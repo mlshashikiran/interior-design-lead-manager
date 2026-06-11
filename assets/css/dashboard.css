@@ -1,0 +1,389 @@
+/* ==========================================================================
+   Interior Design Lead Manager - Premium Dashboard Analytics
+   ========================================================================== */
+
+/* Dashboard Tabs Layout */
+.idlm-tabs {
+    display: flex;
+    gap: 10px;
+    border-bottom: 2px solid var(--idlm-border);
+    margin-bottom: 25px;
+    padding-bottom: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.idlm-tab-link {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--idlm-text-muted);
+    cursor: pointer;
+    transition: var(--idlm-transition);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.idlm-tab-link:hover {
+    color: var(--idlm-primary);
+}
+
+.idlm-tab-link.active {
+    color: var(--idlm-primary);
+    border-bottom-color: var(--idlm-primary);
+}
+
+.idlm-tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.idlm-tab-content.active {
+    display: block;
+}
+
+/* Stats Cards Grid */
+.idlm-grid-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.idlm-stat-card {
+    background-color: var(--idlm-card-bg);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--idlm-border);
+    box-shadow: var(--idlm-shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.idlm-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--idlm-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.idlm-stat-val-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.idlm-stat-val {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--idlm-text-main);
+}
+
+.idlm-stat-val-secondary {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--idlm-text-main);
+}
+
+.idlm-stat-trend {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.idlm-stat-trend.positive {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.idlm-stat-trend.negative {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Charts & Lists Grids */
+.idlm-grid-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+@media (max-width: 900px) {
+    .idlm-grid-charts {
+        grid-template-columns: 1fr;
+    }
+}
+
+.idlm-chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Monthly Targets Card */
+.idlm-targets-card {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    border-color: #a5b4fc;
+}
+
+.idlm-targets-card h3 {
+    margin-bottom: 15px !important;
+}
+
+.idlm-progress-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+@media (max-width: 600px) {
+    .idlm-progress-wrapper {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
+.idlm-progress-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.idlm-progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--idlm-text-main);
+}
+
+.idlm-progress-bar-bg {
+    width: 100%;
+    height: 10px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.idlm-progress-bar {
+    height: 100%;
+    background-color: var(--idlm-primary);
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.idlm-progress-bar-success {
+    background-color: var(--idlm-success);
+}
+
+/* CPL Update Form */
+.idlm-cpl-form {
+    margin-top: 20px;
+    border-top: 1px solid var(--idlm-border);
+    padding-top: 15px;
+}
+
+.idlm-cpl-form h4 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--idlm-text-muted);
+}
+
+.idlm-inline-fields {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.idlm-inline-fields select, .idlm-inline-fields input {
+    flex: 1;
+    min-width: 120px;
+}
+
+/* Code block logger inside CAPI audit */
+.idlm-code-block {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    max-height: 250px;
+    margin-bottom: 10px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Sales Conversion Funnel Widget */
+.idlm-funnel-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    overflow-x: auto;
+    padding: 15px 0;
+}
+
+.idlm-funnel-step-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 1;
+    min-width: 150px;
+}
+
+.idlm-funnel-step {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, rgba(99, 102, 241, 0.01) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 8px;
+    padding: 14px 12px;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+    transition: var(--idlm-transition);
+    width: 100%;
+    text-align: center;
+}
+
+.idlm-funnel-step:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--idlm-shadow);
+    border-color: rgba(99, 102, 241, 0.5);
+}
+
+.idlm-funnel-step-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0.04) 100%);
+    z-index: 1;
+    transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.idlm-funnel-step-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.idlm-funnel-step-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.idlm-funnel-step-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: var(--idlm-primary);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.idlm-funnel-step-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--idlm-text-main);
+}
+
+.idlm-funnel-step-metrics {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.idlm-funnel-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.idlm-funnel-metric-val {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--idlm-text-main);
+}
+
+.idlm-funnel-metric-label {
+    font-size: 10px;
+    color: var(--idlm-text-muted);
+    font-weight: 500;
+}
+
+.idlm-funnel-connector {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: var(--idlm-text-muted);
+    font-size: 10px;
+    font-weight: 600;
+    gap: 2px;
+    padding: 0 5px;
+    text-align: center;
+    min-width: 50px;
+}
+
+.idlm-funnel-connector-val {
+    color: var(--idlm-success);
+    font-weight: 700;
+}
+
+.idlm-funnel-connector svg {
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+    transform: rotate(-90deg);
+}
+
+@media (max-width: 600px) {
+    .idlm-funnel-wrapper {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    .idlm-funnel-step-wrapper {
+        width: 100%;
+        max-width: 280px;
+    }
+    .idlm-funnel-connector {
+        padding: 5px 0;
+        min-width: unset;
+    }
+    .idlm-funnel-connector svg {
+        transform: rotate(0deg); /* point down */
+    }
+}
