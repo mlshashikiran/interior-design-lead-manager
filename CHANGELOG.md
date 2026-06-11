@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.23] - 2026-06-11
+### Changed
+- Cleaned up remaining inline styling references to the 'Outfit' font family in HTML markup structures, changing them to 'Inter' to maintain consistent typography (implemented by Shashi).
+- Incremented the plugin version across constants, headers, and readme files to 1.2.23 (implemented by Shashi).
+
 ## [1.2.22] - 2026-06-11
 ### Changed
 - Stored font assets locally and registered them via a local stylesheet to optimize loading speeds and eliminate external enqueues (implemented by Shashi).

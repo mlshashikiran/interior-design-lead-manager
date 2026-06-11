@@ -1230,7 +1230,7 @@ class IDLM_Admin {
             <div class="idlm-card">
                 <!-- CAPI Bulk Retry Action Bar -->
                 <div class="idlm-bulk-capi-bar" style="display:none; background:#fffbeb; border:1px solid #fef3c7; border-left:4px solid #c99644; padding:12px; border-radius:8px; margin-bottom:15px; justify-content:space-between; align-items:center;">
-                    <span class="idlm-selected-capi-count" style="font-size:13px; font-weight:600; color:#c99644; font-family:'Outfit', sans-serif;">0 logs selected</span>
+                    <span class="idlm-selected-capi-count" style="font-size:13px; font-weight:600; color:#c99644; font-family:'Inter', sans-serif;">0 logs selected</span>
                     <button class="idlm-btn" id="idlm-retry-capi-btn" style="background:#c99644; color:#fff; border:none; padding:6px 15px; border-radius:4px; font-size:12px; cursor:pointer;">Retry/Send Selected Events</button>
                 </div>
 
@@ -1726,7 +1726,7 @@ class IDLM_Admin {
 
                 <!-- Frontend Shortcodes Documentation -->
                 <div class="idlm-card" style="margin-top:20px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-left: 4px solid #c99644;">
-                    <h3 style="margin-top:0; font-family: 'Outfit', sans-serif; display:flex; align-items:center; gap:8px;">
+                    <h3 style="margin-top:0; font-family: 'Inter', sans-serif; display:flex; align-items:center; gap:8px;">
                         <span class="dashicons dashicons-shortcode" style="color:#c99644; font-size:22px; width:22px; height:22px;"></span>
                         Frontend Shortcode Integrations
                     </h3>
@@ -1819,7 +1819,7 @@ class IDLM_Admin {
 
                     <!-- Cloudflare Warning Notice -->
                     <div style="background-color: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #d97706; border-radius: 8px; padding: 15px; margin-top: 15px; margin-bottom: 15px;">
-                        <h4 style="margin-top: 0; color: #b45309; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <h4 style="margin-top: 0; color: #b45309; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
                             <span class="dashicons dashicons-warning" style="color:#d97706; font-size:20px; width:20px; height:20px;"></span>
                             Cloudflare "Under Attack" Mode & Security Blocks Guidance
                         </h4>
@@ -1853,7 +1853,7 @@ class IDLM_Admin {
 
                     <!-- Webhook Setup Guide & Platform URLs -->
                     <div class="idlm-webhook-notes" style="background-color: #f8fafc; border: 1px solid #dfe7f1; border-radius: 8px; padding: 15px; margin-top: 20px; margin-bottom: 20px;">
-                        <h4 style="margin-top: 0; color: #111827; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;">Platform Setup Instructions & Webhook Formats</h4>
+                        <h4 style="margin-top: 0; color: #111827; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;">Platform Setup Instructions & Webhook Formats</h4>
                         <p style="font-size: 12px; color: #64748b; margin-bottom: 12px; line-height: 1.5;">You should configure the same base webhook endpoint to capture leads across all advertising platforms. Distinguish incoming streams by passing the <code>platform</code> name as a query parameter alongside your security key:</p>
                         
                         <div style="display: flex; flex-direction: column; gap: 8px;">

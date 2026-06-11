@@ -3,7 +3,7 @@ Contributors: shashi-protecto
 Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 1.2.22
+Stable tag: 1.2.23
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,9 @@ Features:
 Yes, the smart matcher normalizes phone entries to digits only and performs suffix matches on the last 10 digits to match local/international formats seamlessly.
 
 == Changelog ==
+
+= 1.2.23 =
+* Cleaned up remaining inline styling references to 'Outfit' font family in HTML markup pages to ensure consistent 'Inter' typography (implemented by Shashi).
 
 = 1.2.22 =
 * Stored font assets locally and enqueued them via a local stylesheet to improve performance (implemented by Shashi).

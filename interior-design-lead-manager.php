@@ -3,7 +3,7 @@
  * Plugin Name:       Interior Design Lead Manager
  * Plugin URI:        https://github.com/shashi-protecto/interior-design-lead-manager
  * Description:       A premium lead management system to replace Google Sheets and Pabbly for interior design firms. Captures leads from ad webhooks, manages routing, schedules custom audience batch uploads, triggers conversions server-side using Action Scheduler, and includes a full analytics workspace.
- * Version:           1.2.22
+ * Version:           1.2.23
  * Author:            Shashi
  * License:           GPL-2.0+
  * Text Domain:       interior-design-lead-manager
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define Plugin Constants
-define('IDLM_VERSION', '1.2.22');
+define('IDLM_VERSION', '1.2.23');
 define('IDLM_PATH', plugin_dir_path(__FILE__));
 define('IDLM_URL', plugin_dir_url(__FILE__));
 
