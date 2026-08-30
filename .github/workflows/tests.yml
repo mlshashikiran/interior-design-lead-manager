@@ -1,0 +1,83 @@
+name: Plugin tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.1', '8.4']
+        wordpress: ['6.6', 'latest']
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, openssl, zip
+          coverage: none
+      - name: Run fast behavioral suite
+        run: php tests/run.php
+      - name: Install WordPress fixture
+        shell: bash
+        run: |
+          if [ "${{ matrix.wordpress }}" = "latest" ]; then
+            url="https://wordpress.org/latest.tar.gz"
+          else
+            url="https://wordpress.org/wordpress-${{ matrix.wordpress }}.tar.gz"
+          fi
+          curl --fail --location "$url" --output /tmp/wordpress.tar.gz
+          tar -xzf /tmp/wordpress.tar.gz -C /tmp
+          mkdir -p /tmp/wordpress/wp-content/plugins/interior-design-lead-manager
+          cp -R . /tmp/wordpress/wp-content/plugins/interior-design-lead-manager/
+      - name: Run native WordPress/MySQL suite
+        env:
+          IDLM_TEST_WP_ROOT: /tmp/wordpress
+          IDLM_TEST_DB_USER: root
+          IDLM_TEST_DB_PASSWORD: root
+          IDLM_TEST_DB_HOST: 127.0.0.1:3306
+        run: php tests/integration/run.php
+
+  release-artifact:
+    name: Release artifact gate
+    if: github.event_name == 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: zip
+          coverage: none
+      - name: Build and inspect CI-attested artifact
+        run: php tests/release/build-release.php --build --confirm=build-idlm-release-artifact
+        env:
+          IDLM_RELEASE_MATRIX_PASSED: 'true'
+      - name: Verify recorded checksum
+        working-directory: build
+        run: sha256sum --check interior-design-lead-manager-*.sha256
+      - name: Verify candidate promotion evidence
+        run: php tests/release/verify-candidate.php --artifact-dir=build --expected-revision="${GITHUB_SHA}" > build/staging-rehearsal-gates.json
+      - name: Upload release candidate evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: interior-design-lead-manager-${{ github.sha }}
+          path: build/
+          if-no-files-found: error
+          retention-days: 30

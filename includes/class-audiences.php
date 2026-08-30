@@ -95,7 +95,7 @@ class IDLM_Audiences {
                 $query = "SELECT * FROM {$table_leads} WHERE {$where_clause}";
             }
 
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
             $leads = $wpdb->get_results($query);
 
             if (empty($leads)) {
@@ -106,7 +106,8 @@ class IDLM_Audiences {
 
             // Sync to designated platform
             if ($rule['platform'] === 'meta') {
-                self::sync_to_meta($leads, $rule['audience_id']);
+                $is_val = isset($rule['is_value']) && $rule['is_value'] == '1';
+                self::sync_to_meta($leads, $rule['audience_id'], $is_val);
             } elseif ($rule['platform'] === 'google') {
                 self::sync_to_google($leads, $rule['audience_id']);
             } elseif ($rule['platform'] === 'linkedin') {
@@ -127,7 +128,7 @@ class IDLM_Audiences {
     /**
      * Sync to Meta Custom Audience
      */
-    private static function sync_to_meta($leads, $audience_id = '') {
+    private static function sync_to_meta($leads, $audience_id = '', $is_value_based = false) {
         $pixel_id = get_option('idlm_meta_pixel_id');
         if (empty($audience_id)) {
             $audience_id = get_option('idlm_meta_audience_id');
@@ -139,6 +140,9 @@ class IDLM_Audiences {
         }
 
         $schema = array('EMAIL', 'PHONE', 'FN', 'LN');
+        if ($is_value_based) {
+            $schema[] = 'LOOKALIKE_VALUE';
+        }
         $data = array();
 
         foreach ($leads as $lead) {
@@ -147,7 +151,13 @@ class IDLM_Audiences {
             $first_hash = !empty($lead->first_name) ? hash('sha256', strtolower(trim($lead->first_name))) : '';
             $last_hash = !empty($lead->last_name) ? hash('sha256', strtolower(trim($lead->last_name))) : '';
 
-            $data[] = array($email_hash, $phone_hash, $first_hash, $last_hash);
+            $row_data = array($email_hash, $phone_hash, $first_hash, $last_hash);
+            if ($is_value_based) {
+                // Determine transaction/deal value from lead record, fallback to 100.0 if not set or zero
+                $val = (!empty($lead->deal_value) && floatval($lead->deal_value) > 0) ? floatval($lead->deal_value) : 100.0;
+                $row_data[] = $val;
+            }
+            $data[] = $row_data;
         }
 
         $payload = array(
@@ -187,56 +197,82 @@ class IDLM_Audiences {
     /**
      * Sync to Google Ads Customer Match
      */
+    /**
+     * Get active leads matching specific audience rule filters
+     */
+    public static function get_leads_matching_rule($rule) {
+        global $wpdb;
+        $table_leads = $wpdb->prefix . 'idlm_leads';
+        $conditions = array("is_duplicate = 0");
+
+        if (!empty($rule['stage']) && $rule['stage'] !== 'all') {
+            $conditions[] = $wpdb->prepare("stage = %s", $rule['stage']);
+        }
+        if (!empty($rule['call_status']) && $rule['call_status'] !== 'all') {
+            $conditions[] = $wpdb->prepare("call_status = %s", $rule['call_status']);
+        }
+        if (!empty($rule['lead_quality']) && $rule['lead_quality'] !== 'all') {
+            $conditions[] = $wpdb->prepare("lead_quality = %s", $rule['lead_quality']);
+        }
+
+        $where_clause = implode(" AND ", $conditions);
+        $query = "SELECT * FROM {$table_leads} WHERE {$where_clause}";
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+        return $wpdb->get_results($query);
+    }
+
+    /**
+     * Generate a CSV output containing the mapped leads for Google Ads Data Manager HTTPS Audience Pull source
+     */
+    public static function generate_google_ads_audience_csv_response($leads, $filename = 'google-ads-audience', $terminate = true) {
+        if ($terminate) {
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+        }
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . sanitize_file_name($filename) . '-' . gmdate('Y-m-d') . '.csv');
+
+        $output = fopen('php://output', 'w'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+        if ($output) {
+            fputcsv($output, array('Email', 'Phone Number', 'Country Code', 'Zip', 'Hashed first name', 'Hashed last name'), ',', '"', '\\');
+
+            foreach ($leads as $lead) {
+                $email = !empty($lead->email) ? strtolower(trim($lead->email)) : '';
+                $phone = !empty($lead->phone) ? IDLM_CAPI::format_phone_e164($lead->phone) : '';
+                $first_hash = !empty($lead->first_name) ? IDLM_CAPI::normalize_name_for_hash($lead->first_name) : '';
+                $last_hash = !empty($lead->last_name) ? IDLM_CAPI::normalize_name_for_hash($lead->last_name) : '';
+
+                fputcsv($output, array(
+                    $email,
+                    $phone,
+                    'IN',
+                    '',
+                    $first_hash,
+                    $last_hash
+                ), ',', '"', '\\');
+            }
+            fclose($output); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+        }
+        if ($terminate && !defined('IDLM_TESTING')) {
+            exit;
+        }
+    }
+
+    /**
+     * Sync to Google Ads (Pull Feed Logging)
+     */
     private static function sync_to_google($leads, $user_list_name = '') {
-        if (empty($user_list_name)) {
-            $user_list_name = get_option('idlm_google_user_list_resource');
-        }
-        $developer_token = get_option('idlm_google_developer_token');
-        $client_id = get_option('idlm_google_client_id');
-        $client_secret = get_option('idlm_google_client_secret');
-        $refresh_token = get_option('idlm_google_refresh_token');
-
-        if (empty($user_list_name) || empty($developer_token)) {
-            return;
-        }
-
-        // Mock upload or direct Google API call
-        // Prepare list changes payload
-        $operations = array();
+        $list_name = basename(trim($user_list_name));
+        $lead_count = count($leads);
+        
         foreach ($leads as $lead) {
-            $email_hash = !empty($lead->email) ? hash('sha256', strtolower(trim($lead->email))) : '';
-            $phone_hash = !empty($lead->phone) ? hash('sha256', preg_replace('/[^0-9]/', '', $lead->phone)) : '';
-
-            $user_identifiers = array();
-            if ($email_hash) {
-                $user_identifiers[] = array('hashed_email' => $email_hash);
-            }
-            if ($phone_hash) {
-                $user_identifiers[] = array('hashed_phone_number' => $phone_hash);
-            }
-
-            if (!empty($user_identifiers)) {
-                $operations[] = array(
-                    'create' => array(
-                        'user_identifiers' => $user_identifiers
-                    )
-                );
-            }
+            IDLM_DB::log_activity($lead->id, 'audience_sync', 'Lead mapped and ready for Google Ads Data Manager pull feed: ' . $list_name, 0);
         }
-
-        $payload = array(
-            'operations' => $operations
-        );
-
-        // Google Customer Match offline list additions API endpoint
-        $endpoint = "https://googleads.googleapis.com/v15/{$user_list_name}:mutateMembers";
-
-        // In production, we request access token using Refresh Token
-        // For local development or mock, we output request trace and logs
-        foreach ($leads as $lead) {
-            IDLM_DB::log_activity($lead->id, 'audience_sync', 'Lead prepared and sent to Google Customer Match list: ' . basename($user_list_name), 0);
-        }
-        IDLM_DB::log_audience_sync('google', basename($user_list_name), count($leads), $payload, 'Mock API Request successfully processed (Google Customer Match).', 'success');
+        
+        IDLM_DB::log_audience_sync('google', $list_name, $lead_count, array('mode' => 'pull'), 'Pull Feed Active. Leads mapped: ' . $lead_count, 'success');
     }
 
     /**

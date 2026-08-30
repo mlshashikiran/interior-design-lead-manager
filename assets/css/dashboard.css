@@ -2,7 +2,7 @@
    Interior Design Lead Manager - Premium Dashboard Analytics
    ========================================================================== */
 
-/* Dashboard Tabs Layout */
+/* Dashboard Tabs Layout - Unified in admin-style.css
 .idlm-tabs {
     display: flex;
     gap: 10px;
@@ -34,6 +34,7 @@
     color: var(--idlm-primary);
     border-bottom-color: var(--idlm-primary);
 }
+*/
 
 .idlm-tab-content {
     display: none;
@@ -46,10 +47,25 @@
 
 /* Stats Cards Grid */
 .idlm-grid-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 20px;
     margin-bottom: 25px;
+}
+
+.idlm-grid-stats > .idlm-stat-card {
+    /* Six cards plus five 20px gaps fill a row. Flex growth makes every
+       partially filled row distribute its cards across the full width. */
+    flex: 1 1 calc((100% - 100px) / 6);
+    min-width: 180px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+    .idlm-grid-stats > .idlm-stat-card {
+        flex-basis: 100%;
+        min-width: 0;
+    }
 }
 
 .idlm-stat-card {
@@ -129,6 +145,48 @@
     width: 100%;
 }
 
+/* Keep the title, optional supporting copy, and visualization on one
+   consistent vertical rhythm across every dashboard chart card. */
+.idlm-wrap .idlm-chart-card-header {
+    margin: 0 0 20px;
+}
+
+.idlm-wrap .idlm-chart-card-header > h3 {
+    margin: 0 !important;
+}
+
+.idlm-wrap .idlm-chart-card-subtitle {
+    margin: 8px 0 0 !important;
+    color: var(--idlm-text-muted) !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+}
+
+.idlm-wrap .idlm-chart-card-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.idlm-revenue-chart-container {
+    min-height: 300px;
+}
+
+.idlm-chart-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+    color: var(--idlm-text-muted);
+    font-size: 13px;
+    text-align: center;
+}
+
 /* Monthly Targets Card */
 .idlm-targets-card {
     background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
@@ -183,21 +241,6 @@
 
 .idlm-progress-bar-success {
     background-color: var(--idlm-success);
-}
-
-/* CPL Update Form */
-.idlm-cpl-form {
-    margin-top: 20px;
-    border-top: 1px solid var(--idlm-border);
-    padding-top: 15px;
-}
-
-.idlm-cpl-form h4 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--idlm-text-muted);
 }
 
 .idlm-inline-fields {

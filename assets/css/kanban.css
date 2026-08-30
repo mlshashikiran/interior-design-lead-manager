@@ -1,0 +1,383 @@
+/* ==========================================================================
+   Interior Design Lead Manager - Kanban Board Styles
+   ========================================================================== */
+
+.idlm-kanban-wrap {
+    width: 100%;
+    margin-top: 15px;
+    box-sizing: border-box;
+}
+
+.idlm-kanban-stats {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+    gap: 7px;
+    margin: 10px 0;
+}
+
+.idlm-kanban-stat {
+    min-width: 0;
+    padding: 8px 10px;
+    background: #ffffff;
+    border: 1px solid var(--idlm-border);
+    border-left: 3px solid #64748b;
+    border-radius: 6px;
+    box-shadow: none;
+}
+
+.idlm-kanban-stat-label {
+    display: block;
+    color: var(--idlm-text-muted);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.idlm-kanban-stat-value {
+    display: block;
+    margin-top: 3px;
+    color: var(--idlm-text-main);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.idlm-kanban-stat-value-card {
+    border-left-color: var(--idlm-primary);
+}
+
+.idlm-kanban-stat-success {
+    border-left-color: var(--idlm-success);
+}
+
+.idlm-kanban-stat-attention.has-value {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    border-left-color: #f97316;
+}
+
+@media (max-width: 1280px) {
+    .idlm-kanban-stats {
+        grid-template-columns: repeat(3, minmax(130px, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
+    .idlm-kanban-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Filter Bar styles specifically for Kanban view */
+.idlm-kanban-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+    background: #ffffff;
+    border: 1px solid var(--idlm-border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.idlm-kanban-filters .idlm-filter-group {
+    flex: 1;
+    min-width: 180px;
+    margin-bottom: 0;
+}
+
+.idlm-kanban-filters .idlm-filter-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--idlm-text-muted);
+    margin-bottom: 6px;
+}
+
+.idlm-kanban-filters .idlm-input,
+.idlm-kanban-filters .idlm-select {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Kanban Board Container */
+.idlm-kanban-board {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+    align-items: flex-start;
+    min-height: calc(100vh - 280px);
+    width: 100%;
+}
+
+/* Column Styling */
+.idlm-kanban-column {
+    flex: 0 0 310px;
+    width: 310px;
+    background: #f8fafc;
+    border: 1px solid var(--idlm-border);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 230px);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+/* Drag hover feedback on column */
+.idlm-kanban-column.drag-over {
+    background-color: var(--idlm-info-soft) !important;
+    border: 2px dashed var(--idlm-secondary) !important;
+}
+
+/* Column Header styling with colored top accent line */
+.idlm-kanban-column-header {
+    padding: 16px 16px 12px 16px;
+    border-bottom: 1px solid var(--idlm-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    background: #ffffff;
+}
+
+/* Accent strip color depending on stage rank/index */
+.idlm-kanban-column-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    background-color: var(--idlm-border);
+}
+
+/* Color variations for accent strip */
+.idlm-kanban-column[data-stage="New"] .idlm-kanban-column-header::before { background-color: var(--idlm-secondary); }
+.idlm-kanban-column[data-stage="Contacted"] .idlm-kanban-column-header::before { background-color: var(--idlm-primary); }
+.idlm-kanban-column[data-stage="Qualified"] .idlm-kanban-column-header::before { background-color: var(--idlm-success); }
+.idlm-kanban-column[data-stage="Quote Shared"] .idlm-kanban-column-header::before { background-color: #7c3aed; }
+.idlm-kanban-column[data-stage="Negotiation"] .idlm-kanban-column-header::before { background-color: #ea580c; }
+.idlm-kanban-column[data-stage="Won"] .idlm-kanban-column-header::before { background-color: var(--idlm-success); }
+.idlm-kanban-column[data-stage="Lost"] .idlm-kanban-column-header::before { background-color: var(--idlm-danger); }
+
+.idlm-kanban-column-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--idlm-text-main);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.idlm-kanban-column-metrics {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.idlm-kanban-column-pipeline-value {
+    color: #475569;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.idlm-kanban-column-count {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: var(--idlm-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+/* Scrollable column body */
+.idlm-kanban-column-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 150px;
+    box-sizing: border-box;
+}
+
+/* Card Styling */
+.idlm-kanban-card {
+    background: #ffffff;
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    padding: 14px;
+    cursor: grab;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    user-select: none;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.idlm-kanban-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--idlm-shadow);
+    border-color: var(--idlm-primary);
+}
+
+.idlm-kanban-card:active {
+    cursor: grabbing;
+}
+
+/* Card drag state style */
+.idlm-kanban-card.dragging {
+    opacity: 0.4;
+    border: 1px dashed var(--idlm-primary);
+}
+
+.idlm-kanban-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--idlm-text-main);
+    margin: 0 0 6px 0;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.idlm-kanban-card-title:hover {
+    color: var(--idlm-primary);
+    text-decoration: underline;
+}
+
+.idlm-kanban-card-meta {
+    font-size: 11px;
+    color: var(--idlm-text-muted);
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.idlm-kanban-card-meta div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.idlm-kanban-card-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.idlm-kanban-card-badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Custom indicator states for Call Status and Tasks */
+.idlm-kanban-card-indicators {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 8px;
+    color: var(--idlm-text-muted);
+}
+
+.idlm-kanban-card-rep {
+    font-size: 11px;
+    color: var(--idlm-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.idlm-kanban-card-rep-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.idlm-kanban-task-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 12px;
+}
+
+.idlm-kanban-task-pill.pending {
+    background: #eff6ff;
+    color: var(--idlm-secondary);
+}
+
+.idlm-kanban-task-pill.overdue {
+    background: var(--idlm-danger-soft);
+    color: var(--idlm-danger);
+    animation: idlm-pulse-kanban 1.5s infinite;
+}
+
+/* Animations */
+@keyframes idlm-pulse-kanban {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* Empty Column State */
+.idlm-kanban-column-empty {
+    border: 1px dashed var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    padding: 20px;
+    text-align: center;
+    color: var(--idlm-text-muted);
+    font-size: 12px;
+    margin: auto 0;
+}
+
+/* Responsive constraints */
+@media (max-width: 768px) {
+    .idlm-kanban-board {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .idlm-kanban-column {
+        flex: 1 1 auto;
+        width: 100%;
+        max-height: none;
+    }
+}

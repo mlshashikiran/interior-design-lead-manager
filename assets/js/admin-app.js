@@ -1,23 +1,323 @@
 jQuery(document).ready(function($) {
+    var leadsTableRequest = null;
+    var leadsActiveOnly = false;
+    var filtersReturnFocus = null;
+
+    function updateActiveFilterCount() {
+        var count = 0;
+        $('.idlm-filters-panel').find('input, select').each(function() {
+            var id = this.id;
+            var value = $(this).val();
+            var isDefault = (id === 'filter-date-basis' && value === 'assigned_at') ||
+                (id === 'filter-followup' && value === 'action_required');
+            if (value && !isDefault) count += 1;
+        });
+        var $count = $('.idlm-filter-count');
+        $count.text(count).attr('aria-label', count + ' active filter' + (count === 1 ? '' : 's')).prop('hidden', count === 0);
+    }
+
+    function openFiltersPanel() {
+        var $panel = $('#idlm-lead-filters');
+        if (!$panel.length) return;
+        filtersReturnFocus = document.activeElement;
+        $('#idlm-filters-backdrop').prop('hidden', false);
+        $panel.addClass('is-open').attr('aria-hidden', 'false');
+        $('#idlm-open-filters').attr('aria-expanded', 'true');
+        $('body').addClass('idlm-filters-open');
+        window.setTimeout(function() { $('#idlm-close-filters').trigger('focus'); }, 20);
+    }
+
+    function closeFiltersPanel() {
+        var $panel = $('#idlm-lead-filters');
+        $panel.removeClass('is-open').attr('aria-hidden', 'true');
+        $('#idlm-filters-backdrop').prop('hidden', true);
+        $('#idlm-open-filters').attr('aria-expanded', 'false');
+        $('body').removeClass('idlm-filters-open');
+        if (filtersReturnFocus) $(filtersReturnFocus).trigger('focus');
+    }
+
+    function ensurePresalesActivityModal() {
+        if ($('#idlm-presales-activity-modal').length) return;
+
+        var statuses = Array.isArray(idlm_vars.call_statuses) ? idlm_vars.call_statuses : [];
+        var options = statuses.map(function(status) {
+            return '<option value="' + $('<div>').text(status).html() + '">' + $('<div>').text(status).html() + '</option>';
+        }).join('');
+        $('body').append(
+            '<div class="idlm-modal idlm-presales-activity-modal" id="idlm-presales-activity-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-presales-activity-title">' +
+                '<div class="idlm-modal-content">' +
+                    '<div class="idlm-modal-header">' +
+                        '<div><h2 id="idlm-presales-activity-title">Log outreach</h2><p>Record the customer touch and its outcome.</p></div>' +
+                        '<button type="button" class="idlm-close idlm-presales-activity-cancel" aria-label="Close">&times;</button>' +
+                    '</div>' +
+                    '<form id="idlm-presales-activity-form">' +
+                        '<div class="idlm-form-group idlm-presales-call-outcome"><label for="idlm-presales-call-status">Call outcome <span aria-hidden="true">*</span></label>' +
+                            '<select id="idlm-presales-call-status" class="idlm-input"><option value="">Select an outcome</option>' + options + '</select></div>' +
+                        '<div class="idlm-form-group idlm-presales-callback-field"><label for="idlm-presales-callback-time">Callback date and time <span aria-hidden="true">*</span></label>' +
+                            '<input type="datetime-local" id="idlm-presales-callback-time" class="idlm-input"></div>' +
+                        '<div class="idlm-form-group"><label for="idlm-presales-activity-note">Note <span class="idlm-muted">(optional)</span></label>' +
+                            '<textarea id="idlm-presales-activity-note" class="idlm-input" rows="4" placeholder="Add useful context for the next action"></textarea></div>' +
+                        '<div class="idlm-presales-activity-error" role="alert"></div>' +
+                        '<div class="idlm-presales-activity-footer"><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-activity-cancel">Cancel</button>' +
+                            '<button type="submit" class="idlm-btn idlm-btn-primary">Save activity</button></div>' +
+                    '</form>' +
+                '</div>' +
+            '</div>'
+        );
+    }
+
+    function openPresalesActivityModal(kind, onSubmit) {
+        ensurePresalesActivityModal();
+        var $modal = $('#idlm-presales-activity-modal');
+        var isCall = kind === 'call';
+        $modal.data('submit-handler', onSubmit).data('kind', kind);
+        $modal.find('#idlm-presales-activity-title').text(isCall ? 'Log outbound call' : 'Log WhatsApp');
+        $modal.find('.idlm-presales-call-outcome').toggle(isCall);
+        $modal.find('#idlm-presales-call-status').val('');
+        $modal.find('#idlm-presales-callback-time').val('');
+        $modal.find('#idlm-presales-activity-note').val('');
+        $modal.find('.idlm-presales-callback-field, .idlm-presales-activity-error').hide();
+        if (isCall && $modal.find('#idlm-presales-call-status option').length <= 1) {
+            $modal.find('.idlm-presales-activity-error').text('No call outcomes are configured. Ask an administrator to add one.').show();
+        }
+        $modal.addClass('active');
+        $('body').addClass('idlm-modal-open');
+        window.setTimeout(function() {
+            (isCall ? $modal.find('#idlm-presales-call-status') : $modal.find('#idlm-presales-activity-note')).trigger('focus');
+        }, 50);
+    }
+
+    function closePresalesActivityModal() {
+        $('#idlm-presales-activity-modal').removeClass('active').removeData('submit-handler');
+        if (!$('.idlm-modal.active, .idlm-drawer.active, #idlm-import-modal.active').length) {
+            $('body').removeClass('idlm-modal-open');
+        }
+    }
+
+    $(document).on('change', '#idlm-presales-call-status', function() {
+        var needsCallback = $(this).val() === 'Call Back Requested';
+        $('.idlm-presales-callback-field').toggle(needsCallback);
+        if (needsCallback) $('#idlm-presales-callback-time').trigger('focus');
+    });
+
+    $(document).on('click', '.idlm-presales-activity-cancel', closePresalesActivityModal);
+
+    $(document).on('submit', '#idlm-presales-activity-form', function(e) {
+        e.preventDefault();
+        var $modal = $('#idlm-presales-activity-modal');
+        var kind = $modal.data('kind');
+        var callStatus = kind === 'call' ? $modal.find('#idlm-presales-call-status').val() : '';
+        var callbackTime = callStatus === 'Call Back Requested' ? $modal.find('#idlm-presales-callback-time').val() : '';
+        var $error = $modal.find('.idlm-presales-activity-error');
+        if (kind === 'call' && !callStatus) {
+            $error.text('Select a call outcome.').show();
+            return;
+        }
+        if (callStatus === 'Call Back Requested' && !callbackTime) {
+            $error.text('Choose a callback date and time.').show();
+            return;
+        }
+        var submitHandler = $modal.data('submit-handler');
+        if (typeof submitHandler === 'function') {
+            submitHandler({
+                call_status: callStatus,
+                callback_time: callbackTime,
+                note: $.trim($modal.find('#idlm-presales-activity-note').val())
+            });
+        }
+        closePresalesActivityModal();
+    });
+
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && $('#idlm-presales-activity-modal').hasClass('active')) {
+            closePresalesActivityModal();
+        }
+    });
+
+    function submitPresalesTouch($button, leadId, kind, activity, onSuccess) {
+        $button.prop('disabled', true);
+        $.post(idlm_vars.ajax_url, {
+            action: 'idlm_log_presales_touch', nonce: idlm_vars.nonce,
+            lead_id: leadId, kind: kind, note: activity.note,
+            call_status: activity.call_status, callback_time: activity.callback_time
+        }).done(function(response) {
+            if (response.success) {
+                showToast(response.data.message, 'success');
+                onSuccess();
+            } else {
+                showToast(response.data.message || 'Unable to log outreach.', 'error');
+                $button.prop('disabled', false);
+            }
+        }).fail(function() {
+            showToast('Server error logging outreach.', 'error');
+            $button.prop('disabled', false);
+        });
+    }
+
+    $(document).on('click', '.idlm-log-presales-touch', function() {
+        var $button = $(this);
+        var kind = $button.data('kind');
+        var $panel = $button.closest('.idlm-presales-compliance');
+        var leadId = $panel.data('lead-id');
+        var reason = '';
+        var note = '';
+        if (kind === 'early_close') {
+            reason = $panel.find('.idlm-early-close-reason').val();
+            note = $.trim($panel.find('.idlm-early-close-note').val());
+            if (!reason) { alert('Select an early-close reason.'); return; }
+            if (note.length < 10) { alert('Document the evidence in at least 10 characters.'); return; }
+            if (!window.confirm('Close this lead early as Unqualified? This action will be recorded in the audit log.')) return;
+        } else {
+            openPresalesActivityModal(kind, function(activity) {
+                submitPresalesTouch($button, leadId, kind, activity, function() {
+                    openLeadDrawer(leadId);
+                    if (typeof window.idlmLoadLeadsTable === 'function') window.idlmLoadLeadsTable(1);
+                });
+            });
+            return;
+        }
+        $button.prop('disabled', true);
+        $.post(idlm_vars.ajax_url, {
+            action: 'idlm_log_presales_touch', nonce: idlm_vars.nonce,
+            lead_id: leadId, kind: kind, reason: reason, note: note,
+            call_status: typeof callStatus === 'undefined' ? '' : callStatus,
+            callback_time: typeof callbackTime === 'undefined' ? '' : callbackTime
+        }).done(function(response) {
+            if (response.success) {
+                if (typeof window.idlmShowToast === 'function') window.idlmShowToast(response.data.message, 'success');
+                openLeadDrawer(leadId);
+                if (typeof window.idlmLoadLeadsTable === 'function') window.idlmLoadLeadsTable(1);
+            } else {
+                alert(response.data.message || 'Unable to log follow-up.');
+                $button.prop('disabled', false);
+            }
+        }).fail(function() {
+            alert('Server error logging follow-up.');
+            $button.prop('disabled', false);
+        });
+    });
+
+    $(document).on('click', '.idlm-presales-row-touch', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var $button = $(this);
+        var leadId = $button.data('lead-id');
+        var kind = $button.data('kind');
+        openPresalesActivityModal(kind, function(activity) {
+            submitPresalesTouch($button, leadId, kind, activity, function() {
+                loadLeadsTable(currentPage);
+                updateFloatingTasksCount();
+            });
+        });
+    });
+
+    $(document).on('click', '.idlm-presales-decision', function() {
+        var $button = $(this);
+        var $panel = $button.closest('.idlm-presales-compliance');
+        var leadId = $panel.data('lead-id');
+        var decision = $button.data('decision');
+        var handoffRemark = '';
+        if (decision === 'qualify' && String($panel.data('has-floor-plan')) !== '1') {
+            handoffRemark = window.prompt('No floor plan is attached. Add a remark for the sales handoff:') || '';
+            handoffRemark = $.trim(handoffRemark);
+            if (!handoffRemark) {
+                alert('A handoff remark is required when qualifying without a floor plan.');
+                return;
+            }
+        }
+        var confirmText = decision === 'qualify'
+            ? 'Qualify this lead and send it to the qualified handoff workflow?'
+            : 'Close this lead as Unqualified — Unable to Contact?';
+        if (!window.confirm(confirmText)) return;
+        $button.prop('disabled', true);
+        $.post(idlm_vars.ajax_url, {
+            action: 'idlm_presales_decision', nonce: idlm_vars.nonce,
+            lead_id: leadId, decision: decision, handoff_remark: handoffRemark
+        }).done(function(response) {
+            if (response.success) {
+                showToast(response.data.message, 'success');
+                closeLeadDrawer();
+                loadLeadsTable(1);
+                updateFloatingTasksCount();
+            } else {
+                alert(response.data.message || 'Unable to save the lead decision.');
+                $button.prop('disabled', false);
+            }
+        }).fail(function() {
+            alert('Server error saving the lead decision.');
+            $button.prop('disabled', false);
+        });
+    });
+
     var currentPage = 1;
+    var leadsPageCursors = { 1: '' };
+    var leadsSortBy = '';
+    var leadsSortOrder = 'asc';
     var activeCallbackSelect = null;
     var activeWonSelect = null;
+    var activeQuoteSelect = null;
+    var activeLostSelect = null;
+    var activeLostBulkAction = null;
     window.idlmHasUnsavedChanges = false;
     window.idlmChangedFields = {};
+
+    $(document).on('click', '.idlm-run-fallback-now', function() {
+        var $button = $(this);
+        $button.prop('disabled', true).text('Running…');
+        $.post(idlm_vars.ajax_url, {
+            action: 'idlm_run_fallback_now',
+            nonce: idlm_vars.nonce
+        }).done(function(response) {
+            if (response.success) {
+                showToast(response.data.message + ' Open exceptions: ' + response.data.exception_count, 'success');
+            } else {
+                showToast((response.data && response.data.message) || 'Fallback routing failed.', 'error');
+            }
+        }).fail(function() {
+            showToast('Fallback routing request failed.', 'error');
+        }).always(function() {
+            $button.prop('disabled', false).text('Run Fallback Now');
+        });
+    });
 
     // Load table on start if present
     if ($('#idlm-leads-table').length > 0) {
         loadLeadsTable(1);
     }
 
+    $('#idlm-leads-table').on('click keydown', 'th.idlm-sortable-column', function(event) {
+        if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+        event.preventDefault();
+
+        var $header = $(this);
+        var requestedSort = $header.data('sort');
+
+        if (leadsSortBy === requestedSort) {
+            leadsSortOrder = leadsSortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+            leadsSortBy = requestedSort;
+            leadsSortOrder = 'asc';
+        }
+
+        $('#idlm-leads-table th.idlm-sortable-column').attr('aria-sort', 'none');
+        $header.attr('aria-sort', leadsSortOrder === 'asc' ? 'ascending' : 'descending');
+        loadLeadsTable(1);
+    });
+
     // Filter changes trigger table refresh
     $('.idlm-filters-panel select').change(function() {
+        leadsActiveOnly = false;
+        updateActiveFilterCount();
         loadLeadsTable(1);
     });
 
     // Search input changes trigger table refresh with a small debounce
     var searchTimeout;
     $('#filter-search').on('input keyup', function() {
+        leadsActiveOnly = false;
+        updateActiveFilterCount();
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(function() {
             loadLeadsTable(1);
@@ -26,7 +326,9 @@ jQuery(document).ready(function($) {
 
     // Clear all filters
     $('#btn-clear-filters').click(function() {
+        leadsActiveOnly = false;
         $('#filter-search').val('');
+        $('#filter-date-basis').val('assigned_at');
         $('#filter-date-range').val('');
         $('#filter-stage').val('');
         $('#filter-source').val('');
@@ -36,8 +338,32 @@ jQuery(document).ready(function($) {
         $('#filter-followup').val('');
         $('#idlm-secondary-filters-container').slideUp(200);
         $('#btn-toggle-more-filters').removeClass('active');
+        updateActiveFilterCount();
         loadLeadsTable(1);
     });
+
+    $('#idlm-open-filters').on('click', openFiltersPanel);
+    $('#idlm-close-filters, #idlm-filters-backdrop').on('click', closeFiltersPanel);
+    $(document).on('keydown', function(event) {
+        if (event.key === 'Escape' && $('#idlm-lead-filters').hasClass('is-open')) {
+            closeFiltersPanel();
+            return;
+        }
+        if (event.key === 'Tab' && $('#idlm-lead-filters').hasClass('is-open')) {
+            var $focusable = $('#idlm-lead-filters').find('button, input, select, [tabindex]:not([tabindex="-1"])').filter(':visible');
+            if (!$focusable.length) return;
+            var first = $focusable.get(0);
+            var last = $focusable.get($focusable.length - 1);
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+    });
+    updateActiveFilterCount();
 
     // Toggle secondary advanced filters panel
     $('#btn-toggle-more-filters').click(function() {
@@ -53,20 +379,12 @@ jQuery(document).ready(function($) {
     });
 
     // Metric Summary card clicks trigger filtration
-    $('.idlm-metric').click(function() {
+    $('.idlm-metric[data-filter]').click(function() {
         var filter = $(this).data('filter');
+        leadsActiveOnly = filter !== 'New';
         
-        // Reset all filter fields
-        $('#filter-search').val('');
-        $('#filter-date-range').val('');
-        $('#filter-stage').val('');
-        $('#filter-source').val('');
-        $('#filter-rep').val('');
-        $('#filter-call-status').val('');
-        $('#filter-quality').val('');
-        $('#filter-followup').val('');
-        
-        // Apply selected filter
+        // Refine the current filtered population so the opened table continues
+        // to match the number displayed on the selected metric card.
         if (filter === 'New') {
             $('#filter-stage').val('New');
         } else if (filter === 'Not Called') {
@@ -75,14 +393,31 @@ jQuery(document).ready(function($) {
             $('#filter-call-status').val('Call Back Requested');
         } else if (filter === 'Unassigned') {
             $('#filter-rep').val('0');
+        } else if (filter === 'Qualified Handoffs') {
+            $('#filter-quality').val('Qualified Awaiting Assignment');
+            $('#idlm-secondary-filters-container').slideDown(200);
+            $('#btn-toggle-more-filters').addClass('active');
+        } else if (filter === 'Routing Exceptions') {
+            $('#filter-quality').val('Routing Exception');
+            $('#idlm-secondary-filters-container').slideDown(200);
+            $('#btn-toggle-more-filters').addClass('active');
         } else if (filter === 'Qualified') {
             $('#filter-quality').val('Qualified');
+            // Show secondary filters row since Quality is in it
+            $('#idlm-secondary-filters-container').slideDown(200);
+            $('#btn-toggle-more-filters').addClass('active');
+        } else if (filter === 'Pending Quality') {
+            $('#filter-quality').val('Pending');
             // Show secondary filters row since Quality is in it
             $('#idlm-secondary-filters-container').slideDown(200);
             $('#btn-toggle-more-filters').addClass('active');
         }
         
         loadLeadsTable(1);
+    });
+
+    $(document).on('click', '#idlm-qualified-handoffs-pill', function() {
+        $('.idlm-metric[data-filter="Qualified Handoffs"]').trigger('click');
     });
 
     // Pagination events
@@ -96,8 +431,12 @@ jQuery(document).ready(function($) {
         loadLeadsTable(currentPage + 1);
     });
 
+    $('#idlm-leads-per-page').change(function() {
+        loadLeadsTable(1);
+    });
+
     // Helper function to submit Inline Quick Edits via AJAX
-    function submitQuickEdit(leadId, field, val, callbackTime, $select, dealValue) {
+    function submitQuickEdit(leadId, field, val, callbackTime, $select, dealValue, lostRemark, discountPercentage, propertyLocation, quoteValue, quoteFile, lostReason) {
         var ajaxData = {
             action: 'idlm_quick_edit_lead',
             nonce: idlm_vars.nonce,
@@ -109,6 +448,24 @@ jQuery(document).ready(function($) {
         if (dealValue !== undefined) {
             ajaxData.deal_value = dealValue;
         }
+        if (lostRemark !== undefined) {
+            ajaxData.lost_remark = lostRemark;
+        }
+        if (lostReason !== undefined) {
+            ajaxData.lost_reason = lostReason;
+        }
+        if (discountPercentage !== undefined) {
+            ajaxData.discount_percentage = discountPercentage;
+        }
+        if (propertyLocation !== undefined) {
+            ajaxData.property_location = propertyLocation;
+        }
+        if (quoteValue !== undefined) {
+            ajaxData.quote_value = quoteValue;
+        }
+        if (quoteFile !== undefined) {
+            ajaxData.quote_file = quoteFile;
+        }
         $.ajax({
             url: idlm_vars.ajax_url,
             type: 'POST',
@@ -117,6 +474,14 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     showToast('Changes saved successfully!', 'success');
                     if ($select) {
+                        if (field === 'stage' && val === 'Won' && propertyLocation !== undefined) {
+                            $select.attr('data-property-location', propertyLocation);
+                        }
+                        if (field === 'stage' && val === 'Quote Shared' && quoteValue !== undefined) {
+                            $select.attr('data-quote-value', quoteValue);
+                            $select.attr('data-quote-file', quoteFile || '');
+                        }
+
                         // Add micro-flash animation to row
                         var $row = $select.closest('tr');
                         $row.css('background-color', '#f0fdf4');
@@ -133,6 +498,9 @@ jQuery(document).ready(function($) {
                     // Update pending calls count pill
                     if (response.data && response.data.hasOwnProperty('pending_calls_count')) {
                         updatePendingCallsPill(response.data.pending_calls_count);
+                    }
+                    if (response.data && response.data.hasOwnProperty('unread_whatsapp_count')) {
+                        updateUnreadWhatsAppPill(response.data.unread_whatsapp_count);
                     }
                 } else {
                     showToast(response.data.message || 'Save failed.', 'error');
@@ -179,8 +547,41 @@ jQuery(document).ready(function($) {
                 val: val
             };
             $('#idlm-deal-value-input').val('');
+            $('#idlm-discount-percentage-input').val('');
+            $('#idlm-won-property-location-input').val($select.attr('data-property-location') || '');
             $('#idlm-deal-value-modal').addClass('active');
             updateBodyScrollLock();
+            return;
+        }
+
+        // If Quote Shared is chosen, request the estimated quote value.
+        if (field === 'stage' && val === 'Quote Shared') {
+            activeQuoteSelect = {
+                select: $select,
+                leadId: leadId,
+                val: val
+            };
+            var existingQuoteValue = parseFloat($select.attr('data-quote-value') || 0);
+            $('#idlm-quote-value-input').val(existingQuoteValue > 0 ? existingQuoteValue : '');
+            setQuoteUploadState('idlm-stage-quote-file', 'idlm-stage-quote-preview', $select.attr('data-quote-file') || '');
+            $('#idlm-quote-value-modal').addClass('active');
+            updateBodyScrollLock();
+            $('#idlm-quote-value-input').focus();
+            return;
+        }
+
+        // A reason is mandatory before a lead can be moved to Lost.
+        if (field === 'stage' && val === 'Lost') {
+            activeLostSelect = {
+                select: $select,
+                leadId: leadId,
+                val: val
+            };
+            $('#idlm-lost-reason-select').val('');
+            $('#idlm-lost-remark-input').val('');
+            $('#idlm-lost-remark-modal').addClass('active');
+            updateBodyScrollLock();
+            $('#idlm-lost-reason-select').focus();
             return;
         }
 
@@ -221,14 +622,23 @@ jQuery(document).ready(function($) {
         if (!activeWonSelect) return;
         
         var dealValue = $('#idlm-deal-value-input').val();
-        if (!dealValue || isNaN(dealValue) || parseFloat(dealValue) < 0) {
-            alert('Please enter a valid deal value.');
+        if (!dealValue || isNaN(dealValue) || parseFloat(dealValue) <= 0) {
+            alert('Please enter a deal value greater than zero.');
             return;
         }
 
+        var discountPercentage = $('#idlm-discount-percentage-input').val();
+        if (discountPercentage === '' || isNaN(discountPercentage) || parseFloat(discountPercentage) < 0 || parseFloat(discountPercentage) > 100) {
+            alert('Please enter a discount percentage between 0 and 100.');
+            $('#idlm-discount-percentage-input').focus();
+            return;
+        }
+
+        var propertyLocation = $.trim($('#idlm-won-property-location-input').val());
+
         $('#idlm-deal-value-modal').removeClass('active');
         updateBodyScrollLock();
-        submitQuickEdit(activeWonSelect.leadId, 'stage', 'Won', '', activeWonSelect.select, parseFloat(dealValue));
+        submitQuickEdit(activeWonSelect.leadId, 'stage', 'Won', '', activeWonSelect.select, parseFloat(dealValue), undefined, parseFloat(discountPercentage), propertyLocation);
         activeWonSelect = null;
     });
 
@@ -240,6 +650,79 @@ jQuery(document).ready(function($) {
             loadLeadsTable(currentPage);
             activeWonSelect = null;
         }
+    });
+
+    // Quote Value Modal Event Handlers
+    $('#idlm-quote-value-modal-save').click(function() {
+        if (!activeQuoteSelect) return;
+
+        var quoteValue = $('#idlm-quote-value-input').val();
+        if (!quoteValue || isNaN(quoteValue) || parseFloat(quoteValue) <= 0) {
+            alert('Please enter a quote value greater than zero.');
+            $('#idlm-quote-value-input').focus();
+            return;
+        }
+
+        var quoteFile = $('#idlm-stage-quote-file').val();
+
+        $('#idlm-quote-value-modal').removeClass('active');
+        updateBodyScrollLock();
+        submitQuickEdit(activeQuoteSelect.leadId, 'stage', 'Quote Shared', '', activeQuoteSelect.select, undefined, undefined, undefined, undefined, parseFloat(quoteValue), quoteFile);
+        activeQuoteSelect = null;
+    });
+
+    $('#idlm-quote-value-modal-cancel, #idlm-quote-value-modal-close').click(function() {
+        $('#idlm-quote-value-modal').removeClass('active');
+        updateBodyScrollLock();
+        if (activeQuoteSelect) {
+            loadLeadsTable(currentPage);
+            activeQuoteSelect = null;
+        }
+    });
+
+    // Lost Remark Modal Event Handlers
+    $('#idlm-lost-remark-modal-save').click(function() {
+        if (!activeLostSelect && !activeLostBulkAction) return;
+
+        var lostRemark = $.trim($('#idlm-lost-remark-input').val());
+        var lostReason = $('#idlm-lost-reason-select').val();
+        if (!lostReason) {
+            alert('Please select a lost reason.');
+            $('#idlm-lost-reason-select').focus();
+            return;
+        }
+        if (!lostRemark) {
+            alert('Please enter a remark explaining why the lead was lost.');
+            $('#idlm-lost-remark-input').focus();
+            return;
+        }
+
+        $('#idlm-lost-remark-modal').removeClass('active');
+        updateBodyScrollLock();
+        if (activeLostSelect) {
+            submitQuickEdit(activeLostSelect.leadId, 'stage', 'Lost', '', activeLostSelect.select, undefined, lostRemark, undefined, undefined, undefined, undefined, lostReason);
+            activeLostSelect = null;
+        } else if (activeLostBulkAction) {
+            submitBulkAction(
+                activeLostBulkAction.action,
+                activeLostBulkAction.selectedIds,
+                activeLostBulkAction.repId,
+                activeLostBulkAction.stage,
+                lostRemark,
+                lostReason
+            );
+            activeLostBulkAction = null;
+        }
+    });
+
+    $('#idlm-lost-remark-modal-cancel, #idlm-lost-remark-modal-close').click(function() {
+        $('#idlm-lost-remark-modal').removeClass('active');
+        updateBodyScrollLock();
+        if (activeLostSelect) {
+            loadLeadsTable(currentPage);
+            activeLostSelect = null;
+        }
+        activeLostBulkAction = null;
     });
 
     function getCurrentDateTimeStringForInput() {
@@ -282,6 +765,33 @@ jQuery(document).ready(function($) {
         }
     });
 
+    function submitBulkAction(action, selectedIds, repId, stage, lostRemark, lostReason) {
+        $.ajax({
+            url: idlm_vars.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'idlm_bulk_action',
+                nonce: idlm_vars.nonce,
+                ids: selectedIds,
+                bulk_action: action,
+                rep_id: repId,
+                stage: stage,
+                lost_remark: lostRemark || '',
+                lost_reason: lostReason || ''
+            },
+            success: function(response) {
+                if (response.success) {
+                    showToast(response.data.message, 'success');
+                    $('.idlm-row-selector').prop('checked', false);
+                    $('.idlm-bulk-bar').slideUp(150);
+                    loadLeadsTable(currentPage);
+                } else {
+                    showToast(response.data.message || 'Bulk operation failed.', 'error');
+                }
+            }
+        });
+    }
+
     // Apply Bulk actions to selected leads
     $('#idlm-apply-bulk').click(function() {
         var action = $('#idlm-bulk-action-select').val();
@@ -298,6 +808,21 @@ jQuery(document).ready(function($) {
         var repId = $('#idlm-bulk-rep').val();
         var stage = $('#idlm-bulk-stage').val();
 
+        if (action === 'bulk_stage' && stage === 'Lost') {
+            activeLostBulkAction = {
+                action: action,
+                selectedIds: selectedIds,
+                repId: repId,
+                stage: stage
+            };
+            $('#idlm-lost-reason-select').val('');
+            $('#idlm-lost-remark-input').val('');
+            $('#idlm-lost-remark-modal').addClass('active');
+            updateBodyScrollLock();
+            $('#idlm-lost-reason-select').focus();
+            return;
+        }
+
         // Prompt confirmation for bulk delete
         if (action === 'bulk_delete') {
             if (!confirm('Are you absolutely sure you want to permanently delete these ' + selectedIds.length + ' selected leads? This action cannot be undone and will also delete all associated logs.')) {
@@ -305,42 +830,62 @@ jQuery(document).ready(function($) {
             }
         }
 
-        $.ajax({
-            url: idlm_vars.ajax_url,
-            type: 'POST',
-            data: {
-                action: 'idlm_bulk_action',
-                nonce: idlm_vars.nonce,
-                ids: selectedIds,
-                bulk_action: action,
-                rep_id: repId,
-                stage: stage
-            },
-            success: function(response) {
-                if (response.success) {
-                    showToast(response.data.message, 'success');
-                    $('.idlm-row-selector').prop('checked', false);
-                    $('.idlm-bulk-bar').slideUp(150);
-                    loadLeadsTable(currentPage);
-                } else {
-                    showToast(response.data.message || 'Bulk operation failed.', 'error');
-                }
-            }
-        });
+        submitBulkAction(action, selectedIds, repId, stage, '');
     });
 
-    // Export CSV hook
-    $('#idlm-export-btn').click(function() {
-        var selectedIds = [];
-        $('.idlm-row-selector:checked').each(function() {
-            selectedIds.push($(this).val());
-        });
+    // Export CSV hook: Open Export Options Modal
+    $('#idlm-export-btn').click(function(e) {
+        e.preventDefault();
+        openExportModal();
+    });
 
-        var exportUrl = idlm_vars.ajax_url + '?action=idlm_export_leads';
-        if (selectedIds.length > 0) {
-            exportUrl += '&ids=' + selectedIds.join(',');
+    // Handle confirming download inside the export modal
+    $(document).on('click', '#idlm-confirm-export-btn', function() {
+        var scope = $('input[name="idlm-export-scope"]:checked').val();
+        var exportUrl = idlm_vars.ajax_url + '?action=idlm_export_leads&nonce=' + idlm_vars.nonce;
+
+        if (scope === 'selected') {
+            var selectedIds = [];
+            $('.idlm-row-selector:checked').each(function() {
+                selectedIds.push($(this).val());
+            });
+            if (selectedIds.length > 0) {
+                exportUrl += '&ids=' + selectedIds.join(',');
+            }
+        } else if (scope === 'filtered') {
+            var dateRange = $('#export-filter-date-range').val();
+            var dateBasis = $('#export-filter-date-basis').val();
+            var source = $('#export-filter-source').val();
+            var repId = $('#export-filter-rep').val();
+            var stage = $('#export-filter-stage').val();
+            var callStatus = $('#export-filter-call-status').val();
+            var quality = $('#export-filter-quality').val();
+            var followup = $('#export-filter-followup').val();
+            var search = $('#export-filter-search').val();
+
+            if (dateRange) exportUrl += '&date_range=' + encodeURIComponent(dateRange);
+            if (dateBasis) exportUrl += '&date_basis=' + encodeURIComponent(dateBasis);
+            if (source) exportUrl += '&source=' + encodeURIComponent(source);
+            if (repId) exportUrl += '&rep_id=' + encodeURIComponent(repId);
+            if (stage) exportUrl += '&stage=' + encodeURIComponent(stage);
+            if (callStatus) exportUrl += '&call_status=' + encodeURIComponent(callStatus);
+            if (quality) exportUrl += '&quality=' + encodeURIComponent(quality);
+            if (followup) exportUrl += '&followup_filter=' + encodeURIComponent(followup);
+            if (search) exportUrl += '&search=' + encodeURIComponent(search);
         }
+
         window.open(exportUrl, '_blank');
+        closeExportModal();
+    });
+
+    // Listen for scope changes to visually disable filters panel
+    $(document).on('change', 'input[name="idlm-export-scope"]', function() {
+        var scope = $(this).val();
+        if (scope === 'filtered') {
+            $('#idlm-export-filters-section').css('opacity', '1').find('input, select').prop('disabled', false);
+        } else {
+            $('#idlm-export-filters-section').css('opacity', '0.5').find('input, select').prop('disabled', true);
+        }
     });
 
     // Manual Lead source trigger: Show/hide Referrer text block
@@ -487,7 +1032,13 @@ jQuery(document).ready(function($) {
                 platform: platform,
                 test_type: 'audience',
                 target_id: audienceId,
-                access_token: accessToken
+                access_token: accessToken,
+                google_developer_token: $('input[name="google_developer_token"]').val() || '',
+                google_client_id: $('input[name="google_client_id"]').val() || '',
+                google_client_secret: $('input[name="google_client_secret"]').val() || '',
+                google_refresh_token: $('input[name="google_refresh_token"]').val() || '',
+                google_customer_id: $('input[name="google_customer_id"]').val() || '',
+                google_manager_customer_id: $('input[name="google_manager_customer_id"]').val() || ''
             },
             success: function(response) {
                 if (response.success) {
@@ -506,7 +1057,12 @@ jQuery(document).ready(function($) {
 
     // Query leads list from AJAX endpoint
     function loadLeadsTable(page) {
+        page = Math.max(1, Number(page) || 1);
+        if (page === 1) {
+            leadsPageCursors = { 1: '' };
+        }
         var dateRange = $('#filter-date-range').val();
+        var dateBasis = $('#filter-date-basis').val();
         var source = $('#filter-source').val();
         var repId = $('#filter-rep').val();
         var stage = $('#filter-stage').val();
@@ -515,26 +1071,53 @@ jQuery(document).ready(function($) {
         var followup = $('#filter-followup').val();
         var search = $('#filter-search').val();
 
-        $.ajax({
+        if (leadsTableRequest && leadsTableRequest.readyState !== 4) {
+            leadsTableRequest.abort();
+        }
+
+        var requestData = {
+            action: 'idlm_get_leads_table',
+            nonce: idlm_vars.nonce,
+            page: page,
+            date_range: dateRange,
+            date_basis: dateBasis,
+            source: source,
+            rep_id: repId,
+            stage: stage,
+            call_status: callStatus,
+            quality: quality,
+            followup_filter: followup,
+            active_only: leadsActiveOnly ? '1' : '0',
+            search: search,
+            sort_by: leadsSortBy,
+            sort_order: leadsSortOrder,
+            per_page: $('#idlm-leads-per-page').val() || 25
+        };
+        if (page > 1 && Object.prototype.hasOwnProperty.call(leadsPageCursors, page) && leadsPageCursors[page]) {
+            requestData.cursor = leadsPageCursors[page];
+        }
+
+        leadsTableRequest = $.ajax({
             url: idlm_vars.ajax_url,
             type: 'POST',
-            data: {
-                action: 'idlm_get_leads_table',
-                nonce: idlm_vars.nonce,
-                page: page,
-                date_range: dateRange,
-                source: source,
-                rep_id: repId,
-                stage: stage,
-                call_status: callStatus,
-                quality: quality,
-                followup_filter: followup,
-                search: search
-            },
+            data: requestData,
             success: function(response) {
                 if (response.success) {
                     $('#idlm-leads-table tbody').html(response.data.html);
+                    if (response.data.metric_stats) {
+                        Object.keys(response.data.metric_stats).forEach(function(key) {
+                            $('[data-metric-count="' + key + '"]').text(Number(response.data.metric_stats[key]) || 0);
+                        });
+                        var overdueHandoffs = Number(response.data.metric_stats.overdue_handoffs) || 0;
+                        $('[data-metric-hint="qualified_handoffs"]').text(overdueHandoffs > 0 ? overdueHandoffs + ' overdue' : 'awaiting assignment');
+                        $('.idlm-metric[data-filter="Qualified Handoffs"]').toggleClass('is-alert', overdueHandoffs > 0);
+                    }
                     currentPage = response.data.current_page;
+                    if (response.data.next_cursor) {
+                        leadsPageCursors[currentPage + 1] = response.data.next_cursor;
+                    } else {
+                        delete leadsPageCursors[currentPage + 1];
+                    }
                     $('#page-num').text('Page ' + currentPage + ' of ' + response.data.total_pages);
                     
                     // Toggle paging buttons
@@ -549,7 +1132,20 @@ jQuery(document).ready(function($) {
                     if (response.data && response.data.hasOwnProperty('pending_calls_count')) {
                         updatePendingCallsPill(response.data.pending_calls_count);
                     }
+                    if (response.data && response.data.hasOwnProperty('unread_whatsapp_count')) {
+                        updateUnreadWhatsAppPill(response.data.unread_whatsapp_count);
+                    }
                 }
+            },
+            error: function(xhr) {
+                if (requestData.cursor && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+                    showToast(xhr.responseJSON.data.message, 'error');
+                    leadsPageCursors = { 1: '' };
+                    window.setTimeout(function() { loadLeadsTable(1); }, 0);
+                }
+            },
+            complete: function() {
+                leadsTableRequest = null;
             }
         });
     }
@@ -643,9 +1239,23 @@ jQuery(document).ready(function($) {
         }
     }
 
+    function updateUnreadWhatsAppPill(count) {
+        var $pill = $('#idlm-whatsapp-unread-pill');
+        count = parseInt(count, 10) || 0;
+        $pill.find('.idlm-whatsapp-unread-text strong').text(count);
+        $pill.attr('title', count + ' unread WhatsApp messages');
+        $pill.attr('aria-label', 'Show ' + count + ' unread WhatsApp messages');
+        if (count > 0) {
+            $pill.fadeIn(300);
+        } else {
+            $pill.fadeOut(300);
+        }
+    }
+    window.idlmUpdateUnreadWhatsAppPill = updateUnreadWhatsAppPill;
+
     // Automatically refresh the leads list table every 15 minutes (900,000 ms)
     setInterval(function() {
-        if ($('#idlm-leads-table').length > 0) {
+        if (!document.hidden && $('#idlm-leads-table').length > 0) {
             loadLeadsTable(currentPage);
         }
     }, 900000);
@@ -658,14 +1268,14 @@ jQuery(document).ready(function($) {
             "Project Timeline", "Property Location", "Source Channel", "Property Type", 
             "Number of Rooms", "Preferred Studio", "Lead Quality", "UTM Source", 
             "UTM Medium", "UTM Campaign", "UTM Adgroup", "UTM Term", "UTM Content", 
-            "Gclid", "Fbclid", "Meta Lead ID", "LI Fat ID"
+            "Gclid", "Gbraid", "Wbraid", "Fbclid", "Meta Lead ID", "LI Fat ID", "Landing Page", "Conversion Time"
         ];
         var sampleRow = [
             "John", "Doe", "john.doe@example.com", "+1234567890", "$25,000", 
             "1-3 Months", "Downtown", "Google Ads", "Apartment", 
             "3 BHK", "Downtown Studio", "Qualified", "google", 
             "cpc", "Spring_Campaign", "Adgroup_1", "interior design", "banner_ad", 
-            "gclid12345", "", "1000000000001", ""
+            "gclid12345", "", "", "", "1000000000001", "", "https://example.com/landing", "2026-06-12 12:00:00"
         ];
         var csvContent = headers.join(",") + "\n" + sampleRow.join(",");
         var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -796,6 +1406,7 @@ jQuery(document).ready(function($) {
         { key: 'phone', label: 'Phone Number*', required: true, fuzzy: ['phone', 'phone number', 'phone_number', 'mobile', 'tel', 'contact'] },
         { key: 'budget', label: 'Budget', required: false, fuzzy: ['budget', 'price', 'investment'] },
         { key: 'deal_value', label: 'Deal Value (INR)', required: false, fuzzy: ['deal value', 'deal_value', 'revenue', 'value', 'deal_size'] },
+        { key: 'quote_value', label: 'Quote Value (INR)', required: false, fuzzy: ['quote value', 'quote_value', 'estimate value', 'estimated value'] },
         { key: 'project_timeline', label: 'Project Timeline', required: false, fuzzy: ['timeline', 'project timeline', 'project_timeline', 'timeframe', 'when'] },
         { key: 'property_location', label: 'Property Location / Pincode', required: false, fuzzy: ['location', 'pincode', 'postal code', 'zip', 'zipcode', 'property location'] },
         { key: 'source', label: 'Source Channel', required: false, fuzzy: ['source', 'channel', 'utm_source'] },
@@ -810,9 +1421,13 @@ jQuery(document).ready(function($) {
         { key: 'utm_term', label: 'UTM Term', required: false, fuzzy: ['utm_term'] },
         { key: 'utm_content', label: 'UTM Content', required: false, fuzzy: ['utm_content'] },
         { key: 'gclid', label: 'Google Click ID (Gclid)', required: false, fuzzy: ['gclid'] },
+        { key: 'gbraid', label: 'Google App Click ID (Gbraid)', required: false, fuzzy: ['gbraid'] },
+        { key: 'wbraid', label: 'Google Web Click ID (Wbraid)', required: false, fuzzy: ['wbraid'] },
         { key: 'fbclid', label: 'Facebook Click ID (Fbclid)', required: false, fuzzy: ['fbclid'] },
         { key: 'fb_lead_id', label: 'Meta Lead ID', required: false, fuzzy: ['meta_lead_id', 'fb_lead_id', 'meta lead id', 'facebook lead id', 'lead_id', 'lead id'] },
         { key: 'li_fat_id', label: 'LinkedIn Click ID (LI FAT ID)', required: false, fuzzy: ['li_fat_id', 'li fat id'] },
+        { key: 'landing_page', label: 'Landing Page URL', required: false, fuzzy: ['landing page', 'landing_page', 'url', 'page'] },
+        { key: 'conversion_time', label: 'Conversion Time', required: false, fuzzy: ['conversion time', 'conversion_time', 'time'] },
         { key: 'floor_plan_file', label: 'Floor Plan File URL', required: false, fuzzy: ['floor plan file', 'floor_plan_file', 'floor plan url', 'floor_plan_url', 'floor_plan_file_url'] },
         { key: 'quote_file', label: 'Quote File URL', required: false, fuzzy: ['quote file', 'quote_file', 'quote url', 'quote_url', 'quote_file_url'] }
     ];
@@ -1065,8 +1680,10 @@ jQuery(document).ready(function($) {
         var $button = $inputEl.siblings('.idlm-direct-upload-trigger');
 
         var formData = new FormData();
+        var uploadPurpose = inputId === 'idlm_floor_plan_file' ? 'floor_plan' : 'quote';
         formData.append('action', 'idlm_upload_lead_file');
         formData.append('nonce', idlm_vars.nonce);
+        formData.append('purpose', uploadPurpose);
         formData.append('file', file);
 
         $preview.html('<span style="color:#666;">Uploading...</span>');
@@ -1126,11 +1743,45 @@ jQuery(document).ready(function($) {
         } else if (inputId === 'idlm_quote_file') {
             uploadBtnText = 'Upload Quote';
             $('select[name="quote_shared"]').val('0');
+        } else if (inputId.indexOf('quote-file') !== -1) {
+            uploadBtnText = 'Upload Quote';
         }
         
         // Find sibling trigger button and update text
         $hiddenInput.siblings('.idlm-direct-upload-trigger').text(uploadBtnText);
     });
+
+    function setQuoteUploadState(inputId, previewId, quoteFile) {
+        var $hiddenInput = $('#' + inputId);
+        var $preview = $('#' + previewId);
+        var $uploadButton = $hiddenInput.siblings('.idlm-direct-upload-trigger');
+        var $fileInput = $hiddenInput.siblings('.idlm-file-input');
+
+        $hiddenInput.val(quoteFile || '');
+        $fileInput.val('');
+
+        if (quoteFile) {
+            var $link = $('<a>', {
+                href: quoteFile,
+                target: '_blank',
+                class: 'idlm-file-link',
+                text: '📄 View File'
+            }).css({ color: '#c99644', fontWeight: 500, textDecoration: 'none' });
+            var $removeButton = $('<button>', {
+                type: 'button',
+                class: 'idlm-remove-file-btn',
+                text: 'Remove'
+            }).attr({
+                'data-input-id': inputId,
+                'data-preview-id': previewId
+            }).css({ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px', padding: 0, marginLeft: '5px', fontWeight: 500 });
+            $preview.empty().append($link, $removeButton);
+            $uploadButton.text('Change File');
+        } else {
+            $preview.text('No file uploaded');
+            $uploadButton.text('Upload Quote');
+        }
+    }
 
     // Danger Zone: Reset CRM Leads & Analytics Modal Trigger
     var expectedLeadsCount = 0;
@@ -1381,6 +2032,23 @@ jQuery(document).ready(function($) {
         $('#btn-toggle-more-filters').addClass('active');
     });
 
+    // Click on unread WhatsApp pill filters the table to unread replies.
+    $(document).on('click', '#idlm-whatsapp-unread-pill', function(e) {
+        e.preventDefault();
+
+        $('#filter-search').val('');
+        $('#filter-date-range').val('');
+        $('#filter-stage').val('');
+        $('#filter-source').val('');
+        $('#filter-rep').val('');
+        $('#filter-call-status').val('');
+        $('#filter-quality').val('');
+        $('#filter-followup').val('unread_whatsapp').change();
+
+        $('#idlm-secondary-filters-container').slideDown(200);
+        $('#btn-toggle-more-filters').addClass('active');
+    });
+
     // Ensure all file links open in a new tab
     $(document).on('click', '.idlm-file-link', function(e) {
         e.preventDefault();
@@ -1517,15 +2185,15 @@ function closeLeadModal() {
     updateBodyScrollLock();
 }
 
-function openLeadDrawer(leadId) {
+function openLeadDrawer(leadId, startTab) {
     window.idlmHasUnsavedChanges = false;
     window.idlmChangedFields = {};
     var $ = jQuery;
-    var activeTab = '';
+    var activeTab = startTab || '';
     var currentLeadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
     
-    // Only preserve active tab if we are reloading the same lead (e.g., after comment or edit save)
-    if (currentLeadId && parseInt(currentLeadId) === parseInt(leadId)) {
+    // Only preserve active tab if we are reloading the same lead (e.g., after comment or edit save) and startTab isn't specified
+    if (!startTab && currentLeadId && parseInt(currentLeadId) === parseInt(leadId)) {
         var activeTabId = $('.idlm-drawer-tab.active').attr('onclick');
         if (activeTabId) {
             var match = activeTabId.match(/'([^']+)'/);
@@ -1546,11 +2214,18 @@ function openLeadDrawer(leadId) {
         data: {
             action: 'idlm_get_lead_details',
             nonce: idlm_vars.nonce,
-            lead_id: leadId
+            lead_id: leadId,
+            workspace_url: $('[data-idlm-workspace]').length ? window.location.href : ''
         },
         success: function(response) {
             if (response.success) {
                 $('#idlm-drawer-content-wrapper-inner').html(response.data.html);
+                if (response.data.whatsapp_marked_read) {
+                    $('.idlm-whatsapp-row-badge[data-lead-id="' + leadId + '"]').remove();
+                }
+                if (response.data.hasOwnProperty('unread_whatsapp_count') && typeof window.idlmUpdateUnreadWhatsAppPill === 'function') {
+                    window.idlmUpdateUnreadWhatsAppPill(response.data.unread_whatsapp_count);
+                }
                 
                 // Restore active tab if saved
                 if (activeTab) {
@@ -1562,10 +2237,13 @@ function openLeadDrawer(leadId) {
                             $(this).addClass('active');
                         }
                     });
+                    
+                    if (activeTab === 'drawer-tab-tasks') {
+                        loadLeadTasks(leadId);
+                    }
                 }
                 
-                // Always load timeline comments on open
-                loadLeadActivityLog(leadId, true);
+                // Timeline comments are already loaded inline in PHP detail view
             } else {
                 $('#idlm-drawer-content-wrapper-inner').html('<div class="idlm-alert idlm-alert-warning">' + response.data.message + '</div>');
             }
@@ -1604,6 +2282,12 @@ function switchDrawerTab(evt, tabId) {
         var leadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
         if (leadId) {
             loadLeadActivityLog(leadId);
+        }
+    }
+    if (tabId === 'drawer-tab-tasks') {
+        var leadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
+        if (leadId) {
+            loadLeadTasks(leadId);
         }
     }
 }
@@ -1662,10 +2346,13 @@ function loadLeadActivityLog(leadId, forceRefresh) {
     });
 }
 
-function saveActivityComment(leadId) {
+function saveActivityComment(btn, leadId) {
     var $ = jQuery;
+    var $btn = $(btn);
     var commentText = $('#idlm-comment-text').val();
     if (!commentText) return;
+
+    $btn.prop('disabled', true).text('Adding...');
 
     $.ajax({
         url: idlm_vars.ajax_url,
@@ -1681,14 +2368,20 @@ function saveActivityComment(leadId) {
                 $('#idlm-comment-text').val('');
                 loadLeadActivityLog(leadId, true);
             }
+        },
+        complete: function() {
+            $btn.prop('disabled', false).text('Add Comment');
         }
     });
 }
 
-function saveActivityCommentDetails(leadId) {
+function saveActivityCommentDetails(btn, leadId) {
     var $ = jQuery;
+    var $btn = $(btn);
     var commentText = $('#idlm-comment-text-details').val();
     if (!commentText) return;
+
+    $btn.prop('disabled', true).text('Adding...');
 
     $.ajax({
         url: idlm_vars.ajax_url,
@@ -1704,26 +2397,50 @@ function saveActivityCommentDetails(leadId) {
                 $('#idlm-comment-text-details').val('');
                 loadLeadActivityLog(leadId, true);
             }
+        },
+        complete: function() {
+            $btn.prop('disabled', false).text('Add Comment');
         }
     });
 }
 
-function idlmCopyToClipboard(text, label) {
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(function() {
-            alert(label + ' copied to clipboard!');
-        }).catch(function() {
-            fallbackCopy(text, label);
-        });
-    } else {
-        fallbackCopy(text, label);
+function idlmCopyToClipboard(button, text) {
+    // Legacy support if called in old format: idlmCopyToClipboard(text, label)
+    if (typeof button === 'string') {
+        var legacyText = button;
+        var legacyLabel = text || 'Text';
+        copyTextToClipboardLegacy(legacyText, legacyLabel);
+        return;
     }
 
-    function fallbackCopy(text, label) {
+    var $btn = jQuery(button);
+    var originalText = $btn.text() || 'Copy';
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(function() {
+            showSuccessFeedback($btn, originalText);
+        }).catch(function() {
+            fallbackCopy($btn, text, originalText);
+        });
+    } else {
+        fallbackCopy($btn, text, originalText);
+    }
+
+    function showSuccessFeedback($buttonEl, origText) {
+        $buttonEl.text('Copied!');
+        $buttonEl.addClass('idlm-copied');
+        $buttonEl.prop('disabled', true);
+        setTimeout(function() {
+            $buttonEl.text(origText);
+            $buttonEl.removeClass('idlm-copied');
+            $buttonEl.prop('disabled', false);
+        }, 2000);
+    }
+
+    function fallbackCopy($buttonEl, textVal, origText) {
         var textArea = document.createElement("textarea");
-        textArea.value = text;
+        textArea.value = textVal;
         
-        // Position off-screen safely
         textArea.style.position = "fixed";
         textArea.style.left = "-999999px";
         textArea.style.top = "-999999px";
@@ -1734,12 +2451,46 @@ function idlmCopyToClipboard(text, label) {
         try {
             var successful = document.execCommand('copy');
             if (successful) {
-                alert(label + ' copied to clipboard!');
+                showSuccessFeedback($buttonEl, origText);
             } else {
-                alert('Failed to copy. Please manually select and copy the URL.');
+                alert('Failed to copy. Please manually select and copy the text.');
             }
         } catch (err) {
-            alert('Failed to copy. Please manually select and copy the URL.');
+            alert('Failed to copy. Please manually select and copy the text.');
+        }
+        document.body.removeChild(textArea);
+    }
+
+    function copyTextToClipboardLegacy(textVal, labelVal) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textVal).then(function() {
+                alert(labelVal + ' copied to clipboard!');
+            }).catch(function() {
+                fallbackCopyLegacy(textVal, labelVal);
+            });
+        } else {
+            fallbackCopyLegacy(textVal, labelVal);
+        }
+    }
+
+    function fallbackCopyLegacy(textVal, labelVal) {
+        var textArea = document.createElement("textarea");
+        textArea.value = textVal;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            var successful = document.execCommand('copy');
+            if (successful) {
+                alert(labelVal + ' copied to clipboard!');
+            } else {
+                alert('Failed to copy. Please manually select and copy the text.');
+            }
+        } catch (err) {
+            alert('Failed to copy. Please manually select and copy the text.');
         }
         document.body.removeChild(textArea);
     }
@@ -1812,3 +2563,501 @@ function closeImportModal() {
     updateBodyScrollLock();
 }
 
+function openRoutingSettingsModal() {
+    var modal = jQuery('#idlm-routing-modal');
+    modal.find('.idlm-routing-modal-body').scrollTop(0);
+    modal.addClass('active');
+    window.requestAnimationFrame(function() {
+        modal.find('.idlm-routing-modal-body').scrollTop(0);
+    });
+    updateBodyScrollLock();
+}
+
+function closeRoutingModal() {
+    jQuery('#idlm-routing-modal').removeClass('active');
+    updateBodyScrollLock();
+}
+
+function openExportModal() {
+    var $ = jQuery;
+    var selectedIds = [];
+    $('.idlm-row-selector:checked').each(function() {
+        selectedIds.push($(this).val());
+    });
+
+    var count = selectedIds.length;
+    $('#idlm-export-selected-count').text(count);
+
+    if (count > 0) {
+        $('#idlm-export-scope-selected').prop('disabled', false);
+        $('#idlm-export-scope-selected-label').css('opacity', '1').css('cursor', 'pointer');
+        $('#idlm-export-scope-selected').prop('checked', true);
+        // Dim the filters section since "selected" is active
+        $('#idlm-export-filters-section').css('opacity', '0.5').find('input, select').prop('disabled', true);
+    } else {
+        $('#idlm-export-scope-selected').prop('disabled', true);
+        $('#idlm-export-scope-selected-label').css('opacity', '0.5').css('cursor', 'not-allowed');
+        $('#idlm-export-scope-filtered').prop('checked', true);
+        // Enable the filters section since "filtered" is active
+        $('#idlm-export-filters-section').css('opacity', '1').find('input, select').prop('disabled', false);
+    }
+
+    // Pre-populate filters from the main UI table filters
+    $('#export-filter-search').val($('#filter-search').val() || '');
+    $('#export-filter-date-basis').val($('#filter-date-basis').val() || 'assigned_at');
+    $('#export-filter-date-range').val($('#filter-date-range').val() || '');
+    $('#export-filter-source').val($('#filter-source').val() || '');
+    $('#export-filter-stage').val($('#filter-stage').val() || '');
+    $('#export-filter-call-status').val($('#filter-call-status').val() || '');
+    if ($('#filter-rep').length) {
+        $('#export-filter-rep').val($('#filter-rep').val() || '');
+    }
+    $('#export-filter-quality').val($('#filter-quality').val() || '');
+    $('#export-filter-followup').val($('#filter-followup').val() || '');
+
+    $('#idlm-export-modal').addClass('active');
+    updateBodyScrollLock();
+}
+
+function closeExportModal() {
+    jQuery('#idlm-export-modal').removeClass('active');
+    updateBodyScrollLock();
+}
+
+function toggleRoutingModalSourcePanel(val) {
+    if (val === 'source_based') {
+        jQuery('#idlm-routing-source-mapping-subpanel').show();
+    } else {
+        jQuery('#idlm-routing-source-mapping-subpanel').hide();
+    }
+}
+
+jQuery(document).ready(function($) {
+    $(document).on('submit', '#idlm-routing-settings-form', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        var originalText = submitBtn.text();
+        
+        submitBtn.prop('disabled', true).text('Saving...');
+        
+        $.ajax({
+            url: (typeof idlm_vars !== 'undefined' && idlm_vars.ajax_url) ? idlm_vars.ajax_url : (typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php'),
+            method: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                submitBtn.prop('disabled', false).text(originalText);
+                if (response.success) {
+                    if (typeof window.idlmShowToast === 'function') {
+                        window.idlmShowToast(response.data || 'Routing settings saved successfully!', 'success');
+                    } else {
+                        alert(response.data || 'Routing settings saved successfully!');
+                    }
+                    closeRoutingModal();
+                    // Reload the page or list to reflect settings changes (like active reps dropdown updates)
+                    location.reload();
+                } else {
+                    if (typeof window.idlmShowToast === 'function') {
+                        window.idlmShowToast(response.data || 'Failed to save routing settings.', 'error');
+                    } else {
+                        alert(response.data || 'Failed to save routing settings.');
+                    }
+                }
+            },
+            error: function() {
+                submitBtn.prop('disabled', false).text(originalText);
+                if (typeof window.idlmShowToast === 'function') {
+                    window.idlmShowToast('Server error trying to save routing settings.', 'error');
+                } else {
+                    alert('Server error trying to save routing settings.');
+                }
+            }
+        });
+    });
+
+    // Load active tasks count on page load
+    updateFloatingTasksCount();
+
+    // Close global sidebar when clicking close button
+    $(document).on('click', '#idlm-global-tasks-sidebar-close', function() {
+        toggleGlobalTasksSidebar();
+    });
+});
+
+// Task Manager & Global Sidebar functions
+var globalTasksFilterStatus = 'pending';
+
+function loadLeadTasks(leadId) {
+    var $ = jQuery;
+    var $container = $('#idlm-drawer-tasks-list-container');
+    if (!$container.length) return;
+
+    $container.html('<div style="text-align:center; padding:30px;"><span class="spinner is-active" style="float:none;"></span> Loading tasks...</div>');
+
+    $.ajax({
+        url: (typeof idlm_vars !== 'undefined' && idlm_vars.ajax_url) ? idlm_vars.ajax_url : (typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php'),
+        method: 'POST',
+        data: {
+            action: 'idlm_get_lead_tasks',
+            lead_id: leadId,
+            nonce: idlm_vars.nonce
+        },
+        success: function(response) {
+            if (response.success) {
+                var tasks = response.data.tasks || [];
+                renderLeadTasks(tasks, $container);
+            } else {
+                $container.html('<div style="text-align:center; color:var(--idlm-danger); padding:20px;">' + (response.data.message || 'Failed to load tasks.') + '</div>');
+            }
+        },
+        error: function() {
+            $container.html('<div style="text-align:center; color:var(--idlm-danger); padding:20px;">Server error loading tasks.</div>');
+        }
+    });
+}
+
+function renderLeadTasks(tasks, $container) {
+    var $ = jQuery;
+    $('#idlm-task-count-badge').text(tasks.length + ' task' + (tasks.length === 1 ? '' : 's'));
+
+    if (tasks.length === 0) {
+        $container.html('<div style="text-align: center; color: var(--idlm-text-muted); padding: 40px 0;" id="idlm-tasks-empty-state"><span class="dashicons dashicons-saved" style="font-size: 32px; width: 32px; height: 32px; margin-bottom: 8px; color: var(--idlm-border-strong); display: inline-block;"></span><p style="margin: 0; font-size: 12px;">No active tasks for this lead.</p></div>');
+        return;
+    }
+
+    var html = '<ul class="idlm-task-list">';
+    tasks.forEach(function(task) {
+        var isCompleted = task.status === 'completed';
+        var priorityClass = 'priority-' + task.priority.toLowerCase();
+        var dueHtml = '';
+        if (task.due_date_formatted) {
+            var overdueClass = task.is_overdue ? ' overdue' : '';
+            var alertIcon = task.is_overdue ? '⚠️ ' : '📅 ';
+            dueHtml = '<span class="idlm-task-due' + overdueClass + '">' + alertIcon + task.due_date_formatted + '</span>';
+        }
+
+        html += '<li class="idlm-task-item ' + (isCompleted ? 'completed ' : '') + priorityClass + '" data-task-id="' + task.id + '">';
+        html += '<input type="checkbox" class="idlm-task-checkbox" ' + (isCompleted ? 'checked' : '') + ' onchange="toggleTaskStatus(this, ' + task.id + ')">';
+        html += '<div class="idlm-task-content">';
+        html += '<p class="idlm-task-text">' + escapeHtml(task.title) + '</p>';
+        html += '<div class="idlm-task-meta">';
+        html += '<span class="idlm-task-type-badge">' + escapeHtml(task.task_type) + '</span>';
+        if (dueHtml) html += dueHtml;
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="idlm-task-actions">';
+        html += '<button type="button" class="idlm-task-delete-btn" onclick="deleteLeadTask(' + task.id + ', ' + task.lead_id + ')" title="Delete task">&times;</button>';
+        html += '</div>';
+        html += '</li>';
+    });
+    html += '</ul>';
+    $container.html(html);
+}
+
+function addLeadTask(leadId) {
+    var $ = jQuery;
+    var title = $('#idlm-new-task-title').val().trim();
+    var dueDate = $('#idlm-new-task-due').val();
+    var priority = $('#idlm-new-task-priority').val();
+    var taskType = $('#idlm-new-task-type').val();
+
+    if (!title) {
+        alert('Please enter a task title.');
+        return;
+    }
+
+    var $btn = $('#idlm-btn-add-task');
+    var originalText = $btn.text();
+    $btn.prop('disabled', true).text('Adding...');
+
+    $.ajax({
+        url: (typeof idlm_vars !== 'undefined' && idlm_vars.ajax_url) ? idlm_vars.ajax_url : (typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php'),
+        method: 'POST',
+        data: {
+            action: 'idlm_add_lead_task',
+            lead_id: leadId,
+            title: title,
+            due_date: dueDate,
+            priority: priority,
+            task_type: taskType,
+            nonce: idlm_vars.nonce
+        },
+        success: function(response) {
+            $btn.prop('disabled', false).text(originalText);
+            if (response.success) {
+                $('#idlm-new-task-title').val('');
+                $('#idlm-new-task-due').val('');
+                $('#idlm-new-task-priority').val('Medium');
+                $('#idlm-new-task-type').val('General');
+                if (typeof window.idlmShowToast === 'function') {
+                    window.idlmShowToast('Task added successfully!', 'success');
+                }
+                loadLeadTasks(leadId);
+                refreshLeadsTableIfNeeded();
+                updateFloatingTasksCount();
+            } else {
+                alert(response.data.message || 'Failed to add task.');
+            }
+        },
+        error: function() {
+            $btn.prop('disabled', false).text(originalText);
+            alert('Server error adding task.');
+        }
+    });
+}
+
+function toggleTaskStatus(checkbox, taskId) {
+    var $ = jQuery;
+    var $item = $(checkbox).closest('.idlm-task-item');
+    var isChecked = checkbox.checked;
+    var newStatus = isChecked ? 'completed' : 'pending';
+
+    $item.toggleClass('completed', isChecked);
+
+    $.ajax({
+        url: (typeof idlm_vars !== 'undefined' && idlm_vars.ajax_url) ? idlm_vars.ajax_url : (typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php'),
+        method: 'POST',
+        data: {
+            action: 'idlm_toggle_task_status',
+            task_id: taskId,
+            status: newStatus,
+            nonce: idlm_vars.nonce
+        },
+        success: function(response) {
+            if (response.success) {
+                if (typeof window.idlmShowToast === 'function') {
+                    window.idlmShowToast('Task status updated.', 'success');
+                }
+                refreshLeadsTableIfNeeded();
+                updateFloatingTasksCount();
+                var leadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
+                if (leadId) {
+                    loadLeadTasks(leadId);
+                }
+                if ($('#idlm-global-tasks-sidebar').hasClass('active')) {
+                    loadGlobalTasks();
+                }
+            } else {
+                checkbox.checked = !isChecked;
+                $item.toggleClass('completed', !isChecked);
+                alert(response.data.message || 'Failed to update task.');
+            }
+        },
+        error: function() {
+            checkbox.checked = !isChecked;
+            $item.toggleClass('completed', !isChecked);
+            alert('Server error updating task status.');
+        }
+    });
+}
+
+function deleteLeadTask(taskId, leadId) {
+    var $ = jQuery;
+    if (!confirm('Are you sure you want to delete this task?')) return;
+
+    $.ajax({
+        url: (typeof idlm_vars !== 'undefined' && idlm_vars.ajax_url) ? idlm_vars.ajax_url : (typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php'),
+        method: 'POST',
+        data: {
+            action: 'idlm_delete_lead_task',
+            task_id: taskId,
+            nonce: idlm_vars.nonce
+        },
+        success: function(response) {
+            if (response.success) {
+                if (typeof window.idlmShowToast === 'function') {
+                    window.idlmShowToast('Task deleted successfully.', 'success');
+                }
+                loadLeadTasks(leadId);
+                refreshLeadsTableIfNeeded();
+                updateFloatingTasksCount();
+                if ($('#idlm-global-tasks-sidebar').hasClass('active')) {
+                    loadGlobalTasks();
+                }
+            } else {
+                alert(response.data.message || 'Failed to delete task.');
+            }
+        },
+        error: function() {
+            alert('Server error deleting task.');
+        }
+    });
+}
+
+function toggleGlobalTasksSidebar() {
+    var $ = jQuery;
+    var $sidebar = $('#idlm-global-tasks-sidebar');
+    if ($sidebar.hasClass('active')) {
+        $sidebar.removeClass('active');
+        jQuery('body').removeClass('idlm-modal-open');
+    } else {
+        $sidebar.addClass('active');
+        loadGlobalTasks();
+    }
+}
+
+function filterGlobalTasks(status) {
+    var $ = jQuery;
+    globalTasksFilterStatus = status;
+    $('.idlm-global-sidebar-filter-btn').removeClass('active');
+    if (status === 'pending') {
+        $('#idlm-global-tasks-filter-pending').addClass('active');
+    } else {
+        $('#idlm-global-tasks-filter-completed').addClass('active');
+    }
+    loadGlobalTasks();
+}
+
+function loadGlobalTasks() {
+    var $ = jQuery;
+    var $body = $('#idlm-global-tasks-sidebar-body');
+    if (!$body.length) return;
+
+    $body.html('<div style="text-align: center; color: var(--idlm-text-muted); padding: 40px 0;"><span class="spinner is-active" style="float:none;"></span> Loading tasks...</div>');
+
+    $.ajax({
+        url: (typeof idlm_vars !== 'undefined' && idlm_vars.ajax_url) ? idlm_vars.ajax_url : (typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php'),
+        method: 'POST',
+        data: {
+            action: 'idlm_get_rep_tasks',
+            status: globalTasksFilterStatus,
+            nonce: idlm_vars.nonce
+        },
+        success: function(response) {
+            if (response.success) {
+                var tasks = response.data.tasks || [];
+                renderGlobalTasksList(tasks, $body);
+            } else {
+                $body.html('<div style="text-align:center; color:var(--idlm-danger); padding:20px;">' + (response.data.message || 'Failed to load tasks.') + '</div>');
+            }
+        },
+        error: function() {
+            $body.html('<div style="text-align:center; color:var(--idlm-danger); padding:20px;">Server error loading tasks.</div>');
+        }
+    });
+}
+
+function renderGlobalTasksList(tasks, $body) {
+    var $ = jQuery;
+    if (tasks.length === 0) {
+        $body.html('<div style="text-align: center; color: var(--idlm-text-muted); padding: 40px 0;"><span class="dashicons dashicons-saved" style="font-size: 32px; width: 32px; height: 32px; margin-bottom: 8px; color: var(--idlm-border-strong); display: inline-block;"></span><p style="margin: 0; font-size: 13px;">No tasks found.</p></div>');
+        return;
+    }
+
+    var groupedTasks = {};
+    tasks.forEach(function(task) {
+        if (!groupedTasks[task.lead_id]) {
+            groupedTasks[task.lead_id] = {
+                lead_name: task.lead_name,
+                tasks: []
+            };
+        }
+        groupedTasks[task.lead_id].tasks.push(task);
+    });
+
+    var html = '';
+    for (var leadId in groupedTasks) {
+        var group = groupedTasks[leadId];
+        html += '<div class="idlm-sidebar-group" data-lead-id="' + leadId + '">';
+        html += '<h4 class="idlm-sidebar-group-title" onclick="openLeadDrawer(' + leadId + ', \'drawer-tab-tasks\'); toggleGlobalTasksSidebar();">' + escapeHtml(group.lead_name) + ' &rarr;</h4>';
+        html += '<ul class="idlm-task-list">';
+        
+        group.tasks.forEach(function(task) {
+            var isCompleted = task.status === 'completed';
+            var priorityClass = 'priority-' + task.priority.toLowerCase();
+            var dueHtml = '';
+            if (task.due_date_formatted) {
+                var overdueClass = task.is_overdue ? ' overdue' : '';
+                var alertIcon = task.is_overdue ? '⚠️ ' : '📅 ';
+                dueHtml = '<span class="idlm-task-due' + overdueClass + '">' + alertIcon + task.due_date_formatted + '</span>';
+            }
+
+            html += '<li class="idlm-task-item ' + (isCompleted ? 'completed ' : '') + priorityClass + '" data-task-id="' + task.id + '" style="padding: 10px; margin-bottom: 5px;">';
+            if (!task.is_qualification_summary) {
+                html += '<input type="checkbox" class="idlm-task-checkbox" ' + (isCompleted ? 'checked' : '') + ' onchange="toggleTaskStatus(this, ' + task.id + ')">';
+            } else {
+                html += '<span class="dashicons dashicons-groups idlm-qualification-summary-icon" aria-hidden="true"></span>';
+            }
+            html += '<div class="idlm-task-content">';
+            html += '<p class="idlm-task-text" style="font-size:12px;">' + escapeHtml(task.title) + '</p>';
+            if (task.is_qualification_summary) {
+                html += '<div class="idlm-qualification-summary-progress"><strong>' + task.complete_days + '/6 cycles</strong><span>' + task.today_calls + '/' + task.calls_target + ' calls</span><span>' + task.today_whatsapp + '/' + task.whatsapp_target + ' WA</span></div>';
+            }
+            html += '<div class="idlm-task-meta" style="font-size:10px;">';
+            html += '<span class="idlm-task-type-badge">' + escapeHtml(task.task_type) + '</span>';
+            if (dueHtml) html += dueHtml;
+            html += '</div>';
+            html += '</div>';
+            if (!task.is_qualification_summary) {
+                html += '<div class="idlm-task-actions">';
+                html += '<button type="button" class="idlm-task-delete-btn" onclick="deleteLeadTask(' + task.id + ', ' + task.lead_id + ')" title="Delete task">&times;</button>';
+                html += '</div>';
+            }
+            html += '</li>';
+        });
+
+        html += '</ul>';
+        html += '</div>';
+    }
+
+    $body.html(html);
+}
+
+function updateFloatingTasksCount() {
+    var $ = jQuery;
+    var $badge = $('#idlm-floating-tasks-badge');
+    if (!$badge.length) return;
+
+    $.ajax({
+        url: (typeof idlm_vars !== 'undefined' && idlm_vars.ajax_url) ? idlm_vars.ajax_url : (typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php'),
+        method: 'POST',
+        data: {
+            action: 'idlm_get_rep_tasks',
+            status: 'pending',
+            nonce: idlm_vars.nonce
+        },
+        success: function(response) {
+            if (response.success) {
+                var count = (response.data.tasks || []).length;
+                if (count > 0) {
+                    $badge.text(count).show();
+                    $('#idlm-floating-tasks-btn').css('box-shadow', '0 6px 20px rgba(239, 68, 68, 0.35)');
+                } else {
+                    $badge.hide();
+                    $('#idlm-floating-tasks-btn').css('box-shadow', '0 6px 20px rgba(201, 150, 68, 0.35)');
+                }
+            }
+        }
+    });
+}
+
+function refreshLeadsTableIfNeeded() {
+    var $ = jQuery;
+    if (typeof refreshLeadsTable === 'function') {
+        refreshLeadsTable();
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Attach globally
+window.openLeadDrawer = openLeadDrawer;
+window.switchDrawerTab = switchDrawerTab;
+window.addLeadTask = addLeadTask;
+window.toggleTaskStatus = toggleTaskStatus;
+window.deleteLeadTask = deleteLeadTask;
+window.toggleGlobalTasksSidebar = toggleGlobalTasksSidebar;
+window.filterGlobalTasks = filterGlobalTasks;
+window.loadLeadTasks = loadLeadTasks;
+window.loadGlobalTasks = loadGlobalTasks;
+window.updateFloatingTasksCount = updateFloatingTasksCount;
+window.refreshLeadsTableIfNeeded = refreshLeadsTableIfNeeded;
+window.escapeHtml = escapeHtml;

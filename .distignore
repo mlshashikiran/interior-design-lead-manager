@@ -1,0 +1,13 @@
+.DS_Store
+.distignore
+.gitignore
+.env*
+*.log
+*.tmp
+AGENTS.md
+.github/
+build/
+tests/
+docs/CHANGELOG-DEV.md
+docs/TECH-DEBT.md
+docs/legacy/
