@@ -2,6 +2,16 @@
 
 Current release notes are kept concise. The complete pre-maintenance history is preserved in [`docs/legacy/CHANGELOG-FULL.md`](docs/legacy/CHANGELOG-FULL.md).
 
+## [1.99.10] - 2026-08-31
+
+### Fixed
+
+- Bridged the disposable integration WordPress root into performance subprocesses through `IDLM_PERF_WP_ROOT`, fixing the GitHub Actions native matrix without changing production runtime behavior (implemented by Shashi).
+
+### Tests and documentation
+
+- Added a CI-root handoff regression contract; verified 99 fast contracts and 14 disposable native WordPress/MySQL tests (implemented by Shashi).
+
 ## [1.99.9] - 2026-08-31
 
 ### Staging candidate promotion

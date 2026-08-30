@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 define('ABSPATH', __DIR__ . '/support/wp/');
 define('IDLM_TESTING', true);
-define('IDLM_VERSION', '1.99.9');
+define('IDLM_VERSION', '1.99.10');
 define('IDLM_DB_VERSION', '1.2.0');
 define('IDLM_PATH', dirname(__DIR__) . '/');
 define('IDLM_URL', 'https://example.test/wp-content/plugins/interior-design-lead-manager/');

@@ -3,7 +3,7 @@ Contributors: shashi-protecto
 Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 1.99.9
+Stable tag: 1.99.10
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,13 @@ Yes. Phone values are normalized and suffix-matched to reconcile common local an
 No. Action Scheduler is used when available; WordPress Cron is the fallback.
 
 == Changelog ==
+
+= 1.99.10 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Fixed the GitHub Actions native integration handoff so performance subprocesses receive the disposable WordPress root through `IDLM_PERF_WP_ROOT`.
+* Added a regression contract for the CI WordPress-root bridge; verified 99 fast contracts and 14 disposable native WordPress/MySQL tests.
 
 = 1.99.9 =
 

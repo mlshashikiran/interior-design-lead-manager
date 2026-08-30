@@ -117,6 +117,7 @@ function idlm_integration_config(bool $require_database_name = false): array {
 
 function idlm_integration_export_config(array $config): void {
     putenv('IDLM_TEST_WP_ROOT=' . $config['wp_root']);
+    putenv('IDLM_PERF_WP_ROOT=' . $config['wp_root']);
     putenv('IDLM_TEST_DB_NAME=' . $config['db_name']);
     putenv('IDLM_TEST_DB_USER=' . $config['db_user']);
     putenv('IDLM_TEST_DB_PASSWORD=' . $config['db_password']);

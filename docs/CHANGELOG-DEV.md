@@ -4,6 +4,11 @@ Use this log for meaningful architectural or behavioral engineering changes. Pub
 
 ## 2026-08-31
 
+- **Area:** Controlled-release CI integration root handoff
+- **Change:** Exported the disposable integration WordPress root as `IDLM_PERF_WP_ROOT` so the dataset and query-plan subprocesses validate and boot the same `/tmp/wordpress` fixture used by the GitHub Actions matrix. Builder: Shashi.
+- **Files affected:** integration bootstrap, release regression contracts, controlled-release documentation, changelogs, and release metadata
+- **Compatibility notes:** Production runtime code, hooks, routes, schema, options, and stored values are unchanged. Verified 99 fast contracts and 14 disposable native WordPress/MySQL tests. Plugin version advanced from `1.99.9` to `1.99.10`.
+
 - **Area:** Production scalability Phase 9 staging-candidate promotion gate
 - **Change:** Added independent verification that binds the CI-built ZIP, checksum file, manifest, version, clean exact revision, completed matrix, GitHub run, archive file count, required runtime inventory, and one-plugin-directory boundary before staging rehearsal. CI now emits an aggregate report with all operator-controlled staging gates explicitly pending. Builder: Shashi.
 - **Files affected:** Phase 9 candidate verifier/contracts, CI release job, controlled-release/development/test/production-plan documentation, changelogs, and release metadata
