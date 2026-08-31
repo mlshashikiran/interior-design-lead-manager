@@ -3,7 +3,7 @@ Contributors: shashi-protecto
 Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 1.100.7
+Stable tag: 1.100.11
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,30 @@ Yes. Phone values are normalized and suffix-matched to reconcile common local an
 No. Action Scheduler is used when available; WordPress Cron is the fallback.
 
 == Changelog ==
+
+= 1.100.11 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Added email-only CRM sign-in plus an in-workspace password request and completion flow backed by WordPress core authentication, reset keys, validation hooks, and session handling.
+
+= 1.100.10 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Redesigned the CRM login as a responsive split workspace entry with clearer hierarchy, accessible focus treatment, password recovery, and the established Q Oak design tokens.
+
+= 1.100.9 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Added a nonce-protected WordPress Sign Out option to My Account that returns users to the CRM page after logout.
+
+= 1.100.8 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Added the native WordPress login form to protected CRM shortcode views for signed-out visitors while retaining the restricted-access message for signed-in users without CRM permission.
 
 = 1.100.7 =
 

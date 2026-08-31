@@ -2,6 +2,31 @@
 
 Current release notes are kept concise. The complete pre-maintenance history is preserved in [`docs/legacy/CHANGELOG-FULL.md`](docs/legacy/CHANGELOG-FULL.md).
 
+## [1.100.11] - 2026-08-31
+
+### Authentication
+
+- Added plugin-scoped email-only CRM sign-in and a complete branded password recovery flow while retaining WordPress core authentication, reset keys, validation hooks, cookies, and session invalidation (implemented by Shashi).
+- Added generic reset responses and hashed short-lived request throttling without changing normal WordPress login behavior (implemented by Shashi).
+
+## [1.100.10] - 2026-08-31
+
+### Improved
+
+- Redesigned the CRM login as a responsive split workspace entry using the established Q Oak tokens, clearer form hierarchy, accessible focus states, and native password recovery (implemented by Shashi).
+
+## [1.100.9] - 2026-08-31
+
+### Authentication
+
+- Added a native, nonce-protected WordPress Sign Out option to My Account with a return to the CRM page after logout (implemented by Shashi).
+
+## [1.100.8] - 2026-08-31
+
+### Authentication
+
+- Added the WordPress core login form to protected frontend CRM views for signed-out visitors and preserved capability-based restricted access for signed-in unauthorized users (implemented by Shashi).
+
 ## [1.100.7] - 2026-08-31
 
 ### Engineering workflow

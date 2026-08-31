@@ -3904,17 +3904,49 @@ div.wrap.idlm-wrap {
 .idlm-sla-chip.is-due { color: #285ea8; background: rgba(40,94,168,.08); border-color: rgba(40,94,168,.23); }
 .idlm-queue-actions { display: flex; flex-wrap: wrap; gap: 5px; min-width: 190px; }
 .idlm-queue-actions .idlm-btn { padding: 5px 7px; font-size: 10px; }
-.idlm-access-restricted {
+.idlm-card.idlm-access-restricted {
     padding: 24px;
     text-align: center;
     color: #64748b;
     font-family: 'Inter', sans-serif;
 }
 
-.idlm-access-restricted h3 {
+.idlm-card.idlm-access-restricted h3 {
     color: #1e293b;
     margin-bottom: 8px;
 }
+
+.idlm-login-shell { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr); width: min(100%, 980px); min-height: 580px; margin: clamp(24px, 7vh, 72px) auto; overflow: hidden; border: 1px solid var(--idlm-border); border-radius: 12px; background: var(--idlm-surface); box-shadow: 0 24px 70px rgba(23, 33, 43, .14); text-align: left; }
+.idlm-login-context { display: flex; flex-direction: column; min-width: 0; padding: clamp(32px, 5vw, 58px); background: var(--idlm-dark); color: #f8fafc; }
+.idlm-login-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; letter-spacing: .01em; }
+.idlm-login-brand .dashicons { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; background: var(--idlm-primary); color: #fff; }
+.idlm-login-context-copy { margin: auto 0; max-width: 430px; }
+.idlm-login-product { margin: 0 0 14px; color: #e5c28a; font-size: 12px; font-weight: 700; }
+.idlm-login-context h1 { max-width: 12ch; margin: 0; color: #f8fafc; font-size: clamp(32px, 4vw, 48px); font-weight: 700; line-height: 1.08; letter-spacing: -.035em; }
+.idlm-login-context-copy > p:last-child { max-width: 42ch; margin: 22px 0 0; color: #bdc8d5; font-size: 14px; line-height: 1.65; }
+.idlm-login-access-note { margin: 28px 0 0; color: #9baabd; font-size: 12px; }
+.idlm-login-panel { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: clamp(32px, 5vw, 58px); background: var(--idlm-surface); }
+.idlm-login-panel-heading h2 { margin: 0; color: var(--idlm-text-main); font-size: 28px; line-height: 1.2; }
+.idlm-login-panel-heading p { margin: 9px 0 0; color: var(--idlm-text-muted); font-size: 14px; line-height: 1.5; }
+.idlm-login-form { margin-top: 30px; }
+.idlm-auth-message { margin-top: 22px; padding: 12px 14px; border: 1px solid #b8d8ca; border-radius: var(--idlm-radius); background: var(--idlm-success-soft); color: var(--idlm-success); font-size: 13px; line-height: 1.5; }
+.idlm-auth-message.is-error { border-color: #efb3aa; background: var(--idlm-danger-soft); color: var(--idlm-danger); }
+.idlm-auth-message + .idlm-login-form { margin-top: 20px; }
+.idlm-login-form p { margin: 0 0 18px; }
+.idlm-login-form label { display: block; margin-bottom: 7px; color: var(--idlm-text-main); font-size: 12px; font-weight: 700; }
+.idlm-login-form .input { box-sizing: border-box; width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--idlm-border-strong); border-radius: var(--idlm-radius); background: var(--idlm-surface); color: var(--idlm-text-main); font: inherit; }
+.idlm-login-form .input:focus { border-color: var(--idlm-primary); box-shadow: 0 0 0 3px rgba(201, 150, 68, .18); outline: 0; }
+.idlm-login-form .login-remember label { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-weight: 500; }
+.idlm-login-form .login-remember input { width: 16px; height: 16px; accent-color: var(--idlm-primary); }
+.idlm-login-form .login-submit { margin: 24px 0 0; }
+.idlm-login-form .button-primary { width: 100%; min-height: 46px; border: 0; border-radius: var(--idlm-radius); background: var(--idlm-primary); color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; transition: var(--idlm-transition); }
+.idlm-login-form .button-primary:hover, .idlm-login-form .button-primary:focus { background: var(--idlm-primary-hover); box-shadow: 0 6px 16px rgba(159, 111, 37, .2); }
+.idlm-login-form .button-primary:active { transform: translateY(1px); }
+.idlm-login-reset { display: inline-flex; width: fit-content; margin-top: 18px; color: var(--idlm-primary-hover); font-size: 13px; font-weight: 700; text-decoration: none; }
+.idlm-login-reset:hover, .idlm-login-reset:focus { color: var(--idlm-text-main); text-decoration: underline; }
+.idlm-login-help { margin: 28px 0 0; padding-top: 20px; border-top: 1px solid var(--idlm-border); color: var(--idlm-text-muted); font-size: 12px; line-height: 1.5; }
+@media (max-width: 782px) { .idlm-login-shell { grid-template-columns: 1fr; min-height: 0; margin: 16px auto; } .idlm-login-context { padding: 28px; } .idlm-login-context-copy { margin: 48px 0 20px; } .idlm-login-context h1 { max-width: 16ch; font-size: clamp(30px, 9vw, 40px); } .idlm-login-access-note { display: none; } .idlm-login-panel { padding: 32px 28px; } .idlm-login-form .input { font-size: 16px; } }
+@media (max-width: 480px) { .idlm-login-shell { border-right: 0; border-left: 0; border-radius: 0; } .idlm-login-context, .idlm-login-panel { padding: 26px 20px; } }
 
 /* Users directory controls intentionally occupy their own full-width row. */
 .idlm-users-directory-top { display: grid; align-items: start; }

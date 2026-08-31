@@ -7,6 +7,7 @@ $user = isset($context['user']) ? $context['user'] : wp_get_current_user();
 $phone = isset($context['phone']) ? (string) $context['phone'] : '';
 $notice = isset($context['notice']) ? sanitize_key($context['notice']) : '';
 $error = isset($context['error']) ? sanitize_key($context['error']) : '';
+$logout_url = isset($context['logout_url']) ? (string) $context['logout_url'] : wp_logout_url();
 ?>
 <div class="wrap idlm-wrap idlm-account-wrap">
     <header class="idlm-header">
@@ -20,6 +21,7 @@ $error = isset($context['error']) ? sanitize_key($context['error']) : '';
             <h2><?php echo esc_html($user->display_name); ?></h2>
             <p><?php echo esc_html($user->user_email); ?></p>
             <div class="idlm-account-roles"><?php foreach ((array) $user->roles as $role): ?><span class="idlm-chip"><?php echo esc_html(translate_user_role(wp_roles()->roles[$role]['name'] ?? $role)); ?></span><?php endforeach; ?></div>
+            <a class="idlm-btn idlm-btn-secondary idlm-account-signout" href="<?php echo esc_url($logout_url); ?>">Sign Out</a>
         </aside>
         <form class="idlm-card idlm-account-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
             <input type="hidden" name="action" value="idlm_update_my_account">

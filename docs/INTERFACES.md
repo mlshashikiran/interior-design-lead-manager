@@ -54,7 +54,11 @@ The first namespace’s routes use dedicated permission callbacks and retain han
 
 ## Admin-post actions
 
+- `idlm_login`: anonymous, nonce-protected CRM email/password sign-in; exact email lookup followed by WordPress core `wp_signon()` and a safe local redirect.
+- `idlm_request_password_reset`: anonymous, nonce-protected email request with a generic response and hashed short-lived throttle; WordPress generates the reset key and sends the CRM reset URL.
+- `idlm_reset_password`: anonymous, nonce-protected reset completion; WordPress validates the user-bound key and password hooks before resetting sessions/password.
 - `idlm_update_my_account`: logged-in user + `idlm_update_my_account` nonce; updates own WordPress profile/phone/password or sends reset link.
+- My Account Sign Out uses WordPress core's nonce-protected `wp_logout_url()` and returns to the CRM page; no plugin logout handler is registered.
 - `idlm_rotate_api_credential`: `manage_options` plus a scope-specific nonce; rotates the webhook or MCP credential and ends that scope’s legacy grace window.
 - `idlm_save_quote`, `idlm_print_quote`, `idlm_save_quote_settings`: quotation-specific nonce and capabilities; transactional save, print HTML, or settings update.
 - `idlm_save_catalogue_item`, `idlm_save_catalogue_category`, `idlm_save_catalogue_unit`, `idlm_archive_catalogue_item`, `idlm_bulk_catalogue_items`, `idlm_catalogue_category_action`, `idlm_import_catalogue_csv`, `idlm_export_catalogue_csv`: `idlm_manage_quote_items`, action nonce, validated form/CSV; mutate or export catalogue.

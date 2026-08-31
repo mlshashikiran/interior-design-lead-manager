@@ -223,7 +223,7 @@ idlm_test('admin page, overlay, workspace, and account selector contracts remain
         'logs' => array('idlm-select-all-capi', 'idlm-retry-capi-btn', 'audience-log-details-'),
         'settings' => array('idlm-settings-form', 'settings-general', 'settings-routing', 'settings-webhooks', 'settings-capi', 'settings-audience-reminders', 'settings-health', 'settings-mcp', 'settings-danger-zone'),
         'workspace' => array('idlm-workspace', 'idlm-workspace-nav', 'idlm-workspace-content'),
-        'account' => array('idlm-account-first-name', 'idlm-account-email', 'idlm-account-password', 'idlm-account-password-confirm'),
+        'account' => array('idlm-account-first-name', 'idlm-account-email', 'idlm-account-password', 'idlm-account-password-confirm', 'idlm-account-signout'),
     );
     foreach ($contracts as $area => $selectors) {
         foreach ($selectors as $selector) {

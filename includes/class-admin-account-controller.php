@@ -19,11 +19,13 @@ final class IDLM_Admin_Account_Controller {
         }
         $notice = isset($_GET['idlm_account_notice']) ? sanitize_key(wp_unslash($_GET['idlm_account_notice'])) : '';
         $error = isset($_GET['idlm_account_error']) ? sanitize_key(wp_unslash($_GET['idlm_account_error'])) : '';
+        $account_url = add_query_arg('idlm_view', 'my-account', remove_query_arg(array('idlm_account_notice', 'idlm_account_error')));
         IDLM_View::display('my-account.php', array(
             'user' => $user,
             'phone' => $phone,
             'notice' => $notice,
             'error' => $error,
+            'logout_url' => wp_logout_url($account_url),
         ));
     }
 

@@ -43,3 +43,5 @@ Print uses `admin-post.php?action=idlm_print_quote`, nonce, view/download capabi
 ## Account update
 
 Authenticated shortcode user submits `admin-post.php?action=idlm_update_my_account` → login and nonce validation → sanitize identity/phone and validate unique email/password → update WordPress user plus `idlm_phone`, optionally send core password-reset email → safe redirect with status.
+
+Anonymous CRM user submits `admin-post.php?action=idlm_login` → nonce and safe-return validation → exact email lookup → WordPress `wp_signon()` authentication/cookie creation → generic failure or local workspace redirect. Password recovery uses the parallel request/reset handlers, generic request responses, WordPress-generated user-bound reset keys, core validation hooks, and core password/session reset behavior.

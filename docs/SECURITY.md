@@ -19,6 +19,7 @@ Quotation capability checks and object-level lead access are centralized in `IDL
 
 ## Request protection
 
+- Frontend CRM authentication uses plugin-scoped anonymous admin-post handlers. Sign-in accepts an email field only, resolves it to the internal WordPress login, and delegates authentication/cookies to `wp_signon()` without modifying global WordPress username/email authentication. Password recovery keeps responses generic, throttles normalized email hashes briefly, and delegates reset-key generation, validation hooks, password replacement, and session invalidation to WordPress core.
 - CRM AJAX uses the `idlm_admin_nonce`; quotation AJAX uses dedicated search/autosave nonces. Every registered AJAX action is authenticated (`wp_ajax_`, no `nopriv`).
 - Admin-post forms use action-specific nonces and capabilities.
 - The lead webhook, Google feed, and MCP routes use dedicated `permission_callback` methods, scoped credentials, constant-time comparisons, and fixed-window per-client rate limits. Forwarded addresses are accepted only when `REMOTE_ADDR` belongs to an explicitly configured trusted proxy. Handlers repeat credential checks as defense in depth. Interakt/Meta webhook POSTs validate SHA-256 HMAC; Meta verification GET compares the configured token.

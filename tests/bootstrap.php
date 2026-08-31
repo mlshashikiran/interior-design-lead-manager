@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 define('ABSPATH', __DIR__ . '/support/wp/');
 define('IDLM_TESTING', true);
-define('IDLM_VERSION', '1.100.7');
+define('IDLM_VERSION', '1.100.11');
 define('IDLM_DB_VERSION', '1.2.0');
 define('IDLM_PATH', dirname(__DIR__) . '/');
 define('IDLM_URL', 'https://example.test/wp-content/plugins/interior-design-lead-manager/');
@@ -54,6 +54,10 @@ class WP_Error {
 
     public function get_error_data() {
         return $this->data;
+    }
+
+    public function has_errors(): bool {
+        return '' !== $this->code;
     }
 }
 
@@ -893,6 +897,32 @@ function is_user_logged_in(): bool {
     return (bool) $GLOBALS['idlm_test_logged_in'];
 }
 
+function wp_login_form(array $args = array()) {
+    $args = wp_parse_args($args, array('echo' => true, 'form_id' => 'loginform', 'label_log_in' => 'Log In'));
+    $form = '<form id="' . esc_attr($args['form_id']) . '" action="wp-login.php" method="post"><input name="log"><input name="pwd" type="password"><button type="submit">' . esc_html($args['label_log_in']) . '</button></form>';
+    if ($args['echo']) {
+        echo $form;
+        return;
+    }
+    return $form;
+}
+
+function wp_logout_url(string $redirect = ''): string {
+    return 'https://example.test/wp-login.php?action=logout&_wpnonce=test&redirect_to=' . rawurlencode($redirect);
+}
+
+function wp_lostpassword_url(string $redirect = ''): string {
+    return 'https://example.test/wp-login.php?action=lostpassword';
+}
+
+function home_url(string $path = ''): string {
+    return 'https://example.test' . ('/' === substr($path, 0, 1) ? $path : '/' . $path);
+}
+
+function sanitize_user($value): string {
+    return preg_replace('/[^a-zA-Z0-9_.@-]/', '', (string) $value);
+}
+
 function current_user_can(string $capability, ...$args): bool {
     return !empty($GLOBALS['idlm_test_caps'][$capability]);
 }
@@ -1078,6 +1108,10 @@ function wp_create_nonce(string $action): string {
     return 'test-nonce';
 }
 
+function wp_nonce_field(string $action, string $name = '_wpnonce'): void {
+    echo '<input type="hidden" name="' . esc_attr($name) . '" value="test-nonce">';
+}
+
 function has_shortcode(string $content, string $tag): bool {
     return false !== strpos($content, '[' . $tag);
 }
@@ -1108,6 +1142,7 @@ function wp_add_inline_script(...$args): void {
 
 require_once dirname(__DIR__) . '/includes/class-mcp-core.php';
 require_once dirname(__DIR__) . '/includes/class-view.php';
+require_once dirname(__DIR__) . '/includes/class-auth.php';
 require_once dirname(__DIR__) . '/includes/class-settings.php';
 require_once dirname(__DIR__) . '/includes/class-secret-store.php';
 require_once dirname(__DIR__) . '/includes/class-production-security.php';

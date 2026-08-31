@@ -3,7 +3,7 @@
  * Plugin Name:       Interior Design Lead Manager
  * Plugin URI:        https://github.com/shashi-protecto/interior-design-lead-manager
  * Description:       A premium lead management system to replace Google Sheets and Pabbly for interior design firms. Captures leads from ad webhooks, manages routing, schedules custom audience batch uploads, triggers conversions server-side using Action Scheduler, and includes a full analytics workspace.
- * Version:           1.100.7
+ * Version:           1.100.11
  * Requires PHP:      7.4
  * Author:            Shashi
  * License:           GPL-2.0+
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define Plugin Constants
-define('IDLM_VERSION', '1.100.7');
+define('IDLM_VERSION', '1.100.11');
 define('IDLM_DB_VERSION', '1.2.0');
 define('IDLM_PATH', plugin_dir_path(__FILE__));
 define('IDLM_URL', plugin_dir_url(__FILE__));
@@ -24,6 +24,7 @@ define('IDLM_URL', plugin_dir_url(__FILE__));
 require_once IDLM_PATH . 'includes/class-mcp-core.php';
 require_once IDLM_PATH . 'includes/class-telemetry.php';
 require_once IDLM_PATH . 'includes/class-view.php';
+require_once IDLM_PATH . 'includes/class-auth.php';
 require_once IDLM_PATH . 'includes/class-settings.php';
 require_once IDLM_PATH . 'includes/class-secret-store.php';
 require_once IDLM_PATH . 'includes/class-production-security.php';
@@ -211,6 +212,8 @@ function idlm_deactivate_plugin() {
 // Boot up classes on WordPress init hooks
 add_action('plugins_loaded', 'idlm_boot_plugin');
 function idlm_boot_plugin() {
+    IDLM_Auth::init();
+
     if (get_option('idlm_roles_version') !== IDLM_VERSION) {
         idlm_register_crm_roles_and_capabilities();
     }
@@ -218,8 +221,8 @@ function idlm_boot_plugin() {
     $request_script = isset($_SERVER['SCRIPT_NAME']) ? basename(sanitize_text_field(wp_unslash($_SERVER['SCRIPT_NAME']))) : '';
     $current_page = isset($GLOBALS['pagenow']) ? (string) $GLOBALS['pagenow'] : '';
 
-    // This CRM has no authentication hooks. Avoid loading its database,
-    // telemetry, integration, scheduler, and admin runtime on login requests.
+    // Keep login requests limited to the scoped authentication presentation hooks.
+    // Avoid loading the CRM database, integrations, scheduler, and admin runtime.
     if ('wp-login.php' === $request_script || 'wp-login.php' === $current_page) {
         return;
     }

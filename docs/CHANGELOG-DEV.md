@@ -4,6 +4,26 @@ Use this log for meaningful architectural or behavioral engineering changes. Pub
 
 ## 2026-08-31
 
+- **Area:** Scoped frontend authentication and password recovery
+- **Change:** Added email-only CRM sign-in plus branded password request and reset-completion states using plugin-specific anonymous handlers and WordPress core sign-on, reset-key, validation, password, cookie, and notification APIs. Builder: Shashi.
+- **Files affected:** Authentication controller, bootstrap, access template, core reset styling, shared login styles, security/interface/flow documentation, tests, release metadata, and changelogs.
+- **Compatibility notes:** Normal `wp-login.php` username/email authentication remains unchanged. Public CRM handlers use action nonces, generic failures, safe local redirects, and a hashed one-minute reset-request throttle. Plugin version advanced from `1.100.10` to `1.100.11`.
+
+- **Area:** Frontend CRM login design
+- **Change:** Reworked the anonymous login into a responsive split entry surface with product context, focused authentication hierarchy, native password recovery, and token-aligned responsive/focus states. Builder: Shashi.
+- **Files affected:** Access template, shared design-system styles, fast contracts, release metadata, and changelogs.
+- **Compatibility notes:** WordPress core continues to own credential submission, authentication cookies, password recovery, and redirects. Plugin version advanced from `1.100.9` to `1.100.10`.
+
+- **Area:** Frontend account sign-out
+- **Change:** Added a Sign Out action to My Account using WordPress core's nonce-protected logout URL and returning to the current CRM page. Builder: Shashi.
+- **Files affected:** Account controller/template, workspace styles, fast contracts, release metadata, and changelogs.
+- **Compatibility notes:** WordPress remains responsible for session invalidation and nonce verification. Plugin version advanced from `1.100.8` to `1.100.9`.
+
+- **Area:** Frontend CRM authentication
+- **Change:** Replaced the anonymous restricted-access message with WordPress core's login form while retaining the existing CRM role/capability denial for authenticated unauthorized accounts. Builder: Shashi.
+- **Files affected:** Access template, shared admin styles, fast contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing shortcodes, WordPress authentication cookies, login endpoint, roles, capabilities, and post-login request return behavior are preserved. Plugin version advanced from `1.100.7` to `1.100.8`.
+
 - **Area:** Agent delegation and effort selection
 - **Change:** Refined Sol orchestration and review verification boundaries, preserved Terra/Luna delegation fallback guidance, and standardized effort selection to Low, Medium, and High. Builder: Shashi.
 - **Files affected:** `AGENTS.md`, release metadata, release-alignment tests, `CHANGELOG.md`, and `readme.txt`.

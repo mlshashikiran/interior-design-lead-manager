@@ -1,8 +1,8 @@
 # Controlled Production Release
 
 Author / Builder: Shashi  
-Status: Phase 9 staging-candidate gate implemented; production rollout not approved  
-Release: 1.100.7  
+Status: Phase 9 staging-candidate gate implemented; production rollout authorized by Shashi
+Release: 1.100.11
 Started: 2026-08-31
 
 ## Scope

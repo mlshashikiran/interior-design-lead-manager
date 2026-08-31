@@ -1006,11 +1006,39 @@ idlm_test('grouped routing settings migrate legacy values and preserve compatibi
     assert_same('round_robin', IDLM_Settings::get('idlm_assignment_mode'), 'Legacy option writers must remain authoritative during migration.');
 });
 
-idlm_test('guarded view renderer rejects traversal and renders escaped access state', static function(): void {
+idlm_test('guarded view renderer rejects traversal and renders the correct authentication state', static function(): void {
     assert_same('', IDLM_View::render('../interior-design-lead-manager.php'));
+    $GLOBALS['idlm_test_logged_in'] = false;
     $markup = IDLM_View::render('access-restricted.php');
     assert_contains('idlm-access-restricted', $markup);
+    assert_contains('Welcome back', $markup);
+    assert_contains('idlm-loginform', $markup);
+    assert_contains('idlm-login-shell', $markup);
+    assert_contains('Forgot your password?', $markup);
+    $GLOBALS['idlm_test_logged_in'] = true;
+    $markup = IDLM_View::render('access-restricted.php');
     assert_contains('Access Restricted', $markup);
+});
+
+idlm_test('CRM authentication remains email-only, scoped, and core-backed', static function(): void {
+    $source = file_get_contents(dirname(__DIR__) . '/includes/class-auth.php');
+    assert_contains("admin_post_nopriv_idlm_login", $source);
+    assert_contains("admin_post_nopriv_idlm_request_password_reset", $source);
+    assert_contains("admin_post_nopriv_idlm_reset_password", $source);
+    assert_contains("get_user_by('email', \$email)", $source);
+    assert_contains('wp_signon($credentials, is_ssl())', $source);
+    assert_contains('retrieve_password($user->user_login)', $source);
+    assert_contains('check_password_reset_key($key, $login)', $source);
+    assert_contains('reset_password($user, $password)', $source);
+    assert_false(false !== strpos($source, "add_filter('authenticate'"), 'CRM email-only login must not change global WordPress authentication.');
+    $GLOBALS['idlm_test_logged_in'] = false;
+    $_GET = array();
+    $_SERVER['REQUEST_URI'] = '/crm/';
+    $markup = IDLM_View::render('access-restricted.php');
+    assert_contains('type="email"', $markup);
+    assert_contains('name="idlm_email"', $markup);
+    assert_contains('action" value="idlm_login', $markup);
+    assert_false(false !== strpos($markup, 'Username or Email'), 'CRM login must not advertise username authentication.');
 });
 
 idlm_test('MCP CLI entry uses environment-driven paths and no Local-specific fallback', static function(): void {
