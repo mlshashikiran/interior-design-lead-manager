@@ -2,6 +2,12 @@
 
 Current release notes are kept concise. The complete pre-maintenance history is preserved in [`docs/legacy/CHANGELOG-FULL.md`](docs/legacy/CHANGELOG-FULL.md).
 
+## [1.100.12] - 2026-08-31
+
+### Item catalogue
+
+- Added automatic unique `ITEM-000001`-style codes for newly created catalogue items and CSV rows with an empty `item_code`, while preserving supplied codes (implemented by Shashi).
+
 ## [1.100.11] - 2026-08-31
 
 ### Authentication

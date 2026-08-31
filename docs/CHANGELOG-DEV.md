@@ -4,6 +4,11 @@ Use this log for meaningful architectural or behavioral engineering changes. Pub
 
 ## 2026-08-31
 
+- **Area:** Catalogue item identity
+- **Change:** Added repository-owned automatic `ITEM-000001`-style code assignment after catalogue insertion, shared by manual creation and CSV imports with an empty item-code cell. Builder: Shashi.
+- **Files affected:** Quotation repository, catalogue handlers and renderer, fast tests, catalogue flow documentation, release metadata, and changelogs.
+- **Compatibility notes:** Explicit item codes remain unchanged and existing-item edits still require a code. Plugin version advanced from `1.100.11` to `1.100.12`.
+
 - **Area:** Scoped frontend authentication and password recovery
 - **Change:** Added email-only CRM sign-in plus branded password request and reset-completion states using plugin-specific anonymous handlers and WordPress core sign-on, reset-key, validation, password, cookie, and notification APIs. Builder: Shashi.
 - **Files affected:** Authentication controller, bootstrap, access template, core reset styling, shared login styles, security/interface/flow documentation, tests, release metadata, and changelogs.

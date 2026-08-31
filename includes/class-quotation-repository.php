@@ -432,7 +432,29 @@ final class IDLM_Quotation_Repository {
      */
     public static function insert_catalogue_item($data) {
         global $wpdb;
-        return $wpdb->insert(self::table('quote_catalogue_items'), $data);
+        $table = self::table('quote_catalogue_items');
+        $generate_code = '' === trim((string) ($data['item_code'] ?? ''));
+        if ($generate_code) {
+            $data['item_code'] = 'AUTO-' . wp_generate_uuid4();
+        }
+        $inserted = $wpdb->insert($table, $data);
+        if (!$inserted || !$generate_code) {
+            return $inserted;
+        }
+
+        $item_id = absint($wpdb->insert_id);
+        $base_code = 'ITEM-' . str_pad((string) $item_id, 6, '0', STR_PAD_LEFT);
+        $item_code = $base_code;
+        $suffix = 1;
+        while (self::catalogue_item_code_exists($item_code)) {
+            $item_code = $base_code . '-' . $suffix;
+            $suffix++;
+        }
+        if (false === $wpdb->update($table, array('item_code' => $item_code), array('id' => $item_id), array('%s'), array('%d'))) {
+            $wpdb->delete($table, array('id' => $item_id), array('%d'));
+            return false;
+        }
+        return $inserted;
     }
 
     /**

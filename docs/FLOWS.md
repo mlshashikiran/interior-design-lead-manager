@@ -36,7 +36,7 @@ Interakt and Meta WhatsApp REST callbacks validate configured HMAC signatures, n
 
 Lead picker search, initial editor choices, selected-lead prefilling, and object-access existence checks are read through `IDLM_Quotation_Lead_Read_Model`, which applies unrestricted administrator/assignment-manager scope or current representative ownership scope.
 
-Catalogue handlers retain capability/nonce checks, field and uploaded-file validation, the 2,000-row import transaction, CSV formula neutralization, streamed output, redirects, and UI rendering. Catalogue term/item CRUD, bulk/category actions, duplicate-code checks, search/list pagination, and export chunks are delegated to `IDLM_Quotation_Repository`; the same repository supplies the scoped quotation-list count/page read model.
+Catalogue handlers retain capability/nonce checks, field and uploaded-file validation, the 2,000-row import transaction, CSV formula neutralization, streamed output, redirects, and UI rendering. Catalogue term/item CRUD, automatic `ITEM-000001`-style code assignment for new items with an empty code, bulk/category actions, duplicate-code checks, search/list pagination, and export chunks are delegated to `IDLM_Quotation_Repository`; the same repository supplies the scoped quotation-list count/page read model.
 
 Print uses `admin-post.php?action=idlm_print_quote`, nonce, view/download capabilities, and lead access. It renders escaped HTML with print CSS and a “Print / Save PDF” browser action; the plugin does not generate or store a binary PDF server-side.
 

@@ -818,21 +818,30 @@ idlm_test('quotation repository owns catalogue CRUD, bulk actions, and paginated
         'updated_at' => $now,
     )));
     assert_true(IDLM_Quotation_Repository::catalogue_item_code_exists('LR-001'));
+    assert_same(1, IDLM_Quotation_Repository::insert_catalogue_item(array(
+        'item_code' => '',
+        'category' => 'Living Room',
+        'item_name' => 'Generated Code Item',
+        'unit' => 'Sq Ft',
+        'created_at' => $now,
+        'updated_at' => $now,
+    )));
+    assert_same('ITEM-000002', IDLM_Quotation_Repository::get_catalogue_item(2)->item_code);
     assert_same('active', IDLM_Quotation_Repository::get_catalogue_item_status(1));
     assert_same('TV Unit', IDLM_Quotation_Repository::get_catalogue_item(1)->item_name);
-    assert_same(1, IDLM_Quotation_Repository::count_catalogue_items());
+    assert_same(2, IDLM_Quotation_Repository::count_catalogue_items());
     assert_count_value(1, IDLM_Quotation_Repository::search_catalogue('TV', 1, 20));
-    assert_count_value(1, IDLM_Quotation_Repository::list_catalogue_items('', 1, 100));
+    assert_count_value(2, IDLM_Quotation_Repository::list_catalogue_items('', 1, 100));
     assert_count_value(2, IDLM_Quotation_Repository::list_catalogue_categories());
     assert_same(array('Sq Ft'), IDLM_Quotation_Repository::list_active_catalogue_units());
     $export = IDLM_Quotation_Repository::get_catalogue_export_chunk(0, 500);
-    assert_count_value(1, $export);
+    assert_count_value(2, $export);
     assert_same('Yes', $export[0]['is_wood']);
 
     assert_same(1, IDLM_Quotation_Repository::update_catalogue_item(1, array('default_rate' => 1350)));
     assert_same(1, IDLM_Quotation_Repository::archive_catalogue_item(1, $now));
     assert_same('inactive', IDLM_Quotation_Repository::get_catalogue_item_status(1));
-    assert_same(1, IDLM_Quotation_Repository::bulk_catalogue_items(array(1), 'delete', $now));
+    assert_same(2, IDLM_Quotation_Repository::bulk_catalogue_items(array(1, 2), 'delete', $now));
     assert_count_value(0, $GLOBALS['wpdb']->rows('idlm_quote_catalogue_items'));
 
     assert_same(1, IDLM_Quotation_Repository::ensure_catalogue_term('category', 'Kitchen', 7, $now));

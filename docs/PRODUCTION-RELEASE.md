@@ -2,7 +2,7 @@
 
 Author / Builder: Shashi  
 Status: Phase 9 staging-candidate gate implemented; production rollout authorized by Shashi
-Release: 1.100.11
+Release: 1.100.12
 Started: 2026-08-31
 
 ## Scope

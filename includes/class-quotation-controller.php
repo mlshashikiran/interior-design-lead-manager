@@ -428,8 +428,8 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         $unit = sanitize_text_field(wp_unslash($_POST['unit'] ?? ''));
         $category_exists = IDLM_Quotation_Repository::catalogue_term_exists('category', $category);
         $unit_exists = IDLM_Quotation_Repository::catalogue_term_exists('unit', $unit);
-        if (!$code || !$name || !$category_exists || !$unit_exists) {
-            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Item code, item name, registered category, and registered unit are required.'));
+        if (($id && !$code) || !$name || !$category_exists || !$unit_exists) {
+            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => $id ? 'Item code, item name, registered category, and registered unit are required.' : 'Item name, registered category, and registered unit are required.'));
         }
         $data = array(
             'item_code' => $code,
@@ -558,7 +558,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             $name = sanitize_text_field($row['item_name'] ?? '');
             $category = sanitize_text_field($row['category'] ?? '');
             $unit = sanitize_text_field($row['unit'] ?? 'Nos');
-            if (!$code || !$name || !$category || !$unit) {
+            if (!$name || !$category || !$unit) {
                 $errors++;
                 continue;
             }

@@ -3,7 +3,7 @@ Contributors: shashi-protecto
 Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 1.100.11
+Stable tag: 1.100.12
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,12 @@ Yes. Phone values are normalized and suffix-matched to reconcile common local an
 No. Action Scheduler is used when available; WordPress Cron is the fallback.
 
 == Changelog ==
+
+= 1.100.12 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Automatically generates unique ITEM-prefixed codes when a new catalogue item or imported CSV row has an empty item_code value.
 
 = 1.100.11 =
 
