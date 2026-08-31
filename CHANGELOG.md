@@ -2,6 +2,41 @@
 
 Current release notes are kept concise. The complete pre-maintenance history is preserved in [`docs/legacy/CHANGELOG-FULL.md`](docs/legacy/CHANGELOG-FULL.md).
 
+## [1.101.3] - 2026-08-31
+
+### Kanban board
+
+- Removed the New and Contacted columns from the sales Kanban without changing the underlying lifecycle stages (implemented by Shashi).
+- Added server-side card sorting by newest, oldest, and lead name (implemented by Shashi).
+
+## [1.101.2] - 2026-08-31
+
+### Lead drawer access
+
+- Restricted the header Stage editor to sales representatives and managers, leaving the Stage card read-only for pre-sales users (implemented by Shashi).
+- Added server-side enforcement for drawer-header stage requests so the UI restriction cannot be bypassed (implemented by Shashi).
+
+## [1.101.1] - 2026-08-31
+
+### Lead drawer
+
+- Made the header Stage card editable and routed transitions through the existing nonce, access-policy, lifecycle-validation, and activity-log boundary (implemented by Shashi).
+- Preserved the required Won, Quote Shared, and Lost transition dialogs and refreshes the drawer after a successful change (implemented by Shashi).
+
+## [1.101.0] - 2026-08-31
+
+### Floor plans
+
+- Added secure multi-file floor-plan uploads with a 20-file limit and the existing per-file type/size validation (implemented by Shashi).
+- Added individual View, Download, and Remove controls while preserving legacy single-file records (implemented by Shashi).
+
+## [1.100.13] - 2026-08-31
+
+### Kanban dashboard
+
+- Replaced separate assigned and qualified header counts with one overall filtered lead count (implemented by Shashi).
+- Made current-month Won count and revenue follow each lead's Won conversion timestamp, independent of its created/assigned date and the board date-basis filter (implemented by Shashi).
+
 ## [1.100.12] - 2026-08-31
 
 ### Item catalogue

@@ -143,12 +143,16 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $value = isset($_POST['value']) ? sanitize_text_field(wp_unslash($_POST['value'])) : '';
         $lost_remark = isset($_POST['lost_remark']) ? sanitize_textarea_field(wp_unslash($_POST['lost_remark'])) : '';
         $lost_reason = isset($_POST['lost_reason']) ? sanitize_text_field(wp_unslash($_POST['lost_reason'])) : '';
+        $edit_context = isset($_POST['edit_context']) ? sanitize_key(wp_unslash($_POST['edit_context'])) : '';
 
         if (!$lead_id || !in_array($field, array('call_status', 'stage', 'assigned_rep_id', 'lead_quality'), true)) {
             wp_send_json_error(array('message' => 'Invalid edit request parameters'));
         }
         if (!self::current_user_can_access_lead($lead_id)) {
             wp_send_json_error(array('message' => 'You can update only leads assigned to you.'));
+        }
+        if ('stage' === $field && 'drawer_header' === $edit_context && self::current_user_is_pre_sales()) {
+            wp_send_json_error(array('message' => 'Only sales representatives and managers can change the stage from the lead drawer header.'));
         }
 
         if ('assigned_rep_id' === $field) {
@@ -2264,15 +2268,16 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $post_date_basis = isset($_POST['date_basis']) ? sanitize_key(wp_unslash($_POST['date_basis'])) : 'assigned_at';
         $date_column = $date_columns[$post_date_basis] ?? 'assigned_at';
         $post_date_range = isset($_POST['date_range']) ? sanitize_key(wp_unslash($_POST['date_range'])) : '';
+        $date_conditions = array();
         if (!empty($post_date_range)) {
             $timezone = wp_timezone();
             $now = new DateTime('now', $timezone);
             if ($post_date_range === 'today') {
-                $where[] = $wpdb->prepare("{$date_column} >= %s", $now->format('Y-m-d 00:00:00'));
+                $date_conditions[] = $wpdb->prepare("{$date_column} >= %s", $now->format('Y-m-d 00:00:00'));
             } elseif ($post_date_range === 'yesterday') {
                 $yesterday = clone $now;
                 $yesterday->modify('-1 day');
-                $where[] = $wpdb->prepare(
+                $date_conditions[] = $wpdb->prepare(
                     "{$date_column} >= %s AND {$date_column} <= %s",
                     $yesterday->format('Y-m-d 00:00:00'),
                     $yesterday->format('Y-m-d 23:59:59')
@@ -2280,29 +2285,29 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             } elseif ($post_date_range === 'week') {
                 $start = clone $now;
                 $start->modify('monday this week');
-                $where[] = $wpdb->prepare("{$date_column} >= %s", $start->format('Y-m-d 00:00:00'));
+                $date_conditions[] = $wpdb->prepare("{$date_column} >= %s", $start->format('Y-m-d 00:00:00'));
             } elseif ($post_date_range === 'month') {
-                $where[] = $wpdb->prepare("{$date_column} >= %s", $now->format('Y-m-01 00:00:00'));
+                $date_conditions[] = $wpdb->prepare("{$date_column} >= %s", $now->format('Y-m-01 00:00:00'));
             } elseif ($post_date_range === 'last_7_days') {
                 $start = clone $now;
                 $start->modify('-6 days');
-                $where[] = $wpdb->prepare("{$date_column} >= %s", $start->format('Y-m-d 00:00:00'));
+                $date_conditions[] = $wpdb->prepare("{$date_column} >= %s", $start->format('Y-m-d 00:00:00'));
             } elseif ($post_date_range === 'last_30_days') {
                 $start = clone $now;
                 $start->modify('-29 days');
-                $where[] = $wpdb->prepare("{$date_column} >= %s", $start->format('Y-m-d 00:00:00'));
+                $date_conditions[] = $wpdb->prepare("{$date_column} >= %s", $start->format('Y-m-d 00:00:00'));
             } elseif ($post_date_range === 'last_month') {
                 $start = clone $now;
                 $start->modify('first day of last month');
                 $end = clone $now;
                 $end->modify('last day of last month');
-                $where[] = $wpdb->prepare(
+                $date_conditions[] = $wpdb->prepare(
                     "{$date_column} >= %s AND {$date_column} <= %s",
                     $start->format('Y-m-d 00:00:00'),
                     $end->format('Y-m-d 23:59:59')
                 );
             } elseif ($post_date_range === 'year' || $post_date_range === 'this_year') {
-                $where[] = $wpdb->prepare("{$date_column} >= %s", $now->format('Y-01-01 00:00:00'));
+                $date_conditions[] = $wpdb->prepare("{$date_column} >= %s", $now->format('Y-01-01 00:00:00'));
             }
         }
 
@@ -2311,6 +2316,17 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $post_call_status = isset($_POST['call_status']) ? sanitize_text_field(wp_unslash($_POST['call_status'])) : '';
         $post_quality     = isset($_POST['quality']) ? sanitize_text_field(wp_unslash($_POST['quality'])) : '';
         $post_search      = isset($_POST['search']) ? sanitize_text_field(wp_unslash($_POST['search'])) : '';
+        $post_sort        = isset($_POST['sort']) ? sanitize_key(wp_unslash($_POST['sort'])) : 'newest';
+        $sort_options     = array(
+            'newest'   => 'l.created_at DESC, l.id DESC',
+            'oldest'   => 'l.created_at ASC, l.id ASC',
+            'name_asc' => 'l.first_name ASC, l.last_name ASC, l.id DESC',
+            'name_desc' => 'l.first_name DESC, l.last_name DESC, l.id DESC',
+        );
+        $order_by = isset($sort_options[$post_sort]) ? $sort_options[$post_sort] : $sort_options['newest'];
+
+        // New and Contacted remain valid lifecycle stages but are intentionally omitted from this sales board.
+        $where[] = "l.stage NOT IN ('New', 'Contacted')";
 
         if (!empty($post_source)) {
             $where[] = $wpdb->prepare("source = %s", $post_source);
@@ -2341,6 +2357,8 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             $where[] = $wpdb->prepare("(first_name LIKE %s OR last_name LIKE %s OR email LIKE %s OR phone LIKE %s)", $search, $search, $search, $search);
         }
 
+        $monthly_won_conditions = $where;
+        $where = array_merge($where, $date_conditions);
         $where_clause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
 
         // Query leads
@@ -2352,12 +2370,13 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                     (SELECT COUNT(t.id) FROM {$wpdb->prefix}idlm_tasks t WHERE t.lead_id = l.id AND t.status = 'pending' AND t.due_date IS NOT NULL AND t.due_date < %s) as overdue_tasks_count
              FROM {$table_leads} l
              LEFT JOIN {$wpdb->users} u ON l.assigned_rep_id = u.ID
-             {$where_clause} ORDER BY l.id DESC",
+             {$where_clause} ORDER BY {$order_by}",
             $now_mysql
         ));
 
         // Group leads by stage
         $stages = get_option('idlm_custom_stages', array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'));
+        $stages = array_values(array_diff($stages, array('New', 'Contacted')));
         $grouped_leads = array();
         foreach ($stages as $stage) {
             $grouped_leads[$stage] = array();
@@ -2373,7 +2392,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             }
         }
 
-        // Summary cards describe the same filtered population as the board.
+        // Board summary cards describe the same filtered population as the board.
         $stats_conditions = $where;
         $stats_conditions[] = 'l.is_duplicate = 0';
         $stats_where = 'WHERE ' . implode(' AND ', $stats_conditions);
@@ -2383,11 +2402,22 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $summary = $wpdb->get_row(
             "SELECT
-                SUM(CASE WHEN l.assigned_rep_id > 0 THEN 1 ELSE 0 END) AS assigned_filtered,
-                SUM(CASE WHEN l.lead_quality = 'Qualified' THEN 1 ELSE 0 END) AS qualified_filtered,
-                SUM(CASE WHEN l.stage = 'Won' THEN 1 ELSE 0 END) AS won_filtered,
-                SUM(CASE WHEN l.stage = 'Won' THEN COALESCE(l.deal_value, 0) ELSE 0 END) AS won_revenue_filtered
+                COUNT(*) AS total_filtered
              FROM {$table_leads} l {$stats_where}"
+        );
+
+        // Current-month wins use the actual Won transition timestamp, independently of the board's date-basis filter.
+        $month_start = new DateTime('first day of this month 00:00:00', wp_timezone());
+        $next_month_start = clone $month_start;
+        $next_month_start->modify('first day of next month');
+        $monthly_won_conditions[] = "l.stage = 'Won'";
+        $monthly_won_conditions[] = $wpdb->prepare('l.conversion_time >= %s', $month_start->format('Y-m-d H:i:s'));
+        $monthly_won_conditions[] = $wpdb->prepare('l.conversion_time < %s', $next_month_start->format('Y-m-d H:i:s'));
+        $monthly_won_where = 'WHERE ' . implode(' AND ', $monthly_won_conditions);
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $monthly_won_summary = $wpdb->get_row(
+            "SELECT COUNT(*) AS won_current_month, SUM(COALESCE(l.deal_value, 0)) AS won_revenue_current_month
+             FROM {$table_leads} l {$monthly_won_where}"
         );
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
@@ -2426,12 +2456,11 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         wp_send_json_success(array(
             'leads' => $grouped_leads,
             'stats' => array(
-                'assigned_filtered' => $summary ? intval($summary->assigned_filtered) : 0,
+                'total_filtered' => $summary ? intval($summary->total_filtered) : 0,
                 'followups_due' => $followups_due,
-                'qualified_filtered' => $summary ? intval($summary->qualified_filtered) : 0,
                 'open_pipeline_value' => round($open_pipeline_value, 2),
-                'won_filtered' => $summary ? intval($summary->won_filtered) : 0,
-                'won_revenue_filtered' => $summary ? round(floatval($summary->won_revenue_filtered), 2) : 0,
+                'won_current_month' => $monthly_won_summary ? intval($monthly_won_summary->won_current_month) : 0,
+                'won_revenue_current_month' => $monthly_won_summary ? round(floatval($monthly_won_summary->won_revenue_current_month), 2) : 0,
             ),
         ));
     }
@@ -2492,6 +2521,10 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             wp_send_json_error(array('message' => 'You can update only leads assigned to you.'));
         }
 
+        $floor_plan_files = IDLM_Admin_Presenter::normalize_floor_plan_files(
+            isset($form_fields['floor_plan_files']) ? $form_fields['floor_plan_files'] : '',
+            isset($form_fields['floor_plan_file']) ? $form_fields['floor_plan_file'] : ''
+        );
         $data = array(
             'first_name' => sanitize_text_field($form_fields['first_name']),
             'last_name'  => sanitize_text_field($form_fields['last_name']),
@@ -2508,7 +2541,8 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             'property_type' => sanitize_text_field($form_fields['property_type']),
             'num_rooms' => IDLM_Integrations::normalize_num_rooms(sanitize_text_field($form_fields['num_rooms'])),
             'floor_plan_received' => intval($form_fields['floor_plan_received']),
-            'floor_plan_file' => isset($form_fields['floor_plan_file']) ? esc_url_raw($form_fields['floor_plan_file']) : '',
+            'floor_plan_file' => isset($floor_plan_files[0]) ? $floor_plan_files[0] : '',
+            'floor_plan_files' => $floor_plan_files ? wp_json_encode($floor_plan_files) : null,
             'quote_shared' => intval($form_fields['quote_shared']),
             'quote_value' => isset($form_fields['quote_value']) ? max(0, round(floatval($form_fields['quote_value']), 2)) : 0.00,
             'quote_file' => isset($form_fields['quote_file']) ? esc_url_raw($form_fields['quote_file']) : '',

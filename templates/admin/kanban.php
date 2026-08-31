@@ -31,27 +31,23 @@ $nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
 
             <section class="idlm-kanban-stats" aria-label="Kanban pipeline summary">
                 <div class="idlm-kanban-stat">
-                    <span class="idlm-kanban-stat-label">Assigned Leads — Filtered</span>
-                    <strong class="idlm-kanban-stat-value" id="idlm-stat-assigned-active">—</strong>
+                    <span class="idlm-kanban-stat-label">Overall Leads — Filtered</span>
+                    <strong class="idlm-kanban-stat-value" id="idlm-stat-overall-leads">—</strong>
                 </div>
                 <div class="idlm-kanban-stat idlm-kanban-stat-attention">
                     <span class="idlm-kanban-stat-label">Follow-ups Due</span>
                     <strong class="idlm-kanban-stat-value" id="idlm-stat-followups-due">—</strong>
-                </div>
-                <div class="idlm-kanban-stat">
-                    <span class="idlm-kanban-stat-label">Qualified Leads — Filtered</span>
-                    <strong class="idlm-kanban-stat-value" id="idlm-stat-qualified-pipeline">—</strong>
                 </div>
                 <div class="idlm-kanban-stat idlm-kanban-stat-value-card">
                     <span class="idlm-kanban-stat-label">Open Pipeline Value</span>
                     <strong class="idlm-kanban-stat-value" id="idlm-stat-pipeline-value">—</strong>
                 </div>
                 <div class="idlm-kanban-stat idlm-kanban-stat-success">
-                    <span class="idlm-kanban-stat-label">Currently Won — Filtered</span>
+                    <span class="idlm-kanban-stat-label">Won This Month</span>
                     <strong class="idlm-kanban-stat-value" id="idlm-stat-won-month">—</strong>
                 </div>
                 <div class="idlm-kanban-stat idlm-kanban-stat-success">
-                    <span class="idlm-kanban-stat-label">Current Won Revenue — Filtered</span>
+                    <span class="idlm-kanban-stat-label">Won Revenue This Month</span>
                     <strong class="idlm-kanban-stat-value" id="idlm-stat-won-revenue">—</strong>
                 </div>
             </section>
@@ -131,6 +127,15 @@ $nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                         <option value="Qualified Plan Pending">Qualified · Plan Pending</option>
                         <option value="Unqualified">Unqualified</option>
                         <option value="Pending">Pending Qualification</option>
+                    </select>
+                </div>
+                <div class="idlm-filter-group">
+                    <label>Sort Cards</label>
+                    <select id="idlm-kanban-sort" class="idlm-input">
+                        <option value="newest" selected>Newest Leads</option>
+                        <option value="oldest">Oldest Leads</option>
+                        <option value="name_asc">Name A–Z</option>
+                        <option value="name_desc">Name Z–A</option>
                     </select>
                 </div>
             </div>

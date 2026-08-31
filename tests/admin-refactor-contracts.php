@@ -105,6 +105,54 @@ idlm_test('admin Phase 2 leads renderer retains delegates and presentation-only 
     assert_contains('idlm-lead-drawer', (string) file_get_contents($root . '/templates/admin/common-overlays.php'));
 });
 
+idlm_test('Kanban header reports overall leads and current-month wins by conversion date', static function(): void {
+    $root = dirname(__DIR__);
+    $ajax_source = (string) file_get_contents($root . '/includes/class-admin-ajax.php');
+    $template = (string) file_get_contents($root . '/templates/admin/kanban.php');
+    $script = (string) file_get_contents($root . '/assets/js/kanban.js');
+
+    assert_contains('COUNT(*) AS total_filtered', $ajax_source);
+    assert_contains("l.conversion_time >= %s", $ajax_source);
+    assert_contains("l.conversion_time < %s", $ajax_source);
+    assert_contains("'won_revenue_current_month'", $ajax_source);
+    assert_contains('Overall Leads — Filtered', $template);
+    assert_contains('Won Revenue This Month', $template);
+    assert_false(false !== strpos($template, 'Assigned Leads — Filtered'));
+    assert_false(false !== strpos($template, 'Qualified Leads — Filtered'));
+    assert_contains('stats.total_filtered', $script);
+    assert_contains('stats.won_revenue_current_month', $script);
+});
+
+idlm_test('Kanban omits early stages and exposes whitelisted card sorting', static function(): void {
+    $root = dirname(__DIR__);
+    $renderer = (string) file_get_contents($root . '/includes/class-admin-kanban-renderer.php');
+    $ajax_source = (string) file_get_contents($root . '/includes/class-admin-ajax.php');
+    $template = (string) file_get_contents($root . '/templates/admin/kanban.php');
+    $script = (string) file_get_contents($root . '/assets/js/kanban.js');
+
+    assert_contains('array_diff($stages, array(\'New\', \'Contacted\'))', $renderer);
+    assert_contains("l.stage NOT IN ('New', 'Contacted')", $ajax_source);
+    assert_contains("'newest'   => 'l.created_at DESC, l.id DESC'", $ajax_source);
+    assert_contains('idlm-kanban-sort', $template);
+    assert_contains('Name A–Z', $template);
+    assert_contains("sort: $('#idlm-kanban-sort').val()", $script);
+});
+
+idlm_test('lead drawer header stage card uses the secured lifecycle quick edit', static function(): void {
+    $root = dirname(__DIR__);
+    $drawer_source = (string) file_get_contents($root . '/includes/class-admin-lead-reads.php');
+    $script_source = (string) file_get_contents($root . '/assets/js/admin-app.js');
+
+    assert_contains('id="idlm-drawer-stage-select"', $drawer_source);
+    assert_contains('class="idlm-drawer-stage-select idlm-quick-edit"', $drawer_source);
+    assert_contains('data-field="stage"', $drawer_source);
+    assert_contains('data-edit-context="drawer_header"', $drawer_source);
+    assert_contains('if (self::current_user_is_pre_sales()):', $drawer_source);
+    assert_contains('aria-label="Change lead stage"', $drawer_source);
+    assert_contains("\$select.hasClass('idlm-drawer-stage-select')", $script_source);
+    assert_contains('openLeadDrawer(leadId);', $script_source);
+});
+
 idlm_test('admin hooks, AJAX actions, shortcodes, and menu callbacks remain registered', static function(): void {
     IDLM_Admin::init();
     $actions = array_values(array_map(static fn(array $hook): string => $hook['hook'], array_filter(

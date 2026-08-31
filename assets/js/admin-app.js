@@ -436,6 +436,15 @@ jQuery(document).ready(function($) {
     });
 
     // Helper function to submit Inline Quick Edits via AJAX
+    function resetQuickEditSelect($select) {
+        if ($select && $select.hasClass('idlm-drawer-stage-select')) {
+            $select.val($select.attr('data-original-value'));
+        }
+        if ($('#idlm-leads-table').length) {
+            loadLeadsTable(currentPage);
+        }
+    }
+
     function submitQuickEdit(leadId, field, val, callbackTime, $select, dealValue, lostRemark, discountPercentage, propertyLocation, quoteValue, quoteFile, lostReason) {
         var ajaxData = {
             action: 'idlm_quick_edit_lead',
@@ -445,6 +454,9 @@ jQuery(document).ready(function($) {
             value: val,
             callback_time: callbackTime
         };
+        if ($select && $select.data('edit-context')) {
+            ajaxData.edit_context = $select.data('edit-context');
+        }
         if (dealValue !== undefined) {
             ajaxData.deal_value = dealValue;
         }
@@ -494,6 +506,13 @@ jQuery(document).ready(function($) {
                     if (field === 'call_status') {
                         loadLeadsTable(currentPage);
                     }
+                    if ($select && $select.hasClass('idlm-drawer-stage-select')) {
+                        $select.attr('data-original-value', val);
+                        if ($('#idlm-leads-table').length) {
+                            loadLeadsTable(currentPage);
+                        }
+                        openLeadDrawer(leadId);
+                    }
 
                     // Update pending calls count pill
                     if (response.data && response.data.hasOwnProperty('pending_calls_count')) {
@@ -504,12 +523,12 @@ jQuery(document).ready(function($) {
                     }
                 } else {
                     showToast(response.data.message || 'Save failed.', 'error');
-                    loadLeadsTable(currentPage);
+                    resetQuickEditSelect($select);
                 }
             },
             error: function() {
                 showToast('Server error saving changes.', 'error');
-                loadLeadsTable(currentPage);
+                resetQuickEditSelect($select);
             }
         });
     }
@@ -520,6 +539,13 @@ jQuery(document).ready(function($) {
         var field = $select.data('field');
         var leadId = $select.data('id');
         var val = $select.val();
+
+        if ($select.hasClass('idlm-drawer-stage-select') && window.idlmHasUnsavedChanges) {
+            if (!window.confirm('Changing the stage refreshes this drawer. Continue and discard other unsaved edits?')) {
+                resetQuickEditSelect($select);
+                return;
+            }
+        }
 
         // If callback status chosen, request datetime callback scheduler using custom modal
         if (field === 'call_status' && val === 'Call Back Requested') {
@@ -647,7 +673,7 @@ jQuery(document).ready(function($) {
         updateBodyScrollLock();
         if (activeWonSelect) {
             // Reset dropdown select to database state
-            loadLeadsTable(currentPage);
+            resetQuickEditSelect(activeWonSelect.select);
             activeWonSelect = null;
         }
     });
@@ -675,7 +701,7 @@ jQuery(document).ready(function($) {
         $('#idlm-quote-value-modal').removeClass('active');
         updateBodyScrollLock();
         if (activeQuoteSelect) {
-            loadLeadsTable(currentPage);
+            resetQuickEditSelect(activeQuoteSelect.select);
             activeQuoteSelect = null;
         }
     });
@@ -719,7 +745,7 @@ jQuery(document).ready(function($) {
         $('#idlm-lost-remark-modal').removeClass('active');
         updateBodyScrollLock();
         if (activeLostSelect) {
-            loadLeadsTable(currentPage);
+            resetQuickEditSelect(activeLostSelect.select);
             activeLostSelect = null;
         }
         activeLostBulkAction = null;
@@ -1672,15 +1698,20 @@ jQuery(document).ready(function($) {
         var files = $inputEl[0].files;
         if (files.length === 0) return;
 
-        var file = files[0];
         var inputId = $inputEl.data('input-id');
         var previewId = $inputEl.data('preview-id');
         var $hiddenInput = $('#' + inputId);
         var $preview = $('#' + previewId);
         var $button = $inputEl.siblings('.idlm-direct-upload-trigger');
 
-        var formData = new FormData();
         var uploadPurpose = inputId === 'idlm_floor_plan_file' ? 'floor_plan' : 'quote';
+        if (uploadPurpose === 'floor_plan') {
+            uploadFloorPlanFiles(Array.prototype.slice.call(files), $inputEl, $preview, $button);
+            return;
+        }
+
+        var file = files[0];
+        var formData = new FormData();
         formData.append('action', 'idlm_upload_lead_file');
         formData.append('nonce', idlm_vars.nonce);
         formData.append('purpose', uploadPurpose);
@@ -1722,6 +1753,96 @@ jQuery(document).ready(function($) {
                 showToast('Server error uploading file.', 'error');
             }
         });
+    });
+
+    function getFloorPlanFiles() {
+        try {
+            var files = JSON.parse($('#idlm_floor_plan_files').val() || '[]');
+            return Array.isArray(files) ? files.filter(Boolean).slice(0, 20) : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function renderFloorPlanFiles(files) {
+        var $list = $('#idlm_floor_plan_preview').empty();
+        $('#idlm_floor_plan_files').val(JSON.stringify(files));
+        $('#idlm_floor_plan_file').val(files[0] || '');
+        $('select[name="floor_plan_received"]').val(files.length ? '1' : '0');
+        $('.idlm-file-input[data-input-id="idlm_floor_plan_file"]').siblings('.idlm-direct-upload-trigger').text(files.length ? 'Add Floor Plans' : 'Upload Floor Plans');
+        if (!files.length) {
+            $list.text('No file uploaded');
+            return;
+        }
+        files.forEach(function(url, index) {
+            var $item = $('<span>', { class: 'idlm-floor-plan-file', 'data-url': url });
+            $('<span>', { class: 'idlm-floor-plan-file-name', text: 'Floor plan ' + (index + 1) }).appendTo($item);
+            $('<a>', { href: url, target: '_blank', rel: 'noopener', class: 'idlm-file-link', text: 'View' }).appendTo($item);
+            $('<a>', { href: url, download: '', class: 'idlm-file-link', text: 'Download' }).appendTo($item);
+            $('<button>', { type: 'button', class: 'idlm-remove-floor-plan-btn', 'data-url': url, text: 'Remove' }).appendTo($item);
+            $list.append($item);
+        });
+    }
+
+    function uploadFloorPlanFiles(files, $inputEl, $preview, $button) {
+        var existing = getFloorPlanFiles();
+        files = files.slice(0, Math.max(0, 20 - existing.length));
+        if (!files.length) {
+            showToast('A maximum of 20 floor plans can be attached.', 'error');
+            $inputEl.val('');
+            return;
+        }
+        $preview.html('<span>Uploading 0 of ' + files.length + '…</span>');
+        $button.prop('disabled', true);
+        var uploaded = 0;
+
+        function uploadNext() {
+            if (uploaded >= files.length) {
+                renderFloorPlanFiles(existing);
+                $button.prop('disabled', false);
+                $inputEl.val('');
+                showToast('Floor plans uploaded successfully!', 'success');
+                return;
+            }
+            var formData = new FormData();
+            formData.append('action', 'idlm_upload_lead_file');
+            formData.append('nonce', idlm_vars.nonce);
+            formData.append('purpose', 'floor_plan');
+            formData.append('file', files[uploaded]);
+            $.ajax({
+                url: idlm_vars.ajax_url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        existing.push(response.data.url);
+                        uploaded++;
+                        $preview.html('<span>Uploading ' + uploaded + ' of ' + files.length + '…</span>');
+                        uploadNext();
+                    } else {
+                        renderFloorPlanFiles(existing);
+                        $button.prop('disabled', false);
+                        $inputEl.val('');
+                        showToast(response.data.message || 'Floor plan upload failed.', 'error');
+                    }
+                },
+                error: function() {
+                    renderFloorPlanFiles(existing);
+                    $button.prop('disabled', false);
+                    $inputEl.val('');
+                    showToast('Server error uploading floor plan.', 'error');
+                }
+            });
+        }
+        uploadNext();
+    }
+
+    $(document).on('click', '.idlm-remove-floor-plan-btn', function(e) {
+        e.preventDefault();
+        var url = String($(this).data('url') || '');
+        renderFloorPlanFiles(getFloorPlanFiles().filter(function(fileUrl) { return fileUrl !== url; }));
     });
 
     // Remove file handler

@@ -16,7 +16,7 @@ jQuery(document).ready(function($) {
         loadKanbanBoard();
     }, 300));
 
-    $('#idlm-kanban-filter-date-basis, #idlm-kanban-filter-date-range, #idlm-kanban-filter-rep, #idlm-kanban-filter-source, #idlm-kanban-filter-call-status, #idlm-kanban-filter-quality').on('change', function() {
+    $('#idlm-kanban-filter-date-basis, #idlm-kanban-filter-date-range, #idlm-kanban-filter-rep, #idlm-kanban-filter-source, #idlm-kanban-filter-call-status, #idlm-kanban-filter-quality, #idlm-kanban-sort').on('change', function() {
         loadKanbanBoard();
     });
 
@@ -314,7 +314,8 @@ jQuery(document).ready(function($) {
             rep_id: $('#idlm-kanban-filter-rep').val(),
             source: $('#idlm-kanban-filter-source').val(),
             call_status: $('#idlm-kanban-filter-call-status').val(),
-            quality: $('#idlm-kanban-filter-quality').val()
+            quality: $('#idlm-kanban-filter-quality').val(),
+            sort: $('#idlm-kanban-sort').val()
         };
 
         $.ajax({
@@ -345,12 +346,11 @@ jQuery(document).ready(function($) {
 
     function renderKanbanStats(stats) {
         var currencySymbol = $('#idlm-kanban-board').data('currency-symbol') || '';
-        $('#idlm-stat-assigned-active').text(Number(stats.assigned_filtered) || 0);
+        $('#idlm-stat-overall-leads').text(Number(stats.total_filtered) || 0);
         $('#idlm-stat-followups-due').text(Number(stats.followups_due) || 0);
-        $('#idlm-stat-qualified-pipeline').text(Number(stats.qualified_filtered) || 0);
         $('#idlm-stat-pipeline-value').text(currencySymbol + formatPipelineValue(Number(stats.open_pipeline_value) || 0));
-        $('#idlm-stat-won-month').text(Number(stats.won_filtered) || 0);
-        $('#idlm-stat-won-revenue').text(currencySymbol + formatPipelineValue(Number(stats.won_revenue_filtered) || 0));
+        $('#idlm-stat-won-month').text(Number(stats.won_current_month) || 0);
+        $('#idlm-stat-won-revenue').text(currencySymbol + formatPipelineValue(Number(stats.won_revenue_current_month) || 0));
 
         $('.idlm-kanban-stat-attention').toggleClass('has-value', (Number(stats.followups_due) || 0) > 0);
     }

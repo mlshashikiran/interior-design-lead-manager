@@ -10,6 +10,32 @@ if (!defined('ABSPATH')) {
 }
 
 final class IDLM_Admin_Presenter {
+    /** Normalize legacy single URLs and the multi-file JSON representation. */
+    public static function normalize_floor_plan_files($value, $legacy_url = '') {
+        $files = is_array($value) ? $value : json_decode((string) $value, true);
+        if (!is_array($files)) {
+            $files = array();
+        }
+        if ($legacy_url) {
+            array_unshift($files, $legacy_url);
+        }
+
+        $normalized = array();
+        foreach ($files as $file) {
+            $url = is_array($file) ? ($file['url'] ?? '') : $file;
+            $url = esc_url_raw((string) $url);
+            $scheme = strtolower((string) wp_parse_url($url, PHP_URL_SCHEME));
+            if (!$url || !in_array($scheme, array('http', 'https'), true) || in_array($url, $normalized, true)) {
+                continue;
+            }
+            $normalized[] = $url;
+            if (20 <= count($normalized)) {
+                break;
+            }
+        }
+        return $normalized;
+    }
+
     /** Return the user-facing qualification status without changing stored values. */
     public static function get_qualification_status_label($lead) {
         $quality = is_object($lead) ? ($lead->lead_quality ?? '') : ($lead['lead_quality'] ?? '');

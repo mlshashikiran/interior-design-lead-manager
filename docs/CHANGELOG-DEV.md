@@ -4,6 +4,31 @@ Use this log for meaningful architectural or behavioral engineering changes. Pub
 
 ## 2026-08-31
 
+- **Area:** Kanban stage visibility and sorting
+- **Change:** Omitted New and Contacted from the sales board and added a whitelisted server-side card sort for lead age and name. Builder: Shashi.
+- **Files affected:** Kanban renderer, template, AJAX read, client script, tests, release metadata, and changelogs.
+- **Compatibility notes:** New and Contacted remain valid persisted lifecycle stages and continue to work outside the Kanban view. The existing authenticated action, filters, access scope, and stage-transition workflow remain unchanged. Plugin version advanced from `1.101.2` to `1.101.3`.
+
+- **Area:** Lead drawer stage authorization
+- **Change:** Made the header Stage card read-only for the dedicated pre-sales role and added request-context authorization that permits drawer-header stage changes only outside pre-sales. Builder: Shashi.
+- **Files affected:** Lead-detail renderer, shared admin client, authenticated quick-edit handler, fast tests, release metadata, and changelogs.
+- **Compatibility notes:** Pre-sales qualification workflows and table-stage policy remain unchanged; sales representatives and managers retain the drawer selector. Plugin version advanced from `1.101.1` to `1.101.2`.
+
+- **Area:** Lead drawer stage transitions
+- **Change:** Replaced the read-only header Stage value with an accessible quick-edit selector that reuses the established stage endpoint and its Won, Quote Shared, and Lost completion dialogs. Builder: Shashi.
+- **Files affected:** Lead-detail renderer, shared admin client, drawer styles, fast contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing action names, nonces, object access, lifecycle validation, activity hooks, stage vocabulary, table editing, and modal requirements remain unchanged. Plugin version advanced from `1.101.0` to `1.101.1`.
+
+- **Area:** Floor-plan attachments
+- **Change:** Added a JSON-backed multi-file floor-plan field, sequential secure uploads, legacy single-URL normalization, and per-file View, Download, and Remove controls. Builder: Shashi.
+- **Files affected:** Core lead schema, presenter, lead drawer read/save flow, upload client, drawer styles, tests, data/interface documentation, release metadata, and changelogs.
+- **Compatibility notes:** Existing `floor_plan_file`, Media Library attachments, upload action, nonce/capability boundary, and accepted file types remain supported. Core schema advanced from `1.2.0` to `1.3.0`; plugin version advanced from `1.100.13` to `1.101.0`.
+
+- **Area:** Kanban header metrics
+- **Change:** Consolidated assigned/qualified counts into one overall filtered lead count and isolated current-month Won count/revenue from the board date-basis constraint by using `conversion_time`. Builder: Shashi.
+- **Files affected:** Kanban AJAX aggregation, template, JavaScript rendering, fast contracts, release metadata, and changelogs.
+- **Compatibility notes:** The existing authenticated Kanban action, board filters, stage grouping, and UI entry points remain unchanged. Plugin version advanced from `1.100.12` to `1.100.13`.
+
 - **Area:** Catalogue item identity
 - **Change:** Added repository-owned automatic `ITEM-000001`-style code assignment after catalogue insertion, shared by manual creation and CSV imports with an empty item-code cell. Builder: Shashi.
 - **Files affected:** Quotation repository, catalogue handlers and renderer, fast tests, catalogue flow documentation, release metadata, and changelogs.

@@ -356,6 +356,15 @@ idlm_test('quick edit enforces object ownership for restricted representatives',
     assert_same('New', $GLOBALS['wpdb']->rows('idlm_leads')[0]['stage']);
 });
 
+idlm_test('pre-sales cannot change stage from the lead drawer header', static function(): void {
+    idlm_test_login(5, array('idlm_pre_sales'), array('idlm_access_leads', 'idlm_qualify_leads'));
+    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 5))));
+    $_POST = array('lead_id' => 1, 'field' => 'stage', 'value' => 'Contacted', 'edit_context' => 'drawer_header');
+    $response = expect_json_response(static fn() => IDLM_Admin::ajax_quick_edit_lead(), false);
+    assert_contains('Only sales representatives and managers', (string) $response->data['message']);
+    assert_same('New', $GLOBALS['wpdb']->rows('idlm_leads')[0]['stage']);
+});
+
 idlm_test('bulk lifecycle mutation enforces object ownership for every restricted representative', static function(): void {
     idlm_test_login(5, array('sales_executive'), array('idlm_access_leads'));
     $GLOBALS['idlm_test_options']['idlm_reps_see_all_leads'] = '0';
@@ -472,6 +481,22 @@ idlm_test('lead attachment policies are field-specific and reject unknown purpos
     assert_contains('IDLM_Production_Security::validate_upload', $source);
     assert_contains('_idlm_attachment_owner_id', $source);
     assert_contains('wp_delete_attachment($attachment_id, true)', $source);
+});
+
+idlm_test('floor plan attachments normalize legacy and multi-file values safely', static function(): void {
+    $files = IDLM_Admin_Presenter::normalize_floor_plan_files(
+        wp_json_encode(array('https://example.test/plan-b.pdf', 'javascript:alert(1)', 'https://example.test/plan-a.png')),
+        'https://example.test/plan-a.png'
+    );
+    assert_same(array('https://example.test/plan-a.png', 'https://example.test/plan-b.pdf'), $files);
+
+    $drawer_source = file_get_contents(dirname(__DIR__) . '/includes/class-admin-lead-reads.php');
+    $script_source = file_get_contents(dirname(__DIR__) . '/assets/js/admin-app.js');
+    assert_contains('name="floor_plan_files"', $drawer_source);
+    assert_contains('multiple style="display: none;"', $drawer_source);
+    assert_contains('>View</a>', $drawer_source);
+    assert_contains('>Download</a>', $drawer_source);
+    assert_contains('uploadFloorPlanFiles', $script_source);
 });
 
 idlm_test('Google feed permission uses dedicated Basic Auth and preserves its challenge', static function(): void {
@@ -935,6 +960,7 @@ idlm_test('core schema baseline declares required lifecycle columns, defaults, a
     $leads_sql = $GLOBALS['wpdb']->dbdelta[0];
     assert_contains("handoff_status varchar(30) DEFAULT 'not_ready'", $leads_sql);
     assert_contains('qualified_at datetime DEFAULT NULL', $leads_sql);
+    assert_contains('floor_plan_files longtext DEFAULT NULL', $leads_sql);
     assert_contains('KEY assigned_at (assigned_at)', $leads_sql);
     assert_contains('KEY duplicate_of_id (duplicate_of_id)', $leads_sql);
     $tasks_sql = $GLOBALS['wpdb']->dbdelta[5];

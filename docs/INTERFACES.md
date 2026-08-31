@@ -44,13 +44,15 @@ The first namespace’s routes use dedicated permission callbacks and retain han
 | `idlm_trigger_manual_audience_sync` | `class-admin.php` | Administrator; queue/run audience sync |
 | `idlm_test_api_connection`, `idlm_retry_capi_events`, `idlm_clear_telemetry_logs`, `idlm_download_diagnostic_report`, `idlm_save_routing_settings`, `idlm_run_fallback_now`, `idlm_get_mapped_past_leads`, `idlm_sync_mapped_past_batch` | `class-admin.php` | Administrator; integration/diagnostic/routing operations |
 | `idlm_log_js_error` | `class-admin.php` | CRM nonce; persists client telemetry |
-| `idlm_upload_lead_file` | `class-admin.php` | CRM; creates Media Library attachment and returns URL/ID |
+| `idlm_upload_lead_file` | `class-admin.php` | CRM; creates one validated Media Library attachment and returns URL/ID. The floor-plan client may call it sequentially for a bounded multi-file selection. |
 | `idlm_get_total_leads_count`, `idlm_reset_crm_data`, `idlm_delete_lead`, `idlm_import_leads_batch` | `class-admin.php` | Administrator; destructive/count/import operations |
 | `idlm_get_lead_tasks`, `idlm_add_lead_task`, `idlm_toggle_task_status`, `idlm_delete_lead_task`, `idlm_get_rep_tasks` | `class-admin.php` | CRM plus lead ownership/visibility; task CRUD/list |
 | `idlm_search_quote_catalogue`, `idlm_search_quote_leads` | `class-quotations.php` | Quote search nonce + `idlm_create_quotes`; `IDLM_Quotation_Policy` capability check and lead results scoped by `IDLM_Quotation_Lead_Read_Model` to owner unless manager |
 | `idlm_autosave_quote`, `idlm_discard_quote_autosave` | `class-quotations.php` | Quote autosave nonce + draft-edit capability + lead/revision access; transient working copy |
 
 `idlm_get_leads_table` retains its established `page`, `per_page`, filter, sort, HTML, `current_page`, and `total_pages` contract. For the default non-pre-sales queue it may additionally accept a server-issued `cursor` and returns additive `pagination_mode` and `next_cursor` fields. Cursors are opaque, signed, user/filter/access-bound, and short-lived. Custom sorts, pre-sales ordering, and callers that omit a cursor retain page-offset behavior.
+
+`idlm_get_kanban_leads` accepts an optional `sort` value of `newest`, `oldest`, `name_asc`, or `name_desc`. The sales-board response omits the persisted New and Contacted lifecycle stages; those stages remain available to other lead workflows.
 
 ## Admin-post actions
 

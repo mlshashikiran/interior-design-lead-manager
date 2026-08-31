@@ -68,6 +68,11 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             'SGD' => 'S$'
         );
         $currency_symbol = isset($currency_symbols[$currency_code]) ? $currency_symbols[$currency_code] : $currency_code;
+        $stages = get_option('idlm_custom_stages', array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'));
+        $floor_plan_files = IDLM_Admin_Presenter::normalize_floor_plan_files(
+            isset($lead->floor_plan_files) ? $lead->floor_plan_files : '',
+            isset($lead->floor_plan_file) ? $lead->floor_plan_file : ''
+        );
 
         // Fetch duplicate leads if any
         $duplicates = array();
@@ -151,8 +156,17 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                     <span class="idlm-drawer-status-value"><?php echo esc_html($lead->call_status ? $lead->call_status : 'Not Called'); ?></span>
                 </div>
                 <div class="idlm-drawer-status-item">
-                    <span class="idlm-drawer-status-label">STAGE</span>
-                    <span class="idlm-drawer-status-value"><?php echo esc_html($lead->stage ? $lead->stage : 'New'); ?></span>
+                    <?php if (self::current_user_is_pre_sales()): ?>
+                        <span class="idlm-drawer-status-label">STAGE</span>
+                        <span class="idlm-drawer-status-value"><?php echo esc_html($lead->stage ? $lead->stage : 'New'); ?></span>
+                    <?php else: ?>
+                        <label class="idlm-drawer-status-label" for="idlm-drawer-stage-select">STAGE</label>
+                        <select id="idlm-drawer-stage-select" class="idlm-drawer-stage-select idlm-quick-edit" data-field="stage" data-edit-context="drawer_header" data-id="<?php echo esc_attr($lead->id); ?>" data-original-value="<?php echo esc_attr($lead->stage ? $lead->stage : 'New'); ?>" data-property-location="<?php echo esc_attr($lead->property_location); ?>" data-quote-value="<?php echo esc_attr(isset($lead->quote_value) ? $lead->quote_value : ''); ?>" data-quote-file="<?php echo esc_url(isset($lead->quote_file) ? $lead->quote_file : ''); ?>" aria-label="Change lead stage">
+                            <?php foreach ($stages as $stage): ?>
+                                <option value="<?php echo esc_attr($stage); ?>" <?php selected($lead->stage ? $lead->stage : 'New', $stage); ?>><?php echo esc_html($stage); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
                 </div>
                 <div class="idlm-drawer-status-item">
                     <span class="idlm-drawer-status-label">ASSIGNED REP</span>
@@ -367,15 +381,22 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                             <option value="0" <?php selected($lead->floor_plan_received, 0); ?>>No</option>
                                         </select>
                                         <div class="idlm-drawer-file-row">
-                                            <input type="hidden" name="floor_plan_file" id="idlm_floor_plan_file" value="<?php echo esc_attr(isset($lead->floor_plan_file) ? $lead->floor_plan_file : ''); ?>">
-                                            <input type="file" class="idlm-file-input" data-input-id="idlm_floor_plan_file" data-preview-id="idlm_floor_plan_preview" accept=".pdf,.jpg,.jpeg,.png,.webp" style="display: none;">
+                                            <input type="hidden" name="floor_plan_file" id="idlm_floor_plan_file" value="<?php echo esc_attr(isset($floor_plan_files[0]) ? $floor_plan_files[0] : ''); ?>">
+                                            <input type="hidden" name="floor_plan_files" id="idlm_floor_plan_files" value="<?php echo esc_attr(wp_json_encode($floor_plan_files)); ?>">
+                                            <input type="file" class="idlm-file-input" data-input-id="idlm_floor_plan_file" data-preview-id="idlm_floor_plan_preview" accept=".pdf,.jpg,.jpeg,.png,.webp" multiple style="display: none;">
                                             <button type="button" class="idlm-drawer-btn-file idlm-direct-upload-trigger">
-                                                <?php echo !empty($lead->floor_plan_file) ? 'Change File' : 'Upload Floor Plan'; ?>
+                                                <?php echo $floor_plan_files ? 'Add Floor Plans' : 'Upload Floor Plans'; ?>
                                             </button>
-                                            <span id="idlm_floor_plan_preview" class="idlm-drawer-file-note">
-                                                <?php if (!empty($lead->floor_plan_file)): ?>
-                                                    <a href="<?php echo esc_url($lead->floor_plan_file); ?>" target="_blank" class="idlm-file-link" style="color: var(--gold); font-weight: 500; text-decoration: none;">📄 View File</a>
-                                                    <button type="button" class="idlm-remove-file-btn" data-input-id="idlm_floor_plan_file" data-preview-id="idlm_floor_plan_preview" style="background:none; border:none; color:var(--red); cursor:pointer; font-size:12px; padding:0; margin-left:5px; font-weight:500;">Remove</button>
+                                            <span id="idlm_floor_plan_preview" class="idlm-drawer-file-note idlm-floor-plan-file-list">
+                                                <?php if ($floor_plan_files): ?>
+                                                    <?php foreach ($floor_plan_files as $index => $floor_plan_url): ?>
+                                                        <span class="idlm-floor-plan-file" data-url="<?php echo esc_url($floor_plan_url); ?>">
+                                                            <span class="idlm-floor-plan-file-name">Floor plan <?php echo esc_html($index + 1); ?></span>
+                                                            <a href="<?php echo esc_url($floor_plan_url); ?>" target="_blank" rel="noopener" class="idlm-file-link">View</a>
+                                                            <a href="<?php echo esc_url($floor_plan_url); ?>" download class="idlm-file-link">Download</a>
+                                                            <button type="button" class="idlm-remove-floor-plan-btn" data-url="<?php echo esc_url($floor_plan_url); ?>">Remove</button>
+                                                        </span>
+                                                    <?php endforeach; ?>
                                                 <?php else: ?>
                                                     No file uploaded
                                                 <?php endif; ?>
@@ -724,4 +745,3 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         ));
     }
 }
-

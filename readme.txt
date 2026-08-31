@@ -3,7 +3,7 @@ Contributors: shashi-protecto
 Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 1.100.12
+Stable tag: 1.101.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,36 @@ Yes. Phone values are normalized and suffix-matched to reconcile common local an
 No. Action Scheduler is used when available; WordPress Cron is the fallback.
 
 == Changelog ==
+
+= 1.101.3 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Removed New and Contacted from the Kanban sales board and added card sorting by lead age or name.
+
+= 1.101.2 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Restricted the lead drawer header Stage editor to sales representatives and managers; pre-sales users retain a read-only Stage card.
+
+= 1.101.1 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Made the lead drawer header Stage card editable with the existing secured stage-transition workflow.
+
+= 1.101.0 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Added multi-file floor-plan uploads with individual View, Download, and Remove controls while retaining existing floor-plan files.
+
+= 1.100.13 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Consolidated the Kanban header into an overall filtered lead count and made current-month won count/revenue use the Won conversion date regardless of the board's selected lead-date basis.
 
 = 1.100.12 =
 

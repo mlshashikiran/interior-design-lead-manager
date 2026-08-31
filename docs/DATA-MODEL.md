@@ -6,7 +6,7 @@ Tables use `$wpdb->prefix`; names below omit the site prefix. No database foreig
 
 | Table | Important data and relationships | Created/migrated |
 |---|---|---|
-| `idlm_leads` | Canonical lead/profile, source/UTM/click IDs, commercial fields, pipeline/quality/call status, owner and qualification/handoff timestamps, duplicate linkage (`duplicate_of_id -> leads.id`) and response timings. User-like IDs point to `wp_users.ID`. | `IDLM_DB::create_tables()` plus idempotent backfills in `IDLM_DB::init()` |
+| `idlm_leads` | Canonical lead/profile, source/UTM/click IDs, commercial fields, pipeline/quality/call status, owner and qualification/handoff timestamps, duplicate linkage (`duplicate_of_id -> leads.id`) and response timings. `floor_plan_files` stores a bounded JSON URL list while `floor_plan_file` retains the first URL for compatibility. User-like IDs point to `wp_users.ID`. | `IDLM_DB::create_tables()` plus idempotent backfills in `IDLM_DB::init()` |
 | `idlm_lead_activity_log` | Append-style activity: `lead_id -> leads.id`, `user_id -> wp_users.ID`, type, text details, time. Some structured details are JSON strings interpreted by UI code. | `IDLM_DB::create_tables()` |
 | `idlm_tasks` | Lead tasks: lead/assignee/creator IDs, title, type, priority, `pending|completed`, due/completion timestamps. Qualification and Sales Follow-up types have lifecycle behavior. | `IDLM_DB::create_tables()` |
 | `idlm_call_logs` | Provider-neutral call audit: lead/user, provider and unique provider event, direction/outcome, recording URL/hash, duration, JSON-like `metadata`. | `IDLM_DB::create_tables()` |
@@ -64,7 +64,7 @@ erDiagram
 
 - `wp_users`/roles/capabilities provide identity and access. User IDs appear throughout lead, task, call, activity, and quote tables.
 - User meta: `idlm_phone`; `idlm_whatsapp_read_activity_ids` (per-user bounded list); fallback read of `billing_phone`. Standard first/last name and email are updated by My Account.
-- Attachments: lead floor-plan/file uploads use the WordPress Media Library (`wp_posts` attachment records); lead rows store the URL, not attachment ID.
+- Attachments: lead floor-plan/file uploads use the WordPress Media Library (`wp_posts` attachment records); lead rows store URLs, not attachment IDs. Floor plans support up to 20 URLs in `floor_plan_files`; `floor_plan_file` mirrors the first URL for compatibility.
 - No custom post types, taxonomies, post meta, or comments are registered.
 
 ## Options and transients

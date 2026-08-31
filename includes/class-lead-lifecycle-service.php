@@ -659,8 +659,8 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                         $type = 'call_status_change';
                     } elseif ($key === 'stage') {
                         $type = 'stage_change';
-                    } elseif ($key === 'floor_plan_file') {
-                        $msg = "Floor Plan file updated.";
+                    } elseif ($key === 'floor_plan_file' || $key === 'floor_plan_files') {
+                        $msg = "Floor Plan files updated.";
                     } elseif ($key === 'quote_file') {
                         $msg = "Quote file updated.";
                     } elseif ($key === 'callback_datetime') {

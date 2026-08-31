@@ -16,6 +16,7 @@ class IDLM_Admin_Kanban_Renderer {
         }
 
         $stages = get_option('idlm_custom_stages', array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'));
+        $stages = array_values(array_diff($stages, array('New', 'Contacted')));
         $currency_code = get_option('idlm_currency_code', 'INR');
         $currency_symbols = array(
             'INR' => '₹',

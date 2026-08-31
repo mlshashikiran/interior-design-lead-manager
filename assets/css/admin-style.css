@@ -830,6 +830,28 @@ body.idlm-filters-open {
     white-space: nowrap !important;
 }
 
+.idlm-drawer-stage-select {
+    width: 100% !important;
+    min-height: 28px !important;
+    margin: -3px 0 -4px !important;
+    padding: 3px 24px 3px 6px !important;
+    border: 1px solid transparent !important;
+    border-radius: 6px !important;
+    background-color: transparent !important;
+    color: #1f2937 !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}
+
+.idlm-drawer-stage-select:hover,
+.idlm-drawer-stage-select:focus {
+    border-color: var(--gold) !important;
+    background-color: var(--surface-soft) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(201, 150, 68, 0.14) !important;
+}
+
 .idlm-close {
     width: 40px !important;
     height: 40px !important;
@@ -1032,6 +1054,45 @@ body.idlm-filters-open {
     font-size: 12px !important;
     line-height: 1.3 !important;
     font-weight: 500 !important;
+}
+
+.idlm-floor-plan-file-list {
+    display: grid !important;
+    flex: 1 1 100% !important;
+    gap: 7px !important;
+}
+
+.idlm-floor-plan-file {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 10px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 8px !important;
+    background: var(--surface-soft) !important;
+}
+
+.idlm-floor-plan-file-name {
+    min-width: 90px !important;
+    color: var(--text) !important;
+    font-weight: 700 !important;
+}
+
+.idlm-floor-plan-file .idlm-file-link {
+    color: var(--gold) !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+}
+
+.idlm-remove-floor-plan-btn {
+    margin-left: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--red) !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
 }
 
 /* Attribution read-only Data Grid */

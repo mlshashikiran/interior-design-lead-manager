@@ -315,6 +315,7 @@ class IDLM_DB {
             num_rooms varchar(50) DEFAULT '',
             floor_plan_received tinyint(1) DEFAULT 0,
             floor_plan_file varchar(255) DEFAULT '',
+            floor_plan_files longtext DEFAULT NULL,
             quote_shared tinyint(1) DEFAULT 0,
             quote_value decimal(12,2) DEFAULT 0.00,
             quote_file varchar(255) DEFAULT '',
