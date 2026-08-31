@@ -4,7 +4,7 @@ Author / Builder: Shashi
 Status: Approved staged plan; Phases 0 through 9 are in progress  
 Prepared: 2026-08-30  
 Planning release: 1.98.2  
-Current implementation release: 1.99.10  
+Current implementation release: 1.100.7  
 Baseline implementation: 1.98.1
 
 ## Objective
@@ -377,7 +377,7 @@ Exit criteria:
 
 Progress evidence (version 1.99.8): Phase 9 has started with a dry-run preflight and explicitly confirmed artifact builder driven by `.distignore`. It aligns the plugin header, runtime constant, readme stable tag, changelog, and plan release; validates required runtime files and blocks development/private artifacts plus high-confidence credential signatures; requires one plugin directory; records an exact Git revision; and emits a SHA-256 checksum and aggregate manifest. Dirty local builds require `--allow-dirty` and remain labeled rehearsal-only. A GitHub release-artifact job waits for the complete PHP/WordPress matrix, builds from the clean checked-out revision, verifies the checksum, and uploads the ZIP and evidence together. Remote CI execution, tag/release creation, backup verification, staging deployment, production smoke, monitored rollout, and rollback rehearsal remain pending.
 
-Progress evidence (version 1.99.10): Phase 9 now independently reopens a CI-built candidate and binds its ZIP, checksum file, manifest, clean exact revision, GitHub run, completed matrix, version, file count, required runtime inventory, and single plugin directory before promotion to staging rehearsal. The integration harness now passes the disposable WordPress fixture root to its performance subprocesses in CI. CI emits an aggregate staging-gate report with database/media backup, restore, staging deployment, release matrix, schema, queue, cron, environment, monitoring, rollback-command, and controlled-smoke evidence explicitly pending. The verifier never extracts or deploys the archive, changes CRM state, or approves production. Remote CI execution, tag/release creation, operator evidence, staging deployment, production smoke, monitored rollout, and rollback rehearsal remain pending.
+Progress evidence (version 1.100.5): Phase 9 now independently reopens a CI-built candidate and binds its ZIP, checksum file, manifest, clean exact revision, GitHub run, completed matrix, version, file count, required runtime inventory, and single plugin directory before promotion to staging rehearsal. The integration harness now passes the disposable WordPress fixture root to its performance subprocesses in CI. CI emits an aggregate staging-gate report with database/media backup, restore, staging deployment, release matrix, schema, queue, cron, environment, monitoring, rollback-command, and controlled-smoke evidence explicitly pending. The verifier never extracts or deploys the archive, changes CRM state, or approves production. Remote CI execution, tag/release creation, operator evidence, staging deployment, production smoke, monitored rollout, and rollback rehearsal remain pending.
 
 ## Phase sequencing and release policy
 

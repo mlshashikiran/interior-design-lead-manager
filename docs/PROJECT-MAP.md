@@ -24,6 +24,9 @@ includes/class-settings.php, class-view.php; templates/
 includes/class-admin.php
     [Thin compatibility facade] Registrations, admin menus, and public
     AJAX/page/asset/shortcode/account/presentation delegates.
+includes/class-admin-users-controller.php; templates/admin/users.php
+    [User access] Administrator-only CRM user listing, account creation, managed role changes,
+    access suspension/restoration, reset-link initiation, and self/final-admin safeguards.
 includes/class-admin-assets.php, class-admin-shortcodes.php
     [Shell controllers] Shared asset registration/context enqueueing and frontend
     shortcode/composite-workspace orchestration.

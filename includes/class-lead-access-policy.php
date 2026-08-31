@@ -12,11 +12,13 @@ final class IDLM_Lead_Access_Policy {
 
     public static function has_rep_access() {
         if (!is_user_logged_in()) { return false; }
+        if (class_exists('IDLM_Admin_Users_Controller') && IDLM_Admin_Users_Controller::is_crm_access_disabled(get_current_user_id())) { return false; }
         if (current_user_can('manage_options')) { return true; }
         return (bool) array_intersect((array) wp_get_current_user()->roles, self::allowed_rep_roles());
     }
 
     public static function can_assign() {
+        if (class_exists('IDLM_Admin_Users_Controller') && IDLM_Admin_Users_Controller::is_crm_access_disabled(get_current_user_id())) { return false; }
         return current_user_can('manage_options') || current_user_can('idlm_assign_leads');
     }
 

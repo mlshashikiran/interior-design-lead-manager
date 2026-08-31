@@ -10,6 +10,8 @@ class IDLM_Admin {
         add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_frontend_assets'));
         add_action('admin_post_idlm_update_my_account', array(__CLASS__, 'handle_update_my_account'));
         add_action('admin_post_idlm_rotate_api_credential', array(__CLASS__, 'handle_rotate_api_credential'));
+        add_action('admin_post_idlm_create_user', array(__CLASS__, 'handle_create_user'));
+        add_action('admin_post_idlm_update_user', array(__CLASS__, 'handle_update_user'));
 
         // Shortcodes for frontend lead manager & dashboard
         add_shortcode('idlm_leads_list', array(__CLASS__, 'render_leads_list_shortcode'));
@@ -275,6 +277,8 @@ class IDLM_Admin {
     public static function handle_rotate_api_credential() {
         return IDLM_Admin_Settings_Controller::handle_rotate_api_credential();
     }
+    public static function handle_create_user() { return IDLM_Admin_Users_Controller::handle_create(); }
+    public static function handle_update_user() { return IDLM_Admin_Users_Controller::handle_update(); }
 
     /**
      * Set up admin menus
@@ -343,6 +347,7 @@ class IDLM_Admin {
             'idlm_settings',
             array(__CLASS__, 'render_settings_page')
         );
+        add_submenu_page('interior-design-lead-manager', 'Users & Access', 'Users & Access', 'manage_options', 'idlm_users_access', array(__CLASS__, 'render_users_access_page'));
     }
 
     /**
@@ -351,6 +356,7 @@ class IDLM_Admin {
     public static function render_dashboard_page() {
         return IDLM_Admin_Dashboard_Renderer::render();
     }
+    public static function render_users_access_page() { return IDLM_Admin_Users_Controller::render(); }
 
     /**
      * Render Leads List Page

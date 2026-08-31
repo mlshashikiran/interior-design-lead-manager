@@ -40,8 +40,8 @@ idlm_test('admin facade preserves every public compatibility method and its size
         'check_lead_overdue_status', 'get_pending_calls_count', 'register_core_assets', 'enqueue_assets',
         'enqueue_frontend_assets', 'render_leads_list_shortcode', 'render_dashboard_shortcode',
         'render_kanban_shortcode', 'render_workspace_shortcode', 'render_my_account_page',
-        'handle_update_my_account', 'handle_rotate_api_credential', 'register_admin_menus',
-        'render_dashboard_page', 'render_leads_list_page', 'render_common_overlays', 'render_kanban_page',
+        'handle_update_my_account', 'handle_rotate_api_credential', 'handle_create_user', 'handle_update_user', 'register_admin_menus',
+        'render_dashboard_page', 'render_users_access_page', 'render_leads_list_page', 'render_common_overlays', 'render_kanban_page',
         'render_capi_logs_page', 'render_audience_sync_logs_page', 'render_settings_page',
         'ajax_get_lead_details', 'ajax_get_lead_activity', 'ajax_quick_edit_lead',
         'ajax_log_presales_touch', 'ajax_presales_decision', 'ajax_save_activity_comment',
@@ -64,7 +64,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
     })));
 
     assert_same($expected, $actual, 'The IDLM_Admin public compatibility surface changed.');
-    assert_same(75, count($actual));
+    assert_same(78, count($actual));
     assert_true(count(file(dirname(__DIR__) . '/includes/class-admin.php')) <= 3240, 'The Phase 2 admin facade exceeded its 3,240-line size contract.');
 });
 
@@ -117,7 +117,7 @@ idlm_test('admin hooks, AJAX actions, shortcodes, and menu callbacks remain regi
     )));
     $expected_actions = array(
         'admin_menu', 'admin_enqueue_scripts', 'wp_enqueue_scripts',
-        'admin_post_idlm_update_my_account', 'admin_post_idlm_rotate_api_credential',
+        'admin_post_idlm_update_my_account', 'admin_post_idlm_rotate_api_credential', 'admin_post_idlm_create_user', 'admin_post_idlm_update_user',
         'wp_ajax_idlm_get_lead_details', 'wp_ajax_idlm_get_lead_activity',
         'wp_ajax_idlm_quick_edit_lead', 'wp_ajax_idlm_save_activity_comment',
         'wp_ajax_idlm_edit_activity_comment', 'wp_ajax_idlm_delete_activity_comment',
@@ -154,9 +154,9 @@ idlm_test('admin hooks, AJAX actions, shortcodes, and menu callbacks remain regi
     }, $GLOBALS['idlm_test_menu_calls']);
     assert_same(array(
         'interior-design-lead-manager', 'interior-design-lead-manager', 'idlm_leads_list',
-        'idlm_kanban', 'idlm_capi_logs', 'idlm_audience_sync_logs', 'idlm_settings',
+        'idlm_kanban', 'idlm_capi_logs', 'idlm_audience_sync_logs', 'idlm_settings', 'idlm_users_access',
     ), $slugs);
-    assert_same(array('read', 'read', 'read', 'read', 'manage_options', 'manage_options', 'manage_options'), $caps);
+    assert_same(array('read', 'read', 'read', 'read', 'manage_options', 'manage_options', 'manage_options', 'manage_options'), $caps);
 });
 
 idlm_test('admin core asset handles and localized JavaScript contract remain stable', static function(): void {

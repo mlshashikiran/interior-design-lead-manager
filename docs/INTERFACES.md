@@ -2,6 +2,8 @@
 
 Authentication notation: **CRM** = `manage_options`, `idlm_access_leads`, or recognized CRM role access as implemented by `IDLM_Admin`; **object** = ownership/visibility check; all AJAX actions are logged-in-only and use `idlm_admin_nonce` unless noted.
 
+`idlm_create_user` and `idlm_update_user`: administrator-only admin-post actions with their own nonces. They create or update only managed CRM roles, preserve historical CRM ownership, and reject an administrator self-lockout or removal of the final administrator.
+
 ## Shortcodes
 
 | Name | Location | Purpose | Access / output |

@@ -36,6 +36,37 @@ Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PROJECT-MAP.md](docs/PR
 - `includes/class-telemetry.php`, `class-mcp-core.php`, `mcp-server.php`: diagnostics and read-only CRM MCP access.
 - `assets/js/`: jQuery-based CRM clients; `admin-app.js` is shared by admin and shortcodes. `assets/css/`: shared and module styles. New reusable PHP views belong under `templates/` and receive a single context array.
 
+## Agent and effort selection
+
+- Treat Sol as the primary orchestrator for architectural decisions, security-sensitive work, ambiguous changes, cross-cutting behavior, and final review.
+- Escalate to Sol before changing authentication, authorization, permissions, secrets, database schemas or migrations, public APIs or endpoints, concurrency or transactions, destructive operations, or unclear architecture.
+- Where the current Codex environment supports model-specific subagent delegation, prefer Terra for bounded routine implementation and ordinary code review, and Luna for low-risk repository discovery, mechanical or repetitive edits, straightforward tests, and documentation maintenance.
+- If model-specific subagent delegation is not available, preserve the same risk-based division of work using the available subagent or primary-agent capabilities rather than failing the task.
+- The primary Sol agent must review and verify any subagent output that affects production behavior, public interfaces, security boundaries, data integrity, or architecture before those changes are accepted.
+
+### Reasoning effort
+
+Use only Low, Medium, or High effort:
+
+- Low — low-risk discovery, mechanical edits, simple documentation, and deterministic changes.
+- Medium — bounded implementation, ordinary debugging, test creation, and routine review.
+- High — architecture, security, ambiguous behavior, cross-cutting changes, sensitive data, interface changes, migrations, concurrency, destructive operations, and final review of high-risk work.
+
+Do not use High effort for routine work unless complexity or risk justifies it.
+
+### Shared requirements
+
+All agents must:
+
+- follow this guide and relevant files under `docs/`;
+- preserve existing project conventions and backward compatibility;
+- inspect both the current implementation and documented contracts, investigating and escalating material discrepancies rather than assuming either is automatically correct;
+- avoid unrelated refactoring;
+- preserve unrelated working-tree changes;
+- attribute authored metadata and engineering documentation to Shashi;
+- apply the repository's required version and changelog policy;
+- escalate uncertainty involving security, data integrity, architecture, or public interfaces rather than making risky assumptions.
+
 ## Implementation rules
 
 - Preserve procedural bootstrap plus static `IDLM_*` classes unless an explicitly planned migration changes them. There is no Composer, npm, autoloader, namespace, or build pipeline; use the committed fast and disposable native test suites.
@@ -53,6 +84,11 @@ Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PROJECT-MAP.md](docs/PR
 - Do not casually modify `class-admin.php`, `IDLM_DB::update_lead()`, `IDLM_DB::insert_lead()`, assignment atomics/fallbacks, REST authentication bypass, quotation save transactions/totals, reset/delete flows, or MCP SQL validation.
 
 ## Verification and documentation
+
+## Production deployment target
+
+- When Shashi requests deployment of this plugin to LIVE, use the saved `novamira-crm-qoakinterior` MCP connected to `https://crm.qoakinteriors.com`.
+- Confirm the MCP target domain before mutating production, deploy only the reviewed release artifact, and report the deployed version and verification result.
 
 For every successful change: follow the existing version pattern, increment the plugin version, keep the header/`IDLM_VERSION`/`readme.txt` stable tag aligned, update `CHANGELOG.md` with Shashi attribution, and record meaningful behavioral/architectural work in `docs/CHANGELOG-DEV.md`. Update the relevant focused document instead of duplicating details.
 

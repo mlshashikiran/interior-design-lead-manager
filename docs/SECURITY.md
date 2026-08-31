@@ -9,8 +9,11 @@ Activation/update reconciliation creates `idlm_pre_sales` and adds CRM capabilit
 - Quotes: `idlm_view_quotes`, `idlm_create_quotes`, `idlm_edit_quote_drafts`, `idlm_submit_quotes`, `idlm_mark_quotes_shared`, `idlm_accept_reject_quotes`, `idlm_create_quote_revisions`, `idlm_download_quote_pdf`.
 - Quote managers: `idlm_approve_quotes`, `idlm_cancel_quotes`, `idlm_manage_quote_settings`, `idlm_manage_quote_items`.
 - `manage_options` gates settings, diagnostics, imports, resets/deletes, routing controls, CAPI/audience logs, and several exports.
+- `manage_options` exclusively gates Users & Access. Its create/update handlers use action-specific nonces, an allowlist of managed CRM roles, duplicate account validation, and protections against self-lockout and removal of the final administrator.
 
 Pre-sales users cannot assign leads or author/progress quotations. Non-manager visibility depends on ownership, pre-sales qualification linkage, and `idlm_reps_see_all_leads`; mutating handlers should use `current_user_can_access_lead()`, while read handlers can use `current_user_can_view_lead()`.
+
+Users marked with the `idlm_crm_access_disabled` user meta retain their WordPress account and historical lead relationships, but cannot obtain CRM representative or quotation access.
 
 Quotation capability checks and object-level lead access are centralized in `IDLM_Quotation_Policy`. Administrators and users with `idlm_assign_leads` have unrestricted existing-lead scope after passing the required quotation capability; other quotation users are restricted to leads where `assigned_rep_id` is their current user ID. `IDLM_Quotation_Lead_Read_Model` applies that scope to lead existence, search, editor choices, and selected-lead prefilling.
 

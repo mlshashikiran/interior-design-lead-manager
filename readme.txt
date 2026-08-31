@@ -3,7 +3,7 @@ Contributors: shashi-protecto
 Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 1.99.10
+Stable tag: 1.100.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,12 +42,31 @@ No. Action Scheduler is used when available; WordPress Cron is the fallback.
 
 == Changelog ==
 
-= 1.99.10 =
+= 1.100.7 =
 
 * Date: 2026-08-31
 * Author / Builder: Shashi
-* Fixed the GitHub Actions native integration handoff so performance subprocesses receive the disposable WordPress root through `IDLM_PERF_WP_ROOT`.
-* Added a regression contract for the CI WordPress-root bridge; verified 99 fast contracts and 14 disposable native WordPress/MySQL tests.
+* Refined Sol/Terra/Luna delegation guidance, added model-delegation fallback and review verification requirements, and standardized effort selection to Low, Medium, and High.
+
+= 1.100.6 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Added project-specific Sol, Terra, and Luna delegation boundaries with Light, Medium, and High effort-selection rules.
+
+= 1.100.5 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Kept the Users & Access directory filter controls on one line, including on narrow screens.
+
+= 1.100.1 =
+
+* Date: 2026-08-31
+* Author / Builder: Shashi
+* Added an administrator-only Users & Access workspace to create CRM users, change managed CRM roles, suspend or restore CRM access, and send password-reset links.
+* CRM suspensions now deny representative and quotation access without deleting accounts or historical CRM ownership.
+* Refined the Users & Access interface and made it available in the administrator frontend workspace navigation.
 
 = 1.99.9 =
 

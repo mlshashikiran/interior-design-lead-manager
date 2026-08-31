@@ -4,6 +4,46 @@ Use this log for meaningful architectural or behavioral engineering changes. Pub
 
 ## 2026-08-31
 
+- **Area:** Agent delegation and effort selection
+- **Change:** Refined Sol orchestration and review verification boundaries, preserved Terra/Luna delegation fallback guidance, and standardized effort selection to Low, Medium, and High. Builder: Shashi.
+- **Files affected:** `AGENTS.md`, release metadata, release-alignment tests, `CHANGELOG.md`, and `readme.txt`.
+- **Compatibility notes:** Runtime behavior, hooks, routes, capabilities, schema, options, and stored data are unchanged. Plugin version advanced from `1.100.6` to `1.100.7`.
+
+- **Area:** Agent delegation and effort selection
+- **Change:** Added project guidance assigning architectural, security-sensitive, ambiguous, and final-review work to Sol; bounded routine implementation to Terra; and low-risk discovery, mechanical edits, tests, and documentation maintenance to Luna. Limited effort selection to Light, Medium, and High with risk-based boundaries. Builder: Shashi.
+- **Files affected:** Codex project guide, release-alignment tests, production release references, changelogs, and release metadata.
+- **Compatibility notes:** Runtime behavior, hooks, routes, capabilities, schema, options, and stored data are unchanged. Plugin version advanced from `1.100.5` to `1.100.6`.
+
+- **Area:** Users & Access filter layout
+- **Change:** Disabled wrapping for the inline directory filter controls and enabled narrow-screen horizontal scrolling. Builder: Shashi.
+- **Files affected:** admin style sheet, changelogs, and release metadata.
+- **Compatibility notes:** Filtering behavior and request parameters are unchanged. Plugin version advanced from `1.100.4` to `1.100.5`.
+
+- **Area:** Users & Access filter layout
+- **Change:** Changed the directory filter container to an inline control group while retaining its dedicated row. Builder: Shashi.
+- **Files affected:** admin style sheet, changelogs, and release metadata.
+- **Compatibility notes:** Filtering behavior and request parameters are unchanged. Plugin version advanced from `1.100.3` to `1.100.4`.
+
+- **Area:** Users & Access filter layout
+- **Change:** Moved the directory filter controls to a full-width row below the directory heading. Builder: Shashi.
+- **Files affected:** admin style sheet, changelogs, and release metadata.
+- **Compatibility notes:** Filtering behavior and request parameters are unchanged. Plugin version advanced from `1.100.2` to `1.100.3`.
+
+- **Area:** Frontend Users & Access rendering
+- **Change:** Replaced the wp-admin-only editable-role helper with the always-available WordPress role registry so `idlm_view=users` renders inside the frontend workspace. Builder: Shashi.
+- **Files affected:** user access controller, changelogs, and release metadata.
+- **Compatibility notes:** The CRM role allowlist and all user-management behavior remain unchanged. Plugin version advanced from `1.100.1` to `1.100.2`.
+
+- **Area:** Users & Access administration
+- **Change:** Added an administrator-only CRM user workspace with managed-role account creation and updates, phone metadata, CRM suspension/restoration, password-reset initiation, search/filtering, and self-lockout/final-administrator protection. CRM suspension is enforced by the representative and quotation policies without deleting WordPress users or altering historical lead ownership. Builder: Shashi.
+- **Files affected:** admin user controller/template/styles, bootstrap/access policies, facade registrations, fast contracts, user/access architecture and interface documentation, changelogs, and release metadata.
+- **Compatibility notes:** Existing CRM roles, lead ownership, quotation records, menus, AJAX actions, and settings are retained. Added the administrator-only `idlm_create_user` and `idlm_update_user` admin-post interfaces. Plugin version advanced from `1.99.10` to `1.100.0`.
+
+- **Area:** Users & Access workspace experience
+- **Change:** Reworked Users & Access into a responsive invite and team-directory interface with labelled inputs, filtering, active/suspended state, and native disclosure-based editing. Added the administrator-only section to the frontend `[idlm_workspace]` navigation. Builder: Shashi.
+- **Files affected:** users template and admin styles, shortcode workspace section registration, changelogs, and release metadata.
+- **Compatibility notes:** The existing user handlers, roles, access policy, option keys, and lead ownership remain unchanged. Plugin version advanced from `1.100.0` to `1.100.1`.
+
 - **Area:** Controlled-release CI integration root handoff
 - **Change:** Exported the disposable integration WordPress root as `IDLM_PERF_WP_ROOT` so the dataset and query-plan subprocesses validate and boot the same `/tmp/wordpress` fixture used by the GitHub Actions matrix. Builder: Shashi.
 - **Files affected:** integration bootstrap, release regression contracts, controlled-release documentation, changelogs, and release metadata

@@ -65,6 +65,7 @@ final class IDLM_Admin_Shortcodes {
             $sections['capi-logs'] = array('CAPI Audit', 'dashicons-shield-alt', array('IDLM_Admin', 'render_capi_logs_page'));
             $sections['audience-logs'] = array('Audience Sync', 'dashicons-update', array('IDLM_Admin', 'render_audience_sync_logs_page'));
             $sections['settings'] = array('Settings', 'dashicons-admin-generic', array('IDLM_Admin', 'render_settings_page'));
+            $sections['users'] = array('Users & Access', 'dashicons-admin-users', array('IDLM_Admin', 'render_users_access_page'));
         }
         $sections['my-account'] = array('My Account', 'dashicons-admin-users', array('IDLM_Admin', 'render_my_account_page'));
 

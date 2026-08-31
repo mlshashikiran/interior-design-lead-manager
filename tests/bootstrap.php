@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 define('ABSPATH', __DIR__ . '/support/wp/');
 define('IDLM_TESTING', true);
-define('IDLM_VERSION', '1.99.10');
+define('IDLM_VERSION', '1.100.7');
 define('IDLM_DB_VERSION', '1.2.0');
 define('IDLM_PATH', dirname(__DIR__) . '/');
 define('IDLM_URL', 'https://example.test/wp-content/plugins/interior-design-lead-manager/');
@@ -655,6 +655,7 @@ $GLOBALS['idlm_test_actions'] = array();
 $GLOBALS['idlm_test_routes'] = array();
 $GLOBALS['idlm_test_hooks'] = array();
 $GLOBALS['idlm_test_users'] = array();
+$GLOBALS['idlm_test_user_meta'] = array();
 $GLOBALS['idlm_test_current_user_id'] = 0;
 $GLOBALS['idlm_test_current_roles'] = array();
 $GLOBALS['idlm_test_caps'] = array();
@@ -674,6 +675,7 @@ function idlm_test_reset_environment(): void {
     $GLOBALS['idlm_test_routes'] = array();
     $GLOBALS['idlm_test_hooks'] = array();
     $GLOBALS['idlm_test_users'] = array();
+    $GLOBALS['idlm_test_user_meta'] = array();
     $GLOBALS['idlm_test_current_user_id'] = 0;
     $GLOBALS['idlm_test_current_roles'] = array();
     $GLOBALS['idlm_test_caps'] = array();
@@ -861,6 +863,21 @@ function get_current_user_id(): int {
 
 function get_userdata(int $user_id) {
     return $GLOBALS['idlm_test_users'][$user_id] ?? false;
+}
+
+function get_user_meta(int $user_id, string $key = '', bool $single = false) {
+    $value = $GLOBALS['idlm_test_user_meta'][$user_id][$key] ?? ($single ? '' : array());
+    return $single ? $value : (array) $value;
+}
+
+function update_user_meta(int $user_id, string $key, $value): bool {
+    $GLOBALS['idlm_test_user_meta'][$user_id][$key] = $value;
+    return true;
+}
+
+function delete_user_meta(int $user_id, string $key): bool {
+    unset($GLOBALS['idlm_test_user_meta'][$user_id][$key]);
+    return true;
 }
 
 function wp_get_current_user(): object {
@@ -1122,6 +1139,7 @@ require_once dirname(__DIR__) . '/includes/class-admin-lead-notifications.php';
 require_once dirname(__DIR__) . '/includes/class-admin-assets.php';
 require_once dirname(__DIR__) . '/includes/class-admin-shortcodes.php';
 require_once dirname(__DIR__) . '/includes/class-admin-account-controller.php';
+require_once dirname(__DIR__) . '/includes/class-admin-users-controller.php';
 require_once dirname(__DIR__) . '/includes/class-admin.php';
 require_once dirname(__DIR__) . '/includes/class-admin-lead-reads.php';
 require_once dirname(__DIR__) . '/includes/class-admin-ajax.php';

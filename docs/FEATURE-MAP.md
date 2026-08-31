@@ -50,8 +50,9 @@ Use this map to identify the likely blast radius before changing a business feat
 - **PHP:** bootstrap functions `idlm_register_crm_roles_and_capabilities()` and `idlm_get_crm_role_slugs()`; CRM access decisions in `IDLM_Lead_Access_Policy` behind `IDLM_Admin` delegates; account presentation/updates in `IDLM_Admin_Account_Controller`; `IDLM_Quotation_Policy` behind the existing `IDLM_Quotations` delegates; scoped quotation lead reads in `IDLM_Quotation_Lead_Read_Model`; scoped dashboard queries in `IDLM_Dashboard`.
 - **WordPress storage:** `wp_users`, roles/capabilities, `idlm_phone`, `billing_phone`, and `idlm_whatsapp_read_activity_ids` user meta. Custom tables store user IDs without foreign keys.
 - **Role/capability groups:** `idlm_pre_sales`; recognized sales/marketing/manager roles; `idlm_access_leads`, `idlm_qualify_leads`, `idlm_assign_leads`, and quotation capability family.
-- **Admin-post:** `idlm_update_my_account` delegates to `IDLM_Admin_Account_Controller` to update the current user and optionally invoke WordPress password reset.
-- **Shortcodes/UI:** My Account inside `[idlm_workspace]`; visibility affects every CRM and quotation view/action.
+- **Admin-post:** `idlm_update_my_account` delegates to `IDLM_Admin_Account_Controller`; administrator-only `idlm_create_user` and `idlm_update_user` delegate to `IDLM_Admin_Users_Controller` for managed-role/user access changes.
+- **Admin UI:** Lead Manager → Users & Access lists managed CRM users, creates accounts, changes roles, suspends CRM access, and sends reset links. Suspension is stored in `idlm_crm_access_disabled`; accounts and historic ownership are retained.
+- **Shortcodes/UI:** My Account inside `[idlm_workspace]`; administrators also receive Users & Access in that navigation. Visibility affects every CRM and quotation view/action.
 - **Settings:** `idlm_reps_see_all_leads`, active pre-sales/sales pools, capacity and studio assignments.
 - **High-risk coupling:** capability checks must be paired with object-level lead visibility/ownership; recognized role names are dynamically resolved for compatibility.
 

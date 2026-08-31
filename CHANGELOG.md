@@ -2,15 +2,36 @@
 
 Current release notes are kept concise. The complete pre-maintenance history is preserved in [`docs/legacy/CHANGELOG-FULL.md`](docs/legacy/CHANGELOG-FULL.md).
 
-## [1.99.10] - 2026-08-31
+## [1.100.7] - 2026-08-31
 
-### Fixed
+### Engineering workflow
 
-- Bridged the disposable integration WordPress root into performance subprocesses through `IDLM_PERF_WP_ROOT`, fixing the GitHub Actions native matrix without changing production runtime behavior (implemented by Shashi).
+- Refined Sol/Terra/Luna delegation guidance, added model-delegation fallback and review verification requirements, and standardized effort selection to Low, Medium, and High (implemented by Shashi).
+- Recorded `novamira-crm-qoakinterior` as the saved MCP for reviewed LIVE deployments to `crm.qoakinteriors.com` (implemented by Shashi).
 
-### Tests and documentation
+## [1.100.6] - 2026-08-31
 
-- Added a CI-root handoff regression contract; verified 99 fast contracts and 14 disposable native WordPress/MySQL tests (implemented by Shashi).
+### Engineering workflow
+
+- Added project-specific Sol, Terra, and Luna delegation boundaries with Light, Medium, and High effort-selection rules (implemented by Shashi).
+
+## [1.100.5] - 2026-08-31
+
+### Improved
+
+- Kept the Users & Access directory filter controls on one line, with horizontal scrolling available on narrow screens (implemented by Shashi).
+
+## [1.100.1] - 2026-08-31
+
+### Added
+
+- Added an administrator-only Users & Access workspace for creating CRM users, changing managed CRM roles, suspending/restoring CRM access, and sending password-reset links (implemented by Shashi).
+- Enforced CRM suspensions in representative and quotation authorization while preserving WordPress accounts and historical lead ownership (implemented by Shashi).
+- Redesigned Users & Access with an accessible invite flow, searchable team directory, clear active/suspended state, and disclosure-based user editing. Added it to the administrator frontend workspace navigation (implemented by Shashi).
+
+### Security and documentation
+
+- Added self-lockout and final-administrator safeguards; documented the user-management interface and access boundary (implemented by Shashi).
 
 ## [1.99.9] - 2026-08-31
 
