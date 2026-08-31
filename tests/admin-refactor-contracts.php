@@ -357,7 +357,7 @@ idlm_test('settings shortcode examples remain literal in the frontend workspace'
     $template = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/settings/general.php');
 
     foreach (array('idlm_workspace', 'idlm_leads_list', 'idlm_dashboard', 'idlm_kanban') as $shortcode) {
-        assert_contains('<code class="idlm-code">&#91;' . $shortcode . '&#93;</code>', $template);
+        assert_contains('<code class="idlm-code"><span aria-hidden="true">[</span>' . $shortcode . '<span aria-hidden="true">]</span></code>', $template);
         assert_false(false !== strpos($template, '<code class="idlm-code">[' . $shortcode . ']</code>'), $shortcode . ' must not execute while the frontend workspace shortcode is expanding.');
     }
 });

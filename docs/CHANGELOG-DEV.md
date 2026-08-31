@@ -4,6 +4,11 @@ Use this log for meaningful architectural or behavioral engineering changes. Pub
 
 ## 2026-08-31
 
+- **Area:** General Settings shortcode recursion hardening
+- **Change:** Replaced entity-only shortcode escaping with markup-separated delimiters after LIVE verification showed the outer content filter normalized entities before shortcode expansion. Builder: Shashi.
+- **Files affected:** General Settings template, fast contracts, release metadata, and changelogs.
+- **Compatibility notes:** The examples still render and copy as normal shortcode strings while no contiguous shortcode token exists in template output. Plugin version advanced from `1.101.4` to `1.101.5`.
+
 - **Area:** General Settings shortcode examples
 - **Change:** Encoded the displayed shortcode delimiters so the frontend workspace shortcode pipeline cannot execute examples embedded in code cards. Builder: Shashi.
 - **Files affected:** General Settings template, fast contracts, release metadata, and changelogs.

@@ -3,7 +3,7 @@ Contributors: shashi-protecto
 Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 5.8
 Tested up to: 7.0
-Stable tag: 1.101.4
+Stable tag: 1.101.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -41,6 +41,9 @@ Yes. Phone values are normalized and suffix-matched to reconcile common local an
 No. Action Scheduler is used when available; WordPress Cron is the fallback.
 
 == Changelog ==
+
+= 1.101.5 =
+* Split displayed shortcode delimiters across markup boundaries so nested frontend content filters cannot execute the examples (implemented by Shashi).
 
 = 1.101.4 =
 * Prevented shortcode examples on the General Settings tab from executing and recursively embedding CRM views (implemented by Shashi).

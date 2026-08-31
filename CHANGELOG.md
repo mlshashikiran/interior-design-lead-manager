@@ -2,6 +2,12 @@
 
 Current release notes are kept concise. The complete pre-maintenance history is preserved in [`docs/legacy/CHANGELOG-FULL.md`](docs/legacy/CHANGELOG-FULL.md).
 
+## [1.101.5] - 2026-08-31
+
+### Settings rendering
+
+- Split displayed shortcode delimiters across markup boundaries so nested frontend content filters cannot reconstruct and execute the examples (implemented by Shashi).
+
 ## [1.101.4] - 2026-08-31
 
 ### Settings rendering
