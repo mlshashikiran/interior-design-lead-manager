@@ -27,7 +27,7 @@ idlm_test('Phase 9 distribution inventory includes runtime files and excludes de
 idlm_test('Phase 9 release metadata authorities remain aligned', static function(): void {
     $evidence = IDLM_Release_Artifact::version_evidence(dirname(__DIR__));
     assert_true($evidence['aligned']);
-    assert_same('1.101.3', $evidence['version']);
+    assert_same('1.101.4', $evidence['version']);
     assert_count_value(5, $evidence['sources']);
     assert_count_value(1, array_unique(array_values($evidence['sources'])));
 });
@@ -38,8 +38,8 @@ idlm_test('Phase 9 promotion accepts only a clean matrix-attested exact revision
     $manifest = array(
         'schema' => IDLM_Release_Artifact::MANIFEST_SCHEMA,
         'author_builder' => 'Shashi',
-        'artifact' => 'interior-design-lead-manager-1.101.3.zip',
-        'version' => '1.101.3',
+        'artifact' => 'interior-design-lead-manager-1.101.4.zip',
+        'version' => '1.101.4',
         'revision' => $revision,
         'git_clean' => true,
         'artifact_status' => 'ci_attested_candidate',
@@ -77,7 +77,7 @@ idlm_test('Phase 9 promotion accepts only a clean matrix-attested exact revision
 });
 
 idlm_test('Phase 9 checksum parsing binds the digest to one safe artifact name', static function(): void {
-    $artifact = 'interior-design-lead-manager-1.101.3.zip';
+    $artifact = 'interior-design-lead-manager-1.101.4.zip';
     $sha256 = str_repeat('c', 64);
     assert_same($sha256, IDLM_Release_Candidate::parse_checksum($sha256 . '  ' . $artifact . "\n", $artifact));
 
@@ -93,9 +93,9 @@ idlm_test('Phase 9 checksum parsing binds the digest to one safe artifact name',
 idlm_test('Phase 9 staging report keeps every operational gate pending and production unapproved', static function(): void {
     $report = IDLM_Release_Candidate::staging_report(array(
         'verified' => true,
-        'version' => '1.101.3',
+        'version' => '1.101.4',
         'revision' => str_repeat('d', 40),
-        'artifact' => 'interior-design-lead-manager-1.101.3.zip',
+        'artifact' => 'interior-design-lead-manager-1.101.4.zip',
         'sha256' => str_repeat('e', 64),
         'ci_run_id' => '987654',
     ));
@@ -111,10 +111,10 @@ idlm_test('Phase 9 staging report keeps every operational gate pending and produ
 idlm_test('Phase 9 candidate verifier reopens and independently inventories the CI archive', static function(): void {
     $directory = sys_get_temp_dir() . '/idlm-release-candidate-' . bin2hex(random_bytes(6));
     assert_true(mkdir($directory, 0700));
-    $artifact = 'interior-design-lead-manager-1.101.3.zip';
+    $artifact = 'interior-design-lead-manager-1.101.4.zip';
     $zip_path = $directory . '/' . $artifact;
-    $manifest_path = $directory . '/interior-design-lead-manager-1.101.3.manifest.json';
-    $checksum_path = $directory . '/interior-design-lead-manager-1.101.3.sha256';
+    $manifest_path = $directory . '/interior-design-lead-manager-1.101.4.manifest.json';
+    $checksum_path = $directory . '/interior-design-lead-manager-1.101.4.sha256';
     $revision = str_repeat('f', 40);
 
     try {
@@ -132,7 +132,7 @@ idlm_test('Phase 9 candidate verifier reopens and independently inventories the 
             'schema' => IDLM_Release_Artifact::MANIFEST_SCHEMA,
             'author_builder' => 'Shashi',
             'artifact' => $artifact,
-            'version' => '1.101.3',
+            'version' => '1.101.4',
             'revision' => $revision,
             'git_clean' => true,
             'artifact_status' => 'ci_attested_candidate',

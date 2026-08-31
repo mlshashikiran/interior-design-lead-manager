@@ -2,6 +2,12 @@
 
 Current release notes are kept concise. The complete pre-maintenance history is preserved in [`docs/legacy/CHANGELOG-FULL.md`](docs/legacy/CHANGELOG-FULL.md).
 
+## [1.101.4] - 2026-08-31
+
+### Settings rendering
+
+- Encoded the General Settings shortcode examples so WordPress displays them literally instead of recursively rendering complete CRM views (implemented by Shashi).
+
 ## [1.101.3] - 2026-08-31
 
 ### Kanban board

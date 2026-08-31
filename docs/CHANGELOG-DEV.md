@@ -4,6 +4,11 @@ Use this log for meaningful architectural or behavioral engineering changes. Pub
 
 ## 2026-08-31
 
+- **Area:** General Settings shortcode examples
+- **Change:** Encoded the displayed shortcode delimiters so the frontend workspace shortcode pipeline cannot execute examples embedded in code cards. Builder: Shashi.
+- **Files affected:** General Settings template, fast contracts, release metadata, and changelogs.
+- **Compatibility notes:** Copy-button values and registered shortcode behavior remain unchanged. Plugin version advanced from `1.101.3` to `1.101.4`.
+
 - **Area:** Kanban stage visibility and sorting
 - **Change:** Omitted New and Contacted from the sales board and added a whitelisted server-side card sort for lead age and name. Builder: Shashi.
 - **Files affected:** Kanban renderer, template, AJAX read, client script, tests, release metadata, and changelogs.

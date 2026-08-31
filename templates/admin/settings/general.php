@@ -135,7 +135,7 @@ $num_rooms_options = isset($context['num_rooms_options']) ? $context['num_rooms_
                                         <h4>Complete CRM Workspace</h4>
                                         <button class="idlm-btn idlm-btn-secondary" type="button" onclick="idlmCopyToClipboard(this, '[idlm_workspace]');">Copy</button>
                                     </div>
-                                    <code class="idlm-code">[idlm_workspace]</code>
+                                    <code class="idlm-code">&#91;idlm_workspace&#93;</code>
                                     <p>Recommended. Opens dashboard, leads, pipeline, quotations and authorized administration tools in one frontend workspace.</p>
                                 </div>
                                 <div class="idlm-shortcode-card">
@@ -143,7 +143,7 @@ $num_rooms_options = isset($context['num_rooms_options']) ? $context['num_rooms_
                                         <h4>Leads Database Workspace</h4>
                                         <button class="idlm-btn idlm-btn-secondary" type="button" onclick="idlmCopyToClipboard(this, '[idlm_leads_list]');">Copy</button>
                                     </div>
-                                    <code class="idlm-code">[idlm_leads_list]</code>
+                                    <code class="idlm-code">&#91;idlm_leads_list&#93;</code>
                                     <p>Embeds the main CRM workspace table with quick-edit, search, filters, and detailed drawers.</p>
                                 </div>
                                 <div class="idlm-shortcode-card">
@@ -151,7 +151,7 @@ $num_rooms_options = isset($context['num_rooms_options']) ? $context['num_rooms_
                                         <h4>Analytics Dashboard Widgets</h4>
                                         <button class="idlm-btn idlm-btn-secondary" type="button" onclick="idlmCopyToClipboard(this, '[idlm_dashboard]');">Copy</button>
                                     </div>
-                                    <code class="idlm-code">[idlm_dashboard]</code>
+                                    <code class="idlm-code">&#91;idlm_dashboard&#93;</code>
                                     <p>Embeds marketing performance charts, pipeline stage funnel, and sales metrics.</p>
                                 </div>
                                 <div class="idlm-shortcode-card">
@@ -159,11 +159,10 @@ $num_rooms_options = isset($context['num_rooms_options']) ? $context['num_rooms_
                                         <h4>Kanban Board Workspace</h4>
                                         <button class="idlm-btn idlm-btn-secondary" type="button" onclick="idlmCopyToClipboard(this, '[idlm_kanban]');">Copy</button>
                                     </div>
-                                    <code class="idlm-code">[idlm_kanban]</code>
+                                    <code class="idlm-code">&#91;idlm_kanban&#93;</code>
                                     <p>Embeds the visual Kanban board with interactive drag-and-drop, stages routing, search, and filters.</p>
                                 </div>
                             </div>
                         </article>
                     </section> <!-- End Tab 1: General Settings -->
-
 
