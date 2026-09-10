@@ -3,36 +3,213 @@ jQuery(document).ready(function($) {
     var activeWonLeadId = null;
     var activeQuoteLeadId = null;
     var activeLostLeadId = null;
+    var activeMoveLeadId = null;
     var kanbanLeadLookup = {};
     var dragPointerX = null;
     var dragScrollFrame = null;
     var kanbanRequest = null;
+    var kanbanFiltersReturnFocus = null;
+    var kanbanDialogTrigger = null;
+    var pendingFocusLeadId = null;
+    var pendingAnnouncement = '';
+    var kanbanPhoneMedia = window.matchMedia('(max-width: 782px)');
+    var activeMobileStage = String($('.idlm-kanban-stage-tab').first().data('stage') || '');
+
+    function openKanbanDialog(selector, trigger) {
+        var dialog = document.querySelector(selector);
+        if (!dialog || !window.IDLMDialog) return;
+        $(dialog).find('[aria-invalid="true"]').each(function() { window.IDLMDialog.clearFieldError(this); });
+        window.IDLMDialog.open(dialog, {
+            trigger: trigger || kanbanDialogTrigger || (activeDragCard && activeDragCard.length ? activeDragCard.get(0) : document.activeElement)
+        });
+    }
+
+    function showKanbanFieldError(selector, message) {
+        return window.IDLMDialog ? window.IDLMDialog.setFieldError(selector, message) : false;
+    }
+
+    function activateMobileStage(stage, options) {
+        options = options || {};
+        var $tabs = $('.idlm-kanban-stage-tab');
+        var $targetTab = $tabs.filter(function() { return String($(this).data('stage')) === String(stage); }).first();
+        if (!$targetTab.length) $targetTab = $tabs.first();
+        if (!$targetTab.length) return;
+
+        activeMobileStage = String($targetTab.data('stage') || '');
+        $tabs.each(function() {
+            var selected = this === $targetTab.get(0);
+            $(this).toggleClass('is-active', selected).attr('aria-selected', selected ? 'true' : 'false').attr('tabindex', selected ? '0' : '-1');
+        });
+
+        $('.idlm-kanban-column').each(function() {
+            var active = String($(this).data('stage')) === activeMobileStage;
+            $(this).toggleClass('is-mobile-active', active);
+            if (kanbanPhoneMedia.matches) {
+                $(this).attr({role: 'tabpanel', 'aria-hidden': active ? 'false' : 'true'});
+            } else {
+                $(this).removeAttr('role aria-hidden');
+            }
+        });
+
+        $('.idlm-kanban-card-drag-handle').attr('draggable', kanbanPhoneMedia.matches ? 'false' : 'true');
+        $('#idlm-kanban-board').attr('aria-label', kanbanPhoneMedia.matches ? 'Sales pipeline stage list' : 'Sales pipeline board');
+        if (options.focus) $targetTab.trigger('focus');
+        if (options.announce) {
+            var count = Number($targetTab.find('.idlm-kanban-stage-tab-count').text()) || 0;
+            $('#idlm-kanban-live-status').text(activeMobileStage + ' stage selected. ' + count + ' lead' + (count === 1 ? '' : 's') + '.');
+        }
+    }
+
+    function syncKanbanResponsiveMode() {
+        activateMobileStage(activeMobileStage);
+    }
+
+    $('#idlm-kanban-stage-tabs').on('click', '.idlm-kanban-stage-tab', function() {
+        activateMobileStage($(this).data('stage'), {announce: true});
+    }).on('keydown', '.idlm-kanban-stage-tab', function(event) {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        var $tabs = $('.idlm-kanban-stage-tab');
+        var index = $tabs.index(this);
+        if (event.key === 'Home') index = 0;
+        if (event.key === 'End') index = $tabs.length - 1;
+        if (event.key === 'ArrowLeft') index = (index - 1 + $tabs.length) % $tabs.length;
+        if (event.key === 'ArrowRight') index = (index + 1) % $tabs.length;
+        var $next = $tabs.eq(index);
+        activateMobileStage($next.data('stage'), {focus: true, announce: true});
+    });
+
+    if (typeof kanbanPhoneMedia.addEventListener === 'function') {
+        kanbanPhoneMedia.addEventListener('change', syncKanbanResponsiveMode);
+    } else if (typeof kanbanPhoneMedia.addListener === 'function') {
+        kanbanPhoneMedia.addListener(syncKanbanResponsiveMode);
+    }
+    syncKanbanResponsiveMode();
+
+    function updateKanbanFilterCount() {
+        var count = 0;
+        $('#idlm-kanban-filters').find('input, select').each(function() {
+            var id = this.id;
+            var value = $(this).val();
+            var isDefault = (id === 'idlm-kanban-filter-date-basis' && value === 'assigned_at') ||
+                (id === 'idlm-kanban-filter-quality' && value === 'Qualified') ||
+                (id === 'idlm-kanban-sort' && value === 'newest');
+            if (value && !isDefault) count += 1;
+        });
+        $('.idlm-kanban-filter-count').text(count).attr('aria-label', count + ' active filter' + (count === 1 ? '' : 's')).prop('hidden', count === 0);
+    }
+
+    function openKanbanFilters() {
+        kanbanFiltersReturnFocus = document.activeElement;
+        $('#idlm-kanban-filters-backdrop').prop('hidden', false);
+        $('#idlm-kanban-filters').addClass('is-open').attr('aria-hidden', 'false');
+        $('#idlm-kanban-open-filters').attr('aria-expanded', 'true');
+        $('body').addClass('idlm-filters-open');
+        window.setTimeout(function() { $('#idlm-kanban-close-filters').trigger('focus'); }, 20);
+    }
+
+    function closeKanbanFilters() {
+        $('#idlm-kanban-filters').removeClass('is-open').attr('aria-hidden', 'true');
+        $('#idlm-kanban-filters-backdrop').prop('hidden', true);
+        $('#idlm-kanban-open-filters').attr('aria-expanded', 'false');
+        $('body').removeClass('idlm-filters-open');
+        if (kanbanFiltersReturnFocus) $(kanbanFiltersReturnFocus).trigger('focus');
+    }
 
     // Load Kanban board on startup
     loadKanbanBoard();
 
     // Trigger board reload on filter changes
     $('#idlm-kanban-filter-search').on('input', debounce(function() {
+        updateKanbanFilterCount();
         loadKanbanBoard();
     }, 300));
 
-    $('#idlm-kanban-filter-date-basis, #idlm-kanban-filter-date-range, #idlm-kanban-filter-rep, #idlm-kanban-filter-source, #idlm-kanban-filter-call-status, #idlm-kanban-filter-quality, #idlm-kanban-sort').on('change', function() {
+    $('#idlm-kanban-filter-date-basis, #idlm-kanban-filter-date-range, #idlm-kanban-filter-rep, #idlm-kanban-filter-source, #idlm-kanban-filter-call-status, #idlm-kanban-filter-quality, #idlm-kanban-filter-attention, #idlm-kanban-sort').on('change', function() {
+        updateKanbanFilterCount();
         loadKanbanBoard();
     });
 
-    // Native HTML5 Drag and Drop events delegated to the document
-    $(document).on('dragstart', '.idlm-kanban-card', function(e) {
-        activeDragCard = $(this);
+    $('#idlm-kanban-open-filters').on('click', openKanbanFilters);
+    $('#idlm-kanban-close-filters, #idlm-kanban-filters-backdrop').on('click', closeKanbanFilters);
+    $('#idlm-kanban-clear-filters').on('click', function() {
+        $('#idlm-kanban-filter-search').val('');
+        $('#idlm-kanban-filter-date-basis').val('assigned_at');
+        $('#idlm-kanban-filter-date-range, #idlm-kanban-filter-rep, #idlm-kanban-filter-source, #idlm-kanban-filter-call-status, #idlm-kanban-filter-attention').val('');
+        $('#idlm-kanban-filter-quality').val('Qualified');
+        $('#idlm-kanban-sort').val('newest');
+        updateKanbanFilterCount();
+        loadKanbanBoard();
+    });
+    $('#idlm-kanban-stale-leads-pill').on('click', function() {
+        var isActive = $('#idlm-kanban-filter-attention').val() === 'stale_updates';
+        if (isActive) {
+            $('#idlm-kanban-filter-attention').val('');
+            updateKanbanFilterCount();
+            loadKanbanBoard();
+            return;
+        }
+        $('#idlm-kanban-filter-search').val('');
+        $('#idlm-kanban-filter-date-basis').val('assigned_at');
+        $('#idlm-kanban-filter-date-range, #idlm-kanban-filter-rep, #idlm-kanban-filter-source, #idlm-kanban-filter-call-status').val('');
+        $('#idlm-kanban-filter-quality').val('');
+        $('#idlm-kanban-filter-attention').val('stale_updates');
+        $('#idlm-kanban-sort').val('newest');
+        updateKanbanFilterCount();
+        loadKanbanBoard();
+    });
+
+    $(document).on('keydown', function(event) {
+        if (!$('#idlm-kanban-filters').hasClass('is-open')) return;
+        if (event.key === 'Escape') {
+            closeKanbanFilters();
+            return;
+        }
+        if (event.key === 'Tab') {
+            var $focusable = $('#idlm-kanban-filters').find('button, input, select, [tabindex]:not([tabindex="-1"])').filter(':visible');
+            if (!$focusable.length) return;
+            var first = $focusable.get(0);
+            var last = $focusable.get($focusable.length - 1);
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+    });
+    updateKanbanFilterCount();
+
+    $(document).on('click', '.idlm-kanban-card-open', function() {
+        var leadId = $(this).closest('.idlm-kanban-card').data('id');
+        if (typeof window.openLeadDrawer === 'function') {
+            window.openLeadDrawer(leadId);
+        }
+    });
+
+    $(document).on('click', '.idlm-kanban-card-move', function() {
+        var leadId = $(this).closest('.idlm-kanban-card').data('id');
+        openKanbanMoveModal(leadId, this);
+    });
+
+    // Native HTML5 drag and drop remains a pointer enhancement on the explicit handle.
+    $(document).on('dragstart', '.idlm-kanban-card-drag-handle', function(e) {
+        if (kanbanPhoneMedia.matches) {
+            e.preventDefault();
+            return;
+        }
+        activeDragCard = $(this).closest('.idlm-kanban-card');
         startKanbanDragScroll();
-        $(this).addClass('dragging');
+        activeDragCard.addClass('dragging');
         if (e.originalEvent.dataTransfer) {
-            e.originalEvent.dataTransfer.setData('text/plain', $(this).data('id'));
+            e.originalEvent.dataTransfer.setData('text/plain', activeDragCard.data('id'));
             e.originalEvent.dataTransfer.effectAllowed = 'move';
         }
     });
 
-    $(document).on('dragend', '.idlm-kanban-card', function() {
-        $(this).removeClass('dragging');
+    $(document).on('dragend', '.idlm-kanban-card-drag-handle', function() {
+        if (activeDragCard) activeDragCard.removeClass('dragging');
         $('.idlm-kanban-column').removeClass('drag-over');
         activeDragCard = null;
         stopKanbanDragScroll();
@@ -105,6 +282,43 @@ jQuery(document).ready(function($) {
 
         if (oldStage === newStage) return;
 
+        requestStageMove(leadId, newStage, activeDragCard.find('.idlm-kanban-card-drag-handle').get(0));
+    });
+
+    function openKanbanMoveModal(leadId, trigger) {
+        activeMoveLeadId = leadId;
+        kanbanDialogTrigger = trigger || document.activeElement;
+        var currentStage = String((kanbanLeadLookup[String(leadId)] || {}).stage || '');
+        $('#idlm-kanban-move-stage').val('').find('option').prop('disabled', false).filter(function() {
+            return $(this).val() === currentStage;
+        }).prop('disabled', true);
+        openKanbanDialog('#idlm-kanban-move-modal', kanbanDialogTrigger);
+    }
+
+    $('#idlm-kanban-move-confirm').on('click', function() {
+        var newStage = $('#idlm-kanban-move-stage').val();
+        if (!newStage) {
+            return showKanbanFieldError('#idlm-kanban-move-stage', 'Choose a destination stage.');
+        }
+        var leadId = activeMoveLeadId;
+        var trigger = kanbanDialogTrigger;
+        activeMoveLeadId = null;
+        window.IDLMDialog.close('#idlm-kanban-move-modal', {reason: 'continue', restoreFocus: false});
+        window.setTimeout(function() { requestStageMove(leadId, newStage, trigger); }, 0);
+    });
+
+    $('#idlm-kanban-move-modal').on('idlm:dialogclose', function() {
+        activeMoveLeadId = null;
+    });
+
+    function requestStageMove(leadId, newStage, trigger) {
+        var lead = kanbanLeadLookup[String(leadId)] || {};
+        var currentStage = String(lead.stage || $('.idlm-kanban-card[data-id="' + leadId + '"]').closest('.idlm-kanban-column').data('stage') || '');
+        if (!newStage || currentStage === newStage) {
+            if (trigger) $(trigger).trigger('focus');
+            return;
+        }
+        kanbanDialogTrigger = trigger || document.activeElement;
         if (newStage === 'Quote Shared') {
             openKanbanQuoteModal(leadId);
         } else if (newStage === 'Won') {
@@ -114,26 +328,24 @@ jQuery(document).ready(function($) {
         } else {
             updateLeadStage(leadId, newStage);
         }
-    });
+    }
 
     // A quote value is mandatory before a lead can enter Quote Shared.
     $('#idlm-kanban-quote-save').click(function() {
         var quoteValue = $('#idlm-kanban-quote-input').val();
         if (!quoteValue || isNaN(quoteValue) || parseFloat(quoteValue) <= 0) {
-            alert('Please enter a quote value greater than zero.');
-            $('#idlm-kanban-quote-input').focus();
-            return;
+            return showKanbanFieldError('#idlm-kanban-quote-input', 'Enter a quote value greater than zero.');
         }
 
         var leadId = activeQuoteLeadId;
         var quoteFile = $('#idlm-kanban-quote-file').val();
-        closeKanbanQuoteModal();
+        activeQuoteLeadId = null;
+        closeKanbanQuoteModal('submit');
         updateLeadStage(leadId, 'Quote Shared', undefined, undefined, undefined, undefined, parseFloat(quoteValue), quoteFile);
     });
 
     $('#idlm-kanban-quote-cancel, #idlm-kanban-quote-close').click(function() {
-        closeKanbanQuoteModal();
-        loadKanbanBoard();
+        closeKanbanQuoteModal('cancel');
     });
 
     function openKanbanQuoteModal(leadId) {
@@ -142,42 +354,39 @@ jQuery(document).ready(function($) {
         var existingQuoteValue = parseFloat(lead.quote_value || 0);
         $('#idlm-kanban-quote-input').val(existingQuoteValue > 0 ? existingQuoteValue : '');
         setKanbanQuoteUploadState(lead.quote_file || '');
-        $('#idlm-kanban-quote-modal').addClass('active');
-        $('body').addClass('idlm-modal-open');
-        $('#idlm-kanban-quote-input').focus();
+        openKanbanDialog('#idlm-kanban-quote-modal');
     }
 
-    function closeKanbanQuoteModal() {
-        $('#idlm-kanban-quote-modal').removeClass('active');
-        $('body').removeClass('idlm-modal-open');
-        activeQuoteLeadId = null;
+    function closeKanbanQuoteModal(reason) {
+        window.IDLMDialog.close('#idlm-kanban-quote-modal', {reason: reason || 'programmatic'});
     }
+
+    $('#idlm-kanban-quote-modal').on('idlm:dialogclose', function() {
+        if (activeQuoteLeadId !== null) { activeQuoteLeadId = null; loadKanbanBoard(); }
+    });
 
     // Custom Kanban Won Modal Event Handlers
     $('#idlm-kanban-deal-save').click(function() {
         var dealVal = $('#idlm-kanban-deal-input').val();
         if (!dealVal || isNaN(dealVal) || parseFloat(dealVal) <= 0) {
-            alert('Please enter a deal value greater than zero.');
-            return;
+            return showKanbanFieldError('#idlm-kanban-deal-input', 'Enter a deal value greater than zero.');
         }
 
         var discountPercentage = $('#idlm-kanban-discount-input').val();
         if (discountPercentage === '' || isNaN(discountPercentage) || parseFloat(discountPercentage) < 0 || parseFloat(discountPercentage) > 100) {
-            alert('Please enter a discount percentage between 0 and 100.');
-            $('#idlm-kanban-discount-input').focus();
-            return;
+            return showKanbanFieldError('#idlm-kanban-discount-input', 'Enter a discount percentage between 0 and 100.');
         }
 
         var propertyLocation = $.trim($('#idlm-kanban-property-location-input').val());
 
         var leadId = activeWonLeadId;
-        closeKanbanWonModal();
+        activeWonLeadId = null;
+        closeKanbanWonModal('submit');
         updateLeadStage(leadId, 'Won', parseFloat(dealVal), undefined, parseFloat(discountPercentage), propertyLocation);
     });
 
     $('#idlm-kanban-deal-cancel, #idlm-kanban-deal-close').click(function() {
-        closeKanbanWonModal();
-        loadKanbanBoard(); // Refresh board to restore card position
+        closeKanbanWonModal('cancel');
     });
 
     function openKanbanWonModal(leadId, stageName) {
@@ -186,58 +395,58 @@ jQuery(document).ready(function($) {
         $('#idlm-kanban-deal-input').val('');
         $('#idlm-kanban-discount-input').val('');
         $('#idlm-kanban-property-location-input').val(lead.property_location || '');
-        $('#idlm-kanban-deal-modal').addClass('active');
-        $('body').addClass('idlm-modal-open');
+        openKanbanDialog('#idlm-kanban-deal-modal');
     }
 
-    function closeKanbanWonModal() {
-        $('#idlm-kanban-deal-modal').removeClass('active');
-        $('body').removeClass('idlm-modal-open');
-        activeWonLeadId = null;
+    function closeKanbanWonModal(reason) {
+        window.IDLMDialog.close('#idlm-kanban-deal-modal', {reason: reason || 'programmatic'});
     }
+
+    $('#idlm-kanban-deal-modal').on('idlm:dialogclose', function() {
+        if (activeWonLeadId !== null) { activeWonLeadId = null; loadKanbanBoard(); }
+    });
 
     // A reason is mandatory before a lead can be moved to Lost.
     $('#idlm-kanban-lost-save').click(function() {
         var lostRemark = $.trim($('#idlm-kanban-lost-input').val());
         var lostReason = $('#idlm-kanban-lost-reason').val();
         if (!lostReason) {
-            alert('Please select a lost reason.');
-            $('#idlm-kanban-lost-reason').focus();
-            return;
+            return showKanbanFieldError('#idlm-kanban-lost-reason', 'Select a lost reason.');
         }
         if (!lostRemark) {
-            alert('Please enter a remark explaining why the lead was lost.');
-            $('#idlm-kanban-lost-input').focus();
-            return;
+            return showKanbanFieldError('#idlm-kanban-lost-input', 'Enter a remark explaining why the lead was lost.');
         }
 
         var leadId = activeLostLeadId;
-        closeKanbanLostModal();
+        activeLostLeadId = null;
+        closeKanbanLostModal('submit');
         updateLeadStage(leadId, 'Lost', undefined, lostRemark, undefined, undefined, undefined, undefined, lostReason);
     });
 
     $('#idlm-kanban-lost-cancel, #idlm-kanban-lost-close').click(function() {
-        closeKanbanLostModal();
-        loadKanbanBoard();
+        closeKanbanLostModal('cancel');
     });
 
     function openKanbanLostModal(leadId) {
         activeLostLeadId = leadId;
         $('#idlm-kanban-lost-reason').val('');
         $('#idlm-kanban-lost-input').val('');
-        $('#idlm-kanban-lost-modal').addClass('active');
-        $('body').addClass('idlm-modal-open');
-        $('#idlm-kanban-lost-reason').focus();
+        openKanbanDialog('#idlm-kanban-lost-modal');
     }
 
-    function closeKanbanLostModal() {
-        $('#idlm-kanban-lost-modal').removeClass('active');
-        $('body').removeClass('idlm-modal-open');
-        activeLostLeadId = null;
+    function closeKanbanLostModal(reason) {
+        window.IDLMDialog.close('#idlm-kanban-lost-modal', {reason: reason || 'programmatic'});
     }
+
+    $('#idlm-kanban-lost-modal').on('idlm:dialogclose', function() {
+        if (activeLostLeadId !== null) { activeLostLeadId = null; loadKanbanBoard(); }
+    });
 
     // Function to submit AJAX Stage updates on drag-and-drop
     function updateLeadStage(leadId, newStage, dealValue, lostRemark, discountPercentage, propertyLocation, quoteValue, quoteFile, lostReason) {
+        var leadBeforeMove = kanbanLeadLookup[String(leadId)] || {};
+        var leadName = $.trim((leadBeforeMove.first_name || '') + ' ' + (leadBeforeMove.last_name || '')) || 'Lead';
+        var oldStage = String(leadBeforeMove.stage || $('.idlm-kanban-card[data-id="' + leadId + '"]').closest('.idlm-kanban-column').data('stage') || 'previous stage');
         var postData = {
             action: 'idlm_quick_edit_lead',
             nonce: idlm_vars.nonce,
@@ -280,6 +489,9 @@ jQuery(document).ready(function($) {
                     if (typeof window.idlmShowToast === 'function') {
                         window.idlmShowToast('Stage updated successfully!', 'success');
                     }
+                    pendingFocusLeadId = Number(leadId);
+                    pendingAnnouncement = leadName + ' moved from ' + oldStage + ' to ' + newStage + '. Board counts updated.';
+                    activeMobileStage = String(newStage);
                     loadKanbanBoard();
                 } else {
                     if (typeof window.idlmShowToast === 'function') {
@@ -315,6 +527,7 @@ jQuery(document).ready(function($) {
             source: $('#idlm-kanban-filter-source').val(),
             call_status: $('#idlm-kanban-filter-call-status').val(),
             quality: $('#idlm-kanban-filter-quality').val(),
+            attention: $('#idlm-kanban-filter-attention').val(),
             sort: $('#idlm-kanban-sort').val()
         };
 
@@ -348,11 +561,21 @@ jQuery(document).ready(function($) {
         var currencySymbol = $('#idlm-kanban-board').data('currency-symbol') || '';
         $('#idlm-stat-overall-leads').text(Number(stats.total_filtered) || 0);
         $('#idlm-stat-followups-due').text(Number(stats.followups_due) || 0);
+        updateKanbanStaleLeadsPill(stats.stale_lead_count);
         $('#idlm-stat-pipeline-value').text(currencySymbol + formatPipelineValue(Number(stats.open_pipeline_value) || 0));
         $('#idlm-stat-won-month').text(Number(stats.won_current_month) || 0);
         $('#idlm-stat-won-revenue').text(currencySymbol + formatPipelineValue(Number(stats.won_revenue_current_month) || 0));
 
         $('.idlm-kanban-stat-attention').toggleClass('has-value', (Number(stats.followups_due) || 0) > 0);
+    }
+
+    function updateKanbanStaleLeadsPill(count) {
+        var $pill = $('#idlm-kanban-stale-leads-pill');
+        count = Number(count) || 0;
+        $pill.find('.idlm-pending-text strong').text(count);
+        $pill.attr('title', count + ' pipeline leads need a fresh update');
+        $pill.attr('aria-label', 'Show ' + count + ' pipeline leads that need a fresh update');
+        $pill.toggle(count > 0);
     }
 
     // Render cards inside columns dynamically
@@ -372,6 +595,7 @@ jQuery(document).ready(function($) {
             
             var leads = leadsData[stage] || [];
             $count.text(leads.length);
+            $('.idlm-kanban-stage-tab').filter(function() { return String($(this).data('stage')) === String(stage); }).find('.idlm-kanban-stage-tab-count').text(leads.length).attr('aria-label', leads.length + ' lead' + (leads.length === 1 ? '' : 's'));
             if (totalSource === 'quote_value' || totalSource === 'deal_value') {
                 var stageTotal = 0;
                 $.each(leads, function(i, lead) {
@@ -399,71 +623,84 @@ jQuery(document).ready(function($) {
                 var name = (lead.first_name || '') + ' ' + (lead.last_name || '');
                 name = $.trim(name) || 'Unnamed Lead';
 
-                var dupBadge = lead.is_duplicate === "1" || lead.is_duplicate === 1 ? '<span class="idlm-badge idlm-badge-warning" style="font-size:9px; padding:1px 4px; margin-left:4px;">DUP</span>' : '';
+                var safeName = escapeKanbanHtml(name);
+                var dupBadge = lead.is_duplicate === "1" || lead.is_duplicate === 1 ? '<span class="idlm-badge idlm-badge-warning idlm-kanban-duplicate-badge">Duplicate</span>' : '';
                 
                 // Construct badges
                 var badgesHtml = '';
                 if (lead.source) {
-                    badgesHtml += '<span class="idlm-kanban-card-badge idlm-badge-' + lead.source.toLowerCase().replace(/[^a-z0-9]/g, '') + '">' + lead.source + '</span>';
+                    badgesHtml += '<span class="idlm-kanban-card-badge idlm-badge-' + lead.source.toLowerCase().replace(/[^a-z0-9]/g, '') + '">' + escapeKanbanHtml(lead.source) + '</span>';
                 }
                 if (lead.budget) {
-                    badgesHtml += '<span class="idlm-kanban-card-badge" style="background:var(--idlm-gold-soft); color:var(--idlm-gold-dark); border:1px solid #fbdba3;">' + lead.budget + '</span>';
+                    badgesHtml += '<span class="idlm-kanban-card-badge idlm-kanban-card-badge-budget">' + escapeKanbanHtml(lead.budget) + '</span>';
                 }
                 if (lead.call_status) {
-                    badgesHtml += '<span class="idlm-kanban-card-badge" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;">' + lead.call_status + '</span>';
+                    badgesHtml += '<span class="idlm-kanban-card-badge idlm-kanban-card-badge-status">' + escapeKanbanHtml(lead.call_status) + '</span>';
                 }
-
                 // Construct indicators
                 var indicatorsHtml = '';
                 var hasTasks = parseInt(lead.pending_tasks_count || 0) > 0;
                 var hasOverdueTasks = parseInt(lead.overdue_tasks_count || 0) > 0;
+                var needsUpdate = parseInt(lead.needs_update || 0) === 1;
 
                 if (hasTasks) {
                     if (hasOverdueTasks) {
-                        indicatorsHtml += '<span class="idlm-kanban-task-pill overdue" title="Overdue tasks present">⏳ Overdue</span>';
+                        indicatorsHtml += '<span class="idlm-kanban-task-pill overdue" title="Overdue tasks present"><span class="dashicons dashicons-clock" aria-hidden="true"></span> Overdue</span>';
                     } else {
-                        indicatorsHtml += '<span class="idlm-kanban-task-pill pending" title="Pending tasks count">📋 ' + lead.pending_tasks_count + ' Tasks</span>';
+                        indicatorsHtml += '<span class="idlm-kanban-task-pill pending" title="Pending tasks count"><span class="dashicons dashicons-clipboard" aria-hidden="true"></span> ' + lead.pending_tasks_count + ' Tasks</span>';
                     }
-                } else {
-                    indicatorsHtml += '<span></span>';
+                }
+                if (needsUpdate) {
+                    indicatorsHtml += '<span class="idlm-kanban-task-pill needs-update" title="No representative update in the last 7 days"><span class="dashicons dashicons-warning" aria-hidden="true"></span> Needs update</span>';
                 }
 
                 // Rep avatar bubble
                 var repHtml = '';
                 if (lead.assigned_rep_id && parseInt(lead.assigned_rep_id) > 0 && lead.rep_name) {
                     var initials = getInitials(lead.rep_name);
-                    repHtml = '<div class="idlm-kanban-card-rep" title="Assigned to ' + lead.rep_name + '"><span class="idlm-kanban-card-rep-icon">' + initials + '</span></div>';
+                    repHtml = '<span class="idlm-kanban-card-rep" title="Assigned to ' + escapeKanbanHtml(lead.rep_name) + '"><span class="idlm-kanban-card-rep-icon">' + escapeKanbanHtml(initials) + '</span><span class="screen-reader-text">Assigned to ' + escapeKanbanHtml(lead.rep_name) + '</span></span>';
                 } else {
-                    repHtml = '<div class="idlm-kanban-card-rep" title="Unassigned"><span class="idlm-kanban-card-rep-icon" style="background:#f1f5f9; color:#94a3b8;">?</span></div>';
+                    repHtml = '<span class="idlm-kanban-card-rep" title="Unassigned"><span class="idlm-kanban-card-rep-icon idlm-kanban-card-rep-icon-unassigned" aria-hidden="true">?</span><span class="screen-reader-text">Unassigned</span></span>';
                 }
 
                 var cardHtml = 
-                    '<div class="idlm-kanban-card" draggable="true" data-id="' + lead.id + '">' +
-                        '<h4 class="idlm-kanban-card-title">' + name + dupBadge + '</h4>' +
-                        '<div class="idlm-kanban-card-meta">' +
-                            '<div>' + (lead.email ? lead.email : 'No Email') + '</div>' +
-                            '<div>' + (lead.phone ? lead.phone : 'No Phone') + '</div>' +
-                        '</div>' +
-                        '<div class="idlm-kanban-card-badges">' + badgesHtml + '</div>' +
-                        '<div class="idlm-kanban-card-indicators">' +
-                            repHtml +
-                            indicatorsHtml +
-                        '</div>' +
-                    '</div>';
+                    '<article class="idlm-kanban-card" data-id="' + Number(lead.id) + '" data-stage="' + escapeKanbanHtml(lead.stage || stage) + '">' +
+                        '<button type="button" class="idlm-kanban-card-open" aria-label="Open lead ' + safeName + '">' +
+                        '<span class="idlm-kanban-card-title">' + safeName + dupBadge + '</span>' +
+                        '<span class="idlm-kanban-card-meta">' +
+                            '<span>' + escapeKanbanHtml(lead.email || 'No email') + '</span>' +
+                            '<span>' + escapeKanbanHtml(lead.phone || 'No phone') + '</span>' +
+                        '</span>' +
+                        '<span class="idlm-kanban-card-badges">' + badgesHtml + '</span>' +
+                        '</button>' +
+                        '<footer class="idlm-kanban-card-actions">' +
+                            '<button type="button" class="idlm-kanban-card-drag-handle" draggable="true" aria-label="Drag ' + safeName + ' to another stage" title="Drag to another stage"><span class="dashicons dashicons-move" aria-hidden="true"></span></button>' +
+                            '<button type="button" class="idlm-kanban-card-move" aria-label="Move ' + safeName + ' to another stage"><span class="dashicons dashicons-randomize" aria-hidden="true"></span><span>Move to stage</span></button>' +
+                            '<span class="idlm-kanban-card-footer-meta">' +
+                                indicatorsHtml +
+                                repHtml +
+                            '</span>' +
+                        '</footer>' +
+                    '</article>';
 
                 var $card = $(cardHtml);
-
-                // Clicking the title opens the lead drawer modal using the global function from admin-app.js
-                $card.find('.idlm-kanban-card-title').on('click', function(e) {
-                    e.stopPropagation();
-                    if (typeof window.openLeadDrawer === 'function') {
-                        window.openLeadDrawer(lead.id);
-                    }
-                });
-
                 $body.append($card);
             });
         });
+
+        activateMobileStage(activeMobileStage);
+
+        if (pendingAnnouncement) {
+            $('#idlm-kanban-live-status').text(pendingAnnouncement);
+            pendingAnnouncement = '';
+        }
+        if (pendingFocusLeadId) {
+            var focusLeadId = pendingFocusLeadId;
+            pendingFocusLeadId = null;
+            window.setTimeout(function() {
+                $('.idlm-kanban-card[data-id="' + focusLeadId + '"] .idlm-kanban-card-move').trigger('focus');
+            }, 0);
+        }
     }
 
     // Helper functions
@@ -483,6 +720,10 @@ jQuery(document).ready(function($) {
         });
     }
 
+    function escapeKanbanHtml(value) {
+        return $('<div>').text(value == null ? '' : String(value)).html();
+    }
+
     function setKanbanQuoteUploadState(quoteFile) {
         var $hiddenInput = $('#idlm-kanban-quote-file');
         var $preview = $('#idlm-kanban-quote-preview');
@@ -497,8 +738,8 @@ jQuery(document).ready(function($) {
                 href: quoteFile,
                 target: '_blank',
                 class: 'idlm-file-link',
-                text: '📄 View File'
-            }).css({ color: '#c99644', fontWeight: 500, textDecoration: 'none' });
+                text: 'View file'
+            }).css({ color: 'var(--idlm-brand-gold)', fontWeight: 500, textDecoration: 'none' });
             var $removeButton = $('<button>', {
                 type: 'button',
                 class: 'idlm-remove-file-btn',

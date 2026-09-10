@@ -16,6 +16,7 @@ $can_manage_options = !empty($context['can_manage_options']);
 $reps_see_all = !empty($context['reps_see_all']);
 $pending_calls_count = isset($context['pending_calls_count']) ? absint($context['pending_calls_count']) : 0;
 $unread_whatsapp_count = isset($context['unread_whatsapp_count']) ? absint($context['unread_whatsapp_count']) : 0;
+$stale_lead_count = isset($context['stale_lead_count']) ? absint($context['stale_lead_count']) : 0;
 $new_leads_count = isset($context['new_leads_count']) ? absint($context['new_leads_count']) : 0;
 $not_called_count = isset($context['not_called_count']) ? absint($context['not_called_count']) : 0;
 $followup_count = isset($context['followup_count']) ? absint($context['followup_count']) : 0;
@@ -61,9 +62,17 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
             <header class="idlm-header">
                 <div class="idlm-header-meta">
                     <h1><?php echo $is_pre_sales ? 'My Pre-Sales Queue' : 'Leads Database'; ?></h1>
-                    <p class="idlm-header-subtitle"><?php echo $is_pre_sales ? 'Work today’s calls, WhatsApp follow-ups, callbacks and qualification decisions' : 'Manage interior design pipelines, communications and assignment distributions'; ?></p>
                 </div>
                 <div class="idlm-header-actions" style="display: flex; align-items: center; gap: 15px;">
+                    <label class="idlm-header-search" for="filter-search">
+                        <span class="screen-reader-text">Search leads</span>
+                        <input type="search" id="filter-search" class="idlm-input" autocomplete="off" placeholder="Search leads">
+                    </label>
+                    <button type="button" id="idlm-open-filters" class="idlm-btn idlm-btn-secondary idlm-header-filter-button" aria-controls="idlm-lead-filters" aria-expanded="false">
+                        <span class="dashicons dashicons-filter" aria-hidden="true"></span>
+                        <span>Filters</span>
+                        <span class="idlm-filter-count" aria-label="0 active filters" hidden>0</span>
+                    </button>
                     <?php if ($can_assign_leads && $qualified_handoff_count > 0): ?>
                         <button type="button" class="idlm-handoff-alert-pill <?php echo $overdue_handoff_count > 0 ? 'is-overdue' : ''; ?>" id="idlm-qualified-handoffs-pill" title="Open qualified leads awaiting sales assignment">
                             <span class="dashicons dashicons-randomize" aria-hidden="true"></span>
@@ -77,18 +86,22 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             <span class="idlm-pending-text"><strong><?php echo esc_html($pending_calls_count); ?></strong> Pending Calls</span>
                         </div>
                     <?php endif; ?>
+                    <button type="button" class="idlm-pending-calls-pill" id="idlm-stale-leads-pill" title="Show leads that need a fresh update" aria-label="Show <?php echo esc_attr($stale_lead_count); ?> leads that need a fresh update" <?php echo $stale_lead_count > 0 ? '' : 'style="display:none;"'; ?>>
+                        <span class="dashicons dashicons-warning" aria-hidden="true"></span>
+                        <span class="idlm-pending-text"><strong><?php echo esc_html($stale_lead_count); ?></strong> Needs update</span>
+                    </button>
                     <button type="button" class="idlm-whatsapp-unread-pill" id="idlm-whatsapp-unread-pill" title="<?php echo esc_attr($unread_whatsapp_count); ?> unread WhatsApp messages" aria-label="Show <?php echo esc_attr($unread_whatsapp_count); ?> unread WhatsApp messages" <?php echo $unread_whatsapp_count > 0 ? '' : 'style="display:none;"'; ?>>
                         <span class="dashicons dashicons-whatsapp" aria-hidden="true"></span>
                         <span class="idlm-whatsapp-unread-text"><strong><?php echo esc_html($unread_whatsapp_count); ?></strong> Unread WhatsApp</span>
                     </button>
                     <?php if ($can_manage_options): ?>
-                        <button class="idlm-btn idlm-btn-secondary" id="idlm-import-btn" onclick="openImportModal()">Import CSV</button>
-                        <button class="idlm-btn idlm-btn-secondary" id="idlm-export-btn">Export CSV</button>
-                        <button class="idlm-btn idlm-btn-icon" id="idlm-routing-settings-btn" onclick="openRoutingSettingsModal()" title="Lead Routing Settings" style="display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0; border-radius: 6px; background: var(--idlm-bg-secondary); border: 1px solid var(--idlm-border); color: var(--idlm-text); cursor: pointer; transition: all 0.2s;">
+                        <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-import-btn">Import CSV</button>
+                        <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-export-btn">Export CSV</button>
+                        <button type="button" class="idlm-btn idlm-btn-icon idlm-routing-settings-button" id="idlm-routing-settings-btn" onclick="openRoutingSettingsModal(this)" title="Lead Routing Settings" aria-label="Open lead routing settings">
                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings" style="display: block; margin: auto;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                         </button>
                     <?php endif; ?>
-                    <button class="idlm-btn idlm-btn-primary" onclick="openLeadModal()">+ Add Lead</button>
+                    <button type="button" class="idlm-btn idlm-btn-primary" onclick="openLeadModal()">+ Add Lead</button>
                 </div>
             </header>
 
@@ -146,14 +159,6 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                 </button>
             </section>
 
-            <div class="idlm-filter-launcher">
-                <button type="button" id="idlm-open-filters" class="idlm-btn idlm-btn-secondary idlm-open-filters" aria-controls="idlm-lead-filters" aria-expanded="false">
-                    <span class="dashicons dashicons-filter" aria-hidden="true"></span>
-                    <span class="screen-reader-text">Open lead filters</span>
-                    <span class="idlm-filter-count" aria-label="0 active filters" hidden>0</span>
-                </button>
-            </div>
-
             <!-- Table Filters Panel -->
             <div class="idlm-filters-backdrop" id="idlm-filters-backdrop" hidden></div>
             <div class="idlm-filters-panel" id="idlm-lead-filters" role="dialog" aria-modal="true" aria-labelledby="idlm-filters-title" aria-hidden="true" tabindex="-1">
@@ -170,12 +175,8 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                 <div class="idlm-filters-panel-body">
                 <!-- Primary Filters Row -->
                 <div class="idlm-filters-primary-row">
-                    <div class="idlm-filter-group idlm-filter-group-search">
-                        <label>Search Leads</label>
-                        <input type="text" id="filter-search" class="idlm-input" placeholder="Search...">
-                    </div>
                     <div class="idlm-filter-group">
-                        <label>Date Basis</label>
+                        <label for="filter-date-basis">Date basis</label>
                         <select id="filter-date-basis" class="idlm-input">
                             <option value="assigned_at" selected>Assigned Date</option>
                             <option value="created_at">Created Date</option>
@@ -186,7 +187,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         </select>
                     </div>
                     <div class="idlm-filter-group">
-                        <label>Date Range</label>
+                        <label for="filter-date-range">Date range</label>
                         <select id="filter-date-range" class="idlm-input">
                             <option value="">All Time</option>
                             <option value="today">Today</option>
@@ -200,7 +201,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         </select>
                     </div>
                     <div class="idlm-filter-group">
-                        <label>Stage</label>
+                        <label for="filter-stage">Stage</label>
                         <select id="filter-stage" class="idlm-input">
                             <option value="">All Stages</option>
                             <?php foreach ($stages as $stage): ?>
@@ -209,7 +210,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         </select>
                     </div>
                     <div class="idlm-filter-group">
-                        <label>Call Status</label>
+                        <label for="filter-call-status">Call status</label>
                         <select id="filter-call-status" class="idlm-input">
                             <option value="">All Statuses</option>
                             <?php foreach ($call_statuses as $cs): ?>
@@ -219,7 +220,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                     </div>
                     <?php if ($can_assign_leads || (!$is_pre_sales && $reps_see_all)): ?>
                     <div class="idlm-filter-group">
-                        <label>Assigned Rep</label>
+                        <label for="filter-rep">Assigned representative</label>
                         <select id="filter-rep" class="idlm-input">
                             <option value="">All Reps</option>
                             <option value="0">Unassigned</option>
@@ -234,12 +235,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                     </div>
                     <?php endif; ?>
                     <div class="idlm-filter-group idlm-filter-buttons-group">
-                        <label>&nbsp;</label>
                         <div style="display: flex; gap: 8px; align-items: center;">
-                            <button type="button" id="btn-toggle-more-filters" class="idlm-btn idlm-btn-secondary" style="height: 29px; padding: 0 10px; display: flex; width: auto; box-sizing: border-box; align-items: center; justify-content: center; gap: 4px; font-size: 11px;" title="More Filters">
-                                <span class="dashicons dashicons-filter" style="font-size: 14px; width: 14px; height: 14px; line-height: 14px; margin: 0;"></span>
-                                <span>More Filters</span>
-                            </button>
                             <button type="button" id="btn-clear-filters" class="idlm-btn idlm-btn-secondary" style="height: 29px; padding: 0 10px; display: flex; width: auto; box-sizing: border-box; align-items: center; justify-content: center; gap: 4px; font-size: 11px;" title="Clear Filters">
                                 <span class="dashicons dashicons-trash" style="font-size: 14px; width: 14px; height: 14px; line-height: 14px; margin: 0;"></span>
                                 <span>Clear</span>
@@ -248,10 +244,10 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                     </div>
                 </div>
 
-                <!-- Collapsible Secondary Filters Row -->
-                <div class="idlm-filters-secondary-row" id="idlm-secondary-filters-container" style="display: <?php echo $is_pre_sales ? 'grid' : 'none'; ?>;">
+                <!-- Additional lead filters -->
+                <div class="idlm-filters-secondary-row" id="idlm-secondary-filters-container">
                     <div class="idlm-filter-group">
-                        <label>Channel Source</label>
+                        <label for="filter-source">Channel source</label>
                         <select id="filter-source" class="idlm-input">
                             <option value="">All Channels</option>
                             <option value="Website">Website</option>
@@ -263,7 +259,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         </select>
                     </div>
                     <div class="idlm-filter-group">
-                        <label>Lead Quality</label>
+                        <label for="filter-quality">Lead quality</label>
                         <select id="filter-quality" class="idlm-input">
                             <option value="">All Qualities</option>
                             <?php if ($can_assign_leads): ?>
@@ -278,15 +274,16 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         </select>
                     </div>
                     <div class="idlm-filter-group">
-                        <label>Engagement Status</label>
+                        <label for="filter-followup">Engagement status</label>
                         <select id="filter-followup" class="idlm-input">
                             <?php if ($is_pre_sales): ?>
                                 <option value="action_required" selected>Action Required</option>
                                 <option value="my_qualified_history">My Qualified History (read-only)</option>
                             <?php endif; ?>
                             <option value="">All Leads</option>
-                            <option value="overdue">⏳ Overdue Follow-up</option>
-                            <option value="pending_calls">📞 Pending Calls</option>
+                            <option value="overdue">Overdue follow-up</option>
+                            <option value="stale_updates">Needs fresh update (7+ days)</option>
+                            <option value="pending_calls">Pending calls</option>
                             <option value="whatsapp_received">WhatsApp Message Received</option>
                             <option value="unread_whatsapp">Unread WhatsApp Messages</option>
                         </select>
@@ -296,9 +293,10 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
             </div>
 
             <!-- Bulk Actions Panel -->
-            <div class="idlm-bulk-bar" style="display:none;">
-                <span class="idlm-selected-count">0 items selected</span>
+            <div class="idlm-bulk-bar" hidden aria-label="Bulk lead actions">
+                <span class="idlm-selected-count" role="status" aria-live="polite">0 leads selected</span>
                 <div class="idlm-bulk-actions">
+                    <label class="screen-reader-text" for="idlm-bulk-action-select">Bulk action</label>
                     <select id="idlm-bulk-action-select" class="idlm-input">
                         <option value="">Select Bulk Action</option>
                         <?php if ($can_assign_leads): ?>
@@ -308,11 +306,12 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <option value="bulk_unqualified">Mark Unqualified</option>
                         <option value="bulk_audience_queue">Add to Audience Sync Queue</option>
                         <?php if ($can_manage_options): ?>
-                            <option value="bulk_delete" style="color: #ef4444; font-weight: 600;">🗑️ Delete Leads</option>
+                            <option value="bulk_delete">Delete leads</option>
                         <?php endif; ?>
                     </select>
 
                     <!-- Contextual dynamic parameters for bulk options -->
+                    <label class="screen-reader-text" for="idlm-bulk-rep">Representative for bulk assignment</label>
                     <select id="idlm-bulk-rep" class="idlm-input" style="display:none;">
                         <option value="">Select Rep</option>
                         <?php foreach ($reps as $rep):
@@ -324,6 +323,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <?php endforeach; ?>
                     </select>
 
+                    <label class="screen-reader-text" for="idlm-bulk-stage">Stage for bulk update</label>
                     <select id="idlm-bulk-stage" class="idlm-input" style="display:none;">
                         <option value="">Select Stage</option>
                         <?php foreach ($stages as $stage): ?>
@@ -331,40 +331,57 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <?php endforeach; ?>
                     </select>
 
-                    <button id="idlm-apply-bulk" class="idlm-btn idlm-btn-primary">Apply Action</button>
+                    <button type="button" id="idlm-clear-selection" class="idlm-btn idlm-btn-secondary">Clear selection</button>
+                    <button type="button" id="idlm-apply-bulk" class="idlm-btn idlm-btn-primary">Apply action</button>
                 </div>
+                <p class="idlm-field-error idlm-bulk-error" id="idlm-bulk-error" role="alert" hidden></p>
+            </div>
+
+            <div class="idlm-leads-mobile-sort">
+                <label for="idlm-leads-mobile-sort">Sort leads</label>
+                <select id="idlm-leads-mobile-sort" class="idlm-input">
+                    <option value="">Default order</option>
+                    <option value="name|asc">Name: A to Z</option>
+                    <option value="name|desc">Name: Z to A</option>
+                    <option value="budget|desc">Budget: high to low</option>
+                    <option value="lead_quality|asc"><?php echo $is_pre_sales ? 'Follow-up status' : 'Lead quality'; ?></option>
+                    <option value="assigned_at|desc">Recently assigned</option>
+                    <option value="created_at|desc">Recently created</option>
+                    <?php if (!$is_pre_sales): ?>
+                        <option value="stage|asc">Stage</option>
+                        <option value="assigned_rep|asc">Assigned representative</option>
+                    <?php endif; ?>
+                </select>
             </div>
 
             <!-- Leads Data Table -->
-            <div class="idlm-table-wrapper">
+            <div class="idlm-table-wrapper idlm-leads-table-wrapper">
                 <table class="idlm-table" id="idlm-leads-table">
+                    <caption class="screen-reader-text">Leads matching the current filters. On narrow screens, use each lead's Show details button to reveal secondary columns.</caption>
                     <thead>
                         <tr>
-                            <th style="width: 30px;"><input type="checkbox" id="idlm-select-all"></th>
+                            <th class="idlm-selection-column idlm-col-priority-primary"><input type="checkbox" id="idlm-select-all" aria-label="Select all leads on this page" aria-controls="idlm-leads-table"></th>
                             <?php if ($is_pre_sales): ?>
-                            <th class="idlm-sortable-column" data-sort="name" aria-sort="none" role="button" tabindex="0">Lead<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="source" aria-sort="none" role="button" tabindex="0">Channel<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-col-created-at idlm-sortable-column" data-sort="created_at" aria-sort="none" role="button" tabindex="0">Created Date<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-col-created-at idlm-sortable-column" data-sort="assigned_at" aria-sort="none" role="button" tabindex="0">Assigned Date<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="age" aria-sort="none" role="button" tabindex="0">Age<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th>Today</th>
-                            <th>Next Action</th>
-                            <th class="idlm-sortable-column" data-sort="callback" aria-sort="none" role="button" tabindex="0">Callback<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="response" aria-sort="none" role="button" tabindex="0">Response<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="budget" aria-sort="none" role="button" tabindex="0">Budget<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="details" aria-sort="none" role="button" tabindex="0">Details<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="lead_quality" aria-sort="none" role="button" tabindex="0">Follow-up Status<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th>Actions</th>
+                            <th class="idlm-sortable-column idlm-col-priority-primary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="name">Lead<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="source">Channel<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-col-created-at idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="assigned_at">Assigned Date<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="age">Age<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-col-priority-low">Today</th>
+                            <th class="idlm-sortable-column idlm-col-priority-secondary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="response">Response<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-secondary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="budget">Budget<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="details">Details<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-primary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="lead_quality">Follow-up Status<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-col-priority-primary">Actions</th>
                             <?php else: ?>
-                            <th class="idlm-sortable-column" data-sort="name" aria-sort="none" role="button" tabindex="0">Name<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="source" aria-sort="none" role="button" tabindex="0">Channel<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="budget" aria-sort="none" role="button" tabindex="0">Budget<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="stage" aria-sort="none" role="button" tabindex="0">Stage<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="assigned_rep" aria-sort="none" role="button" tabindex="0">Assigned Rep<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="lead_quality" aria-sort="none" role="button" tabindex="0">Lead Quality<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-sortable-column" data-sort="tasks" aria-sort="none" role="button" tabindex="0">Tasks<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-col-created-at idlm-sortable-column" data-sort="assigned_at" aria-sort="none" role="button" tabindex="0">Assigned At<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
-                            <th class="idlm-col-created-at idlm-sortable-column" data-sort="created_at" aria-sort="none" role="button" tabindex="0">Created At<span class="idlm-sort-indicator" aria-hidden="true"></span></th>
+                            <th class="idlm-sortable-column idlm-col-priority-primary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="name">Name<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="source">Channel<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-secondary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="budget">Budget<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-primary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="stage">Stage<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-secondary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="assigned_rep">Assigned Rep<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-primary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="lead_quality">Lead Quality<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-sortable-column idlm-col-priority-secondary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="tasks">Tasks<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-col-created-at idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="assigned_at">Assigned At<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-col-created-at idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="created_at">Created At<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
                             <?php endif; ?>
                         </tr>
                     </thead>
@@ -382,9 +399,9 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <option value="100">100</option>
                     </select>
                 </label>
-                <button class="idlm-pagination-btn" id="prev-page">Previous</button>
+                <button type="button" class="idlm-pagination-btn" id="prev-page">Previous</button>
                 <span id="page-num" class="idlm-pagination-info">Page 1 of 1</span>
-                <button class="idlm-pagination-btn" id="next-page">Next</button>
+                <button type="button" class="idlm-pagination-btn" id="next-page">Next</button>
             </div>
         </div>
 
@@ -393,28 +410,28 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
             <div class="idlm-modal-content">
                 <div class="idlm-modal-header">
                     <h2>Create Manual Lead</h2>
-                    <span class="idlm-close" onclick="closeLeadModal()">&times;</span>
+                    <button type="button" class="idlm-close" onclick="closeLeadModal()" aria-label="Close create manual lead dialog">&times;</button>
                 </div>
                 <form id="idlm-add-lead-form">
                     <div class="idlm-form-grid">
                         <div class="idlm-form-group">
-                            <label>First Name*</label>
-                            <input type="text" name="first_name" class="idlm-input" required>
+                            <label for="idlm-add-lead-first-name">First name <span class="idlm-required-indicator" aria-hidden="true">*</span></label>
+                            <input type="text" id="idlm-add-lead-first-name" name="first_name" class="idlm-input" autocomplete="given-name" required>
                         </div>
                         <div class="idlm-form-group">
-                            <label>Last Name</label>
-                            <input type="text" name="last_name" class="idlm-input">
+                            <label for="idlm-add-lead-last-name">Last name</label>
+                            <input type="text" id="idlm-add-lead-last-name" name="last_name" class="idlm-input" autocomplete="family-name">
                         </div>
                         <div class="idlm-form-group">
-                            <label>Email Address*</label>
-                            <input type="email" name="email" class="idlm-input" required>
+                            <label for="idlm-add-lead-email">Email address <span class="idlm-required-indicator" aria-hidden="true">*</span></label>
+                            <input type="email" id="idlm-add-lead-email" name="email" class="idlm-input" autocomplete="email" required>
                         </div>
                         <div class="idlm-form-group">
-                            <label>Phone Number*</label>
-                            <input type="tel" name="phone" class="idlm-input" required>
+                            <label for="idlm-add-lead-phone">Phone number <span class="idlm-required-indicator" aria-hidden="true">*</span></label>
+                            <input type="tel" id="idlm-add-lead-phone" name="phone" class="idlm-input" autocomplete="tel" inputmode="tel" required>
                         </div>
                         <div class="idlm-form-group">
-                            <label>Source Channel</label>
+                            <label for="idlm-lead-source-select">Source channel</label>
                             <select name="source" id="idlm-lead-source-select" class="idlm-input">
                                 <option value="Website">Website</option>
                                 <option value="Meta Ads">Meta Ads</option>
@@ -426,12 +443,12 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         </div>
                         <!-- Referrer Text Area (Hidden by default, shown when Source is Referral) -->
                         <div class="idlm-form-group" id="idlm-referrer-field" style="display:none; grid-column: span 2;">
-                            <label>Referrer Details</label>
-                            <textarea name="referrer_details" class="idlm-input" rows="2" placeholder="Mention referral details..."></textarea>
+                            <label for="idlm-add-lead-referrer">Referrer details</label>
+                            <textarea id="idlm-add-lead-referrer" name="referrer_details" class="idlm-input" rows="2" placeholder="Mention referral details..."></textarea>
                         </div>
                         <div class="idlm-form-group">
-                            <label>Property Type</label>
-                            <select name="property_type" class="idlm-input">
+                            <label for="idlm-add-lead-property-type">Property type</label>
+                            <select id="idlm-add-lead-property-type" name="property_type" class="idlm-input">
                                 <option value="Apartment">Apartment</option>
                                 <option value="Villa">Villa</option>
                                 <option value="Independent House">Independent House</option>
@@ -439,40 +456,40 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             </select>
                         </div>
                         <div class="idlm-form-group">
-                            <label>Number of Rooms</label>
-                            <select name="num_rooms" class="idlm-input">
+                            <label for="idlm-add-lead-rooms">Number of rooms</label>
+                            <select id="idlm-add-lead-rooms" name="num_rooms" class="idlm-input">
                                 <?php foreach ($num_rooms_options as $opt): ?>
                                     <option value="<?php echo esc_attr($opt); ?>"><?php echo esc_html($opt); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="idlm-form-group">
-                            <label>Preferred Studio Location</label>
-                            <select name="preferred_studio" class="idlm-input">
+                            <label for="idlm-add-lead-studio">Preferred studio location</label>
+                            <select id="idlm-add-lead-studio" name="preferred_studio" class="idlm-input">
                                 <?php foreach ($studios as $studio): ?>
                                     <option value="<?php echo esc_attr($studio); ?>"><?php echo esc_html($studio); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="idlm-form-group">
-                            <label>Lead Quality</label>
-                            <select name="lead_quality" class="idlm-input">
+                            <label for="idlm-add-lead-quality">Lead quality</label>
+                            <select id="idlm-add-lead-quality" name="lead_quality" class="idlm-input">
                                 <option value="" selected>Choose Quality...</option>
                                 <option value="Qualified">Qualified</option>
                                 <option value="Unqualified">Unqualified</option>
                             </select>
                         </div>
                         <div class="idlm-form-group">
-                            <label>Lead Budget</label>
-                            <input type="text" name="budget" class="idlm-input" placeholder="e.g. $15,000 or 25000">
+                            <label for="idlm-add-lead-budget">Lead budget</label>
+                            <input type="text" id="idlm-add-lead-budget" name="budget" class="idlm-input" inputmode="decimal" placeholder="e.g. 15000 or 25000">
                         </div>
                         <div class="idlm-form-group">
-                            <label>Project Timeline</label>
-                            <input type="text" name="project_timeline" class="idlm-input" placeholder="e.g. Immediate or 1-3 Months">
+                            <label for="idlm-add-lead-timeline">Project timeline</label>
+                            <input type="text" id="idlm-add-lead-timeline" name="project_timeline" class="idlm-input" placeholder="e.g. Immediate or 1–3 months">
                         </div>
                         <div class="idlm-form-group">
-                            <label>Property Location / Pincode</label>
-                            <input type="text" name="property_location" class="idlm-input" placeholder="e.g. Downtown or 560001">
+                            <label for="idlm-add-lead-property-location">Property location or pincode</label>
+                            <input type="text" id="idlm-add-lead-property-location" name="property_location" class="idlm-input" autocomplete="street-address" placeholder="e.g. Downtown or 560001">
                         </div>
                     </div>
                     <div style="margin-top: 20px; display:flex; justify-content: flex-end; gap: 10px;">
@@ -484,14 +501,14 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
         </div>
 
         <!-- Lead Routing Settings Modal -->
-        <div class="idlm-modal" id="idlm-routing-modal">
-            <div class="idlm-modal-content">
+        <div class="idlm-modal idlm-dialog" id="idlm-routing-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-routing-modal-title" aria-describedby="idlm-routing-modal-description" aria-hidden="true" data-idlm-dialog data-idlm-use-hidden hidden>
+            <div class="idlm-modal-content idlm-dialog__panel">
                 <div class="idlm-modal-header">
-                    <div>
-                        <h2>Lead Routing & Assignment Rules</h2>
-                        <p class="idlm-routing-modal-intro">Choose how leads are distributed and which studio each representative covers.</p>
+                    <div class="idlm-routing-modal-heading">
+                        <h2 id="idlm-routing-modal-title">Lead Routing &amp; Assignment Rules</h2>
+                        <p class="idlm-routing-modal-intro" id="idlm-routing-modal-description">Choose how leads are distributed and which studio each representative covers.</p>
                     </div>
-                    <button type="button" class="idlm-close" onclick="closeRoutingModal()" aria-label="Close routing settings">&times;</button>
+                    <button type="button" class="idlm-close" onclick="return closeRoutingModal()" aria-label="Close routing settings">&times;</button>
                 </div>
                 <form id="idlm-routing-settings-form">
                     <input type="hidden" name="action" value="idlm_save_routing_settings">
@@ -501,28 +518,32 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <div class="idlm-form-grid idlm-routing-primary-grid">
                             <section class="idlm-form-group idlm-routing-section idlm-routing-strategy-section">
                                 <div class="idlm-routing-section-heading">
-                                    <span class="idlm-routing-step">1</span>
                                     <div>
-                                        <h3>Assignment strategy</h3>
-                                        <p>Choose when and how incoming leads should be assigned.</p>
+                                        <h3>New-lead routing</h3>
+                                        <p>Choose how new leads reach the right person.</p>
                                     </div>
                                 </div>
-                                <select name="assignment_mode" id="idlm-routing-mode-select" class="idlm-input" onchange="toggleRoutingModalSourcePanel(this.value)">
+                                <label for="idlm-routing-mode-select">Assignment strategy</label>
+                                <select name="assignment_mode" id="idlm-routing-mode-select" class="idlm-input" aria-describedby="idlm-routing-strategy-help idlm-routing-settings-error" onchange="toggleRoutingModalSourcePanel(this.value)">
 
-                                    <option value="manual" <?php selected($assignment_mode, 'manual'); ?>>Manual Only (Admin delegates from tables)</option>
-                                    <option value="pre_sales" <?php selected($assignment_mode, 'pre_sales'); ?>>Pre-Sales Intake (Round robin across Pre-Sales users)</option>
-                                    <option value="round_robin" <?php selected($assignment_mode, 'round_robin'); ?>>Round Robin (Autosync rotation across active reps)</option>
-                                    <option value="source_based" <?php selected($assignment_mode, 'source_based'); ?>>Source-Based (Route channels to specific reps)</option>
-                                    <option value="studio_based" <?php selected($assignment_mode, 'studio_based'); ?>>Studio-Based (Route preferred studios to assigned reps)</option>
+                                    <option value="manual" <?php selected($assignment_mode, 'manual'); ?>>Manual assignment</option>
+                                    <option value="pre_sales" <?php selected($assignment_mode, 'pre_sales'); ?>>Pre-sales rotation</option>
+                                    <option value="round_robin" <?php selected($assignment_mode, 'round_robin'); ?>>All-representative rotation</option>
+                                    <option value="source_based" <?php selected($assignment_mode, 'source_based'); ?>>Route by source</option>
+                                    <option value="studio_based" <?php selected($assignment_mode, 'studio_based'); ?>>Route by studio</option>
                                 </select>
+                                <p class="idlm-routing-outcome" id="idlm-routing-strategy-help" role="status" aria-live="polite"></p>
+                                <div class="idlm-routing-current-summary" role="status" aria-live="polite" aria-label="Current routing setup" data-pre-sales-count="<?php echo esc_attr($active_pre_sales_count); ?>" data-unassigned-count="<?php echo esc_attr($unassigned_intake_count); ?>">
+                                    <strong>Current setup</strong>
+                                    <span id="idlm-routing-current-summary-text"><?php echo esc_html($assignment_mode_label); ?> · <?php echo esc_html($active_pre_sales_count); ?> pre-sales available · <?php echo esc_html($unassigned_intake_count); ?> unassigned · Backlog recovery <?php echo '1' === $fallback_enabled ? 'on' : 'off'; ?></span>
+                                </div>
                             </section>
 
                             <section class="idlm-form-group idlm-routing-section idlm-routing-reps-section">
                                 <div class="idlm-routing-section-heading">
-                                    <span class="idlm-routing-step">2</span>
                                     <div>
                                         <h3>Representative coverage</h3>
-                                        <p>Enable representatives and select the studio whose leads they can receive.</p>
+                                        <p>Choose the representatives available for rotation and their studio coverage.</p>
                                     </div>
                                 </div>
                                 <div class="idlm-routing-rep-head" aria-hidden="true">
@@ -554,18 +575,18 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
 
                         <!-- Source maps sub panel -->
 
-                        <div id="idlm-routing-source-mapping-subpanel" style="display:<?php echo ($assignment_mode === 'source_based') ? 'grid' : 'none'; ?>;" class="idlm-form-grid idlm-routing-section idlm-routing-source-section">
+                        <div id="idlm-routing-source-mapping-subpanel" class="idlm-form-grid idlm-routing-section idlm-routing-source-section<?php echo 'source_based' === $assignment_mode ? '' : ' is-inactive'; ?>" aria-disabled="<?php echo 'source_based' === $assignment_mode ? 'false' : 'true'; ?>">
                             <div class="idlm-routing-section-heading full">
-                                <span class="idlm-routing-step">3</span>
-                                <div><h3>Source routing maps</h3><p>Send each lead source to a specific active representative.</p></div>
+                                <div><h3>Source assignments</h3><p>Choose who receives each source. These rules apply when “Route by source” is selected above.</p></div>
                             </div>
                             <?php foreach (array('Website', 'Meta Ads', 'Google Ads', 'LinkedIn Ads', 'Referral', 'Offline/Walk-in') as $src):
                                 $field_name = 'source_map_' . str_replace(array(' ', '/', '-'), '_', strtolower($src));
+                                $field_id = 'idlm-' . $field_name;
                                 $val = isset($source_maps[$src]) ? $source_maps[$src] : 0;
                             ?>
                                 <div class="idlm-form-group">
-                                    <label>Route <?php echo esc_html($src); ?> to</label>
-                                    <select name="<?php echo esc_attr($field_name); ?>" class="idlm-input">
+                                    <label for="<?php echo esc_attr($field_id); ?>">Route <?php echo esc_html($src); ?> to</label>
+                                    <select id="<?php echo esc_attr($field_id); ?>" name="<?php echo esc_attr($field_name); ?>" class="idlm-input"<?php disabled('source_based' !== $assignment_mode); ?>>
                                         <option value="0">Unassigned</option>
                                         <?php foreach ($reps as $rep): ?>
                                             <option value="<?php echo esc_attr($rep->ID); ?>" <?php selected($val, $rep->ID); ?>><?php echo esc_html($rep->display_name); ?></option>
@@ -575,44 +596,21 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             <?php endforeach; ?>
                         </div>
 
-                        <!-- Fallback Routing sub panel -->
-
-                        <section id="idlm-routing-fallback-subpanel" class="idlm-routing-section idlm-routing-fallback-section">
+                        <section class="idlm-routing-advanced" id="idlm-routing-advanced-safeguards">
                             <div class="idlm-routing-section-heading">
-                                <span class="idlm-routing-step" aria-hidden="true">↻</span>
-                                <div><h3>Routing team & safeguards</h3><p>See who receives new leads, recover the unassigned backlog, and configure qualified-lead handoff independently.</p></div>
-                            </div>
-
-                            <div class="idlm-routing-status-strip" aria-label="Current routing status">
-                                <div class="idlm-routing-status-card">
-                                    <span>New lead routing</span>
-                                    <strong><?php echo esc_html($assignment_mode_label); ?></strong>
-                                    <small><?php echo 'manual' === $assignment_mode ? 'New leads wait for an admin.' : 'New leads route automatically.'; ?></small>
-                                </div>
-                                <div class="idlm-routing-status-card <?php echo $active_pre_sales_count > 0 ? 'is-ready' : 'is-warning'; ?>">
-                                    <span>Active pre-sales</span>
-                                    <strong><?php echo esc_html($active_pre_sales_count); ?> available</strong>
-                                    <small><?php echo $active_pre_sales_count > 0 ? 'Eligible for new intake leads.' : 'No one can receive pre-sales leads.'; ?></small>
-                                </div>
-                                <div class="idlm-routing-status-card <?php echo $unassigned_intake_count > 0 ? 'is-warning' : 'is-ready'; ?>">
-                                    <span>Unassigned backlog</span>
-                                    <strong><?php echo esc_html($unassigned_intake_count); ?> leads</strong>
-                                    <small><?php echo $unassigned_intake_count > 0 ? 'Waiting for an owner.' : 'No open leads are waiting.'; ?></small>
-                                </div>
-                                <div class="idlm-routing-status-card <?php echo '1' === $fallback_enabled ? 'is-ready' : 'is-inactive'; ?>">
-                                    <span>Backlog recovery</span>
-                                    <strong><?php echo '1' === $fallback_enabled ? 'Enabled' : 'Disabled'; ?></strong>
-                                    <small><?php echo '1' === $fallback_enabled ? esc_html(sprintf('Runs after %d working hours.', $fallback_hours)) : 'Existing unassigned leads stay put.'; ?></small>
+                                <div>
+                                    <h3>Safeguards and operations</h3>
+                                    <p>Set team availability, recovery, handoff, and everyday routing limits.</p>
                                 </div>
                             </div>
-
-                            <div class="idlm-routing-control-card idlm-routing-team-card">
-                                <div class="idlm-routing-control-heading">
-                                    <span class="idlm-routing-control-number">1</span>
-                                    <div><strong>Active Pre-Sales Team</strong><small>Controls who can receive new leads immediately.</small></div>
-                                </div>
-                                <div class="idlm-form-group" style="width:100%;">
-                                    <label>Available now</label>
+                            <div class="idlm-routing-advanced-content">
+                                <section id="idlm-routing-fallback-subpanel" class="idlm-routing-fallback-section">
+                                    <div class="idlm-routing-control-group idlm-routing-team-group">
+                                        <div class="idlm-routing-control-heading">
+                                            <div><h3>Pre-sales availability</h3><p>Choose who can receive new pre-sales leads right now.</p></div>
+                                        </div>
+                                <div class="idlm-form-group idlm-control-full">
+                                    <span class="idlm-form-label">Available now</span>
                                     <div class="idlm-routing-days">
                                         <?php if (empty($pre_sales_reps)): ?>
                                             <span class="description">No users currently have the Pre-Sales Representative role.</span>
@@ -624,60 +622,56 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                     </div>
                                     <p class="description">Checked users are active for new Pre-Sales Intake leads. Uncheck someone while they are unavailable or on leave.</p>
                                 </div>
-                            </div>
+                                    </div>
 
-                            <div class="idlm-routing-control-card">
-                                <div class="idlm-routing-control-heading">
-                                    <span class="idlm-routing-control-number">2</span>
-                                    <div><strong>Unassigned Lead Recovery</strong><small>A separate safety net for older leads that currently have no owner.</small></div>
-                                </div>
+                                    <div class="idlm-routing-control-group">
+                                        <div class="idlm-routing-control-heading">
+                                            <div><h3>Unassigned lead recovery</h3><p>Optionally return older unassigned leads to the active pre-sales pool.</p></div>
+                                        </div>
                                 <label class="idlm-routing-switch-row">
                                     <input type="checkbox" name="fallback_assignment_enabled" value="1" <?php checked($fallback_enabled, '1'); ?>>
                                     <span><strong>Automatically assign the unassigned backlog</strong><small>When enabled, eligible leads return to the active pre-sales pool after the fallback threshold.</small></span>
                                 </label>
-                            </div>
+                                        <div id="idlm-routing-backlog-controls" class="idlm-routing-conditional-controls"<?php echo '1' === $fallback_enabled ? '' : ' hidden aria-hidden="true"'; ?>>
+                                            <input type="hidden" name="fallback_assignment_controls_active" value="1"<?php disabled('1' !== $fallback_enabled); ?>>
+                                            <div class="idlm-form-group">
+                                                <label for="idlm-fallback-hours">Recovery threshold</label>
+                                                <div class="idlm-routing-input-suffix"><input id="idlm-fallback-hours" type="number" name="fallback_assignment_hours" class="idlm-input" min="1" max="720" value="<?php echo esc_attr($fallback_hours); ?>"<?php disabled('1' !== $fallback_enabled); ?>><span>working hours</span></div>
+                                                <p class="description">Wait this long before an eligible unassigned lead is reassigned.</p>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            <div class="idlm-routing-control-card">
-                                <div class="idlm-routing-control-heading">
-                                    <span class="idlm-routing-control-number">3</span>
-                                    <div><strong>Qualified Lead Handoff</strong><small>Optional coverage for moving qualified pre-sales leads to the sales team.</small></div>
-                                </div>
+                                    <div class="idlm-routing-control-group">
+                                        <div class="idlm-routing-control-heading">
+                                            <div><h3>Qualified lead handoff</h3><p>Cover qualified leads when a manager is unavailable.</p></div>
+                                        </div>
                                 <label class="idlm-routing-switch-row">
                                     <input type="checkbox" name="qualified_fallback_enabled" value="1" <?php checked($qualified_fallback_enabled, '1'); ?>>
                                     <span><strong>Manager OOO: auto-assign qualified leads</strong><small>After the threshold, hand qualified pre-sales leads to studio-matched active sales representatives, then the general sales pool.</small></span>
                                 </label>
-                            </div>
-                            <div class="idlm-routing-fallback-fields">
+                                        <div id="idlm-routing-qualified-controls" class="idlm-routing-conditional-controls idlm-routing-fallback-fields"<?php echo '1' === $qualified_fallback_enabled ? '' : ' hidden aria-hidden="true"'; ?>>
+                                            <input type="hidden" name="qualified_fallback_controls_active" value="1"<?php disabled('1' !== $qualified_fallback_enabled); ?>>
                                 <div class="idlm-form-group">
-                                    <label>Maximum active leads per rep</label>
-                                    <div class="idlm-routing-input-suffix"><input type="number" name="max_active_leads_per_rep" class="idlm-input" min="0" max="10000" value="<?php echo esc_attr($max_active_leads_per_rep); ?>"><span>leads</span></div>
-                                    <p class="description">Applied to every automatic pre-sales and sales routing pool. Enter 0 for unlimited.</p>
-                                </div>
-                                <div class="idlm-form-group">
-                                    <label>Fallback threshold</label>
-                                    <div class="idlm-routing-input-suffix"><input type="number" name="fallback_assignment_hours" class="idlm-input" min="1" max="720" value="<?php echo esc_attr($fallback_hours); ?>"><span>working hours</span></div>
-                                    <p class="description">Wait time before fallback assignment.</p>
-                                </div>
-                                <div class="idlm-form-group">
-                                    <label>Qualified handoff threshold</label>
-                                    <div class="idlm-routing-input-suffix"><input type="number" name="qualified_fallback_hours" class="idlm-input" min="1" max="720" value="<?php echo esc_attr($qualified_fallback_hours); ?>"><span>working hours</span></div>
+                                    <label for="idlm-qualified-fallback-hours">Qualified handoff threshold</label>
+                                    <div class="idlm-routing-input-suffix"><input id="idlm-qualified-fallback-hours" type="number" name="qualified_fallback_hours" class="idlm-input" min="1" max="720" value="<?php echo esc_attr($qualified_fallback_hours); ?>"><span>working hours</span></div>
                                     <p class="description">Manager OOO wait time measured from qualification.</p>
                                 </div>
                                 <div class="idlm-form-group">
-                                    <label>Manager OOO ends</label>
-                                    <input type="datetime-local" name="qualified_fallback_end_at" class="idlm-input" value="<?php echo esc_attr($qualified_fallback_end_at ? str_replace(' ', 'T', substr($qualified_fallback_end_at, 0, 16)) : ''); ?>">
+                                    <label for="idlm-qualified-fallback-end">Manager OOO ends</label>
+                                    <input id="idlm-qualified-fallback-end" type="datetime-local" name="qualified_fallback_end_at" class="idlm-input" value="<?php echo esc_attr($qualified_fallback_end_at ? str_replace(' ', 'T', substr($qualified_fallback_end_at, 0, 16)) : ''); ?>">
                                     <p class="description">Optional. OOO handoff disables automatically after this time.</p>
                                 </div>
                                 <div class="idlm-form-group">
-                                    <label>Missing studio behavior</label>
-                                    <select name="studio_mismatch_behavior" class="idlm-input">
+                                    <label for="idlm-studio-mismatch-behavior">Missing studio behavior</label>
+                                    <select id="idlm-studio-mismatch-behavior" name="studio_mismatch_behavior" class="idlm-input">
                                         <option value="general_pool" <?php selected($studio_mismatch_behavior, 'general_pool'); ?>>Use general active sales pool</option>
                                         <option value="hold_for_manager" <?php selected($studio_mismatch_behavior, 'hold_for_manager'); ?>>Hold for manager review</option>
                                     </select>
                                 </div>
                                 <div class="idlm-form-group">
-                                    <label>Pending task policy</label>
-                                    <select name="handoff_task_policy" class="idlm-input">
+                                    <label for="idlm-handoff-task-policy">Pending task policy</label>
+                                    <select id="idlm-handoff-task-policy" name="handoff_task_policy" class="idlm-input">
                                         <option value="transfer" <?php selected($handoff_task_policy, 'transfer'); ?>>Transfer pending tasks to sales owner</option>
                                         <option value="retain" <?php selected($handoff_task_policy, 'retain'); ?>>Keep tasks with pre-sales</option>
                                         <option value="complete_qualification" <?php selected($handoff_task_policy, 'complete_qualification'); ?>>Complete qualification tasks only</option>
@@ -689,30 +683,51 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                 <div class="idlm-form-group">
                                     <label class="idlm-routing-switch-row"><input type="checkbox" name="handoff_notifications_enabled" value="1" <?php checked($handoff_notifications_enabled, '1'); ?>><span><strong>Email handoff participants</strong><small>Notify the previous pre-sales owner and the new sales owner.</small></span></label>
                                 </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </section>
+
+                        <section class="idlm-routing-advanced idlm-routing-operating-section">
+                            <div class="idlm-routing-section-heading">
+                                <div>
+                                    <h3>Operating limits and notifications</h3>
+                                    <p>Set capacity, working hours, follow-up targets, and routing alerts.</p>
+                                </div>
+                            </div>
+                            <div class="idlm-routing-advanced-content">
+                                <div class="idlm-routing-control-group idlm-routing-operating-group">
+                                        <div class="idlm-routing-fallback-fields">
+                                <div class="idlm-form-group">
+                                    <label for="idlm-max-active-leads">Maximum active leads per rep</label>
+                                    <div class="idlm-routing-input-suffix"><input id="idlm-max-active-leads" type="number" name="max_active_leads_per_rep" class="idlm-input" min="0" max="10000" value="<?php echo esc_attr($max_active_leads_per_rep); ?>"><span>leads</span></div>
+                                    <p class="description">Use 0 for no limit.</p>
+                                </div>
                                 <div class="idlm-form-group">
                                     <label class="idlm-routing-switch-row"><input type="checkbox" name="routing_exception_notifications_enabled" value="1" <?php checked($routing_exception_notifications_enabled, '1'); ?>><span><strong>Email routing exceptions</strong><small>Notify the WordPress administrator when a routing pool is unavailable.</small></span></label>
                                 </div>
                                 <div class="idlm-form-group">
-                                    <label>Daily working hours</label>
+                                    <span class="idlm-form-label">Daily working hours</span>
                                     <div class="idlm-routing-time-range">
-                                    <input type="time" name="working_hours_start" class="idlm-input" value="<?php echo esc_attr($working_hours_start); ?>">
+                                    <input type="time" name="working_hours_start" class="idlm-input" aria-label="Working day starts" value="<?php echo esc_attr($working_hours_start); ?>">
                                     <span>to</span>
-                                    <input type="time" name="working_hours_end" class="idlm-input" value="<?php echo esc_attr($working_hours_end); ?>">
+                                    <input type="time" name="working_hours_end" class="idlm-input" aria-label="Working day ends" value="<?php echo esc_attr($working_hours_end); ?>">
                                     </div>
                                     <p class="description">Hours when the business is open.</p>
                                 </div>
                                 <div class="idlm-form-group">
-                                    <label>Calls per follow-up cycle</label>
-                                    <input type="number" name="presales_calls_per_day" class="idlm-input" min="1" max="20" value="<?php echo esc_attr($presales_targets['calls']); ?>">
+                                    <label for="idlm-presales-calls">Calls per follow-up cycle</label>
+                                    <input id="idlm-presales-calls" type="number" name="presales_calls_per_day" class="idlm-input" min="1" max="20" value="<?php echo esc_attr($presales_targets['calls']); ?>">
                                     <p class="description">Partial progress carries forward until this target is reached.</p>
                                 </div>
                                 <div class="idlm-form-group">
-                                    <label>WhatsApp messages per follow-up cycle</label>
-                                    <input type="number" name="presales_whatsapp_per_day" class="idlm-input" min="0" max="20" value="<?php echo esc_attr($presales_targets['whatsapp']); ?>">
+                                    <label for="idlm-presales-whatsapp">WhatsApp messages per follow-up cycle</label>
+                                    <input id="idlm-presales-whatsapp" type="number" name="presales_whatsapp_per_day" class="idlm-input" min="0" max="20" value="<?php echo esc_attr($presales_targets['whatsapp']); ?>">
                                     <p class="description">Enter 0 when WhatsApp is not required.</p>
                                 </div>
                                 <div class="idlm-form-group idlm-routing-days-group">
-                                <label>Business working days</label>
+                                <span class="idlm-form-label">Business working days</span>
                                 <div class="idlm-routing-days">
                                     <?php foreach ($days_map as $val => $label): ?>
                                         <label>
@@ -723,18 +738,23 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                 </div>
                                 <p class="description">Days counted toward the threshold.</p>
                                 </div>
-                                <div class="idlm-form-group idlm-routing-days-group">
-                                    <label>Fallback health</label>
-                                    <p class="description">Last completed: <?php echo esc_html($fallback_last_completed); ?> · Status: <?php echo esc_html($fallback_last_status); ?> · Open routing exceptions: <?php echo esc_html($routing_exception_count); ?></p>
-                                    <button type="button" class="idlm-btn idlm-btn-secondary idlm-run-fallback-now">Run Fallback Now</button>
+                                            <div class="idlm-form-group idlm-routing-days-group">
+                                                <span class="idlm-form-label">Fallback health</span>
+                                                <p class="description">Last completed: <?php echo esc_html($fallback_last_completed); ?> · Status: <?php echo esc_html($fallback_last_status); ?> · Open exceptions: <?php echo esc_html($routing_exception_count); ?></p>
+                                                <button type="button" class="idlm-btn idlm-btn-secondary idlm-run-fallback-now" aria-describedby="idlm-routing-fallback-progress">Run fallback now</button>
+                                                <p class="idlm-routing-fallback-progress" id="idlm-routing-fallback-progress" role="status" aria-live="polite"></p>
+                                                <div class="idlm-routing-fallback-confirm" hidden><p>Run fallback routing now? This can assign eligible unassigned leads immediately.</p><div><button type="button" class="idlm-btn idlm-btn-secondary idlm-cancel-fallback-run">Cancel</button><button type="button" class="idlm-btn idlm-btn-primary idlm-confirm-fallback-run">Run fallback</button></div></div>
+                                            </div>
+                                        </div>
                                 </div>
                             </div>
                         </section>
                     </div>
 
                     <div class="idlm-routing-modal-footer">
-                        <button type="button" class="idlm-btn idlm-btn-secondary" onclick="closeRoutingModal()">Cancel</button>
+                        <button type="button" class="idlm-btn idlm-btn-secondary" onclick="return closeRoutingModal()">Cancel</button>
                         <button type="submit" class="idlm-btn idlm-btn-primary">Save Routing Rules</button>
+                        <p class="idlm-routing-form-error" id="idlm-routing-settings-error" role="alert" hidden></p>
                     </div>
                 </form>
             </div>
@@ -742,54 +762,62 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
 
         <?php if ($can_manage_options): ?>
         <!-- Import Leads Modal -->
-        <div class="idlm-modal" id="idlm-import-modal">
-            <div class="idlm-modal-content" style="max-width: 650px;">
-                <div class="idlm-modal-header">
-                    <h2>Import Leads from CSV</h2>
-                    <span class="idlm-close" onclick="closeImportModal()">&times;</span>
-                </div>
+        <div class="idlm-modal idlm-dialog" id="idlm-import-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-import-title" aria-describedby="idlm-import-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-import-drag-zone">
+            <div class="idlm-modal-content idlm-dialog__panel idlm-import-dialog-panel">
+                <header class="idlm-modal-header idlm-dialog__header">
+                    <div>
+                        <h2 class="idlm-dialog__title" id="idlm-import-title">Import leads from CSV</h2>
+                        <p class="idlm-dialog__description" id="idlm-import-description">Upload, map, review, and import lead records in four guided steps.</p>
+                    </div>
+                    <button type="button" class="idlm-dialog__close" id="idlm-import-close" data-idlm-dialog-close aria-label="Close lead import"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+                </header>
+
+                <div class="idlm-dialog__body">
 
                 <!-- Steps Navigation Indicator -->
-                <div class="idlm-import-steps">
-                    <div class="idlm-import-step-item active" id="import-step-nav-1">
+                <ol class="idlm-import-steps" aria-label="Import progress">
+                    <li class="idlm-import-step-item active" id="import-step-nav-1" aria-current="step">
                         <span class="idlm-import-step-number">1</span> Upload CSV
-                    </div>
-                    <div class="idlm-import-step-item" id="import-step-nav-2">
+                    </li>
+                    <li class="idlm-import-step-item" id="import-step-nav-2">
                         <span class="idlm-import-step-number">2</span> Map Fields
-                    </div>
-                    <div class="idlm-import-step-item" id="import-step-nav-3">
+                    </li>
+                    <li class="idlm-import-step-item" id="import-step-nav-3">
                         <span class="idlm-import-step-number">3</span> Preview & Options
-                    </div>
-                    <div class="idlm-import-step-item" id="import-step-nav-4">
+                    </li>
+                    <li class="idlm-import-step-item" id="import-step-nav-4">
                         <span class="idlm-import-step-number">4</span> Progress
-                    </div>
-                </div>
+                    </li>
+                </ol>
+                <p class="idlm-field-error idlm-import-error" id="idlm-import-error" role="alert" hidden></p>
 
                 <!-- STEP 1: UPLOAD CSV -->
                 <div class="idlm-import-step-content active" id="import-step-content-1">
-                    <div class="idlm-import-drag-zone" id="idlm-import-drag-zone">
+                    <button type="button" class="idlm-import-drag-zone" id="idlm-import-drag-zone" aria-describedby="idlm-import-file-help">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                         <span class="idlm-import-drag-text">Drag and drop your CSV file here, or click to browse</span>
-                        <span class="idlm-import-drag-subtext">Supports standard .csv files up to 5MB</span>
-                        <input type="file" id="idlm-import-file-input" accept=".csv" style="display: none;">
-                    </div>
+                        <span class="idlm-import-drag-subtext" id="idlm-import-file-help">Supports standard .csv files up to 5MB</span>
+                    </button>
+                    <label class="screen-reader-text" for="idlm-import-file-input">Choose CSV file</label>
+                    <input type="file" id="idlm-import-file-input" accept=".csv,text/csv" hidden>
 
                     <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-                        <a href="#" class="idlm-btn idlm-btn-secondary" id="idlm-import-download-template" style="text-decoration: none; display: inline-flex; gap: 5px;">
-                            📥 Download Sample Template
-                        </a>
-                        <button type="button" class="idlm-btn idlm-btn-secondary" onclick="closeImportModal()">Cancel</button>
+                        <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-import-download-template" style="display: inline-flex; gap: 5px;">
+                            <span class="dashicons dashicons-download" aria-hidden="true"></span> Download sample template
+                        </button>
+                        <button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-dialog-close>Cancel</button>
                     </div>
                 </div>
 
                 <!-- STEP 2: MAP FIELDS -->
                 <div class="idlm-import-step-content" id="import-step-content-2">
-                    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Map the headers from your CSV file to Lead Manager fields. Fields marked with * are highly recommended.</p>
+                    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Map the headers from your CSV file to Lead Manager fields. Fields marked with * are required. Qualified leads also require all project-detail fields shown below.</p>
 
                     <div class="idlm-import-mapping-wrapper">
                         <table class="idlm-import-mapping-table">
+                            <caption class="screen-reader-text">Map CRM fields to columns in the uploaded CSV file</caption>
                             <thead>
                                 <tr>
                                     <th>CRM Field</th>
@@ -807,7 +835,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <h4 style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600;">Import Defaults</h4>
                         <div class="idlm-form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                             <div class="idlm-form-group">
-                                <label style="font-size: 11px;">Default Source Channel</label>
+                                <label for="import-default-source" style="font-size: 11px;">Default Source Channel</label>
                                 <select id="import-default-source" class="idlm-input">
                                     <option value="CSV Import" selected>CSV Import</option>
                                     <option value="Website">Website</option>
@@ -818,7 +846,16 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                 </select>
                             </div>
                             <div class="idlm-form-group">
-                                <label style="font-size: 11px;">Default Pipeline Stage</label>
+                                <label for="import-default-studio" style="font-size: 11px;">Default Preferred Studio</label>
+                                <select id="import-default-studio" class="idlm-input">
+                                    <option value="">No default studio</option>
+                                    <?php foreach ($studios as $studio): ?>
+                                        <option value="<?php echo esc_attr($studio); ?>"><?php echo esc_html($studio); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="idlm-form-group">
+                                <label for="import-default-stage" style="font-size: 11px;">Default Pipeline Stage</label>
                                 <select id="import-default-stage" class="idlm-input">
                                     <?php foreach ($stages as $stage): ?>
                                         <option value="<?php echo esc_attr($stage); ?>"><?php echo esc_html($stage); ?></option>
@@ -826,7 +863,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                 </select>
                             </div>
                             <div class="idlm-form-group">
-                                <label style="font-size: 11px;">Default Call Status</label>
+                                <label for="import-default-call-status" style="font-size: 11px;">Default Call Status</label>
                                 <select id="import-default-call-status" class="idlm-input">
                                     <?php foreach ($call_statuses as $cs): ?>
                                         <option value="<?php echo esc_attr($cs); ?>"><?php echo esc_html($cs); ?></option>
@@ -846,8 +883,11 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                 <div class="idlm-import-step-content" id="import-step-content-3">
                     <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Confirm the parsed data preview (showing first 3 rows) and configure additional processing rules.</p>
 
+                    <div class="idlm-import-status-list" id="idlm-import-projection" role="status" aria-live="polite">Validating every CSV row…</div>
+
                     <div class="idlm-import-preview-wrapper">
                         <table class="idlm-import-preview-table" id="idlm-import-preview-table">
+                            <caption>Preview of the first three imported rows</caption>
                             <thead>
                                 <tr id="idlm-import-preview-thead-tr">
                                     <!-- Dynamic headers -->
@@ -878,7 +918,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
 
                 <!-- STEP 4: PROGRESS & STATUS -->
                 <div class="idlm-import-step-content" id="import-step-content-4">
-                    <div class="idlm-import-progress-wrapper">
+                    <div class="idlm-import-progress-wrapper" id="idlm-import-progress" role="progressbar" aria-labelledby="import-progress-text" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Initializing import">
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 500;">
                             <span id="import-progress-text">Initializing import...</span>
                             <span id="import-progress-percent">0%</span>
@@ -888,13 +928,15 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         </div>
                     </div>
 
-                    <div class="idlm-import-status-list" id="idlm-import-status-list">
+                    <div class="idlm-import-status-list" id="idlm-import-status-list" role="log" aria-live="polite" aria-relevant="additions text">
                         <!-- Code activity details populated dynamically -->
                     </div>
 
                     <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-                        <button type="button" class="idlm-btn idlm-btn-primary" id="import-btn-close-final" style="display: none;" onclick="closeImportModal()">Close & Refresh</button>
+                        <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-import-download-failures" hidden>Download failure report</button>
+                        <button type="button" class="idlm-btn idlm-btn-primary" id="import-btn-close-final" hidden data-idlm-dialog-close>Close and refresh</button>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
@@ -904,15 +946,19 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
         <?php echo $common_overlays_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Guarded plugin template output. ?>
 
         <!-- Export Leads Modal -->
-        <div class="idlm-modal" id="idlm-export-modal" style="z-index: 100000;">
-            <div class="idlm-modal-content" style="max-width: 550px; padding: 25px;">
-                <div class="idlm-modal-header" style="margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid var(--idlm-border);">
-                    <h2 style="font-size: 18px; font-weight: 700; color: var(--idlm-text);">Export Leads to CSV</h2>
-                    <span class="idlm-close" onclick="closeExportModal()">&times;</span>
-                </div>
+        <div class="idlm-modal idlm-dialog" id="idlm-export-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-export-title" aria-describedby="idlm-export-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="input[name='idlm-export-scope']:checked">
+            <div class="idlm-modal-content idlm-dialog__panel idlm-export-dialog-panel">
+                <header class="idlm-modal-header idlm-dialog__header">
+                    <div>
+                        <h2 class="idlm-dialog__title" id="idlm-export-title">Export leads to CSV</h2>
+                        <p class="idlm-dialog__description" id="idlm-export-description">Choose a scope and confirm the matched record count before downloading.</p>
+                    </div>
+                    <button type="button" class="idlm-dialog__close" id="idlm-export-close" data-idlm-dialog-close aria-label="Close lead export"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+                </header>
 
-                <div class="idlm-form-group" style="margin-bottom: 20px;">
-                    <label style="font-weight: 600; display: block; margin-bottom: 10px; color: var(--idlm-text);">1. Select Export Scope</label>
+                <div class="idlm-dialog__body">
+                <fieldset class="idlm-form-group idlm-export-scope">
+                    <legend class="idlm-form-label">1. Select export scope</legend>
                     <div style="display: flex; flex-direction: column; gap: 10px;">
                         <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;" id="idlm-export-scope-selected-label">
                             <input type="radio" name="idlm-export-scope" value="selected" id="idlm-export-scope-selected">
@@ -927,18 +973,18 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             <span>Export all leads (unfiltered)</span>
                         </label>
                     </div>
-                </div>
+                </fieldset>
 
-                <div id="idlm-export-filters-section" style="border: 1px solid var(--idlm-border); border-radius: 8px; padding: 15px; background: var(--idlm-surface-soft); margin-bottom: 20px; transition: all 0.2s;">
-                    <label style="font-weight: 600; display: block; margin-bottom: 12px; color: var(--idlm-text);">2. Filter Options to Apply</label>
+                <div id="idlm-export-filters-section" style="border: 1px solid var(--idlm-border); border-radius: 8px; padding: 15px; background: var(--idlm-surface-soft); margin-bottom: 20px; transition: var(--idlm-transition);">
+                    <span class="idlm-form-label" style="font-weight: 600; display: block; margin-bottom: 12px; color: var(--idlm-text);">2. Filter Options to Apply</span>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
-                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-muted);">Search Query</label>
-                            <input type="text" id="export-filter-search" class="idlm-input" style="width: 100%;" placeholder="Search...">
+                            <label for="export-filter-search" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Search Query</label>
+                            <input type="search" id="export-filter-search" class="idlm-input idlm-control-full" placeholder="Search..." autocomplete="off">
                         </div>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
-                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-muted);">Date Basis</label>
-                            <select id="export-filter-date-basis" class="idlm-input" style="width: 100%;">
+                            <label for="export-filter-date-basis" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Date Basis</label>
+                            <select id="export-filter-date-basis" class="idlm-input idlm-control-full">
                                 <option value="assigned_at" selected>Assigned Date</option>
                                 <option value="created_at">Created Date</option>
                                 <option value="handoff_at">Sales Handoff Date</option>
@@ -948,8 +994,8 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             </select>
                         </div>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
-                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-muted);">Date Range</label>
-                            <select id="export-filter-date-range" class="idlm-input" style="width: 100%;">
+                            <label for="export-filter-date-range" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Date Range</label>
+                            <select id="export-filter-date-range" class="idlm-input idlm-control-full">
                                 <option value="">All Time</option>
                                 <option value="today">Today</option>
                                 <option value="yesterday">Yesterday</option>
@@ -962,8 +1008,8 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             </select>
                         </div>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
-                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-muted);">Channel Source</label>
-                            <select id="export-filter-source" class="idlm-input" style="width: 100%;">
+                            <label for="export-filter-source" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Channel Source</label>
+                            <select id="export-filter-source" class="idlm-input idlm-control-full">
                                 <option value="">All Channels</option>
                                 <option value="Website">Website</option>
                                 <option value="Meta Ads">Meta Ads</option>
@@ -974,8 +1020,8 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             </select>
                         </div>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
-                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-muted);">Lead Stage</label>
-                            <select id="export-filter-stage" class="idlm-input" style="width: 100%;">
+                            <label for="export-filter-stage" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Lead Stage</label>
+                            <select id="export-filter-stage" class="idlm-input idlm-control-full">
                                 <option value="">All Stages</option>
                                 <?php foreach ($stages as $stage): ?>
                                     <option value="<?php echo esc_attr($stage); ?>"><?php echo esc_html($stage); ?></option>
@@ -983,8 +1029,8 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             </select>
                         </div>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
-                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-muted);">Call Status</label>
-                            <select id="export-filter-call-status" class="idlm-input" style="width: 100%;">
+                            <label for="export-filter-call-status" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Call Status</label>
+                            <select id="export-filter-call-status" class="idlm-input idlm-control-full">
                                 <option value="">All Statuses</option>
                                 <?php foreach ($call_statuses as $cs): ?>
                                     <option value="<?php echo esc_attr($cs); ?>"><?php echo esc_html($cs); ?></option>
@@ -993,8 +1039,8 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         </div>
                         <?php if ($can_assign_leads || (!$is_pre_sales && $reps_see_all)): ?>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
-                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-muted);">Assigned Rep</label>
-                            <select id="export-filter-rep" class="idlm-input" style="width: 100%;">
+                            <label for="export-filter-rep" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Assigned Rep</label>
+                            <select id="export-filter-rep" class="idlm-input idlm-control-full">
                                 <option value="">All Reps</option>
                                 <option value="0">Unassigned</option>
                                 <?php foreach ($reps as $rep):
@@ -1008,8 +1054,8 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         </div>
                         <?php endif; ?>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
-                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-muted);">Lead Quality</label>
-                            <select id="export-filter-quality" class="idlm-input" style="width: 100%;">
+                            <label for="export-filter-quality" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Lead Quality</label>
+                            <select id="export-filter-quality" class="idlm-input idlm-control-full">
                                 <option value="">All Qualities</option>
                                 <option value="Qualified">Qualified</option>
                                 <option value="Unqualified">Unqualified</option>
@@ -1017,11 +1063,12 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             </select>
                         </div>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
-                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-muted);">Engagement Status</label>
-                            <select id="export-filter-followup" class="idlm-input" style="width: 100%;">
+                            <label for="export-filter-followup" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Engagement Status</label>
+                            <select id="export-filter-followup" class="idlm-input idlm-control-full">
                                 <option value="">All Leads</option>
-                                <option value="overdue">⏳ Overdue Follow-up</option>
-                                <option value="pending_calls">📞 Pending Calls</option>
+                                <option value="overdue">Overdue follow-up</option>
+                                <option value="stale_updates">Needs fresh update (7+ days)</option>
+                                <option value="pending_calls">Pending calls</option>
                                 <option value="whatsapp_received">WhatsApp Message Received</option>
                                 <option value="unread_whatsapp">Unread WhatsApp Messages</option>
                             </select>
@@ -1029,10 +1076,30 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="idlm-btn idlm-btn-secondary" onclick="closeExportModal()">Cancel</button>
-                    <button type="button" class="idlm-btn idlm-btn-primary" id="idlm-confirm-export-btn" style="min-width: 120px;">Download CSV</button>
+                <p class="idlm-export-count-preview" id="idlm-export-count-preview" role="status" aria-live="polite">Calculating matched leads…</p>
                 </div>
+
+                <footer class="idlm-dialog__footer">
+                    <button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-dialog-close>Cancel</button>
+                    <button type="button" class="idlm-btn idlm-btn-primary" id="idlm-confirm-export-btn">Download CSV</button>
+                </footer>
             </div>
         </div>
 
+        <?php if ($can_manage_options): ?>
+        <div class="idlm-modal idlm-dialog" id="idlm-bulk-delete-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-bulk-delete-title" aria-describedby="idlm-bulk-delete-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-bulk-delete-cancel">
+            <div class="idlm-modal-content idlm-dialog__panel">
+                <header class="idlm-modal-header idlm-dialog__header">
+                    <div>
+                        <h2 class="idlm-dialog__title" id="idlm-bulk-delete-title">Permanently delete selected leads?</h2>
+                        <p class="idlm-dialog__description" id="idlm-bulk-delete-description">This deletes <strong id="idlm-bulk-delete-count">0</strong> selected leads and their associated CRM records. This action cannot be undone.</p>
+                    </div>
+                    <button type="button" class="idlm-dialog__close" data-idlm-dialog-close aria-label="Close delete confirmation"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+                </header>
+                <footer class="idlm-dialog__footer">
+                    <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-bulk-delete-cancel" data-idlm-dialog-close>Keep leads</button>
+                    <button type="button" class="idlm-btn idlm-btn-danger" id="idlm-confirm-bulk-delete">Permanently delete leads</button>
+                </footer>
+            </div>
+        </div>
+        <?php endif; ?>

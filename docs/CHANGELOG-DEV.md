@@ -1,8 +1,704 @@
 # Engineering Change Log
 
+## 2026-09-10 — Task drawer interaction and density refinement
+
+Builder: Shashi.
+
+- Changed Today’s work into a docked bottom-right tab with a high-contrast attention badge and no hover animation. Reduced the drawer type scale and standardized close controls to 30px.
+- Reordered attention groups to put due-today work first, displays phone contact details beside lead names, and keeps the task drawer open when a lead detail drawer opens.
+- Plugin version advanced from `1.102.30` to `1.102.31`; database schema remains unchanged.
+
+## 2026-09-10 — Today’s work queue and task hygiene
+
+Builder: Shashi.
+
+- Replaced the global raw pending-task listing with a server-bounded daily queue grouped into overdue, due today, upcoming seven-day work, and one qualification follow-up plan per lead. The completed list is a separate history view, and the floating indicator reports attention work only.
+- Added nonce- and ownership-protected manual task rescheduling, rejected manual past-due task dates, and added an administrator-only stale-task archive action. An idempotent migration archives pending work on Lost leads and task rows owned by removed WordPress users; transitions into Lost apply the same rule immediately.
+- Plugin version advanced from `1.102.29` to `1.102.30`; database schema remains unchanged.
+
+## 2026-09-10 — Catalogue table sorting
+
+Builder: Shashi.
+
+- Added allowlisted, server-side catalogue sorting by code, category, item, unit, wood, rate, or status, with ascending/descending selection preserved across pagination. The toolbar keeps a non-JavaScript fallback.
+- Plugin version advanced from `1.102.28` to `1.102.29`; database schema remains unchanged.
+
+## 2026-09-10 — Diagnostic integration-log retention
+
+Builder: Shashi.
+
+- Retained recurring per-lead `audience_sync` and CAPI diagnostic activities plus CAPI audit-table entries for seven days. Added a versioned one-time cleanup for existing records and applies the same cleanup immediately after a successful backup restore, while retaining lifecycle and other CRM history.
+- Plugin version advanced from `1.102.27` to `1.102.28`; database schema remains unchanged.
+
+## 2026-09-10 — Live backup restore schema reconciliation
+
+Builder: Shashi.
+
+- Advanced the independent core schema to `1.3.3` so installations previously marked as `1.3.2` reconcile the `idlm_lead_state_events.amount` column before restoring backups that contain recorded Won/Lost amounts.
+- Plugin version advanced from `1.102.26` to `1.102.27`; the core schema version advanced from `1.3.2` to `1.3.3`.
+
+## 2026-09-10 — Backup restore size alignment
+
+Builder: Shashi.
+
+- Raised the validated restore limit from 50 MB to 100 MB so generated backups that exceed the former ceiling can be restored, and updated the restore guidance and security/interface documentation.
+
+## 2026-09-10 — Close-date dashboard breakdowns and conversion timestamp integrity
+
+Builder: Shashi.
+
+- Kept Channel Performance and Business Mix acquisition volume and qualification measures on `created_at`, but changed Won count and revenue to the selected `conversion_time` close period. Removed mixed-basis win-rate columns and labelled each population in the dashboard.
+- Moved the Marketing Won trend to `conversion_time`, retaining lead acquisition and qualification on `created_at` so closes on dates without new leads remain visible.
+- Added a one-time, idempotent integrity repair that clears `conversion_time` from every non-Won lead, plus a lifecycle guard that clears it if a Won lead is reopened. Live read-only evidence found no activity, immutable event, or conversion-log Won history for the affected legacy records. Plugin version advanced from `1.102.25` to `1.102.26`; database schema remains unchanged.
+
+## 2026-09-10 — Sales Rep Performance close-date reporting
+
+Builder: Shashi.
+
+- Kept acquisition measures in the Sales Rep Performance table on the selected `created_at` cohort, while moving Won count, Won revenue, and average/median sales-cycle measures to the canonical `conversion_time` close-date basis used by the main Won KPI and trend.
+- Included representatives with either an acquired lead or a Won deal in the selected period, so prior-month leads closed this month are not omitted. Plugin version advanced from `1.102.24` to `1.102.25`; database schema remains unchanged.
+
+## 2026-09-10 — Update build 1.102.24
+
+Builder: Shashi.
+
+- Added protected plugin-data backup and restore, plus the related Settings interface.
+- Refined dashboard reports and Settings controls, including routing, conversion tracking, automation, webhook, and AI access layouts.
+- Plugin version advanced from `1.102.23` to `1.102.24`; database schema remains unchanged.
+
+## 2026-09-10 — Backup and restore
+
+Builder: Shashi.
+
+- Added administrator-only JSON backup and restore for IDLM custom-table data and non-secret settings. Restore is nonce-protected, requires a typed confirmation, validates the backup format, runs transactionally, preserves current credentials, and clears queued outbound jobs.
+
+## 2026-09-10 — Role-level lead visibility scopes
+
+Builder: Shashi.
+
+- Added administrator-managed `All leads`, `Assigned leads only`, and backward-compatible default visibility scopes for each managed CRM role.
+- Applied configured scopes through the central lead policy to lists, dashboards, notifications, lead history, and quotation lead reads while retaining existing ownership rules for non-manager mutations.
+
+## 2026-09-09 — Fixed account overlay
+
+Builder: Shashi.
+
+- Replaced the collapsed account menu's ancestor-dependent absolute positioning with a button-anchored fixed overlay, recalculated on resize and sidebar state changes.
+- Plugin version advanced from `1.102.22` to `1.102.23`; database schema remains unchanged.
+
+## 2026-09-09 — Collapsed account menu
+
+Builder: Shashi.
+
+- Allowed the collapsed desktop sidebar to overflow so its account popover can render beside the compact navigation instead of being clipped by the sidebar container.
+- Plugin version advanced from `1.102.21` to `1.102.22`; database schema remains unchanged.
+
+## 2026-09-09 — Pre-sales workspace scope
+
+Builder: Shashi.
+
+- Restricted Pre-sales users to Dashboard and Leads by hiding Pipeline/Kanban and Quotations from the workspace.
+- Enforced that restriction in the standalone Kanban renderer, quotation policy, lead-drawer quotation link, and legacy admin redirects.
+- Plugin version advanced from `1.102.20` to `1.102.21`; database schema remains unchanged.
+
+## 2026-09-09 — Cumulative average deal-value trend
+
+Builder: Shashi.
+
+- Changed the Avg. Deal Value selector from daily deal-size points to a cumulative revenue ÷ Won-deals line over the currently selected date range.
+- Plugin version advanced from `1.102.19` to `1.102.20`; database schema remains unchanged.
+
+## 2026-09-09 — Pre-sales activity dashboard
+
+Builder: Shashi.
+
+- Added the manager-only Pre-sales Activity panel, backed by direct activity-log events and recorded lifecycle actions for users with the `idlm_pre_sales` CRM role.
+- The panel distinguishes calls, WhatsApp outreach/replies, call-status changes, follow-up tasks, qualifications, unqualifications, and completed sales handoffs.
+- Plugin version advanced from `1.102.18` to `1.102.19`; database schema remains unchanged.
+
+## 2026-09-09 — Average-deal trend correction
+
+Builder: Shashi.
+
+- Changed the Average Deal Value trend's no-close dates from numeric zero to chart gaps, preventing visual and mathematical implication of ₹0 closed deals.
+- Plugin version advanced from `1.102.17` to `1.102.18`; database schema remains unchanged.
+
+## 2026-09-09 — Sales close-time metric
+
+Builder: Shashi.
+
+- Replaced the Won-summary connection-time metric with an average from lead `created_at` to the recorded Won event or legacy canonical `conversion_time`. Reopened transition events remain event-timed; untracked legacy Won leads are included once.
+- Plugin version advanced from `1.102.16` to `1.102.17`; database schema remains unchanged.
+
+## 2026-09-09 — Won trend legacy close recovery
+
+Builder: Shashi.
+
+- Merged event-backed Won transitions with legacy current Won records that have a canonical `conversion_time` and no matching Won event. The trend now covers every selected-period date, including dates with a close but no new lead.
+- Added explicit legacy-close counts and UI labels. Plugin version advanced from `1.102.15` to `1.102.16`; database schema remains unchanged.
+
+## 2026-09-09 — Dashboard selector refresh state
+
+Builder: Shashi.
+
+- Re-enabled persistent Sales, Marketing, disqualification, and Business Mix selector controls after a successful dashboard data refresh. Zero-value action rows remain disabled by their own render contracts.
+- Plugin version advanced from `1.102.14` to `1.102.15`; database schema remains unchanged.
+
+## 2026-09-09 — Partial event-history dashboard repair
+
+Builder: Shashi.
+
+- Replaced the global event-presence gate with per-lead event exclusion for Lost-reason and assignment aggregates. Recorded events stay authoritative; current-state legacy rows contribute only when the same lead has no matching immutable event.
+- Added explicit legacy-record counts to the dashboard response and visible widget labels. Won trends remain immutable-event-only. Plugin version advanced from `1.102.13` to `1.102.14`; database schema remains unchanged.
+
+## 2026-09-09 — Legacy dashboard reporting fallbacks
+
+Builder: Shashi.
+
+- Added scoped fallback aggregates for Lost reasons and sales assignments when an upgraded installation has no immutable stage/assignment events at all. The response declares each fallback basis so the dashboard can label legacy `assigned_at` cohort data correctly.
+- Selected periods remain event-based whenever that event history exists. Won trends and Won revenue remain immutable-event-only because legacy rows do not retain a trustworthy transition timestamp. Plugin version advanced from `1.102.12` to `1.102.13`; database schema remains unchanged.
+
+## 2026-09-09 — Removed dashboard daily counts and landing-page sections
+
+Builder: Shashi.
+
+- Removed the `View daily counts` disclosure and the `Landing Page Performance` panel from the dashboard body, including their client-side render hooks. Attribution-health coverage remains available.
+
+## 2026-09-09 — Reference-matched Sales and Marketing dashboard body
+
+Builder: Shashi.
+
+- Reproduced the supplied HTML body inside the role-scoped CRM dashboard: five-card KPI rows, asymmetric panel grids, Sales and Marketing trend charts, action queues, seven-column performance tables, handoff health, lost/disqualification bars, five-mode Business Mix, expandable campaign/ad-group rows, landing-page outcomes, and five-part attribution health.
+- Backed the new widgets with scoped CRM aggregates for Won revenue/time series, rep revenue and median sales cycle, channel revenue, click-ID coverage, campaign/ad-group hierarchy, disqualification reasons, landing pages, and business segments. Existing capability, filter, cache, and investigation boundaries remain in force. Plugin version advanced from `1.102.10` to `1.102.11`; database schema remains unchanged.
+
+## 2026-09-09 — Lead CSV import contract reconciliation
+
+Builder: Shashi.
+
+- Added prominent Preferred Studio mapping with a default studio selector, Project Name and Possession Date mappings, deterministic one-to-one exact alias matching, non-mutating all-row preflight classification, and explicit total-row accounting.
+- The server now persists the mapped project fields and applies the studio default. Existing AJAX action, permissions, duplicate persistence behavior, and database schema remain unchanged. Plugin version advanced from `1.102.9` to `1.102.10`.
+
+
+## 2026-09-09 — Dashboard decision views (unreleased local iteration)
+
+Builder: Shashi.
+
+- Rebuilt the dashboard body as Sales and Marketing contexts beneath the existing `idlm-header`. Sales starts with current operational queues and stage distribution; Marketing compares acquisition cohorts, source quality, current outcomes and campaign performance.
+- Added server-side role context filtering. Assignment managers/administrators receive both views; recognized marketing roles receive Marketing; other CRM roles receive Sales. Pre-sales receives qualification readiness without commercial metrics. Existing `restriction_user_id()` scope remains authoritative, and individual performance/organization targets are manager-only. Cache keys include effective context permissions.
+- Added bounded (25 records/page) source, campaign, missing-tag, pending-quality, stage, overdue-task, missing-task, aged-lead and manager-handoff investigations through the existing nonce-protected dashboard AJAX action. Lead details reuse the existing drawer and its object permissions.
+- Preserved the distinction between current snapshots, acquisition cohorts and recorded Won/Lost events. Fixed reversed 31–60 day bounds and timezone handling; included saved stages removed from configuration. Empty/error/loading states, keyboard tabs, chart data alternatives, mobile table scrolling and dashboard drawer focus are supported.
+- Verification: fast behavioral suite and disposable native SQL integration suite; desktop/mobile workspace checks. No schema or release version change; no deployment.
+
+
 Use this log for meaningful architectural or behavioral engineering changes. Public release notes remain in `CHANGELOG.md`/`readme.txt`.
 
+## 2026-09-09
+
+- **Area:** Sales Dashboard reporting integrity, release 1.102.9. Builder: Shashi.
+- **Change:** Separated current open-pipeline inventory, value coverage, and operational backlog from selected-period conversion events. Added immutable stage/assignment events with Won/Lost amount snapshots and used them for newly recorded Won, Lost, and assignment reporting.
+- **Compatibility:** Existing lead rows, activities, lifecycle hooks, routing behavior, and dashboard response keys remain available. Pre-install historical state is explicitly not fabricated as event history.
+
+- **Area:** Pipeline stage editor, release 1.102.8. Builder: Shashi.
+- **Change:** Corrected dynamic pipeline-stage item construction so Add option inserts the new stage with its drag handle, display label, and header-total control.
+- **Compatibility:** Existing stage values, ordering, aliases, and save behavior are unchanged.
+
+- **Area:** Kanban rendering regression, release 1.102.7. Builder: Shashi.
+- **Change:** Removed a stale client-side feed-only condition that prevented cards from rendering after the handoff column removal.
+- **Compatibility:** Kanban filters, cards, stage movement, and pipeline data are unchanged.
+
+- **Area:** Kanban handoff feed removal, release 1.102.6. Builder: Shashi.
+- **Change:** Removed the synthetic handoff column, its response grouping and SQL predicate, action-driven refresh events, feed-specific card behavior, and related presentation rules.
+- **Compatibility:** Pre-sales qualification, handoff state, lead ownership, canonical pipeline stages, and existing lead activity remain unchanged.
+
+- **Area:** UI label aliases, release 1.102.5. Builder: Shashi.
+- **Change:** Changed presentation aliases from broad substring replacement to exact-label replacement, making refreshes idempotent and preventing renamed labels from being transformed repeatedly.
+- **Compatibility:** Stored values, aliases, Kanban behavior, and API contracts are unchanged.
+
+- **Area:** Shared dialog typography, release 1.102.4. Builder: Shashi.
+- **Change:** Applied the CRM font stack directly to dialogs rendered outside the CRM wrapper, including their textual controls, while preserving icon fonts.
+- **Compatibility:** Dialog behavior, focus management, and existing visual tokens are unchanged.
+
+- **Area:** Pipeline stage safety, release 1.102.3. Builder: Shashi.
+- **Change:** Added an accessible confirmation dialog before removing a pipeline stage. It clarifies that existing leads retain their stored stage until moved and that saving is still required.
+- **Compatibility:** The canonical stage store and lead records are unchanged until an administrator confirms and saves the updated stage list.
+
+- **Area:** General Settings field-options layout, release 1.102.2. Builder: Shashi.
+- **Change:** Grouped display-label controls in an inset surface and increased spacing between the card introduction, field labels, and option disclosures.
+- **Compatibility:** Field keys, values, aliases, validation, and save behavior are unchanged.
+
+- **Area:** Brand-neutral defaults and documentation, release 1.102.1. Builder: Shashi.
+- **Change:** Removed legacy client-specific naming from runtime defaults, quotation output, reset copy, comments, tests, and project documentation. Quotation output now uses configured company settings.
+- **Compatibility:** Existing saved white-label and quotation settings remain unchanged; canonical CRM values and data contracts are unaffected.
+
+- **Area:** UI label aliases and pipeline ordering, release 1.102.0. Builder: Shashi.
+- **Change:** Added sanitized field/value display-label maps localized to CRM presentation and editable in General Settings. Pipeline stages now reorder through native drag-and-drop.
+- **Compatibility:** Canonical field keys, option values, lead records, stage values, AJAX/REST contracts, CSV keys, reporting, and integrations remain unchanged.
+
+- **Area:** Lead drawer task prioritization, release 1.101.99. Builder: Shashi.
+- **Change:** Replaced lexical task-status ordering with an explicit overdue-pending, pending, completed priority order and placed dated work before undated work within each group.
+- **Compatibility:** Task data, overdue calculation, mutation behavior, authorization, and drawer rendering are unchanged.
+
+- **Area:** Lead drawer task notifications, release 1.101.98. Builder: Shashi.
+- **Change:** Added an overdue count badge to the Tasks tab and proactively loads the lead’s task collection when the drawer opens so the notification is immediately available. Existing task refreshes keep it synchronized after add, toggle, and delete actions.
+- **Compatibility:** Task persistence, overdue calculation, authorization, and tab switching behavior are unchanged.
+
+- **Area:** Kanban card freshness indicators, release 1.101.95. Builder: Shashi.
+- **Change:** Projected the existing seven-day representative-activity freshness rule into each Kanban lead read and rendered a compact Needs update pill beside task state. Reduced shared pill dimensions to support both states on one footer row.
+- **Compatibility:** The stale threshold, qualifying activity types, header filter, ownership scope, lifecycle rules, and card actions are unchanged.
+
+- **Area:** Leads and Kanban filter-pill interaction, release 1.101.93. Builder: Shashi.
+- **Change:** Standardized summary metrics and header pills as toggle controls by checking their bound filter value before applying it. A repeated click now restores the unfiltered value and reloads the current view.
+- **Compatibility:** Existing filter field values, AJAX requests, counts, visibility scope, and first-click behavior are unchanged.
+
+## 2026-09-07
+
+- **Area:** Users and integration-log filter indicators, release 1.101.91. Builder: Shashi.
+- **Change:** Scoped the legacy leads filter counter to its own drawer and marked the Users directory's actual controls for the shared drawer counter, preventing routing fields from appearing as active filters.
+- **Compatibility:** Lead filters and Users/CAPI/Audience filter query parameters are unchanged; only the badge accuracy changed.
+
+- **Area:** Stale-reminder activity correlation, release 1.101.90. Builder: Shashi.
+- **Change:** Fixed the activity subquery's unqualified outer lead references. The database had resolved `id` to the inner activity row, preventing the stale reminder from matching a lead's actual assigned-representative activity.
+- **Compatibility:** The qualifying activity policy and all lead visibility/lifecycle rules remain unchanged.
+
+- **Area:** Kanban and leads stale-update reminder correctness, release 1.101.89. Builder: Shashi.
+- **Change:** Replaced the stale lead-row timestamp condition with a seven-day qualifying activity check for the currently assigned representative. The action whitelist excludes automated audience and integration events, including those written with a user ID.
+- **Compatibility:** Reminder scope, seven-day interval, lifecycle-stage exclusions, and representative access policy are unchanged.
+
+- **Area:** Kanban first-action notification correctness, release 1.101.88. Builder: Shashi.
+- **Change:** Replaced the lead-row timestamp test with an assigned-representative activity-log test. Comments and other actions taken by that representative after assignment now clear the queue, while automated activities do not.
+- **Compatibility:** The new-assignment count remains scoped by the existing lead-access policy and continues to exclude inactive, duplicate, and pre-sales stages.
+
+- **Area:** Kanban assignment notification wording, release 1.101.87. Builder: Shashi.
+- **Change:** Renamed the new-assignment notification and queue from an update request to a first-action prompt: “New leads assigned” and “awaiting first action.”
+- **Compatibility:** The assignment queue calculation, access scope, and Kanban interactions are unchanged.
+
+- **Area:** Kanban assignment acknowledgement, release 1.101.86. Builder: Shashi.
+- **Change:** Added a count pill and filter for active, non-duplicate sales-board leads assigned to a representative that have not had an action recorded since assignment. The queue is restricted to the signed-in representative where the existing lead-access policy applies.
+- **Compatibility:** Existing Kanban filters, stale-update reminder, assignment flow, and lead data schema are unchanged.
+
+- **Area:** Quotation calculations and Preview / Save PDF output, release 1.101.85. Builder: Shashi.
+- **Change:** Added discounted wooden/other subtotal handling, optional global Soft Close Addition, stored round-off to the nearest rupee, and bordered summary and section treatment in the generated quotation document.
+- **Compatibility:** Existing quotation revisions retain their persisted totals; updated revisions use the new calculation and schema fields.
+
+## 2026-09-06
+
+- **Area:** Pre-Sales leads table, release 1.101.84. Builder: Shashi.
+- **Change:** Removed the Next Action and Callback headers and corresponding cells from the Pre-Sales queue.
+- **Compatibility:** Existing filters, sorting options, lead drawer, and outreach controls remain unchanged.
+
+- **Area:** Pre-Sales leads table, release 1.101.83. Builder: Shashi.
+- **Change:** Removed the Created Date header and matching table cell from the Pre-Sales queue while retaining Created Date as the source for the existing Age calculation.
+- **Compatibility:** No lead sorting, data access, or queue workflow changed outside the removed visible column.
+
+- **Area:** Pre-Sales leads table, release 1.101.82. Builder: Shashi.
+- **Change:** Changed action controls to a two-column intrinsic grid so Log Call and Log WA remain inline and the conditional Decide action spans the row below.
+- **Compatibility:** No action availability or lead lifecycle behavior changed.
+
+- **Area:** Pre-Sales leads table, release 1.101.81. Builder: Shashi.
+- **Change:** Reduced the action-group minimum width from 190px to 128px and made only the conditional primary Decide action span the mobile action grid.
+- **Compatibility:** Call and WhatsApp outreach controls retain their existing behavior and responsive layout.
+
+- **Area:** Pre-Sales leads table, release 1.101.80. Builder: Shashi.
+- **Change:** Removed the generic Open action from the action column; the conditional Decide action remains for leads ready for a qualification decision.
+- **Compatibility:** Lead identity rows continue to open the drawer, and outreach/decision workflows are unchanged.
+
+- **Area:** Kanban card presentation, release 1.101.79. Builder: Shashi.
+- **Change:** Reduced `.idlm-kanban-card-title` from 16px to 12px.
+- **Compatibility:** Visual-only change; no Kanban interactions, data, or lifecycle behavior changed.
+
+- **Area:** Dashboard frontend, release 1.101.78. Builder: Shashi.
+- **Change:** Removed the visible Data-quality guardrails section and its browser-side rendering/styles at the user's request. The authenticated dashboard aggregate contract remains unchanged.
+- **Compatibility:** No lead lifecycle, schema, capability, nonce, or dashboard API response behavior changed.
+
+- **Area:** Dashboard data-quality guardrails, release 1.101.77. Builder: Shashi.
+- **Change:** Added a current visible-scope dashboard read for lead freshness plus UTM, intake-owner, and first-contact timing coverage. The presentation states both the rate and denominator so users can assess whether descriptive analytics are complete.
+- **Compatibility:** The existing authenticated dashboard action and all lifecycle, schema, capability, and nonce behavior remain unchanged.
+
+- **Area:** Dashboard analytics truthfulness, release 1.101.76. Builder: Shashi.
+- **Change:** Reframed sales pipeline counts and values as current open-lead snapshots, excluded Won/Lost from the pipeline visuals, and retained Won count/revenue as selected-period conversion events. Removed the mixed-population revenue chart, restricted calendar targets to the current-month selection with pace context, and marked duplicate-volume growth as adverse.
+- **Compatibility:** The authenticated dashboard action and its existing response keys remain available. No lead lifecycle data, schema, role, capability, or nonce behavior changed.
+
+- **Area:** Collapsed account navigation, release 1.101.75. Builder: Shashi.
+- **Change:** Centered the collapsed My Account trigger, hid its redundant chevron, and opened the compact account menu beside the sidebar.
+
+- **Area:** Centered Kanban action glyphs, release 1.101.74. Builder: Shashi.
+- **Change:** Applied grid centering, border-box sizing, and zero drag-button padding so the desktop 24px action glyphs are aligned with their button geometry.
+
+- **Area:** Minimal desktop Kanban actions, release 1.101.73. Builder: Shashi.
+- **Change:** Reduced the desktop action footer to a 32px row with 24px drag and move icons and 14px glyphs. Mobile retains the existing touch-sized control layout.
+
+- **Area:** Compact desktop Kanban actions, release 1.101.72. Builder: Shashi.
+- **Change:** Reduced desktop action-footer padding and both drag/move controls to 32px icon-only actions. Accessible labels remain on the controls. Mobile restores its labelled 44px move target and hides the drag handle.
+
+- **Area:** Quiet Kanban reference labels, release 1.101.71. Builder: Shashi.
+- **Change:** Reduced source, budget, and call-status badge height to 24px, text to 10px, horizontal padding to 6px, and inter-badge gap to 4px.
+
+- **Area:** Compact Kanban contact row, release 1.101.70. Builder: Shashi.
+- **Change:** Converted card contact metadata into one 11px flex row. Email remains flexible and ellipsizes when necessary; phone remains visible at its intrinsic width.
+
+- **Area:** Kanban card identity treatment, release 1.101.69. Builder: Shashi.
+- **Change:** Removed the underlined blue title treatment and retained the card's one click-to-open button as the sole lead-details affordance.
+
+- **Area:** Compact Kanban card controls, release 1.101.68. Builder: Shashi.
+- **Change:** Reduced desktop card title, contact metadata, chips, drag handle, and Move to stage control to the existing 40px control scale. The narrow-screen move control remains at the 44px touch target.
+
+- **Area:** Kanban dense-column rendering, release 1.101.67. Builder: Shashi.
+- **Change:** Explicitly made Kanban cards non-shrinking flex items. A stage with many leads now scrolls its card stack instead of compressing individual cards and clipping their details or footer controls.
+- **Compatibility:** No markup, lead data, drag-and-drop, keyboard, or move-stage dialog behavior changed.
+
+- **Area:** Kanban lead-card presentation, release 1.101.66. Builder: Shashi.
+- **Change:** Reworked the existing Kanban card layout to establish a clearer blue identity cue, larger contact metadata, intrinsic-width source/budget/call-status chips, and a tighter footer that separates lead actions from task and ownership indicators.
+- **Compatibility:** Card markup, lead drawer activation, keyboard focus, stage-move dialog, and explicit drag handle behavior remain unchanged. No AJAX, domain, or database contracts changed.
+
+- **Area:** Frontend workspace consolidation, release 1.101.65. Builder: Shashi.
+- **Change:** Replaced the duplicated wp-admin CRM surface with one administrator-only Lead Manager utility page containing plugin version and shortcode setup reference. Removed its CRM sidebar/shell and styles; CRM navigation is now solely the frontend `[idlm_workspace]` shell.
+- **Compatibility and security:** Former admin URLs map to the corresponding frontend `idlm_view` only after the original capability check and only when a published page contains `[idlm_workspace]`; otherwise they safely land on the utility page. Existing module callbacks and shortcodes remain intact. Users & Access and credential rotation preserve a validated frontend return URL after admin-post handling.
+
+- **Area:** Shared CRM admin shell, release 1.101.64. Builder: Shashi.
+- **Change:** Added a plugin-scoped shared navigation frame on each CRM admin route. It replaces the route-local WordPress menu presentation with a branded sidebar, maintains the existing menu URLs and per-link capabilities, and leaves each renderer responsible for its own page title/actions. The existing `.idlm-header` is now a fixed 64px operational strip, so Lead List and Kanban retain their header search fields without duplicate controls.
+- **Interaction and responsive behavior:** Desktop navigation persists its expanded/collapsed preference locally. At WordPress's mobile breakpoint, it becomes an off-canvas panel with a backdrop, Escape dismissal, focus restoration, explicit button labels, and admin-bar-safe offsets. The shell respects reduced-motion preferences. No data model, AJAX contract, nonce, capability, or menu registration changed.
+
+- **Area:** High-priority CRM integrity remediation, release 1.101.63. Builder: Shashi.
+- **Change:** Shared mutation policy now requires ownership or manager authority independently of read-all visibility and verifies existence. Comments, uploads and drawer edits enforce that policy; pre-sales commercial fields are disabled and protected server-side, omitted fields survive partial saves, and attachment lead bindings are checked.
+- **Lifecycle/tasks:** Inbound external touchpoints resolve replay identity; uncertain or conflicting contact candidates produce a separate inquiry with `duplicate_review` activity. Manual task enums/title/date validation and qualification task guards preserve generated-task authority.
+- **Automation:** `IDLM_Interakt_Batch` owns bounded admin backfills using non-autoloaded `idlm_interakt_batch_*` state, atomic enqueue claims and database worker locks. Jobs store references rather than credentials, use current configuration, retry up to three attempts and avoid resending completed jobs. Transport failures can still be ambiguous remotely: local idempotency is not a guarantee of exactly-once provider delivery.
+- **Reset:** One runtime-table manifest drives checked transactional DELETE operations after InnoDB preflight and locked count verification. Queue options are removed in the transaction; caches are cleared and queued CAPI/Interakt callbacks cancelled after commit. IDs are not recycled; catalogue/configuration remain intact. Already-running remote requests cannot be recalled.
+- **Verification:** Fast behavioral suite and targeted inbound/task tests; native WordPress/MySQL suite in a disposable `idlm_test_*` database includes an injected DELETE failure, rollback checks, successful reset, queue cleanup and monotonic IDs. Core/quotation schema versions are unchanged.
+
+## 2026-09-03
+
+- **Area:** Settings notices
+- **Change:** Replaced the CSS/icon-font-derived dismiss glyph with a normalized inline SVG X for WordPress-generated and fallback controls. Each button now has a capture-phase dismiss handler that cancels any auto-close timer and runs the existing reduced-motion-aware exit transition. Toasts use compact, regular-weight 13px text and content-width sizing with viewport-safe wrapping. Builder: Shashi.
+- **Files affected:** `assets/js/settings.js`, `assets/css/admin-style.css`, toast UI contracts, and release metadata.
+- **Compatibility notes:** Top-centre stacking, accessible native button activation, hover/focus timer pause, persistent warnings/errors, and 3–5 second success/info dismissal remain unchanged. Plugin version advanced from `1.101.61` to `1.101.62`; database schema remains `1.3.1`.
+
+- **Area:** Settings notices
+- **Change:** Added a scoped fixed toast stack for WordPress notices within CRM settings. Success and informational notices close after four seconds and pause on hover or keyboard focus; warnings, errors, and action-required notices remain visible. The stack itself is not a live region, preventing duplicate announcements, while each notice retains WordPress dismissal behavior. Builder: Shashi.
+- **Files affected:** Settings shell, settings client, shared admin styles, UI regression contracts, and release metadata.
+- **Compatibility notes:** Existing server-side notice generation and WordPress dismiss controls remain unchanged. Plugin version advanced from `1.101.58` to `1.101.59`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** CRM settings workflow and lead-capture mappings
+- **Change:** Combined ordered stage configuration and Kanban header-total selection in one responsive pipeline editor. Grouped call outcomes, lost reasons, studio routing, and room requirements in native count-labelled disclosures. Rebuilt lead-capture mappings with semantic source tabs, keyboard navigation, mapped-field status, and identity/project/attribution/advanced sections. Mapping details no longer output the webhook key. Builder: Shashi.
+- **Files affected:** General and webhook settings templates, shared token editor, settings client, shared settings styles, UI regression contracts, and release metadata.
+- **Compatibility notes:** Existing option names, legacy comma-delimited and structured vocabulary posts, total-map keys, settings nonce/capability checks, webhook endpoint, and field-mapping persistence remain unchanged. Plugin version advanced from `1.101.57` to `1.101.58`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Custom vocabulary ordering
+- **Change:** Added accessible Move up and Move down controls to the shared token editor. Reordering changes the list DOM order and both submitted vocabulary representations, allowing custom sales-stage order to persist through the existing settings controller. Boundary controls are disabled, each reorder is announced, and focus stays on the initiating move action. Builder: Shashi.
+- **Files affected:** Shared token-editor template, settings client, shared admin styles, focused UI contracts, and release metadata.
+- **Compatibility notes:** Existing settings nonce, capability checks, option names, structured vocabulary sanitizer, and legacy comma-delimited field remain unchanged. Plugin version advanced from `1.101.56` to `1.101.57`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Theme-isolated CRM overlay hardening
+- **Change:** Added scoped task-sidebar, action-dialog, drawer loading/failure, integration-payload, and routing-popup containment rules so active WordPress theme or page-builder presentation cannot alter CRM-owned overlay layout. Replaced safe overlay inline presentation with named CRM classes and stacked fields/actions at the compact breakpoint. Builder: Shashi.
+- **Files affected:** Shared CRM overlay template, admin client loading/error markup, shared admin styles, release metadata, and release contracts.
+- **Compatibility notes:** Existing dialog IDs, delegated handlers, AJAX action names, nonces, capabilities, options, and database schema remain unchanged. Plugin version advanced from `1.101.55` to `1.101.56`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** CRM usability, accessibility, and bounded operations release
+- **Change:** Released the completed shared focus-managed dialog, responsive workspace workflows, white-label design-token propagation, lazy privileged log-payload reads, and bounded lead-history retrieval as one verified plugin release. Corrected native settings-save coverage to submit the required white-label payload, matching the rendered form. Builder: Shashi.
+- **Files affected:** CRM clients, templates, renderers, settings, lifecycle persistence, fast/native regression contracts, and release metadata.
+- **Compatibility notes:** Existing routes, AJAX action names, nonces, capabilities, stored option shapes, and database schema remain compatible. Plugin version advanced from `1.101.54` to `1.101.55`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Lead routing popup Escape delivery
+- **Change:** Replaced the inline confirmation's delegated Escape handling with a temporary native capture-phase listener, which dismisses only the visible confirmation before the shared dialog listener can close its parent. Cleanup runs when the confirmation resolves or the routing dialog closes. Advanced the release asset version so browsers load the completed behavior. Builder: Shashi.
+- **Files affected:** Shared admin client, focused UI contracts, and release metadata.
+- **Compatibility notes:** Existing dialog close behavior, unsaved-change guard, routing AJAX action, nonce, permissions, option values, and database schema remain unchanged. Plugin version advanced from `1.101.53` to `1.101.54`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Lead routing popup responsive and keyboard polish
+- **Change:** Explicitly collapse the primary routing grid at the 760px compact breakpoint. The inline manual-fallback confirmation now handles Escape before dialog-level Escape handling, dismisses only the confirmation, and restores focus to the initiating action. Restored fallback button text now matches the rendered label. Builder: Shashi.
+- **Files affected:** Shared admin client and styles, routing settings template, focused UI contracts, and release metadata.
+- **Compatibility notes:** Existing dialog close behavior, unsaved-change guard, routing AJAX action, nonce, permissions, option values, and database schema remain unchanged. Plugin version advanced from `1.101.52` to `1.101.53`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Lead routing popup hierarchy and safeguards
+- **Change:** Replaced decorative numbered sections and nested status cards with named routing sections, concise strategy labels, a live plain-language outcome, and one compact setup summary. Moved team availability and operations into a native Advanced safeguards disclosure. Backlog and qualified-handoff controls now use progressive disclosure and disabled controls retain their saved configuration through explicit active-control markers. Builder: Shashi.
+- **Files affected:** Lead routing template, shared admin client and styles, routing settings persistence, focused UI contracts, and release metadata.
+- **Compatibility notes:** Existing routing AJAX action, nonce, permissions, option names, source-map retention behavior, and database schema remain unchanged. Disabled conditional controls preserve prior option values instead of submitting fallback defaults. Plugin version advanced from `1.101.51` to `1.101.52`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Outbound-call dialog branding and validation
+- **Change:** Extended the existing white-label token injection to admin CRM roots and body-level plugin dialogs; replaced the popup's fixed error colour with semantic tokens. Made Call outcome conditionally required, exposed its inline error through `aria-errormessage`/`aria-describedby`, moved focus to the invalid select, and cleared that state on correction. Builder: Shashi.
+- **Files affected:** Shared asset and dialog clients, admin outreach client/style contract, UI regression contracts, and release metadata.
+- **Compatibility notes:** Existing AJAX payloads, actions, nonces, permissions, activity persistence, white-label option shape, and database schema remain unchanged. Plugin version advanced from `1.101.50` to `1.101.51`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Lead routing popup accessibility and state management
+- **Change:** Migrated the routing popup to the shared dialog controller; added dialog semantics, accessible names, conditional source-map state, unsaved-change confirmation, inline save feedback, status announcements, and a confirmed/progress-aware manual fallback action. Builder: Shashi.
+- **Files affected:** Lead routing template, shared dialog/client/style contracts, routing AJAX persistence, focused UI contracts, and release metadata.
+- **Compatibility notes:** Existing routing AJAX actions, nonces, permissions, options, and schema remain unchanged. Source mappings are deliberately retained when their disabled controls are not submitted outside source-based routing. Plugin version advanced from `1.101.49` to `1.101.50`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Lead routing popup audit documentation
+- **Change:** Documented the routing popup and surrounding Leads layout audit, design-system reference map, severity findings, and prioritized next-task brief. Builder: Shashi.
+- **Files affected:** New routing audit document and release metadata/changelogs.
+- **Compatibility notes:** Runtime UI, AJAX actions, accessibility behavior, routes, options, stored data, and database schema remain unchanged. Plugin version advanced from `1.101.48` to `1.101.49`; database schema remains `1.3.1`.
+
+- **Area:** Workspace account navigation alignment
+- **Change:** Removed the My Account link's asymmetric top padding and moved the active navigation marker inside the item boundary to prevent sidebar clipping. Builder: Shashi.
+- **Files affected:** Workspace styles; UI regression contracts; release metadata; and changelogs.
+- **Compatibility notes:** Navigation URLs, active-state selection, `aria-current`, white-label tokens, and mobile behavior remain unchanged. Plugin version advanced from `1.101.47` to `1.101.48`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Accessible tokenized controls
+- **Change:** Replaced the remaining fixed primary-button hover glow and nested active-tab border with derived tokens, and changed the Active Tasks close affordance from a non-semantic span to a labelled button with visible keyboard focus. Builder: Shashi.
+- **Files affected:** Shared admin styles; common overlay markup; UI regression contracts; release metadata; and changelogs.
+- **Compatibility notes:** The existing close-control ID and delegated click handler remain unchanged. Dashboard active-tab underlines continue to use the configured Accent colour. Plugin version advanced from `1.101.46` to `1.101.47`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Complete white-label colour propagation
+- **Change:** Added a derived action-soft token and replaced fixed legacy gold/brown plus unrelated Dashboard and Kanban presentation accents across workspace controls, focus glows, dynamic links, charts, quotation defaults, and password recovery. Builder: Shashi.
+- **Files affected:** White-label settings and authentication helpers; workspace, shared admin, Dashboard, Kanban, login, and quotation styles; Dashboard, Kanban, and shared admin clients; lead renderers; quotation settings; regression contracts; release metadata; and changelogs.
+- **Compatibility notes:** Existing saved quotation accent choices remain authoritative; only the unsaved default now follows the main white-label accent. Hooks, capabilities, routes, stored white-label fields, and database schema remain unchanged. Plugin version advanced from `1.101.45` to `1.101.46`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Focus highlight consistency
+- **Change:** Converted remaining input/button `:focus` border rules to `:focus-visible` and made the shared focus ring inherit the configured action colour. Builder: Shashi.
+- **Files affected:** Shared admin styles; release metadata; and changelogs.
+- **Compatibility notes:** Keyboard focus visibility remains intact; mouse-only interactions no longer leave accent borders active after interaction. Settings, drawer, routes, capabilities, and database schema remain unchanged. Plugin version advanced from `1.101.44` to `1.101.45`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Stable early-close validation
+- **Change:** Anchored the early-close validation message at the top of the grid instead of inserting it after whichever field failed, preventing inconsistent row shifts. Builder: Shashi.
+- **Files affected:** Admin client validation and shared admin styles; release metadata; and changelogs.
+- **Compatibility notes:** Validation text, focus behavior, early-close workflow, routes, and database schema remain unchanged. Plugin version advanced from `1.101.43` to `1.101.44`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Unified decision copy
+- **Change:** Moved the qualification guidance into the decision explanation block and simplified the desktop grid to one flexible copy column plus right-aligned actions. Builder: Shashi.
+- **Files affected:** Lead drawer renderer and shared admin styles; release metadata; and changelogs.
+- **Compatibility notes:** Decision actions, validation, accessibility semantics, routes, and database schema remain unchanged. Plugin version advanced from `1.101.42` to `1.101.43`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Adjacent decision guidance
+- **Change:** Replaced stretched desktop decision columns with content-sized columns, keeping explanatory and qualification messages visually adjacent while retaining the responsive stack. Builder: Shashi.
+- **Files affected:** Shared admin styles; release metadata; and changelogs.
+- **Compatibility notes:** Decision actions, validation, accessibility semantics, routes, and database schema remain unchanged. Plugin version advanced from `1.101.41` to `1.101.42`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Desktop decision guidance alignment
+- **Change:** Placed the qualification-needs guidance in the open desktop grid column beside the explanatory copy, with a single-column fallback for constrained viewports. Builder: Shashi.
+- **Files affected:** Shared admin styles; release metadata; and changelogs.
+- **Compatibility notes:** Decision actions, validation, accessibility semantics, routes, and database schema remain unchanged. Plugin version advanced from `1.101.40` to `1.101.41`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Compact lead decision box
+- **Change:** Tightened the decision panel layout and action controls while preserving qualification guidance, disabled states, and lifecycle behavior. Builder: Shashi.
+- **Files affected:** Shared admin styles; release metadata; and changelogs.
+- **Compatibility notes:** Decision actions, authorization, validation, focus behavior, routes, and database schema remain unchanged. Plugin version advanced from `1.101.39` to `1.101.40`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Early-close validation layout
+- **Change:** Added a full-width compact validation row for early-close errors so inline feedback no longer shifts the form controls. Builder: Shashi.
+- **Files affected:** Shared admin styles; release metadata; and changelogs.
+- **Compatibility notes:** Validation messages, focus behavior, early-close workflow, routes, and database schema remain unchanged. Plugin version advanced from `1.101.38` to `1.101.39`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Compact pre-sales cycle cards
+- **Change:** Tightened the six-cycle follow-up grid and action row in the lead drawer without changing cycle data, controls, or workflow rules. Builder: Shashi.
+- **Files affected:** Shared admin styles; release metadata; and changelogs.
+- **Compatibility notes:** Existing follow-up state, lifecycle actions, accessibility labels, routes, and database schema remain unchanged. Plugin version advanced from `1.101.37` to `1.101.38`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Lead details drawer refinement
+- **Change:** Tightened the drawer header and identity hierarchy, aligned panel radius with shared CRM tokens, and preserved status/action behavior. Builder: Shashi.
+- **Files affected:** Shared admin styles; release metadata; and changelogs.
+- **Compatibility notes:** Drawer data loading, tabs, lifecycle controls, comments, files, navigation, and save/delete actions remain unchanged. Plugin version advanced from `1.101.36` to `1.101.37`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Consistent Settings shell
+- **Change:** Removed the redundant `wp-header-end` divider from the Settings view and applied the shared CRM canvas and shell spacing. Builder: Shashi.
+- **Files affected:** Settings shell template and shared admin styles; release metadata; and changelogs.
+- **Compatibility notes:** Settings tabs, form actions, capabilities, routes, data, and database schema remain unchanged. Plugin version advanced from `1.101.35` to `1.101.36`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Responsive state polish
+- **Change:** Added an explicit empty-chart state hook so no-data visualizations collapse to a compact message region, reducing wasted viewport height while preserving accessible chart data links. Builder: Shashi.
+- **Files affected:** Dashboard script and styles; release metadata; and changelogs.
+- **Compatibility notes:** Existing chart rendering, data-table disclosure, routes, actions, and database schema remain unchanged. Plugin version advanced from `1.101.34` to `1.101.35`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** SaaS CRM layout polish
+- **Change:** Applied the reference-informed density pass across dashboard, tables, filters, workspace navigation, quotations, and Kanban while preserving existing interaction and accessibility contracts. Builder: Shashi.
+- **Files affected:** Dashboard template/script/styles; shared admin, workspace, quotation, and Kanban styles; release metadata; and changelogs.
+- **Compatibility notes:** Existing markup contracts, routes, capabilities, data, actions, touch targets, and database schema remain unchanged. Plugin version advanced from `1.101.33` to `1.101.34`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Compact chart data link
+- **Change:** Changed the chart data disclosure control from a padded button to a small text link with an explicit href, preserved aria-expanded/aria-controls behavior, and retained visible keyboard focus. Builder: Shashi.
+- **Files affected:** Dashboard script and styles; release metadata; and changelogs.
+- **Compatibility notes:** Chart data rendering, disclosure state, accessible table content, and existing selectors remain compatible. Plugin version advanced from `1.101.32` to `1.101.33`; database schema remains `1.3.1`.
+
+## 2026-09-03
+
+- **Area:** Consistent CRM buttons
+- **Change:** Added a shared 8px button-radius token, aligned standard controls across CRM/workspace/quotation surfaces, retained pill and circular shapes only for status/floating actions, and enforced explicit neutral/primary contrast pairs. Builder: Shashi.
+- **Files affected:** Shared, workspace, quotation, and task-overlay styles/templates; design-system guidance; regression contracts; release metadata; and changelogs.
+- **Compatibility notes:** Existing button classes, markup, selectors, actions, semantic states, touch targets, focus behavior, data, routes, capabilities, and database schema remain unchanged. Plugin version advanced from `1.101.31` to `1.101.32`; database schema remains `1.3.1`.
+
+- **Area:** Tighter secondary CRM typography
+- **Change:** Reduced secondary labels, metadata, dashboard stat labels/trends, and metric values by one density step while leaving primary headings, body copy, mobile controls, touch targets, and zoom/reflow behavior unchanged. Builder: Shashi.
+- **Files affected:** Shared and Dashboard styles; master design system; release metadata; and changelogs.
+- **Compatibility notes:** Existing markup, selectors, actions, breakpoints, focus behavior, data, routes, capabilities, and database schema remain unchanged. Plugin version advanced from `1.101.30` to `1.101.31`; database schema remains `1.3.1`.
+
+- **Area:** Compact CRM typography
+- **Change:** Introduced a rem-based operational type scale and applied it across shared headings, cards, tables, metrics, Kanban columns, Dashboard statistics, dialogs, and account views. Reduced table row typography and vertical padding while preserving 14px mobile body text, 16px mobile text-entry controls, unitless line heights, and browser zoom behavior. Builder: Shashi.
+- **Files affected:** Shared, Dashboard, Kanban, and workspace styles; master/design documentation; UI regression contracts; release metadata; and changelogs.
+- **Compatibility notes:** Existing markup, selectors, actions, responsive breakpoints, touch targets, focus behavior, data, routes, capabilities, and database schema remain unchanged. Plugin version advanced from `1.101.29` to `1.101.30`; database schema remains `1.3.1`.
+
+- **Area:** White-label branding implementation
+- **Change:** Added grouped and server-validated white-label settings; WordPress media selection; live preview; WCAG colour checks; recoverable reset/save/error states; CRM-only favicon output; and centralized branding consumption on sign-in, workspace, and account surfaces. Added plugin-root normalization and scoped token ownership so active themes, block themes, and page builders do not control CRM presentation. Builder: Shashi.
+- **Files affected:** Settings model/controller/renderer/tab/client/styles, authentication and workspace/account presentation, feature/settings/design documentation, regression contracts, release authorities, and changelogs.
+- **Compatibility notes:** Existing settings nonce and administrator capability boundaries remain in force. Branding is stored in `idlm_white_label_settings`; no database schema, route, capability, lead data, plugin metadata name, or site-wide theme setting changed. Plugin version advanced from `1.101.28` to `1.101.29`; database schema remains `1.3.1`.
+
+- **Area:** White-label theme isolation planning
+- **Change:** Added a hard requirement that white-label and CRM presentation remain independent from active theme, block-theme, and page-builder settings through plugin-root token ownership, explicit scoped normalization, isolated selectors, controlled enqueueing, and cross-theme regression coverage. Builder: Shashi.
+- **Files affected:** White-label plan, Settings page design rules, release authorities, metadata contracts, and changelogs.
+- **Compatibility notes:** This release changes documentation only. Runtime styles, Settings, stored options, theme integration, routes, capabilities, and database schema remain unchanged. Plugin version advanced from `1.101.27` to `1.101.28`; database schema remains `1.3.1`.
+
+- **Area:** White-label Settings planning
+- **Change:** Defined the White label tab architecture, field groups, responsive editor and live preview, interaction states, accessibility constraints, grouped option shape, media and authorization safeguards, application surfaces, test coverage, and phased delivery. Builder: Shashi.
+- **Files affected:** White-label plan, Settings page design rules, production release authority, release metadata contracts, and changelogs.
+- **Compatibility notes:** This release changes documentation only. Runtime Settings, stored options, plugin metadata behavior, routes, capabilities, and database schema remain unchanged. Plugin version advanced from `1.101.26` to `1.101.27`; database schema remains `1.3.1`.
+
+- **Area:** My Account password layout
+- **Change:** Top-aligned password form-group grid tracks so the hidden confirmation error does not vertically stretch and offset the confirmation input. Builder: Shashi.
+- **Files affected:** Shared account styles, release metadata, and changelogs.
+- **Compatibility notes:** Existing account fields, validation, visibility controls, form actions, authentication behavior, and input padding remain unchanged. Plugin version advanced from `1.101.25` to `1.101.26`; database schema remains `1.3.1`.
+
+- **Area:** Password and credential visibility controls
+- **Change:** Replaced Show/Hide text buttons with compact eye icons across access, account, and Settings forms while retaining dynamic accessible names and pressed state. Builder: Shashi.
+- **Files affected:** Access/account templates, access/account and Settings clients, shared styles, release metadata, and changelogs.
+- **Compatibility notes:** Existing field names, form actions, selectors, keyboard behavior, authentication and secret handling remain unchanged. Plugin version advanced from `1.101.24` to `1.101.25`; database schema remains `1.3.1`.
+
+## 2026-09-02
+
+- **Area:** Frontend Settings option editors
+- **Change:** Loaded the existing Settings client in the unified frontend workspace so Pipeline and lead option labels can be added, removed, validated, and submitted there. Builder: Shashi.
+- **Files affected:** Shared asset enqueueing, frontend asset regression contract, release metadata, and changelogs.
+- **Compatibility notes:** Existing option names, structured and legacy form fields, administrator capability and nonce checks, persistence behavior, and database schema remain unchanged. Plugin version advanced from `1.101.23` to `1.101.24`; database schema remains `1.3.1`.
+
+- **Area:** Final UI acceptance cleanup
+- **Change:** Replaced remaining browser alerts, confirms, and prompts with shared focus-managed confirmation/input dialogs and non-blocking status feedback; migrated lead, task, activity, quotation, Settings, and credential-rotation flows; and removed the final inline transition styling from the routing control. Builder: Shashi.
+- **Files affected:** Shared dialog controller, CRM and quotation clients, Settings and Leads templates, shared/quotation styles, UI audit, regression contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing handlers, AJAX actions, forms, nonces, capabilities, lifecycle rules, stored data, and schema remain unchanged. Plugin version advanced from `1.101.22` to `1.101.23`; database schema remains `1.3.1`.
+
+- **Area:** Nested lead outreach dialogs
+- **Change:** Added a dedicated dialog layer between the lead drawer and toast layers so call, WhatsApp, closure, and other shared dialogs render above lead details while retaining the existing focus and inert-background controller. Builder: Shashi.
+- **Files affected:** Shared CRM stylesheet, UI regression contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing dialog markup, selectors, AJAX actions, nonce and access checks, lead drawer behavior, persisted data, and database schema remain unchanged. Plugin version advanced from `1.101.21` to `1.101.22`; database schema remains `1.3.1`.
+
+- **Area:** Pre-sales call and WhatsApp activity logging
+- **Change:** Made outreach submission recoverable by keeping the activity dialog open through the request, showing a visible saving state, enforcing a 20-second client timeout, restoring controls after server/validation failures, and closing only after confirmed persistence. Builder: Shashi.
+- **Files affected:** Shared CRM client, UI regression contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing authenticated AJAX action, nonce, representative/object access checks, activity types, lifecycle transitions, task synchronization, and database schema remain unchanged. Plugin version advanced from `1.101.20` to `1.101.21`; database schema remains `1.3.1`.
+
+- **Area:** Phase 7 Users & Access and operational logs
+- **Change:** Completed the remaining audit recommendations for administrator account management and integration audit views: labelled responsive filters, account autofill and pending/focused feedback, explicit access safeguards, semantic log captions/selection labels, responsive log cards, inline retry status, and one shared lazy/copyable redacted payload dialog. Builder: Shashi.
+- **Files affected:** Users/log renderers and templates, shared assets/styles, administrator payload-read facade, UI audit/design system/matrix, interface and feature maps, regression contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing `manage_options`, user action nonces, managed-role/self-lockout/final-administrator rules, CAPI retry action, stored logs, redaction, shortcode/workspace access, and database schema remain unchanged. Added authenticated `idlm_get_capi_log_payload` beside the existing audience payload read; plugin version advanced from `1.101.19` to `1.101.20`; database schema remains `1.3.1`.
+
+- **Area:** Lead drawer header hierarchy
+- **Change:** Reworked the status header from equal bordered cards into a two-level metadata summary. Call status, stage, assigned rep, and lead quality retain primary emphasis; conditional reasons and created date share a quieter single-line context region. Builder: Shashi.
+- **Files affected:** Lead detail renderer, shared drawer styles, Leads page design rules, UI regression contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing values, stage quick edit selectors and data attributes, mobile status behavior, drawer navigation, roles, routes, persisted data, and database schema remain unchanged. Plugin version advanced from `1.101.18` to `1.101.19`; database schema remains `1.3.1`.
+
+- **Area:** Lead drawer status density
+- **Change:** Replaced the fixed five-column wrapping status grid with a single-row auto-column strip that expands columns when space is available and uses contained, labelled, keyboard-focusable overflow for additional conditional fields. Builder: Shashi.
+- **Files affected:** Lead detail renderer, shared drawer styles, Leads page design rules, UI regression contracts, release metadata, and changelogs.
+- **Compatibility notes:** All existing status fields, stage quick edit, mobile status behavior, drawer navigation, roles, selectors, routes, persisted data, and database schema remain unchanged. Plugin version advanced from `1.101.17` to `1.101.18`; database schema remains `1.3.1`.
+
+- **Area:** Frontend workspace style isolation
+- **Change:** Added workspace-scoped aliases for metric and lead-row button components so Elementor Kit global button selectors cannot override CRM backgrounds, text, radii, or spacing. Builder: Shashi.
+- **Files affected:** Shared admin/frontend stylesheet, UI regression contracts, release metadata, and changelogs.
+- **Compatibility notes:** The existing unscoped aliases remain for wp-admin; no `!important` declarations, markup, scripts, routes, persisted data, or database schema changed. Plugin version advanced from `1.101.16` to `1.101.17`; database schema remains `1.3.1`.
+
+- **Area:** Phase 6 settings usability
+- **Change:** Replaced comma-delimited CRM vocabularies with structured add/remove editors, clarified Settings navigation around administrator goals, added a sticky saved/unsaved/submitting region, standardized credential reveal/copy/configuration feedback, kept connection-test results beside their actions, and isolated credential-rotation forms so the main Settings form remains valid and complete. Builder: Shashi.
+- **Files affected:** Settings renderer/templates/client/styles, shared asset registration and connection-test client feedback, UI audit/design-system/matrix documentation, regression contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing option names and comma serialization, capability and nonce checks, secret persistence, credential rotation, integration-test endpoints, and database schema remain unchanged. Plugin version advanced from `1.101.15` to `1.101.16`; database schema remains `1.3.1`.
+
+- **Area:** Phase 5 access and account experience
+- **Change:** Added a dedicated access/account client for labelled password visibility, nearby match validation, submit-progress feedback, and post-redirect notice focus; completed profile autofill metadata and made the workspace skip target programmatically focusable. Aligned CRM reset completion with the existing eight-character My Account minimum. Builder: Shashi.
+- **Files affected:** Access/account/workspace templates, authentication and asset controllers, shared/workspace styles, access/account client, UI design/audit/matrix documentation, fast contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing anonymous and authenticated admin-post action names, nonces, safe redirects, generic recovery response, WordPress reset-key/session behavior, CRM capabilities, account fields, shortcodes, and database schema remain unchanged. Plugin version advanced from `1.101.14` to `1.101.15`; database schema remains `1.3.1`.
+
+## 2026-09-01
+
+- **Area:** Phase 4 UI design-debt reduction
+- **Change:** Migrated Settings and shared presentation patterns to canonical tokens/classes, made primary and MCP tabs keyboard-operable, moved diagnostics/reset confirmations to the shared dialog controller, aligned the workspace shell, added role/state hooks and a visual regression matrix, and introduced decreasing source-level debt budgets. Builder: Shashi.
+- **Files affected:** Shared/admin/login/dashboard/Kanban/workspace/quotation styles; Settings/workspace templates and scripts; asset dependencies; UI design system/audit/matrix; fast contracts; release metadata; and changelogs.
+- **Compatibility notes:** Legacy token aliases remain declaration-only for extension compatibility; existing routes, AJAX actions, nonces, capabilities, selectors, saved settings, and database schema remain unchanged. Plugin version advanced from `1.101.13` to `1.101.14`; database schema remains `1.3.1`.
+
+- **Area:** Phase 3 responsive workflow design
+- **Change:** Added priority-based expandable Leads rows with mobile sorting; a phone Kanban stage-tab/list presentation; structured quotation item cards; canonical responsive dimensions, motion, and layers for affected components; and a missing shared-script debounce helper found during live verification. Builder: Shashi.
+- **Files affected:** Leads, Kanban, and quotation templates/renderers/scripts/styles; responsive regression contracts; UI audit; master/page design rules; design documentation; release metadata; and changelogs.
+- **Compatibility notes:** Existing selectors, AJAX actions, nonces, capability and object-access checks, lifecycle dialogs, calculations, catalogue search, autosave, revision, ordering, printable output, and stored CRM data remain unchanged. Plugin version advanced from `1.101.12` to `1.101.13`; database schema remains `1.3.1`.
+
+- **Area:** Phase 2 frontend core workflows
+- **Change:** Implemented semantic and keyboard-operable Kanban movement with lifecycle-dialog reuse and focus/live feedback; synchronized Leads selection and bulk actions; migrated import/export to accessible, count-aware, recoverable flows; and added persistent ARIA Dashboard tabs plus equivalent canvas data tables. Builder: Shashi.
+- **Files affected:** Leads, Kanban, and Dashboard templates/scripts/styles; authenticated lead table/import AJAX responses; UI audit/design-system page rules; fast contracts; release metadata; and changelogs.
+- **Compatibility notes:** Existing AJAX action names, nonces, capabilities, lifecycle validation, filter selectors, export endpoint, chart datasets, and stored CRM data remain unchanged. Plugin version advanced from `1.101.11` to `1.101.12`; database schema remains `1.3.1`.
+
+- **Area:** Phase 1 frontend accessibility and design-system foundation
+- **Change:** Consolidated the runtime token system, corrected primary-action contrast, established consistent focus-visible and reduced-motion behavior, added the reusable `IDLMDialog` controller/component, migrated requested Leads/Kanban/quotation decision dialogs, associated affected form labels, added inline validation, and standardized migrated icons. Builder: Shashi.
+- **Files affected:** Shared/admin/quotation styles and scripts, asset registration, Leads/Kanban/common overlay/quotation/settings templates, UI design system and audit, fast contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing CRM selectors, AJAX actions, nonces, capability checks, lifecycle transitions, saved data, and role-specific workflows remain unchanged. Plugin version advanced from `1.101.10` to `1.101.11`.
+
+- **Area:** Frontend design governance and usability audit
+- **Change:** Audited the complete CRM frontend and established a normative, hierarchical design system covering accessible brand tokens, typography, spacing, interaction, dialogs, tables, charts, responsive behavior, page-specific rules, governance, and delivery acceptance criteria. Builder: Shashi.
+- **Files affected:** Master design system, page-specific design rules, frontend UI/UX audit, existing design documentation, release metadata, and changelogs.
+- **Compatibility notes:** Runtime UI, hooks, routes, capabilities, selectors, schema, options, stored data, and public behavior remain unchanged. Plugin version advanced from `1.101.9` to `1.101.10`.
+
 ## 2026-08-31
+
+- **Area:** Won close-date integrity
+- **Change:** Established `conversion_time` as the canonical Won event timestamp across lifecycle inserts/transitions, legacy backfill, indexed filtering, stage-period reporting, exports, drawer reads, MCP summaries, and offline conversion feeds. Legacy missing values are recovered from the latest Won transition activity, then `updated_at` only when no transition history exists. Builder: Shashi.
+- **Files affected:** Core schema/migration, lead lifecycle, dashboard and MCP read models, CAPI export timing, import mapping, tests, release metadata, and changelogs.
+- **Compatibility notes:** Existing stage actions, access policy, filters, AJAX contracts, deal values, and stored activity remain unchanged. Core schema advanced from `1.3.0` to `1.3.1`; plugin version advanced from `1.101.8` to `1.101.9`.
+
+- **Area:** Lead drawer navigation
+- **Change:** Added previous/next overlay controls and left/right keyboard shortcuts using the visible filtered lead-list or Kanban sequence, with endpoint state, position feedback, input-focus exclusions, and unsaved-change protection. Builder: Shashi.
+- **Files affected:** Common overlays template, shared admin client, shared drawer styles, selector contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing drawer AJAX reads, access checks, tabs, table filters, pagination, and edit workflows remain unchanged. Plugin version advanced from `1.101.7` to `1.101.8`.
+
+- **Area:** Kanban filter presentation
+- **Change:** Reused the Leads-list floating filter launcher and accessible side-drawer interaction for all existing Kanban filters, including active-filter counting and reset behavior. Builder: Shashi.
+- **Files affected:** Kanban template, client script, module styles, selector contracts, release metadata, and changelogs.
+- **Compatibility notes:** Existing Kanban filter selectors, defaults, AJAX payload, authorization scope, and live board reload behavior remain unchanged. Plugin version advanced from `1.101.6` to `1.101.7`.
+
+- **Area:** CRM log read performance
+- **Change:** Bounded lead activity reads to the newest 100 indexed records and moved large audience request/response bodies behind an administrator-only, nonce-protected on-demand read. Builder: Shashi.
+- **Files affected:** Lead read handlers, admin facade, log renderer/template, tests, release metadata, and changelogs.
+- **Compatibility notes:** Existing activity and audience records remain unchanged; the audience log list preserves inspection behavior while avoiding multi-megabyte initial responses. Plugin version advanced from `1.101.5` to `1.101.6`.
 
 - **Area:** General Settings shortcode recursion hardening
 - **Change:** Replaced entity-only shortcode escaping with markup-separated delimiters after LIVE verification showed the outer content filter normalized entities before shortcode expansion. Builder: Shashi.
@@ -294,3 +990,17 @@ Use this log for meaningful architectural or behavioral engineering changes. Pub
 - **Change:** Added a source-verified Codex guide and focused architecture, project map, data model, flow, interface, security, development, and technical-debt references. Recorded the current legacy boundaries and a compatibility-preserving future structure. Builder: Shashi.
 - **Files affected:** `AGENTS.md`, `docs/*.md`
 - **Compatibility notes:** Documentation and release metadata only; no production behavior, public interface, schema, or stored data changed.
+## 1.101.62 — 2026-09-03
+
+- **Change:** Replaced the CSS-drawn dismiss glyph with a real inline SVG X and made dismissal explicit for WordPress-generated and fallback controls. Refined content-width toast sizing and compact 13px regular typography. Builder: Shashi.
+- **Compatibility notes:** Existing auto-close, pause, top-centre stacking, mobile, persistent errors, and reduced-motion behavior are preserved. Version advanced from `1.101.61` to `1.101.62`.
+
+## 1.101.61 — 2026-09-03
+
+- **Change:** Settings toast typography now follows the compact design-system scale with an explicit detached-stack font declaration, and the dismiss control uses a load-order-safe CSS-drawn accessible close icon. Builder: Shashi.
+- **Compatibility notes:** Top-centre positioning, opaque surfaces, auto-close, pause, stacking, mobile, and reduced-motion behavior are preserved. Version advanced from `1.101.60` to `1.101.61`.
+
+## 1.101.60 — 2026-09-03
+
+- **Change:** Settings notice toasts now render top-centre with opaque high-contrast surfaces and explicit accessible close buttons, including a JS fallback when WordPress common.js is unavailable. Builder: Shashi.
+- **Compatibility notes:** Auto-close, hover/focus pause, stacking, and reduced-motion behavior are preserved. Version advanced from `1.101.59` to `1.101.60`.

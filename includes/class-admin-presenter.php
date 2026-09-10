@@ -63,6 +63,19 @@ final class IDLM_Admin_Presenter {
         }
     }
 
+    /** Render a lead-list timestamp as a compact, two-line value. */
+    public static function render_lead_table_datetime($mysql_date) {
+        if (empty($mysql_date)) {
+            return '<span class="idlm-muted">—</span>';
+        }
+
+        return sprintf(
+            '<span class="idlm-table-timestamp"><span class="idlm-table-timestamp-date">%1$s</span><span class="idlm-table-timestamp-time">%2$s</span></span>',
+            esc_html(self::format_datetime($mysql_date, 'M j, Y')),
+            esc_html(self::format_datetime($mysql_date, 'g:i A'))
+        );
+    }
+
     /** Count configured business dates inclusively for pre-sales queue ageing. */
     public static function get_business_day_age($created_at) {
         if (!$created_at) {

@@ -1,6 +1,74 @@
 (function () {
     'use strict';
-    document.querySelectorAll('.idlm-quote-row[data-href]').forEach(function (row) { row.addEventListener('click', function () { window.location.href = row.dataset.href; }); });
+    function bindQuotationRows(scope) {
+        scope.querySelectorAll('.idlm-quote-row[data-href]').forEach(function (row) {
+            if (row.dataset.idlmRowBound) { return; }
+            row.dataset.idlmRowBound = '1';
+            row.addEventListener('click', function (event) { if (!event.target.closest('a,button,input,select')) { window.location.href = row.dataset.href; } });
+        });
+    }
+    bindQuotationRows(document);
+    var catalogueSortForm = document.querySelector('.idlm-catalogue-sort-form');
+    var catalogueToolbar = document.querySelector('.idlm-catalogue-toolbar');
+    if (catalogueSortForm && catalogueToolbar) {
+        catalogueToolbar.insertBefore(catalogueSortForm, catalogueToolbar.querySelector('.idlm-bulk-action-bar'));
+    }
+    function escapeHtml(value) { var node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML; }
+    function liveListUrl(args) {
+        var url = new URL(window.location.href);
+        Object.keys(args).forEach(function (key) { if (args[key]) { url.searchParams.set(key, args[key]); } else { url.searchParams.delete(key); } });
+        return url;
+    }
+    function quotationRow(row) {
+        var customer = [row.first_name, row.last_name].filter(Boolean).join(' ') || '—';
+        return '<tr class="idlm-quote-row" data-href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '"><td><strong>' + escapeHtml(row.quote_number) + '</strong><br><small>' + escapeHtml(row.title) + '</small></td><td><strong>' + escapeHtml(customer) + '</strong><br><small>' + escapeHtml([row.phone, row.project_name].filter(Boolean).join(' · ')) + '</small></td><td>' + escapeHtml(row.revision_name || '—') + '</td><td>' + escapeHtml(new Intl.NumberFormat('en-IN', {style: 'currency', currency: 'INR', maximumFractionDigits: 2}).format(Number(row.grand_total || 0))) + '</td><td>' + escapeHtml(row.creator_name || 'Unknown') + '<br><small>' + escapeHtml(row.created_at) + '</small></td><td>' + escapeHtml(row.updated_at) + '</td><td><a class="button" href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '">Open</a></td></tr>';
+    }
+    function catalogueRow(row) {
+        var editUrl = liveListUrl({workspace: 'catalogue', edit_item: row.id, catalogue_search: document.querySelector('[name="catalogue_search"]').value}).href;
+        return '<tr><td class="idlm-checkbox-column"><input type="checkbox" name="item_ids[]" value="' + escapeHtml(row.id) + '" data-row-select aria-label="Select ' + escapeHtml(row.item_name) + '"></td><td>' + escapeHtml(row.item_code) + '</td><td>' + escapeHtml(row.category) + '</td><td><strong>' + escapeHtml(row.item_name) + '</strong><br><small>' + escapeHtml(row.description) + '</small></td><td>' + escapeHtml(row.unit) + '</td><td>' + (Number(row.is_wood) ? 'Yes' : 'No') + '</td><td>' + escapeHtml(new Intl.NumberFormat('en-IN', {style: 'currency', currency: 'INR', maximumFractionDigits: 2}).format(Number(row.default_rate || 0))) + '</td><td>' + escapeHtml((row.status || '').charAt(0).toUpperCase() + (row.status || '').slice(1)) + '</td><td><div class="idlm-catalogue-actions"><a class="button-link" href="' + escapeHtml(editUrl) + '">Edit</a>' + ('active' === row.status ? '<button class="button-link-delete" name="bulk_action" value="archive" data-single-submit>Archive</button>' : '') + '<button class="button-link-delete" name="bulk_action" value="delete" data-single-submit>Delete</button></div></td></tr>';
+    }
+    document.querySelectorAll('[data-live-list]').forEach(function (filterForm) {
+        var type = filterForm.dataset.liveList;
+        var rows = document.querySelector('[data-live-list-rows="' + type + '"]');
+        var pagination = document.querySelector('[data-live-list-pagination="' + type + '"]');
+        var status = document.querySelector('[data-live-list-status="' + type + '"]');
+        var searchInput = filterForm.querySelector(type === 'catalogue' ? '[name="catalogue_search"]' : '[name="quote_search"]');
+        if (!rows || !searchInput) { return; }
+        var timer = 0, controller = null, page = 1;
+        function request(nextPage) {
+            page = nextPage || 1;
+            if (controller) { controller.abort(); }
+            controller = new AbortController();
+            var params = new URLSearchParams(new FormData(filterForm));
+            if ('catalogue' === type) {
+                var sortForm = document.querySelector('.idlm-catalogue-sort-form');
+                if (sortForm) {
+                    params.set('catalogue_sort', sortForm.elements.catalogue_sort.value);
+                    params.set('catalogue_order', sortForm.elements.catalogue_order.value);
+                }
+            }
+            params.set(type === 'catalogue' ? 'catalogue_page' : 'quote_page', page);
+            params.set('action', type === 'catalogue' ? 'idlm_filter_catalogue_list' : 'idlm_filter_quotation_list');
+            params.set('nonce', idlmQuoteData.nonce);
+            fetch(idlmQuoteData.ajaxUrl + '?' + params.toString(), {credentials: 'same-origin', signal: controller.signal}).then(function (response) {
+                if (!response.ok) { throw new Error('Search failed.'); }
+                return response.json();
+            }).then(function (payload) {
+                if (!payload.success || !payload.data || !Array.isArray(payload.data.rows)) { throw new Error(payload.data && payload.data.message ? payload.data.message : 'Search failed.'); }
+                var data = payload.data, rowMarkup = type === 'catalogue' ? catalogueRow : quotationRow;
+                rows.innerHTML = data.rows.length ? data.rows.map(rowMarkup).join('') : '<tr><td colspan="' + (type === 'catalogue' ? 9 : 7) + '">No ' + (type === 'catalogue' ? 'catalogue items' : 'quotations') + ' found.</td></tr>';
+                if ('quotations' === type) { bindQuotationRows(rows); }
+                var pages = Math.max(1, Math.ceil(Number(data.total) / Number(data.perPage)));
+                pagination.innerHTML = pages > 1 ? '<button type="button" class="button" data-live-list-page="' + Math.max(1, data.page - 1) + '" ' + (data.page <= 1 ? 'disabled' : '') + '>Previous</button> <span>Page ' + data.page + ' of ' + pages + '</span> <button type="button" class="button" data-live-list-page="' + Math.min(pages, data.page + 1) + '" ' + (data.page >= pages ? 'disabled' : '') + '>Next</button>' : '';
+                if (status) { status.textContent = data.total + ' result' + (Number(data.total) === 1 ? '' : 's') + ' found.'; }
+                var url = liveListUrl({[type === 'catalogue' ? 'catalogue_search' : 'quote_search']: searchInput.value, [type === 'catalogue' ? 'catalogue_page' : 'quote_page']: data.page > 1 ? data.page : null});
+                window.history.replaceState({}, '', url.href);
+            }).catch(function (error) { if ('AbortError' !== error.name && status) { status.textContent = error.message || 'Search failed.'; } });
+        }
+        filterForm.addEventListener('submit', function (event) { event.preventDefault(); window.clearTimeout(timer); request(1); });
+        searchInput.addEventListener('input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { request(1); }, 250); });
+        pagination.addEventListener('click', function (event) { var button = event.target.closest('[data-live-list-page]'); if (button) { request(Number(button.dataset.liveListPage)); } });
+    });
     var catalogueEditor = document.querySelector('.idlm-catalogue-editor');
     if (catalogueEditor) {
         var catalogueParams = new URLSearchParams(window.location.search);
@@ -53,28 +121,50 @@
     }
     document.querySelectorAll('[data-bulk-form]').forEach(function (bulkForm) {
         var selectAll = bulkForm.querySelector('[data-select-all]');
-        var rowSelects = Array.from(bulkForm.querySelectorAll('[data-row-select]'));
+        function rowSelects() { return Array.from(bulkForm.querySelectorAll('[data-row-select]')); }
         var counter = bulkForm.querySelector('[data-selection-count]') || (bulkForm.closest('.idlm-quote-panel') && bulkForm.closest('.idlm-quote-panel').querySelector('.idlm-catalogue-toolbar [data-selection-count]'));
         var actionSelect = bulkForm.querySelector('select') || (bulkForm.id ? document.querySelector('select[form="' + bulkForm.id + '"]') : null);
         function updateSelection() {
-            var selected = rowSelects.filter(function (checkbox) { return checkbox.checked; }).length;
+            var checkboxes = rowSelects();
+            var selected = checkboxes.filter(function (checkbox) { return checkbox.checked; }).length;
             if (counter) { counter.textContent = selected + ' selected'; }
-            if (selectAll) { selectAll.checked = rowSelects.length > 0 && selected === rowSelects.length; selectAll.indeterminate = selected > 0 && selected < rowSelects.length; }
+            if (selectAll) { selectAll.checked = checkboxes.length > 0 && selected === checkboxes.length; selectAll.indeterminate = selected > 0 && selected < checkboxes.length; }
         }
-        if (selectAll) { selectAll.addEventListener('change', function () { rowSelects.forEach(function (checkbox) { checkbox.checked = selectAll.checked; }); updateSelection(); }); }
-        rowSelects.forEach(function (checkbox) { checkbox.addEventListener('change', updateSelection); });
-        bulkForm.querySelectorAll('[data-single-submit]').forEach(function (button) {
-            button.addEventListener('click', function () {
-                rowSelects.forEach(function (checkbox) { checkbox.checked = false; });
+        if (selectAll) { selectAll.addEventListener('change', function () { rowSelects().forEach(function (checkbox) { checkbox.checked = selectAll.checked; }); updateSelection(); }); }
+        bulkForm.addEventListener('change', function (event) { if (event.target.matches('[data-row-select]')) { updateSelection(); } });
+        bulkForm.addEventListener('click', function (event) {
+            var button = event.target.closest('[data-single-submit]');
+            if (button) {
+                rowSelects().forEach(function (checkbox) { checkbox.checked = false; });
                 var rowCheckbox = button.closest('tr, .idlm-category-manager-list>div').querySelector('[data-row-select]');
                 if (rowCheckbox) { rowCheckbox.checked = true; }
                 if (actionSelect) { actionSelect.value = button.value; }
                 updateSelection();
-            });
+            }
         });
         bulkForm.addEventListener('submit', function (event) {
-            if (!rowSelects.some(function (checkbox) { return checkbox.checked; })) { event.preventDefault(); window.alert('Select at least one item.'); return; }
-            if (actionSelect && 'delete' === actionSelect.value && !window.confirm(bulkForm.dataset.deleteMessage || 'Permanently delete the selected records?')) { event.preventDefault(); }
+            if (!rowSelects().some(function (checkbox) { return checkbox.checked; })) {
+                event.preventDefault();
+                window.IDLMDialog.notify('Select at least one item.', 'error');
+                (actionSelect || rowSelects()[0]).focus();
+                return;
+            }
+            if (actionSelect && 'delete' === actionSelect.value && bulkForm.dataset.idlmDeleteConfirmed !== 'true') {
+                event.preventDefault();
+                window.IDLMDialog.confirm({
+                    title: 'Delete selected records?',
+                    message: bulkForm.dataset.deleteMessage || 'Permanently delete the selected records?',
+                    confirmLabel: 'Delete selected',
+                    destructive: true,
+                    trigger: event.submitter || document.activeElement
+                }).then(function (confirmed) {
+                    if (!confirmed) { return; }
+                    bulkForm.dataset.idlmDeleteConfirmed = 'true';
+                    bulkForm.requestSubmit(event.submitter || undefined);
+                });
+                return;
+            }
+            delete bulkForm.dataset.idlmDeleteConfirmed;
         });
         updateSelection();
     });
@@ -191,10 +281,10 @@
         var quoteCancel = form.querySelector('[data-quote-cancel]');
         if (quoteCancel && autosaveCancelModal) {
             var cancelDestination = quoteCancel.dataset.cancelUrl;
-            function closeCancelDialog() { autosaveCancelModal.hidden = true; }
+            function closeCancelDialog() { window.IDLMDialog.close(autosaveCancelModal, {reason: 'continue'}); }
             quoteCancel.addEventListener('click', function () {
                 if (!autosaveHasWorkingCopy && !autosaveDirty && !autosaveSaving) { window.location.href = cancelDestination; return; }
-                autosaveCancelModal.hidden = false;
+                window.IDLMDialog.open(autosaveCancelModal, {trigger: quoteCancel});
             });
             autosaveCancelModal.querySelector('[data-autosave-continue]').addEventListener('click', closeCancelDialog);
             autosaveCancelModal.querySelector('[data-autosave-save]').addEventListener('click', function () {
@@ -217,7 +307,6 @@
                     .then(function (payload) { if (!payload.success) { throw new Error(payload.data && payload.data.message ? payload.data.message : 'Unable to discard changes.'); } window.location.href = cancelDestination; })
                     .catch(function (error) { autosaveEnabled = true; closeCancelDialog(); setAutosaveStatus(error.message || 'Unable to discard changes', 'error'); });
             });
-            document.addEventListener('keydown', function (event) { if ('Escape' === event.key && !autosaveCancelModal.hidden) { closeCancelDialog(); } });
         }
     }
     if (!autosaveEnabled) {
@@ -375,24 +464,38 @@
         var woodenSubtotal = woodGroups.Wood.base;
         var woodenDiscountPercent = Math.min(100, Math.max(0, num(form.elements.wooden_discount_percent)));
         var woodenDiscount = round2(woodenSubtotal * woodenDiscountPercent / 100);
-        var afterWoodenDiscount = round2(Math.max(0, subtotal - woodenDiscount));
-        var designFeePercent = Math.min(100, Math.max(0, num(form.elements.design_fee_percent)));
-        var designFee = round2(afterWoodenDiscount * designFeePercent / 100);
-        var total = round2(afterWoodenDiscount + designFee);
+        var afterWoodenDiscount = round2(Math.max(0, woodenSubtotal - woodenDiscount));
+        var otherSubtotal = round2(subtotal - woodenSubtotal);
+        var totalsPanel = form.querySelector('#idlm-live-totals');
+        var softClosePercent = Math.min(100, Math.max(0, Number(totalsPanel.dataset.softClosePercent || 0)));
+        var softCloseEnabled = form.elements.soft_close_enabled.checked;
+        var softClose = softCloseEnabled ? round2(afterWoodenDiscount * softClosePercent / 100) : 0;
+        var total = round2(afterWoodenDiscount + otherSubtotal + softClose);
         var additionalDiscount = Math.min(total, Math.max(0, num(form.elements.additional_discount_amount)));
         var afterAdditionalDiscount = round2(Math.max(0, total - additionalDiscount));
         var gst = round2(afterAdditionalDiscount * 18 / 100);
-        var grand = round2(afterAdditionalDiscount + gst);
+        var preRoundTotal = round2(afterAdditionalDiscount + gst);
+        var grand = Math.round(preRoundTotal);
+        var roundOff = round2(grand - preRoundTotal);
         var hasAdditionalDiscount = additionalDiscount > 0;
         form.querySelector('[data-total="subtotal"]').textContent = '₹' + subtotal.toFixed(2);
         form.querySelector('[data-total="wooden-subtotal"]').textContent = '₹' + woodenSubtotal.toFixed(2);
         form.querySelector('[data-total="wooden-discount"]').textContent = '₹' + woodenDiscount.toFixed(2);
         form.querySelector('[data-total="after-wooden-discount"]').textContent = '₹' + afterWoodenDiscount.toFixed(2);
-        form.querySelector('[data-total="design-fee"]').textContent = '₹' + designFee.toFixed(2);
+        form.querySelector('[data-total="other-subtotal"]').textContent = '₹' + otherSubtotal.toFixed(2);
+        form.querySelector('[data-total="soft-close"]').textContent = '₹' + softClose.toFixed(2);
         form.querySelector('[data-total="total"]').textContent = '₹' + total.toFixed(2);
         form.querySelector('[data-after-additional-discount-row]').hidden = !hasAdditionalDiscount;
         form.querySelector('[data-total="after-additional-discount"]').textContent = '₹' + afterAdditionalDiscount.toFixed(2);
         form.querySelector('[data-total="tax"]').textContent = '₹' + gst.toFixed(2);
+        var roundOffOutput = form.querySelector('[data-total="round-off"]');
+        if (!roundOffOutput) {
+            var roundOffRow = document.createElement('div');
+            roundOffRow.innerHTML = '<dt>Round Off</dt><dd data-total="round-off">₹0.00</dd>';
+            form.querySelector('.idlm-grand-total').before(roundOffRow);
+            roundOffOutput = roundOffRow.querySelector('[data-total="round-off"]');
+        }
+        roundOffOutput.textContent = '₹' + roundOff.toFixed(2);
         form.querySelector('[data-total="grand"]').textContent = '₹' + grand.toFixed(2);
         document.getElementById('idlm-wood-totals').innerHTML = Object.keys(woodGroups).map(function (group) { return '<div><span>' + group + '</span><strong>₹' + woodGroups[group].total.toFixed(2) + '</strong></div>'; }).join('');
         document.getElementById('idlm-section-totals').innerHTML = sectionTotals.map(function (section) { return '<div><span>' + escapeHtml(section.name) + '</span><strong>₹' + section.total.toFixed(2) + '</strong></div>'; }).join('') || '<p>No section totals yet.</p>';
@@ -415,7 +518,7 @@
     function headerRow() {
         var row = document.createElement('tr');
         row.className = 'idlm-quote-item-row idlm-quote-header-row';
-        row.innerHTML = '<td colspan="7"><input type="hidden" name="items[0][section_key]" value=""><input type="hidden" name="items[0][row_type]" value="header"><input class="idlm-inline-header-input" name="items[0][description]" placeholder="Header title" required></td><td class="idlm-line-actions"><button type="button" class="button-link idlm-line-action idlm-move-row-up" title="Move up" aria-label="Move header up">↑</button><button type="button" class="button-link idlm-line-action idlm-move-row-down" title="Move down" aria-label="Move header down">↓</button><button type="button" class="button-link-delete idlm-line-action idlm-remove-row" title="Remove" aria-label="Remove header">×</button></td>';
+        row.innerHTML = '<td colspan="7" data-label="Header"><input type="hidden" name="items[0][section_key]" value=""><input type="hidden" name="items[0][row_type]" value="header"><input class="idlm-inline-header-input" aria-label="Header title" name="items[0][description]" placeholder="Header title" required></td><td class="idlm-line-actions" data-label="Header actions"><button type="button" class="button-link idlm-line-action idlm-move-row-up" title="Move up" aria-label="Move header up">↑</button><button type="button" class="button-link idlm-line-action idlm-move-row-down" title="Move down" aria-label="Move header down">↓</button><button type="button" class="button-link-delete idlm-line-action idlm-remove-row" title="Remove" aria-label="Remove header">×</button></td>';
         return row;
     }
 

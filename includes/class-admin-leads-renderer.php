@@ -49,6 +49,7 @@ class IDLM_Admin_Leads_Renderer {
         $reps_see_all = '1' === get_option('idlm_reps_see_all_leads', '1');
         $pending_calls_count = $is_pre_sales ? IDLM_Admin::get_pending_calls_count() : 0;
         $unread_whatsapp_count = IDLM_Admin::get_unread_whatsapp_count();
+        $stale_lead_count = IDLM_Admin_Lead_Notifications::get_stale_lead_count();
 
         $table_leads = $wpdb->prefix . 'idlm_leads';
         $restricted_user_id = IDLM_Lead_Access_Policy::restriction_user_id();
@@ -151,6 +152,7 @@ class IDLM_Admin_Leads_Renderer {
             'reps_see_all'                            => $reps_see_all,
             'pending_calls_count'                     => $pending_calls_count,
             'unread_whatsapp_count'                   => $unread_whatsapp_count,
+            'stale_lead_count'                        => $stale_lead_count,
             'new_leads_count'                         => $new_leads_count,
             'not_called_count'                        => $not_called_count,
             'followup_count'                          => $followup_count,

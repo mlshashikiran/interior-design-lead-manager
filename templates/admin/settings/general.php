@@ -15,118 +15,102 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
 $lost_reasons = isset($context['lost_reasons']) ? $context['lost_reasons'] : null;
 $studios = isset($context['studios']) ? $context['studios'] : null;
 $num_rooms_options = isset($context['num_rooms_options']) ? $context['num_rooms_options'] : null;
+$ui_labels = isset($context['ui_labels']) ? $context['ui_labels'] : array();
+$value_labels = isset($context['value_labels']) ? $context['value_labels'] : array();
 ?>
                     <!-- Tab 1: General Settings -->
-                    <section id="settings-general" class="idlm-settings-tab-content <?php echo $active_tab === 'general' ? 'active' : ''; ?>" style="display: <?php echo $active_tab === 'general' ? 'block' : 'none'; ?>;">
+                    <section id="settings-general" class="idlm-settings-tab-content <?php echo $active_tab === 'general' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-general" <?php echo $active_tab === 'general' ? '' : 'hidden'; ?>>
                         <div class="idlm-grid-charts">
-                            <article class="idlm-card">
+                            <article class="idlm-card idlm-settings-general-metrics">
                                 <h3>Firm Metrics & Targets</h3>
-                                <div class="idlm-form-grid three" style="grid-template-columns: repeat(3, 1fr);">
+                                <div class="idlm-form-grid three" data-idlm-ui="grid-three">
                                     <div class="idlm-form-group">
-                                        <label>Monthly Lead Volume Target</label>
-                                        <input type="number" name="lead_target" class="idlm-input" value="<?php echo esc_attr($lead_target); ?>">
+                                        <label for="idlm-lead-target">Monthly lead volume target</label>
+                                        <input type="number" id="idlm-lead-target" name="lead_target" class="idlm-input" min="0" inputmode="numeric" value="<?php echo esc_attr($lead_target); ?>">
                                     </div>
                                     <div class="idlm-form-group">
-                                        <label>Monthly Won Deals Target</label>
-                                        <input type="number" name="conversion_target" class="idlm-input" value="<?php echo esc_attr($conv_target); ?>">
+                                        <label for="idlm-conversion-target">Monthly Won deals target</label>
+                                        <input type="number" id="idlm-conversion-target" name="conversion_target" class="idlm-input" min="0" inputmode="numeric" value="<?php echo esc_attr($conv_target); ?>">
                                     </div>
                                     <div class="idlm-form-group">
-                                        <label>Preferred Currency Code</label>
-                                        <input type="text" name="currency_code" class="idlm-input" value="<?php echo esc_attr($currency_code); ?>" placeholder="e.g. INR" maxlength="3" style="text-transform: uppercase;">
+                                        <label for="idlm-currency-code">Preferred currency code</label>
+                                        <input type="text" id="idlm-currency-code" name="currency_code" class="idlm-input" value="<?php echo esc_attr($currency_code); ?>" placeholder="e.g. INR" maxlength="3" autocapitalize="characters" data-idlm-ui="uppercase">
                                     </div>
                                     <div class="idlm-form-group full">
-                                        <div class="idlm-checkbox-row">
-                                            <input type="checkbox" name="reps_see_all" value="1" <?php checked($reps_see_all, '1'); ?> style="width: 17px; height: 17px; margin: 0; cursor: pointer;">
+                                        <label class="idlm-checkbox-row">
+                                            <input type="checkbox" name="reps_see_all" value="1" <?php checked($reps_see_all, '1'); ?> data-idlm-ui="checkbox">
                                             <span>Reps see all leads (Shared Inbox Model)</span>
-                                        </div>
+                                        </label>
                                     </div>
                                 </div>
                             </article>
 
                             <article class="idlm-card">
-                                <h3>Custom Pipelines Stages & Statuses</h3>
-                                <div class="idlm-form-grid two">
-                                    <div class="idlm-form-group full">
-                                        <label>Configure Sales Stages (Comma separated)</label>
-                                        <input type="text" name="custom_stages" class="idlm-input" value="<?php echo esc_attr(implode(',', $stages)); ?>">
-                                        <div class="idlm-chip-grid">
-                                            <?php foreach ($stages as $stage): ?>
-                                                <span class="idlm-chip"><?php echo esc_html($stage); ?></span>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                    <div class="idlm-form-group full">
-                                        <label>Configure Call Status Options (Comma separated)</label>
-                                        <input type="text" name="custom_call_statuses" class="idlm-input" value="<?php echo esc_attr(implode(',', $call_statuses)); ?>">
-                                        <div class="idlm-chip-grid">
-                                            <?php foreach ($call_statuses as $cs): ?>
-                                                <span class="idlm-chip"><?php echo esc_html($cs); ?></span>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                    <div class="idlm-form-group full">
-                                        <label>Configure Lost Reason Options (Comma separated)</label>
-                                        <input type="text" name="custom_lost_reasons" class="idlm-input" value="<?php echo esc_attr(implode(',', $lost_reasons)); ?>">
-                                        <p class="description">These reasons appear in the required dropdown when a lead is moved to Lost.</p>
-                                        <div class="idlm-chip-grid">
-                                            <?php foreach ($lost_reasons as $lost_reason): ?>
-                                                <span class="idlm-chip"><?php echo esc_html($lost_reason); ?></span>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                    <div class="idlm-form-group">
-                                        <label>Configure Preferred Studio Locations (Comma separated)</label>
-                                        <input type="text" name="custom_studios" class="idlm-input" value="<?php echo esc_attr(implode(',', $studios)); ?>">
-                                        <div class="idlm-chip-grid">
-                                            <?php foreach ($studios as $studio): ?>
-                                                <span class="idlm-chip"><?php echo esc_html($studio); ?></span>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                    <div class="idlm-form-group">
-                                        <label>Configure Number of Rooms Options (Comma separated)</label>
-                                        <input type="text" name="custom_num_rooms" class="idlm-input" value="<?php echo esc_attr(implode(',', $num_rooms_options)); ?>">
-                                        <div class="idlm-chip-grid">
-                                            <?php foreach ($num_rooms_options as $opt): ?>
-                                                <span class="idlm-chip"><?php echo esc_html($opt); ?></span>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    </div>
-                                </div>
+                                <h3>Pipeline stages</h3>
+                                <p class="idlm-card-desc">Set the workflow order and each Kanban column’s header total together. The first stage appears first throughout the CRM.</p>
+                                <?php IDLM_View::display('admin/settings/token-editor.php', array(
+                                    'editor_id' => 'idlm-custom-stages',
+                                    'field_name' => 'custom_stages',
+                                    'label' => 'Sales stages',
+                                    'help' => 'Move stages to set the workflow order. Choose Hidden to show only a lead count in the Kanban header.',
+                                    'values' => $stages,
+                                    'stage_totals' => $kanban_stage_totals,
+                                    'required' => true,
+                                    'pipeline' => true,
+                                    'aliases' => isset($value_labels['custom_stages']) ? $value_labels['custom_stages'] : array(),
+                                )); ?>
                             </article>
 
-                            <article class="idlm-card">
-                                <h3>Kanban Column Value Consolidation</h3>
-                                <p class="idlm-card-desc">Choose which monetary field is totaled for each stage. Select Hidden to show only the lead count.</p>
-                                <div class="idlm-table-wrapper" style="margin-top: 14px;">
-                                    <table class="idlm-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Pipeline Stage</th>
-                                                <th>Header Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($stages as $stage): ?>
-                                                <?php $total_source = isset($kanban_stage_totals[$stage]) ? $kanban_stage_totals[$stage] : 'none'; ?>
-                                                <tr>
-                                                    <td><strong><?php echo esc_html($stage); ?></strong></td>
-                                                    <td>
-                                                        <select name="kanban_stage_totals[<?php echo esc_attr(rawurlencode($stage)); ?>]" class="idlm-select" style="width: 100%;">
-                                                            <option value="none" <?php selected($total_source, 'none'); ?>>Hidden</option>
-                                                            <option value="quote_value" <?php selected($total_source, 'quote_value'); ?>>Quote Value</option>
-                                                            <option value="deal_value" <?php selected($total_source, 'deal_value'); ?>>Deal Value</option>
-                                                        </select>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                            <article class="idlm-card idlm-lead-fields-card">
+                                <h3>Lead fields and options</h3>
+                                <p class="idlm-card-desc">Keep reusable choices organized by the part of the CRM that uses them. Open a group to add, remove, or reorder its options.</p>
+                                <div class="idlm-form-grid two idlm-ui-label-editor">
+                                    <?php foreach (array('call_status' => 'Call Status', 'lost_reason' => 'Lost Reason', 'preferred_studio' => 'Preferred Studio', 'num_rooms' => 'Rooms') as $key => $default): ?>
+                                        <div class="idlm-form-group"><label for="idlm-ui-label-<?php echo esc_attr($key); ?>"><?php echo esc_html($default); ?> display label</label><input class="idlm-input" id="idlm-ui-label-<?php echo esc_attr($key); ?>" name="ui_labels[<?php echo esc_attr($key); ?>]" value="<?php echo esc_attr(isset($ui_labels[$key]) ? $ui_labels[$key] : $default); ?>"></div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <div class="idlm-settings-disclosures">
+                                    <details class="idlm-settings-disclosure" open>
+                                        <summary>Sales activity <span class="idlm-settings-disclosure__count"><?php echo count($call_statuses); ?> options</span></summary>
+                                        <div class="idlm-settings-disclosure__content">
+                                            <?php IDLM_View::display('admin/settings/token-editor.php', array(
+                                                'editor_id' => 'idlm-custom-call-statuses', 'field_name' => 'custom_call_statuses', 'label' => 'Call status options',
+                                                'help' => 'These options appear in outreach activity and follow-up reminder rules.', 'values' => $call_statuses, 'required' => true, 'aliases' => isset($value_labels['custom_call_statuses']) ? $value_labels['custom_call_statuses'] : array(),
+                                            )); ?>
+                                        </div>
+                                    </details>
+                                    <details class="idlm-settings-disclosure">
+                                        <summary>Outcome tracking <span class="idlm-settings-disclosure__count"><?php echo count($lost_reasons); ?> reasons</span></summary>
+                                        <div class="idlm-settings-disclosure__content">
+                                            <?php IDLM_View::display('admin/settings/token-editor.php', array(
+                                                'editor_id' => 'idlm-custom-lost-reasons', 'field_name' => 'custom_lost_reasons', 'label' => 'Lost reasons',
+                                                'help' => 'These reasons appear in the required dropdown when a lead is moved to Lost.', 'values' => $lost_reasons, 'required' => true, 'aliases' => isset($value_labels['custom_lost_reasons']) ? $value_labels['custom_lost_reasons'] : array(),
+                                            )); ?>
+                                        </div>
+                                    </details>
+                                    <details class="idlm-settings-disclosure">
+                                        <summary>Assignment and routing <span class="idlm-settings-disclosure__count"><?php echo count($studios); ?> studios</span></summary>
+                                        <div class="idlm-settings-disclosure__content">
+                                            <?php IDLM_View::display('admin/settings/token-editor.php', array(
+                                                'editor_id' => 'idlm-custom-studios', 'field_name' => 'custom_studios', 'label' => 'Preferred studio locations',
+                                                'help' => 'Studio choices used for lead preference and studio-based routing.', 'values' => $studios, 'required' => true, 'aliases' => isset($value_labels['custom_studios']) ? $value_labels['custom_studios'] : array(),
+                                            )); ?>
+                                        </div>
+                                    </details>
+                                    <details class="idlm-settings-disclosure">
+                                        <summary>Project requirements <span class="idlm-settings-disclosure__count"><?php echo count($num_rooms_options); ?> room options</span></summary>
+                                        <div class="idlm-settings-disclosure__content">
+                                            <?php IDLM_View::display('admin/settings/token-editor.php', array(
+                                                'editor_id' => 'idlm-custom-num-rooms', 'field_name' => 'custom_num_rooms', 'label' => 'Room options',
+                                                'help' => 'Room choices shown when capturing an interior-design requirement.', 'values' => $num_rooms_options, 'required' => true, 'aliases' => isset($value_labels['custom_num_rooms']) ? $value_labels['custom_num_rooms'] : array(),
+                                            )); ?>
+                                        </div>
+                                    </details>
                                 </div>
                             </article>
                         </div>
 
-                        <article class="idlm-card idlm-card-muted" style="margin-top: 22px;">
+                        <article class="idlm-card idlm-card-muted" data-idlm-ui="mt-6">
                             <h3>Frontend Shortcode Integrations</h3>
                             <p class="idlm-card-desc">Display the Leads Database Workspace and Analytics Dashboard on any frontend page or post. Access is strictly restricted to logged-in users with authorized roles (e.g. Sales Reps, Editors, Administrators) to preserve CRM security.</p>
                             <div class="idlm-shortcode-grid">

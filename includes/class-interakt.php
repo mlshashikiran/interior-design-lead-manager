@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) {
 
 class IDLM_Interakt {
     public static function init() {
+        IDLM_Interakt_Batch::init();
         // Hook when a lead call status changes to No Answer (Legacy/Wrapper)
         add_action('idlm_lead_call_status_no_answer', array(__CLASS__, 'trigger_no_answer_automation'), 10, 2);
 
@@ -112,6 +113,10 @@ class IDLM_Interakt {
      * Action Scheduler callback for async delivery
      */
     public static function process_async_track_event($payload, $api_key, $lead_id = 0) {
+        global $wpdb;
+        if (!$lead_id || !$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id))) {
+            return;
+        }
         self::send_track_event_to_interakt($payload, $api_key, $lead_id);
     }
 

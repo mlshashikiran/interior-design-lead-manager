@@ -1177,6 +1177,16 @@ class IDLM_Integrations {
         }
 
         IDLM_DB::log_activity($lead_id, 'assignment', $activity_message, 0);
+        IDLM_DB::record_reporting_event(
+            $lead_id,
+            'assignment',
+            $expected_owner_id,
+            $assigned_rep_id,
+            '',
+            'automatic_' . sanitize_key($assignment_context),
+            0,
+            $assignment_time
+        );
         IDLM_Read_Model_Cache::invalidate('lead_assignment');
 
         if ('intake' === $assignment_context) {

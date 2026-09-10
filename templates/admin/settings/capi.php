@@ -19,7 +19,7 @@ $linkedin_access_token = IDLM_Admin_Settings_Renderer::credential_value('linkedi
 $linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $context['linkedin_event_mappings'] : null;
 ?>
                 <!-- Tab 4: Conversion APIs (CAPI) -->
-                <section id="settings-capi" class="idlm-settings-tab-content <?php echo $active_tab === 'capi' ? 'active' : ''; ?>" style="display: <?php echo $active_tab === 'capi' ? 'block' : 'none'; ?>;">
+                <section id="settings-capi" class="idlm-settings-tab-content <?php echo $active_tab === 'capi' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-capi" <?php echo $active_tab === 'capi' ? '' : 'hidden'; ?>>
                     <div class="idlm-grid-full">
                         <article class="idlm-card">
                             <h3>Platform Conversion APIs (CAPI) Settings</h3>
@@ -29,27 +29,27 @@ $linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $context
                         <div class="idlm-detail-grid">
                             <!-- Meta CAPI Card -->
                             <article class="idlm-card">
-                                <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;">
-                                    <input type="checkbox" name="meta_capi_enabled" value="1" <?php checked($meta_capi_enabled, '1'); ?> style="width: 17px; height: 17px; margin: 0; cursor: pointer;">
-                                    <h3 style="margin: 0 !important;">Meta Conversion API (CAPI)</h3>
+                                <div class="idlm-settings-card-head">
+                                    <input type="checkbox" id="idlm-meta-capi-enabled" name="meta_capi_enabled" value="1" <?php checked($meta_capi_enabled, '1'); ?> class="idlm-capi-toggle" data-idlm-ui="checkbox">
+                                    <h3 class="idlm-heading-flush"><label for="idlm-meta-capi-enabled">Meta Conversion API (CAPI)</label></h3>
                                 </div>
                                 <div class="idlm-form-grid two">
                                     <div class="idlm-form-group">
-                                        <label>Meta Pixel ID</label>
-                                        <input type="text" name="meta_pixel_id" class="idlm-input" value="<?php echo esc_attr($meta_pixel_id); ?>">
+                                        <label for="idlm-meta-pixel-id">Meta Pixel ID</label>
+                                        <input type="text" id="idlm-meta-pixel-id" name="meta_pixel_id" class="idlm-input" value="<?php echo esc_attr($meta_pixel_id); ?>">
                                     </div>
                                     <div class="idlm-form-group">
-                                        <label>Meta Access Token</label>
-                                        <input type="password" name="meta_access_token" class="idlm-input" value="<?php echo esc_attr($meta_access_token); ?>">
+                                        <label for="idlm-meta-access-token">Meta access token</label>
+                                        <input type="password" id="idlm-meta-access-token" name="meta_access_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($meta_access_token); ?>">
                                     </div>
                                 </div>
 
-                                <h4 style="margin-top: 20px; margin-bottom: 8px; font-size: 14px; font-weight: 700;">Stage to Meta CAPI Event Mapping</h4>
+                                <h4 class="idlm-settings-subtitle">Stage to Meta CAPI event mapping</h4>
                                 <table class="idlm-table">
                                     <thead>
                                         <tr>
-                                            <th style="width: 40%;">Sales Stage</th>
-                                            <th style="width: 60%;">Meta Event Name</th>
+                                            <th data-idlm-ui="col-40">Sales Stage</th>
+                                            <th data-idlm-ui="col-60">Meta Event Name</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -57,9 +57,9 @@ $linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $context
                                             $mapped_val = isset($meta_event_mappings[$stage]) ? $meta_event_mappings[$stage] : '';
                                         ?>
                                             <tr>
-                                                <td style="font-weight: 600; color: var(--idlm-text);"><?php echo esc_html($stage); ?></td>
+                                                <td data-idlm-ui="strong"><?php echo esc_html($stage); ?></td>
                                                 <td>
-                                                    <input type="text" name="meta_event_mappings[<?php echo esc_attr($stage); ?>]" class="idlm-input" style="height: 34px;" value="<?php echo esc_attr($mapped_val); ?>" placeholder="e.g. Lead, Contact, etc.">
+                                                    <input type="text" name="meta_event_mappings[<?php echo esc_attr($stage); ?>]" class="idlm-input" aria-label="Meta event for <?php echo esc_attr($stage); ?>" value="<?php echo esc_attr($mapped_val); ?>" placeholder="e.g. Lead or Contact">
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -67,33 +67,33 @@ $linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $context
                                 </table>
 
                                 <div class="idlm-table-actions">
-                                    <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-test-meta-capi" style="border-color: var(--idlm-gold); color: var(--idlm-gold-dark);">Test Meta CAPI Connection</button>
+                                    <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-test-meta-capi" data-idlm-ui="action-outline">Test Meta CAPI Connection</button>
                                 </div>
                             </article>
 
                             <!-- Google Ads Offline Conversions Card -->
                             <article class="idlm-card">
-                                <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;">
-                                    <input type="checkbox" name="google_capi_enabled" value="1" <?php checked($google_capi_enabled, '1'); ?> style="width: 17px; height: 17px; margin: 0; cursor: pointer;">
-                                    <h3 style="margin: 0 !important;">Google Ads Offline Conversions</h3>
+                                <div class="idlm-settings-card-head">
+                                    <input type="checkbox" id="idlm-google-capi-enabled" name="google_capi_enabled" value="1" <?php checked($google_capi_enabled, '1'); ?> class="idlm-capi-toggle" data-idlm-ui="checkbox">
+                                    <h3 class="idlm-heading-flush"><label for="idlm-google-capi-enabled">Google Ads Offline Conversions</label></h3>
                                 </div>
                                 <div class="idlm-form-grid two">
                                     <div class="idlm-form-group">
-                                        <label>GA4 Measurement ID</label>
-                                        <input type="text" name="google_measurement_id" class="idlm-input" value="<?php echo esc_attr($google_measurement_id); ?>">
+                                        <label for="idlm-google-measurement-id">GA4 Measurement ID</label>
+                                        <input type="text" id="idlm-google-measurement-id" name="google_measurement_id" class="idlm-input" value="<?php echo esc_attr($google_measurement_id); ?>">
                                     </div>
                                     <div class="idlm-form-group">
-                                        <label>GA4 API Secret</label>
-                                        <input type="password" name="google_api_secret" class="idlm-input" value="<?php echo esc_attr($google_api_secret); ?>">
+                                        <label for="idlm-google-api-secret">GA4 API secret</label>
+                                        <input type="password" id="idlm-google-api-secret" name="google_api_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($google_api_secret); ?>">
                                     </div>
                                 </div>
 
-                                <h4 style="margin-top: 20px; margin-bottom: 8px; font-size: 14px; font-weight: 700;">Stage to Google Ads Conversion Mapping</h4>
+                                <h4 class="idlm-settings-subtitle">Stage to Google Ads conversion mapping</h4>
                                 <table class="idlm-table">
                                     <thead>
                                         <tr>
-                                            <th style="width: 40%;">Sales Stage</th>
-                                            <th style="width: 60%;">Google Ads Conversion Name</th>
+                                            <th data-idlm-ui="col-40">Sales Stage</th>
+                                            <th data-idlm-ui="col-60">Google Ads Conversion Name</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -101,9 +101,9 @@ $linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $context
                                             $mapped_val = isset($google_event_mappings[$stage]) ? $google_event_mappings[$stage] : '';
                                         ?>
                                             <tr>
-                                                <td style="font-weight: 600; color: var(--idlm-text);"><?php echo esc_html($stage); ?></td>
+                                                <td data-idlm-ui="strong"><?php echo esc_html($stage); ?></td>
                                                 <td>
-                                                    <input type="text" name="google_event_mappings[<?php echo esc_attr($stage); ?>]" class="idlm-input" style="height: 34px;" value="<?php echo esc_attr($mapped_val); ?>" placeholder="e.g. CLOSED_WON, etc.">
+                                                    <input type="text" name="google_event_mappings[<?php echo esc_attr($stage); ?>]" class="idlm-input" aria-label="Google conversion for <?php echo esc_attr($stage); ?>" value="<?php echo esc_attr($mapped_val); ?>" placeholder="e.g. CLOSED_WON">
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -113,41 +113,41 @@ $linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $context
                                 <?php 
                                 $feed_url = site_url('/wp-json/interior-design-lead-manager/v1/google-ads-conversions.csv');
                                 ?>
-                                <h4 style="margin-top: 25px; margin-bottom: 8px; font-size: 14px; font-weight: 700;">Google Ads Offline Conversion Import (OCI) CSV Feed</h4>
+                                <h4 class="idlm-settings-subtitle">Google Ads offline conversion import (OCI) CSV feed</h4>
                                 <p class="idlm-card-desc">Use this URL to schedule automatic conversion uploads in Google Ads (fetch schedule: e.g. daily), or download the CSV manually.</p>
-                                <div class="idlm-form-group" style="margin-top: 10px;">
+                                <div class="idlm-form-group" data-idlm-ui="mt-2">
                                     <input type="text" class="idlm-input" readonly value="<?php echo esc_url($feed_url); ?>" id="idlm-google-oci-feed-url">
                                 </div>
                                 <div class="idlm-table-actions">
                                     <button type="button" class="idlm-btn idlm-btn-secondary" onclick="idlmCopyToClipboard(this, document.getElementById('idlm-google-oci-feed-url').value);">Copy URL</button>
-                                    <a href="<?php echo esc_url(admin_url('admin-ajax.php?action=idlm_export_google_conversions')); ?>" class="idlm-btn idlm-btn-secondary" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">Download OCI CSV</a>
+                                    <a href="<?php echo esc_url(admin_url('admin-ajax.php?action=idlm_export_google_conversions')); ?>" class="idlm-btn idlm-btn-secondary idlm-link-plain">Download OCI CSV</a>
                                 </div>
                             </article>
                         </div>
 
                         <!-- LinkedIn Conversion API Card -->
                         <article class="idlm-card">
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom: 20px;">
-                                <input type="checkbox" name="linkedin_capi_enabled" value="1" <?php checked($linkedin_capi_enabled, '1'); ?> style="width: 17px; height: 17px; margin: 0; cursor: pointer;">
-                                <h3 style="margin: 0 !important;">LinkedIn Conversion API</h3>
+                            <div class="idlm-settings-card-head">
+                                <input type="checkbox" id="idlm-linkedin-capi-enabled" name="linkedin_capi_enabled" value="1" <?php checked($linkedin_capi_enabled, '1'); ?> class="idlm-capi-toggle" data-idlm-ui="checkbox">
+                                <h3 class="idlm-heading-flush"><label for="idlm-linkedin-capi-enabled">LinkedIn Conversion API</label></h3>
                             </div>
                             <div class="idlm-form-grid two">
                                 <div class="idlm-form-group">
-                                    <label>LinkedIn Conversion Action Partner ID</label>
-                                    <input type="text" name="linkedin_conversion_id" class="idlm-input" value="<?php echo esc_attr($linkedin_conversion_id); ?>">
+                                    <label for="idlm-linkedin-conversion-id">LinkedIn conversion action partner ID</label>
+                                    <input type="text" id="idlm-linkedin-conversion-id" name="linkedin_conversion_id" class="idlm-input" value="<?php echo esc_attr($linkedin_conversion_id); ?>">
                                 </div>
                                 <div class="idlm-form-group">
-                                    <label>LinkedIn Access Token</label>
-                                    <input type="password" name="linkedin_access_token" class="idlm-input" value="<?php echo esc_attr($linkedin_access_token); ?>">
+                                    <label for="idlm-linkedin-access-token">LinkedIn access token</label>
+                                    <input type="password" id="idlm-linkedin-access-token" name="linkedin_access_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($linkedin_access_token); ?>">
                                 </div>
                             </div>
 
-                            <h4 style="margin-top: 20px; margin-bottom: 8px; font-size: 14px; font-weight: 700;">Stage to LinkedIn Conversion Mapping</h4>
+                            <h4 class="idlm-settings-subtitle">Stage to LinkedIn conversion mapping</h4>
                             <table class="idlm-table">
                                 <thead>
                                     <tr>
-                                        <th style="width: 40%;">Sales Stage</th>
-                                        <th style="width: 60%;">LinkedIn Conversion Name</th>
+                                        <th data-idlm-ui="col-40">Sales Stage</th>
+                                        <th data-idlm-ui="col-60">LinkedIn Conversion Name</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -155,9 +155,9 @@ $linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $context
                                         $mapped_val = isset($linkedin_event_mappings[$stage]) ? $linkedin_event_mappings[$stage] : '';
                                     ?>
                                         <tr>
-                                            <td style="font-weight: 600; color: var(--idlm-text);"><?php echo esc_html($stage); ?></td>
+                                            <td data-idlm-ui="strong"><?php echo esc_html($stage); ?></td>
                                             <td>
-                                                <input type="text" name="linkedin_event_mappings[<?php echo esc_attr($stage); ?>]" class="idlm-input" style="height: 34px;" value="<?php echo esc_attr($mapped_val); ?>" placeholder="e.g. Lead, etc.">
+                                                <input type="text" name="linkedin_event_mappings[<?php echo esc_attr($stage); ?>]" class="idlm-input" aria-label="LinkedIn conversion for <?php echo esc_attr($stage); ?>" value="<?php echo esc_attr($mapped_val); ?>" placeholder="e.g. Lead">
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -166,4 +166,3 @@ $linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $context
                         </article>
                     </div>
                 </section> <!-- End Tab 4: Conversion APIs (CAPI) -->
-

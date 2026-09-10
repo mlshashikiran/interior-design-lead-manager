@@ -338,8 +338,8 @@ class IDLM_MCP_Core {
                 if (!empty($params)) {
                     $total_leads = $wpdb->get_var("SELECT COUNT(*) FROM $table_leads");
                     $non_dup_leads = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_leads WHERE $where", $params));
-                    $total_won_val = $wpdb->get_var($wpdb->prepare("SELECT SUM(deal_value) FROM $table_leads WHERE stage = 'Won' AND $where", $params)) ?: 0;
-                    $avg_won_val = $wpdb->get_var($wpdb->prepare("SELECT AVG(deal_value) FROM $table_leads WHERE stage = 'Won' AND deal_value > 0 AND $where", $params)) ?: 0;
+                    $total_won_val = $wpdb->get_var($wpdb->prepare("SELECT SUM(deal_value) FROM $table_leads WHERE stage = 'Won' AND is_duplicate = 0 AND conversion_time >= DATE_SUB(NOW(), INTERVAL %d DAY)", $days)) ?: 0;
+                    $avg_won_val = $wpdb->get_var($wpdb->prepare("SELECT AVG(deal_value) FROM $table_leads WHERE stage = 'Won' AND deal_value > 0 AND is_duplicate = 0 AND conversion_time >= DATE_SUB(NOW(), INTERVAL %d DAY)", $days)) ?: 0;
                     $stages = $wpdb->get_results($wpdb->prepare("SELECT stage, COUNT(*) as count FROM $table_leads WHERE $where GROUP BY stage", $params), ARRAY_A);
                     $sources = $wpdb->get_results($wpdb->prepare("SELECT source, COUNT(*) as count FROM $table_leads WHERE $where GROUP BY source", $params), ARRAY_A);
                     $qualities = $wpdb->get_results($wpdb->prepare("SELECT lead_quality, COUNT(*) as count FROM $table_leads WHERE $where GROUP BY lead_quality", $params), ARRAY_A);

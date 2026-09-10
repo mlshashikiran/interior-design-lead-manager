@@ -216,7 +216,7 @@ try {
         IDLM_Quotations::install();
 
         $required_tables = array(
-            'idlm_leads', 'idlm_lead_activity_log', 'idlm_capi_logs', 'idlm_audience_sync_logs',
+            'idlm_leads', 'idlm_lead_activity_log', 'idlm_lead_state_events', 'idlm_capi_logs', 'idlm_audience_sync_logs',
             'idlm_telemetry_logs', 'idlm_tasks', 'idlm_call_logs', 'idlm_lead_touchpoints',
             'idlm_quotes', 'idlm_quote_revisions', 'idlm_quote_revision_items',
             'idlm_quote_revision_sections', 'idlm_quote_catalogue_items', 'idlm_quote_item_categories',
@@ -304,7 +304,8 @@ try {
         idlm_integration_assert_same(401, $mcp_denied->get_status());
     });
 
-    idlm_integration_test('authenticated WordPress AJAX dispatch enforces nonce and capability context', static function() use ($administrator_id): void {
+    idlm_integration_test('authenticated WordPress AJAX dispatch enforces nonce, capability, and lazy log payload context', static function() use ($administrator_id): void {
+        global $wpdb;
         if (!defined('DOING_AJAX')) { define('DOING_AJAX', true); }
         wp_set_current_user((int) $administrator_id);
         IDLM_Admin::init();
@@ -324,6 +325,23 @@ try {
         remove_filter('wp_die_ajax_handler', $handler_filter);
         idlm_integration_assert_true(!empty($payload['success']));
         idlm_integration_assert_true(isset($payload['data']['count']));
+
+        IDLM_DB::log_capi_event(0, 'meta', 'Lead', array('event_name' => 'Lead'), array('accepted' => true), 'success');
+        $log_id = (int) $wpdb->insert_id;
+        add_filter('wp_die_ajax_handler', $handler_filter);
+        $_POST = array('action' => 'idlm_get_capi_log_payload', 'nonce' => wp_create_nonce('idlm_admin_nonce'), 'log_id' => $log_id);
+        $_REQUEST = $_POST;
+        ob_start();
+        try {
+            do_action('wp_ajax_idlm_get_capi_log_payload');
+        } catch (IDLM_Integration_Ajax_Die $error) {
+            // Expected termination path from wp_send_json_success().
+        }
+        $log_payload = json_decode((string) ob_get_clean(), true);
+        remove_filter('wp_die_ajax_handler', $handler_filter);
+        idlm_integration_assert_true(!empty($log_payload['success']));
+        idlm_integration_assert_true(false !== strpos((string) $log_payload['data']['payload'], 'event_name'));
+        idlm_integration_assert_true(false !== strpos((string) $log_payload['data']['response'], 'accepted'));
     });
 
     idlm_integration_test('admin and frontend renderers preserve critical selectors and access output', static function() use ($administrator_id): void {
@@ -337,7 +355,7 @@ try {
             'leads' => array(static fn() => IDLM_Admin::render_leads_list_page(), array('idlm-lead-filters', 'idlm-leads-table', 'idlm-lead-drawer')),
             'kanban' => array(static fn() => IDLM_Admin::render_kanban_page(), array('idlm-kanban-filter-search', 'idlm-kanban-board', 'idlm-kanban-deal-modal')),
             'capi logs' => array(static fn() => IDLM_Admin::render_capi_logs_page(), array('idlm-select-all-capi', 'idlm-retry-capi-btn')),
-            'audience logs' => array(static fn() => IDLM_Admin::render_audience_sync_logs_page(), array('Audience Batch Sync Logs', 'idlm-table-wrapper')),
+            'audience logs' => array(static fn() => IDLM_Admin::render_audience_sync_logs_page(), array('Audience sync log', 'idlm-audience-payload-dialog')),
             'settings' => array(static fn() => IDLM_Admin::render_settings_page(), array('idlm-settings-form', 'settings-routing', 'settings-danger-zone')),
             'account' => array(static fn() => IDLM_Admin::render_my_account_page(), array('idlm-account-first-name', 'idlm-account-password-confirm')),
             'dashboard shortcode' => array(static fn() => IDLM_Admin::render_dashboard_shortcode(), array('idlm-period-selector', 'chart-leads-over-time')),
@@ -410,11 +428,20 @@ try {
             'working_hours_end' => '17:30',
             'working_days' => array('1', '3', '5'),
             'custom_stages' => 'New,<b>Qualified</b>,Won',
+            'custom_stages_values' => array('Won', 'New', '<b>Qualified</b>', 'New'),
             'kanban_stage_totals' => array('Qualified' => 'quote_value', 'Won' => 'deal_value'),
             'custom_call_statuses' => 'Not Called,<i>Connected</i>',
             'custom_lost_reasons' => 'Budget,Other,Budget',
             'custom_studios' => 'North,South',
             'custom_num_rooms' => '2 BHK,3 BHK',
+            'white_label' => array(
+                'brand_name' => 'Integration Studio',
+                'workspace_title' => 'Integration CRM',
+                'login_heading' => 'Manage every customer conversation.',
+                'primary_color' => '#264653',
+                'accent_color' => '#E9C46A',
+                'sidebar_color' => '#17212B',
+            ),
             'google_gadm_password' => '<b>native-secret</b>',
         );
         $_REQUEST = $_POST;
@@ -433,7 +460,7 @@ try {
         idlm_integration_assert_same('general_pool', get_option('idlm_studio_mismatch_behavior'));
         idlm_integration_assert_same('transfer', get_option('idlm_handoff_task_policy'));
         idlm_integration_assert_same(array(1, 3, 5), get_option('idlm_working_days'));
-        idlm_integration_assert_same(array('New', 'Qualified', 'Won'), get_option('idlm_custom_stages'));
+        idlm_integration_assert_same(array('Won', 'New', 'Qualified'), get_option('idlm_custom_stages'));
         idlm_integration_assert_same(array('Budget', 'Other'), get_option('idlm_custom_lost_reasons'));
         $routing = get_option(IDLM_Settings::ROUTING_OPTION, array());
         idlm_integration_assert_same('manual', $routing['idlm_assignment_mode']);
@@ -507,6 +534,11 @@ try {
         idlm_integration_assert_true(in_array('creation', $activity_types, true));
         idlm_integration_assert_true(in_array('update', $activity_types, true));
         idlm_integration_assert_true(in_array('stage_change', $activity_types, true));
+        $reporting_events = $wpdb->get_results($wpdb->prepare("SELECT event_type, from_value, to_value FROM {$wpdb->prefix}idlm_lead_state_events WHERE lead_id = %d ORDER BY id ASC", $lead_id));
+        idlm_integration_assert_same(3, count($reporting_events));
+        idlm_integration_assert_same('stage_change', $reporting_events[2]->event_type);
+        idlm_integration_assert_same('New', $reporting_events[2]->from_value);
+        idlm_integration_assert_same('Qualified', $reporting_events[2]->to_value);
         idlm_integration_assert_same('New', $events[0][1]);
         idlm_integration_assert_same('Qualified', $events[1][1]);
         remove_action('idlm_lead_stage_converted', $listener, 10);
@@ -721,6 +753,52 @@ try {
             idlm_integration_assert_true(!array_key_exists('sql', $plan));
         }
     });
+
+    idlm_integration_test('dashboard analytics and investigations share role scope and real SQL counts', static function() use ($administrator_id): void {
+        global $wpdb;
+        $rep = wp_insert_user(array('user_login' => 'dashboard_rep_' . wp_rand(), 'user_pass' => wp_generate_password(), 'role' => 'author'));
+        $other = wp_insert_user(array('user_login' => 'dashboard_other_' . wp_rand(), 'user_pass' => wp_generate_password(), 'role' => 'author'));
+        update_option('timezone_string', 'Asia/Kolkata');
+        $created = (new DateTime('now', wp_timezone()))->modify('-45 days')->format('Y-m-d H:i:s');
+        $older = (new DateTime('now', wp_timezone()))->modify('-65 days')->format('Y-m-d H:i:s');
+        $ids = array();
+        foreach (array(array($rep, $created, 'New', 'Qualified'), array($rep, $older, 'Retired stage', ''), array($other, $created, 'New', 'Qualified')) as $fixture) {
+            // Isolated reporting fixtures deliberately bypass workflow side effects in this disposable database.
+            $wpdb->insert($wpdb->prefix . 'idlm_leads', array('first_name' => 'Dashboard fixture', 'assigned_rep_id' => $fixture[0], 'created_at' => $fixture[1], 'updated_at' => $fixture[1], 'stage' => $fixture[2], 'lead_quality' => $fixture[3], 'source' => 'Dashboard source', 'utm_campaign' => 'Dashboard campaign', 'is_duplicate' => 0));
+            $ids[] = (int) $wpdb->insert_id;
+        }
+        $wpdb->insert($wpdb->prefix . 'idlm_tasks', array('lead_id' => $ids[0], 'assigned_rep_id' => $rep, 'created_by' => $rep, 'title' => 'Dashboard pending follow-up', 'status' => 'pending', 'due_date' => $created, 'created_at' => $created));
+        idlm_integration_assert_same('', $wpdb->last_error);
+        update_option('idlm_reps_see_all_leads', '0');
+        wp_set_current_user($rep);
+        $data = IDLM_Dashboard::calculate_stats('this_year');
+        idlm_integration_assert_same('', $wpdb->last_error);
+        idlm_integration_assert_true(!isset($data['marketing']));
+        idlm_integration_assert_true(!isset($data['sales']['leads_by_rep']));
+        idlm_integration_assert_same(2, $data['sales']['open_pipeline_total']);
+        idlm_integration_assert_same(1, $data['sales']['open_pipeline_health']['aged_31_to_60']);
+        idlm_integration_assert_same(1, $data['sales']['open_pipeline_health']['aged_61_plus']);
+        idlm_integration_assert_same(1, $data['sales']['open_pipeline_health']['overdue_task']);
+        idlm_integration_assert_same(1, $data['sales']['open_pipeline_health']['without_next_task']);
+        $records = IDLM_Dashboard::get_records('overdue', '', 'today');
+        idlm_integration_assert_same(array($ids[0]), array_map('intval', wp_list_pluck($records['records'], 'id')));
+        $records = IDLM_Dashboard::get_records('stage', 'Retired stage', 'today');
+        idlm_integration_assert_same(array($ids[1]), array_map('intval', wp_list_pluck($records['records'], 'id')));
+        idlm_integration_assert_true(is_wp_error(IDLM_Dashboard::get_records('channel', 'Dashboard source', 'this_year')));
+        add_role('marketing', 'Marketing', array('read' => true, 'idlm_access_leads' => true));
+        $user = new WP_User($rep); $user->set_role('marketing'); wp_set_current_user(0); wp_set_current_user($rep);
+        $marketing = IDLM_Dashboard::calculate_stats('this_year');
+        idlm_integration_assert_true(!isset($marketing['sales']));
+        idlm_integration_assert_same(2, $marketing['marketing']['total_leads_period']);
+        idlm_integration_assert_same(1, $marketing['marketing']['leads_by_channel'][0]->qualified);
+        $records = IDLM_Dashboard::get_records('channel', 'Dashboard source', 'this_year');
+        idlm_integration_assert_same(2, count($records['records']));
+        idlm_integration_assert_true(!in_array($ids[2], array_map('intval', wp_list_pluck($records['records'], 'id')), true));
+        idlm_integration_assert_true(is_wp_error(IDLM_Dashboard::get_records('overdue', '', 'today')));
+        wp_set_current_user($administrator_id);
+    });
+
+    require_once __DIR__ . '/high-priority-contracts.php';
 
     $passed = 0;
     $failed = 0;

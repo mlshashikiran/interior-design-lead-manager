@@ -3,7 +3,7 @@
  * Plugin Name:       Interior Design Lead Manager
  * Plugin URI:        https://github.com/shashi-protecto/interior-design-lead-manager
  * Description:       A premium lead management system to replace Google Sheets and Pabbly for interior design firms. Captures leads from ad webhooks, manages routing, schedules custom audience batch uploads, triggers conversions server-side using Action Scheduler, and includes a full analytics workspace.
- * Version:           1.101.5
+ * Version:           1.102.31
  * Requires PHP:      7.4
  * Author:            Shashi
  * License:           GPL-2.0+
@@ -15,8 +15,8 @@ if (!defined('ABSPATH')) {
 }
 
 // Define Plugin Constants
-define('IDLM_VERSION', '1.101.5');
-define('IDLM_DB_VERSION', '1.3.0');
+define('IDLM_VERSION', '1.102.31');
+define('IDLM_DB_VERSION', '1.3.3');
 define('IDLM_PATH', plugin_dir_path(__FILE__));
 define('IDLM_URL', plugin_dir_url(__FILE__));
 
@@ -38,11 +38,14 @@ require_once IDLM_PATH . 'includes/class-routing-state.php';
 require_once IDLM_PATH . 'includes/class-data-retention.php';
 require_once IDLM_PATH . 'includes/class-db.php';
 require_once IDLM_PATH . 'includes/class-lead-lifecycle-service.php';
+require_once IDLM_PATH . 'includes/class-task-queue-service.php';
 require_once IDLM_PATH . 'includes/class-lead-deletion-service.php';
+require_once IDLM_PATH . 'includes/class-backup.php';
 require_once IDLM_PATH . 'includes/class-integrity-command.php';
 require_once IDLM_PATH . 'includes/class-integrations.php';
 require_once IDLM_PATH . 'includes/class-capi.php';
 require_once IDLM_PATH . 'includes/class-scheduler.php';
+require_once IDLM_PATH . 'includes/class-interakt-batch.php';
 require_once IDLM_PATH . 'includes/class-audiences.php';
 require_once IDLM_PATH . 'includes/class-dashboard-read-model.php';
 require_once IDLM_PATH . 'includes/class-dashboard.php';
@@ -240,5 +243,6 @@ function idlm_boot_plugin() {
     IDLM_Interakt::init();
     IDLM_Scheduler::init();
     IDLM_Admin::init();
+    IDLM_Backup::init();
     IDLM_Quotations::init();
 }

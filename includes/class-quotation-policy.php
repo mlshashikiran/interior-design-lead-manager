@@ -20,6 +20,9 @@ final class IDLM_Quotation_Policy {
         if (class_exists('IDLM_Admin_Users_Controller') && IDLM_Admin_Users_Controller::is_crm_access_disabled(get_current_user_id())) {
             return false;
         }
+        if (IDLM_Lead_Access_Policy::is_pre_sales()) {
+            return false;
+        }
         return current_user_can((string) $capability);
     }
 

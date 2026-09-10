@@ -2,7 +2,7 @@
 
 Authentication notation: **CRM** = `manage_options`, `idlm_access_leads`, or recognized CRM role access as implemented by `IDLM_Admin`; **object** = ownership/visibility check; all AJAX actions are logged-in-only and use `idlm_admin_nonce` unless noted.
 
-`idlm_create_user` and `idlm_update_user`: administrator-only admin-post actions with their own nonces. They create or update only managed CRM roles, preserve historical CRM ownership, and reject an administrator self-lockout or removal of the final administrator.
+`idlm_create_user`, `idlm_update_user`, and `idlm_update_role_scopes`: administrator-only admin-post actions with their own nonces. They create or update only managed CRM roles, preserve historical CRM ownership, configure allowlisted role visibility scopes, and reject an administrator self-lockout or removal of the final administrator.
 
 ## Shortcodes
 
@@ -31,6 +31,8 @@ The first namespace’s routes use dedicated permission callbacks and retain han
 
 ## AJAX actions
 
+In 1.101.63, `idlm_upload_lead_file` additionally requires `lead_id` and current mutation authority; pre-sales cannot upload quote-purpose files. `idlm_sync_mapped_past_batch` accepts 1–50 lead IDs, a saved mapped `event_name`, and an 8–80 character alphanumeric/underscore/hyphen `request_id`. Reuse the request ID when retrying a submission. Responses provide `queued_count`, `existing_count`, and `failure_count`; delivery results are recorded asynchronously in lead activity. `idlm_async_interakt_batch_event` processes an opaque job key through Action Scheduler or WP-Cron.
+
 | Actions | Handler area | Authorization and purpose |
 |---|---|---|
 | `idlm_get_lead_details` | `class-admin.php` → `class-admin-ajax.php` → `class-admin-lead-reads.php` | CRM plus object visibility scoping; returns the established lead drawer JSON/HTML response |
@@ -42,6 +44,7 @@ The first namespace’s routes use dedicated permission callbacks and retain han
 | `idlm_export_leads` | `class-admin.php` | CRM/visibility filters; stream CSV |
 | `idlm_export_google_conversions` | `class-admin.php` | Administrator; stream Google conversion CSV |
 | `idlm_trigger_manual_audience_sync` | `class-admin.php` | Administrator; queue/run audience sync |
+| `idlm_get_capi_log_payload`, `idlm_get_audience_log_payload` | `class-admin.php` → `class-admin-logs-renderer.php` | Administrator; nonce-protected on-demand reads of one redacted request/response pair |
 | `idlm_test_api_connection`, `idlm_retry_capi_events`, `idlm_clear_telemetry_logs`, `idlm_download_diagnostic_report`, `idlm_save_routing_settings`, `idlm_run_fallback_now`, `idlm_get_mapped_past_leads`, `idlm_sync_mapped_past_batch` | `class-admin.php` | Administrator; integration/diagnostic/routing operations |
 | `idlm_log_js_error` | `class-admin.php` | CRM nonce; persists client telemetry |
 | `idlm_upload_lead_file` | `class-admin.php` | CRM; creates one validated Media Library attachment and returns URL/ID. The floor-plan client may call it sequentially for a bounded multi-file selection. |
@@ -58,10 +61,12 @@ The first namespace’s routes use dedicated permission callbacks and retain han
 
 - `idlm_login`: anonymous, nonce-protected CRM email/password sign-in; exact email lookup followed by WordPress core `wp_signon()` and a safe local redirect.
 - `idlm_request_password_reset`: anonymous, nonce-protected email request with a generic response and hashed short-lived throttle; WordPress generates the reset key and sends the CRM reset URL.
-- `idlm_reset_password`: anonymous, nonce-protected reset completion; WordPress validates the user-bound key and password hooks before resetting sessions/password.
+- `idlm_reset_password`: anonymous, nonce-protected reset completion; requires at least eight characters, then WordPress validates the user-bound key and password hooks before resetting sessions/password.
 - `idlm_update_my_account`: logged-in user + `idlm_update_my_account` nonce; updates own WordPress profile/phone/password or sends reset link.
 - My Account Sign Out uses WordPress core's nonce-protected `wp_logout_url()` and returns to the CRM page; no plugin logout handler is registered.
 - `idlm_rotate_api_credential`: `manage_options` plus a scope-specific nonce; rotates the webhook or MCP credential and ends that scope’s legacy grace window.
+- `idlm_export_backup`: `manage_options` plus `idlm_export_backup` nonce; streams a JSON export of IDLM custom tables and non-secret settings.
+- `idlm_restore_backup`: `manage_options` plus `idlm_restore_backup` nonce, a validated JSON upload smaller than 100 MB, and an exact `RESTORE` confirmation; atomically replaces IDLM custom-table data and non-secret settings, preserves current credentials, and clears queued outbound jobs.
 - `idlm_save_quote`, `idlm_print_quote`, `idlm_save_quote_settings`: quotation-specific nonce and capabilities; transactional save, print HTML, or settings update.
 - `idlm_save_catalogue_item`, `idlm_save_catalogue_category`, `idlm_save_catalogue_unit`, `idlm_archive_catalogue_item`, `idlm_bulk_catalogue_items`, `idlm_catalogue_category_action`, `idlm_import_catalogue_csv`, `idlm_export_catalogue_csv`: `idlm_manage_quote_items`, action nonce, validated form/CSV; mutate or export catalogue.
 - `IDLM_Quotations::handle_create_revision()` exists as a public PHP method but is not registered by `init()` in the inspected version; treat as dormant/legacy.

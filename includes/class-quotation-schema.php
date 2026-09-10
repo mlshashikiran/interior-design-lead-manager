@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 }
 
 final class IDLM_Quotation_Schema {
-    const VERSION = '2.2.0';
+    const VERSION = '2.4.0';
     const LEGACY_MIGRATION_VERSION = '1.1.0';
     const SNAPSHOT_MIGRATION_VERSION = '1.1.0';
 
@@ -80,6 +80,10 @@ final class IDLM_Quotation_Schema {
             wooden_discount_percent decimal(5,2) NOT NULL DEFAULT 0.00,
             wooden_discount_amount decimal(14,2) NOT NULL DEFAULT 0.00,
             subtotal_after_wooden_discount decimal(14,2) NOT NULL DEFAULT 0.00,
+            other_subtotal decimal(14,2) NOT NULL DEFAULT 0.00,
+            soft_close_enabled tinyint(1) NOT NULL DEFAULT 0,
+            soft_close_percent decimal(5,2) NOT NULL DEFAULT 0.00,
+            soft_close_amount decimal(14,2) NOT NULL DEFAULT 0.00,
             design_fee_percent decimal(5,2) NOT NULL DEFAULT 0.00,
             design_fee_amount decimal(14,2) NOT NULL DEFAULT 0.00,
             total_before_additional_discount decimal(14,2) NOT NULL DEFAULT 0.00,
@@ -88,6 +92,7 @@ final class IDLM_Quotation_Schema {
             cgst_total decimal(14,2) NOT NULL DEFAULT 0.00,
             sgst_total decimal(14,2) NOT NULL DEFAULT 0.00,
             igst_total decimal(14,2) NOT NULL DEFAULT 0.00,
+            round_off_amount decimal(14,2) NOT NULL DEFAULT 0.00,
             grand_total decimal(14,2) NOT NULL DEFAULT 0.00,
             created_by bigint(20) unsigned NOT NULL,
             created_at datetime NOT NULL,

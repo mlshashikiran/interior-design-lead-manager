@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 $active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
 ?>
             <!-- Tab: Help & FAQs -->
-            <section id="settings-help" class="idlm-settings-tab-content <?php echo $active_tab === 'help' ? 'active' : ''; ?>" style="display: <?php echo $active_tab === 'help' ? 'block' : 'none'; ?>;">
+            <section id="settings-help" class="idlm-settings-tab-content <?php echo $active_tab === 'help' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-help" <?php echo $active_tab === 'help' ? '' : 'hidden'; ?>>
                 <div class="idlm-grid-full">
                     <article class="idlm-card">
                         <h3>Cloudflare "Under Attack" Mode & Security Blocks Guidance</h3>
@@ -23,15 +23,15 @@ $active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general'
                     <article class="idlm-card" id="idlm-help-google-ads-creds">
                         <h3>Obtaining Google Ads Data Manager Credentials</h3>
                         <p class="idlm-card-desc">Instead of complex API applications, Google Ads Data Manager pulls audience segments and conversion events from secure HTTPS CSV feeds on your server. Follow these steps to link your feeds to Google Ads:</p>
-                        <div class="idlm-help-steps" style="margin-top: 15px;">
-                            <h4 style="margin-bottom: 5px; color: var(--idlm-gold-dark); font-weight: 600;">1. View HTTPS source credentials</h4>
-                            <ul class="idlm-help-list" style="margin-bottom: 15px; padding-left: 20px; list-style-type: disc;">
+                        <div class="idlm-help-steps" data-idlm-ui="mt-4">
+                            <h4 class="idlm-help-step-title">1. View HTTPS source credentials</h4>
+                            <ul class="idlm-help-list" data-idlm-ui="help-list">
                                 <li>Navigate to the <strong>Sync &amp; Reminders</strong> tab.</li>
                                 <li>Under the <strong>Google Ads Data Manager (HTTPS Pull Feeds)</strong> section, configure and save your custom <strong>HTTPS Source Username</strong> and <strong>HTTPS Source Password</strong>. Keep these credentials safe as they secure your endpoints.</li>
                             </ul>
 
-                            <h4 style="margin-bottom: 5px; color: var(--idlm-gold-dark); font-weight: 600;">2. Link Offline Conversion Import Feed</h4>
-                            <ul class="idlm-help-list" style="margin-bottom: 15px; padding-left: 20px; list-style-type: disc;">
+                            <h4 class="idlm-help-step-title">2. Link Offline Conversion Import Feed</h4>
+                            <ul class="idlm-help-list" data-idlm-ui="help-list">
                                 <li>In Google Ads, open <strong>Goals &gt; Conversions &gt; Summary &gt; + New conversion action</strong>.</li>
                                 <li>Select <strong>Import &gt; CRMs, files, or other data sources &gt; Connect a new data source</strong>.</li>
                                 <li>Search and select <strong>HTTPS</strong> as the data source and click <strong>Continue</strong>.</li>
@@ -39,8 +39,8 @@ $active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general'
                                 <li>Map the CSV column headers (e.g. <code>Google Click ID</code>, <code>Conversion Name</code>, <code>Conversion Time</code>, <code>Conversion Value</code>) to the corresponding destination fields in Google Ads.</li>
                             </ul>
 
-                            <h4 style="margin-bottom: 5px; color: var(--idlm-gold-dark); font-weight: 600;">3. Link Customer Match Audience Feeds</h4>
-                            <ul class="idlm-help-list" style="margin-bottom: 5px; padding-left: 20px; list-style-type: disc;">
+                            <h4 class="idlm-help-step-title">3. Link Customer Match Audience Feeds</h4>
+                            <ul class="idlm-help-list" data-idlm-ui="help-list mb-2">
                                 <li>In Google Ads, open <strong>Tools &gt; Shared library &gt; Audience manager &gt; + Create remarketing list &gt; + Customer list</strong>.</li>
                                 <li>Under Data source, choose <strong>Connect a new data source &gt; HTTPS</strong> and click <strong>Continue</strong>.</li>
                                 <li>Enter the specific rule's <strong>Feed URL</strong> (displayed directly inside your Sync Rules table below the Google Ads segment ID), along with your HTTPS Source credentials, and click <strong>Next</strong>.</li>
@@ -51,7 +51,7 @@ $active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general'
 
                     <article class="idlm-card">
                         <h3>Frequently Asked Questions (FAQs)</h3>
-                        <div class="idlm-grid-full" style="margin-top: 16px;">
+                        <div class="idlm-grid-full" data-idlm-ui="mt-4">
                             <div class="idlm-faq-item">
                                 <h4>Q: How does the smart duplicate detection work?</h4>
                                 <p>It normalizes all incoming phone numbers to digits only and performs a suffix match on the last 10 digits. This matches identical contacts regardless of international country prefixes or local punctuation styles.</p>
@@ -68,5 +68,3 @@ $active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general'
                     </article>
                 </div>
             </section> <!-- End Tab: Help & FAQs -->
-
-

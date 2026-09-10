@@ -14,12 +14,13 @@ class IDLM_Admin_Settings_Renderer {
             wp_die('Access Denied');
         }
 
-        $settings_saved = IDLM_Admin_Settings_Controller::process_request();
-        if ($settings_saved) {
-            echo '<div class="notice notice-success is-dismissible"><p>Settings saved successfully!</p></div>';
+        if (function_exists('wp_enqueue_media')) {
+            wp_enqueue_media();
         }
-
-        IDLM_View::display('admin/settings/shell.php', self::build_context());
+        $settings_saved = IDLM_Admin_Settings_Controller::process_request();
+        $context = self::build_context();
+        $context['settings_saved'] = $settings_saved;
+        IDLM_View::display('admin/settings/shell.php', $context);
     }
 
     /**
@@ -100,6 +101,16 @@ class IDLM_Admin_Settings_Renderer {
         $lost_reasons = get_option('idlm_custom_lost_reasons', array('Budget Too High', 'Lost to Competitor', 'Project Postponed', 'Unable to Contact', 'Location or Service Unavailable', 'Timeline Mismatch', 'Client Not Interested', 'Duplicate or Invalid Lead', 'Other'));
         $studios = get_option('idlm_custom_studios', array('Downtown Studio', 'North Studio', 'South Studio'));
         $num_rooms_options = get_option('idlm_custom_num_rooms', array('1 BHK', '2 BHK', '3 BHK', '4 BHK', '4+ BHK'));
+        $ui_labels = wp_parse_args((array) get_option('idlm_ui_labels', array()), array('call_status' => 'Call Status', 'lost_reason' => 'Lost Reason', 'preferred_studio' => 'Preferred Studio', 'num_rooms' => 'Rooms'));
+        $value_labels = (array) get_option('idlm_value_labels', array());
+        $white_label_errors = IDLM_Admin_Settings_Controller::white_label_errors();
+        $submitted_white_label = IDLM_Admin_Settings_Controller::white_label_values();
+        $white_label = !empty($white_label_errors) && !empty($submitted_white_label) ? $submitted_white_label : IDLM_Settings::get_white_label();
+        $white_label_assets = array(
+            'logo_id' => IDLM_Settings::brand_asset($white_label['logo_id']),
+            'compact_logo_id' => IDLM_Settings::brand_asset($white_label['compact_logo_id']),
+            'favicon_id' => IDLM_Settings::brand_asset($white_label['favicon_id']),
+        );
 
         // CAPI
         $meta_capi_enabled = get_option('idlm_meta_capi_enabled', '0');
@@ -201,7 +212,7 @@ class IDLM_Admin_Settings_Renderer {
 
         $reps = get_users(array(
             'role__in' => IDLM_Admin::get_allowed_rep_roles(),
-            'fields'   => array('ID', 'display_name'),
+            'fields'   => 'all_with_meta',
         ));
         $pre_sales_reps = get_users(array(
             'role'   => 'idlm_pre_sales',
@@ -299,6 +310,11 @@ class IDLM_Admin_Settings_Renderer {
             'lost_reasons' => $lost_reasons,
             'studios' => $studios,
             'num_rooms_options' => $num_rooms_options,
+            'ui_labels' => $ui_labels,
+            'value_labels' => $value_labels,
+            'white_label' => $white_label,
+            'white_label_assets' => $white_label_assets,
+            'white_label_errors' => $white_label_errors,
             'meta_capi_enabled' => $meta_capi_enabled,
             'meta_pixel_id' => $meta_pixel_id,
             'meta_audience_id' => $meta_audience_id,

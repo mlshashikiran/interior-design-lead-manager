@@ -1,0 +1,17 @@
+# Generated output, exports, and non-source material.
+graphify-out/
+build/
+*.zip
+*.sql
+*.log
+*.tmp
+
+# Do not index credentials, deployment configuration, or local copies of data.
+.env*
+wp-config.php
+credentials/
+backups/
+uploads/
+
+# Bundled vendor output obscures application-level code relationships.
+assets/js/chart.js

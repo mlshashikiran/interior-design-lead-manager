@@ -19,8 +19,6 @@ class IDLM_Quotations {
             self::migrate_legacy_quotes();
         }
 
-        add_action('admin_menu', array(__CLASS__, 'register_menu'), 20);
-        add_action('admin_enqueue_scripts', array(__CLASS__, 'enqueue_assets'));
         add_action('admin_post_idlm_save_quote', array(__CLASS__, 'handle_save'));
         add_action('admin_post_idlm_print_quote', array(__CLASS__, 'render_print_view'));
         add_action('admin_post_idlm_save_quote_settings', array(__CLASS__, 'handle_save_settings'));
@@ -34,6 +32,8 @@ class IDLM_Quotations {
         add_action('admin_post_idlm_export_catalogue_csv', array(__CLASS__, 'handle_export_catalogue_csv'));
         add_action('wp_ajax_idlm_search_quote_catalogue', array(__CLASS__, 'ajax_search_catalogue'));
         add_action('wp_ajax_idlm_search_quote_leads', array(__CLASS__, 'ajax_search_leads'));
+        add_action('wp_ajax_idlm_filter_quotation_list', array(__CLASS__, 'ajax_filter_quotation_list'));
+        add_action('wp_ajax_idlm_filter_catalogue_list', array(__CLASS__, 'ajax_filter_catalogue_list'));
         add_action('wp_ajax_idlm_autosave_quote', array(__CLASS__, 'ajax_autosave_quote'));
         add_action('wp_ajax_idlm_discard_quote_autosave', array(__CLASS__, 'ajax_discard_quote_autosave'));
         add_shortcode('idlm_quotations', array(__CLASS__, 'render_shortcode'));
@@ -42,16 +42,11 @@ class IDLM_Quotations {
     public static function install() {
         IDLM_Quotation_Schema::install();
     }
-    public static function register_menu() {
-        add_submenu_page(
-            'interior-design-lead-manager',
-            'Quotations',
-            'Quotations',
-            'idlm_view_quotes',
-            'idlm_quotations',
-            array(__CLASS__, 'render_page')
-        );
-    }
+    /**
+     * Kept as a no-op compatibility method after consolidating CRM UI in the
+     * frontend workspace. Legacy wp-admin quotation URLs redirect there.
+     */
+    public static function register_menu() {}
 
     public static function enqueue_assets($hook) {
         if (false === strpos((string) $hook, 'idlm_quotations')) {
@@ -61,9 +56,10 @@ class IDLM_Quotations {
             IDLM_Admin::register_core_assets();
             wp_enqueue_style('idlm-google-fonts');
             wp_enqueue_style('idlm-admin-styles');
+            wp_enqueue_script('idlm-dialog');
         }
         wp_enqueue_style('idlm-quotations', IDLM_URL . 'assets/css/quotations.css', array(), IDLM_VERSION);
-        wp_enqueue_script('idlm-quotations', IDLM_URL . 'assets/js/quotations.js', array(), IDLM_VERSION, true);
+        wp_enqueue_script('idlm-quotations', IDLM_URL . 'assets/js/quotations.js', array('idlm-dialog'), IDLM_VERSION, true);
         wp_localize_script('idlm-quotations', 'idlmQuoteData', array('ajaxUrl' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('idlm_quote_catalogue_search'), 'autosaveNonce' => wp_create_nonce('idlm_quote_autosave')));
     }
 
@@ -117,9 +113,10 @@ class IDLM_Quotations {
             IDLM_Admin::register_core_assets();
             wp_enqueue_style('idlm-google-fonts');
             wp_enqueue_style('idlm-admin-styles');
+            wp_enqueue_script('idlm-dialog');
         }
         wp_enqueue_style('idlm-quotations', IDLM_URL . 'assets/css/quotations.css', array(), IDLM_VERSION);
-        wp_enqueue_script('idlm-quotations', IDLM_URL . 'assets/js/quotations.js', array(), IDLM_VERSION, true);
+        wp_enqueue_script('idlm-quotations', IDLM_URL . 'assets/js/quotations.js', array('idlm-dialog'), IDLM_VERSION, true);
         wp_localize_script('idlm-quotations', 'idlmQuoteData', array('ajaxUrl' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('idlm_quote_catalogue_search'), 'autosaveNonce' => wp_create_nonce('idlm_quote_autosave')));
         ob_start();
         self::render_page();
@@ -127,12 +124,15 @@ class IDLM_Quotations {
     }
 
     protected static function settings() {
+        $white_label = class_exists('IDLM_Settings') ? IDLM_Settings::get_white_label() : array();
+        $default_accent = !empty($white_label['accent_color']) ? $white_label['accent_color'] : '#C99644';
         return wp_parse_args((array) get_option('idlm_quote_settings', array()), array(
-            'company_name' => get_bloginfo('name'), 'company_logo' => '', 'accent_color' => '#111827',
+            'company_name' => get_bloginfo('name'), 'company_logo' => '', 'accent_color' => $default_accent,
             'pdf_footer' => '', 'paper_size' => 'A4',
             'cover_page_enabled' => 0, 'cover_page_html' => '',
             'after_quote_enabled' => 0, 'after_quote_html' => '',
             'payment_structure' => '[]',
+            'soft_close_percent' => 0,
             'number_prefix' => 'Q', 'number_separator' => '-', 'number_padding' => 6,
         ));
     }
@@ -153,8 +153,8 @@ class IDLM_Quotations {
         return IDLM_Quotation_Calculator::parse_sections($raw_sections);
     }
 
-    protected static function calculate_totals($items, $posted) {
-        return IDLM_Quotation_Calculator::calculate_totals($items, $posted);
+    protected static function calculate_totals($items, $posted, $quote_settings = array()) {
+        return IDLM_Quotation_Calculator::calculate_totals($items, $posted, $quote_settings);
     }
 
 
@@ -164,6 +164,8 @@ class IDLM_Quotations {
     public static function handle_create_revision() { return IDLM_Quotation_Controller::handle_create_revision(); }
     public static function ajax_search_catalogue() { return IDLM_Quotation_Controller::ajax_search_catalogue(); }
     public static function ajax_search_leads() { return IDLM_Quotation_Controller::ajax_search_leads(); }
+    public static function ajax_filter_quotation_list() { return IDLM_Quotation_Controller::ajax_filter_quotation_list(); }
+    public static function ajax_filter_catalogue_list() { return IDLM_Quotation_Controller::ajax_filter_catalogue_list(); }
     public static function handle_save_catalogue_category() { return IDLM_Quotation_Controller::handle_save_catalogue_category(); }
     public static function handle_save_catalogue_unit() { return IDLM_Quotation_Controller::handle_save_catalogue_unit(); }
     public static function handle_save_catalogue_item() { return IDLM_Quotation_Controller::handle_save_catalogue_item(); }

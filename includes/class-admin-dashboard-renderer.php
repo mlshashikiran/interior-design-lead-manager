@@ -18,9 +18,10 @@ class IDLM_Admin_Dashboard_Renderer {
         // Dashboard data remains owned by IDLM_Dashboard and is loaded through
         // the established idlm_get_dashboard_stats AJAX contract.
         IDLM_View::display('admin/dashboard.php', array(
-            'can_assign_leads' => IDLM_Admin::current_user_can_assign_leads(),
+            'access' => IDLM_Dashboard::access_context(),
+            'reps' => get_users(array('role__in' => IDLM_Lead_Access_Policy::allowed_rep_roles(), 'fields' => array('ID', 'display_name'))),
+            'studios' => get_option('idlm_custom_studios', array('Downtown Studio', 'North Studio', 'South Studio')),
         ));
         IDLM_Admin::render_common_overlays();
     }
 }
-

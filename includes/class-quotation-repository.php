@@ -557,11 +557,18 @@ final class IDLM_Quotation_Repository {
      *
      * @return array
      */
-    public static function list_catalogue_items($search, $page, $per_page) {
+    public static function list_catalogue_items($search, $page, $per_page, $sort_by = 'status', $sort_order = 'asc') {
         global $wpdb;
         $search = (string) $search;
         $page = max(1, absint($page));
         $per_page = max(1, absint($per_page));
+        $sort_columns = array(
+            'code' => 'item_code', 'category' => 'category', 'item' => 'item_name', 'unit' => 'unit',
+            'wood' => 'is_wood', 'rate' => 'default_rate', 'status' => 'status',
+        );
+        $sort_by = sanitize_key($sort_by);
+        $sort_column = $sort_columns[$sort_by] ?? $sort_columns['status'];
+        $sort_order = 'desc' === strtolower((string) $sort_order) ? 'DESC' : 'ASC';
         $params = array();
         $where = '';
         if ('' !== $search) {
@@ -569,7 +576,12 @@ final class IDLM_Quotation_Repository {
             $where = ' WHERE item_name LIKE %s OR item_code LIKE %s OR category LIKE %s';
             $params = array($like, $like, $like);
         }
-        $query = "SELECT * FROM " . self::table('quote_catalogue_items') . $where . " ORDER BY status, category, item_name LIMIT %d OFFSET %d";
+        $order_by = 'status' === $sort_by
+            ? "status {$sort_order}, category ASC, item_name ASC, id ASC"
+            : "{$sort_column} {$sort_order}, id ASC";
+        // Sort identifiers are selected only from the fixed allowlist above.
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $query = "SELECT * FROM " . self::table('quote_catalogue_items') . $where . " ORDER BY {$order_by} LIMIT %d OFFSET %d";
         $params[] = $per_page;
         $params[] = ($page - 1) * $per_page;
         return $wpdb->get_results($wpdb->prepare($query, $params));
@@ -778,16 +790,31 @@ final class IDLM_Quotation_Repository {
     }
 
     /**
-     * Truncate runtime quotation data and clear data-migration markers.
+     * Delete runtime quotation data atomically and clear data-migration markers.
      *
-     * @return void
+     * Catalogue rows and quotation configuration are intentionally preserved.
+     *
+     * @return bool
      */
     public static function reset_data() {
         global $wpdb;
+
+        if (false === $wpdb->query('START TRANSACTION')) {
+            return false;
+        }
         foreach (array('quote_revision_items', 'quote_revision_sections', 'quote_payment_milestones', 'quote_status_history', 'quote_revisions', 'quotes', 'number_sequences') as $table) {
-            $wpdb->query('TRUNCATE TABLE ' . self::table($table)); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
+            if (false === $wpdb->query('DELETE FROM ' . self::table($table))) {
+                $wpdb->query('ROLLBACK');
+                return false;
+            }
+        }
+        if (false === $wpdb->query('COMMIT')) {
+            $wpdb->query('ROLLBACK');
+            return false;
         }
         delete_option('idlm_legacy_quote_migration_version');
         delete_option('idlm_quotation_snapshot_migration_version');
+        return true;
     }
 }

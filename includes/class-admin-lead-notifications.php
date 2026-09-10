@@ -10,6 +10,16 @@ if (!defined('ABSPATH')) {
 }
 
 final class IDLM_Admin_Lead_Notifications {
+    const STALE_LEAD_DAYS = 7;
+
+    /** Activity types that demonstrate an assigned representative has acted. */
+    const REP_ACTION_ACTIVITY_TYPES = array(
+        'update', 'outbound_call', 'whatsapp_outbound', 'comment', 'stage_change',
+        'call_status_change', 'task', 'qualification_decision', 'lead_quality',
+        'early_disqualification', 'qualification_handoff_remark', 'closure_message',
+        'lost_remark', 'duplicate_exclusion', 'quotation',
+    );
+
     /** Request-local copy of the current user's unread WhatsApp snapshot. */
     protected static $whatsapp_unread_snapshot = null;
 
@@ -220,5 +230,67 @@ final class IDLM_Admin_Lead_Notifications {
         $query = "SELECT COUNT(id) FROM {$table_leads} WHERE call_status IN ($placeholders) AND is_duplicate = 0";
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         return intval($wpdb->get_var($wpdb->prepare($query, $statuses)));
+    }
+
+    /**
+     * Count active assigned leads that have not received an update in a week.
+     *
+     * Reps receive only their own count; managers retain their usual all-leads
+     * view. Won, lost, duplicate, and unassigned leads are intentionally not
+     * reminders because no representative needs to provide an update for them.
+     */
+    public static function get_stale_lead_count($sales_board_only = false) {
+        global $wpdb;
+
+        $table_leads = $wpdb->prefix . 'idlm_leads';
+        $cutoff = self::get_stale_lead_cutoff();
+        $restricted_user_id = IDLM_Lead_Access_Policy::restriction_user_id();
+        $rep_clause = $restricted_user_id
+            ? $wpdb->prepare(' AND assigned_rep_id = %d', $restricted_user_id)
+            : '';
+        $sales_board_clause = $sales_board_only ? " AND stage NOT IN ('New', 'Contacted')" : '';
+        $no_recent_action = self::get_no_recent_assigned_rep_action_sql($cutoff);
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        return intval($wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$table_leads}
+             WHERE assigned_rep_id > 0
+               AND is_duplicate = 0
+               AND stage NOT IN ('Won', 'Lost')
+               AND COALESCE(assigned_at, created_at) < %s
+               AND {$no_recent_action}{$sales_board_clause}{$rep_clause}",
+            $cutoff
+        )));
+    }
+
+    /** Build the SQL predicate for no qualifying owner action since a timestamp. */
+    public static function get_no_recent_assigned_rep_action_sql($since, $lead_alias = '') {
+        global $wpdb;
+
+        $lead_prefix = 'l' === $lead_alias ? 'l.' : $wpdb->prefix . 'idlm_leads.';
+        $table_activity = $wpdb->prefix . 'idlm_lead_activity_log';
+        $activity_types = implode(', ', array_map(static function($activity_type) use ($wpdb) {
+            return $wpdb->prepare('%s', $activity_type);
+        }, self::REP_ACTION_ACTIVITY_TYPES));
+
+        return $wpdb->prepare(
+            "NOT EXISTS (
+                SELECT 1 FROM {$table_activity} a
+                WHERE a.lead_id = {$lead_prefix}id
+                  AND a.user_id = {$lead_prefix}assigned_rep_id
+                  AND a.created_at >= %s
+                  AND a.created_at > COALESCE({$lead_prefix}assigned_at, {$lead_prefix}created_at)
+                  AND a.activity_type IN ({$activity_types})
+            )",
+            $since
+        );
+    }
+
+    /** Return the local CRM datetime before which a lead needs a fresh update. */
+    public static function get_stale_lead_cutoff() {
+        $cutoff = new DateTime(current_time('mysql'), wp_timezone());
+        $cutoff->modify('-' . self::STALE_LEAD_DAYS . ' days');
+
+        return $cutoff->format('Y-m-d H:i:s');
     }
 }

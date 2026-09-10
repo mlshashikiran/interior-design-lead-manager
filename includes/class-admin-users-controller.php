@@ -4,6 +4,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_Admin_Users_Controller {
     const DISABLED_META_KEY = 'idlm_crm_access_disabled';
+    const ROLE_SCOPES_OPTION = 'idlm_role_lead_scopes';
 
     public static function render() {
         if (!current_user_can('manage_options')) { wp_die('You do not have permission to manage CRM users.', 403); }
@@ -24,6 +25,7 @@ final class IDLM_Admin_Users_Controller {
         }
         IDLM_View::display('admin/users.php', array(
             'users' => $users, 'roles' => $roles, 'search' => $search, 'selected_role' => $role,
+            'role_scopes' => self::role_scopes(),
             'selected_access' => $status, 'paged' => $paged, 'total' => (int) $query->get_total(),
             'per_page' => 25, 'notice' => sanitize_key(wp_unslash($_GET['idlm_users_notice'] ?? '')),
             'error' => sanitize_key(wp_unslash($_GET['idlm_users_error'] ?? '')),
@@ -72,7 +74,41 @@ final class IDLM_Admin_Users_Controller {
         self::redirect('notice', 'updated');
     }
 
+    public static function handle_update_role_scopes() {
+        self::authorize('idlm_update_role_scopes');
+        $submitted = isset($_POST['role_scopes']) && is_array($_POST['role_scopes'])
+            ? wp_unslash($_POST['role_scopes']) : array();
+        $scopes = array();
+        foreach (self::managed_roles() as $role => $data) {
+            if ('administrator' === $role) { continue; }
+            $scope = isset($submitted[$role]) ? sanitize_key($submitted[$role]) : 'default';
+            if (in_array($scope, array('all', 'assigned'), true)) {
+                $scopes[$role] = $scope;
+            }
+        }
+        update_option(self::ROLE_SCOPES_OPTION, $scopes, false);
+        self::redirect('notice', 'role-scopes-updated');
+    }
+
     public static function is_crm_access_disabled($user_id) { return '1' === (string) get_user_meta(absint($user_id), self::DISABLED_META_KEY, true); }
+
+    public static function role_scopes() {
+        $stored = get_option(self::ROLE_SCOPES_OPTION, array());
+        return is_array($stored) ? $stored : array();
+    }
+
+    public static function role_scope($roles) {
+        $scopes = self::role_scopes();
+        $resolved = array();
+        foreach ((array) $roles as $role) {
+            if ('administrator' === $role) { return 'all'; }
+            if (isset($scopes[$role]) && in_array($scopes[$role], array('all', 'assigned'), true)) {
+                $resolved[] = $scopes[$role];
+            }
+        }
+        if (in_array('assigned', $resolved, true)) { return 'assigned'; }
+        return in_array('all', $resolved, true) ? 'all' : 'default';
+    }
 
     public static function managed_roles() {
         // `get_editable_roles()` is only loaded by wp-admin. The same page is
@@ -99,5 +135,11 @@ final class IDLM_Admin_Users_Controller {
             if (count($admins) <= 1) { self::redirect('error', 'last-admin'); }
         }
     }
-    private static function redirect($kind, $code) { wp_safe_redirect(add_query_arg('idlm_users_' . $kind, $code, admin_url('admin.php?page=idlm_users_access'))); exit; }
+    private static function redirect($kind, $code) {
+        $fallback = IDLM_Admin::admin_utility_url();
+        $return_url = isset($_POST['idlm_return_url']) ? esc_url_raw(wp_unslash($_POST['idlm_return_url'])) : '';
+        $base = $return_url ? wp_validate_redirect($return_url, $fallback) : $fallback;
+        wp_safe_redirect(add_query_arg('idlm_users_' . $kind, $code, $base));
+        exit;
+    }
 }

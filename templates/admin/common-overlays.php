@@ -11,152 +11,120 @@ $can_assign_leads = !empty($context['can_assign_leads']);
 $can_manage_options = !empty($context['can_manage_options']);
 ?>
         <!-- Sliding Drawer Panel (Right side slideout) -->
-        <div class="idlm-drawer" id="idlm-lead-drawer">
+        <div class="idlm-drawer" id="idlm-lead-drawer" role="dialog" aria-modal="true" aria-labelledby="lead-title" aria-hidden="true" tabindex="-1">
+            <button type="button" class="idlm-drawer-lead-nav idlm-drawer-lead-nav-prev" id="idlm-drawer-prev-lead" aria-label="Open previous lead" title="Previous lead (Left arrow)" disabled>
+                <span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
+            </button>
             <div class="idlm-drawer-content-wrapper" id="idlm-drawer-content-wrapper-inner">
                 <!-- Header, Tabs, and Body loaded dynamically via AJAX to match mockup -->
-                <div style="text-align:center; padding:50px;"><span class="spinner is-active" style="float:none;"></span> Loading Lead details...</div>
+                <div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> Loading Lead details...</div>
             </div>
+            <button type="button" class="idlm-drawer-lead-nav idlm-drawer-lead-nav-next" id="idlm-drawer-next-lead" aria-label="Open next lead" title="Next lead (Right arrow)" disabled>
+                <span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
+            </button>
+            <div class="idlm-drawer-lead-position" id="idlm-drawer-lead-position" aria-live="polite"></div>
         </div>
 
-        <!-- Callback Scheduler Modal -->
-        <div class="idlm-modal" id="idlm-callback-modal">
-            <div class="idlm-modal-content" style="max-width: 400px; padding: 20px;">
-                <div class="idlm-modal-header" style="margin-bottom: 15px; padding-bottom: 8px;">
-                    <h2 style="font-size: 16px;">Schedule Callback</h2>
-                    <span class="idlm-close" id="idlm-callback-modal-close">&times;</span>
-                </div>
-                <div class="idlm-form-group" style="margin-bottom: 15px;">
-                    <label style="font-weight: 500; font-size: 12px; margin-bottom: 6px; color: #64748b;">Select Date & Time</label>
-                    <input type="datetime-local" id="idlm-callback-datetime-input" class="idlm-input" style="width: 100%;">
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-callback-modal-cancel" style="padding: 6px 12px;">Cancel</button>
-                    <button type="button" class="idlm-btn idlm-btn-primary" id="idlm-callback-modal-save" style="padding: 6px 12px;">Schedule</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Deal Value Input Modal -->
-        <div class="idlm-modal" id="idlm-deal-value-modal">
-            <div class="idlm-modal-content" style="max-width: 400px; padding: 20px;">
-                <div class="idlm-modal-header" style="margin-bottom: 15px; padding-bottom: 8px;">
-                    <h2 style="font-size: 16px;">Enter Deal Value</h2>
-                    <span class="idlm-close" id="idlm-deal-value-modal-close">&times;</span>
-                </div>
-                <div class="idlm-form-group" style="margin-bottom: 15px;">
-                    <label style="font-weight: 500; font-size: 12px; margin-bottom: 6px; color: #64748b;">Deal Value (<?php echo esc_html($currency_code); ?>)*</label>
-                    <input type="number" step="0.01" min="0" id="idlm-deal-value-input" class="idlm-input" style="width: 100%;" placeholder="e.g. 150000">
-                </div>
-                <div class="idlm-form-group" style="margin-bottom: 15px;">
-                    <label for="idlm-discount-percentage-input" style="font-weight: 500; font-size: 12px; margin-bottom: 6px; color: #64748b;">Discount % *</label>
-                    <input type="number" step="0.01" min="0" max="100" id="idlm-discount-percentage-input" class="idlm-input" required style="width: 100%;" placeholder="e.g. 10">
-                </div>
-                <div class="idlm-form-group" style="margin-bottom: 15px;">
-                    <label for="idlm-won-property-location-input" style="font-weight: 500; font-size: 12px; margin-bottom: 6px; color: #64748b;">Property Location / Pincode</label>
-                    <input type="text" id="idlm-won-property-location-input" class="idlm-input" maxlength="255" style="width: 100%;" placeholder="e.g. North Bangalore / 560001">
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-deal-value-modal-cancel" style="padding: 6px 12px;">Cancel</button>
-                    <button type="button" class="idlm-btn idlm-btn-primary" id="idlm-deal-value-modal-save" style="padding: 6px 12px;">Save Value</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quote Value Input Modal -->
-        <div class="idlm-modal" id="idlm-quote-value-modal">
-            <div class="idlm-modal-content" style="max-width: 400px; padding: 20px;">
-                <div class="idlm-modal-header" style="margin-bottom: 15px; padding-bottom: 8px;">
-                    <h2 style="font-size: 16px;">Enter Quote Value</h2>
-                    <span class="idlm-close" id="idlm-quote-value-modal-close">&times;</span>
-                </div>
-                <div class="idlm-form-group" style="margin-bottom: 15px;">
-                    <label for="idlm-quote-value-input" style="font-weight: 500; font-size: 12px; margin-bottom: 6px; color: #64748b;">Quote Value (<?php echo esc_html($currency_code); ?>) *</label>
-                    <input type="number" step="0.01" min="0.01" id="idlm-quote-value-input" class="idlm-input" required style="width: 100%;" placeholder="e.g. 150000">
-                </div>
-                <div class="idlm-form-group" style="margin-bottom: 15px;">
-                    <label style="font-weight: 500; font-size: 12px; margin-bottom: 6px; color: #64748b;">Upload Quote</label>
-                    <div class="idlm-drawer-file-row">
-                        <input type="hidden" id="idlm-stage-quote-file" value="">
-                        <input type="file" class="idlm-file-input" data-input-id="idlm-stage-quote-file" data-preview-id="idlm-stage-quote-preview" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;">
-                        <button type="button" class="idlm-drawer-btn-file idlm-direct-upload-trigger">Upload Quote</button>
-                        <span id="idlm-stage-quote-preview" class="idlm-drawer-file-note">No file uploaded</span>
+        <!-- Callback Scheduler Dialog -->
+        <div class="idlm-modal idlm-dialog" id="idlm-callback-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-callback-modal-title" aria-describedby="idlm-callback-modal-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-callback-datetime-input">
+            <div class="idlm-modal-content idlm-dialog__panel">
+                <header class="idlm-modal-header idlm-dialog__header">
+                    <div><h2 class="idlm-dialog__title" id="idlm-callback-modal-title">Schedule callback</h2><p class="idlm-dialog__description" id="idlm-callback-modal-description">Choose when the customer should be contacted again.</p></div>
+                    <button type="button" class="idlm-dialog__close" id="idlm-callback-modal-close" data-idlm-dialog-close aria-label="Close callback dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+                </header>
+                <div class="idlm-dialog__body">
+                    <div class="idlm-form-group">
+                        <label for="idlm-callback-datetime-input">Callback date and time <span class="idlm-required-indicator" aria-hidden="true">*</span></label>
+                        <input type="datetime-local" id="idlm-callback-datetime-input" class="idlm-input" required aria-errormessage="idlm-callback-datetime-error">
+                        <p class="idlm-field-error" id="idlm-callback-datetime-error" role="alert" hidden></p>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-quote-value-modal-cancel" style="padding: 6px 12px;">Cancel</button>
-                    <button type="button" class="idlm-btn idlm-btn-primary" id="idlm-quote-value-modal-save" style="padding: 6px 12px;">Save &amp; Share Quote</button>
-                </div>
+                <footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-callback-modal-cancel" data-idlm-dialog-close>Cancel</button><button type="button" class="idlm-btn idlm-btn-primary" id="idlm-callback-modal-save">Schedule</button></footer>
             </div>
         </div>
 
-        <!-- Lost Lead Remark Modal -->
-        <div class="idlm-modal" id="idlm-lost-remark-modal">
-            <div class="idlm-modal-content" style="max-width: 450px; padding: 20px;">
-                <div class="idlm-modal-header" style="margin-bottom: 15px; padding-bottom: 8px;">
-                    <h2 style="font-size: 16px;">Why was this lead lost?</h2>
-                    <span class="idlm-close" id="idlm-lost-remark-modal-close">&times;</span>
+        <!-- Won Deal Value Dialog -->
+        <div class="idlm-modal idlm-dialog" id="idlm-deal-value-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-deal-value-modal-title" aria-describedby="idlm-deal-value-modal-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-deal-value-input">
+            <div class="idlm-modal-content idlm-dialog__panel">
+                <header class="idlm-modal-header idlm-dialog__header">
+                    <div><h2 class="idlm-dialog__title" id="idlm-deal-value-modal-title">Move lead to Won</h2><p class="idlm-dialog__description" id="idlm-deal-value-modal-description">Record the final commercial value before closing this lead.</p></div>
+                    <button type="button" class="idlm-dialog__close" id="idlm-deal-value-modal-close" data-idlm-dialog-close aria-label="Close Won dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+                </header>
+                <div class="idlm-dialog__body">
+                    <div class="idlm-form-group"><label for="idlm-deal-value-input">Deal value (<?php echo esc_html($currency_code); ?>) <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0.01" inputmode="decimal" id="idlm-deal-value-input" class="idlm-input" required aria-errormessage="idlm-deal-value-error" placeholder="e.g. 150000"><p class="idlm-field-error" id="idlm-deal-value-error" role="alert" hidden></p></div>
+                    <div class="idlm-form-group"><label for="idlm-discount-percentage-input">Discount percentage <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0" max="100" inputmode="decimal" id="idlm-discount-percentage-input" class="idlm-input" required aria-errormessage="idlm-discount-percentage-error" placeholder="e.g. 10"><p class="idlm-field-error" id="idlm-discount-percentage-error" role="alert" hidden></p></div>
+                    <div class="idlm-form-group"><label for="idlm-won-property-location-input">Property location or pincode</label><input type="text" id="idlm-won-property-location-input" class="idlm-input" maxlength="255" autocomplete="street-address" placeholder="e.g. North Bangalore / 560001"></div>
                 </div>
-                <div class="idlm-form-group" style="margin-bottom: 15px;">
-                    <label for="idlm-lost-reason-select" style="font-weight: 500; font-size: 12px; margin-bottom: 6px; color: #64748b;">Lost Reason *</label>
-                    <select id="idlm-lost-reason-select" class="idlm-input" required style="width: 100%;">
-                        <option value="">Select a reason</option>
-                        <?php foreach ($lost_reasons as $lost_reason): ?>
-                            <option value="<?php echo esc_attr($lost_reason); ?>"><?php echo esc_html($lost_reason); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="idlm-form-group" style="margin-bottom: 15px;">
-                    <label for="idlm-lost-remark-input" style="font-weight: 500; font-size: 12px; margin-bottom: 6px; color: #64748b;">Lost Remark *</label>
-                    <textarea id="idlm-lost-remark-input" class="idlm-input" rows="4" maxlength="1000" required style="width: 100%; resize: vertical;" placeholder="Add the reason the lead was lost..."></textarea>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                    <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-lost-remark-modal-cancel" style="padding: 6px 12px;">Cancel</button>
-                    <button type="button" class="idlm-btn idlm-btn-primary" id="idlm-lost-remark-modal-save" style="padding: 6px 12px;">Save &amp; Mark Lost</button>
-                </div>
+                <footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-deal-value-modal-cancel" data-idlm-dialog-close>Cancel</button><button type="button" class="idlm-btn idlm-btn-primary" id="idlm-deal-value-modal-save">Save value</button></footer>
             </div>
         </div>
 
-        <!-- Unsaved Changes Confirmation Modal -->
-        <div class="idlm-modal" id="idlm-unsaved-changes-modal" style="z-index: 110000;">
-            <div class="idlm-modal-content" style="max-width: 450px; padding: 25px;">
-                <div class="idlm-modal-header" style="margin-bottom: 15px; padding-bottom: 8px;">
-                    <h2 style="font-size: 18px; font-weight: 700; color: #111827;">⚠️ Unsaved Changes</h2>
-                    <span class="idlm-close" id="idlm-unsaved-modal-close">&times;</span>
+        <!-- Quote Shared Dialog -->
+        <div class="idlm-modal idlm-dialog" id="idlm-quote-value-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-quote-value-modal-title" aria-describedby="idlm-quote-value-modal-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-quote-value-input">
+            <div class="idlm-modal-content idlm-dialog__panel">
+                <header class="idlm-modal-header idlm-dialog__header">
+                    <div><h2 class="idlm-dialog__title" id="idlm-quote-value-modal-title">Move lead to Quote Shared</h2><p class="idlm-dialog__description" id="idlm-quote-value-modal-description">Record the shared quote value and optional quote file.</p></div>
+                    <button type="button" class="idlm-dialog__close" id="idlm-quote-value-modal-close" data-idlm-dialog-close aria-label="Close Quote Shared dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+                </header>
+                <div class="idlm-dialog__body">
+                    <div class="idlm-form-group"><label for="idlm-quote-value-input">Quote value (<?php echo esc_html($currency_code); ?>) <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0.01" inputmode="decimal" id="idlm-quote-value-input" class="idlm-input" required aria-errormessage="idlm-quote-value-error" placeholder="e.g. 150000"><p class="idlm-field-error" id="idlm-quote-value-error" role="alert" hidden></p></div>
+                    <div class="idlm-form-group"><span class="idlm-form-label">Quote file</span><div class="idlm-drawer-file-row"><input type="hidden" id="idlm-stage-quote-file" value=""><label class="screen-reader-text" for="idlm-stage-quote-file-input">Choose quote file</label><input type="file" id="idlm-stage-quote-file-input" class="idlm-file-input" data-input-id="idlm-stage-quote-file" data-preview-id="idlm-stage-quote-preview" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" hidden><button type="button" class="idlm-drawer-btn-file idlm-direct-upload-trigger">Upload quote</button><span id="idlm-stage-quote-preview" class="idlm-drawer-file-note" role="status">No file uploaded</span></div></div>
                 </div>
-                <p style="font-size: 13px; line-height: 1.5; color: #63728a; margin-bottom: 10px;">
-                    You have made edits to the lead details. Would you like to save your changes before closing, or discard them?
-                </p>
-                <div id="idlm-unsaved-fields-list" style="margin-bottom: 20px; font-weight: 600; color: #111827; font-size: 12px; line-height: 1.4;"></div>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <button type="button" class="idlm-btn idlm-btn-primary" id="idlm-unsaved-save-exit" style="width: 100%; justify-content: center; min-height: 40px;">Save & Exit</button>
-                    <button type="button" class="idlm-btn" id="idlm-unsaved-discard-exit" style="width: 100%; justify-content: center; min-height: 40px; background-color: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;">Discard & Exit</button>
-                    <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-unsaved-cancel" style="width: 100%; justify-content: center; min-height: 40px;">Keep Editing</button>
+                <footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-quote-value-modal-cancel" data-idlm-dialog-close>Cancel</button><button type="button" class="idlm-btn idlm-btn-primary" id="idlm-quote-value-modal-save">Save and share quote</button></footer>
+            </div>
+        </div>
+
+        <!-- Lost Lead Dialog -->
+        <div class="idlm-modal idlm-dialog" id="idlm-lost-remark-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-lost-remark-modal-title" aria-describedby="idlm-lost-remark-modal-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-lost-reason-select">
+            <div class="idlm-modal-content idlm-dialog__panel">
+                <header class="idlm-modal-header idlm-dialog__header">
+                    <div><h2 class="idlm-dialog__title" id="idlm-lost-remark-modal-title">Move lead to Lost</h2><p class="idlm-dialog__description" id="idlm-lost-remark-modal-description">Document why this opportunity was closed without a sale.</p></div>
+                    <button type="button" class="idlm-dialog__close" id="idlm-lost-remark-modal-close" data-idlm-dialog-close aria-label="Close Lost dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+                </header>
+                <div class="idlm-dialog__body">
+                    <div class="idlm-form-group"><label for="idlm-lost-reason-select">Lost reason <span class="idlm-required-indicator" aria-hidden="true">*</span></label><select id="idlm-lost-reason-select" class="idlm-input" required aria-errormessage="idlm-lost-reason-error"><option value="">Select a reason</option><?php foreach ($lost_reasons as $lost_reason): ?><option value="<?php echo esc_attr($lost_reason); ?>"><?php echo esc_html($lost_reason); ?></option><?php endforeach; ?></select><p class="idlm-field-error" id="idlm-lost-reason-error" role="alert" hidden></p></div>
+                    <div class="idlm-form-group"><label for="idlm-lost-remark-input">Lost remark <span class="idlm-required-indicator" aria-hidden="true">*</span></label><textarea id="idlm-lost-remark-input" class="idlm-input" rows="4" maxlength="1000" required aria-errormessage="idlm-lost-remark-error" placeholder="Add the reason the lead was lost..."></textarea><p class="idlm-field-error" id="idlm-lost-remark-error" role="alert" hidden></p></div>
                 </div>
+                <footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-lost-remark-modal-cancel" data-idlm-dialog-close>Cancel</button><button type="button" class="idlm-btn idlm-btn-primary" id="idlm-lost-remark-modal-save">Save and mark Lost</button></footer>
+            </div>
+        </div>
+
+        <!-- Unsaved Changes Dialog -->
+        <div class="idlm-modal idlm-dialog idlm-dialog--stacked-actions" id="idlm-unsaved-changes-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-unsaved-modal-title" aria-describedby="idlm-unsaved-modal-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-unsaved-save-exit">
+            <div class="idlm-modal-content idlm-dialog__panel">
+                <header class="idlm-modal-header idlm-dialog__header">
+                    <div><h2 class="idlm-dialog__title" id="idlm-unsaved-modal-title">Unsaved changes</h2><p class="idlm-dialog__description" id="idlm-unsaved-modal-description">Save your lead edits before closing, discard them, or return to editing.</p></div>
+                    <button type="button" class="idlm-dialog__close" id="idlm-unsaved-modal-close" data-idlm-dialog-close aria-label="Close unsaved changes dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+                </header>
+                <div class="idlm-dialog__body"><div id="idlm-unsaved-fields-list" role="status" aria-live="polite"></div><p class="idlm-field-error" id="idlm-unsaved-save-error" role="alert" hidden></p></div>
+                <footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-unsaved-cancel" data-idlm-dialog-close>Keep editing</button><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-unsaved-discard-exit">Discard and exit</button><button type="button" class="idlm-btn idlm-btn-primary" id="idlm-unsaved-save-exit">Save and exit</button></footer>
             </div>
         </div>
 
         <!-- Global Task Sidebar Panel -->
         <div class="idlm-global-sidebar" id="idlm-global-tasks-sidebar">
-            <div class="idlm-global-sidebar-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--idlm-border); padding: 15px 20px; background: var(--idlm-surface-soft);">
-                <h2 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--idlm-text-main);">My Active Tasks</h2>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <button class="idlm-global-sidebar-filter-btn active" id="idlm-global-tasks-filter-pending" onclick="filterGlobalTasks('pending')" style="padding: 2px 8px; font-size: 11px; border: 1px solid var(--idlm-border); border-radius: 4px; background: #fff; cursor: pointer;">Pending</button>
-                    <button class="idlm-global-sidebar-filter-btn" id="idlm-global-tasks-filter-completed" onclick="filterGlobalTasks('completed')" style="padding: 2px 8px; font-size: 11px; border: 1px solid var(--idlm-border); border-radius: 4px; background: #fff; cursor: pointer;">Completed</button>
-                    <span class="idlm-close" id="idlm-global-tasks-sidebar-close" style="font-size: 20px; cursor: pointer; margin-left: 5px;">&times;</span>
+            <div class="idlm-global-sidebar-header">
+                <h2 class="idlm-global-sidebar-title">Today’s work</h2>
+                <div class="idlm-global-sidebar-actions">
+                    <button type="button" class="idlm-global-sidebar-filter-btn active" id="idlm-global-tasks-filter-attention" onclick="filterGlobalTasks('attention')">Needs attention</button>
+                    <button type="button" class="idlm-global-sidebar-filter-btn" id="idlm-global-tasks-filter-completed" onclick="filterGlobalTasks('completed')">Completed</button>
+                    <?php if (current_user_can('manage_options')): ?>
+                        <button type="button" class="idlm-global-sidebar-filter-btn" onclick="cleanupStaleTasks()">Clean up</button>
+                    <?php endif; ?>
+                    <button type="button" class="idlm-close" id="idlm-global-tasks-sidebar-close" aria-label="Close active tasks">&times;</button>
                 </div>
             </div>
-            <div class="idlm-global-sidebar-body" id="idlm-global-tasks-sidebar-body" style="padding: 15px; overflow-y: auto; height: calc(100% - 60px);">
+            <div class="idlm-global-sidebar-body" id="idlm-global-tasks-sidebar-body">
                 <!-- Loaded dynamically via AJAX -->
-                <div style="text-align: center; color: var(--idlm-text-muted); padding: 40px 0;">
-                    <span class="spinner is-active" style="float:none;"></span> Loading tasks...
+                <div class="idlm-global-sidebar-load-state" role="status">
+                    <span class="spinner is-active idlm-spinner-inline"></span> Loading tasks...
                 </div>
             </div>
         </div>
 
         <!-- Floating Action Button for Tasks -->
-        <button type="button" class="idlm-floating-tasks-btn" id="idlm-floating-tasks-btn" title="View Active Tasks" onclick="toggleGlobalTasksSidebar()">
-            <span class="dashicons dashicons-editor-ul" style="font-size: 20px; width: 20px; height: 20px; line-height: 20px; display: block; margin: auto;"></span>
-            <span class="idlm-floating-tasks-badge" id="idlm-floating-tasks-badge" style="display: none;">0</span>
+        <button type="button" class="idlm-floating-tasks-btn" id="idlm-floating-tasks-btn" title="View today’s work" onclick="toggleGlobalTasksSidebar()">
+            <span class="dashicons dashicons-editor-ul idlm-floating-tasks-icon" aria-hidden="true"></span>
+            <span class="idlm-floating-tasks-label">Today’s work</span>
+            <span class="idlm-floating-tasks-badge" id="idlm-floating-tasks-badge">0</span>
         </button>
-
-

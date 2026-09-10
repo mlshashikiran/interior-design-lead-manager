@@ -118,9 +118,10 @@ final class IDLM_Quotation_Calculator {
      *
      * @param array $items Normalized item rows.
      * @param array $posted Raw quotation adjustment values.
+     * @param array $quote_settings Global quotation calculation settings.
      * @return array
      */
-    public static function calculate_totals($items, $posted) {
+    public static function calculate_totals($items, $posted, $quote_settings = array()) {
         $subtotal = 0.0;
         $wooden_subtotal = 0.0;
         foreach ((array) $items as $item) {
@@ -137,30 +138,41 @@ final class IDLM_Quotation_Calculator {
         }
         $wooden_discount_percent = min(100, self::clean_decimal($posted['wooden_discount_percent'] ?? 0));
         $wooden_discount_amount = round($wooden_subtotal * $wooden_discount_percent / 100, 2);
-        $subtotal_after_wooden_discount = round(max(0, $subtotal - $wooden_discount_amount), 2);
-        $design_fee_percent = min(100, self::clean_decimal($posted['design_fee_percent'] ?? 0));
-        $design_fee_amount = round($subtotal_after_wooden_discount * $design_fee_percent / 100, 2);
-        $total_before_additional_discount = round($subtotal_after_wooden_discount + $design_fee_amount, 2);
+        $subtotal_after_wooden_discount = round(max(0, $wooden_subtotal - $wooden_discount_amount), 2);
+        $other_subtotal = round($subtotal - $wooden_subtotal, 2);
+        $soft_close_enabled = !empty($posted['soft_close_enabled']) ? 1 : 0;
+        $soft_close_percent = min(100, self::clean_decimal($quote_settings['soft_close_percent'] ?? 0));
+        $soft_close_amount = $soft_close_enabled
+            ? round($subtotal_after_wooden_discount * $soft_close_percent / 100, 2)
+            : 0.0;
+        $total_before_additional_discount = round($subtotal_after_wooden_discount + $other_subtotal + $soft_close_amount, 2);
         $additional_discount_amount = min($total_before_additional_discount, self::clean_decimal($posted['additional_discount_amount'] ?? 0));
         $taxable = round(max(0, $total_before_additional_discount - $additional_discount_amount), 2);
         $tax_total = round($taxable * 18 / 100, 2);
         $cgst = round($tax_total / 2, 2);
         $sgst = round($tax_total - $cgst, 2);
+        $pre_round_total = round($taxable + $tax_total, 2);
+        $grand_total = round($pre_round_total, 0);
         return array(
             'subtotal' => round($subtotal, 2),
             'wooden_subtotal' => round($wooden_subtotal, 2),
             'wooden_discount_percent' => $wooden_discount_percent,
             'wooden_discount_amount' => $wooden_discount_amount,
             'subtotal_after_wooden_discount' => $subtotal_after_wooden_discount,
-            'design_fee_percent' => $design_fee_percent,
-            'design_fee_amount' => $design_fee_amount,
+            'other_subtotal' => $other_subtotal,
+            'soft_close_enabled' => $soft_close_enabled,
+            'soft_close_percent' => $soft_close_percent,
+            'soft_close_amount' => $soft_close_amount,
+            'design_fee_percent' => 0,
+            'design_fee_amount' => 0,
             'total_before_additional_discount' => $total_before_additional_discount,
             'additional_discount_amount' => $additional_discount_amount,
             'taxable_total' => $taxable,
             'cgst_total' => $cgst,
             'sgst_total' => $sgst,
             'igst_total' => 0,
-            'grand_total' => round($taxable + $tax_total, 2),
+            'round_off_amount' => round($grand_total - $pre_round_total, 2),
+            'grand_total' => $grand_total,
         );
     }
 }

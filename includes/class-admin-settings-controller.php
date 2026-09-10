@@ -9,6 +9,32 @@ if (!defined('ABSPATH')) {
  * Builder: Shashi
  */
 class IDLM_Admin_Settings_Controller {
+    private static $white_label_errors = array();
+    private static $white_label_values = array();
+
+    /** Return white-label validation failures for the current settings render. */
+    public static function white_label_errors() {
+        return self::$white_label_errors;
+    }
+
+    /** Return submitted white-label values when validation prevented persistence. */
+    public static function white_label_values() {
+        return self::$white_label_values;
+    }
+
+    /** Normalize a structured vocabulary post while retaining the legacy comma field. */
+    private static function posted_vocabulary($array_key, $legacy_key, $fallback) {
+        if (isset($_POST[$array_key]) && is_array($_POST[$array_key])) {
+            $raw_values = wp_unslash($_POST[$array_key]);
+        } else {
+            $legacy_value = isset($_POST[$legacy_key]) ? sanitize_text_field(wp_unslash($_POST[$legacy_key])) : '';
+            $raw_values = explode(',', $legacy_value);
+        }
+
+        $values = array_values(array_unique(array_filter(array_map('sanitize_text_field', $raw_values))));
+        return empty($values) ? array_values($fallback) : $values;
+    }
+
     /** Rotate a scoped REST credential after explicit administrator confirmation. */
     public static function handle_rotate_api_credential() {
         if (!current_user_can('manage_options')) {
@@ -27,10 +53,10 @@ class IDLM_Admin_Settings_Controller {
             wp_die(esc_html($rotated->get_error_message()), 400);
         }
         $tab = 'mcp' === $scope ? 'mcp' : 'webhooks';
-        $return_url = add_query_arg(
-            array('page' => 'idlm_settings', 'idlm_credential_rotated' => $scope),
-            admin_url('admin.php')
-        ) . '#tab-' . $tab;
+        $fallback = IDLM_Admin::admin_utility_url();
+        $posted_return_url = isset($_POST['idlm_return_url']) ? esc_url_raw(wp_unslash($_POST['idlm_return_url'])) : '';
+        $base = $posted_return_url ? wp_validate_redirect($posted_return_url, $fallback) : $fallback;
+        $return_url = add_query_arg('idlm_credential_rotated', $scope, $base) . '#tab-' . $tab;
         wp_safe_redirect($return_url);
         exit;
     }
@@ -49,6 +75,34 @@ class IDLM_Admin_Settings_Controller {
         }
 
         check_admin_referer('idlm_settings_save_action');
+        $label_defaults = array('call_status' => 'Call Status', 'lost_reason' => 'Lost Reason', 'preferred_studio' => 'Preferred Studio', 'num_rooms' => 'Rooms');
+        $posted_ui_labels = (isset($_POST['ui_labels']) && is_array($_POST['ui_labels'])) ? wp_unslash($_POST['ui_labels']) : array();
+        $ui_labels = array();
+        foreach ($label_defaults as $key => $default) {
+            $ui_labels[$key] = sanitize_text_field(isset($posted_ui_labels[$key]) ? $posted_ui_labels[$key] : $default) ?: $default;
+        }
+        update_option('idlm_ui_labels', $ui_labels);
+        $posted_value_labels = (isset($_POST['value_labels']) && is_array($_POST['value_labels'])) ? wp_unslash($_POST['value_labels']) : array();
+        $value_labels = array();
+        foreach ($posted_value_labels as $group => $labels) {
+            $group = sanitize_key($group);
+            if (!is_array($labels)) continue;
+            foreach ($labels as $encoded_value => $display_label) {
+                $value = sanitize_text_field(rawurldecode($encoded_value));
+                $display_label = sanitize_text_field($display_label);
+                if ($value && $display_label && $value !== $display_label) $value_labels[$group][$value] = $display_label;
+            }
+        }
+        update_option('idlm_value_labels', $value_labels);
+        $white_label_raw = (isset($_POST['white_label']) && is_array($_POST['white_label'])) ? wp_unslash($_POST['white_label']) : array();
+        $white_label_validation = IDLM_Settings::validate_white_label($white_label_raw);
+        self::$white_label_values = $white_label_validation['settings'];
+        self::$white_label_errors = $white_label_validation['errors'];
+        if (!empty(self::$white_label_errors)) {
+            return false;
+        }
+        update_option(IDLM_Settings::WHITE_LABEL_OPTION, self::$white_label_values, false);
+
         $previous_presales_targets = IDLM_DB::get_presales_outreach_targets();
 
         // Save basic settings
@@ -124,8 +178,11 @@ class IDLM_Admin_Settings_Controller {
         IDLM_Settings::sync_routing_from_legacy();
 
         // Save custom options lists
-        $custom_stages = isset($_POST['custom_stages']) ? sanitize_text_field(wp_unslash($_POST['custom_stages'])) : '';
-        $stages = array_filter(array_map('sanitize_text_field', explode(',', $custom_stages)));
+        $stages = self::posted_vocabulary(
+            'custom_stages_values',
+            'custom_stages',
+            get_option('idlm_custom_stages', array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'))
+        );
         update_option('idlm_custom_stages', $stages);
 
         // Save the monetary field consolidated in each Kanban stage header.
@@ -146,23 +203,32 @@ class IDLM_Admin_Settings_Controller {
         }
         update_option('idlm_kanban_stage_totals', $kanban_stage_totals);
         
-        $custom_call_statuses = isset($_POST['custom_call_statuses']) ? sanitize_text_field(wp_unslash($_POST['custom_call_statuses'])) : '';
-        $call_statuses = array_filter(array_map('sanitize_text_field', explode(',', $custom_call_statuses)));
+        $call_statuses = self::posted_vocabulary(
+            'custom_call_statuses_values',
+            'custom_call_statuses',
+            get_option('idlm_custom_call_statuses', array('Not Called', 'No Answer', 'Call Back Requested', 'Connected - Interested', 'Connected - Not Interested', 'Wrong Number'))
+        );
         update_option('idlm_custom_call_statuses', $call_statuses);
 
-        $custom_lost_reasons = isset($_POST['custom_lost_reasons']) ? sanitize_text_field(wp_unslash($_POST['custom_lost_reasons'])) : '';
-        $lost_reasons = array_values(array_unique(array_filter(array_map('sanitize_text_field', explode(',', $custom_lost_reasons)))));
-        if (empty($lost_reasons)) {
-            $lost_reasons = array('Budget Too High', 'Lost to Competitor', 'Project Postponed', 'Unable to Contact', 'Location or Service Unavailable', 'Timeline Mismatch', 'Client Not Interested', 'Duplicate or Invalid Lead', 'Other');
-        }
+        $lost_reasons = self::posted_vocabulary(
+            'custom_lost_reasons_values',
+            'custom_lost_reasons',
+            get_option('idlm_custom_lost_reasons', array('Budget Too High', 'Lost to Competitor', 'Project Postponed', 'Unable to Contact', 'Location or Service Unavailable', 'Timeline Mismatch', 'Client Not Interested', 'Duplicate or Invalid Lead', 'Other'))
+        );
         update_option('idlm_custom_lost_reasons', $lost_reasons);
 
-        $custom_studios = isset($_POST['custom_studios']) ? sanitize_text_field(wp_unslash($_POST['custom_studios'])) : '';
-        $studios = array_filter(array_map('sanitize_text_field', explode(',', $custom_studios)));
+        $studios = self::posted_vocabulary(
+            'custom_studios_values',
+            'custom_studios',
+            get_option('idlm_custom_studios', array('Downtown Studio', 'North Studio', 'South Studio'))
+        );
         update_option('idlm_custom_studios', $studios);
 
-        $custom_num_rooms = isset($_POST['custom_num_rooms']) ? sanitize_text_field(wp_unslash($_POST['custom_num_rooms'])) : '';
-        $num_rooms = array_filter(array_map('sanitize_text_field', explode(',', $custom_num_rooms)));
+        $num_rooms = self::posted_vocabulary(
+            'custom_num_rooms_values',
+            'custom_num_rooms',
+            get_option('idlm_custom_num_rooms', array('1 BHK', '2 BHK', '3 BHK', '4 BHK', '4+ BHK'))
+        );
         update_option('idlm_custom_num_rooms', $num_rooms);
 
         // Save CAPI configurations

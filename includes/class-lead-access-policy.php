@@ -26,6 +26,27 @@ final class IDLM_Lead_Access_Policy {
         return in_array('idlm_pre_sales', (array) wp_get_current_user()->roles, true);
     }
 
+    /** Validate drawer fields before persistence; return the role-protected fields. */
+    public static function validate_detail_fields($fields, $existing) {
+        $protected = self::is_pre_sales()
+            ? array('lead_quality', 'deal_value', 'discount_percentage', 'quote_shared', 'quote_value', 'quote_file') : array();
+        foreach ($protected as $field) {
+            if (isset($fields[$field]) && (string) $fields[$field] !== (string) ($existing->$field ?? '')) {
+                $numeric = in_array($field, array('deal_value', 'discount_percentage', 'quote_shared', 'quote_value'), true);
+                if (!$numeric || !is_numeric($fields[$field]) || (float) $fields[$field] !== (float) ($existing->$field ?? 0)) {
+                    return new WP_Error('idlm_detail_permission', 'Use Lead Decision controls for qualification; commercial fields are managed by sales.');
+                }
+            }
+        }
+        foreach (array('deal_value', 'quote_value', 'discount_percentage') as $field) {
+            if (isset($fields[$field]) && '' !== $fields[$field] &&
+                (!is_numeric($fields[$field]) || !is_finite((float) $fields[$field]) || (float) $fields[$field] < 0 || ('discount_percentage' === $field && (float) $fields[$field] > 100))) {
+                return new WP_Error('idlm_detail_value', 'Enter valid non-negative commercial values and a discount between 0 and 100.');
+            }
+        }
+        return $protected;
+    }
+
     public static function is_assignable_rep($user_id) {
         $user_id = absint($user_id);
         if (0 === $user_id) { return true; }
@@ -40,14 +61,18 @@ final class IDLM_Lead_Access_Policy {
         )))));
     }
 
-    public static function restriction_user_id() {
+    public static function restriction_user_id($respect_global_visibility = true) {
+        $scope = class_exists('IDLM_Admin_Users_Controller')
+            ? IDLM_Admin_Users_Controller::role_scope((array) wp_get_current_user()->roles) : 'default';
+        if ('assigned' === $scope) { return get_current_user_id(); }
+        if ('all' === $scope) { return 0; }
         if (self::can_assign()) { return 0; }
-        return self::is_pre_sales() || '1' !== IDLM_Settings::get('idlm_reps_see_all_leads', '1')
-            ? get_current_user_id() : 0;
+        if (!$respect_global_visibility) { return get_current_user_id(); }
+        return self::is_pre_sales() || '1' !== IDLM_Settings::get('idlm_reps_see_all_leads', '1') ? get_current_user_id() : 0;
     }
 
     public static function scope_sql($alias, &$params, $view_history = false, $respect_global_visibility = true) {
-        $user_id = $respect_global_visibility ? self::restriction_user_id() : (self::can_assign() ? 0 : get_current_user_id());
+        $user_id = self::restriction_user_id($respect_global_visibility);
         if (!$user_id) { return ''; }
         $alias = preg_replace('/[^a-zA-Z0-9_]/', '', (string) $alias);
         if ($view_history && self::is_pre_sales()) {
@@ -60,7 +85,10 @@ final class IDLM_Lead_Access_Policy {
 
     public static function can_access($lead_id, $view_history = false) {
         global $wpdb;
-        if (!self::restriction_user_id()) { return true; }
+        if (!self::has_rep_access() || absint($lead_id) < 1) { return false; }
+        if ((self::can_assign() && !self::restriction_user_id()) || ($view_history && !self::restriction_user_id())) {
+            return (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}idlm_leads WHERE id = %d", absint($lead_id)));
+        }
         if (!$view_history) {
             $assigned = $wpdb->get_var($wpdb->prepare(
                 "SELECT assigned_rep_id FROM {$wpdb->prefix}idlm_leads WHERE id = %d",

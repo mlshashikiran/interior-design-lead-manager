@@ -39,7 +39,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             "SELECT a.*, u.display_name 
              FROM {$wpdb->prefix}idlm_lead_activity_log a 
              LEFT JOIN {$wpdb->users} u ON a.user_id = u.ID 
-             WHERE a.lead_id = %d ORDER BY a.id DESC", 
+             WHERE a.lead_id = %d ORDER BY a.id DESC LIMIT 100",
             $lead_id
         ));
 
@@ -73,7 +73,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                             </div>
                             <?php if ($log->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $log->user_id)): ?>
                                 <div class="idlm-timeline-actions" style="font-size: 11px;">
-                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #c99644; text-decoration: none; margin-right: 8px;">Edit</a>
+                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
                                     <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
                                 </div>
                             <?php endif; ?>
@@ -107,7 +107,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                             </div>
                             <?php if ($log->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $log->user_id)): ?>
                                 <div class="idlm-timeline-actions" style="font-size: 11px;">
-                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #c99644; text-decoration: none; margin-right: 8px;">Edit</a>
+                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
                                     <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
                                 </div>
                             <?php endif; ?>
@@ -482,6 +482,9 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         if (!$lead_id || empty($comment)) {
             wp_send_json_error(array('message' => 'Empty comment or invalid Lead ID'));
         }
+        if (!self::current_user_can_access_lead($lead_id)) {
+            wp_send_json_error(array('message' => 'You can comment only on leads currently assigned to you.'));
+        }
 
         global $wpdb;
         $table_activity = $wpdb->prefix . 'idlm_lead_activity_log';
@@ -536,6 +539,10 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             wp_send_json_error(array('message' => 'Comment not found.'));
         }
 
+        if (!self::current_user_can_access_lead($log->lead_id)) {
+            wp_send_json_error(array('message' => 'You cannot modify comments on this lead.'));
+        }
+
         if (!current_user_can('manage_options') && get_current_user_id() != $log->user_id) {
             wp_send_json_error(array('message' => 'Unauthorized operation.'));
         }
@@ -571,6 +578,10 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $log = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_activity} WHERE id = %d", $log_id));
         if (!$log || $log->activity_type !== 'comment') {
             wp_send_json_error(array('message' => 'Comment not found.'));
+        }
+
+        if (!self::current_user_can_access_lead($log->lead_id)) {
+            wp_send_json_error(array('message' => 'You cannot modify comments on this lead.'));
         }
 
         if (!current_user_can('manage_options') && get_current_user_id() != $log->user_id) {
@@ -783,6 +794,12 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 } else {
                     $where[] = "1=0";
                 }
+            } elseif (!empty($get_followup_filter) && $get_followup_filter === 'stale_updates') {
+                $cutoff = IDLM_Admin_Lead_Notifications::get_stale_lead_cutoff();
+                $where[] = $wpdb->prepare(
+                    "assigned_rep_id > 0 AND is_duplicate = 0 AND stage NOT IN ('Won', 'Lost') AND COALESCE(assigned_at, created_at) < %s AND " . IDLM_Admin_Lead_Notifications::get_no_recent_assigned_rep_action_sql($cutoff),
+                    $cutoff
+                );
             }
 
             if (!empty($get_search)) {
@@ -1294,34 +1311,44 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
 
         // Save source based mappings
         $sources = array('Website', 'Meta Ads', 'Google Ads', 'LinkedIn Ads', 'Referral', 'Offline/Walk-in');
-        $source_maps = array();
-        foreach ($sources as $src) {
-            $field_name = 'source_map_' . str_replace(array(' ', '/', '-'), '_', strtolower($src));
-            if (isset($_POST[$field_name])) {
-                $source_maps[$src] = intval(wp_unslash($_POST[$field_name]));
+        // Hidden source-map controls are disabled in the accessible modal. Retain the
+        // saved mappings unless the source-based strategy is actively being edited.
+        if ('source_based' === $assignment_mode) {
+            $source_maps = array();
+            foreach ($sources as $src) {
+                $field_name = 'source_map_' . str_replace(array(' ', '/', '-'), '_', strtolower($src));
+                if (isset($_POST[$field_name])) {
+                    $source_maps[$src] = intval(wp_unslash($_POST[$field_name]));
+                }
             }
+            update_option('idlm_source_assignment_mappings', $source_maps);
         }
-        update_option('idlm_source_assignment_mappings', $source_maps);
 
         // Save fallback
         update_option('idlm_fallback_assignment_enabled', isset($_POST['fallback_assignment_enabled']) ? '1' : '0');
-        update_option('idlm_fallback_assignment_hours', isset($_POST['fallback_assignment_hours']) ? max(1, intval(wp_unslash($_POST['fallback_assignment_hours']))) : 24);
+        // Conditional controls are intentionally disabled while their safeguard is off.
+        // Preserve the previously configured values until that safeguard is enabled again.
+        if (isset($_POST['fallback_assignment_controls_active'])) {
+            update_option('idlm_fallback_assignment_hours', isset($_POST['fallback_assignment_hours']) ? max(1, intval(wp_unslash($_POST['fallback_assignment_hours']))) : 24);
+        }
         $qualified_fallback_was_enabled = get_option('idlm_qualified_fallback_enabled', '0');
         $qualified_fallback_is_enabled = isset($_POST['qualified_fallback_enabled']) ? '1' : '0';
         update_option('idlm_qualified_fallback_enabled', $qualified_fallback_is_enabled);
         if ('1' === $qualified_fallback_is_enabled && '1' !== $qualified_fallback_was_enabled) {
             update_option('idlm_qualified_fallback_enabled_at', current_time('mysql'));
         }
-        update_option('idlm_qualified_fallback_hours', isset($_POST['qualified_fallback_hours']) ? min(720, max(1, intval(wp_unslash($_POST['qualified_fallback_hours'])))) : 4);
-        $qualified_end_raw = isset($_POST['qualified_fallback_end_at']) ? sanitize_text_field(wp_unslash($_POST['qualified_fallback_end_at'])) : '';
-        $qualified_end_at = $qualified_end_raw && strtotime($qualified_end_raw) ? str_replace('T', ' ', $qualified_end_raw) : '';
-        update_option('idlm_qualified_fallback_end_at', $qualified_end_at);
-        update_option('idlm_qualified_fallback_include_existing', isset($_POST['qualified_fallback_include_existing']) ? '1' : '0');
-        $studio_mismatch_behavior = isset($_POST['studio_mismatch_behavior']) ? sanitize_key(wp_unslash($_POST['studio_mismatch_behavior'])) : 'general_pool';
-        update_option('idlm_studio_mismatch_behavior', in_array($studio_mismatch_behavior, array('general_pool', 'hold_for_manager'), true) ? $studio_mismatch_behavior : 'general_pool');
-        $handoff_task_policy = isset($_POST['handoff_task_policy']) ? sanitize_key(wp_unslash($_POST['handoff_task_policy'])) : 'transfer';
-        update_option('idlm_handoff_task_policy', in_array($handoff_task_policy, array('transfer', 'retain', 'complete_qualification'), true) ? $handoff_task_policy : 'transfer');
-        update_option('idlm_handoff_notifications_enabled', isset($_POST['handoff_notifications_enabled']) ? '1' : '0');
+        if (isset($_POST['qualified_fallback_controls_active'])) {
+            update_option('idlm_qualified_fallback_hours', isset($_POST['qualified_fallback_hours']) ? min(720, max(1, intval(wp_unslash($_POST['qualified_fallback_hours'])))) : 4);
+            $qualified_end_raw = isset($_POST['qualified_fallback_end_at']) ? sanitize_text_field(wp_unslash($_POST['qualified_fallback_end_at'])) : '';
+            $qualified_end_at = $qualified_end_raw && strtotime($qualified_end_raw) ? str_replace('T', ' ', $qualified_end_raw) : '';
+            update_option('idlm_qualified_fallback_end_at', $qualified_end_at);
+            update_option('idlm_qualified_fallback_include_existing', isset($_POST['qualified_fallback_include_existing']) ? '1' : '0');
+            $studio_mismatch_behavior = isset($_POST['studio_mismatch_behavior']) ? sanitize_key(wp_unslash($_POST['studio_mismatch_behavior'])) : 'general_pool';
+            update_option('idlm_studio_mismatch_behavior', in_array($studio_mismatch_behavior, array('general_pool', 'hold_for_manager'), true) ? $studio_mismatch_behavior : 'general_pool');
+            $handoff_task_policy = isset($_POST['handoff_task_policy']) ? sanitize_key(wp_unslash($_POST['handoff_task_policy'])) : 'transfer';
+            update_option('idlm_handoff_task_policy', in_array($handoff_task_policy, array('transfer', 'retain', 'complete_qualification'), true) ? $handoff_task_policy : 'transfer');
+            update_option('idlm_handoff_notifications_enabled', isset($_POST['handoff_notifications_enabled']) ? '1' : '0');
+        }
         update_option('idlm_routing_exception_notifications_enabled', isset($_POST['routing_exception_notifications_enabled']) ? '1' : '0');
         update_option('idlm_max_active_leads_per_rep', isset($_POST['max_active_leads_per_rep']) ? min(10000, max(0, absint(wp_unslash($_POST['max_active_leads_per_rep'])))) : 30);
         update_option('idlm_working_hours_start', isset($_POST['working_hours_start']) ? sanitize_text_field(wp_unslash($_POST['working_hours_start'])) : '09:00');
@@ -1400,76 +1427,31 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Access Denied');
         }
-
-        $lead_ids = isset($_POST['lead_ids']) && is_array($_POST['lead_ids']) ? array_map('intval', wp_unslash($_POST['lead_ids'])) : array();
-        $event_name = isset($_POST['event_name']) ? sanitize_text_field(wp_unslash($_POST['event_name'])) : '';
-
-        if (empty($lead_ids) || empty($event_name)) {
-            wp_send_json_error('Missing required parameters');
+        $raw_ids = isset($_POST['lead_ids']) ? wp_unslash($_POST['lead_ids']) : array();
+        if (!is_array($raw_ids) || !$raw_ids || count($raw_ids) > 50 || count(array_filter($raw_ids, 'is_scalar')) !== count($raw_ids)) {
+            wp_send_json_error('Select between 1 and 50 leads per batch.');
         }
-
-        $enabled = get_option('idlm_interakt_enabled', '0');
-        $api_key = get_option('idlm_interakt_api_key', '');
-
-        if ($enabled !== '1' || empty($api_key)) {
+        $event = isset($_POST['event_name']) && is_scalar($_POST['event_name']) ? sanitize_text_field(wp_unslash($_POST['event_name'])) : '';
+        $request_id = isset($_POST['request_id']) && is_scalar($_POST['request_id']) ? sanitize_text_field(wp_unslash($_POST['request_id'])) : '';
+        if (!preg_match('/^[a-zA-Z0-9_-]{8,80}$/D', $request_id)) {
+            wp_send_json_error('A valid sync request ID is required. Refresh the page and retry.');
+        }
+        if (!IDLM_Interakt_Batch::allowed_event($event)) {
+            wp_send_json_error('Save a valid Interakt event mapping before syncing.');
+        }
+        if ('1' !== get_option('idlm_interakt_enabled', '0') || !get_option('idlm_interakt_api_key', '')) {
             wp_send_json_error('Interakt automation is disabled or API key is missing.');
         }
-
-        $success_count = 0;
-        $failure_count = 0;
-
-        foreach ($lead_ids as $index => $lead_id) {
-            // Rate limiting: sleep 250ms between requests in this sequential execution
-            if ($index > 0) {
-                usleep(250000);
-            }
-
-            global $wpdb;
-            $table_leads = $wpdb->prefix . 'idlm_leads';
-            
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-            $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_leads} WHERE id = %d", $lead_id));
-            if (!$lead || empty($lead->phone)) {
-                $failure_count++;
-                continue;
-            }
-
-            $phone_parsed = IDLM_Interakt::format_phone_for_interakt($lead->phone);
-            if (empty($phone_parsed['phoneNumber'])) {
-                $failure_count++;
-                continue;
-            }
-
-            $payload = array(
-                'userId'      => (string) $lead->id,
-                'countryCode' => $phone_parsed['countryCode'],
-                'phoneNumber' => $phone_parsed['phoneNumber'],
-                'event'       => trim($event_name),
-                'traits'      => array(
-                    'name'             => IDLM_Interakt::sanitize_trait_value($lead->first_name . ' ' . $lead->last_name),
-                    'email'            => IDLM_Interakt::sanitize_trait_value($lead->email),
-                    'project_location' => IDLM_Interakt::sanitize_trait_value($lead->property_location),
-                    'budget'           => IDLM_Interakt::sanitize_trait_value($lead->budget),
-                    'property_type'    => IDLM_Interakt::sanitize_trait_value($lead->property_type),
-                    'lead_id'          => intval($lead->id),
-                    'source'           => IDLM_Interakt::sanitize_trait_value($lead->source),
-                    'triggered_at'     => current_time('mysql')
-                ),
-                'createdAt'   => gmdate('c')
-            );
-
-            $res = IDLM_Interakt::send_track_event_to_interakt($payload, $api_key, $lead_id);
-            if ($res) {
-                $success_count++;
-            } else {
-                $failure_count++;
-            }
+        $queued = 0;
+        $existing = 0;
+        $failed = 0;
+        foreach (array_values(array_unique(array_map('absint', $raw_ids))) as $index => $lead_id) {
+            $result = IDLM_Interakt_Batch::enqueue($lead_id, $event, $request_id, $index * 2);
+            if ('queued' === $result) { $queued++; }
+            elseif ('existing' === $result) { $existing++; }
+            else { $failed++; }
         }
-
-        wp_send_json_success(array(
-            'success_count' => $success_count,
-            'failure_count' => $failure_count
-        ));
+        wp_send_json_success(array('queued_count' => $queued, 'existing_count' => $existing, 'failure_count' => $failed));
     }
 
     /**
@@ -1634,7 +1616,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         // Rep permissions check
         $current_user_id = get_current_user_id();
         $is_admin = current_user_can('manage_options');
-        $is_pre_sales = self::current_user_is_pre_sales();
         $restricted_user_id = IDLM_Lead_Access_Policy::restriction_user_id();
 
         // Duplicate rows remain available to administrators for audit, but reps
@@ -1807,6 +1788,12 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             } else {
                 $where[] = "1=0";
             }
+        } elseif (!empty($post_followup_filter) && $post_followup_filter === 'stale_updates') {
+            $cutoff = IDLM_Admin_Lead_Notifications::get_stale_lead_cutoff();
+            $where[] = $wpdb->prepare(
+                "l.assigned_rep_id > 0 AND l.is_duplicate = 0 AND l.stage NOT IN ('Won', 'Lost') AND COALESCE(l.assigned_at, l.created_at) < %s AND " . IDLM_Admin_Lead_Notifications::get_no_recent_assigned_rep_action_sql($cutoff, 'l'),
+                $cutoff
+            );
         }
 
         if (!empty($post_search)) {
@@ -1815,6 +1802,13 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         }
 
         $where_clause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
+
+        if (isset($_POST['count_only']) && '1' === sanitize_text_field(wp_unslash($_POST['count_only']))) {
+            // Reuse the authenticated, capability-scoped table filters for export previews without rendering rows.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+            $matched_count = intval($wpdb->get_var("SELECT COUNT(l.id) FROM {$table_leads} l {$where_clause}"));
+            wp_send_json_success(array('total_items' => $matched_count));
+        }
 
         // Metric-grid values use the same permissions and active filters as the
         // table, while retaining each card's documented workflow definition.
@@ -2015,7 +2009,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
 
         ob_start();
         if (empty($leads)) {
-            echo '<tr><td colspan="' . ($is_pre_sales ? '13' : '9') . '" style="text-align:center;">No leads found matching your active filters.</td></tr>';
+            echo '<tr><td colspan="' . ($is_pre_sales ? '13' : '10') . '" style="text-align:center;">No leads found matching your active filters.</td></tr>';
         } else {
             foreach ($leads as $l) {
                 $name = esc_html($l->first_name . ' ' . $l->last_name);
@@ -2025,6 +2019,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 $dup_badge = $l->is_duplicate ? '<span class="idlm-badge idlm-badge-warning" style="margin-left:5px; font-size:9px; padding:2px 6px;">DUP</span>' : '';
                 $last_read_whatsapp_id = isset($whatsapp_read_ids[$l->id]) ? absint($whatsapp_read_ids[$l->id]) : 0;
                 $has_unread_whatsapp = !empty($l->latest_whatsapp_reply_id) && absint($l->latest_whatsapp_reply_id) > $last_read_whatsapp_id;
+                $responsive_row_id = 'idlm-lead-row-' . absint($l->id);
                 if ($is_pre_sales) {
                     $outreach_targets = IDLM_DB::get_presales_outreach_targets();
                     $calculated_progress = IDLM_DB::calculate_presales_outreach_progress(
@@ -2096,38 +2091,36 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                     $decision_ready = in_array($next_action, array('Ready to qualify', 'Review invalid contact', 'Review early close', 'Review budget mismatch', 'Send final closure'), true);
                     $decision_complete = in_array($l->lead_quality, array('Qualified', 'Unqualified'), true);
                     ?>
-                    <tr data-id="<?php echo esc_attr($l->id); ?>" class="idlm-presales-queue-row <?php echo $l->is_duplicate ? 'idlm-duplicate-row' : ''; ?>">
-                        <td><input type="checkbox" class="idlm-row-selector" value="<?php echo esc_attr($l->id); ?>"></td>
-                        <td onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)">
-                            <strong><?php echo esc_html($name); ?></strong> <?php echo wp_kses_post($dup_badge); ?>
+                    <tr id="<?php echo esc_attr($responsive_row_id); ?>" data-id="<?php echo esc_attr($l->id); ?>" class="idlm-presales-queue-row idlm-responsive-lead-row <?php echo $l->is_duplicate ? 'idlm-duplicate-row' : ''; ?>">
+                        <td class="idlm-selection-column idlm-col-priority-primary" data-label="Select"><input type="checkbox" class="idlm-row-selector" value="<?php echo esc_attr($l->id); ?>" aria-label="Select lead <?php echo esc_attr($name); ?>"></td>
+                        <td class="idlm-lead-identity-cell idlm-col-priority-primary" data-label="Lead" data-lead-drawer-id="<?php echo esc_attr($l->id); ?>">
+                            <button type="button" class="idlm-lead-row-open" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)"><strong><?php echo esc_html($name); ?></strong><span class="screen-reader-text"> — open lead details</span></button> <?php echo wp_kses_post($dup_badge); ?>
                             <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge">New WhatsApp</span><?php endif; ?>
                             <small><?php echo esc_html($l->phone); ?><?php echo $l->project_name ? ' · ' . esc_html($l->project_name) : ''; ?></small>
+                            <button type="button" class="idlm-lead-row-expand" aria-expanded="false" aria-controls="<?php echo esc_attr($responsive_row_id); ?>"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><span class="idlm-lead-row-expand-label">Show details</span></button>
                         </td>
-                        <td><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(array(' ', '/', '-'), '', $l->source))); ?>"><?php echo esc_html($l->source ?: 'Unknown'); ?></span></td>
-                        <td class="idlm-col-created-at"><?php echo esc_html(self::format_datetime($l->created_at, 'M j, Y')); ?></td>
-                        <td class="idlm-col-created-at"><?php echo $l->assigned_at ? esc_html(self::format_datetime($l->assigned_at, 'M j, Y')) : '<span class="idlm-muted">—</span>'; ?></td>
-                        <td><strong><?php echo esc_html(self::get_business_day_age($l->created_at)); ?></strong><small>business days</small></td>
-                        <td><span class="idlm-progress-chip"><?php echo esc_html($cycle_outreach['calls']); ?>/<?php echo esc_html($outreach_targets['calls']); ?> calls</span><span class="idlm-progress-chip"><?php echo esc_html($cycle_outreach['whatsapp']); ?>/<?php echo esc_html($outreach_targets['whatsapp']); ?> WA</span><small><?php echo esc_html(min(6, $complete_cycles)); ?>/6 cycles</small></td>
-                        <td><strong><?php echo esc_html($next_action); ?></strong></td>
-                        <td><?php echo $l->callback_datetime ? esc_html(self::format_datetime($l->callback_datetime, 'M j, g:i A')) : '<span class="idlm-muted">None</span>'; ?></td>
-                        <td><span class="idlm-response-chip"><?php echo esc_html($response_label); ?></span></td>
-                        <td><strong><?php echo esc_html($l->budget ?: 'Missing'); ?></strong><span class="idlm-budget-check <?php echo $budget_pass ? 'is-pass' : 'is-review'; ?>"><?php echo $budget_pass ? '₹4L+' : 'Review'; ?></span></td>
-                        <td><strong><?php echo esc_html($details_complete); ?>/6</strong><small><?php echo empty($l->floor_plan_received) ? 'Plan pending' : 'Plan received'; ?></small></td>
-                        <td><span class="idlm-sla-chip <?php echo esc_attr($sla_class); ?>"><?php echo esc_html($sla_label); ?></span></td>
-                        <td><div class="idlm-queue-actions"><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="call" data-lead-id="<?php echo esc_attr($l->id); ?>" <?php disabled($decision_complete); ?>>Log call</button><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="whatsapp" data-lead-id="<?php echo esc_attr($l->id); ?>" <?php disabled($decision_complete); ?>>Log WA</button><button type="button" class="idlm-btn idlm-btn-primary" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)"><?php echo $decision_ready ? 'Decide' : 'Open'; ?></button></div></td>
+                        <td class="idlm-col-priority-low" data-label="Channel"><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(array(' ', '/', '-'), '', $l->source))); ?>"><?php echo esc_html($l->source ?: 'Unknown'); ?></span></td>
+                        <td class="idlm-col-created-at idlm-col-priority-low" data-label="Assigned date"><?php echo wp_kses_post(IDLM_Admin_Presenter::render_lead_table_datetime($l->assigned_at)); ?></td>
+                        <td class="idlm-col-priority-low" data-label="Age"><strong><?php echo esc_html(self::get_business_day_age($l->created_at)); ?></strong><small>business days</small></td>
+                        <td class="idlm-col-priority-low" data-label="Today"><span class="idlm-progress-chip"><?php echo esc_html($cycle_outreach['calls']); ?>/<?php echo esc_html($outreach_targets['calls']); ?> calls</span><span class="idlm-progress-chip"><?php echo esc_html($cycle_outreach['whatsapp']); ?>/<?php echo esc_html($outreach_targets['whatsapp']); ?> WA</span><small><?php echo esc_html(min(6, $complete_cycles)); ?>/6 cycles</small></td>
+                        <td class="idlm-col-priority-secondary" data-label="Response"><span class="idlm-response-chip"><?php echo esc_html($response_label); ?></span></td>
+                        <td class="idlm-col-priority-secondary" data-label="Budget"><strong><?php echo esc_html($l->budget ?: 'Missing'); ?></strong><span class="idlm-budget-check <?php echo $budget_pass ? 'is-pass' : 'is-review'; ?>"><?php echo $budget_pass ? '₹4L+' : 'Review'; ?></span></td>
+                        <td class="idlm-col-priority-low" data-label="Project details"><strong><?php echo esc_html($details_complete); ?>/6</strong><small><?php echo empty($l->floor_plan_received) ? 'Plan pending' : 'Plan received'; ?></small></td>
+                        <td class="idlm-col-priority-primary" data-label="Follow-up status"><span class="idlm-sla-chip <?php echo esc_attr($sla_class); ?>"><?php echo esc_html($sla_label); ?></span></td>
+                        <td class="idlm-col-priority-primary idlm-lead-row-actions" data-label="Actions"><div class="idlm-queue-actions"><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="call" data-lead-id="<?php echo esc_attr($l->id); ?>" <?php disabled($decision_complete); ?>>Log call</button><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="whatsapp" data-lead-id="<?php echo esc_attr($l->id); ?>" <?php disabled($decision_complete); ?>>Log WA</button><?php if ($decision_ready): ?><button type="button" class="idlm-btn idlm-btn-primary" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)">Decide</button><?php endif; ?></div></td>
                     </tr>
                     <?php
                     continue;
                 }
                 ?>
-                <tr data-id="<?php echo esc_attr($l->id); ?>" class="<?php echo $l->is_duplicate ? 'idlm-duplicate-row' : ''; ?>">
-                    <td><input type="checkbox" class="idlm-row-selector" value="<?php echo esc_attr($l->id); ?>"></td>
-                    <td onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)">
-                        <strong><?php echo esc_html($name); ?></strong> <?php echo wp_kses_post($dup_badge); ?>
+                <tr id="<?php echo esc_attr($responsive_row_id); ?>" data-id="<?php echo esc_attr($l->id); ?>" class="idlm-responsive-lead-row <?php echo $l->is_duplicate ? 'idlm-duplicate-row' : ''; ?>">
+                    <td class="idlm-selection-column idlm-col-priority-primary" data-label="Select"><input type="checkbox" class="idlm-row-selector" value="<?php echo esc_attr($l->id); ?>" aria-label="Select lead <?php echo esc_attr($name); ?>"></td>
+                    <td class="idlm-lead-identity-cell idlm-col-priority-primary" data-label="Lead" data-lead-drawer-id="<?php echo esc_attr($l->id); ?>">
+                        <button type="button" class="idlm-lead-row-open" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)"><strong><?php echo esc_html($name); ?></strong><span class="screen-reader-text"> — open lead details</span></button> <?php echo wp_kses_post($dup_badge); ?>
                         <?php if ($has_unread_whatsapp): ?>
                             <span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span>
                         <?php endif; ?>
-                        <div style="font-size:11px; color:#666; margin-top:2px;"><?php echo esc_html($l->email); ?> | <?php echo esc_html($l->phone); ?></div>
+                        <div class="idlm-lead-row-contact"><?php echo esc_html($l->email); ?> | <?php echo esc_html($l->phone); ?></div>
                         <?php if ('Qualified' === $l->lead_quality && 'awaiting_manager' === $l->handoff_status):
                             $handoff_started_at = $l->qualified_at ?: ($l->updated_at ?: $l->created_at);
                             $handoff_wait_hours = IDLM_Integrations::get_elapsed_working_hours(
@@ -2142,12 +2135,13 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                             <span class="idlm-row-handoff-badge <?php echo $handoff_is_overdue ? 'is-overdue' : ''; ?>">Awaiting assignment · <?php echo esc_html($handoff_wait_hours < 1 ? '<1 working hour' : floor($handoff_wait_hours) . ' working hours'); ?></span>
                             <?php if (!empty($l->property_location)): ?><small class="idlm-row-handoff-location"><?php echo esc_html($l->property_location); ?></small><?php endif; ?>
                         <?php endif; ?>
+                        <button type="button" class="idlm-lead-row-expand" aria-expanded="false" aria-controls="<?php echo esc_attr($responsive_row_id); ?>"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><span class="idlm-lead-row-expand-label">Show details</span></button>
                     </td>
-                    <td><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(' ', '', $l->source))); ?>"><?php echo esc_html($l->source); ?></span></td>
-                    <td><strong><?php echo !empty($l->budget) ? esc_html($l->budget) : 'N/A'; ?></strong></td>
+                    <td class="idlm-col-priority-low" data-label="Channel"><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(' ', '', $l->source))); ?>"><?php echo esc_html($l->source); ?></span></td>
+                    <td class="idlm-col-priority-secondary" data-label="Budget"><strong><?php echo !empty($l->budget) ? esc_html($l->budget) : 'N/A'; ?></strong></td>
                     
                     <!-- Stage Quick Edit dropdown -->
-                    <td>
+                    <td class="idlm-col-priority-primary" data-label="Stage">
                         <select class="idlm-table-select idlm-quick-edit" data-field="stage" data-id="<?php echo esc_attr($l->id); ?>" data-property-location="<?php echo esc_attr($l->property_location); ?>" data-quote-value="<?php echo esc_attr(isset($l->quote_value) ? $l->quote_value : ''); ?>" data-quote-file="<?php echo esc_url(isset($l->quote_file) ? $l->quote_file : ''); ?>">
                             <?php foreach ($stages as $st): ?>
                                 <option value="<?php echo esc_attr($st); ?>" <?php selected($l->stage, $st); ?>><?php echo esc_html($st); ?></option>
@@ -2156,7 +2150,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                     </td>
  
                     <!-- Rep Quick Edit dropdown -->
-                    <td>
+                    <td class="idlm-col-priority-secondary" data-label="Assigned representative">
                         <?php if (self::current_user_can_assign_leads()): ?>
                             <select class="idlm-table-select idlm-quick-edit" data-field="assigned_rep_id" data-id="<?php echo esc_attr($l->id); ?>">
                                 <option value="0">Unassigned</option>
@@ -2177,7 +2171,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                     </td>
  
                     <!-- Lead Quality dropdown -->
-                    <td>
+                    <td class="idlm-col-priority-primary" data-label="Lead quality">
                         <select class="idlm-table-select idlm-quick-edit" data-field="lead_quality" data-id="<?php echo esc_attr($l->id); ?>">
                             <option value="" <?php selected($l->lead_quality, ''); ?>>Pending Qualification</option>
                             <option value="Qualified" <?php selected($l->lead_quality, 'Qualified'); ?>>✅ <?php echo esc_html('Qualified' === $l->lead_quality ? self::get_qualification_status_label($l) : 'Qualified'); ?></option>
@@ -2186,7 +2180,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                     </td>
  
                     <!-- Tasks Indicator -->
-                    <td>
+                    <td class="idlm-col-priority-secondary" data-label="Tasks">
                         <?php 
                         $pending_count = intval($l->pending_tasks_count);
                         $overdue_count = intval($l->overdue_tasks_count);
@@ -2203,8 +2197,8 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                         <?php endif; ?>
                     </td>
 
-                    <td class="idlm-col-created-at"><?php echo $l->assigned_at ? esc_html(self::format_datetime($l->assigned_at)) : '<span class="idlm-muted">—</span>'; ?></td>
-                    <td class="idlm-col-created-at"><?php echo esc_html(self::format_datetime($l->created_at)); ?></td>
+                    <td class="idlm-col-created-at idlm-col-priority-low" data-label="Assigned at"><?php echo wp_kses_post(IDLM_Admin_Presenter::render_lead_table_datetime($l->assigned_at)); ?></td>
+                    <td class="idlm-col-created-at idlm-col-priority-low" data-label="Created at"><?php echo wp_kses_post(IDLM_Admin_Presenter::render_lead_table_datetime($l->created_at)); ?></td>
                 </tr>
                 <?php
             }
@@ -2226,13 +2220,15 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
 
         wp_send_json_success(array(
             'html' => $html,
+            'total_items' => $total_items,
             'total_pages' => max(1, $total_pages),
             'current_page' => $page,
             'pagination_mode' => $use_cursor_query ? 'cursor' : 'offset',
             'next_cursor' => $next_cursor,
             'metric_stats' => $metric_stats,
             'pending_calls_count' => self::get_pending_calls_count(),
-            'unread_whatsapp_count' => self::get_unread_whatsapp_count()
+            'unread_whatsapp_count' => self::get_unread_whatsapp_count(),
+            'stale_lead_count' => IDLM_Admin_Lead_Notifications::get_stale_lead_count()
         ));
     }
 
@@ -2315,6 +2311,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $post_rep_id      = isset($_POST['rep_id']) ? sanitize_text_field(wp_unslash($_POST['rep_id'])) : '';
         $post_call_status = isset($_POST['call_status']) ? sanitize_text_field(wp_unslash($_POST['call_status'])) : '';
         $post_quality     = isset($_POST['quality']) ? sanitize_text_field(wp_unslash($_POST['quality'])) : '';
+        $post_attention   = isset($_POST['attention']) ? sanitize_key(wp_unslash($_POST['attention'])) : '';
         $post_search      = isset($_POST['search']) ? sanitize_text_field(wp_unslash($_POST['search'])) : '';
         $post_sort        = isset($_POST['sort']) ? sanitize_key(wp_unslash($_POST['sort'])) : 'newest';
         $sort_options     = array(
@@ -2352,6 +2349,13 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 $where[] = $wpdb->prepare("lead_quality = %s", $post_quality);
             }
         }
+        if ('stale_updates' === $post_attention) {
+            $cutoff = IDLM_Admin_Lead_Notifications::get_stale_lead_cutoff();
+            $where[] = $wpdb->prepare(
+                "l.assigned_rep_id > 0 AND l.stage NOT IN ('Won', 'Lost') AND COALESCE(l.assigned_at, l.created_at) < %s AND " . IDLM_Admin_Lead_Notifications::get_no_recent_assigned_rep_action_sql($cutoff, 'l'),
+                $cutoff
+            );
+        }
         if (!empty($post_search)) {
             $search = '%' . $wpdb->esc_like($post_search) . '%';
             $where[] = $wpdb->prepare("(first_name LIKE %s OR last_name LIKE %s OR email LIKE %s OR phone LIKE %s)", $search, $search, $search, $search);
@@ -2363,9 +2367,19 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
 
         // Query leads
         $now_mysql = current_time('mysql');
+        $stale_cutoff = IDLM_Admin_Lead_Notifications::get_stale_lead_cutoff();
+        $needs_update_sql = $wpdb->prepare(
+            "CASE WHEN l.assigned_rep_id > 0
+                AND l.stage NOT IN ('Won', 'Lost')
+                AND COALESCE(l.assigned_at, l.created_at) < %s
+                AND " . IDLM_Admin_Lead_Notifications::get_no_recent_assigned_rep_action_sql($stale_cutoff, 'l') . "
+             THEN 1 ELSE 0 END",
+            $stale_cutoff
+        );
         $leads = $wpdb->get_results($wpdb->prepare(
             "SELECT l.id, l.first_name, l.last_name, l.email, l.phone, l.budget, l.quote_value, l.deal_value, l.quote_file, l.property_location, l.source, l.stage, l.call_status, l.assigned_rep_id, l.is_duplicate,
                     u.display_name as rep_name,
+                    {$needs_update_sql} as needs_update,
                     (SELECT COUNT(t.id) FROM {$wpdb->prefix}idlm_tasks t WHERE t.lead_id = l.id AND t.status = 'pending') as pending_tasks_count,
                     (SELECT COUNT(t.id) FROM {$wpdb->prefix}idlm_tasks t WHERE t.lead_id = l.id AND t.status = 'pending' AND t.due_date IS NOT NULL AND t.due_date < %s) as overdue_tasks_count
              FROM {$table_leads} l
@@ -2381,7 +2395,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         foreach ($stages as $stage) {
             $grouped_leads[$stage] = array();
         }
-
         if (!empty($leads)) {
             foreach ($leads as $lead) {
                 $stage = !empty($lead->stage) ? $lead->stage : 'New';
@@ -2461,6 +2474,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 'open_pipeline_value' => round($open_pipeline_value, 2),
                 'won_current_month' => $monthly_won_summary ? intval($monthly_won_summary->won_current_month) : 0,
                 'won_revenue_current_month' => $monthly_won_summary ? round(floatval($monthly_won_summary->won_revenue_current_month), 2) : 0,
+                'stale_lead_count' => IDLM_Admin_Lead_Notifications::get_stale_lead_count(true),
             ),
         ));
     }
@@ -2494,7 +2508,18 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             }
         }
 
-        $stats = IDLM_Dashboard::get_stats($period, $custom_start, $custom_end);
+        if (!empty($_POST['investigate'])) {
+            $records = IDLM_Dashboard::get_records(
+                sanitize_key(wp_unslash($_POST['investigate'])),
+                isset($_POST['value']) ? sanitize_text_field(wp_unslash($_POST['value'])) : '',
+                $period, $custom_start, $custom_end,
+                isset($_POST['records_page']) ? absint($_POST['records_page']) : 1
+            );
+            if (is_wp_error($records)) { wp_send_json_error(array('message' => $records->get_error_message())); }
+            wp_send_json_success($records);
+        }
+        $filters = array('rep_id' => isset($_POST['rep_id']) ? absint($_POST['rep_id']) : 0, 'studio' => isset($_POST['studio']) ? sanitize_text_field(wp_unslash($_POST['studio'])) : '', 'source' => isset($_POST['source']) ? sanitize_text_field(wp_unslash($_POST['source'])) : '', 'campaign' => isset($_POST['campaign']) ? sanitize_text_field(wp_unslash($_POST['campaign'])) : '');
+        $stats = IDLM_Dashboard::get_stats($period, $custom_start, $custom_end, $filters);
 
         wp_send_json_success($stats);
     }
@@ -2509,9 +2534,15 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         }
 
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $form_raw = isset($_POST['form_data']) ? wp_unslash($_POST['form_data']) : '';
+        $form_raw = isset($_POST['form_data']) && is_string($_POST['form_data']) ? wp_unslash($_POST['form_data']) : '';
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         parse_str($form_raw, $form_fields);
+
+        foreach ($form_fields as $value) {
+            if (!is_scalar($value)) {
+                wp_send_json_error(array('message' => 'Invalid lead field value.'));
+            }
+        }
 
         $lead_id = isset($form_fields['lead_id']) ? intval($form_fields['lead_id']) : 0;
         if (!$lead_id) {
@@ -2525,6 +2556,27 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             isset($form_fields['floor_plan_files']) ? $form_fields['floor_plan_files'] : '',
             isset($form_fields['floor_plan_file']) ? $form_fields['floor_plan_file'] : ''
         );
+        $file_urls = $floor_plan_files;
+        if (!empty($form_fields['quote_file'])) { $file_urls[] = esc_url_raw($form_fields['quote_file']); }
+        foreach ($file_urls as $file_url) {
+            $attachment_id = attachment_url_to_postid($file_url);
+            $owner_lead = $attachment_id ? absint(get_post_meta($attachment_id, '_idlm_attachment_lead_id', true)) : 0;
+            if ($owner_lead && $owner_lead !== $lead_id) {
+                wp_send_json_error(array('message' => 'An uploaded file belongs to another lead.'));
+            }
+        }
+        global $wpdb;
+        $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id));
+        if (!$existing) {
+            wp_send_json_error(array('message' => 'Lead not found.'));
+        }
+        $protected_fields = IDLM_Lead_Access_Policy::validate_detail_fields($form_fields, $existing);
+        if (is_wp_error($protected_fields)) {
+            wp_send_json_error(array('message' => $protected_fields->get_error_message()));
+        }
+        // Omitted controls must preserve stored values, including disabled role-specific fields.
+        $submitted_fields = array_keys($form_fields);
+        $form_fields = array_merge((array) $existing, $form_fields);
         $data = array(
             'first_name' => sanitize_text_field($form_fields['first_name']),
             'last_name'  => sanitize_text_field($form_fields['last_name']),
@@ -2548,6 +2600,13 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             'quote_file' => isset($form_fields['quote_file']) ? esc_url_raw($form_fields['quote_file']) : '',
             'preferred_studio' => sanitize_text_field($form_fields['preferred_studio'])
         );
+
+        foreach ($data as $field => $value) {
+            if (in_array($field, $protected_fields, true) ||
+                (!in_array($field, $submitted_fields, true) && !('floor_plan_file' === $field && in_array('floor_plan_files', $submitted_fields, true)) && !('floor_plan_files' === $field && in_array('floor_plan_file', $submitted_fields, true)))) {
+                unset($data[$field]);
+            }
+        }
 
         // Once a lead has structured quotations, commercial summary fields are
         // maintained only by the quotation workflow and cannot be overwritten
@@ -2586,11 +2645,19 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             wp_send_json_error(array('message' => 'Permission denied.'));
         }
 
+        $lead_id = isset($_POST['lead_id']) ? absint($_POST['lead_id']) : 0;
+        if (!$lead_id || !self::current_user_can_access_lead($lead_id)) {
+            wp_send_json_error(array('message' => 'You can upload files only for leads currently assigned to you.'), 403);
+        }
+
         if (empty($_FILES['file'])) {
             wp_send_json_error(array('message' => 'No file uploaded.'), 400);
         }
 
         $purpose = isset($_POST['purpose']) ? sanitize_key(wp_unslash($_POST['purpose'])) : '';
+        if ('quote' === $purpose && self::current_user_is_pre_sales()) {
+            wp_send_json_error(array('message' => 'Pre-sales users cannot upload commercial quotations.'), 403);
+        }
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated by the field-specific policy before WordPress handles it.
         $upload_validation = IDLM_Production_Security::validate_upload($_FILES['file'], $purpose);
         if (is_wp_error($upload_validation)) {
@@ -2610,6 +2677,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         }
 
         update_post_meta($attachment_id, '_idlm_attachment_purpose', $purpose);
+        update_post_meta($attachment_id, '_idlm_attachment_lead_id', $lead_id);
         update_post_meta($attachment_id, '_idlm_attachment_owner_id', get_current_user_id());
         update_post_meta($attachment_id, '_idlm_attachment_created_at', current_time('mysql'));
 
@@ -2656,38 +2724,19 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         }
 
         $input_count = isset($_POST['confirm_count']) ? sanitize_text_field(wp_unslash($_POST['confirm_count'])) : '';
-
-        global $wpdb;
-        $table_leads = $wpdb->prefix . 'idlm_leads';
-        $table_activity = $wpdb->prefix . 'idlm_lead_activity_log';
-        $table_capi = $wpdb->prefix . 'idlm_capi_logs';
-        $table_tasks = $wpdb->prefix . 'idlm_tasks';
-        $table_touchpoints = $wpdb->prefix . 'idlm_lead_touchpoints';
-
-        $table_audience_logs = $wpdb->prefix . 'idlm_audience_sync_logs';
-
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $actual_count = intval($wpdb->get_var("SELECT COUNT(id) FROM {$table_leads}"));
-
-        if (strval($input_count) !== strval($actual_count)) {
-            wp_send_json_error(array('message' => 'Verification failed. The entered count does not match the actual number of leads.'));
+        if ('' === $input_count || !ctype_digit($input_count)) {
+            wp_send_json_error(array('message' => 'Verification failed. Enter the current lead count as a whole number.'));
         }
 
-        // Truncate tables to delete all leads & reset analytics
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $wpdb->query("TRUNCATE TABLE {$table_leads}");
-        $wpdb->query("TRUNCATE TABLE {$table_activity}");
-        $wpdb->query("TRUNCATE TABLE {$table_capi}");
-        $wpdb->query("TRUNCATE TABLE {$table_audience_logs}");
-        $wpdb->query("TRUNCATE TABLE {$table_tasks}");
-        $wpdb->query("TRUNCATE TABLE {$table_touchpoints}");
-        if (class_exists('IDLM_Quotations')) {
-            IDLM_Quotations::reset_data();
+        $reset = IDLM_Lead_Deletion_Service::reset_all($input_count);
+        if (is_wp_error($reset)) {
+            wp_send_json_error(array('message' => $reset->get_error_message()), 500);
         }
-        // phpcs:enable
 
-        IDLM_Read_Model_Cache::invalidate('crm_reset');
-        wp_send_json_success(array('message' => 'CRM leads database and analytics have been successfully reset to starting state!'));
+        wp_send_json_success(array(
+            'message' => 'CRM leads database and analytics have been successfully reset to starting state!',
+            'manifest' => $reset,
+        ));
     }
 
     /**
@@ -2724,6 +2773,12 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
 
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $leads = isset($_POST['leads']) ? (array) wp_unslash($_POST['leads']) : array();
+        if (!$leads && isset($_POST['leads_json'])) {
+            // JSON avoids PHP max_input_vars truncating large non-mutating preflight requests.
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            $decoded_leads = json_decode(wp_unslash($_POST['leads_json']), true);
+            $leads = is_array($decoded_leads) ? $decoded_leads : array();
+        }
         if (empty($leads)) {
             wp_send_json_error(array('message' => 'No lead records received in this batch.'));
         }
@@ -2731,23 +2786,33 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $default_source = isset($_POST['default_source']) ? sanitize_text_field(wp_unslash($_POST['default_source'])) : 'CSV Import';
         $default_stage = isset($_POST['default_stage']) ? sanitize_text_field(wp_unslash($_POST['default_stage'])) : 'New';
         $default_call_status = isset($_POST['default_call_status']) ? sanitize_text_field(wp_unslash($_POST['default_call_status'])) : 'Not Called';
+        $default_studio = isset($_POST['default_studio']) ? sanitize_text_field(wp_unslash($_POST['default_studio'])) : '';
+        $validate_only = !empty($_POST['validate_only']);
         $run_routing = !empty($_POST['run_routing']) ? true : false;
         $run_capi = !empty($_POST['run_capi']) ? true : false;
 
         $imported = 0;
         $duplicates = 0;
         $failed = 0;
+        $errors = array();
+        $projected = array('valid' => 0, 'duplicate' => 0, 'rejected' => 0);
+        $seen_import_identities = array();
 
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
 
-        foreach ($leads as $lead) {
+        foreach ($leads as $lead_index => $lead) {
             $first_name = isset($lead['first_name']) ? sanitize_text_field($lead['first_name']) : '';
             $phone = isset($lead['phone']) ? sanitize_text_field($lead['phone']) : '';
 
             // First Name and Phone are required for database schema integrity
             if (empty($first_name) || empty($phone)) {
                 $failed++;
+                $projected['rejected']++;
+                $errors[] = array(
+                    'index' => absint($lead_index),
+                    'message' => 'First name and phone number are required.',
+                );
                 continue;
             }
 
@@ -2756,17 +2821,44 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 'last_name' => isset($lead['last_name']) ? sanitize_text_field($lead['last_name']) : '',
                 'email' => isset($lead['email']) ? sanitize_email($lead['email']) : '',
                 'phone' => $phone,
+                'project_name' => isset($lead['project_name']) ? sanitize_text_field($lead['project_name']) : '',
                 'budget' => isset($lead['budget']) ? IDLM_Integrations::normalize_budget(sanitize_text_field($lead['budget'])) : '',
+                'deal_value' => isset($lead['deal_value']) ? max(0, round(floatval($lead['deal_value']), 2)) : 0,
                 'project_timeline' => isset($lead['project_timeline']) ? sanitize_text_field($lead['project_timeline']) : '',
+                'possession_date' => !empty($lead['possession_date']) ? sanitize_text_field($lead['possession_date']) : null,
                 'property_location' => isset($lead['property_location']) ? sanitize_text_field($lead['property_location']) : '',
                 'source' => !empty($lead['source']) ? sanitize_text_field($lead['source']) : $default_source,
                 'property_type' => isset($lead['property_type']) ? sanitize_text_field($lead['property_type']) : '',
                 'num_rooms' => isset($lead['num_rooms']) ? IDLM_Integrations::normalize_num_rooms(sanitize_text_field($lead['num_rooms'])) : '',
-                'preferred_studio' => isset($lead['preferred_studio']) ? sanitize_text_field($lead['preferred_studio']) : '',
+                'preferred_studio' => !empty($lead['preferred_studio']) ? sanitize_text_field($lead['preferred_studio']) : $default_studio,
                 'lead_quality' => isset($lead['lead_quality']) ? sanitize_text_field($lead['lead_quality']) : '',
                 'stage' => !empty($lead['stage']) ? sanitize_text_field($lead['stage']) : $default_stage,
                 'call_status' => !empty($lead['call_status']) ? sanitize_text_field($lead['call_status']) : $default_call_status,
             );
+
+            if ($validate_only) {
+                $qualified = 'Qualified' === $lead_data['lead_quality'] || 'Qualified' === $lead_data['stage'];
+                $required_project_fields = array('project_name', 'property_location', 'budget', 'possession_date', 'property_type', 'project_timeline');
+                $missing_project_fields = array_filter($required_project_fields, static function($field) use ($lead_data) {
+                    return empty($lead_data[$field]);
+                });
+                if ($qualified && ($missing_project_fields || IDLM_DB::budget_to_rupees($lead_data['budget']) < 400000)) {
+                    $projected['rejected']++;
+                    continue;
+                }
+                $email_identity = strtolower(trim($lead_data['email']));
+                $phone_digits = preg_replace('/[^0-9]/', '', $lead_data['phone']);
+                $phone_identity = strlen($phone_digits) >= 10 ? substr($phone_digits, -10) : $phone_digits;
+                $email_key = $email_identity ? 'email:' . $email_identity : '';
+                $phone_key = $phone_identity ? 'phone:' . $phone_identity : '';
+                $is_duplicate = ($email_key && isset($seen_import_identities[$email_key]))
+                    || ($phone_key && isset($seen_import_identities[$phone_key]))
+                    || self::import_row_is_duplicate($lead_data, $table_leads);
+                if ($email_key) $seen_import_identities[$email_key] = true;
+                if ($phone_key) $seen_import_identities[$phone_key] = true;
+                $projected[$is_duplicate ? 'duplicate' : 'valid']++;
+                continue;
+            }
 
             if (isset($lead['floor_plan_received'])) {
                 $lead_data['floor_plan_received'] = intval($lead['floor_plan_received']);
@@ -2824,6 +2916,10 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 }
             } else {
                 $failed++;
+                $errors[] = array(
+                    'index' => absint($lead_index),
+                    'message' => IDLM_DB::get_last_validation_error() ?: 'The lead could not be saved.',
+                );
             }
         }
 
@@ -2831,8 +2927,44 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             'imported' => $imported,
             'duplicates' => $duplicates,
             'failed' => $failed,
+            'errors' => $errors,
+            'projected' => $projected,
             'message' => 'Batch completed successfully'
         ));
+    }
+
+    private static function import_row_is_duplicate($lead, $table_leads) {
+        global $wpdb;
+        $email = sanitize_email($lead['email'] ?? '');
+        $digits = preg_replace('/[^0-9]/', '', (string) ($lead['phone'] ?? ''));
+        $conditions = array();
+        $params = array();
+        if ($email) {
+            $conditions[] = 'email = %s';
+            $params[] = $email;
+        }
+        if ($digits) {
+            $conditions[] = 'phone LIKE %s';
+            $params[] = '%' . $wpdb->esc_like(substr($digits, -10));
+        }
+        if (!$conditions) {
+            return false;
+        }
+        $sql = "SELECT id, email, phone FROM {$table_leads} WHERE is_duplicate = 0 AND (" . implode(' OR ', $conditions) . ')';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+        $candidates = $wpdb->get_results($wpdb->prepare($sql, $params));
+        $matching_ids = array();
+        foreach ($candidates as $candidate) {
+            if ($email && strtolower(trim((string) $candidate->email)) === strtolower($email)) {
+                $matching_ids[] = absint($candidate->id);
+                continue;
+            }
+            $candidate_digits = preg_replace('/[^0-9]/', '', (string) $candidate->phone);
+            if (strlen($digits) >= 10 && strlen($candidate_digits) >= 10 && substr($digits, -10) === substr($candidate_digits, -10)) {
+                $matching_ids[] = absint($candidate->id);
+            }
+        }
+        return 1 === count(array_unique(array_filter($matching_ids)));
     }
 
     /**
@@ -2857,8 +2989,19 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $tasks = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$table_tasks} WHERE lead_id = %d ORDER BY status ASC, due_date ASC, id DESC",
-            $lead_id
+            "SELECT * FROM {$table_tasks}
+             WHERE lead_id = %d
+             ORDER BY
+                CASE
+                    WHEN status = 'pending' AND due_date IS NOT NULL AND due_date <> '0000-00-00 00:00:00' AND due_date < %s THEN 0
+                    WHEN status = 'pending' THEN 1
+                    ELSE 2
+                END ASC,
+                CASE WHEN due_date IS NULL OR due_date = '0000-00-00 00:00:00' THEN 1 ELSE 0 END ASC,
+                due_date ASC,
+                id DESC",
+            $lead_id,
+            current_time('mysql')
         ));
 
         // Format dates nicely
@@ -2881,13 +3024,29 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         }
 
         $lead_id = isset($_POST['lead_id']) ? intval($_POST['lead_id']) : 0;
-        $title = isset($_POST['title']) ? sanitize_text_field(wp_unslash($_POST['title'])) : '';
+        $title = isset($_POST['title']) ? trim(sanitize_text_field(wp_unslash($_POST['title']))) : '';
         $due_date = isset($_POST['due_date']) ? sanitize_text_field(wp_unslash($_POST['due_date'])) : '';
         $priority = isset($_POST['priority']) ? sanitize_text_field(wp_unslash($_POST['priority'])) : 'Medium';
         $task_type = isset($_POST['task_type']) ? sanitize_text_field(wp_unslash($_POST['task_type'])) : 'General';
 
-        if (!$lead_id || empty($title)) {
+        if (!$lead_id || '' === $title) {
             wp_send_json_error(array('message' => 'Missing required fields.'));
+        }
+        if (strlen($title) > 255) {
+            wp_send_json_error(array('message' => 'Task title must be 255 characters or fewer.'));
+        }
+        if (!in_array($priority, array('Low', 'Medium', 'High'), true)) {
+            wp_send_json_error(array('message' => 'Invalid task priority.'));
+        }
+        if (!in_array($task_type, self::manual_task_types(), true)) {
+            wp_send_json_error(array('message' => 'Invalid task type.'));
+        }
+        $formatted_due_date = self::normalize_manual_task_due_date($due_date);
+        if (false === $formatted_due_date) {
+            wp_send_json_error(array('message' => 'Please provide a valid due date and time.'));
+        }
+        if ($formatted_due_date && strtotime($formatted_due_date) <= current_time('timestamp')) {
+            wp_send_json_error(array('message' => 'Please choose a future due date and time.'));
         }
         if (!self::current_user_can_access_lead($lead_id)) {
             wp_send_json_error(array('message' => 'You can add tasks only to leads currently assigned to you.'));
@@ -2903,7 +3062,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         }
 
         $assigned_rep_id = $lead->assigned_rep_id;
-        $formatted_due_date = !empty($due_date) ? wp_date('Y-m-d H:i:s', strtotime($due_date)) : null;
 
         $table_tasks = $wpdb->prefix . 'idlm_tasks';
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -2963,6 +3121,9 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         if (!self::current_user_can_access_lead($task->lead_id)) {
             wp_send_json_error(array('message' => 'You can update tasks only for leads currently assigned to you.'));
         }
+        if (self::is_system_qualification_task($task)) {
+            wp_send_json_error(array('message' => 'Qualification tasks are updated automatically from outreach evidence and cannot be changed manually.'));
+        }
 
         $completed_at = ($status === 'completed') ? current_time('mysql') : null;
 
@@ -3013,6 +3174,9 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         if (!self::current_user_can_access_lead($task->lead_id)) {
             wp_send_json_error(array('message' => 'You can delete tasks only for leads currently assigned to you.'));
         }
+        if (self::is_system_qualification_task($task)) {
+            wp_send_json_error(array('message' => 'Qualification tasks are managed automatically and cannot be deleted manually.'));
+        }
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $result = $wpdb->delete($table_tasks, array('id' => $task_id));
@@ -3027,19 +3191,43 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             wp_send_json_error(array('message' => 'Failed to delete task.'));
         }
     }
+    private static function manual_task_types() {
+        return array('General', 'Call', 'Email', 'Site Visit', 'Design Mockup', 'Quote Revision');
+    }
 
     /**
-     * AJAX Endpoint: Get all active tasks for the current rep (global sidebar)
+     * A blank due date is valid; otherwise accept only the datetime-local
+     * contract emitted by the task form and store a normalized site-local value.
      */
+    private static function normalize_manual_task_due_date($due_date) {
+        if ('' === $due_date) {
+            return null;
+        }
+        $parsed = DateTime::createFromFormat('!Y-m-d\\TH:i', $due_date, wp_timezone());
+        $errors = DateTime::getLastErrors();
+        if (!$parsed || (is_array($errors) && ($errors['warning_count'] || $errors['error_count'])) || $parsed->format('Y-m-d\\TH:i') !== $due_date) {
+            return false;
+        }
+        return $parsed->format('Y-m-d H:i:s');
+    }
+
+    private static function is_system_qualification_task($task) {
+        return 'Qualification' === (string) ($task->task_type ?? '');
+    }
+
     public static function ajax_get_rep_tasks() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
+        $operation = isset($_POST['operation']) ? sanitize_key(wp_unslash($_POST['operation'])) : '';
+        if ('reschedule' === $operation) {
+            IDLM_Task_Queue_Service::ajax_reschedule();
+        }
+        if ('cleanup_stale' === $operation) {
+            IDLM_Task_Queue_Service::ajax_cleanup_stale();
+        }
         if (!self::current_user_has_rep_access()) {
             wp_send_json_error(array('message' => 'Permission denied.'));
         }
 
-        $current_user_id = get_current_user_id();
-        $is_admin = current_user_can('manage_options');
-        $is_pre_sales = self::current_user_is_pre_sales();
         $restricted_user_id = IDLM_Lead_Access_Policy::restriction_user_id();
 
         global $wpdb;
@@ -3052,12 +3240,14 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             $where[] = $wpdb->prepare("(t.assigned_rep_id = %d OR l.assigned_rep_id = %d)", $restricted_user_id, $restricted_user_id);
         }
 
-        // Optionally support a filter for completed vs pending (default pending)
-        $status_filter = isset($_POST['status']) ? sanitize_key(wp_unslash($_POST['status'])) : 'pending';
-        if ($status_filter === 'completed') {
+        // Default to bounded daily attention work; completed is a separate
+        // history view rather than a peer of the work queue.
+        $view = isset($_POST['view']) ? sanitize_key(wp_unslash($_POST['view'])) : 'attention';
+        if ('completed' === $view) {
             $where[] = "t.status = 'completed'";
         } else {
             $where[] = "t.status = 'pending'";
+            $where[] = "l.stage <> 'Lost'";
         }
 
         $where_sql = '';
@@ -3068,7 +3258,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         // Query tasks joining leads to display lead name
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $tasks = $wpdb->get_results("
-            SELECT t.*, l.first_name, l.last_name, l.phone, l.email, l.source 
+            SELECT t.*, l.first_name, l.last_name, l.phone, l.email, l.source, l.stage
             FROM {$table_tasks} t
             INNER JOIN {$table_leads} l ON t.lead_id = l.id
             {$where_sql}
@@ -3076,8 +3266,8 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         ");
 
         // Keep the six scheduled qualification tasks internally, but present one
-        // actionable qualification plan per lead in the pre-sales pending view.
-        if ($is_pre_sales && 'completed' !== $status_filter && $tasks) {
+        // actionable follow-up plan per lead for every representative.
+        if ('completed' !== $view && $tasks) {
             $visible_tasks = array();
             $qualification_groups = array();
             foreach ($tasks as $task) {
@@ -3101,7 +3291,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                     $summary = clone $group['task'];
                     $progress = IDLM_DB::get_followup_compliance($lead_id);
                     $summary->id = 'qualification-summary-' . $lead_id;
-                    $summary->title = 'Qualification follow-up';
+                    $summary->title = 'Follow-up plan';
                     $summary->due_date = $group['next_due'];
                     $summary->is_qualification_summary = true;
                     $summary->complete_days = (int) $progress['complete_days'];
@@ -3119,13 +3309,41 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             });
         }
 
-        // Format dates and labels
+        $today_start = (new DateTime(wp_date('Y-m-d', current_time('timestamp'), wp_timezone()) . ' 00:00:00', wp_timezone()))->getTimestamp();
+        $tomorrow_start = strtotime('+1 day', $today_start);
+        $upcoming_end = strtotime('+8 days', $today_start);
+        $attention = array('overdue' => 0, 'due_today' => 0, 'upcoming' => 0, 'follow_up_plans' => 0);
+        $visible_tasks = array();
+
+        // Format and group attention work. Undated backlog is deliberately not
+        // shown as daily work; users can schedule it from the lead drawer.
         foreach ($tasks as &$task) {
             $task->lead_name = esc_html($task->first_name . ' ' . $task->last_name);
             $task->due_date_formatted = $task->due_date && $task->due_date !== '0000-00-00 00:00:00' ? self::format_datetime($task->due_date) : 'No due date';
             $task->is_overdue = ($task->status === 'pending' && $task->due_date && $task->due_date !== '0000-00-00 00:00:00' && strtotime($task->due_date) < current_time('timestamp'));
+            $task->queue_group = '';
+            if ('completed' === $view) {
+                $visible_tasks[] = $task;
+                continue;
+            }
+            if (!empty($task->is_qualification_summary)) {
+                $task->queue_group = 'follow_up_plans';
+            } elseif ($task->due_date) {
+                $due_timestamp = strtotime($task->due_date);
+                if ($due_timestamp < $today_start) {
+                    $task->queue_group = 'overdue';
+                } elseif ($due_timestamp < $tomorrow_start) {
+                    $task->queue_group = 'due_today';
+                } elseif ($due_timestamp < $upcoming_end) {
+                    $task->queue_group = 'upcoming';
+                }
+            }
+            if ($task->queue_group) {
+                $attention[$task->queue_group]++;
+                $visible_tasks[] = $task;
+            }
         }
 
-        wp_send_json_success(array('tasks' => $tasks));
+        wp_send_json_success(array('tasks' => $visible_tasks, 'attention' => $attention, 'view' => $view));
     }
 }

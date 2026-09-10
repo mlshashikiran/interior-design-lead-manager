@@ -2,7 +2,20 @@
 
 **Design owner / builder:** Shashi  
 **Applies to:** `[idlm_workspace]`, Leads List, Kanban, Dashboard, Settings, Quotations, drawers, modals, logs, and future frontend modules  
-**Source of truth:** The implemented UI in `assets/css/admin-style.css`, `dashboard.css`, `kanban.css`, `workspace.css`, and `quotations.css`
+**Normative source of truth:** [`design-system/interior-design-lead-manager/MASTER.md`](../design-system/interior-design-lead-manager/MASTER.md), with page overrides in its `pages/` directory
+**Implementation audit:** [`UI-UX-AUDIT-2026-09-01.md`](UI-UX-AUDIT-2026-09-01.md)
+
+> This document describes the established frontend patterns. Where it conflicts with the normative master design system, the master and its page-specific override take precedence.
+
+**Phase 3 implementation:** Completed 2026-09-01 by Shashi. Leads, Kanban, and quotation responsive workflows now use the canonical master breakpoints and preserve their established data, permissions, and mutation contracts.
+
+**Phase 4 implementation:** Completed 2026-09-01 by Shashi. Settings and shared presentation contracts now use canonical tokens and classes, legacy aliases are compatibility declarations only, override volume is bounded by automated debt budgets, and the desktop/mobile, role, motion, and semantic-state regression matrix is documented in [`UI-VISUAL-REGRESSION-MATRIX.md`](UI-VISUAL-REGRESSION-MATRIX.md).
+
+**Phase 5 implementation:** Completed 2026-09-02 by Shashi. Access and My Account now provide labelled password visibility, visible password guidance, nearby match feedback, post-redirect status focus, pending submission states, complete autofill metadata, and a focusable workspace skip target.
+
+**Phase 6 implementation:** Completed 2026-09-02 by Shashi. Settings now use goal-oriented navigation, structured add/remove vocabulary editors, a sticky save-state region, consistent credential reveal/copy/configuration feedback, and nearby connection-test results.
+
+**Phase 7 implementation:** Completed 2026-09-02 by Shashi. Users & Access and operational logs now use labelled responsive filters, complete account input metadata, explicit administrator safeguards, semantic log tables/mobile cards, inline retry feedback, and lazy copyable payload inspection through the shared accessible dialog.
 
 ## 1. Purpose
 
@@ -18,7 +31,7 @@ The product should feel premium, calm, trustworthy, and efficient. It is a dense
 4. **Consistent hierarchy:** Every screen follows page header → summary → filters/navigation → primary content → supporting actions.
 5. **Capability-aware UI:** Hide unavailable actions instead of showing controls that will fail. Server-side capability checks remain mandatory.
 6. **Measured density:** Tables and Kanban cards are compact; forms and detail drawers use more breathing room.
-7. **Meaningful colour:** Gold indicates primary actions and focus. Blue indicates information. Green, amber, and red communicate state—not decoration.
+7. **Meaningful colour:** Gold is the brand accent. Accessible brown action tokens indicate primary actions and focus. Blue indicates information. Green, amber, and red communicate state—not decoration.
 8. **Responsive, not reduced:** On small screens, reflow or horizontally scroll dense data without removing essential operations.
 
 ## 3. Design Tokens
@@ -29,11 +42,12 @@ Use the existing `--idlm-*` CSS custom properties. Do not introduce a near-dupli
 
 | Token | Value | Use |
 |---|---:|---|
-| `--idlm-primary` | `#c99644` | Primary actions, active navigation, focus, selected states |
-| `--idlm-primary-hover` | `#9f6f25` | Primary hover/focus |
-| `--idlm-secondary` / `--idlm-info` | `#1f7fc2` | Informational accents, links, New-stage Kanban accent |
+| `--idlm-brand-gold` | `#c99644` | Decorative accents, selected indicators, labelled charts |
+| `--idlm-action` / `--idlm-primary` | `#7a5017` | Primary actions, actionable text, focus ring |
+| `--idlm-action-hover` / `--idlm-primary-hover` | `#603d10` | Primary hover/pressed state |
+| `--idlm-secondary` / `--idlm-info` | `#176a9e` | Informational accents, links, New-stage Kanban accent |
 | `--idlm-success` | `#177c51` | Success, Qualified/Won, completed states |
-| `--idlm-warning` | `#9a6700` | Warnings and attention states |
+| `--idlm-warning` | `#855a00` | Warnings and attention states |
 | `--idlm-danger` | `#c84635` | Destructive actions, failures, Lost |
 | `--idlm-dark` | `#111a24` | Sidebar and strong dark surfaces |
 
@@ -48,9 +62,9 @@ Soft state backgrounds are `--idlm-success-soft`, `--idlm-warning-soft`, `--idlm
 | `--idlm-surface-soft` | `#f8fafc` | Table headers, filters, grouped content |
 | `--idlm-surface-tint` | `#f5f9ff` | Subtle informational grouping |
 | `--idlm-text-main` | `#17212b` | Primary text |
-| `--idlm-text-muted` | `#63728a` | Supporting text and metadata |
+| `--idlm-text-muted` | `#56657a` | Supporting text and metadata |
 | `--idlm-border` | `#d9e1eb` | Standard borders and separators |
-| `--idlm-border-strong` | `#c7d2df` | Hover and stronger divisions |
+| `--idlm-border-strong` | `#b9c6d5` | Hover and stronger divisions |
 
 ### Shape, shadow, and motion
 
@@ -60,12 +74,14 @@ Soft state backgrounds are `--idlm-success-soft`, `--idlm-warning-soft`, `--idlm
 - Standard card shadow: `--idlm-shadow`.
 - Elevated drawer/modal shadow: `--idlm-shadow-lg`.
 - Standard transition: `--idlm-transition`, approximately `200ms` with a smooth ease.
+- Canonical controls use `--idlm-control-height: 40px`; icon-only and mobile action targets use `--idlm-target-size: 44px`.
+- Layer order uses the named `--idlm-layer-*` scale; responsive references are `480`, `782`, `1024`, and `1280px`.
 - Avoid heavy shadows on dense operational components such as Kanban stats and filters.
 
 ## 4. Typography
 
 - Font stack: `Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`.
-- Page title: `28px / 700`.
+- Page title: `22px / 700`.
 - Card title: `18px / 600`.
 - Section and Kanban titles: `14–16px / 600–700`.
 - Body and inputs: `13–14px / 400–500`.
@@ -118,7 +134,7 @@ Do not place more than one visually dominant primary action in the page header.
 
 ### Buttons
 
-- `.idlm-btn-primary`: gold background, white text; use for the single preferred action.
+- `.idlm-btn-primary`: accessible `--idlm-action` background with white text; use for the single preferred action.
 - `.idlm-btn-secondary`: white surface, neutral border; use for navigation and secondary operations.
 - Danger actions use red text/border and require clear wording. Irreversible actions require confirmation.
 - Standard controls are approximately `8px 16px`, `13px`, medium weight, and `8px` radius.
@@ -129,7 +145,7 @@ Do not place more than one visually dominant primary action in the page header.
 
 - Standard class: `.idlm-input`; use the matching select and textarea styles within `.idlm-wrap`.
 - White background, soft border, `8px` radius, `13px` text.
-- Focus uses the gold border plus a translucent gold ring.
+- Focus uses a `2px` `--idlm-focus-ring` outline with a `2px` offset through `:focus-visible`.
 - Labels sit above controls, use `11–12px` semibold text, and may be uppercase in compact filters.
 - Form grids use two columns by default and collapse to one column responsively.
 - Group related checkboxes in bordered or soft-surface rows rather than scattering them through a form.
@@ -190,7 +206,8 @@ Do not place more than one visually dominant primary action in the page header.
 - Use an elevated white panel, clear title, concise explanation, and explicit cancel/confirm actions.
 - Standard wide work modals use `min(920px, calc(100vw - 48px))` width and `min(82vh, 760px)` maximum height; at `700px` and below they use `calc(100vw - 20px)` width and `92vh` height.
 - Keep modal headers fixed, long form bodies independently scrollable, and action placement consistent across catalogue, import, and selection popups.
-- Keep keyboard focus inside the modal and restore it to the trigger on close when adding new modal behavior.
+- Use `window.IDLMDialog` and the `.idlm-dialog` component for blocking decisions. It owns initial focus, trapping, Escape, trigger restoration, background inertness, and scroll locking.
+- Dialogs require `role="dialog"`, `aria-modal="true"`, labelled title and description, a native close button, and nearby accessible validation.
 
 ### Empty, loading, success, and error states
 
@@ -241,6 +258,8 @@ Do not place more than one visually dominant primary action in the page header.
 ## 12. Dashboard Pattern
 
 - Marketing and Sales are peer tabs.
+- Dashboard tabs implement tablist/tab/tabpanel semantics, Left/Right/Home/End navigation, and persistent selection.
+- Every canvas chart exposes an accessible name, fallback text, and a toggled equivalent data table.
 - Stat cards flex across the available width, targeting six per row with `180px` minimum width; they become single-column on narrow phones.
 - Chart grids use two columns and collapse below `900px`.
 - Each chart card uses title, optional subtitle, optional compact toolbar, then a stable-height chart region around `300px`.
@@ -260,33 +279,29 @@ Do not place more than one visually dominant primary action in the page header.
 
 ## 14. Responsive Rules
 
-Use the existing breakpoints unless a component has a demonstrated need for another:
+Use the canonical master breakpoints for new and changed components:
 
-- `1280px`: Kanban summary reduces from six to three columns.
-- `1120px`: Lead drawer workspace begins simplifying.
-- `900px`: chart grids and multi-column settings become one column.
-- `820px`: drawer form/data grids become one column.
-- `782px`: unified sidebar becomes top navigation.
-- `768px`: common tablet adjustments.
-- `700px`: lead drawer becomes full-width.
-- `680px`: Kanban summary becomes two columns.
-- `640px`: settings tabs and form spacing tighten.
-- `600px`: modal, progress, and compact layout adjustments.
-- `480px`: stat cards become one per row.
+- `1280px`: wide dashboard and summary density adjustments.
+- `1024px`: compact desktop/tablet reflow and priority-column reduction.
+- `782px`: WordPress mobile navigation; Leads priority cards/details and mobile sort; Kanban stage tabs/one vertical list; quotation item cards; single-column forms and full-screen workspaces where required.
+- `480px`: small-phone action, pagination, metric, and compact layout stacking.
+
+Legacy component breakpoints may remain until that component is deliberately migrated; Phase 3 components must not add another breakpoint scale.
 
 Do not shrink text below legible sizes to force desktop layouts onto mobile. Prefer reflow, stacking, or scoped horizontal scrolling.
 
 ## 15. Accessibility Requirements
 
-- Maintain a visible keyboard focus state using the gold focus treatment.
+- Maintain a visible keyboard focus state using the action-colour focus treatment.
 - Every form control requires an associated label or accessible name.
 - Icon-only controls require `aria-label` or equivalent text.
 - Interactive table headers must support Enter and Space and expose `aria-sort`.
 - Active navigation uses `aria-current`; tabs should expose their selected state when new tab systems are added.
+- Drag-and-drop mutations require a keyboard action with the same validation, completion announcement, and focus restoration.
 - Modal and drawer close controls must be keyboard reachable.
 - Preserve sufficient contrast for muted text, badges, and controls.
 - Status, validation, and drag feedback must not depend on colour alone.
-- Minimum target size should be approximately `36px`, with `44px` preferred for primary mobile navigation and actions.
+- Minimum control height is `40px`; icon-only and primary mobile actions use a `44px` target.
 - Respect reduced-motion preferences when introducing nonessential animation.
 
 ## 16. Writing and Content Style

@@ -112,6 +112,37 @@ function action_names(): array {
     return array_column($GLOBALS['idlm_test_actions'], 'hook');
 }
 
+idlm_test('backup restore accepts generated backups smaller than 100 MB', static function(): void {
+    $root = dirname(__DIR__) . '/';
+    $backup = file_get_contents($root . 'includes/class-backup.php');
+    $template = file_get_contents($root . 'templates/admin/settings/backup.php');
+
+    assert_contains('const MAX_FILE_SIZE = 104857600; // 100 MB.', $backup);
+    assert_contains('$size > self::MAX_FILE_SIZE', $backup);
+    assert_contains('IDLM_Data_Retention::prune();', $backup);
+    assert_contains('smaller than 100 MB.', $template);
+});
+
+idlm_test('heavy CRM log reads are bounded and audience payloads are lazy loaded', static function(): void {
+    $root = dirname(__DIR__) . '/';
+    $lead_reads = file_get_contents($root . 'includes/class-admin-lead-reads.php');
+    $ajax_reads = file_get_contents($root . 'includes/class-admin-ajax.php');
+    $log_renderer = file_get_contents($root . 'includes/class-admin-logs-renderer.php');
+    $log_template = file_get_contents($root . 'templates/admin/logs/audience.php');
+    $log_script = file_get_contents($root . 'assets/js/users-logs.js');
+    $admin = file_get_contents($root . 'includes/class-admin.php');
+
+    assert_contains('ORDER BY a.id DESC LIMIT 100', $lead_reads);
+    assert_contains('ORDER BY a.id DESC LIMIT 100', $ajax_reads);
+    assert_contains('SELECT id, platform, audience_id, lead_count, status, created_at', $log_renderer);
+    assert_false(false !== strpos($log_renderer, 'SELECT *\n            FROM {$wpdb->prefix}idlm_audience_sync_logs'));
+    assert_contains("check_ajax_referer('idlm_admin_nonce', 'nonce')", $log_renderer);
+    assert_contains("current_user_can('manage_options')", $log_renderer);
+    assert_contains("add_action('wp_ajax_idlm_get_audience_log_payload'", $admin);
+    assert_contains("'idlm_get_audience_log_payload'", $log_script);
+    assert_false(false !== strpos($log_template, 'maybe_unserialize($log->payload)'));
+});
+
 idlm_test('signed cursor pagination binds position to actor and normalized request scope', static function(): void {
     idlm_test_login(7, array('sales_manager'), array('idlm_access_leads'));
     $scope = array(
@@ -211,7 +242,7 @@ idlm_test('dashboard cache invalidation covers routing, deletion, reset, quotati
     $root = dirname(__DIR__) . '/includes/';
     assert_contains("IDLM_Read_Model_Cache::invalidate('lead_assignment')", file_get_contents($root . 'class-integrations.php'));
     assert_contains("IDLM_Read_Model_Cache::invalidate('lead_delete')", file_get_contents($root . 'class-lead-deletion-service.php'));
-    assert_contains("IDLM_Read_Model_Cache::invalidate('crm_reset')", file_get_contents($root . 'class-admin-ajax.php'));
+    assert_contains("IDLM_Read_Model_Cache::invalidate('crm_reset')", file_get_contents($root . 'class-lead-deletion-service.php'));
 
     $quotation_source = file_get_contents($root . 'class-quotation-controller.php');
     $commit_position = strpos($quotation_source, "if (false === \$wpdb->query('COMMIT')) {");
@@ -270,6 +301,14 @@ idlm_test('lead update enforces Lost, Won, and Quote Shared invariants', static 
     assert_false(IDLM_DB::update_lead(1, array('stage' => 'Quote Shared')));
     assert_contains('positive quote value', IDLM_DB::get_last_validation_error());
     assert_same('New', $GLOBALS['wpdb']->rows('idlm_leads')[0]['stage']);
+});
+
+idlm_test('Won transitions persist the actual close timestamp', static function(): void {
+    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('stage' => 'Negotiation', 'lead_quality' => 'Qualified', 'deal_value' => 750000))));
+    assert_true(IDLM_DB::update_lead(1, array('stage' => 'Won')));
+    $lead = $GLOBALS['wpdb']->rows('idlm_leads')[0];
+    assert_same('Won', $lead['stage']);
+    assert_same(current_time('mysql'), $lead['conversion_time']);
 });
 
 idlm_test('qualification updates stage, handoff state, tasks, audit, and conversion hook', static function(): void {
@@ -677,7 +716,7 @@ idlm_test('quotation line items calculate quantity multiplied by rate and saniti
     assert_same(0, $items[2]['line_total']);
 });
 
-idlm_test('quotation totals apply wood discount, design fee, additional discount, fixed GST, and exact rounding', static function(): void {
+idlm_test('quotation totals apply wooden discount, optional soft close addition, additional discount, and fixed GST', static function(): void {
     $items = invoke_private('IDLM_Quotations', 'parse_items', array(array(
         array('description' => 'Woodwork', 'quantity' => '2', 'unit_rate' => '1000', 'is_wood' => '1'),
         array('description' => 'Lighting', 'quantity' => '3', 'unit_rate' => '500'),
@@ -685,19 +724,31 @@ idlm_test('quotation totals apply wood discount, design fee, additional discount
     ), array()));
     $totals = invoke_private('IDLM_Quotations', 'calculate_totals', array($items, array(
         'wooden_discount_percent' => '10',
-        'design_fee_percent' => '10',
+        'soft_close_enabled' => '1',
         'additional_discount_amount' => '130',
-    )));
+    ), array('soft_close_percent' => '10')));
     assert_same(3500.0, $totals['subtotal']);
     assert_same(2000.0, $totals['wooden_subtotal']);
     assert_same(200.0, $totals['wooden_discount_amount']);
-    assert_same(3300.0, $totals['subtotal_after_wooden_discount']);
-    assert_same(330.0, $totals['design_fee_amount']);
-    assert_same(3500.0, $totals['taxable_total']);
-    assert_same(315.0, $totals['cgst_total']);
-    assert_same(315.0, $totals['sgst_total']);
+    assert_same(1800.0, $totals['subtotal_after_wooden_discount']);
+    assert_same(1500.0, $totals['other_subtotal']);
+    assert_same(10.0, $totals['soft_close_percent']);
+    assert_same(180.0, $totals['soft_close_amount']);
+    assert_same(3350.0, $totals['taxable_total']);
+    assert_same(301.5, $totals['cgst_total']);
+    assert_same(301.5, $totals['sgst_total']);
     assert_same(0, $totals['igst_total']);
-    assert_same(4130.0, $totals['grand_total']);
+    assert_same(0.0, $totals['round_off_amount']);
+    assert_same(3953.0, $totals['grand_total']);
+});
+
+idlm_test('quotation grand total rounds to the nearest rupee and records the adjustment', static function(): void {
+    $items = IDLM_Quotation_Calculator::parse_items(array(
+        array('description' => 'Rounding example', 'quantity' => '1', 'unit_rate' => '10.01'),
+    ));
+    $totals = IDLM_Quotation_Calculator::calculate_totals($items, array());
+    assert_same(0.19, $totals['round_off_amount']);
+    assert_same(12.0, $totals['grand_total']);
 });
 
 idlm_test('quotation calculator is deterministic and the legacy quotation API delegates without drift', static function(): void {
@@ -708,7 +759,6 @@ idlm_test('quotation calculator is deterministic and the legacy quotation API de
     );
     $adjustments = array(
         'wooden_discount_percent' => '125',
-        'design_fee_percent' => '10.555',
         'additional_discount_amount' => '-50',
     );
 
@@ -857,6 +907,13 @@ idlm_test('quotation repository owns catalogue CRUD, bulk actions, and paginated
     assert_same(2, IDLM_Quotation_Repository::count_catalogue_items());
     assert_count_value(1, IDLM_Quotation_Repository::search_catalogue('TV', 1, 20));
     assert_count_value(2, IDLM_Quotation_Repository::list_catalogue_items('', 1, 100));
+    $catalogue_source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-quotation-repository.php');
+    $catalogue_renderer = (string) file_get_contents(dirname(__DIR__) . '/includes/class-quotation-renderer.php');
+    $catalogue_script = (string) file_get_contents(dirname(__DIR__) . '/assets/js/quotations.js');
+    assert_contains("'rate' => 'default_rate'", $catalogue_source);
+    assert_contains('ORDER BY {$order_by}', $catalogue_source);
+    assert_contains('idlm-catalogue-sort-form', $catalogue_renderer);
+    assert_contains('catalogueToolbar.insertBefore(catalogueSortForm', $catalogue_script);
     assert_count_value(2, IDLM_Quotation_Repository::list_catalogue_categories());
     assert_same(array('Sq Ft'), IDLM_Quotation_Repository::list_active_catalogue_units());
     $export = IDLM_Quotation_Repository::get_catalogue_export_chunk(0, 500);
@@ -956,14 +1013,21 @@ idlm_test('quotation autosave stores a scoped working copy with server-calculate
 
 idlm_test('core schema baseline declares required lifecycle columns, defaults, and indexes', static function(): void {
     IDLM_DB::create_tables();
-    assert_count_value(8, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(9, $GLOBALS['wpdb']->dbdelta);
     $leads_sql = $GLOBALS['wpdb']->dbdelta[0];
     assert_contains("handoff_status varchar(30) DEFAULT 'not_ready'", $leads_sql);
     assert_contains('qualified_at datetime DEFAULT NULL', $leads_sql);
     assert_contains('floor_plan_files longtext DEFAULT NULL', $leads_sql);
     assert_contains('KEY assigned_at (assigned_at)', $leads_sql);
+    assert_contains('KEY conversion_time (conversion_time)', $leads_sql);
     assert_contains('KEY duplicate_of_id (duplicate_of_id)', $leads_sql);
-    $tasks_sql = $GLOBALS['wpdb']->dbdelta[5];
+    $db_source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-db.php');
+    assert_contains('MAX(created_at) AS won_at', $db_source);
+    assert_contains("WHERE l.stage = 'Won'", $db_source);
+    $state_events_sql = $GLOBALS['wpdb']->dbdelta[2];
+    assert_contains('amount decimal(14,2) DEFAULT NULL', $state_events_sql);
+    assert_contains('KEY event_target_time (event_type, to_value, occurred_at)', $state_events_sql);
+    $tasks_sql = $GLOBALS['wpdb']->dbdelta[6];
     assert_contains("status varchar(50) DEFAULT 'pending'", $tasks_sql);
     assert_contains('KEY lead_status_due (lead_id, status, due_date)', $tasks_sql);
 });
@@ -993,8 +1057,26 @@ idlm_test('core migration upgrades an older schema and records the independent s
         'idlm_attribution_touchpoint_backfill_version' => '1.0.0',
     );
     IDLM_DB::init();
-    assert_count_value(8, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(9, $GLOBALS['wpdb']->dbdelta);
     assert_same(IDLM_DB_VERSION, get_option('idlm_schema_version'));
+});
+
+idlm_test('core migration reconciles the state-event amount column from schema 1.3.2', static function(): void {
+    $GLOBALS['idlm_test_options'] = array(
+        'idlm_schema_version' => '1.3.2',
+        'idlm_handoff_state_version' => '1.0.0',
+        'idlm_duplicate_quality_version' => '1.0.0',
+        'idlm_workflow_integrity_version' => '1.0.0',
+        'idlm_assignment_timestamp_version' => '1.0.0',
+        'idlm_attribution_touchpoint_backfill_version' => '1.0.0',
+        'idlm_conversion_time_integrity_version' => '1.0.0',
+    );
+
+    IDLM_DB::init();
+
+    assert_count_value(9, $GLOBALS['wpdb']->dbdelta);
+    assert_contains('amount decimal(14,2) DEFAULT NULL', $GLOBALS['wpdb']->dbdelta[2]);
+    assert_same('1.3.3', get_option('idlm_schema_version'));
 });
 
 idlm_test('quotation installer declares transactional persistence tables and records schema state', static function(): void {
@@ -1041,6 +1123,54 @@ idlm_test('grouped routing settings migrate legacy values and preserve compatibi
     assert_same('round_robin', IDLM_Settings::get('idlm_assignment_mode'), 'Legacy option writers must remain authoritative during migration.');
 });
 
+idlm_test('white-label settings normalize safe values and reject inaccessible colours', static function(): void {
+    $valid = IDLM_Settings::validate_white_label(array(
+        'brand_name' => 'Northline Studio',
+        'workspace_title' => 'Project Desk',
+        'login_heading' => 'Keep every client decision in one place.',
+        'support_email' => 'help@northline.test',
+        'primary_color' => '#264653',
+        'accent_color' => '#E9C46A',
+        'sidebar_color' => '#17212B',
+        'show_plugin_attribution' => '1',
+    ));
+    assert_same(array(), $valid['errors']);
+    assert_same('#264653', $valid['settings']['primary_color']);
+    assert_same('1', $valid['settings']['show_plugin_attribution']);
+    $tokens = IDLM_Settings::white_label_style($valid['settings']);
+    assert_contains('--idlm-action:#264653;', $tokens);
+    assert_contains('--idlm-action-hover:#1F3944;', $tokens);
+    assert_contains('--idlm-action-soft:#E9EDEE;', $tokens);
+    assert_contains('--idlm-brand-gold:#E9C46A;', $tokens);
+
+    $invalid = IDLM_Settings::validate_white_label(array(
+        'brand_name' => '',
+        'workspace_title' => '',
+        'login_heading' => '',
+        'support_email' => 'not-an-email',
+        'primary_color' => '#FFFFFF',
+        'accent_color' => 'gold',
+        'sidebar_color' => '#F8FAFC',
+    ));
+    foreach (array('brand_name', 'workspace_title', 'login_heading', 'support_email', 'primary_color', 'accent_color', 'sidebar_color') as $field) {
+        assert_true(isset($invalid['errors'][$field]), 'Missing white-label validation error for ' . $field);
+    }
+});
+
+idlm_test('white-label runtime surfaces do not retain fixed default accent colors', static function(): void {
+    $root = dirname(__DIR__);
+    $workspace = (string) file_get_contents($root . '/assets/css/workspace.css');
+    $dashboard = (string) file_get_contents($root . '/assets/js/dashboard.js');
+    $kanban = (string) file_get_contents($root . '/assets/js/kanban.js');
+    $lead_markup = (string) file_get_contents($root . '/includes/class-admin-ajax.php')
+        . (string) file_get_contents($root . '/includes/class-admin-lead-reads.php');
+
+    assert_false((bool) preg_match('/(?:201\s*,\s*150\s*,\s*68|225\s*,\s*182\s*,\s*109|#e1b66d)/i', $workspace . $dashboard . $kanban . $lead_markup));
+    assert_false(false !== strpos($lead_markup, 'var(--gold)'));
+    assert_false(false !== strpos($lead_markup, 'var(--red)'));
+    assert_contains("dashboardToken('--idlm-brand-gold'", $dashboard);
+});
+
 idlm_test('guarded view renderer rejects traversal and renders the correct authentication state', static function(): void {
     assert_same('', IDLM_View::render('../interior-design-lead-manager.php'));
     $GLOBALS['idlm_test_logged_in'] = false;
@@ -1050,6 +1180,8 @@ idlm_test('guarded view renderer rejects traversal and renders the correct authe
     assert_contains('idlm-loginform', $markup);
     assert_contains('idlm-login-shell', $markup);
     assert_contains('Forgot your password?', $markup);
+    assert_contains('data-idlm-password-toggle', $markup);
+    assert_contains('autocomplete="current-password"', $markup);
     $GLOBALS['idlm_test_logged_in'] = true;
     $markup = IDLM_View::render('access-restricted.php');
     assert_contains('Access Restricted', $markup);
@@ -1073,6 +1205,7 @@ idlm_test('CRM authentication remains email-only, scoped, and core-backed', stat
     assert_contains('type="email"', $markup);
     assert_contains('name="idlm_email"', $markup);
     assert_contains('action" value="idlm_login', $markup);
+    assert_contains('data-idlm-pending-label="Signing in…"', $markup);
     assert_false(false !== strpos($markup, 'Username or Email'), 'CRM login must not advertise username authentication.');
 });
 
@@ -1097,6 +1230,26 @@ idlm_test('retention redacts nested credentials and contact PII', static functio
     assert_same('[REDACTED]', $redacted['email']);
     assert_same('[REDACTED]', $redacted['nested']['token']);
     assert_same('value', $redacted['safe']);
+});
+
+idlm_test('audience audit payloads are stored as fixed-size redacted summaries', static function(): void {
+    $summary = IDLM_Data_Retention::summarize_audience_payload(array(
+        'payload' => array('schema' => array('EMAIL'), 'data' => array(array('person@example.test'), array('other@example.test'))),
+        'token' => 'secret',
+    ));
+    assert_same('summary', $summary['storage']);
+    assert_same(2, $summary['item_count']);
+    assert_true($summary['original_bytes'] > 0);
+    assert_false(false !== strpos(wp_json_encode($summary), 'person@example.test'));
+    assert_false(false !== strpos(wp_json_encode($summary), 'secret'));
+});
+
+idlm_test('diagnostic audience and CAPI logs expire after seven days', static function(): void {
+    $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-data-retention.php');
+
+    foreach (array('DIAGNOSTIC_LOG_RETENTION_VERSION', 'DIAGNOSTIC_LOG_RETENTION_DAYS = 7', "'idlm_diagnostic_log_retention_version'", "'audience_sync', 'capi_sync', 'capi_queue', 'capi_abort'", 'idlm_lead_activity_log', 'idlm_capi_logs', 'diagnostic_log_retention') as $contract) {
+        assert_contains($contract, $source);
+    }
 });
 
 idlm_test('transactional deletion removes a lead and every core dependent row', static function(): void {
@@ -1232,26 +1385,6 @@ idlm_test('Phase 8 result recorder emits deterministic aggregate percentiles and
     assert_same('evidence_only', $summary['provisional_thresholds']['qualification_status']);
 });
 
-idlm_test('audience audit payloads are stored as fixed-size redacted summaries', static function(): void {
-    $summary = IDLM_Data_Retention::summarize_audience_payload(array(
-        'payload' => array('schema' => array('EMAIL'), 'data' => array(array('person@example.test'), array('other@example.test'))),
-        'token' => 'secret',
-    ));
-    assert_same('summary', $summary['storage']);
-    assert_same(2, $summary['item_count']);
-    assert_true($summary['original_bytes'] > 0);
-    assert_false(false !== strpos(wp_json_encode($summary), 'person@example.test'));
-    assert_false(false !== strpos(wp_json_encode($summary), 'secret'));
-});
-
-idlm_test('diagnostic audience and CAPI logs expire after seven days', static function(): void {
-    $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-data-retention.php');
-
-    foreach (array('DIAGNOSTIC_LOG_RETENTION_VERSION', 'DIAGNOSTIC_LOG_RETENTION_DAYS = 7', "'idlm_diagnostic_log_retention_version'", "'audience_sync', 'capi_sync', 'capi_queue', 'capi_abort'", 'idlm_lead_activity_log', 'idlm_capi_logs', 'diagnostic_log_retention') as $contract) {
-        assert_contains($contract, $source);
-    }
-});
-
 idlm_test('Phase 8 runner refuses production and excludes authentication and response material', static function(): void {
     $source = file_get_contents(__DIR__ . '/performance/run-load-qualification.php');
     $matrix = require __DIR__ . '/performance/qualification-matrix.php';
@@ -1382,7 +1515,10 @@ idlm_test('operational health marks critical gates and renders the administrator
 });
 
 require_once __DIR__ . '/admin-refactor-contracts.php';
+require_once __DIR__ . '/ui-regression-contracts.php';
 require_once __DIR__ . '/release-contracts.php';
+require_once __DIR__ . '/high-priority-contracts.php';
+require_once __DIR__ . '/dashboard-contracts.php';
 
 $passed = 0;
 $failed = 0;

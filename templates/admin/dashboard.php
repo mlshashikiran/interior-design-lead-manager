@@ -1,345 +1,56 @@
 <?php
-if (!defined('ABSPATH')) {
-    exit;
-}
-
-$can_assign_leads = !empty($context['can_assign_leads']);
+if (!defined('ABSPATH')) { exit; }
+$access = $context['access'];
+$first_tab = $access['sales'] ? 'sales' : 'marketing';
+$reps = isset($context['reps']) ? $context['reps'] : array();
+$studios = isset($context['studios']) ? $context['studios'] : array();
 ?>
-        <div class="wrap idlm-wrap">
-            <header class="idlm-header">
-                <div class="idlm-header-meta">
-                    <h1>Lead Management Dashboard</h1>
-                    <p class="idlm-header-subtitle">Performance Analytics and Conversion Pipelines</p>
-                </div>
-                <div class="idlm-header-actions">
-                    <select id="idlm-period-selector" class="idlm-input">
-                        <option value="today">Today</option>
-                        <option value="yesterday">Yesterday</option>
-                        <option value="this_week">This Week</option>
-                        <option value="last_7_days">Last 7 Days</option>
-                        <option value="this_month" selected>This Month</option>
-                        <option value="last_30_days">Last 30 Days</option>
-                        <option value="last_month">Last Month</option>
-                        <option value="this_year">This Year</option>
-                        <option value="custom">Custom Range</option>
-                    </select>
-                    <div id="idlm-custom-range-picker" style="display:none; align-items:center; gap: 5px;">
-                        <input type="date" id="idlm-start-date" class="idlm-input" style="width:130px;">
-                        <span>to</span>
-                        <input type="date" id="idlm-end-date" class="idlm-input" style="width:130px;">
-                        <button id="idlm-apply-custom" class="idlm-btn idlm-btn-primary">Apply</button>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Dashboard Tabs -->
-            <div class="idlm-tabs">
-                <button class="idlm-tab-link active" onclick="switchDashboardTab(event, 'idlm-marketing-tab')">Marketing Section (Source Performance)</button>
-                <button class="idlm-tab-link" onclick="switchDashboardTab(event, 'idlm-sales-tab')">Sales Section (Pipeline Performance)</button>
+<div class="wrap idlm-wrap idlm-dashboard">
+    <header class="idlm-header">
+        <div class="idlm-header-meta"><h1>Dashboard Analytics</h1><p>Sales execution, lead quality and acquisition performance</p></div>
+        <div class="idlm-header-actions"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-dashboard-refresh"><span class="dashicons dashicons-update" aria-hidden="true"></span> Refresh</button></div>
+    </header>
+    <main class="idlm-dashboard-body">
+        <div class="idlm-dashboard-top-row">
+            <div class="idlm-dashboard__tabs idlm-tabs" role="tablist" aria-label="Dashboard views">
+                <?php foreach (array('sales' => 'Sales', 'marketing' => 'Marketing') as $key => $label): if (!$access[$key]) { continue; } $selected = $key === $first_tab; ?>
+                <button type="button" class="idlm-tab-link<?php echo $selected ? ' active' : ''; ?>" id="idlm-<?php echo esc_attr($key); ?>-tab-button" role="tab" aria-selected="<?php echo $selected ? 'true' : 'false'; ?>" aria-controls="idlm-<?php echo esc_attr($key); ?>-tab" tabindex="<?php echo $selected ? '0' : '-1'; ?>" data-dashboard-tab="<?php echo esc_attr($key); ?>"><?php echo esc_html($label); ?></button>
+                <?php endforeach; ?>
             </div>
-
-            <p class="idlm-muted" style="margin: 8px 0 16px;">
-                Metric scope: unless explicitly labeled as a Won event or calendar-month target, dashboard figures use non-duplicate leads created in the selected period and show their current CRM state and owner.
-            </p>
-
-            <!-- Targets Progress Area -->
-            <div id="idlm-targets-container" class="idlm-card idlm-targets-card">
-                <h3>Monthly Conversion Progress</h3>
-                <div class="idlm-progress-wrapper">
-                    <div class="idlm-progress-item">
-                        <div class="idlm-progress-header">
-                            <span>Leads Goal</span>
-                            <strong id="lead-target-ratio">0/0</strong>
-                        </div>
-                        <div class="idlm-progress-bar-bg">
-                            <div id="lead-target-bar" class="idlm-progress-bar" style="width: 0%;"></div>
-                        </div>
-                    </div>
-                    <div class="idlm-progress-item">
-                        <div class="idlm-progress-header">
-                            <span>This Month's Won Goal</span>
-                            <strong id="conv-target-ratio">0/0</strong>
-                        </div>
-                        <div class="idlm-progress-bar-bg">
-                            <div id="conv-target-bar" class="idlm-progress-bar idlm-progress-bar-success" style="width: 0%;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Marketing Tab -->
-            <div id="idlm-marketing-tab" class="idlm-tab-content active">
-                <div class="idlm-grid-stats">
-                    <div class="idlm-stat-card">
-                        <span class="idlm-stat-label">Unique Leads (Period)</span>
-                        <div class="idlm-stat-val-wrapper">
-                            <span id="mkt-total-leads" class="idlm-stat-val">0</span>
-                            <span id="mkt-growth-pct" class="idlm-stat-trend">0%</span>
-                        </div>
-                    </div>
-                    <div class="idlm-stat-card">
-                        <span class="idlm-stat-label">Unique Leads (Previous Period)</span>
-                        <span id="mkt-prev-leads" class="idlm-stat-val-secondary">0</span>
-                    </div>
-                    <div class="idlm-stat-card">
-                        <span class="idlm-stat-label">Top Channel</span>
-                        <span id="mkt-top-channel" class="idlm-stat-val-secondary">N/A</span>
-                    </div>
-                    <div class="idlm-stat-card">
-                        <span class="idlm-stat-label">Duplicate Leads (Period)</span>
-                        <div class="idlm-stat-val-wrapper">
-                            <span id="mkt-total-duplicates" class="idlm-stat-val">0</span>
-                            <span id="mkt-duplicates-growth-pct" class="idlm-stat-trend">0%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="idlm-card idlm-chart-card" style="margin-top: 25px;">
-                    <div class="idlm-chart-card-header">
-                        <h3>Leads Over Time</h3>
-                    </div>
-                    <div class="idlm-chart-container" style="height: 320px;">
-                        <canvas id="chart-leads-over-time"></canvas>
-                    </div>
-                </div>
-
-                <div class="idlm-card idlm-chart-card" style="margin-top: 25px;">
-                    <div class="idlm-chart-card-header">
-                        <h3>Lead Quality by Channel</h3>
-                    </div>
-                    <div class="idlm-chart-container">
-                        <canvas id="chart-leads-by-channel"></canvas>
-                    </div>
-                </div>
-
-                <div class="idlm-grid-charts" style="margin-top: 25px;">
-                    <div class="idlm-card idlm-chart-card">
-                        <div class="idlm-chart-card-header">
-                            <h3>Leads by Property Type</h3>
-                        </div>
-                        <div class="idlm-chart-container">
-                            <canvas id="chart-property-types"></canvas>
-                        </div>
-                    </div>
-                    <div class="idlm-card idlm-chart-card">
-                        <div class="idlm-chart-card-header">
-                            <h3>Leads by Room Configuration (BHK)</h3>
-                        </div>
-                        <div class="idlm-chart-container">
-                            <canvas id="chart-room-configs"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="idlm-grid-charts" style="grid-template-columns: 1fr; margin-top: 25px;">
-                    <div class="idlm-card idlm-chart-card">
-                        <div class="idlm-chart-card-header idlm-chart-card-toolbar">
-                            <h3 id="idlm-utm-chart-title">Top UTM Campaigns</h3>
-                            <select id="idlm-utm-type-selector" class="idlm-input" style="width: 180px;">
-                                <option value="utm_campaign" selected>UTM Campaign</option>
-                                <option value="utm_source">UTM Source</option>
-                                <option value="utm_medium">UTM Medium</option>
-                                <option value="utm_adgroup">UTM Adgroup</option>
-                                <option value="utm_term">UTM Term</option>
-                                <option value="utm_content">UTM Content</option>
-                            </select>
-                        </div>
-                        <div class="idlm-chart-container">
-                            <canvas id="chart-utm-campaigns"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sales Tab -->
-            <div id="idlm-sales-tab" class="idlm-tab-content">
-                <div class="idlm-grid-stats">
-                    <div class="idlm-stat-card">
-                        <span id="sales-total-won-label" class="idlm-stat-label">Total Won — This Month</span>
-                        <span id="sales-total-won" class="idlm-stat-val">0</span>
-                    </div>
-                    <div class="idlm-stat-card">
-                        <span class="idlm-stat-label">Avg Speed to Connected — Acquisition Cohort</span>
-                        <span id="sales-avg-connected" class="idlm-stat-val-secondary">N/A</span>
-                    </div>
-                    <div class="idlm-stat-card">
-                        <span class="idlm-stat-label">Avg Connected to Won — Acquisition Cohort</span>
-                        <span id="sales-avg-won" class="idlm-stat-val-secondary">N/A</span>
-                    </div>
-                    <div class="idlm-stat-card">
-                        <span class="idlm-stat-label">Estimated Open Pipeline</span>
-                        <span id="sales-estimated-pipeline" class="idlm-stat-val-secondary">0</span>
-                    </div>
-                    <div class="idlm-stat-card">
-                        <span class="idlm-stat-label">Won Revenue</span>
-                        <span id="sales-won-revenue" class="idlm-stat-val-secondary">0</span>
-                    </div>
-                    <div class="idlm-stat-card">
-                        <span class="idlm-stat-label">Plan Collection Rate — Acquisition Cohort</span>
-                        <span id="sales-plan-collection-rate" class="idlm-stat-val-secondary">0%</span>
-                        <small id="sales-plan-collection-detail" class="idlm-muted">0 of 0 qualified leads</small>
-                    </div>
-                </div>
-
-                <?php if ($can_assign_leads): ?>
-                <div class="idlm-card idlm-chart-card" style="margin-bottom: 25px;">
-                    <div class="idlm-chart-card-header">
-                        <h3>Qualified Sales Assignments by Representative</h3>
-                        <p class="idlm-chart-card-subtitle">Qualified leads assigned to their current sales representative during the selected period, using sales handoff date when available and current assignment date otherwise.</p>
-                    </div>
-                    <div class="idlm-chart-container" style="height: 340px;">
-                        <canvas id="chart-sales-assignments"></canvas>
-                        <div id="chart-sales-assignments-empty" class="idlm-chart-empty" style="display:none;">No qualified sales assignments match the selected period.</div>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-                <div class="idlm-card idlm-chart-card" style="margin-bottom: 25px;">
-                    <div class="idlm-chart-card-header">
-                        <h3>Current Sales Stage Distribution</h3>
-                        <p class="idlm-chart-card-subtitle">
-                            See where leads acquired in the selected period currently sit in the configured sales lifecycle.
-                        </p>
-                    </div>
-                    <div class="idlm-funnel-wrapper" id="sales-funnel-container">
-                        <!-- Populated dynamically via JS -->
-                    </div>
-                </div>
-
-                <div class="idlm-grid-charts">
-                    <div class="idlm-card idlm-chart-card">
-                        <div class="idlm-chart-card-header">
-                            <h3>Revenue Estimate by Channel</h3>
-                            <p class="idlm-chart-card-subtitle">
-                                Open-pipeline estimates and Won revenue split by source channel.
-                            </p>
-                        </div>
-                        <div class="idlm-chart-container idlm-revenue-chart-container">
-                            <canvas id="chart-revenue-by-channel"></canvas>
-                            <div id="chart-revenue-by-channel-empty" class="idlm-chart-empty" style="display:none;">No quote or deal values are available for the selected period.</div>
-                        </div>
-                    </div>
-                    <div class="idlm-card idlm-chart-card">
-                        <div class="idlm-chart-card-header">
-                            <h3>Open Pipeline vs Won Revenue</h3>
-                            <p class="idlm-chart-card-subtitle">
-                                Open value from leads created in the selected period versus revenue won during that period.
-                            </p>
-                        </div>
-                        <div class="idlm-chart-container idlm-revenue-chart-container">
-                            <canvas id="chart-revenue-summary"></canvas>
-                            <div id="chart-revenue-summary-empty" class="idlm-chart-empty" style="display:none;">No quote or deal values are available for the selected period.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="idlm-grid-charts">
-                    <div class="idlm-card idlm-chart-card">
-                        <div class="idlm-chart-card-header">
-                            <h3>Current Stage Distribution — Acquisition Cohort</h3>
-                        </div>
-                        <div class="idlm-chart-container">
-                            <canvas id="chart-pipeline-stages"></canvas>
-                        </div>
-                    </div>
-                    <div class="idlm-card idlm-chart-card">
-                        <div class="idlm-chart-card-header">
-                            <h3>Current Call Status — Acquisition Cohort</h3>
-                        </div>
-                        <div class="idlm-chart-container">
-                            <canvas id="chart-call-status-dist"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="idlm-grid-charts" style="margin-top: 25px;">
-                    <div class="idlm-card idlm-chart-card">
-                        <div class="idlm-chart-card-header">
-                            <h3>Qualification Readiness</h3>
-                            <p class="idlm-chart-card-subtitle">Qualified leads are split by floor-plan availability; both remain Qualified in conversion reporting.</p>
-                        </div>
-                        <div class="idlm-chart-container">
-                            <canvas id="chart-overall-quality"></canvas>
-                        </div>
-                    </div>
-                    <div class="idlm-card idlm-chart-card">
-                        <div class="idlm-chart-card-header">
-                            <h3>Preferred Studio Distribution</h3>
-                        </div>
-                        <div class="idlm-chart-container">
-                            <canvas id="chart-studio-dist"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="idlm-card idlm-chart-card" style="margin-top: 25px;">
-                    <div class="idlm-chart-card-header">
-                        <h3>Lost Leads by Reason</h3>
-                        <p class="idlm-chart-card-subtitle">
-                            Categorized reasons for Lost leads created in the selected period, including their associated quote value.
-                        </p>
-                    </div>
-                    <div class="idlm-chart-container" style="height: 360px;">
-                        <canvas id="chart-lost-reasons"></canvas>
-                        <div id="chart-lost-reasons-empty" class="idlm-chart-empty" style="display:none;">No Lost leads are available for the selected period.</div>
-                    </div>
-                </div>
-
-                <div class="idlm-card" style="margin-top: 25px;">
-                    <h3>Studio Acquisition Cohort Performance</h3>
-                    <p class="idlm-chart-card-subtitle">Leads created in the selected period, grouped by their current preferred studio.</p>
-                    <div class="idlm-table-wrapper">
-                        <table class="idlm-table" id="studio-performance-table">
-                            <thead>
-                                <tr>
-                                    <th>Studio Branch</th>
-                                    <th>Leads Acquired</th>
-                                    <th>Currently Won</th>
-                                    <th>Cohort Win Rate (%)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="idlm-card" style="margin-top: 25px;">
-                    <h3>Pre-Sales Intake Cohort Performance</h3>
-                    <p class="idlm-chart-card-subtitle">Non-duplicate intake leads created in the selected period, permanently attributed to their original intake owner.</p>
-                    <div class="idlm-table-wrapper">
-                        <table class="idlm-table" id="pre-sales-performance-table">
-                            <thead><tr><th>Pre-Sales User</th><th>Intake Leads</th><th>Outreach Logged</th><th>Ever Qualified</th><th>Currently Unqualified</th><th>Completed Handoffs</th><th>Ever-Qualified Rate</th><th>Avg Calendar Time to Qualify</th></tr></thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="idlm-card" style="margin-top: 25px;">
-                    <h3>Current Sales Ownership Cohort Performance</h3>
-                    <p class="idlm-chart-card-subtitle">Leads created in the selected period, grouped by their current assigned representative. Reassignment intentionally moves the complete cohort row.</p>
-                    <div class="idlm-table-wrapper">
-                        <table class="idlm-table" id="sales-rep-table">
-                            <thead>
-                                <tr>
-                                    <th>Rep Name</th>
-                                    <th>Currently Assigned</th>
-                                    <th>Successfully Connected</th>
-                                    <th>Avg Working Time to Connect</th>
-                                    <th>Quality: Qualified</th>
-                                    <th>Quality: Unqualified</th>
-                                    <th>Currently Won</th>
-                                    <th>Avg Working Time Connected to Won</th>
-                                    <th>Cohort Win Rate (%)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <p class="idlm-dashboard-scope"><?php echo esc_html($access['scope']); ?><?php echo $access['pre_sales'] ? ' · Pre-sales' : ''; ?></p>
         </div>
-
+        <div class="idlm-dashboard-filters">
+            <label class="screen-reader-text" for="idlm-period-selector">Reporting period</label><select id="idlm-period-selector" class="idlm-input"><option value="last_30_days">Last 30 days</option><option value="last_7_days">Last 7 days</option><option value="this_month" selected>This month</option><option value="this_week">This week</option><option value="last_month">Last month</option><option value="this_year">This year</option><option value="custom">Custom range</option></select>
+            <?php if ($access['manager']): ?><label class="screen-reader-text" for="idlm-dashboard-rep">Sales representative</label><select id="idlm-dashboard-rep" class="idlm-input idlm-sales-filter"><option value="">All Sales Reps</option><?php foreach ($reps as $rep): ?><option value="<?php echo esc_attr($rep->ID); ?>"><?php echo esc_html($rep->display_name); ?></option><?php endforeach; ?></select><?php endif; ?>
+            <label class="screen-reader-text" for="idlm-dashboard-studio">Studio</label><select id="idlm-dashboard-studio" class="idlm-input idlm-sales-filter"><option value="">All Studios</option><?php foreach ($studios as $studio): ?><option value="<?php echo esc_attr($studio); ?>"><?php echo esc_html($studio); ?></option><?php endforeach; ?></select>
+            <label class="screen-reader-text" for="idlm-dashboard-source">Source</label><select id="idlm-dashboard-source" class="idlm-input idlm-marketing-filter" hidden><option value="">All Sources</option></select>
+            <label class="screen-reader-text" for="idlm-dashboard-campaign">Campaign</label><select id="idlm-dashboard-campaign" class="idlm-input idlm-marketing-filter" hidden><option value="">All Campaigns</option></select>
+            <button type="button" class="idlm-dashboard-reset" id="idlm-dashboard-reset" disabled aria-disabled="true">Reset filters</button><span id="idlm-dashboard-range-status" class="idlm-dashboard-status" role="status" aria-live="polite">Loading dashboard…</span>
+        </div>
+        <fieldset id="idlm-custom-range-picker" class="idlm-dashboard-custom-range" hidden><legend>Custom reporting period</legend><label for="idlm-start-date">Start <input type="date" id="idlm-start-date" class="idlm-input"></label><label for="idlm-end-date">End <input type="date" id="idlm-end-date" class="idlm-input"></label><button type="button" id="idlm-apply-custom" class="idlm-btn idlm-btn-primary">Apply</button><p id="idlm-dashboard-date-error" role="alert" hidden></p></fieldset>
+        <div id="idlm-dashboard-error" class="idlm-dashboard-error" role="alert" hidden><span></span> <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-dashboard-retry">Try again</button></div>
+        <div class="idlm-dashboard-insight" id="idlm-dashboard-insight" hidden><span><strong id="idlm-dashboard-insight-title">Filter applied</strong> <span>— Open the matching CRM records below.</span></span><button type="button" id="idlm-dashboard-insight-clear">Clear</button></div>
+        <?php if ($access['sales']): ?>
+        <section id="idlm-sales-tab" role="tabpanel" aria-labelledby="idlm-sales-tab-button" tabindex="0"<?php echo 'sales' === $first_tab ? '' : ' hidden'; ?>>
+            <div id="idlm-sales-kpis" class="idlm-dashboard-kpi-grid"></div>
+            <div class="idlm-dashboard-grid"><article class="idlm-dashboard-panel idlm-dashboard-panel--wide"><header><div><h3 id="idlm-pipeline-title">Open pipeline</h3><p>Current distribution of active opportunities by stage</p></div><strong id="sales-open-pipeline-total">—</strong></header><div class="idlm-dashboard-panel-body"><div id="sales-funnel-container" class="idlm-dashboard-bars"></div></div></article><article class="idlm-dashboard-panel"><header><div><h3 id="idlm-attention-title">Act next</h3><p>Leads requiring action now</p></div></header><div class="idlm-dashboard-panel-body"><div id="idlm-attention-list" class="idlm-dashboard-actions"><p class="idlm-dashboard-empty">Loading your queues…</p></div></div></article></div>
+            <article class="idlm-dashboard-panel"><header><div><h2>Open &amp; Closed Pipeline by Channel</h2><p>Current pipeline status grouped by lead source</p></div></header><div class="idlm-dashboard-panel-body"><div class="idlm-dashboard-vertical-chart"><canvas id="idlm-pipeline-channel-chart" role="img" aria-label="Current open and closed pipeline leads by channel"></canvas><p id="idlm-pipeline-channel-empty" class="idlm-dashboard-empty" hidden></p></div></div><div class="idlm-table-wrapper"><table class="idlm-table"><thead><tr><th scope="col">Channel</th><th scope="col">Open</th><th scope="col">Closed</th><th scope="col">Total</th></tr></thead><tbody id="idlm-pipeline-channel-rows"></tbody></table></div></article>
+            <article class="idlm-dashboard-panel idlm-dashboard-period-panel"><header><div><h2><?php echo $access['pre_sales'] ? 'Qualification readiness' : 'Won Deals &amp; Revenue Trend'; ?></h2><p id="idlm-sales-period-note">Conversion performance over the selected period</p></div><?php if (!$access['pre_sales']): ?><div class="idlm-dashboard-panel-actions" role="group" aria-label="Sales trend metric"><button type="button" class="idlm-dashboard-chip active" data-sales-trend="revenue">Revenue</button><button type="button" class="idlm-dashboard-chip" data-sales-trend="won">Won Deals</button><button type="button" class="idlm-dashboard-chip" data-sales-trend="average">Avg Deal Value</button></div><?php endif; ?></header><?php if (!$access['pre_sales']): ?><div class="idlm-dashboard-panel-body"><div class="idlm-dashboard-trend"><canvas id="idlm-sales-trend-chart" role="img" aria-label="Won deals and revenue trend"></canvas><p id="idlm-sales-trend-empty" class="idlm-dashboard-empty" hidden></p></div></div><?php endif; ?><div id="idlm-sales-summary" class="idlm-dashboard-mini-grid"></div><p id="idlm-events-note" class="idlm-dashboard-note"></p></article>
+            <?php if ($access['manager']): ?><article class="idlm-dashboard-panel"><header><div><h2>Sales Rep Performance</h2><p>Compare efficiency and outcome quality across the team</p></div></header><div class="idlm-table-wrapper"><table class="idlm-table"><thead><tr><th scope="col">Sales Rep</th><th scope="col">Opportunities</th><th scope="col">Won</th><th scope="col">Win Rate</th><th scope="col">Revenue</th><th scope="col">Avg Deal</th><th scope="col">Median Sales Cycle</th></tr></thead><tbody id="idlm-rep-outcomes"></tbody></table></div></article><?php endif; ?>
+            <div class="idlm-dashboard-grid"><article class="idlm-dashboard-panel idlm-dashboard-panel--wide"><header><div><h2>Pre-sales → Sales Handoff Health</h2><p>Qualification-to-assignment operational health</p></div></header><div id="idlm-handoff-health" class="idlm-dashboard-mini-grid"></div></article><article class="idlm-dashboard-panel"><header><div><h2>Lost Deal Reasons</h2><p>Why sales opportunities are being lost</p></div></header><div class="idlm-dashboard-panel-body"><div id="idlm-lost-reasons" class="idlm-dashboard-bars"></div><p id="idlm-lost-reasons-note" class="idlm-dashboard-note"></p></div></article></div>
+            <?php if ($access['manager']): ?><article class="idlm-dashboard-panel"><header><div><h2>Pre-sales Activity</h2><p>Direct team outreach, qualification, and sales handoff work</p></div></header><div id="idlm-pre-sales-activity" class="idlm-dashboard-mini-grid"></div><div class="idlm-table-wrapper"><table class="idlm-table"><thead><tr><th scope="col">Pre-sales</th><th scope="col">Leads Touched</th><th scope="col">Calls</th><th scope="col">WhatsApp</th><th scope="col">Replies</th><th scope="col">Status Updates</th><th scope="col">Tasks</th><th scope="col">Qualified</th><th scope="col">Handed Off</th><th scope="col">Avg. Qualification Time</th></tr></thead><tbody id="idlm-pre-sales-activity-rows"></tbody></table></div></article><?php endif; ?>
+            <article class="idlm-dashboard-panel"><header><div><h2>Business Mix</h2><p>Acquisition volume and Won outcomes closed in the selected period</p></div></header><div class="idlm-dashboard-segment-tabs" role="tablist" aria-label="Business mix"><button type="button" class="idlm-dashboard-chip active" data-segment="rooms">Rooms</button><button type="button" class="idlm-dashboard-chip" data-segment="property">Property Type</button><button type="button" class="idlm-dashboard-chip" data-segment="location">Location</button><button type="button" class="idlm-dashboard-chip" data-segment="studio">Studio</button><button type="button" class="idlm-dashboard-chip" data-segment="timeline">Timeline</button></div><div class="idlm-table-wrapper"><table class="idlm-table"><thead><tr><th scope="col">Segment</th><th scope="col">Leads Acquired</th><th scope="col">Opportunities</th><th scope="col">Won Closed</th><th scope="col">Won Revenue</th></tr></thead><tbody id="idlm-business-mix"></tbody></table></div></article>
+        </section>
+        <?php endif; ?>
+        <?php if ($access['marketing']): ?>
+        <section id="idlm-marketing-tab" role="tabpanel" aria-labelledby="idlm-marketing-tab-button" tabindex="0"<?php echo 'marketing' === $first_tab ? '' : ' hidden'; ?>>
+            <div id="idlm-marketing-kpis" class="idlm-dashboard-kpi-grid"></div>
+            <div class="idlm-dashboard-grid"><article class="idlm-dashboard-panel idlm-dashboard-panel--wide"><header><div><h2>Lead Volume &amp; Quality Trend</h2><p>Acquisition volume, qualification, and Won deals closed by day</p></div><div class="idlm-dashboard-panel-actions" role="group" aria-label="Marketing trend metric"><button type="button" class="idlm-dashboard-chip" data-marketing-trend="leads">Leads</button><button type="button" class="idlm-dashboard-chip" data-marketing-trend="qualified">Qualified</button><button type="button" class="idlm-dashboard-chip" data-marketing-trend="won">Won Closed</button></div></header><div class="idlm-dashboard-panel-body"><div class="idlm-dashboard-trend"><canvas id="chart-leads-over-time" role="img" aria-label="Daily acquired, qualified, and Won-closed lead counts"></canvas><p id="idlm-trend-empty" hidden></p></div><p class="idlm-dashboard-legend idlm-dashboard-trend-legend"><span class="is-leads">Leads Acquired</span><span class="is-qualified">Qualified</span><span class="is-won">Won Closed</span></p></div></article><article class="idlm-dashboard-panel"><header><div><h2>Lead Quality by Source</h2><p>Qualified, unqualified and pending mix</p></div></header><div class="idlm-dashboard-panel-body"><div id="idlm-source-quality" class="idlm-dashboard-quality-list"></div><p class="idlm-dashboard-legend"><span class="is-qualified">Qualified</span><span class="is-unqualified">Unqualified</span><span class="is-pending">Pending</span></p></div></article></div>
+            <article class="idlm-dashboard-panel"><header><div><h2>Channel Performance</h2><p>Acquisition quality and Won outcomes closed in the selected period</p></div></header><div class="idlm-table-wrapper"><table class="idlm-table" id="channel-scorecard-table"><thead><tr><th scope="col">Source</th><th scope="col">Leads Acquired</th><th scope="col">Qualified</th><th scope="col">Qual. Rate</th><th scope="col">Won Closed</th><th scope="col">Won Revenue</th></tr></thead><tbody></tbody></table></div></article>
+            <div class="idlm-dashboard-grid"><article class="idlm-dashboard-panel idlm-dashboard-panel--wide"><header><div><h2>Campaign Explorer</h2><p>Expand campaigns to inspect ad group performance</p></div></header><div class="idlm-table-wrapper"><table class="idlm-table"><thead><tr><th scope="col">Campaign / Ad Group</th><th scope="col">Leads</th><th scope="col">Qualified</th><th scope="col">Qual %</th><th scope="col">Won</th><th scope="col">Win %</th></tr></thead><tbody id="idlm-campaign-outcomes"></tbody></table></div></article><article class="idlm-dashboard-panel"><header><div><h2>Disqualification Reasons</h2><p>Where marketing volume is being wasted</p></div><div class="idlm-dashboard-panel-actions"><button type="button" class="idlm-dashboard-chip active" data-disqualification-view="overall">Overall</button><button type="button" class="idlm-dashboard-chip" data-disqualification-view="source">Source</button><button type="button" class="idlm-dashboard-chip" data-disqualification-view="campaign">Campaign</button></div></header><div class="idlm-dashboard-panel-body"><div id="idlm-disqualification-reasons" class="idlm-dashboard-bars"></div></div></article></div>
+            <article class="idlm-dashboard-panel"><header><div><h2>Attribution &amp; Tracking Health</h2><p>How complete the CRM attribution data is</p></div></header><div id="idlm-marketing-investigations" class="idlm-dashboard-coverage"></div></article>
+        </section>
+        <?php endif; ?>
+        <section id="idlm-dashboard-records" class="idlm-dashboard-panel idlm-dashboard-records" aria-labelledby="idlm-records-title" hidden><header><div><h2 id="idlm-records-title" tabindex="-1">Investigate leads</h2><p id="idlm-records-status" role="status" aria-live="polite"></p></div><button type="button" id="idlm-records-close" class="idlm-btn idlm-btn-secondary">Close</button></header><div class="idlm-table-wrapper"><table class="idlm-table"><thead><tr><th scope="col">Lead</th><th scope="col">Stage</th><th scope="col">Quality</th><th scope="col">Created</th><th scope="col">Next task due</th></tr></thead><tbody id="idlm-records-body"></tbody></table></div><div class="idlm-dashboard-pagination"><button type="button" id="idlm-records-prev" class="idlm-btn idlm-btn-secondary">Previous</button><span id="idlm-records-page"></span><button type="button" id="idlm-records-next" class="idlm-btn idlm-btn-secondary">Next</button></div></section>
+    </main>
+</div>

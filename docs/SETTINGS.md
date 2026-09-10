@@ -25,9 +25,12 @@ New non-secret routing fields should be added to `IDLM_Settings::routing_default
 
 ## Other option families
 
-- `idlm_retention_policy`: grouped touchpoint, integration-log, and telemetry retention limits.
+- `idlm_retention_policy`: grouped touchpoint, integration-log, and telemetry retention limits. Per-lead audience-sync and CAPI diagnostic activity, plus CAPI audit-table records, are retained for seven days independently so recurring integration diagnostics do not become CRM-history bloat.
 - `idlm_quote_settings`: grouped quotation identity, branding, defaults, cover, and closing content.
+- `idlm_white_label_settings`: grouped non-secret CRM brand identity, WordPress attachment IDs, accessible semantic colours, workspace/sign-in copy, support contact, footer text, and attribution visibility. Read through `IDLM_Settings::get_white_label()` so defaults, normalization, and frontend token ownership remain centralized.
 - `idlm_field_mappings_{platform}`: dynamic inbound field maps retained per platform.
+- `idlm_custom_stages` and `idlm_kanban_stage_totals`: ordered pipeline labels and their per-stage header-total source. The General settings pipeline editor submits the established structured and legacy vocabulary fields, and total-map keys remain URL-encoded stage labels for compatibility.
+- `idlm_custom_call_statuses`, `idlm_custom_lost_reasons`, `idlm_custom_studios`, `idlm_custom_num_rooms`: reusable lead-option vocabularies. Their count-labelled settings disclosures are presentation only; all controls remain successful form controls when collapsed.
 - Schema and migration markers: independent, scalar, idempotent version options.
 - Integration configuration: platform IDs, feature flags, and event maps; credentials remain separate protected secrets.
 - Operational status: fallback timestamps/status, queues, telemetry level, and migration progress. These are runtime state, not administrator-authored configuration.

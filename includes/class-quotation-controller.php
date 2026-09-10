@@ -50,7 +50,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         if (!$line_items) {
             self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'lead_id' => $lead_id, 'idlm_error' => 'Add at least one line item.'));
         }
-        $totals = self::calculate_totals($items, $_POST);
+        $totals = self::calculate_totals($items, $_POST, $quote_settings);
         $sections = self::parse_sections($_POST['sections'] ?? array());
         $now = current_time('mysql');
         $user_id = get_current_user_id();
@@ -205,7 +205,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             wp_send_json_error(array('message' => 'Autosave is waiting for a title and at least one complete line item.'), 422);
         }
         $sections = self::parse_sections($_POST['sections'] ?? array());
-        $totals = self::calculate_totals($items, $_POST);
+        $totals = self::calculate_totals($items, $_POST, self::settings());
         $revision_data = array_merge(array(
             'currency_code' => sanitize_text_field(wp_unslash($_POST['currency_code'] ?? $revision->currency_code)),
             'valid_until' => self::clean_date(wp_unslash($_POST['valid_until'] ?? '')),
@@ -380,6 +380,63 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             wp_send_json_success(array());
         }
         wp_send_json_success(IDLM_Quotation_Lead_Read_Model::search($term, 20));
+    }
+
+    /**
+     * Return one scoped quotation-list page for the live toolbar search.
+     */
+    public static function ajax_filter_quotation_list() {
+        check_ajax_referer('idlm_quote_catalogue_search', 'nonce');
+        if (!self::can('idlm_view_quotes')) {
+            wp_send_json_error(array('message' => 'Permission denied.'), 403);
+        }
+        $lead_id = absint(wp_unslash($_GET['lead_id'] ?? 0));
+        $filters = array(
+            'owner_user_id' => IDLM_Quotation_Policy::can_manage_all_leads() ? 0 : get_current_user_id(),
+            'search' => sanitize_text_field(wp_unslash($_GET['quote_search'] ?? '')),
+            'created_by' => absint(wp_unslash($_GET['created_by'] ?? 0)),
+            'date_from' => self::list_filter_date(wp_unslash($_GET['date_from'] ?? '')),
+            'date_to' => self::list_filter_date(wp_unslash($_GET['date_to'] ?? '')),
+            'lead_id' => $lead_id && self::can_view_lead($lead_id) ? $lead_id : 0,
+        );
+        $page = max(1, absint(wp_unslash($_GET['quote_page'] ?? 1)));
+        $per_page = 50;
+        wp_send_json_success(array(
+            'rows' => IDLM_Quotation_Repository::list_quotations($filters, $page, $per_page),
+            'total' => IDLM_Quotation_Repository::count_quotations($filters),
+            'page' => $page,
+            'perPage' => $per_page,
+        ));
+    }
+
+    /**
+     * Return one catalogue page for the live toolbar search.
+     */
+    public static function ajax_filter_catalogue_list() {
+        check_ajax_referer('idlm_quote_catalogue_search', 'nonce');
+        if (!self::can('idlm_manage_quote_items')) {
+            wp_send_json_error(array('message' => 'Permission denied.'), 403);
+        }
+        $sort = sanitize_key(wp_unslash($_GET['catalogue_sort'] ?? 'status'));
+        if (!in_array($sort, array('code', 'category', 'item', 'unit', 'wood', 'rate', 'status'), true)) {
+            $sort = 'status';
+        }
+        $order = 'desc' === strtolower(sanitize_key(wp_unslash($_GET['catalogue_order'] ?? 'asc'))) ? 'desc' : 'asc';
+        $search = sanitize_text_field(wp_unslash($_GET['catalogue_search'] ?? ''));
+        $page = max(1, absint(wp_unslash($_GET['catalogue_page'] ?? 1)));
+        $per_page = 100;
+        wp_send_json_success(array(
+            'rows' => IDLM_Quotation_Repository::list_catalogue_items($search, $page, $per_page, $sort, $order),
+            'total' => IDLM_Quotation_Repository::count_catalogue_items($search),
+            'page' => $page,
+            'perPage' => $per_page,
+        ));
+    }
+
+    private static function list_filter_date($value) {
+        $value = sanitize_text_field($value);
+        $date = DateTime::createFromFormat('Y-m-d', $value, wp_timezone());
+        return $date && $date->format('Y-m-d') === $value ? $value : null;
     }
 
     public static function handle_save_catalogue_category() {
@@ -651,6 +708,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             }
         }
         $settings['payment_structure'] = wp_json_encode($payment_structure);
+        $settings['soft_close_percent'] = min(100, self::clean_decimal($_POST['soft_close_percent'] ?? 0));
         $settings['number_prefix'] = preg_replace('/[^A-Za-z0-9_-]/', '', sanitize_text_field(wp_unslash($_POST['number_prefix'] ?? 'Q')));
         $settings['number_separator'] = in_array(($_POST['number_separator'] ?? ''), array('-', '/', '_'), true) ? $_POST['number_separator'] : '-';
         $settings['number_padding'] = min(10, max(3, absint($_POST['number_padding'] ?? 6)));

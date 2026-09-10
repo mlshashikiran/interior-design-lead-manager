@@ -1,13 +1,104 @@
-/* Interior Design Lead Manager — unified frontend shell */
-.idlm-workspace{--idlm-workspace-sidebar:210px;display:grid;grid-template-columns:var(--idlm-workspace-sidebar) minmax(0,1fr);min-height:78vh;width:100%;overflow:clip;overscroll-behavior:none;border:1px solid var(--idlm-border,#d9e1eb);border-radius:18px;background:var(--idlm-bg-main,#eef2f6);box-shadow:0 18px 50px rgba(23,33,43,.1);color:var(--idlm-text-main,#17212b);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.idlm-workspace.is-collapsed,.idlm-workspace-sidebar-precollapsed .idlm-workspace{--idlm-workspace-sidebar:64px}
-.idlm-workspace-page,.idlm-workspace-page body{overscroll-behavior:none}
-.idlm-workspace-sidebar{position:sticky;top:0;align-self:start;display:flex;flex-direction:column;height:100vh;height:100dvh;min-height:100vh;overflow:hidden;overscroll-behavior:none;border-right:1px solid rgba(255,255,255,.08);background:var(--idlm-dark,#111a24);color:#fff}.idlm-workspace-brand{display:flex;align-items:center;min-height:64px;padding:0 12px;gap:8px;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.025)}
-.idlm-workspace-brand>.dashicons{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border:1px solid rgba(201,150,68,.32);border-radius:8px;background:rgba(201,150,68,.12);color:#e1b66d}.idlm-workspace-brand-text{flex:1;overflow:hidden;font-size:12.5px;font-weight:700;letter-spacing:-.01em;text-overflow:ellipsis;white-space:nowrap}
-.idlm-workspace-toggle{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid rgba(255,255,255,.15);border-radius:9px;background:rgba(255,255,255,.06);color:#fff;cursor:pointer;transition:var(--idlm-transition,all .2s ease)}.idlm-workspace-toggle:hover,.idlm-workspace-toggle:focus-visible{border-color:rgba(225,182,109,.7);background:rgba(201,150,68,.16);outline:none;box-shadow:0 0 0 3px rgba(201,150,68,.16)}
-.idlm-workspace-nav{display:flex;flex:1;min-height:0;flex-direction:column;gap:3px;padding:12px 8px;overflow-y:auto;overscroll-behavior:contain}.idlm-workspace-nav-item{position:relative;display:flex;align-items:center;min-height:40px;padding:0 10px;gap:10px;border:1px solid transparent;border-radius:9px;color:#c7d2df!important;font-size:12px;font-weight:600;text-decoration:none!important;white-space:nowrap;transition:var(--idlm-transition,all .2s ease)}.idlm-workspace-nav-item:hover{border-color:rgba(255,255,255,.07);background:rgba(255,255,255,.07);color:#fff!important}.idlm-workspace-nav-item:focus-visible{outline:none;box-shadow:inset 0 0 0 2px #e1b66d}.idlm-workspace-nav-item.is-active{border-color:rgba(255,255,255,.12);background:var(--idlm-primary,#c99644);color:#fff!important;box-shadow:0 8px 18px rgba(0,0,0,.16)}.idlm-workspace-nav-item.is-active:before{position:absolute;top:10px;bottom:10px;left:-8px;width:3px;border-radius:0 3px 3px 0;background:#fff;content:""}.idlm-workspace-nav-item .dashicons{flex:0 0 18px;width:18px;height:18px;font-size:18px;line-height:18px;color:inherit}
-.idlm-workspace-account-link{margin-top:auto!important;border-top-color:rgba(255,255,255,.12)!important}
-.idlm-workspace-content{min-width:0;padding:22px;background:var(--idlm-bg-main,#eef2f6)}.idlm-workspace-content>.wrap{max-width:none;margin:0}.idlm-workspace-content .idlm-header{padding:2px 2px 0}.idlm-workspace-denied{padding:28px;border-radius:12px;color:var(--idlm-text-muted,#63728a);text-align:center}
-.idlm-workspace.is-collapsed .idlm-workspace-brand-text,.idlm-workspace.is-collapsed .idlm-workspace-nav-label,.idlm-workspace-sidebar-precollapsed .idlm-workspace-brand-text,.idlm-workspace-sidebar-precollapsed .idlm-workspace-nav-label{display:none}.idlm-workspace.is-collapsed .idlm-workspace-brand,.idlm-workspace-sidebar-precollapsed .idlm-workspace-brand{justify-content:center;padding-inline:8px;flex-wrap:wrap;align-content:center}.idlm-workspace.is-collapsed .idlm-workspace-brand>.dashicons,.idlm-workspace-sidebar-precollapsed .idlm-workspace-brand>.dashicons{display:none}.idlm-workspace.is-collapsed .idlm-workspace-toggle .dashicons,.idlm-workspace-sidebar-precollapsed .idlm-workspace-toggle .dashicons{transform:rotate(180deg)}.idlm-workspace.is-collapsed .idlm-workspace-nav-item,.idlm-workspace-sidebar-precollapsed .idlm-workspace-nav-item{justify-content:center;padding-inline:0}
-.idlm-account-layout{display:grid;grid-template-columns:minmax(220px,.65fr) minmax(0,2fr);gap:20px;align-items:start}.idlm-account-summary{text-align:center}.idlm-account-avatar{width:96px;height:96px;border:4px solid #fff;border-radius:50%;box-shadow:0 0 0 1px var(--idlm-border),0 10px 24px rgba(23,33,43,.1)}.idlm-account-summary h2{margin:16px 0 5px;font-size:20px}.idlm-account-summary p{margin:0;color:var(--idlm-text-muted)}.idlm-account-roles{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:14px}.idlm-account-signout{justify-content:center;width:100%;margin-top:20px}.idlm-account-form>section+section{margin-top:24px;padding-top:24px;border-top:1px solid var(--idlm-border)}.idlm-account-form h2{margin:0 0 16px;font-size:16px}.idlm-account-form .idlm-card-desc{margin:-8px 0 16px;color:var(--idlm-text-muted)}.idlm-account-security .idlm-checkbox-row{margin-top:14px}.idlm-account-actions{display:flex;justify-content:flex-end;margin-top:22px}.idlm-account-success{margin-bottom:18px;border:1px solid #bbdecf;background:var(--idlm-success-soft);color:var(--idlm-success)}
-@media(max-width:782px){.idlm-workspace,.idlm-workspace.is-collapsed{grid-template-columns:1fr;border-radius:12px}.idlm-workspace-sidebar{position:relative;height:auto;min-height:auto;overflow-y:visible;border-right:0}.idlm-workspace-brand{min-height:58px}.idlm-workspace-nav{display:flex;flex:none;flex-direction:row;gap:6px;overflow-x:auto;padding:8px;scrollbar-width:thin}.idlm-workspace-nav-item{flex:0 0 auto;min-height:40px;padding:0 12px}.idlm-workspace-account-link{margin-top:0!important;border-top-color:transparent!important}.idlm-workspace-nav-item.is-active:before{display:none}.idlm-workspace.is-collapsed .idlm-workspace-nav,.idlm-workspace-sidebar-precollapsed .idlm-workspace-nav{display:none}.idlm-workspace.is-collapsed .idlm-workspace-brand>.dashicons,.idlm-workspace-sidebar-precollapsed .idlm-workspace-brand>.dashicons{display:grid}.idlm-workspace.is-collapsed .idlm-workspace-brand-text,.idlm-workspace-sidebar-precollapsed .idlm-workspace-brand-text{display:block}.idlm-workspace-content{padding:12px}.idlm-account-layout{grid-template-columns:1fr}.idlm-account-summary{text-align:left}.idlm-account-avatar{width:72px;height:72px}.idlm-account-roles{justify-content:flex-start}.idlm-account-actions .idlm-btn{width:100%}}
-@media(max-width:480px){.idlm-workspace{border-right:0;border-left:0;border-radius:0;box-shadow:none}.idlm-workspace-content{padding:10px}}@media(prefers-reduced-motion:reduce){.idlm-workspace *{transition-duration:.01ms!important}}
+/* Frontend CRM shell, scoped so Elementor cannot revive the retired card shell. */
+.idlm-workspace{--idlm-workspace-sidebar:248px;display:grid;grid-template-columns:var(--idlm-workspace-sidebar) minmax(0,1fr);width:100%;min-height:100dvh;overflow:clip;overscroll-behavior:none;border:0;border-radius:0;background:var(--idlm-canvas);box-shadow:none;color:var(--idlm-text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.idlm-workspace.is-collapsed,.idlm-workspace-sidebar-precollapsed .idlm-workspace{--idlm-workspace-sidebar:64px}.idlm-workspace-page,.idlm-workspace-page body{overscroll-behavior:none}
+.idlm-workspace-sidebar{position:sticky;top:0;z-index:30;align-self:start;display:flex;flex-direction:column;box-sizing:border-box;width:var(--idlm-workspace-sidebar);height:100dvh;min-height:100dvh;padding:12px;overflow:hidden;overscroll-behavior:none;border:0;background:var(--idlm-dark);color:var(--idlm-surface);transition:width var(--idlm-motion-base,180ms) var(--idlm-ease,ease)}.idlm-workspace-brand{display:flex;align-items:center;min-height:40px;gap:12px;padding:0 4px 18px;margin-bottom:8px;border-bottom:1px solid rgb(255 255 255 / .1)}.idlm-workspace-brand-mark,.idlm-workspace-brand-image{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;overflow:hidden;border-radius:50%;background:var(--idlm-brand-gold);color:var(--idlm-action-contrast);font-size:14px;font-weight:750;line-height:1;object-fit:contain}.idlm-workspace-brand-text{min-width:0;flex:1;overflow:hidden;color:inherit;font-size:15px;font-weight:700;letter-spacing:-.01em;text-overflow:ellipsis;white-space:nowrap}
+.idlm-workspace-toggle,.idlm-workspace-mobile-toggle{display:grid;place-items:center;box-sizing:border-box;width:32px;height:32px;flex:0 0 32px;padding:0;border:1px solid rgb(255 255 255 / .15);border-radius:var(--idlm-button-radius,8px);background:rgb(255 255 255 / .06);color:var(--idlm-surface);cursor:pointer;transition:background var(--idlm-motion-base,180ms) var(--idlm-ease,ease),border-color var(--idlm-motion-base,180ms) var(--idlm-ease,ease),transform var(--idlm-motion-base,180ms) var(--idlm-ease,ease)}.idlm-workspace-toggle:hover,.idlm-workspace-toggle:focus-visible,.idlm-workspace-mobile-toggle:hover,.idlm-workspace-mobile-toggle:focus-visible{border-color:var(--idlm-brand-gold);background:color-mix(in srgb,var(--idlm-brand-gold) 16%,transparent);outline:none}.idlm-workspace-mobile-toggle,.idlm-workspace-backdrop{display:none}
+.idlm-workspace-nav{display:flex;flex:1;min-height:0;flex-direction:column;gap:4px;padding:0;overflow-y:auto;overscroll-behavior:contain}.idlm-workspace-nav-item{position:relative;display:flex;align-items:center;box-sizing:border-box;min-height:40px;gap:12px;padding:0 12px;border:1px solid transparent;border-radius:var(--idlm-button-radius,8px);color:color-mix(in srgb,var(--idlm-surface) 78%,transparent)!important;font-size:12px;font-weight:600;text-decoration:none!important;white-space:nowrap;transition:background var(--idlm-motion-base,180ms) var(--idlm-ease,ease),color var(--idlm-motion-base,180ms) var(--idlm-ease,ease)}.idlm-workspace-nav-item:hover,.idlm-workspace-nav-item:focus-visible{background:rgb(255 255 255 / .1);color:var(--idlm-surface)!important;outline:none}.idlm-workspace-nav-item:focus-visible{box-shadow:inset 0 0 0 2px var(--idlm-brand-gold)}.idlm-workspace-nav-item.is-active{border-color:transparent;background:color-mix(in srgb,var(--idlm-brand-gold) 18%,transparent);box-shadow:inset 2px 0 0 var(--idlm-brand-gold);color:var(--idlm-surface)!important}.idlm-workspace-nav-item .dashicons{width:20px;height:20px;flex:0 0 20px;font-size:20px;line-height:20px}.idlm-workspace-footer{display:grid;gap:4px;padding:12px 4px 4px;border-top:1px solid rgb(255 255 255 / .1);color:color-mix(in srgb,var(--idlm-surface) 78%,transparent);font-size:10px;line-height:1.4}.idlm-workspace-footer small{color:color-mix(in srgb,var(--idlm-surface) 58%,transparent);font-size:9px}
+.idlm-workspace-content{min-width:0;padding:0 28px 28px;background:var(--idlm-canvas)}.idlm-workspace-content>.wrap,.idlm-workspace-content>.idlm-wrap,.idlm-workspace-content>.idlm-wrap.idlm-wrap{max-width:none;margin:0;padding:0}
+/* Frontend equivalent of the 64px admin operational strip. */
+.idlm-workspace .idlm-wrap .idlm-header{position:sticky;top:0;z-index:20;display:flex;min-height:64px;box-sizing:border-box;align-items:center;gap:16px;padding:0 28px;margin:0 -28px 20px;border-bottom:1px solid var(--idlm-border);background:var(--idlm-canvas);box-shadow:none}.idlm-workspace .idlm-wrap .idlm-header>:first-child,.idlm-workspace .idlm-wrap .idlm-header-meta{min-width:0;flex:0 1 auto}.idlm-workspace .idlm-wrap .idlm-header h1{overflow:hidden;margin:0;color:var(--idlm-text);font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}.idlm-workspace .idlm-wrap .idlm-header-subtitle{display:none}.idlm-workspace .idlm-wrap .idlm-header-actions{display:flex;min-width:0;flex:1 1 auto;flex-wrap:nowrap;justify-content:flex-end;gap:8px!important;overflow-x:auto;overflow-y:hidden;margin-left:auto;scrollbar-width:none;white-space:nowrap}.idlm-workspace .idlm-wrap .idlm-header-actions::-webkit-scrollbar{display:none}.idlm-workspace .idlm-wrap .idlm-header-actions>*{flex:0 0 auto}.idlm-workspace .idlm-wrap .idlm-header-search{min-width:160px;max-width:340px;flex:1 1 280px;margin:0}.idlm-workspace .idlm-wrap .idlm-header-search .idlm-input{width:100%;min-width:0;height:34px}
+.idlm-workspace .idlm-pending-calls-pill,.idlm-workspace .idlm-whatsapp-unread-pill{min-height:28px;max-width:190px;gap:5px;padding:4px 9px;border-radius:var(--idlm-radius-pill);box-shadow:none;font-size:11px;font-weight:650;line-height:18px;white-space:nowrap}.idlm-workspace .idlm-pending-calls-pill{border-color:var(--idlm-info);background:var(--idlm-info-soft);color:var(--idlm-info)}.idlm-workspace .idlm-whatsapp-unread-pill{border-color:var(--idlm-success);background:var(--idlm-success-soft);color:var(--idlm-success)}.idlm-workspace .idlm-pending-calls-pill:hover,.idlm-workspace .idlm-whatsapp-unread-pill:hover{box-shadow:none;transform:none}.idlm-workspace .idlm-pending-text,.idlm-workspace .idlm-whatsapp-unread-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.idlm-workspace .idlm-pending-pulse-dot{width:6px;height:6px;flex:0 0 6px;background-color:var(--idlm-info)}.idlm-workspace .idlm-pending-pulse-dot::after{background-color:var(--idlm-info)}.idlm-workspace .idlm-whatsapp-unread-pill .dashicons{width:14px;height:14px;flex:0 0 14px;color:currentColor;font-size:14px;line-height:14px}
+.idlm-workspace-denied{padding:28px;border-radius:12px;color:var(--idlm-text-muted);text-align:center}.idlm-workspace.is-collapsed .idlm-workspace-brand-text,.idlm-workspace.is-collapsed .idlm-workspace-nav-label,.idlm-workspace.is-collapsed .idlm-workspace-footer,.idlm-workspace-sidebar-precollapsed .idlm-workspace-brand-text,.idlm-workspace-sidebar-precollapsed .idlm-workspace-nav-label,.idlm-workspace-sidebar-precollapsed .idlm-workspace-footer{display:none}.idlm-workspace.is-collapsed .idlm-workspace-brand,.idlm-workspace-sidebar-precollapsed .idlm-workspace-brand{justify-content:center;padding-inline:0}.idlm-workspace.is-collapsed .idlm-workspace-toggle .dashicons,.idlm-workspace-sidebar-precollapsed .idlm-workspace-toggle .dashicons{transform:rotate(180deg)}.idlm-workspace.is-collapsed .idlm-workspace-nav-item,.idlm-workspace-sidebar-precollapsed .idlm-workspace-nav-item{justify-content:center;padding-inline:0}
+.idlm-account-layout{display:grid;grid-template-columns:minmax(220px,.65fr) minmax(0,2fr);gap:20px;align-items:start}.idlm-account-summary{text-align:center}.idlm-account-avatar{width:96px;height:96px;border:4px solid var(--idlm-surface);border-radius:50%;box-shadow:0 0 0 1px var(--idlm-border),0 10px 24px rgb(23 33 43 / .1)}.idlm-account-summary h2{margin:16px 0 5px;font-size:var(--idlm-type-section,1rem)}.idlm-account-summary p{margin:0;color:var(--idlm-text-muted)}.idlm-account-roles{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:14px}.idlm-account-signout{justify-content:center;width:100%;margin-top:20px}.idlm-account-form>section+section{margin-top:24px;padding-top:24px;border-top:1px solid var(--idlm-border)}.idlm-account-form h2{margin:0 0 16px;font-size:var(--idlm-type-card,.875rem)}.idlm-account-form .idlm-card-desc{margin:-8px 0 16px;color:var(--idlm-text-muted)}.idlm-account-security .idlm-checkbox-row{margin-top:14px}.idlm-account-actions{display:flex;justify-content:flex-end;margin-top:22px}.idlm-account-success{margin-bottom:18px;border:1px solid var(--idlm-success);background:var(--idlm-success-soft);color:var(--idlm-success)}.idlm-account-brand{display:grid;place-items:center;min-height:46px;margin:0 0 18px;padding:8px;border-bottom:1px solid var(--idlm-border);color:var(--idlm-text);font-size:13px}.idlm-account-brand img{max-width:170px;max-height:46px;object-fit:contain}
+@media(max-width:782px){.idlm-workspace,.idlm-workspace.is-collapsed{grid-template-columns:1fr}.idlm-workspace-sidebar{position:fixed;top:0;bottom:0;left:0;width:min(280px,calc(100vw - 48px));height:100dvh;min-height:100dvh;transform:translateX(-100%);transition:transform var(--idlm-motion-base,180ms) var(--idlm-ease,ease);box-shadow:12px 0 32px rgb(23 33 43 / .2)}.idlm-workspace.is-mobile-open .idlm-workspace-sidebar{transform:translateX(0)}.idlm-workspace-mobile-toggle{position:fixed;z-index:21;top:14px;left:12px;display:grid;background:var(--idlm-dark)}.idlm-workspace-backdrop{position:fixed;z-index:29;inset:0;background:rgb(23 33 43 / .36)}.idlm-workspace.is-mobile-open .idlm-workspace-backdrop{display:block}.idlm-workspace .idlm-workspace-toggle{display:none}.idlm-workspace-content{padding:0 12px 20px}.idlm-workspace .idlm-wrap .idlm-header{min-height:64px;gap:10px;padding:0 12px 0 52px;margin:0 -12px 16px}.idlm-workspace .idlm-wrap .idlm-header-meta{display:none}.idlm-workspace .idlm-wrap .idlm-header-actions{justify-content:flex-start}.idlm-workspace .idlm-wrap .idlm-header-search{min-width:150px;flex-basis:clamp(150px,52vw,280px)}.idlm-workspace .idlm-pending-calls-pill,.idlm-workspace .idlm-whatsapp-unread-pill{max-width:164px}.idlm-account-layout{grid-template-columns:1fr}.idlm-account-summary{text-align:left}.idlm-account-avatar{width:72px;height:72px}.idlm-account-roles{justify-content:flex-start}.idlm-account-actions .idlm-btn{width:100%}}
+@media(prefers-reduced-motion:reduce){.idlm-workspace *,.idlm-workspace *::before,.idlm-workspace *::after{transition-duration:.01ms!important}}
+
+/* CRM density: header utilities stay compact and do not consume the page strip. */
+.idlm-workspace .idlm-wrap .idlm-header { gap: 12px; }
+.idlm-workspace .idlm-wrap .idlm-header-actions { gap: 6px !important; }
+.idlm-workspace .idlm-wrap .idlm-header-search { flex-basis: 240px; max-width: 300px; }
+.idlm-workspace .idlm-wrap .idlm-header-search .idlm-input { height: var(--idlm-control-height); }
+.idlm-workspace .idlm-pending-calls-pill,
+.idlm-workspace .idlm-whatsapp-unread-pill {
+    min-height: 24px;
+    max-width: 176px;
+    gap: 4px;
+    padding: 2px 7px;
+    font-size: 10px;
+    line-height: 16px;
+}
+
+/* Dense CRM controls. Field groups may still stretch their fields, but utility
+   controls size to their content and never grow merely to fill a flex row. */
+.idlm-workspace .idlm-wrap :is(.idlm-btn, button.button, a.button) {
+    min-height: var(--idlm-control-height);
+    width: auto;
+    padding: 0 10px;
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+.idlm-workspace .idlm-wrap .idlm-tab-link {
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 11px;
+}
+.idlm-workspace .idlm-wrap :is(.idlm-input, .idlm-select, select) {
+    min-height: var(--idlm-control-height);
+    font-size: 12px;
+}
+.idlm-workspace .idlm-wrap .idlm-header-actions > :is(.idlm-btn, button.button, a.button, select, .idlm-input) {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: min(240px, 42vw);
+}
+.idlm-workspace .idlm-wrap .idlm-dashboard-header-actions {
+    flex: 0 0 auto;
+    width: auto;
+}
+.idlm-workspace .idlm-wrap .idlm-dashboard-header-actions #idlm-period-selector {
+    width: 148px;
+    min-width: 148px;
+}
+.idlm-workspace .idlm-wrap :is(.idlm-badge, .idlm-chip, [class*="-pill"]) {
+    white-space: nowrap;
+}
+.idlm-workspace .idlm-handoff-alert-pill {
+    min-height: 26px;
+    max-width: 176px;
+    gap: 4px;
+    padding: 2px 7px;
+    overflow: hidden;
+    font-size: 10px;
+    line-height: 16px;
+}
+.idlm-workspace .idlm-handoff-alert-pill > span:not(.dashicons) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.idlm-workspace .idlm-handoff-alert-pill .dashicons {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    font-size: 14px;
+    line-height: 14px;
+}
+.idlm-workspace .idlm-handoff-alert-pill em {
+    flex: 0 0 auto;
+    padding-left: 5px;
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+@media (max-width: 782px) {
+    .idlm-workspace .idlm-wrap .idlm-header-search { flex-basis: clamp(150px, 52vw, 280px); }
+    .idlm-workspace .idlm-wrap :is(.idlm-btn, button.button, a.button, .idlm-input, .idlm-select, select) {
+        min-height: 40px;
+    }
+    .idlm-workspace .idlm-wrap .idlm-dashboard-header-actions #idlm-period-selector {
+        width: 132px;
+        min-width: 132px;
+    }
+}
+.idlm-workspace-account-menu-wrap{position:relative;margin-top:auto}.idlm-workspace-account-trigger{width:100%;border:1px solid transparent;background:transparent;color:color-mix(in srgb,var(--idlm-surface) 78%,transparent)!important;cursor:pointer;text-align:left;font:inherit}.idlm-workspace-account-chevron{margin-left:auto;transition:transform var(--idlm-motion-base,180ms) var(--idlm-ease,ease)}.idlm-workspace-account-trigger[aria-expanded="true"] .idlm-workspace-account-chevron{transform:rotate(180deg)}.idlm-workspace-account-menu{position:absolute;right:0;bottom:calc(100% + 8px);left:0;padding:4px;border:1px solid rgb(255 255 255 / .12);border-radius:8px;background:var(--idlm-dark);box-shadow:0 12px 28px rgb(0 0 0 / .25)}.idlm-workspace-account-menu a{display:flex;align-items:center;gap:10px;min-height:36px;padding:0 10px;border-radius:6px;color:var(--idlm-surface)!important;text-decoration:none!important;font-size:12px}.idlm-workspace-account-menu a:hover,.idlm-workspace-account-menu a:focus-visible{background:rgb(255 255 255 / .1);outline:none}.idlm-workspace-account-menu .dashicons{width:18px;height:18px;font-size:18px}.idlm-workspace.is-collapsed .idlm-workspace-account-trigger,.idlm-workspace-sidebar-precollapsed .idlm-workspace-account-trigger{display:grid;place-items:center;padding-inline:0;text-align:center}.idlm-workspace.is-collapsed .idlm-workspace-account-chevron,.idlm-workspace-sidebar-precollapsed .idlm-workspace-account-chevron{display:none}.idlm-workspace.is-collapsed .idlm-workspace-account-menu,.idlm-workspace-sidebar-precollapsed .idlm-workspace-account-menu{z-index:1000;right:auto;bottom:0;left:calc(100% + 8px);min-width:144px}.idlm-workspace.is-collapsed .idlm-workspace-sidebar,.idlm-workspace-sidebar-precollapsed .idlm-workspace-sidebar{overflow:visible}

@@ -2,36 +2,31 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-
 $active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
 $stages = isset($context['stages']) ? $context['stages'] : array();
 $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : array();
+$settings_saved = !empty($context['settings_saved']);
+$return_url = remove_query_arg('idlm_credential_rotated');
 ?>
         <div class="wrap idlm-wrap idlm-settings-page">
             <script>
             function switchFieldMappingTab(element, tabId) {
-                var $element = jQuery(element);
-                jQuery('.idlm-mapping-tab-content').removeClass('active');
-                jQuery('#' + tabId).addClass('active');
-                
-                $element.siblings('.idlm-tab-link').removeClass('active');
-                $element.addClass('active');
+                var $element = jQuery(element); jQuery('.idlm-mapping-tab-content').prop('hidden', true).removeClass('active'); jQuery('#' + tabId).prop('hidden', false).addClass('active');
+                $element.siblings('[role="tab"]').removeClass('active').attr({'aria-selected': 'false', 'tabindex': '-1'}); $element.addClass('active').attr({'aria-selected': 'true', 'tabindex': '0'});
             }
             function switchMcpClientTab(element, tabId) {
                 var $element = jQuery(element);
-                jQuery('.idlm-mcp-client-tab-content').hide().removeClass('active');
-                jQuery('#' + tabId).show().addClass('active');
-                
-                $element.siblings('.idlm-tab-link').removeClass('active');
-                $element.addClass('active');
+                jQuery('.idlm-mcp-client-tab-content').prop('hidden', true).removeClass('active');
+                jQuery('#' + tabId).prop('hidden', false).addClass('active');
+                $element.siblings('.idlm-tab-link').removeClass('active').attr({'aria-selected': 'false', 'tabindex': '-1'});
+                $element.addClass('active').attr({'aria-selected': 'true', 'tabindex': '0'});
             }
             function switchSettingsTab(element, tabId) {
                 var $element = jQuery(element);
-                jQuery('.idlm-settings-tab-content').hide().removeClass('active');
-                jQuery('#' + tabId).show().addClass('active');
-                
-                $element.siblings('.idlm-tab-link').removeClass('active');
-                $element.addClass('active');
+                jQuery('.idlm-settings-tab-content').prop('hidden', true).removeClass('active');
+                jQuery('#' + tabId).prop('hidden', false).addClass('active');
+                $element.siblings('.idlm-tab-link').removeClass('active').attr({'aria-selected': 'false', 'tabindex': '-1'});
+                $element.addClass('active').attr({'aria-selected': 'true', 'tabindex': '0'});
 
                 // Update the hidden input field value so the tab state is kept when saving
                 var tabName = tabId.replace('settings-', '');
@@ -39,25 +34,15 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                 if (tabInput) {
                     tabInput.value = tabName;
                 }
-
                 // Hide the global Save Settings buttons if on Danger Zone, Help, System Health, or MCP tab
                 var saveBtns = document.querySelectorAll('.idlm-save-settings-btn');
                 saveBtns.forEach(function(btn) {
-                    if (tabName === 'danger-zone' || tabName === 'help' || tabName === 'health' || tabName === 'mcp') {
-                        btn.style.display = 'none';
-                    } else {
-                        btn.style.display = 'inline-block';
-                    }
+                    btn.hidden = tabName === 'backup' || tabName === 'danger-zone' || tabName === 'help' || tabName === 'health' || tabName === 'mcp';
                 });
-
                 // Also hide the footer actions container on those tabs
                 var footerActions = document.querySelector('.idlm-footer-actions');
                 if (footerActions) {
-                    if (tabName === 'danger-zone' || tabName === 'help' || tabName === 'health' || tabName === 'mcp') {
-                        footerActions.style.display = 'none';
-                    } else {
-                        footerActions.style.display = 'flex';
-                    }
+                    footerActions.hidden = tabName === 'backup' || tabName === 'danger-zone' || tabName === 'help' || tabName === 'health' || tabName === 'mcp';
                 }
 
                 // Update the window hash to allow direct linking/bookmarking
@@ -69,35 +54,35 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
             }
             </script>
             <div class="idlm-shell">
-                <hr class="wp-header-end">
+                <?php if ($settings_saved): ?>
+                    <div class="notice notice-success is-dismissible idlm-settings-save-notice" role="status" tabindex="-1" data-idlm-settings-saved data-idlm-settings-toast data-idlm-toast-autoclose="4000">
+                        <p>Settings saved successfully!</p>
+                    </div>
+                <?php endif; ?>
                 <header class="idlm-header">
                     <div class="idlm-header-meta">
-                        <h1>System Settings & Mappings</h1>
-                        <p class="idlm-header-subtitle">Route assignments, Conversion APIs and field definitions</p>
-                    </div>
-                    <div class="idlm-header-actions">
-                        <button type="submit" form="idlm-settings-form" class="idlm-btn idlm-btn-primary idlm-save-settings-btn">Save Settings</button>
+                        <h1>System settings and mappings</h1>
                     </div>
                 </header>
-
-                <nav class="idlm-tabs" aria-label="System settings tabs">
-                    <button type="button" class="idlm-tab-link <?php echo $active_tab === 'general' ? 'active' : ''; ?>" onclick="switchSettingsTab(this, 'settings-general')">General Settings</button>
-                    <button type="button" class="idlm-tab-link <?php echo $active_tab === 'routing' ? 'active' : ''; ?>" onclick="switchSettingsTab(this, 'settings-routing')">Lead Routing</button>
-                    <button type="button" class="idlm-tab-link <?php echo $active_tab === 'webhooks' ? 'active' : ''; ?>" onclick="switchSettingsTab(this, 'settings-webhooks')">Incoming Webhooks</button>
-                    <button type="button" class="idlm-tab-link <?php echo $active_tab === 'capi' ? 'active' : ''; ?>" onclick="switchSettingsTab(this, 'settings-capi')">Conversion APIs (CAPI)</button>
-                    <button type="button" class="idlm-tab-link <?php echo $active_tab === 'audience-reminders' ? 'active' : ''; ?>" onclick="switchSettingsTab(this, 'settings-audience-reminders')">Sync & Reminders</button>
-                    <button type="button" class="idlm-tab-link <?php echo $active_tab === 'help' ? 'active' : ''; ?>" onclick="switchSettingsTab(this, 'settings-help')">Help & FAQs</button>
-                    <button type="button" class="idlm-tab-link <?php echo $active_tab === 'health' ? 'active' : ''; ?>" onclick="switchSettingsTab(this, 'settings-health')">System Health</button>
-                    <button type="button" class="idlm-tab-link <?php echo $active_tab === 'mcp' ? 'active' : ''; ?>" onclick="switchSettingsTab(this, 'settings-mcp')">AI Agent Access (MCP)</button>
-                    <button type="button" class="idlm-tab-link idlm-tab-link-danger <?php echo $active_tab === 'danger-zone' ? 'active' : ''; ?>" onclick="switchSettingsTab(this, 'settings-danger-zone')" style="color: var(--idlm-danger) !important;">Danger Zone</button>
+                <nav class="idlm-tabs idlm-settings-tabs" role="tablist" aria-label="System settings tabs">
+                    <button type="button" id="idlm-settings-tab-general" class="idlm-tab-link <?php echo $active_tab === 'general' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'general' ? 'true' : 'false'; ?>" aria-controls="settings-general" tabindex="<?php echo $active_tab === 'general' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-general')">General</button>
+                    <button type="button" id="idlm-settings-tab-white-label" class="idlm-tab-link <?php echo $active_tab === 'white-label' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'white-label' ? 'true' : 'false'; ?>" aria-controls="settings-white-label" tabindex="<?php echo $active_tab === 'white-label' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-white-label')">White label</button>
+                    <button type="button" id="idlm-settings-tab-routing" class="idlm-tab-link <?php echo $active_tab === 'routing' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'routing' ? 'true' : 'false'; ?>" aria-controls="settings-routing" tabindex="<?php echo $active_tab === 'routing' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-routing')">Routing</button>
+                    <button type="button" id="idlm-settings-tab-webhooks" class="idlm-tab-link <?php echo $active_tab === 'webhooks' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'webhooks' ? 'true' : 'false'; ?>" aria-controls="settings-webhooks" tabindex="<?php echo $active_tab === 'webhooks' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-webhooks')">Lead capture</button>
+                    <button type="button" id="idlm-settings-tab-capi" class="idlm-tab-link <?php echo $active_tab === 'capi' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'capi' ? 'true' : 'false'; ?>" aria-controls="settings-capi" tabindex="<?php echo $active_tab === 'capi' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-capi')">Conversion tracking</button>
+                    <button type="button" id="idlm-settings-tab-audience-reminders" class="idlm-tab-link <?php echo $active_tab === 'audience-reminders' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'audience-reminders' ? 'true' : 'false'; ?>" aria-controls="settings-audience-reminders" tabindex="<?php echo $active_tab === 'audience-reminders' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-audience-reminders')">Automation</button>
+                    <button type="button" id="idlm-settings-tab-health" class="idlm-tab-link <?php echo $active_tab === 'health' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'health' ? 'true' : 'false'; ?>" aria-controls="settings-health" tabindex="<?php echo $active_tab === 'health' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-health')">Health</button>
+                    <button type="button" id="idlm-settings-tab-help" class="idlm-tab-link <?php echo $active_tab === 'help' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'help' ? 'true' : 'false'; ?>" aria-controls="settings-help" tabindex="<?php echo $active_tab === 'help' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-help')">Help</button>
+                    <button type="button" id="idlm-settings-tab-mcp" class="idlm-tab-link <?php echo $active_tab === 'mcp' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'mcp' ? 'true' : 'false'; ?>" aria-controls="settings-mcp" tabindex="<?php echo $active_tab === 'mcp' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-mcp')">AI access</button>
+                    <button type="button" id="idlm-settings-tab-backup" class="idlm-tab-link <?php echo $active_tab === 'backup' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'backup' ? 'true' : 'false'; ?>" aria-controls="settings-backup" tabindex="<?php echo $active_tab === 'backup' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-backup')">Backup &amp; restore</button>
+                    <button type="button" id="idlm-settings-tab-danger-zone" class="idlm-tab-link idlm-tab-link-danger <?php echo $active_tab === 'danger-zone' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'danger-zone' ? 'true' : 'false'; ?>" aria-controls="settings-danger-zone" tabindex="<?php echo $active_tab === 'danger-zone' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-danger-zone')">Danger Zone</button>
                 </nav>
-
                 <form method="POST" action="" id="idlm-settings-form" class="idlm-settings-form">
                     <?php wp_nonce_field('idlm_settings_save_action'); ?>
                     <input type="hidden" name="idlm_save_settings" value="1">
                     <input type="hidden" name="active_tab" id="idlm-active-tab-input" value="<?php echo esc_attr($active_tab); ?>">
-
 <?php IDLM_View::display('admin/settings/general.php', $context); ?>
+<?php IDLM_View::display('admin/settings/white-label.php', $context); ?>
 <?php IDLM_View::display('admin/settings/routing.php', $context); ?>
 <?php IDLM_View::display('admin/settings/webhooks.php', $context); ?>
 <?php IDLM_View::display('admin/settings/capi.php', $context); ?>
@@ -105,12 +90,68 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
 <?php IDLM_View::display('admin/settings/health.php', $context); ?>
 <?php IDLM_View::display('admin/settings/help.php', $context); ?>
 <?php IDLM_View::display('admin/settings/mcp.php', $context); ?>
+<?php IDLM_View::display('admin/settings/backup.php', $context); ?>
 <?php IDLM_View::display('admin/settings/danger-zone.php', $context); ?>
-
+                    <footer class="idlm-footer-actions idlm-settings-savebar" aria-label="Settings save actions">
+                        <p class="idlm-settings-savebar__status" role="status" aria-live="polite" data-idlm-save-status><?php echo $settings_saved ? 'Settings saved' : 'No unsaved changes'; ?></p>
+                        <button type="submit" form="idlm-settings-form" class="idlm-btn idlm-btn-primary idlm-save-settings-btn" aria-busy="false"><span data-idlm-save-label>Save settings</span></button>
+                    </footer>
+                </form>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-rotate-webhook-form">
+                    <input type="hidden" name="action" value="idlm_rotate_api_credential">
+                    <input type="hidden" name="scope" value="webhook">
+                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($return_url); ?>">
+                    <?php wp_nonce_field('idlm_rotate_api_credential_webhook'); ?>
+                </form>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-rotate-mcp-form">
+                    <input type="hidden" name="action" value="idlm_rotate_api_credential">
+                    <input type="hidden" name="scope" value="mcp">
+                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($return_url); ?>">
+                    <?php wp_nonce_field('idlm_rotate_api_credential_mcp'); ?>
+                </form>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-export-backup-form">
+                    <input type="hidden" name="action" value="idlm_export_backup">
+                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($return_url); ?>">
+                    <?php wp_nonce_field('idlm_export_backup'); ?>
+                </form>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-restore-backup-form" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="idlm_restore_backup">
+                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($return_url); ?>">
+                    <?php wp_nonce_field('idlm_restore_backup'); ?>
+                </form>
         </div>
     </div>
         <script>
         jQuery(document).ready(function($) {
+            $('.idlm-settings-tabs').on('keydown', '[role="tab"]', function(event) {
+                var $tabs = $('.idlm-settings-tabs [role="tab"]');
+                var index = $tabs.index(this);
+                if (event.key === 'ArrowRight') index = (index + 1) % $tabs.length;
+                else if (event.key === 'ArrowLeft') index = (index - 1 + $tabs.length) % $tabs.length;
+                else if (event.key === 'Home') index = 0;
+                else if (event.key === 'End') index = $tabs.length - 1;
+                else return;
+                event.preventDefault();
+                $tabs.eq(index).trigger('click').trigger('focus');
+            });
+            $('.idlm-mcp-tabs').on('keydown', '[role="tab"]', function(event) {
+                var $tabs = $('.idlm-mcp-tabs [role="tab"]');
+                var index = $tabs.index(this);
+                if (event.key === 'ArrowRight') index = (index + 1) % $tabs.length;
+                else if (event.key === 'ArrowLeft') index = (index - 1 + $tabs.length) % $tabs.length;
+                else if (event.key === 'Home') index = 0;
+                else if (event.key === 'End') index = $tabs.length - 1;
+                else return;
+                event.preventDefault();
+                $tabs.eq(index).trigger('click').trigger('focus');
+            });
+            $('.idlm-mapping-tabs').on('keydown', '[role="tab"]', function(event) {
+                var $tabs = $('.idlm-mapping-tabs [role="tab"]'), index = $tabs.index(this);
+                if (event.key === 'ArrowRight' || event.key === 'ArrowDown') index = (index + 1) % $tabs.length;
+                else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') index = (index - 1 + $tabs.length) % $tabs.length;
+                else if (event.key === 'Home') index = 0; else if (event.key === 'End') index = $tabs.length - 1; else return;
+                event.preventDefault(); $tabs.eq(index).trigger('click').trigger('focus');
+            });
             // Auto-activate tab from hash or hidden input
             var hash = window.location.hash;
             var activeTabName = $('#idlm-active-tab-input').val() || 'general';
@@ -129,7 +170,7 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
             // Clear Telemetry Logs
             $('#idlm-clear-telemetry-btn').on('click', function(e) {
                 e.preventDefault();
-                if (!confirm('Are you sure you want to permanently delete all error telemetry logs?')) {
+                if (!window.IDLMDialog || !window.IDLMDialog.confirm('Are you sure you want to permanently delete all error telemetry logs?')) {
                     return;
                 }
                 var btn = $(this);
@@ -141,17 +182,16 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                 }, function(response) {
                     btn.prop('disabled', false).text('Clear Telemetry Logs');
                     if (response.success) {
-                        alert(response.data.message);
+                        window.IDLMDialog.notify(response.data.message, 'success');
                         location.reload();
                     } else {
-                        alert(response.data.message || 'Error occurred');
+                        window.IDLMDialog.notify(response.data.message || 'Error occurred', 'error');
                     }
                 }).fail(function() {
                     btn.prop('disabled', false).text('Clear Telemetry Logs');
-                    alert('Network error occurred.');
+                    window.IDLMDialog.notify('Network error occurred.', 'error');
                 });
             });
-
             // View Stack Trace Modal
             $('.idlm-view-trace-btn').on('click', function(e) {
                 e.preventDefault();
@@ -161,17 +201,16 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                 
                 $('#idlm-trace-modal-title').text('Stack Trace: ' + msg);
                 $('#idlm-trace-content').text(trace);
-                $('#idlm-trace-modal').show();
+                if (window.IDLMDialog) {
+                    window.IDLMDialog.open(document.getElementById('idlm-trace-modal'), {trigger: btn.get(0)});
+                }
             });
 
             // Close Trace Modal
             $('#idlm-trace-close-btn, #idlm-trace-dismiss-btn').on('click', function(e) {
                 e.preventDefault();
-                $('#idlm-trace-modal').hide();
-            });
-            $(window).on('click', function(e) {
-                if ($(e.target).is('#idlm-trace-modal')) {
-                    $('#idlm-trace-modal').hide();
+                if (window.IDLMDialog) {
+                    window.IDLMDialog.close(document.getElementById('idlm-trace-modal'));
                 }
             });
 
@@ -193,15 +232,15 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                 var rowHtml = '\
                 <tr class="idlm-reminder-row">\
                     <td>\
-                        <select name="reminder_rules_status[]" class="idlm-select" style="width: 100%;">\
+                        <select name="reminder_rules_status[]" class="idlm-select">\
                             ' + statusesHtml + '\
                         </select>\
                     </td>\
                     <td>\
-                        <input type="number" name="reminder_rules_hours[]" class="idlm-input" placeholder="Hours" min="1" required style="height: 34px;">\
+                        <input type="number" name="reminder_rules_hours[]" class="idlm-input" placeholder="Hours" min="1" required>\
                     </td>\
-                    <td style="text-align: center;">\
-                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-reminder-rule" style="border-color: #ef4444; color: #ef4444; padding: 4px 10px;">Delete</button>\
+                    <td>\
+                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-reminder-rule">Delete</button>\
                     </td>\
                 </tr>';
                 
@@ -227,47 +266,47 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                 var rowHtml = '\
                 <tr class="idlm-audience-rule-row">\
                     <td>\
-                        <select name="audience_rules[platform][]" class="idlm-select" style="width: 100%;">\
+                        <select name="audience_rules[platform][]" class="idlm-select">\
                             <option value="meta">Meta Ads</option>\
                             <option value="google">Google Ads</option>\
                             <option value="linkedin">LinkedIn Ads</option>\
                         </select>\
                     </td>\
                     <td>\
-                        <input type="text" name="audience_rules[audience_id][]" class="idlm-input" placeholder="e.g. Audience ID or URN" required style="width: 100%; height: 34px;">\
+                        <input type="text" name="audience_rules[audience_id][]" class="idlm-input" placeholder="e.g. Audience ID or URN" required>\
                     </td>\
                     <td>\
-                        <select name="audience_rules[is_value][]" class="idlm-select" style="width: 100%;">\
+                        <select name="audience_rules[is_value][]" class="idlm-select">\
                             <option value="0">No</option>\
                             <option value="1">Yes (Meta Value-Based)</option>\
                         </select>\
                     </td>\
                     <td>\
-                        <select name="audience_rules[stage][]" class="idlm-select" style="width: 100%;">\
+                        <select name="audience_rules[stage][]" class="idlm-select">\
                             ' + stagesHtml + '\
                         </select>\
                     </td>\
                     <td>\
-                        <select name="audience_rules[call_status][]" class="idlm-select" style="width: 100%;">\
+                        <select name="audience_rules[call_status][]" class="idlm-select">\
                             ' + callStatusesHtml + '\
                         </select>\
                     </td>\
                     <td>\
-                        <select name="audience_rules[lead_quality][]" class="idlm-select" style="width: 100%;">\
+                        <select name="audience_rules[lead_quality][]" class="idlm-select">\
                             <option value="all">All Qualities</option>\
                             <option value="Qualified">Qualified</option>\
                             <option value="Unqualified">Unqualified</option>\
                         </select>\
                     </td>\
                     <td>\
-                        <select name="audience_rules[enabled][]" class="idlm-select" style="width: 100%;">\
+                        <select name="audience_rules[enabled][]" class="idlm-select">\
                             <option value="1">Enabled</option>\
                             <option value="0">Disabled</option>\
                         </select>\
                     </td>\
-                    <td style="text-align: center;">\
-                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-test-audience-rule" style="border-color: var(--idlm-gold); color: var(--idlm-gold-dark); padding: 4px 10px; margin-right: 5px;">Test</button>\
-                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-audience-rule" style="border-color: #ef4444; color: #ef4444; padding: 4px 10px;">Delete</button>\
+                    <td>\
+                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-test-audience-rule">Test</button>\
+                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-audience-rule">Delete</button>\
                     </td>\
                 </tr>';
 
@@ -323,21 +362,21 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
             $('#idlm-add-interakt-mapping').click(function() {
                 const rowHtml = '<tr class="idlm-interakt-mapping-row">\
                     <td>\
-                        <select name="interakt_mapping_type[]" class="idlm-select interakt-mapping-type-select" style="width: 100%;">\
+                        <select name="interakt_mapping_type[]" class="idlm-select interakt-mapping-type-select">\
                             <option value="call_status">Call Status</option>\
                             <option value="stage">Stage</option>\
                             <option value="lead_quality">Lead Quality</option>\
                         </select>\
                     </td>\
                     <td>\
-                        <select name="interakt_mapping_value[]" class="idlm-select interakt-mapping-value-select" style="width: 100%;">\
+                        <select name="interakt_mapping_value[]" class="idlm-select interakt-mapping-value-select">\
                         </select>\
                     </td>\
                     <td>\
-                        <input type="text" name="interakt_mapping_event[]" class="idlm-input" placeholder="e.g. lead_no_answer" required style="width: 100%; height: 34px;">\
+                        <input type="text" name="interakt_mapping_event[]" class="idlm-input" placeholder="e.g. lead_no_answer" required>\
                     </td>\
-                    <td style="text-align: center;">\
-                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-interakt-mapping" style="border-color: #ef4444; color: #ef4444; padding: 4px 10px;">Delete</button>\
+                    <td>\
+                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-interakt-mapping">Delete</button>\
                     </td>\
                 </tr>';
                 
@@ -364,7 +403,7 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                 var $statusText = $('#idlm-bulk-sync-status-text');
                 
                 var confirmMsg = 'Are you sure you want to sync all past leads where "' + triggerType + '" is "' + triggerValue + '" to Interakt for event "' + eventName + '"?';
-                if (!confirm(confirmMsg)) {
+                if (!window.IDLMDialog || !window.IDLMDialog.confirm(confirmMsg)) {
                     return;
                 }
                 
@@ -380,7 +419,7 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                     nonce: '<?php echo esc_js(wp_create_nonce("idlm_admin_nonce")); ?>'
                 }, function(res) {
                     if (!res.success) {
-                        alert(res.data || 'Failed to fetch leads');
+                        window.IDLMDialog.notify(res.data || 'Failed to fetch leads', 'error');
                         resetSyncBtn();
                         return;
                     }
@@ -397,12 +436,14 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                     var total = leadIds.length;
                     var processed = 0;
                     var successCount = 0;
+                    var existingCount = 0;
+                    var requestId = 'sync_' + Date.now() + '_' + Math.random().toString(36).slice(2);
                     var failureCount = 0;
                     var batchSize = 10;
                     
                     function processNextBatch() {
                         if (leadIds.length === 0) {
-                            $statusText.html('<strong>Sync completed!</strong> ' + successCount + ' succeeded, ' + failureCount + ' failed.');
+                            $statusText.text('Queue complete: ' + successCount + ' queued, ' + existingCount + ' already submitted, ' + failureCount + ' failed to queue. Delivery results appear in each lead’s activity.');
                             resetSyncBtn();
                             return;
                         }
@@ -414,10 +455,12 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                             action: 'idlm_sync_mapped_past_batch',
                             lead_ids: currentBatch,
                             event_name: eventName,
+                            request_id: requestId,
                             nonce: '<?php echo esc_js(wp_create_nonce("idlm_admin_nonce")); ?>'
                         }, function(batchRes) {
                             if (batchRes.success) {
-                                successCount += batchRes.data.success_count || 0;
+                                successCount += batchRes.data.queued_count || 0;
+                                existingCount += batchRes.data.existing_count || 0;
                                 failureCount += batchRes.data.failure_count || 0;
                             } else {
                                 failureCount += currentBatch.length;
@@ -427,7 +470,7 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                             var pct = Math.round((processed / total) * 100);
                             $progressBar.css('width', pct + '%');
                             
-                            // Proceed to next batch (internal 250ms sleep rate limits requests)
+                            // HTTP requests only queue delivery; background jobs send the events.
                             processNextBatch();
                         }).fail(function() {
                             failureCount += currentBatch.length;
@@ -441,7 +484,7 @@ $call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : 
                     processNextBatch();
                     
                 }).fail(function() {
-                    alert('An error occurred during sync initialization.');
+                    window.IDLMDialog.notify('An error occurred during sync initialization.', 'error');
                     resetSyncBtn();
                 });
                 

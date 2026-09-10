@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 define('ABSPATH', __DIR__ . '/support/wp/');
 define('IDLM_TESTING', true);
-define('IDLM_VERSION', '1.101.5');
-define('IDLM_DB_VERSION', '1.3.0');
+define('IDLM_VERSION', '1.101.75');
+define('IDLM_DB_VERSION', '1.3.3');
 define('IDLM_PATH', dirname(__DIR__) . '/');
 define('IDLM_URL', 'https://example.test/wp-content/plugins/interior-design-lead-manager/');
 define('ARRAY_A', 'ARRAY_A');
@@ -603,9 +603,18 @@ final class IDLM_Test_WPDB {
             return $this->format_rows($rows, $output);
         }
 
-        if (preg_match('/SELECT \* FROM (wp_idlm_quote_catalogue_items).*ORDER BY status, category, item_name/i', $query, $matches)) {
+        if (preg_match('/SELECT \* FROM (wp_idlm_quote_catalogue_items).*ORDER BY (item_code|category|item_name|unit|is_wood|default_rate|status) (ASC|DESC)/i', $query, $matches)) {
             $rows = $this->tables[$matches[1]];
-            usort($rows, static fn(array $a, array $b): int => array($a['status'] ?? '', $a['category'] ?? '', $a['item_name'] ?? '') <=> array($b['status'] ?? '', $b['category'] ?? '', $b['item_name'] ?? ''));
+            $column = strtolower($matches[2]);
+            $direction = 'DESC' === strtoupper($matches[3]) ? -1 : 1;
+            usort($rows, static function(array $a, array $b) use ($column, $direction): int {
+                $left = $a[$column] ?? '';
+                $right = $b[$column] ?? '';
+                $comparison = in_array($column, array('is_wood', 'default_rate'), true)
+                    ? (float) $left <=> (float) $right
+                    : (string) $left <=> (string) $right;
+                return $comparison * $direction;
+            });
             return $this->format_rows($rows, $output);
         }
 
@@ -644,6 +653,16 @@ final class IDLM_Test_WPDB {
 
     public function get_col(string $query): array {
         $query = preg_replace('/\s+/', ' ', trim($query));
+        if (preg_match("/SELECT DISTINCT t\.lead_id FROM (wp_idlm_lead_touchpoints) t INNER JOIN (wp_idlm_leads) l ON l\.id = t\.lead_id WHERE t\.platform = '([^']+)' AND t\.external_id = '([^']+)' AND l\.is_duplicate = 0/i", $query, $matches)) {
+            return array_values(array_unique(array_map('intval', array_column(array_filter($this->tables[$matches[1]] ?? array(), static function(array $row) use ($matches): bool {
+                return ($row['platform'] ?? '') === stripslashes($matches[3]) && ($row['external_id'] ?? '') === stripslashes($matches[4]);
+            }), 'lead_id'))));
+        }
+        if (preg_match("/SELECT id FROM (wp_idlm_leads) WHERE is_duplicate = 0 AND fb_lead_id = '([^']+)'/i", $query, $matches)) {
+            return array_values(array_map('intval', array_column(array_filter($this->tables[$matches[1]] ?? array(), static function(array $row) use ($matches): bool {
+                return empty($row['is_duplicate']) && ($row['fb_lead_id'] ?? '') === stripslashes($matches[2]);
+            }), 'id')));
+        }
         if (preg_match("/SELECT unit_name FROM (wp_idlm_quote_item_units) WHERE status = 'active' ORDER BY unit_name/i", $query, $matches)) {
             $units = array_values(array_map(static fn(array $row): string => (string) $row['unit_name'], array_filter($this->tables[$matches[1]], static fn(array $row): bool => 'active' === ($row['status'] ?? ''))));
             sort($units);
@@ -938,7 +957,7 @@ function idlm_get_crm_role_slugs(string $scope = 'all'): array {
     if ('manager' === $scope) {
         return array('administrator', 'sales_manager');
     }
-    return array('administrator', 'editor', 'author', 'contributor', 'sales_manager', 'sales_executive', 'idlm_pre_sales');
+    return array('administrator', 'editor', 'author', 'contributor', 'sales_manager', 'sales_executive', 'idlm_pre_sales', 'marketing', 'marketing_manager', 'campaign_team');
 }
 
 function is_email(string $email): bool {
@@ -1156,11 +1175,13 @@ require_once dirname(__DIR__) . '/includes/class-routing-state.php';
 require_once dirname(__DIR__) . '/includes/class-data-retention.php';
 require_once dirname(__DIR__) . '/includes/class-db.php';
 require_once dirname(__DIR__) . '/includes/class-lead-lifecycle-service.php';
+require_once dirname(__DIR__) . '/includes/class-task-queue-service.php';
 require_once dirname(__DIR__) . '/includes/class-lead-deletion-service.php';
 require_once dirname(__DIR__) . '/includes/class-integrity-command.php';
 require_once dirname(__DIR__) . '/includes/class-integrations.php';
 require_once dirname(__DIR__) . '/includes/class-scheduler.php';
 require_once dirname(__DIR__) . '/includes/class-interakt.php';
+require_once dirname(__DIR__) . '/includes/class-interakt-batch.php';
 require_once dirname(__DIR__) . '/includes/class-dashboard-read-model.php';
 require_once dirname(__DIR__) . '/includes/class-dashboard.php';
 require_once dirname(__DIR__) . '/includes/class-admin-dashboard-renderer.php';
@@ -1186,3 +1207,12 @@ require_once dirname(__DIR__) . '/includes/class-quotation-calculator.php';
 require_once dirname(__DIR__) . '/includes/class-quotations.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-controller.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-renderer.php';
+
+// Dashboard role registry mirrors the production recognition helper.
+function wp_roles(): object {
+    return (object) array('roles' => array(
+        'marketing' => array('name' => 'Marketing'),
+        'marketing_manager' => array('name' => 'Marketing Manager'),
+        'campaign_team' => array('name' => 'Marketing Manager'),
+    ));
+}

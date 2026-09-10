@@ -866,7 +866,7 @@ Yes, the smart matcher normalizes phone entries to digits only and performs suff
 * Fixed visibility of lead routing source mapping subpanel (#idlm-source-mapping-subpanel) so it remains hidden for Manual and Round Robin strategies (implemented by Shashi).
 
 = 1.2.46 =
-* Redesigned settings page HTML/CSS to match Q Oak Interiors mockup theme and design system (implemented by Shashi).
+* Redesigned settings page HTML/CSS to match the supplied mockup theme and design system (implemented by Shashi).
 
 = 1.2.45 =
 * Fixed `$wpdb` null reference errors causing fatal crashes on settings page load and corrected missing `idlm_cost_per_lead` table identification in diagnostics reporting (implemented by Shashi).
@@ -998,7 +998,7 @@ Yes, the smart matcher normalizes phone entries to digits only and performs suff
 * Adapted close buttons (`.idlm-close`) to render with a general layout and hover transition, applying absolute top-right positioning on mobile query dimensions across both drawers and modals (implemented by Shashi).
 
 = 1.2.15 =
-* Implemented premium custom styles for table pagination controls, buttons, hover states, disabled states, and text indicators matching the Q Oak design aesthetic (implemented by Shashi).
+* Implemented premium custom styles for table pagination controls, buttons, hover states, disabled states, and text indicators matching the established design aesthetic (implemented by Shashi).
 
 = 1.2.14 =
 * Refactored global CSS variables and base wrap styling rules in the plugin stylesheet to incorporate mockup colors, typography, borders, shadows, and spacing tokens across the entire CRM plugin workspace (implemented by Shashi).
@@ -1022,10 +1022,10 @@ Yes, the smart matcher normalizes phone entries to digits only and performs suff
 * Added desktop/mobile layout overrides, footer styling, and mobile responsive media queries from the mockup file to fix the mobile layout views for lead profile drawers (implemented by Shashi).
 
 = 1.2.7 =
-* Cleaned up old drawer layout media query overrides to prevent mobile display squishing and ensure the new Q Oak Interiors full-screen responsive layout renders correctly on mobile devices (implemented by Shashi).
+* Cleaned up old drawer layout media query overrides to prevent mobile display squishing and ensure the full-screen responsive layout renders correctly on mobile devices (implemented by Shashi).
 
 = 1.2.6 =
-* Updated the layout and style of the lead details pop-up modal to match the premium Q Oak Interiors design mockup layout, status grids, and tabs (implemented by Shashi).
+* Updated the layout and style of the lead details pop-up modal to match the premium design mockup layout, status grids, and tabs (implemented by Shashi).
 * Integrated dynamic status values and Assigned Rep display names in the modal header via AJAX (implemented by Shashi).
 * Added a new comments & activity log sidebar to the main Details tab view (implemented by Shashi).
 

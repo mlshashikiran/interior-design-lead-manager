@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
  */
 class IDLM_Admin_Kanban_Renderer {
     public static function render() {
-        if (!IDLM_Admin::current_user_has_rep_access()) {
+        if (!IDLM_Admin::current_user_has_rep_access() || IDLM_Admin::current_user_is_pre_sales()) {
             IDLM_View::display('access-restricted.php', array('admin' => true));
             return;
         }
@@ -40,6 +40,7 @@ class IDLM_Admin_Kanban_Renderer {
             )),
             'currency_symbol'     => isset($currency_symbols[$currency_code]) ? $currency_symbols[$currency_code] : $currency_code,
             'can_assign_leads'    => IDLM_Admin::current_user_can_assign_leads(),
+            'stale_lead_count'    => IDLM_Admin_Lead_Notifications::get_stale_lead_count(true),
             'ajax_url'            => admin_url('admin-ajax.php'),
             'nonce'               => wp_create_nonce('idlm_admin_nonce'),
         ));

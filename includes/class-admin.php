@@ -6,12 +6,13 @@ if (!defined('ABSPATH')) {
 class IDLM_Admin {
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'register_admin_menus'));
-        add_action('admin_enqueue_scripts', array(__CLASS__, 'enqueue_assets'));
+        add_action('admin_init', array(__CLASS__, 'redirect_legacy_admin_page'));
         add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_frontend_assets'));
         add_action('admin_post_idlm_update_my_account', array(__CLASS__, 'handle_update_my_account'));
         add_action('admin_post_idlm_rotate_api_credential', array(__CLASS__, 'handle_rotate_api_credential'));
         add_action('admin_post_idlm_create_user', array(__CLASS__, 'handle_create_user'));
         add_action('admin_post_idlm_update_user', array(__CLASS__, 'handle_update_user'));
+        add_action('admin_post_idlm_update_role_scopes', array(__CLASS__, 'handle_update_role_scopes'));
 
         // Shortcodes for frontend lead manager & dashboard
         add_shortcode('idlm_leads_list', array(__CLASS__, 'render_leads_list_shortcode'));
@@ -22,6 +23,8 @@ class IDLM_Admin {
         // AJAX endpoints
         add_action('wp_ajax_idlm_get_lead_details', array(__CLASS__, 'ajax_get_lead_details'));
         add_action('wp_ajax_idlm_get_lead_activity', array(__CLASS__, 'ajax_get_lead_activity'));
+        add_action('wp_ajax_idlm_get_capi_log_payload', array(__CLASS__, 'ajax_get_capi_log_payload'));
+        add_action('wp_ajax_idlm_get_audience_log_payload', array(__CLASS__, 'ajax_get_audience_log_payload'));
         add_action('wp_ajax_idlm_quick_edit_lead', array(__CLASS__, 'ajax_quick_edit_lead'));
         add_action('wp_ajax_idlm_save_activity_comment', array(__CLASS__, 'ajax_save_activity_comment'));
         add_action('wp_ajax_idlm_edit_activity_comment', array(__CLASS__, 'ajax_edit_activity_comment'));
@@ -215,7 +218,7 @@ class IDLM_Admin {
     }
 
     /**
-     * Enqueue Google Fonts, Chart.js, styles and admin client JS inside backend
+     * Retained compatibility delegate; the utility page uses WordPress core UI.
      */
     public static function enqueue_assets($hook) {
         return IDLM_Admin_Assets::enqueue_assets($hook);
@@ -279,75 +282,91 @@ class IDLM_Admin {
     }
     public static function handle_create_user() { return IDLM_Admin_Users_Controller::handle_create(); }
     public static function handle_update_user() { return IDLM_Admin_Users_Controller::handle_update(); }
+    public static function handle_update_role_scopes() { return IDLM_Admin_Users_Controller::handle_update_role_scopes(); }
 
-    /**
-     * Set up admin menus
-     */
+    /** Register the deliberately small wp-admin utility page. */
     public static function register_admin_menus() {
         add_menu_page(
+            'Lead Manager utilities',
             'Lead Manager',
-            'Lead Manager',
-            'read', // Reps can see leads page, access logic restricted per lead
-            'interior-design-lead-manager',
-            array(__CLASS__, 'render_dashboard_page'),
+            'manage_options',
+            'idlm_utilities',
+            array(__CLASS__, 'render_admin_utility_page'),
             'dashicons-groups',
             26
         );
+    }
 
-        add_submenu_page(
-            'interior-design-lead-manager',
-            'Dashboard',
-            'Dashboard',
-            'read',
-            'interior-design-lead-manager',
-            array(__CLASS__, 'render_dashboard_page')
+    /** Redirect former CRM admin routes to the matching frontend workspace view. */
+    public static function redirect_legacy_admin_page() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        $page = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : '';
+        $legacy_pages = array(
+            'interior-design-lead-manager' => array('view' => 'dashboard', 'capability' => 'idlm_access_leads'),
+            'idlm_leads_list' => array('view' => 'leads', 'capability' => 'idlm_access_leads'),
+            'idlm_kanban' => array('view' => 'pipeline', 'capability' => 'idlm_access_leads'),
+            'idlm_quotations' => array('view' => 'quotations', 'capability' => 'idlm_view_quotes'),
+            'idlm_capi_logs' => array('view' => 'capi-logs', 'capability' => 'manage_options'),
+            'idlm_audience_sync_logs' => array('view' => 'audience-logs', 'capability' => 'manage_options'),
+            'idlm_settings' => array('view' => 'settings', 'capability' => 'manage_options'),
+            'idlm_users_access' => array('view' => 'users', 'capability' => 'manage_options'),
         );
+        if (!isset($legacy_pages[$page])) {
+            return;
+        }
+        if (IDLM_Lead_Access_Policy::is_pre_sales() && in_array($page, array('idlm_kanban', 'idlm_quotations'), true)) {
+            $workspace_url = IDLM_Admin_Shortcodes::workspace_url();
+            if ($workspace_url) {
+                wp_safe_redirect(add_query_arg('idlm_view', 'dashboard', $workspace_url));
+                exit;
+            }
+            wp_die('You do not have permission to access this CRM area.', 403);
+        }
+        if (!current_user_can($legacy_pages[$page]['capability'])) {
+            wp_die('You do not have permission to access this CRM area.', 403);
+        }
+        $workspace_url = IDLM_Admin_Shortcodes::workspace_url();
+        if (!$workspace_url) {
+            wp_safe_redirect(self::admin_utility_url());
+            exit;
+        }
+        $query_args = array('idlm_view' => $legacy_pages[$page]['view']);
+        foreach (array('workspace', 'quote_id', 'lead_id', 'revision_id', 'quote_search', 'catalogue_search', 'status', 'created_by', 'date_from', 'date_to', 's', 'role', 'access', 'paged', 'idlm_notice', 'idlm_error') as $key) {
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+            if (isset($_GET[$key]) && is_scalar($_GET[$key])) {
+                $query_args[$key] = sanitize_text_field(wp_unslash($_GET[$key]));
+            }
+        }
+        $target = add_query_arg($query_args, $workspace_url);
+        wp_safe_redirect($target);
+        exit;
+    }
 
-        add_submenu_page(
-            'interior-design-lead-manager',
-            'Leads List',
-            'Leads List',
-            'read',
-            'idlm_leads_list',
-            array(__CLASS__, 'render_leads_list_page')
-        );
+    /** Return the admin utility URL, used only when no frontend workspace exists. */
+    public static function admin_utility_url() {
+        return admin_url('admin.php?page=idlm_utilities');
+    }
 
-        add_submenu_page(
-            'interior-design-lead-manager',
-            'Kanban Board',
-            'Kanban Board',
-            'read',
-            'idlm_kanban',
-            array(__CLASS__, 'render_kanban_page')
-        );
-
-        add_submenu_page(
-            'interior-design-lead-manager',
-            'CAPI Audit Logs',
-            'CAPI Audit Logs',
-            'manage_options',
-            'idlm_capi_logs',
-            array(__CLASS__, 'render_capi_logs_page')
-        );
-
-        add_submenu_page(
-            'interior-design-lead-manager',
-            'Audience Sync Logs',
-            'Audience Sync Logs',
-            'manage_options',
-            'idlm_audience_sync_logs',
-            array(__CLASS__, 'render_audience_sync_logs_page')
-        );
-
-        add_submenu_page(
-            'interior-design-lead-manager',
-            'Settings',
-            'Settings',
-            'manage_options',
-            'idlm_settings',
-            array(__CLASS__, 'render_settings_page')
-        );
-        add_submenu_page('interior-design-lead-manager', 'Users & Access', 'Users & Access', 'manage_options', 'idlm_users_access', array(__CLASS__, 'render_users_access_page'));
+    /** Render short setup guidance without rebuilding a second CRM interface. */
+    public static function render_admin_utility_page() {
+        if (!current_user_can('manage_options')) {
+            wp_die('You do not have permission to manage Lead Manager.', 403);
+        }
+        $workspace_url = IDLM_Admin_Shortcodes::workspace_url();
+        ?>
+        <div class="wrap">
+            <h1>Lead Manager</h1>
+            <p>Version <?php echo esc_html(IDLM_VERSION); ?>. Daily CRM work happens in the frontend workspace.</p>
+            <?php if ($workspace_url) : ?>
+                <p><a class="button button-primary" href="<?php echo esc_url($workspace_url); ?>">Open workspace</a></p>
+            <?php else : ?>
+                <div class="notice notice-warning inline"><p>Create a published page containing the recommended workspace shortcode below to enable the CRM workspace and legacy-link redirects.</p></div>
+            <?php endif; ?>
+            <h2>Shortcodes</h2>
+            <p><code>[idlm_workspace]</code> — complete, role-aware CRM workspace (recommended).</p>
+            <p><code>[idlm_leads_list]</code> <code>[idlm_dashboard]</code> <code>[idlm_kanban]</code> <code>[idlm_quotations]</code> — individual compatibility views.</p>
+        </div>
+        <?php
     }
 
     /**
@@ -401,6 +420,8 @@ class IDLM_Admin {
     }
     public static function ajax_get_lead_details() { return IDLM_Admin_Ajax::ajax_get_lead_details(); }
     public static function ajax_get_lead_activity() { return IDLM_Admin_Ajax::ajax_get_lead_activity(); }
+    public static function ajax_get_capi_log_payload() { return IDLM_Admin_Logs_Renderer::ajax_get_capi_log_payload(); }
+    public static function ajax_get_audience_log_payload() { return IDLM_Admin_Logs_Renderer::ajax_get_audience_log_payload(); }
     public static function ajax_quick_edit_lead() { return IDLM_Admin_Ajax::ajax_quick_edit_lead(); }
     public static function ajax_log_presales_touch() { return IDLM_Admin_Ajax::ajax_log_presales_touch(); }
     public static function ajax_presales_decision() { return IDLM_Admin_Ajax::ajax_presales_decision(); }

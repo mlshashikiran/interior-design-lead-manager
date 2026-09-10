@@ -57,6 +57,78 @@ class IDLM_DB {
             self::backfill_duplicate_touchpoints();
             update_option('idlm_attribution_touchpoint_backfill_version', '1.0.0');
         }
+
+        // conversion_time is the canonical timestamp of a current Won lead.
+        // Older imports populated it for other stages, risking false closes in
+        // any report that filters by this timestamp.
+        if ('1.0.0' !== get_option('idlm_conversion_time_integrity_version', '')) {
+            if (self::clear_non_won_conversion_times()) {
+                update_option('idlm_conversion_time_integrity_version', '1.0.0');
+            }
+        }
+
+        // The daily queue must never inherit work from terminal leads or
+        // accounts that no longer exist. This is intentionally a one-time,
+        // idempotent archive rather than a destructive delete.
+        if ('1.0.0' !== get_option('idlm_task_queue_cleanup_version', '')) {
+            self::cleanup_stale_pending_tasks();
+            update_option('idlm_task_queue_cleanup_version', '1.0.0');
+        }
+    }
+
+    /** Archive pending work which cannot be actioned safely. */
+    public static function cleanup_stale_pending_tasks() {
+        global $wpdb;
+        $tasks = $wpdb->prefix . 'idlm_tasks';
+        $leads = $wpdb->prefix . 'idlm_leads';
+        $users = $wpdb->users;
+        $now = current_time('mysql');
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $lost = $wpdb->query($wpdb->prepare(
+            "UPDATE {$tasks} t INNER JOIN {$leads} l ON l.id = t.lead_id
+             SET t.status = 'cancelled', t.completed_at = NULL, t.updated_at = %s
+             WHERE t.status = 'pending' AND l.stage = 'Lost'",
+            $now
+        ));
+        // A task can retain an obsolete task owner even when its lead is still
+        // active. Archive it for a manager to recreate/reassign deliberately.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $orphaned = $wpdb->query($wpdb->prepare(
+            "UPDATE {$tasks} t LEFT JOIN {$users} u ON u.ID = t.assigned_rep_id
+             SET t.status = 'cancelled', t.completed_at = NULL, t.updated_at = %s
+             WHERE t.status = 'pending' AND t.assigned_rep_id > 0 AND u.ID IS NULL",
+            $now
+        ));
+
+        return array('lost' => max(0, (int) $lost), 'orphaned' => max(0, (int) $orphaned));
+    }
+
+    /** Archive all pending work for a lead when it enters the Lost stage. */
+    public static function archive_pending_tasks_for_lost_lead($lead_id) {
+        global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        return $wpdb->update(
+            $wpdb->prefix . 'idlm_tasks',
+            array('status' => 'cancelled', 'completed_at' => null, 'updated_at' => current_time('mysql')),
+            array('lead_id' => absint($lead_id), 'status' => 'pending')
+        );
+    }
+
+    /** Clear legacy close timestamps from records that are not currently Won. */
+    protected static function clear_non_won_conversion_times() {
+        global $wpdb;
+        $leads = $wpdb->prefix . 'idlm_leads';
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $result = $wpdb->query(
+            "UPDATE {$leads}
+             SET conversion_time = NULL
+             WHERE COALESCE(stage, '') <> 'Won'
+               AND conversion_time IS NOT NULL"
+        );
+
+        return false !== $result;
     }
 
     /**
@@ -370,6 +442,7 @@ class IDLM_DB {
             KEY assigned_rep_id (assigned_rep_id),
             KEY assigned_at (assigned_at),
             KEY created_at (created_at),
+            KEY conversion_time (conversion_time),
             KEY lead_quality (lead_quality),
             KEY disqualification_reason (disqualification_reason),
             KEY disqualified_at (disqualified_at),
@@ -409,6 +482,50 @@ class IDLM_DB {
         ) $charset_collate;";
 
         dbDelta($sql_activity);
+
+        // Immutable reporting events make period-based dashboard metrics
+        // truthful even when a lead's current stage or owner changes later.
+        $table_state_events = $wpdb->prefix . 'idlm_lead_state_events';
+        $sql_state_events = "CREATE TABLE $table_state_events (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            lead_id bigint(20) unsigned NOT NULL,
+            event_type varchar(50) NOT NULL,
+            event_origin varchar(50) DEFAULT '',
+            from_value varchar(191) DEFAULT '',
+            to_value varchar(191) DEFAULT '',
+            reason varchar(191) DEFAULT '',
+            amount decimal(14,2) DEFAULT NULL,
+            actor_user_id bigint(20) unsigned DEFAULT 0,
+            occurred_at datetime DEFAULT NULL,
+            PRIMARY KEY  (id),
+            KEY lead_event_time (lead_id, event_type, occurred_at),
+            KEY event_time (event_type, occurred_at),
+            KEY event_target_time (event_type, to_value, occurred_at)
+        ) $charset_collate;";
+        dbDelta($sql_state_events);
+        if (!get_option('idlm_reporting_events_started_at', '')) {
+            update_option('idlm_reporting_events_started_at', current_time('mysql'), false);
+        }
+
+        // Repair legacy Won records that predate canonical close timestamps.
+        // The latest transition to Won is authoritative when a lead was reopened;
+        // updated_at is the safest fallback when no historical activity survives.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        $wpdb->query(
+            "UPDATE {$table_leads} l
+             LEFT JOIN (
+                SELECT lead_id, MAX(created_at) AS won_at
+                FROM {$table_activity}
+                WHERE activity_type = 'stage_change'
+                  AND details LIKE CONCAT('%to ', CHAR(39), 'Won', CHAR(39), '%')
+                GROUP BY lead_id
+             ) won_history ON won_history.lead_id = l.id
+             SET l.conversion_time = COALESCE(won_history.won_at, l.updated_at)
+             WHERE l.stage = 'Won'
+               AND (won_history.won_at IS NOT NULL
+                    OR l.conversion_time IS NULL
+                    OR l.conversion_time < '1000-01-01 00:00:00')"
+        );
 
         // 3. Conversion API Log Table
         $table_capi = $wpdb->prefix . 'idlm_capi_logs';
@@ -1031,6 +1148,37 @@ class IDLM_DB {
             'activity_type' => $activity_type,
             'details' => $details,
             'created_at' => current_time('mysql')
+        ));
+    }
+
+    /**
+     * Record a compact immutable lifecycle event for truthful event reporting.
+     * This deliberately stores no contact PII; a transition may retain the
+     * numeric value recorded at that moment for revenue reporting.
+     */
+    public static function record_reporting_event($lead_id, $event_type, $from_value, $to_value, $reason = '', $event_origin = '', $actor_user_id = 0, $occurred_at = null, $amount = null) {
+        global $wpdb;
+
+        $lead_id = absint($lead_id);
+        $event_type = sanitize_key($event_type);
+        if (!$lead_id || !in_array($event_type, array('stage_change', 'assignment'), true)) {
+            return false;
+        }
+        if (!$actor_user_id) {
+            $actor_user_id = get_current_user_id();
+        }
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+        return false !== $wpdb->insert($wpdb->prefix . 'idlm_lead_state_events', array(
+            'lead_id' => $lead_id,
+            'event_type' => $event_type,
+            'event_origin' => sanitize_key($event_origin),
+            'from_value' => sanitize_text_field((string) $from_value),
+            'to_value' => sanitize_text_field((string) $to_value),
+            'reason' => sanitize_text_field((string) $reason),
+            'amount' => null === $amount ? null : round((float) $amount, 2),
+            'actor_user_id' => absint($actor_user_id),
+            'occurred_at' => $occurred_at ? sanitize_text_field((string) $occurred_at) : current_time('mysql'),
         ));
     }
 

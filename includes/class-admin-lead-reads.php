@@ -91,7 +91,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             "SELECT a.*, u.display_name
              FROM {$wpdb->prefix}idlm_lead_activity_log a
              LEFT JOIN {$wpdb->users} u ON a.user_id = u.ID
-             WHERE a.lead_id = %d ORDER BY a.id DESC",
+             WHERE a.lead_id = %d ORDER BY a.id DESC LIMIT 100",
             $lead_id
         ));
 
@@ -121,7 +121,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         $whatsapp_read_ids = self::get_whatsapp_read_activity_ids();
         $last_read_whatsapp_id = isset($whatsapp_read_ids[$lead_id]) ? absint($whatsapp_read_ids[$lead_id]) : 0;
         $has_unread_whatsapp = $latest_whatsapp_reply && absint($latest_whatsapp_reply->id) > $last_read_whatsapp_id;
-        $show_presales_compliance = self::current_user_is_pre_sales() || current_user_can('manage_options');
+        $show_presales_compliance = self::current_user_is_pre_sales();
         $followup = $show_presales_compliance ? IDLM_DB::get_followup_compliance($lead_id) : null;
         $qualification_fields = array(
             'project_name' => 'Project name', 'property_location' => 'Location', 'budget' => 'Budget',
@@ -150,53 +150,57 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                 </div>
             </div>
 
-            <div class="idlm-drawer-status-grid" aria-label="Lead status">
-                <div class="idlm-drawer-status-item">
-                    <span class="idlm-drawer-status-label">CALL STATUS</span>
-                    <span class="idlm-drawer-status-value"><?php echo esc_html($lead->call_status ? $lead->call_status : 'Not Called'); ?></span>
+            <div class="idlm-drawer-status-grid" role="group" aria-label="Lead status summary">
+                <div class="idlm-drawer-status-primary">
+                    <div class="idlm-drawer-status-item">
+                        <span class="idlm-drawer-status-label">Call status</span>
+                        <span class="idlm-drawer-status-value"><?php echo esc_html($lead->call_status ? $lead->call_status : 'Not Called'); ?></span>
+                    </div>
+                    <div class="idlm-drawer-status-item">
+                        <?php if (self::current_user_is_pre_sales()): ?>
+                            <span class="idlm-drawer-status-label">Stage</span>
+                            <span class="idlm-drawer-status-value"><?php echo esc_html($lead->stage ? $lead->stage : 'New'); ?></span>
+                        <?php else: ?>
+                            <label class="idlm-drawer-status-label" for="idlm-drawer-stage-select">Stage</label>
+                            <select id="idlm-drawer-stage-select" class="idlm-drawer-stage-select idlm-quick-edit" data-field="stage" data-edit-context="drawer_header" data-id="<?php echo esc_attr($lead->id); ?>" data-original-value="<?php echo esc_attr($lead->stage ? $lead->stage : 'New'); ?>" data-property-location="<?php echo esc_attr($lead->property_location); ?>" data-quote-value="<?php echo esc_attr(isset($lead->quote_value) ? $lead->quote_value : ''); ?>" data-quote-file="<?php echo esc_url(isset($lead->quote_file) ? $lead->quote_file : ''); ?>" aria-label="Change lead stage">
+                                <?php foreach ($stages as $stage): ?>
+                                    <option value="<?php echo esc_attr($stage); ?>" <?php selected($lead->stage ? $lead->stage : 'New', $stage); ?>><?php echo esc_html($stage); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
+                    </div>
+                    <div class="idlm-drawer-status-item">
+                        <span class="idlm-drawer-status-label">Assigned rep</span>
+                        <span class="idlm-drawer-status-value"><?php echo esc_html($lead->assigned_rep_name ? $lead->assigned_rep_name : 'Unassigned'); ?></span>
+                    </div>
+                    <div class="idlm-drawer-status-item">
+                        <span class="idlm-drawer-status-label">Lead quality</span>
+                        <span class="idlm-drawer-status-value"><?php echo esc_html(self::get_qualification_status_label($lead)); ?></span>
+                    </div>
                 </div>
-                <div class="idlm-drawer-status-item">
-                    <?php if (self::current_user_is_pre_sales()): ?>
-                        <span class="idlm-drawer-status-label">STAGE</span>
-                        <span class="idlm-drawer-status-value"><?php echo esc_html($lead->stage ? $lead->stage : 'New'); ?></span>
-                    <?php else: ?>
-                        <label class="idlm-drawer-status-label" for="idlm-drawer-stage-select">STAGE</label>
-                        <select id="idlm-drawer-stage-select" class="idlm-drawer-stage-select idlm-quick-edit" data-field="stage" data-edit-context="drawer_header" data-id="<?php echo esc_attr($lead->id); ?>" data-original-value="<?php echo esc_attr($lead->stage ? $lead->stage : 'New'); ?>" data-property-location="<?php echo esc_attr($lead->property_location); ?>" data-quote-value="<?php echo esc_attr(isset($lead->quote_value) ? $lead->quote_value : ''); ?>" data-quote-file="<?php echo esc_url(isset($lead->quote_file) ? $lead->quote_file : ''); ?>" aria-label="Change lead stage">
-                            <?php foreach ($stages as $stage): ?>
-                                <option value="<?php echo esc_attr($stage); ?>" <?php selected($lead->stage ? $lead->stage : 'New', $stage); ?>><?php echo esc_html($stage); ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                <div class="idlm-drawer-status-context" aria-label="Additional lead context">
+                    <?php if ('Unqualified' === $lead->lead_quality && !empty($lead->disqualification_reason)): ?>
+                    <span class="idlm-drawer-status-context-item">
+                        <span class="idlm-drawer-status-context-label">Disqualification:</span>
+                        <span class="idlm-drawer-status-context-value" title="<?php echo esc_attr(ucwords(str_replace('_', ' ', $lead->disqualification_reason))); ?>"><?php echo esc_html(ucwords(str_replace('_', ' ', $lead->disqualification_reason))); ?></span>
+                    </span>
                     <?php endif; ?>
-                </div>
-                <div class="idlm-drawer-status-item">
-                    <span class="idlm-drawer-status-label">ASSIGNED REP</span>
-                    <span class="idlm-drawer-status-value"><?php echo esc_html($lead->assigned_rep_name ? $lead->assigned_rep_name : 'Unassigned'); ?></span>
-                </div>
-                <div class="idlm-drawer-status-item">
-                    <span class="idlm-drawer-status-label">LEAD QUALITY</span>
-                    <span class="idlm-drawer-status-value"><?php echo esc_html(self::get_qualification_status_label($lead)); ?></span>
-                </div>
-                <?php if ('Unqualified' === $lead->lead_quality && !empty($lead->disqualification_reason)): ?>
-                <div class="idlm-drawer-status-item">
-                    <span class="idlm-drawer-status-label">DISQUALIFICATION REASON</span>
-                    <span class="idlm-drawer-status-value"><?php echo esc_html(ucwords(str_replace('_', ' ', $lead->disqualification_reason))); ?></span>
-                </div>
-                <?php endif; ?>
-                <?php if ('exception' === $lead->handoff_status): ?>
-                <div class="idlm-drawer-status-item">
-                    <span class="idlm-drawer-status-label">ROUTING EXCEPTION</span>
-                    <span class="idlm-drawer-status-value"><?php echo esc_html($lead->handoff_exception_reason); ?></span>
-                </div>
-                <?php endif; ?>
-                <?php if ('Lost' === $lead->stage && !empty($lead->lost_reason)): ?>
-                <div class="idlm-drawer-status-item">
-                    <span class="idlm-drawer-status-label">LOST REASON</span>
-                    <span class="idlm-drawer-status-value"><?php echo esc_html($lead->lost_reason); ?></span>
-                </div>
-                <?php endif; ?>
-                <div class="idlm-drawer-status-item">
-                    <span class="idlm-drawer-status-label">CREATED AT</span>
-                    <span class="idlm-drawer-status-value"><?php echo esc_html(self::format_datetime($lead->created_at)); ?></span>
+                    <?php if ('exception' === $lead->handoff_status): ?>
+                    <span class="idlm-drawer-status-context-item">
+                        <span class="idlm-drawer-status-context-label">Routing exception:</span>
+                        <span class="idlm-drawer-status-context-value" title="<?php echo esc_attr($lead->handoff_exception_reason); ?>"><?php echo esc_html($lead->handoff_exception_reason); ?></span>
+                    </span>
+                    <?php endif; ?>
+                    <?php if ('Lost' === $lead->stage && !empty($lead->lost_reason)): ?>
+                    <span class="idlm-drawer-status-context-item">
+                        <span class="idlm-drawer-status-context-label">Lost reason:</span>
+                        <span class="idlm-drawer-status-context-value" title="<?php echo esc_attr($lead->lost_reason); ?>"><?php echo esc_html($lead->lost_reason); ?></span>
+                    </span>
+                    <?php endif; ?>
+                    <span class="idlm-drawer-status-context-item">
+                        <span class="idlm-drawer-status-context-label">Created:</span>
+                        <span class="idlm-drawer-status-context-value"><?php echo esc_html(self::format_datetime($lead->created_at)); ?></span>
+                    </span>
                 </div>
             </div>
 
@@ -206,7 +210,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         <nav class="idlm-drawer-tabs" aria-label="Lead sections">
             <button class="idlm-drawer-tab active" type="button" onclick="switchDrawerTab(event, 'drawer-tab-info')">Details</button>
             <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-activity')">Activity Log & Comments</button>
-            <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-tasks')">Tasks</button>
+            <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-tasks')">Tasks <span class="idlm-drawer-tab-notification" id="idlm-drawer-overdue-task-count" aria-label="No overdue tasks" hidden>0</span></button>
         </nav>
 
         <?php if ($has_unread_whatsapp): ?>
@@ -245,15 +249,12 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                     <div class="idlm-presales-decision-box" id="idlm-presales-decision-box">
                         <div>
                             <strong>Lead Decision</strong>
-                            <small>Choose an outcome after logging the required evidence.</small>
+                            <small>Choose an outcome after logging the required evidence. <span class="idlm-decision-guidance"><?php if (!$qualification_ready): ?>Qualification needs: <?php echo esc_html(implode(', ', $missing_qualification_fields ?: array('Budget of ₹4L or above'))); ?>.
+                            <?php elseif (empty($followup['eligible'])): ?>Qualify now, use structured Early Close, or continue follow-up.
+                            <?php else: ?>This lead is ready for a final decision.<?php endif; ?></span></small>
                         </div>
                         <button type="button" class="idlm-btn idlm-btn-primary idlm-presales-decision" data-decision="qualify" <?php disabled(!$qualification_ready || in_array($lead->lead_quality, array('Qualified', 'Unqualified'), true)); ?>>Qualify Lead</button>
                         <button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-decision" data-decision="unreachable" <?php disabled(empty($followup['eligible']) || 'Unqualified' === $lead->lead_quality); ?>>Close as Unreachable</button>
-                        <span class="idlm-decision-guidance">
-                            <?php if (!$qualification_ready): ?>Qualification needs: <?php echo esc_html(implode(', ', $missing_qualification_fields ?: array('Budget of ₹4L or above'))); ?>.
-                            <?php elseif (empty($followup['eligible'])): ?>Qualify now, use structured Early Close, or continue follow-up.
-                            <?php else: ?>This lead is ready for a final decision.<?php endif; ?>
-                        </span>
                     </div>
                     <div class="idlm-early-close-box">
                         <strong>Early close for confirmed junk or mismatch</strong>
@@ -274,7 +275,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                 <option value="not_interested">Customer confirmed not interested</option>
                             </optgroup>
                             <?php if (current_user_can('manage_options')): ?>
-                                <option value="administrator_exception">Other — administrator exception</option>
+                                <option value="administrator_exception">Other - administrator exception</option>
                             <?php endif; ?>
                         </select>
                         <textarea class="idlm-input idlm-early-close-note" rows="2" maxlength="1000" placeholder="Document the evidence and specific reason (required)"></textarea>
@@ -338,11 +339,11 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                     </div>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-deal-value">Deal Value (<?php echo esc_html($currency_code); ?>)</label>
-                                        <input type="number" step="0.01" min="0" name="deal_value" class="idlm-drawer-control" id="idlm-edit-deal-value" value="<?php echo esc_attr($lead->deal_value ? $lead->deal_value : ''); ?>" placeholder="e.g. 150000" />
+                                        <input <?php disabled(self::current_user_is_pre_sales()); ?> type="number" step="0.01" min="0" name="deal_value" class="idlm-drawer-control" id="idlm-edit-deal-value" value="<?php echo esc_attr($lead->deal_value ? $lead->deal_value : ''); ?>" placeholder="e.g. 150000" />
                                     </div>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-discount-percentage">Discount %</label>
-                                        <input type="number" step="0.01" min="0" max="100" name="discount_percentage" class="idlm-drawer-control" id="idlm-edit-discount-percentage" value="<?php echo esc_attr(isset($lead->discount_percentage) ? $lead->discount_percentage : '0.00'); ?>" placeholder="e.g. 10" />
+                                        <input <?php disabled(self::current_user_is_pre_sales()); ?> type="number" step="0.01" min="0" max="100" name="discount_percentage" class="idlm-drawer-control" id="idlm-edit-discount-percentage" value="<?php echo esc_attr(isset($lead->discount_percentage) ? $lead->discount_percentage : '0.00'); ?>" placeholder="e.g. 10" />
                                     </div>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-timeline">Project Timeline</label>
@@ -410,20 +411,20 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                 <div class="idlm-drawer-form-grid idlm-drawer-form-grid-two">
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-quote-shared">Quote Shared</label>
-                                        <select name="quote_shared" class="idlm-drawer-control" id="idlm-edit-quote-shared" style="margin-bottom: 8px;">
+                                        <select <?php disabled(self::current_user_is_pre_sales()); ?> name="quote_shared" class="idlm-drawer-control" id="idlm-edit-quote-shared" style="margin-bottom: 8px;">
                                             <option value="1" <?php selected($lead->quote_shared, 1); ?>>Yes</option>
                                             <option value="0" <?php selected($lead->quote_shared, 0); ?>>No</option>
                                         </select>
                                         <div class="idlm-drawer-file-row">
-                                            <input type="hidden" name="quote_file" id="idlm_quote_file" value="<?php echo esc_attr(isset($lead->quote_file) ? $lead->quote_file : ''); ?>">
-                                            <input type="file" class="idlm-file-input" data-input-id="idlm_quote_file" data-preview-id="idlm_quote_preview" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;">
-                                            <button type="button" class="idlm-drawer-btn-file idlm-direct-upload-trigger">
+                                            <input <?php disabled(self::current_user_is_pre_sales()); ?> type="hidden" name="quote_file" id="idlm_quote_file" value="<?php echo esc_attr(isset($lead->quote_file) ? $lead->quote_file : ''); ?>">
+                                            <input <?php disabled(self::current_user_is_pre_sales()); ?> type="file" class="idlm-file-input" data-input-id="idlm_quote_file" data-preview-id="idlm_quote_preview" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;">
+                                            <button <?php disabled(self::current_user_is_pre_sales()); ?> type="button" class="idlm-drawer-btn-file idlm-direct-upload-trigger">
                                                 <?php echo !empty($lead->quote_file) ? 'Change File' : 'Upload Quote'; ?>
                                             </button>
                                             <span id="idlm_quote_preview" class="idlm-drawer-file-note">
                                                 <?php if (!empty($lead->quote_file)): ?>
-                                                    <a href="<?php echo esc_url($lead->quote_file); ?>" target="_blank" class="idlm-file-link" style="color: var(--gold); font-weight: 500; text-decoration: none;">📄 View File</a>
-                                                    <button type="button" class="idlm-remove-file-btn" data-input-id="idlm_quote_file" data-preview-id="idlm_quote_preview" style="background:none; border:none; color:var(--red); cursor:pointer; font-size:12px; padding:0; margin-left:5px; font-weight:500;">Remove</button>
+                                                    <a href="<?php echo esc_url($lead->quote_file); ?>" target="_blank" class="idlm-file-link" style="color: var(--idlm-brand-gold); font-weight: 500; text-decoration: none;">📄 View File</a>
+                                                    <button <?php disabled(self::current_user_is_pre_sales()); ?> type="button" class="idlm-remove-file-btn" data-input-id="idlm_quote_file" data-preview-id="idlm_quote_preview" style="background:none; border:none; color:var(--idlm-danger); cursor:pointer; font-size:12px; padding:0; margin-left:5px; font-weight:500;">Remove</button>
                                                 <?php else: ?>
                                                     No file uploaded
                                                 <?php endif; ?>
@@ -432,8 +433,8 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                     </div>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-quote-value">Quote Value (<?php echo esc_html($currency_code); ?>)</label>
-                                        <input type="number" step="0.01" min="0" name="quote_value" class="idlm-drawer-control" id="idlm-edit-quote-value" value="<?php echo esc_attr(isset($lead->quote_value) && $lead->quote_value > 0 ? $lead->quote_value : ''); ?>" placeholder="e.g. 150000" />
-                                        <?php if (current_user_can('idlm_view_quotes')): ?>
+                                        <input <?php disabled(self::current_user_is_pre_sales()); ?> type="number" step="0.01" min="0" name="quote_value" class="idlm-drawer-control" id="idlm-edit-quote-value" value="<?php echo esc_attr(isset($lead->quote_value) && $lead->quote_value > 0 ? $lead->quote_value : ''); ?>" placeholder="e.g. 150000" />
+                                        <?php if (!self::current_user_is_pre_sales() && current_user_can('idlm_view_quotes')): ?>
                                             <a class="idlm-drawer-btn-file" style="display:inline-flex;margin-top:8px;text-decoration:none;" href="<?php echo esc_url($quote_url); ?>">Open Quotations</a>
                                         <?php endif; ?>
                                     </div>
@@ -540,7 +541,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                     <ul class="idlm-duplicate-list" style="margin:0; padding-left:18px;">
                                         <?php foreach ($duplicates as $dup): ?>
                                             <li style="margin-bottom:6px; font-size:12px;">
-                                                <a href="#" onclick="openLeadDrawer(<?php echo esc_attr($dup->id); ?>)" style="color:var(--gold); text-decoration:none; font-weight:600;"><?php echo esc_html($dup->first_name . ' ' . $dup->last_name); ?></a>
+                                                <a href="#" onclick="openLeadDrawer(<?php echo esc_attr($dup->id); ?>)" style="color:var(--idlm-brand-gold); text-decoration:none; font-weight:600;"><?php echo esc_html($dup->first_name . ' ' . $dup->last_name); ?></a>
                                                 <span style="font-size:11px; color:#64748b;">(Added <?php echo esc_html(self::format_datetime($dup->created_at)); ?>)</span>
                                             </li>
                                         <?php endforeach; ?>
@@ -581,7 +582,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                                             </div>
                                                             <?php if ($log->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $log->user_id)): ?>
                                                                 <div class="idlm-timeline-actions" style="font-size: 11px;">
-                                                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #c99644; text-decoration: none; margin-right: 8px;">Edit</a>
+                                                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
                                                                     <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
                                                                 </div>
                                                             <?php endif; ?>
@@ -640,7 +641,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                                     </div>
                                                     <?php if ($log->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $log->user_id)): ?>
                                                         <div class="idlm-timeline-actions" style="font-size: 11px;">
-                                                            <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #c99644; text-decoration: none; margin-right: 8px;">Edit</a>
+                                                            <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
                                                             <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
                                                         </div>
                                                     <?php endif; ?>
@@ -706,7 +707,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                     <section class="idlm-drawer-panel">
                         <div class="idlm-drawer-panel-head" style="display: flex; justify-content: space-between; align-items: center;">
                             <h3 class="idlm-drawer-panel-title">Task List</h3>
-                            <span class="idlm-task-count-badge" id="idlm-task-count-badge" style="font-size: 11px; background: var(--idlm-gold-soft); color: var(--idlm-gold-dark); padding: 2px 8px; border-radius: 12px; font-weight: 600;">0 tasks</span>
+                            <span class="idlm-task-count-badge" id="idlm-task-count-badge" style="font-size: 11px; background: var(--idlm-action-soft); color: var(--idlm-action); padding: 2px 8px; border-radius: 12px; font-weight: 600;">0 tasks</span>
                         </div>
                         <div class="idlm-drawer-panel-body" style="padding: 15px; min-height: 250px; max-height: 400px; overflow-y: auto;" id="idlm-drawer-tasks-list-container">
                             <!-- Tasks loaded dynamically via JS -->

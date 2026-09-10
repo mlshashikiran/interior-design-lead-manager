@@ -14,14 +14,15 @@ final class IDLM_Dashboard_Read_Model {
     /**
      * Return cached dashboard aggregates for the current visibility scope.
      */
-    public static function get_stats($period, $custom_start = '', $custom_end = '') {
+    public static function get_stats($period, $custom_start = '', $custom_end = '', $filters = array()) {
         $context = self::cache_context($period, $custom_start, $custom_end);
+        $context['dashboard_filters'] = array_map('strval', (array) $filters);
 
         return IDLM_Read_Model_Cache::remember(
             'dashboard',
             $context,
-            static function() use ($period, $custom_start, $custom_end) {
-                return IDLM_Dashboard::calculate_stats($period, $custom_start, $custom_end);
+            static function() use ($period, $custom_start, $custom_end, $filters) {
+                return IDLM_Dashboard::calculate_stats($period, $custom_start, $custom_end, $filters);
             }
         );
     }
@@ -50,6 +51,8 @@ final class IDLM_Dashboard_Read_Model {
         );
 
         return array(
+            'dashboard_contract' => 2,
+            'access' => IDLM_Dashboard::access_context(),
             'period' => sanitize_key($period),
             'ranges' => $ranges,
             'scope' => $restriction_user_id ? 'owner:' . absint($restriction_user_id) : 'global',

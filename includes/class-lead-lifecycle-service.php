@@ -25,7 +25,8 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         }
 
         try {
-            $canonical_id = self::find_inbound_canonical_id($data);
+            $match = self::find_inbound_canonical_id($data, $platform);
+            $canonical_id = absint($match['lead_id']);
             if ($canonical_id) {
                 $canonical = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_leads} WHERE id = %d", $canonical_id));
                 $updates = self::build_inbound_canonical_updates($canonical, $data, $platform);
@@ -48,12 +49,31 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
 
             $data['original_source'] = !empty($data['source']) ? sanitize_text_field($data['source']) : '';
             $data['latest_source'] = $data['original_source'];
-            $lead_id = self::insert_lead($data);
+            // Do not turn an uncertain identity into a duplicate relationship. The
+            // original inquiry remains actionable and an administrator can use the
+            // existing duplicate-review workflow to resolve it deliberately.
+            $lead_id = self::insert_lead($data, !empty($match['ambiguous_candidate_ids']));
             if (!$lead_id) {
                 return false;
             }
+            if (!empty($match['ambiguous_candidate_ids'])) {
+                self::log_activity(
+                    $lead_id,
+                    'duplicate_review',
+                    sprintf(
+                        'Inbound %s inquiry requires duplicate review; uncertain or conflicting identity candidates: %s.',
+                        $platform,
+                        implode(', ', array_map('absint', $match['ambiguous_candidate_ids']))
+                    )
+                );
+            }
             self::record_lead_touchpoint($lead_id, $platform, $data, $payload);
-            return array('lead_id' => $lead_id, 'created' => true, 'matched' => false);
+            return array(
+                'lead_id' => $lead_id,
+                'created' => true,
+                'matched' => false,
+                'requires_duplicate_review' => !empty($match['ambiguous_candidate_ids']),
+            );
         } finally {
             $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
         }
@@ -68,19 +88,49 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         if ($email) {
             return 'email:' . $email;
         }
-        return 'external:' . (string) ($data['fb_lead_id'] ?? wp_generate_uuid4());
+        $external_id = self::get_inbound_external_id($data);
+        return $external_id ? 'external:' . $external_id : 'anonymous:' . wp_generate_uuid4();
     }
 
-    private static function find_inbound_canonical_id($data) {
+    private static function get_inbound_external_id($data) {
+        return !empty($data['fb_lead_id']) ? sanitize_text_field($data['fb_lead_id']) : '';
+    }
+
+    /**
+     * Return one canonical inbound match only when its identity is unambiguous.
+     *
+     * @return array{lead_id:int,ambiguous_candidate_ids:array<int,int>}
+     */
+    private static function find_inbound_canonical_id($data, $platform) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
-        if (!empty($data['fb_lead_id'])) {
-            $id = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$table_leads} WHERE is_duplicate = 0 AND fb_lead_id = %s ORDER BY id ASC LIMIT 1",
-                sanitize_text_field($data['fb_lead_id'])
+        $external_id = self::get_inbound_external_id($data);
+        if ($external_id) {
+            $touchpoint_leads = $wpdb->get_col($wpdb->prepare(
+                "SELECT DISTINCT t.lead_id FROM {$wpdb->prefix}idlm_lead_touchpoints t INNER JOIN {$table_leads} l ON l.id = t.lead_id WHERE t.platform = %s AND t.external_id = %s AND l.is_duplicate = 0 LIMIT 2",
+                sanitize_key($platform),
+                $external_id
             ));
-            if ($id) {
-                return absint($id);
+            $touchpoint_leads = array_values(array_unique(array_filter(array_map('absint', $touchpoint_leads))));
+            if (1 === count($touchpoint_leads)) {
+                return array('lead_id' => $touchpoint_leads[0], 'ambiguous_candidate_ids' => array());
+            }
+            if (count($touchpoint_leads) > 1) {
+                return array('lead_id' => 0, 'ambiguous_candidate_ids' => $touchpoint_leads);
+            }
+
+            // Preserve compatibility with legacy inbound rows that predate
+            // touchpoints, but never select an arbitrary duplicate external ID.
+            $external_matches = $wpdb->get_col($wpdb->prepare(
+                "SELECT id FROM {$table_leads} WHERE is_duplicate = 0 AND fb_lead_id = %s LIMIT 2",
+                $external_id
+            ));
+            $external_matches = array_values(array_unique(array_filter(array_map('absint', $external_matches))));
+            if (1 === count($external_matches)) {
+                return array('lead_id' => $external_matches[0], 'ambiguous_candidate_ids' => array());
+            }
+            if (count($external_matches) > 1) {
+                return array('lead_id' => 0, 'ambiguous_candidate_ids' => $external_matches);
             }
         }
 
@@ -101,22 +151,47 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             }
         }
         if (empty($conditions)) {
-            return 0;
+            return array('lead_id' => 0, 'ambiguous_candidate_ids' => array());
         }
         // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
         $sql = "SELECT id, email, phone FROM {$table_leads} WHERE is_duplicate = 0 AND (" . implode(' OR ', $conditions) . ') ORDER BY id ASC';
         // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $candidates = $wpdb->get_results($wpdb->prepare($sql, $params));
+        $matching_ids = array();
+        $conflicting_ids = array();
         foreach ($candidates as $candidate) {
+            $candidate_email = strtolower(trim((string) $candidate->email));
+            $normalized_phone = self::normalize_identity_phone($phone);
+            $candidate_normalized_phone = self::normalize_identity_phone($candidate->phone);
+            if (($email && $candidate_email && $email !== $candidate_email) ||
+                ($normalized_phone && $candidate_normalized_phone && $normalized_phone !== $candidate_normalized_phone)) {
+                $conflicting_ids[] = absint($candidate->id);
+                continue;
+            }
             if ($email && $email === strtolower(trim((string) $candidate->email))) {
-                return absint($candidate->id);
+                $matching_ids[] = absint($candidate->id);
+                continue;
             }
             $candidate_phone = preg_replace('/[^0-9]/', '', (string) $candidate->phone);
             if ($phone && $candidate_phone && ($phone === $candidate_phone || (strlen($phone) >= 10 && strlen($candidate_phone) >= 10 && substr($phone, -10) === substr($candidate_phone, -10)))) {
-                return absint($candidate->id);
+                $matching_ids[] = absint($candidate->id);
             }
         }
-        return 0;
+        $matching_ids = array_values(array_unique(array_filter($matching_ids)));
+        if ($conflicting_ids) {
+            return array('lead_id' => 0, 'ambiguous_candidate_ids' => array_values(array_unique(array_merge($matching_ids, $conflicting_ids))));
+        }
+        return array(
+            'lead_id' => 1 === count($matching_ids) ? $matching_ids[0] : 0,
+            'ambiguous_candidate_ids' => count($matching_ids) > 1 ? $matching_ids : array(),
+        );
+    }
+
+    /** Canonical India-default phone identity without dropping explicit country codes. */
+    private static function normalize_identity_phone($phone) {
+        $digits = preg_replace('/[^0-9]/', '', (string) $phone);
+        if (11 === strlen($digits) && '0' === $digits[0]) { $digits = substr($digits, 1); }
+        return 10 === strlen($digits) ? '91' . $digits : $digits;
     }
 
     private static function build_inbound_canonical_updates($canonical, $data, $platform) {
@@ -190,7 +265,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
     /**
      * Add lead and run duplicate detection
      */
-    public static function insert_lead($data) {
+    public static function insert_lead($data, $skip_duplicate_detection = false) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
 
@@ -227,6 +302,9 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
 
         $data['created_at'] = current_time('mysql');
         $data['updated_at'] = current_time('mysql');
+        if ('Won' === $data['stage'] && empty($data['conversion_time'])) {
+            $data['conversion_time'] = current_time('mysql');
+        }
         if (!empty($data['assigned_rep_id'])) {
             $data['assigned_at'] = current_time('mysql');
         }
@@ -259,7 +337,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         $is_duplicate = 0;
         $duplicate_of_id = 0;
 
-        if (!empty($data['email']) || !empty($data['phone'])) {
+        if (!$skip_duplicate_detection && (!empty($data['email']) || !empty($data['phone']))) {
             $conditions = array();
             $params = array();
 
@@ -287,12 +365,12 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             $candidates = $wpdb->get_results($wpdb->prepare($duplicate_query, $params));
 
             if (!empty($candidates)) {
+                $matching_ids = array();
                 foreach ($candidates as $cand) {
                     // 1. If email matches exactly
                     if (!empty($data['email']) && !empty($cand->email) && strtolower(trim($data['email'])) === strtolower(trim($cand->email))) {
-                        $is_duplicate = 1;
-                        $duplicate_of_id = $cand->id;
-                        break;
+                        $matching_ids[] = absint($cand->id);
+                        continue;
                     }
 
                     // 2. If phone matches with smart phone digits matching (ignoring format and international code)
@@ -301,19 +379,21 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                         $cand_clean = preg_replace('/[^0-9]/', '', $cand->phone);
 
                         if ($incoming_clean === $cand_clean) {
-                            $is_duplicate = 1;
-                            $duplicate_of_id = $cand->id;
-                            break;
+                            $matching_ids[] = absint($cand->id);
+                            continue;
                         }
 
                         if (strlen($incoming_clean) >= 10 && strlen($cand_clean) >= 10) {
                             if (substr($incoming_clean, -10) === substr($cand_clean, -10)) {
-                                $is_duplicate = 1;
-                                $duplicate_of_id = $cand->id;
-                                break;
+                                $matching_ids[] = absint($cand->id);
                             }
                         }
                     }
+                }
+                $matching_ids = array_values(array_unique(array_filter($matching_ids)));
+                if (1 === count($matching_ids)) {
+                    $is_duplicate = 1;
+                    $duplicate_of_id = $matching_ids[0];
                 }
             }
         }
@@ -346,6 +426,20 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                 $log_msg .= " Marked as duplicate of Lead ID: " . $duplicate_of_id;
             }
             self::log_activity($lead_id, 'creation', $log_msg);
+            self::record_reporting_event(
+                $lead_id,
+                'stage_change',
+                '',
+                $data['stage'],
+                isset($data['lost_reason']) ? $data['lost_reason'] : '',
+                'creation',
+                0,
+                null,
+                'Won' === $data['stage'] ? ($data['deal_value'] ?? 0) : ('Lost' === $data['stage'] ? ($data['quote_value'] ?? 0) : null)
+            );
+            if (!empty($data['assigned_rep_id'])) {
+                self::record_reporting_event($lead_id, 'assignment', '', $data['assigned_rep_id'], '', 'creation');
+            }
 
             if ($is_duplicate && $duplicate_of_id > 0) {
                 // Fetch original lead to compare and merge attribution details
@@ -539,6 +633,9 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         if (isset($data['stage']) && $data['stage'] !== $old_lead->stage) {
             if ('Won' === $data['stage']) {
                 $data['conversion_time'] = current_time('mysql');
+            } elseif ('Won' === $old_lead->stage) {
+                // conversion_time describes a current Won close, not a past stage.
+                $data['conversion_time'] = null;
             }
             if ($data['stage'] === 'Won' && empty($old_lead->time_to_won) && !empty($old_lead->time_to_connected)) {
                 // Find when call status was set to Connected
@@ -573,6 +670,32 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         if ($updated !== false) {
             $user_id = get_current_user_id();
 
+            if (isset($data['stage']) && (string) $data['stage'] !== (string) $old_lead->stage) {
+                self::record_reporting_event(
+                    $lead_id,
+                    'stage_change',
+                    $old_lead->stage,
+                    $data['stage'],
+                    'Lost' === $data['stage'] ? (isset($data['lost_reason']) ? $data['lost_reason'] : $old_lead->lost_reason) : '',
+                    'manual',
+                    $user_id,
+                    $data['updated_at'],
+                    'Won' === $data['stage'] ? ($data['deal_value'] ?? $old_lead->deal_value) : ('Lost' === $data['stage'] ? ($data['quote_value'] ?? $old_lead->quote_value) : null)
+                );
+            }
+            if (isset($data['assigned_rep_id']) && absint($data['assigned_rep_id']) !== absint($old_lead->assigned_rep_id)) {
+                self::record_reporting_event(
+                    $lead_id,
+                    'assignment',
+                    $old_lead->assigned_rep_id,
+                    $data['assigned_rep_id'],
+                    '',
+                    'manual',
+                    $user_id,
+                    $data['assigned_at'] ?? $data['updated_at']
+                );
+            }
+
             // Qualification ends the pre-sales sequence; never send unfinished
             // qualification tasks into the sales executive's daily backlog.
             if ($became_qualified) {
@@ -599,6 +722,10 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                      WHERE lead_id = %d AND status = 'pending' AND task_type = 'Qualification'",
                     current_time('mysql'), current_time('mysql'), absint($lead_id)
                 ));
+            }
+
+            if (isset($data['stage']) && 'Lost' === $data['stage'] && 'Lost' !== $old_lead->stage) {
+                self::archive_pending_tasks_for_lost_lead($lead_id);
             }
 
             if (isset($data['assigned_rep_id']) && absint($data['assigned_rep_id']) !== absint($old_lead->assigned_rep_id) && 'Qualified' === $old_lead->lead_quality) {

@@ -83,7 +83,7 @@ final class IDLM_Auth {
             wp_safe_redirect(add_query_arg('idlm_auth_error', 'invalid-key', $reset_url));
             exit;
         }
-        if ('' === $password || trim($password) !== $password) {
+        if ('' === $password || trim($password) !== $password || strlen($password) < 8) {
             wp_safe_redirect(add_query_arg('idlm_auth_error', 'password-invalid', $reset_url));
             exit;
         }
@@ -132,6 +132,11 @@ final class IDLM_Auth {
         }
         wp_enqueue_style('idlm-login-fonts', IDLM_URL . 'assets/css/fonts.css', array(), IDLM_VERSION);
         wp_enqueue_style('idlm-core-password', IDLM_URL . 'assets/css/login.css', array('idlm-login-fonts'), IDLM_VERSION);
+        if (function_exists('wp_add_inline_style')) {
+            $white_label = IDLM_Settings::get_white_label();
+            $tokens = IDLM_Settings::white_label_style($white_label);
+            wp_add_inline_style('idlm-core-password', 'body.login{' . $tokens . '--idlm-login-action:var(--idlm-action);--idlm-login-action-hover:var(--idlm-action-hover);--idlm-login-brand:var(--idlm-brand-gold);--idlm-login-sidebar:var(--idlm-sidebar);}');
+        }
     }
 
     public static function login_header_url($url) {
@@ -139,7 +144,11 @@ final class IDLM_Auth {
     }
 
     public static function login_header_text($text) {
-        return self::is_password_screen() ? 'Q Oak Interiors Lead Manager' : $text;
+        if (!self::is_password_screen()) {
+            return $text;
+        }
+        $white_label = IDLM_Settings::get_white_label();
+        return $white_label['brand_name'] . ' ' . $white_label['workspace_title'];
     }
 
     private static function return_url() {

@@ -55,7 +55,6 @@ try {
             'save_request_key' => '12345678-1234-4123-8123-123456789abc',
             'currency_code' => 'INR',
             'wooden_discount_percent' => '0',
-            'design_fee_percent' => '0',
             'additional_discount_amount' => '0',
             'sections' => array(
                 array('key' => 'general', 'section_name' => 'General'),

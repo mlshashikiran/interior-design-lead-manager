@@ -1,6 +1,805 @@
 # Changelog
 
+## [1.102.31] - 2026-09-10
+
+### Changed
+
+- Refined the Today’s work trigger into a docked bottom-right tab and compacted the task drawer’s groups, task metadata, controls, and standardized close buttons. Builder: Shashi.
+
+### Fixed
+
+- Kept the task drawer open while opening lead details and surfaced the lead phone number in queue rows. Builder: Shashi.
+
+## [1.102.30] - 2026-09-10
+
+### Changed
+
+- Replaced the raw active-task backlog with a bounded Today’s work queue: overdue, due-today, next-seven-days, and one follow-up plan per lead. Completed tasks now live in separate history, and the floating indicator reports only due-today and overdue work. Builder: Shashi.
+
+### Fixed
+
+- Archived pending tasks on Lost leads and orphaned task owners during the one-time upgrade and through an administrator cleanup control. Lost-stage transitions now archive pending work, and manual task creation/rescheduling rejects past-due dates. Builder: Shashi.
+
+## [1.102.29] - 2026-09-10
+
+### Added
+
+- Added catalogue-table sorting by code, category, item, unit, wood, rate, or status in ascending or descending order. Sorting is allowlisted on the server and retained across pagination. Builder: Shashi.
+
+## [1.102.28] - 2026-09-10
+
+### Changed
+
+- Retains recurring per-lead audience/CAPI diagnostic activity and CAPI audit-table records for seven days. A versioned cleanup removes older diagnostic records on update, and the same policy runs immediately after a backup restore. Builder: Shashi.
+
+## [1.102.27] - 2026-09-10
+
+### Fixed
+
+- Raised the JSON backup restore limit to 100 MB and repaired the core schema migration so live backups containing recorded Won/Lost event amounts restore correctly on local installations. Builder: Shashi.
+- Rendered backup restore results as page-level floating notices with an accessible close icon and a three-second auto-dismiss. Builder: Shashi.
+
+## [1.102.26] - 2026-09-10
+
+### Fixed
+
+- Made Channel Performance, Business Mix, and the Marketing Won trend report Won outcomes on the selected `conversion_time` close-date basis, while retaining clearly-labelled acquisition measures for lead quality and volume. Builder: Shashi.
+- Added an idempotent cleanup for legacy `conversion_time` values on non-Won leads and clear that timestamp whenever a Won lead is reopened, preventing false future close reporting. Builder: Shashi.
+
+## [1.102.25] - 2026-09-10
+
+### Fixed
+
+- Made Sales Rep Performance Won counts, Won revenue, and average/median sales-cycle calculations use the lead `conversion_time` reporting period, so deals created earlier and closed in the selected period are included. Builder: Shashi.
+
+## [1.102.24] - 2026-09-10
+
+### Added
+
+- Added protected JSON backup and restore for CRM data and non-secret settings. Builder: Shashi.
+
+### Changed
+
+- Refined dashboard reporting, Conversion tracking, Automation, AI access, webhook, and Routing settings interfaces for clearer controls, consistent toggles, and responsive alignment. Builder: Shashi.
+
+### Fixed
+
+- Improved routing representative coverage with aligned role and studio columns. Builder: Shashi.
+
+## [1.102.23] - 2026-09-09
+
+### Fixed
+
+- Positioned the collapsed workspace account menu as a fixed high-layer overlay, preventing it from being clipped or obscured by workspace content. Builder: Shashi.
+
+## [1.102.22] - 2026-09-09
+
+### Fixed
+
+- Fixed the collapsed workspace sidebar account menu being clipped outside the sidebar, restoring Profile and Logout access. Builder: Shashi.
+
+## [1.102.21] - 2026-09-09
+
+### Changed
+
+- Removed Pipeline/Kanban and Quotations from the Pre-sales workspace. Direct shortcode, legacy admin-link, and quotation-policy access now enforce the same restriction. Builder: Shashi.
+
+## [1.102.20] - 2026-09-09
+
+### Fixed
+
+- Changed Avg. Deal Value from a per-close-day value to a continuous cumulative average over the selected reporting period. Builder: Shashi.
+
+## [1.102.19] - 2026-09-09
+
+### Added
+
+- Added a manager-only Pre-sales Activity dashboard widget covering direct calls, WhatsApp outreach and replies, call-status updates, follow-up tasks, qualifications, and sales handoffs. Activity is attributed only to users with the Pre-sales CRM role. Builder: Shashi.
+
+## [1.102.18] - 2026-09-09
+
+### Fixed
+
+- Corrected the Avg. Deal Value trend so dates with no Won deal render as gaps rather than ₹0 values. Builder: Shashi.
+
+## [1.102.17] - 2026-09-09
+
+### Changed
+
+- Replaced the Sales Won-summary average connection time with average elapsed time from lead creation to recorded close. Builder: Shashi.
+
+## [1.102.16] - 2026-09-09
+
+### Fixed
+
+- Restored Won Deals and Revenue Trend for legacy closes using canonical conversion timestamps without double-counting immutable transition events. Builder: Shashi.
+
+## [1.102.15] - 2026-09-09
+
+### Fixed
+
+- Restored dashboard selector buttons after refresh; Sales, Marketing, disqualification, and Business Mix chips no longer remain disabled after the loading state. Builder: Shashi.
+
+## [1.102.14] - 2026-09-09
+
+### Fixed
+
+- Merged immutable dashboard events with non-duplicating legacy per-lead fallback data, so partial event history no longer suppresses Lost-reason and assignment reporting. Builder: Shashi.
+
+## [1.102.13] - 2026-09-09
+
+### Fixed
+
+- Restored dashboard Lost-reason and assignment totals on legacy CRM data using clearly-labelled current-state fallbacks only when immutable reporting events are absent. Won history remains event-only and is never reconstructed. Builder: Shashi.
+
+## [1.102.12] - 2026-09-09
+
+### Removed
+
+- Removed the daily-count disclosure and Landing Page Performance dashboard sections. Builder: Shashi.
+
+## [1.102.11] - 2026-09-09
+
+### Changed
+
+- Matched the live Sales and Marketing dashboard body to the supplied HTML reference, including its trend charts, panel composition, selector chips, campaign/ad-group explorer, performance tables, Business Mix dimensions, landing-page outcomes, disqualification reasons, and attribution-health data points. Builder: Shashi.
+
+## [1.102.10] - 2026-09-09
+
+### Fixed
+
+- Reconciled lead CSV mapping and import validation, including Qualified project fields, deterministic one-to-one header matching, Preferred Studio defaults, full-row preflight counts, and explicit imported/duplicate/failed accounting. Builder: Shashi.
+
+## [1.102.9] - 2026-09-09
+
+### Fixed
+
+- Made Sales Dashboard time semantics explicit: current open inventory and its operational risks are no longer presented as a period conversion funnel.
+- Added immutable lifecycle/assignment reporting events, with Won/Lost amount snapshots, so new selected-period event metrics cannot be rewritten by later lead edits. Historic current-state rows are intentionally not inferred as historical events. Builder: Shashi.
+
+## [1.102.8] - 2026-09-09
+
+### Fixed
+
+- Restored adding Pipeline stages from General Settings by correcting the dynamic pipeline-editor item construction. New stages include the expected drag handle and header-total control. Builder: Shashi.
+
+## [1.102.7] - 2026-09-09
+
+### Fixed
+
+- Restored Kanban card rendering by removing a stale feed-only client condition left after the synthetic handoff column was removed. Builder: Shashi.
+
+## [1.102.6] - 2026-09-09
+
+### Removed
+
+- Removed the synthetic Kanban handoff column and all of its supporting UI, board response, action-refresh, and feed logic. The underlying pre-sales handoff workflow is unchanged. Builder: Shashi.
+
+## [1.102.5] - 2026-09-09
+
+### Fixed
+
+- Fixed renamed Kanban stage titles repeating after an AJAX refresh by applying UI aliases only to complete labels, never partial text fragments. Builder: Shashi.
+
+## [1.102.4] - 2026-09-09
+
+### Fixed
+
+- Aligned shared action-dialog typography with the CRM interface, including dynamically created confirmation dialogs. Builder: Shashi.
+
+## [1.102.3] - 2026-09-09
+
+### Added
+
+- Added a confirmation warning before a Pipeline stage is removed, explaining how existing leads are affected and requiring explicit confirmation before the pending settings save. Builder: Shashi.
+
+## [1.102.2] - 2026-09-09
+
+### Changed
+
+- Improved the Lead Fields & Options card’s spacing, display-label grouping, and disclosure rhythm in General Settings. Builder: Shashi.
+
+## [1.102.1] - 2026-09-09
+
+### Changed
+
+- Removed legacy client branding from defaults, quotation output, user-facing reset copy, code comments, and project documentation. Quotation identity now uses configured company settings. Builder: Shashi.
+
+## [1.102.0] - 2026-09-09
+
+### Added
+
+- Added presentation-only aliases for Call Status, Lost Reason, Preferred Studio, Rooms, pipeline stages, and their configurable options. Stored values, integrations, filters, reports, and API contracts remain unchanged. Builder: Shashi.
+- Replaced pipeline-stage arrow controls with drag-and-drop ordering while retaining the established ordered stage values. Builder: Shashi.
+
+## [1.101.99] - 2026-09-09
+
+### Changed
+
+- Reordered the lead drawer task list so overdue pending tasks appear first, followed by other pending tasks and then completed tasks. Dated tasks precede undated tasks within their status group. Builder: Shashi.
+
+## [1.101.98] - 2026-09-09
+
+### Added
+
+- Added a compact notification badge to the lead drawer’s Tasks tab showing the number of overdue pending tasks. It loads when the drawer opens and updates after task changes, remaining hidden when no tasks are overdue. Builder: Shashi.
+
+## [1.101.95] - 2026-09-09
+
+### Added
+
+- Added a “Needs update” indicator to Kanban cards with no qualifying representative activity in the last seven days, using the same rule as the existing stale-lead filter. Builder: Shashi.
+
+### Changed
+
+- Reduced Kanban task and attention pill typography, icon size, padding, and spacing so Overdue and Needs update indicators fit together in one card-footer row. Builder: Shashi.
+
+## [1.101.93] - 2026-09-09
+
+### Changed
+
+- Made every clickable Leads and Kanban filter pill toggle its filter: the first click applies the pill’s queue and the second click clears it. Builder: Shashi.
+
+## [1.101.91] - 2026-09-07
+
+### Fixed
+
+- Corrected the Users, CAPI Audit, and Audience Sync filter badges so they count only visible filter criteria and no longer treat workspace routing fields as active filters. Builder: Shashi.
+
+## [1.101.90] - 2026-09-07
+
+### Fixed
+
+- Corrected the live stale-reminder activity subquery to reference the outer lead row explicitly. Recent actions by the assigned representative now reliably remove leads from “Needs update.” Builder: Shashi.
+
+## [1.101.89] - 2026-09-07
+
+### Fixed
+
+- Corrected the “Needs update” reminder to use recent qualifying activity by the assigned representative instead of the lead row timestamp. Automated audience and integration activity is excluded, while genuine rep actions clear the reminder for seven days. Builder: Shashi.
+
+## [1.101.88] - 2026-09-07
+
+### Fixed
+
+- Corrected the Kanban new-assignment notification so a comment, call, task action, or other activity logged by the assigned sales representative clears the lead from their queue. Automated system activity does not clear it. Builder: Shashi.
+
+## [1.101.87] - 2026-09-07
+
+### Changed
+
+- Renamed the Kanban new-assignment notification to “New leads assigned” and its filter to “awaiting first action,” so it clearly prompts sales reps to act rather than suggesting that the lead itself needs an update. Builder: Shashi.
+
+## [1.101.86] - 2026-09-07
+
+### Added
+
+- Added a Kanban pill that highlights active newly assigned sales leads awaiting their first action. It filters directly to that queue and is scoped to the signed-in representative where lead access is restricted. Builder: Shashi.
+
+## [1.101.85] - 2026-09-07
+
+### Changed
+
+- Updated quotation totals with discounted wooden and other subtotals, optional globally configured Soft Close Addition, total discount, GST, and nearest-rupee round-off. Builder: Shashi.
+- Improved the Preview / Save PDF quotation summary and item-section borders. Builder: Shashi.
+
+## [1.101.84] - 2026-09-06
+
+### Changed
+
+- Removed Next Action and Callback columns from the Pre-Sales leads table to make room for remaining operational fields. Builder: Shashi.
+
+## [1.101.83] - 2026-09-06
+
+### Changed
+
+- Removed the Created Date column from the Pre-Sales leads table so remaining columns can use the available width. Builder: Shashi.
+
+## [1.101.82] - 2026-09-06
+
+### Fixed
+
+- Kept the Pre-Sales Log Call and Log WA controls inline; the conditional Decide control uses its own row. Builder: Shashi.
+
+## [1.101.81] - 2026-09-06
+
+### Fixed
+
+- Tightened the Pre-Sales table action column after removal of the generic Open action; the conditional Decide control still uses the full mobile row. Builder: Shashi.
+
+## [1.101.80] - 2026-09-06
+
+### Changed
+
+- Removed the generic Open action from the Pre-Sales leads-table action column while retaining the Decide action when a lead requires a qualification decision. Builder: Shashi.
+
+## [1.101.79] - 2026-09-06
+
+### Changed
+
+- Reduced Kanban card titles to 12px. Builder: Shashi.
+
+## [1.101.78] - 2026-09-06
+
+### Changed
+
+- Removed the Data-quality guardrails metric section from the dashboard frontend. The underlying aggregate data remains available to authenticated dashboard reads. Builder: Shashi.
+
+## [1.101.77] - 2026-09-06
+
+### Added
+
+- Added current-scope dashboard data-quality guardrails for lead freshness, UTM attribution coverage, intake-owner coverage, and first-contact timing coverage. Builder: Shashi.
+
+## [1.101.76] - 2026-09-06
+
+### Fixed
+
+- Separated current open-pipeline snapshots from selected-period Won events and Won revenue, removing the invalid open-pipeline-versus-Won-revenue comparison. Builder: Shashi.
+- Restricted monthly targets to the current-month view, added straight-line pace context, and reversed duplicate-growth visual semantics so increases are adverse. Builder: Shashi.
+
+## [1.101.75] - 2026-09-06
+
+### Collapsed account navigation
+
+- Centered the My Account icon in the collapsed sidebar and positioned its account menu beside the compact navigation. Builder: Shashi.
+
+## [1.101.74] - 2026-09-06
+
+### Centered Kanban action glyphs
+
+- Centered the desktop drag and move glyphs within their compact icon controls. Builder: Shashi.
+
+## [1.101.73] - 2026-09-06
+
+### Minimal desktop Kanban actions
+
+- Further reduced desktop Kanban drag and move controls to a 24px icon scale without changing the mobile action layout. Builder: Shashi.
+
+## [1.101.72] - 2026-09-06
+
+### Compact desktop Kanban actions
+
+- Reduced desktop drag and move-stage controls to unobtrusive icon-only secondary actions; the mobile move control remains labelled and touch-sized. Builder: Shashi.
+
+## [1.101.71] - 2026-09-06
+
+### Quiet Kanban reference labels
+
+- Reduced source, budget, and call-status badge size and spacing so they read as supporting references rather than primary controls. Builder: Shashi.
+
+## [1.101.70] - 2026-09-06
+
+### Compact Kanban contact row
+
+- Reduced Kanban contact metadata and placed email and phone on one line; long email values truncate before the phone number. Builder: Shashi.
+
+## [1.101.69] - 2026-09-06
+
+### Kanban card identity treatment
+
+- Removed the misleading link-style title treatment; the complete card remains the single click target for opening lead details. Builder: Shashi.
+
+## [1.101.68] - 2026-09-06
+
+### Compact Kanban card controls
+
+- Reduced desktop Kanban card title, metadata, badge, and action-control sizing for faster pipeline scanning. Mobile retains the established 44px move control. Builder: Shashi.
+
+## [1.101.67] - 2026-09-06
+
+### Kanban dense-column rendering
+
+- Prevented the Kanban flex column from shrinking lead cards when a stage contains many leads, retaining every card's contact details, chips, and action footer within the column's native scroll area. Builder: Shashi.
+
+## [1.101.66] - 2026-09-06
+
+### Kanban card hierarchy
+
+- Refined lead cards with a blue identity treatment, readable contact metadata, naturally sized source/budget/status chips, and a compact action footer. Existing drawer, move-stage, ownership, and drag interactions are unchanged. Builder: Shashi.
+
+## [1.101.65] - 2026-09-06
+
+### Frontend workspace consolidation
+
+- Removed the duplicate wp-admin CRM menu, navigation shell, and associated shell styles. The remaining administrator-only Lead Manager page provides the plugin version, shortcode reference, and a workspace link. Builder: Shashi.
+- Redirected legacy CRM admin URLs to their capability-matched frontend workspace section when a published `[idlm_workspace]` page is available. Frontend Users & Access and credential-rotation submissions now retain their workspace return URL. Builder: Shashi.
+
+## [1.101.64] - 2026-09-06
+
+### Standardized CRM admin shell
+
+- Added a scoped CRM sidebar and a 64px fixed header strip across all plugin admin routes. The shell preserves existing URLs, navigation labels, capabilities, page controls, and lead-search behavior. Builder: Shashi.
+- Added desktop collapse persistence, a mobile off-canvas navigation treatment, WordPress admin-bar offsets, Escape/backdrop dismissal, and visible keyboard focus states. Builder: Shashi.
+
+## [1.101.63] - 2026-09-06
+
+### High-priority CRM integrity fixes
+
+- Enforced current lead ownership for mutations even when all leads are visible; comment handlers now check the linked lead, and uploads require and record lead ownership. Builder: Shashi.
+- Enforced pre-sales drawer field restrictions, preserved omitted fields, validated commercial values, and prevented cross-lead reuse of newly bound attachments. Builder: Shashi.
+- Validated manual task types, priorities, titles and dates; qualification tasks remain controlled by their workflow in both server and client. Builder: Shashi.
+- Retained ambiguous or conflicting inbound identities as actionable inquiries with duplicate-review activity; exact external touchpoints remain replay-safe. Builder: Shashi.
+- Replaced synchronous administrative Interakt backfills with bounded, request-idempotent Action Scheduler/WP-Cron jobs, capped retries, current-state checks and truthful queue progress. Builder: Shashi.
+- Replaced unchecked reset truncation with checked InnoDB deletes, rollback, runtime queue cleanup and scheduled-job cancellation without recycling lead IDs. Builder: Shashi.
+
+## [1.101.62] - 2026-09-03
+
+### Settings toast interaction and sizing
+
+- Replaced the broken dismiss glyph with a real inline SVG X, explicitly intercepting each dismiss action before WordPress notice handling so it cancels the timer and uses the existing reduced-motion-aware removal transition. Builder: Shashi.
+- Made settings toasts content-width by default with safe viewport bounds, and reduced their text to a compact 13px regular-weight treatment. Builder: Shashi.
+
+## [1.101.61] - 2026-09-03
+
+### Settings toast refinement
+
+- Matched toast text to the compact design-system type scale, explicitly applied the plugin font stack to the detached toast stack, and replaced the broken icon-font close glyph with a load-order-safe CSS-drawn X. Builder: Shashi.
+
+## [1.101.60] - 2026-09-03
+
+### Settings toast presentation
+
+- Repositioned settings notices to a visible top-centre stack with opaque status colours, responsive sizing, and 44px dismiss controls.
+- Added a fallback accessible dismiss button when WordPress common.js has not injected one (implemented by Shashi).
+
 Current release notes are kept concise. The complete pre-maintenance history is preserved in [`docs/legacy/CHANGELOG-FULL.md`](docs/legacy/CHANGELOG-FULL.md).
+
+## [1.101.59] - 2026-09-03
+
+### Settings notification toasts
+
+- Promoted settings-screen WordPress notices into a fixed, mobile-safe toast stack without changing their server-side generation or dismiss controls (implemented by Shashi).
+- Success and informational notices automatically close after four seconds, pausing while hovered or keyboard-focused; warnings, errors, and notices needing action remain visible.
+- Preserved per-notice live-region semantics, reduced-motion support, and non-shifting page layout while supporting multiple concurrent notices.
+
+## [1.101.58] - 2026-09-03
+
+### CRM settings workflow and lead-capture clarity
+
+- Consolidated ordered pipeline stages and each stage’s Kanban header total into one responsive, accessible editor; existing option names, submitted fields, and persistence remain unchanged (implemented by Shashi).
+- Grouped lead-option dictionaries behind count-labelled native disclosures and reworked source mappings into semantic keyboard-operable tabs with contact-route status and progressive field groups.
+- Removed plaintext webhook API-key output from mapping details; administrators use the protected credential control above instead (implemented by Shashi).
+
+## [1.101.57] - 2026-09-03
+
+### Accessible custom stage ordering
+
+- Added Move up and Move down controls to the shared settings option editor. They maintain the list and hidden submitted values in the selected order, so custom pipeline stages persist in that order across the CRM (implemented by Shashi).
+- Disabled unavailable move controls, preserved focus on the action after a move, and announced reorder changes to assistive technology.
+
+## [1.101.56] - 2026-09-03
+
+### Theme-isolated CRM overlay hardening
+
+- Hardened task sidebar states, action-dialog controls, lead-drawer load/failure states, payload-log overflow, and routing-modal scrolling against theme and page-builder styling leakage (implemented by Shashi).
+- Stacked overlay fields and actions cleanly on narrow screens without changing CRM behavior, AJAX contracts, permissions, or saved data.
+
+## [1.101.55] - 2026-09-03
+
+### CRM usability, accessibility, and bounded operations release
+
+- Released the completed shared focus-managed dialog, responsive dashboard/Kanban/leads/quotation, and white-label design-token refinements across the CRM workspace.
+- Added lazy privileged log-payload retrieval and bounded lead-history reads to keep operational screens responsive while preserving their existing authorization boundaries (implemented by Shashi).
+- Corrected native settings-save coverage to submit the required white-label form payload, matching the rendered settings form (implemented by Shashi).
+
+## [1.101.54] - 2026-09-03
+
+### Cache-safe routing popup Escape handling
+
+- Advanced the asset version so the completed capture-phase Escape handling reaches browsers that cached the earlier routing-popup script.
+- Escape now reliably dismisses only the inline fallback confirmation and restores focus to its trigger (implemented by Shashi).
+
+## [1.101.53] - 2026-09-03
+
+### Lead routing popup polish
+
+- Collapsed the primary routing grid to one column at the compact breakpoint and normalized the manual fallback action label.
+- Escape now dismisses the inline fallback confirmation and returns focus to its trigger without closing the routing dialog (implemented by Shashi).
+
+## [1.101.52] - 2026-09-03
+
+### Distilled lead routing popup
+
+- Replaced numbered routing scaffolding and competing status cards with named sections, concise strategy choices, one live routing outcome, and a compact current-setup summary.
+- Moved team availability and operational safeguards into a native Advanced safeguards disclosure. Backlog and qualified-handoff details now appear only when enabled and retain their existing saved values while inactive (implemented by Shashi).
+
+## [1.101.51] - 2026-09-03
+
+### Tokenized accessible outbound-call popup
+
+- Applied the saved white-label tokens to admin CRM roots and body-level dialogs, so the outbound-call popup's primary action and focus states follow configured branding.
+- Made Call outcome conditionally required, linked its inline error accessibly, and returned focus to the invalid control (implemented by Shashi).
+
+## [1.101.50] - 2026-09-03
+
+### Accessible lead routing popup
+
+- Moved the routing popup onto the shared focus-managed dialog contract, added labelled controls and live feedback, protected unsaved edits, and made source-map controls semantically hidden without clearing saved mappings.
+- Added an in-context fallback-run confirmation/progress state and a denser two-column desktop routing layout while retaining the 760px and 480px responsive rules (implemented by Shashi).
+
+## [1.101.49] - 2026-09-03
+
+### Lead routing popup audit documentation
+
+- Added the routing-popup audit, CRM design-system reference map, and prioritized implementation brief without changing runtime behavior (implemented by Shashi).
+
+## [1.101.48] - 2026-09-03
+
+### Workspace account navigation alignment
+
+- Removed the My Account navigation padding offset and inset active navigation markers so labels remain centered and indicators are not clipped (implemented by Shashi).
+
+## [1.101.47] - 2026-09-03
+
+### Accessible tokenized controls
+
+- Derived the primary-button glow and nested active-tab border from white-label tokens and converted the Active Tasks close control into a labelled, keyboard-accessible button (implemented by Shashi).
+
+## [1.101.46] - 2026-09-03
+
+### Complete white-label colour propagation
+
+- Derived soft surfaces, interaction glows, dynamic links, revenue charts, quotation defaults, Dashboard accents, Kanban accents, and password-recovery hover states from the configured white-label and semantic tokens (implemented by Shashi).
+
+## [1.101.45] - 2026-09-03
+
+### Focus highlight consistency
+
+- Limited persistent-looking input and button border highlights to keyboard-visible focus and tied the focus colour to the white-label action token (implemented by Shashi).
+
+## [1.101.44] - 2026-09-03
+
+### Stable early-close validation
+
+- Moved early-close validation feedback into a stable full-width grid slot so missing-reason and missing-evidence errors preserve the same control alignment (implemented by Shashi).
+
+## [1.101.43] - 2026-09-03
+
+### Unified decision copy
+
+- Consolidated decision guidance into one compact copy block and kept the two decision actions aligned on the right side (implemented by Shashi).
+
+## [1.101.42] - 2026-09-03
+
+### Adjacent decision guidance
+
+- Kept the desktop decision messages in content-sized adjacent columns so the guidance no longer floats far from the explanatory copy (implemented by Shashi).
+
+## [1.101.41] - 2026-09-03
+
+### Desktop decision guidance alignment
+
+- Positioned the qualification guidance beside the decision explanation on desktop and preserved a stacked responsive layout below 900px (implemented by Shashi).
+
+## [1.101.40] - 2026-09-03
+
+### Compact lead decision box
+
+- Reduced the pre-sales decision panel height with tighter spacing, smaller guidance text, and compact action controls inspired by the CRM reference (implemented by Shashi).
+
+## [1.101.39] - 2026-09-03
+
+### Early-close validation layout
+
+- Fixed early-close validation feedback so the error message occupies a full grid row without breaking the reason, notes, and action controls (implemented by Shashi).
+
+## [1.101.38] - 2026-09-03
+
+### Compact pre-sales cycle cards
+
+- Reduced pre-sales cycle card padding, typography, gaps, and action spacing to reclaim drawer space while retaining status readability (implemented by Shashi).
+
+## [1.101.37] - 2026-09-03
+
+### Lead details drawer refinement
+
+- Refined the lead drawer hierarchy with a tighter header, smaller identity title, consistent panel radius, and more compact status rhythm inspired by the CRM reference (implemented by Shashi).
+
+## [1.101.36] - 2026-09-03
+
+### Consistent Settings shell
+
+- Aligned the Settings page canvas and shell spacing with the other CRM views and removed the redundant WordPress divider line (implemented by Shashi).
+
+## [1.101.35] - 2026-09-03
+
+### Responsive state polish
+
+- Reduced empty dashboard chart footprint and tightened responsive state presentation without changing chart data or disclosure behavior (implemented by Shashi).
+
+## [1.101.34] - 2026-09-03
+
+### SaaS CRM layout polish
+
+- Tightened dashboard cards, metric grids, charts, table density, filters, navigation, quotation panels, and Kanban spacing for a more efficient CRM workspace (implemented by Shashi).
+
+## [1.101.33] - 2026-09-03
+
+### Compact chart data link
+
+- Replaced the oversized chart data button with a small underlined disclosure link while preserving keyboard access, focus visibility, and the accessible data-table toggle behavior (implemented by Shashi).
+
+## [1.101.32] - 2026-09-03
+
+### Consistent CRM buttons
+
+- Standardized standard button radius at 8px across shared CRM, workspace, Dashboard, filters, pagination, quotation, and task-overlay controls (implemented by Shashi).
+- Added explicit semantic foreground/background pairs so primary buttons retain white text on the dark action colour and neutral buttons remain dark text on white (implemented by Shashi).
+
+## [1.101.31] - 2026-09-03
+
+### Tighter secondary CRM typography
+
+- Reduced labels to 10px, metadata to 9px, and summary metrics to 18px, with Dashboard stat labels and trends aligned to the tighter scale (implemented by Shashi).
+
+## [1.101.30] - 2026-09-03
+
+### Compact CRM typography
+
+- Added a consistent, rem-based operational type scale and reduced oversized page, section, card, metric, table, board, dialog, and account typography to improve information density (implemented by Shashi).
+- Preserved 14px mobile body text, 16px mobile text-entry controls, 200% browser zoom compatibility, and reflow-friendly unitless line heights (implemented by Shashi).
+
+## [1.101.29] - 2026-09-03
+
+### White-label branding
+
+- Added an accessible White label Settings tab with grouped identity, media, colour, workspace, attribution, live preview, contrast validation, reset, save, and error states (implemented by Shashi).
+- Applied saved branding to plugin-owned sign-in, workspace, account, and frontend browser icon surfaces through scoped semantic tokens and explicit theme/page-builder isolation (implemented by Shashi).
+
+## [1.101.28] - 2026-09-03
+
+### White-label theme isolation
+
+- Required white-label and CRM presentation to remain independent from active WordPress theme and page-builder styles through plugin-owned tokens, scoped normalization, selector isolation, and cross-theme regression coverage (planned by Shashi).
+
+## [1.101.27] - 2026-09-03
+
+### White-label settings plan
+
+- Added an implementation-ready White label Settings plan covering information architecture, layout, responsive behavior, preview and upload states, accessibility, storage, security, rollout surfaces, tests, and phased delivery (planned by Shashi).
+
+## [1.101.26] - 2026-09-03
+
+### My Account password alignment
+
+- Aligned the New password and Confirm new password controls by preventing empty validation space from stretching the confirmation field (implemented by Shashi).
+
+## [1.101.25] - 2026-09-03
+
+### Compact password visibility controls
+
+- Replaced oversized Show/Hide text controls with compact accessible eye icons across sign-in, password reset, My Account, and Settings credential fields (implemented by Shashi).
+
+## [1.101.24] - 2026-09-02
+
+### Frontend pipeline option controls
+
+- Restored Pipeline and lead option add/remove controls in the frontend CRM workspace by enqueueing the existing Settings client there (implemented by Shashi).
+
+## [1.101.23] - 2026-09-02
+
+### Final UI acceptance cleanup
+
+- Replaced remaining native browser alerts, confirms, and prompts with shared accessible dialogs and non-blocking feedback across CRM, quotation, and Settings workflows (implemented by Shashi).
+- Removed the remaining inline `transition: all` control styling and added contracts that prevent native browser feedback from returning (implemented by Shashi).
+
+## [1.101.22] - 2026-09-02
+
+### Nested outreach dialog stacking
+
+- Raised shared dialogs above the lead-details overlay so Log Call, Log WhatsApp, and Log Closure remain visible and interactive when launched from a lead drawer (implemented by Shashi).
+
+## [1.101.21] - 2026-09-02
+
+### Pre-sales activity logging recovery
+
+- Kept call and WhatsApp activity dialogs open while requests are pending, added bounded request timeouts and retryable inline failures, and closed the dialog only after a confirmed save so representatives are not left in a blocked interface (implemented by Shashi).
+
+## [1.101.20] - 2026-09-02
+
+### Phase 7 users and operational logs
+
+- Added labelled responsive Users & Access filters, complete account input metadata, focused result feedback, pending form states, specific errors, and visible administrator safeguards (implemented by Shashi).
+- Added filtered semantic CAPI/audience log views, mobile record cards, accessible selection and inline retry feedback, plus lazy copyable redacted payload inspection through the shared focus-managed dialog (implemented by Shashi).
+
+## [1.101.19] - 2026-09-02
+
+### Lead drawer header hierarchy
+
+- Replaced equal bordered status cards with a four-field operational summary and one quieter contextual line for conditional reasons and created date, removing the status scrollbar while preserving every value and the stage quick edit (implemented by Shashi).
+
+## [1.101.18] - 2026-09-02
+
+### Lead drawer status summary
+
+- Kept status metadata in one scan-friendly row and added contained, labelled, keyboard-focusable horizontal overflow for conditional fields so the drawer header no longer grows beyond five items (implemented by Shashi).
+
+## [1.101.17] - 2026-09-02
+
+### Frontend style isolation
+
+- Scoped metric and lead-row button component rules beneath the CRM workspace so Elementor Kit global button styles cannot override their intended presentation, without adding broad `!important` declarations or changing wp-admin rendering (implemented by Shashi).
+
+## [1.101.16] - 2026-09-02
+
+### Phase 6 settings usability
+
+- Replaced comma-delimited pipeline, call-status, Lost-reason, studio, and room configuration with labelled add/remove option lists that preserve the established saved-option format (implemented by Shashi).
+- Added goal-oriented Settings tabs, a sticky saved/unsaved/submitting status area, consistent credential reveal/copy/configuration controls, nearby timestamped connection-test results, and isolated credential-rotation forms that preserve the complete Settings save boundary (implemented by Shashi).
+
+## [1.101.15] - 2026-09-02
+
+### Phase 5 access and account experience
+
+- Added labelled password reveal controls, visible eight-character guidance, nearby password-match validation, and clear pending states across sign-in, password reset, and My Account (implemented by Shashi).
+- Added focused post-redirect success/error feedback, complete profile autocomplete/input metadata, and a focusable CRM skip-link target while preserving WordPress authentication, nonce, safe-redirect, and account-enumeration protections (implemented by Shashi).
+
+## [1.101.14] - 2026-09-01
+
+### Phase 4 design-debt reduction
+
+- Migrated Settings and shared UI presentation from inline values and legacy aliases to canonical tokens/classes, added keyboard-operable Settings/MCP tabs, and moved health/reset dialogs to the shared accessible controller (implemented by Shashi).
+- Reduced runtime inline styles, hard-coded CSS colours, and `!important` overrides; added decreasing automated budgets plus responsive, role, motion, and empty/loading/error/success visual-state contracts (implemented by Shashi).
+
+## [1.101.13] - 2026-09-01
+
+### Phase 3 responsive workflows
+
+- Added priority-based Leads columns, accessible expandable mobile details, and a narrow-screen sorting control while preserving selection, filtering, pagination, drawer navigation, and role-aware actions (implemented by Shashi).
+- Added phone Kanban stage tabs with a single vertical card list while retaining desktop columns, pointer drag-and-drop, keyboard movement, lifecycle dialogs, focus restoration, and announcements (implemented by Shashi).
+- Added structured mobile quotation item cards and normalized affected responsive dimensions, motion, and layers without changing calculations, catalogue, autosave, revision, ordering, print, or stored-data contracts (implemented by Shashi).
+
+## [1.101.12] - 2026-09-01
+
+### Phase 2 core frontend workflows
+
+- Added semantic Kanban card opening, explicit drag handles, keyboard “Move to stage” actions, shared lifecycle validation, live movement announcements, and focus restoration (implemented by Shashi).
+- Standardized Leads selection/bulk state, accessible destructive confirmation, labelled CSV import progress with downloadable row failures, and export scope count previews (implemented by Shashi).
+- Added persistent keyboard-operable Dashboard tabs, labelled/custom reporting ranges, update announcements, accessible canvas names, and equivalent chart data tables (implemented by Shashi).
+
+## [1.101.11] - 2026-09-01
+
+### Phase 1 accessibility foundation
+
+- Replaced inaccessible white-on-gold primary actions with the approved action and hover tokens, and consolidated shared colour, spacing, control, focus, motion, breakpoint, layer, and semantic-status tokens (implemented by Shashi).
+- Added shared focus-visible and reduced-motion behavior plus one accessible dialog controller with initial focus, trapping, Escape close, trigger restoration, inert background, and scroll locking (implemented by Shashi).
+- Migrated callback, Won, Quote Shared, Lost, and unsaved-change decisions across Leads, Kanban, and quotations; associated affected Leads/Settings labels, added inline validation, and replaced migrated emoji controls with Dashicons (implemented by Shashi).
+
+## [1.101.10] - 2026-09-01
+
+### UI/UX design system and audit
+
+- Audited every user-facing CRM module across workspace, authentication, account, Leads, drawers/modals/tasks, import/export/routing, Kanban, Dashboard, Quotations, Settings, Users, and logs (implemented by Shashi).
+- Added a normative design system with accessible colour, typography, spacing, motion, layer, responsive, component, chart, and interaction contracts plus page-specific overrides (implemented by Shashi).
+- Added a prioritized improvement roadmap covering primary-action contrast, dialog behavior, keyboard Kanban operation, chart accessibility, form semantics, mobile workflows, and design-token debt (implemented by Shashi).
+
+## [1.101.9] - 2026-08-31
+
+### Won close dates
+
+- Backfilled missing Won timestamps from the latest recorded transition to Won, with last-update fallback for legacy records without activity history (implemented by Shashi).
+- Made Won-stage dashboard periods, MCP deal summaries, drawer/export values, offline conversion timing, and Won-date filters use the canonical close timestamp instead of lead creation (implemented by Shashi).
+- Added a conversion-time index, guaranteed timestamps for newly inserted Won leads, and prevented generic import `time` columns from auto-mapping as Won dates (implemented by Shashi).
+
+## [1.101.8] - 2026-08-31
+
+### Lead drawer navigation
+
+- Added previous/next controls, visible-position feedback, and left/right keyboard navigation for leads in the current filtered list or Kanban view, with form-focus and unsaved-change safeguards (implemented by Shashi).
+
+## [1.101.7] - 2026-08-31
+
+### Kanban filters
+
+- Replaced the inline Kanban filter bar with the Leads-list floating filter button, active-filter badge, backdrop, accessible side drawer, and clear action while preserving the existing live filters (implemented by Shashi).
+
+## [1.101.6] - 2026-08-31
+
+### Performance
+
+- Limited lead drawer and activity refresh reads to the newest 100 indexed events (implemented by Shashi).
+- Removed large audience request/response bodies from the initial log-list query and added an administrator-only, nonce-protected lazy payload read (implemented by Shashi).
 
 ## [1.101.5] - 2026-08-31
 
@@ -66,7 +865,7 @@ Current release notes are kept concise. The complete pre-maintenance history is 
 
 ### Improved
 
-- Redesigned the CRM login as a responsive split workspace entry using the established Q Oak tokens, clearer form hierarchy, accessible focus states, and native password recovery (implemented by Shashi).
+- Redesigned the CRM login as a responsive split workspace entry using the established tokens, clearer form hierarchy, accessible focus states, and native password recovery (implemented by Shashi).
 
 ## [1.100.9] - 2026-08-31
 
@@ -85,7 +884,7 @@ Current release notes are kept concise. The complete pre-maintenance history is 
 ### Engineering workflow
 
 - Refined Sol/Terra/Luna delegation guidance, added model-delegation fallback and review verification requirements, and standardized effort selection to Low, Medium, and High (implemented by Shashi).
-- Recorded `novamira-crm-qoakinterior` as the saved MCP for reviewed LIVE deployments to `crm.qoakinteriors.com` (implemented by Shashi).
+- Recorded the saved MCP for reviewed LIVE deployments (implemented by Shashi).
 
 ## [1.100.6] - 2026-08-31
 

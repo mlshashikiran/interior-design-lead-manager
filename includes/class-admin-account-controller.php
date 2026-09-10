@@ -26,6 +26,7 @@ final class IDLM_Admin_Account_Controller {
             'notice' => $notice,
             'error' => $error,
             'logout_url' => wp_logout_url($account_url),
+            'white_label' => IDLM_Settings::get_white_label(),
         ));
     }
 

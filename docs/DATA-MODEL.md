@@ -8,6 +8,7 @@ Tables use `$wpdb->prefix`; names below omit the site prefix. No database foreig
 |---|---|---|
 | `idlm_leads` | Canonical lead/profile, source/UTM/click IDs, commercial fields, pipeline/quality/call status, owner and qualification/handoff timestamps, duplicate linkage (`duplicate_of_id -> leads.id`) and response timings. `floor_plan_files` stores a bounded JSON URL list while `floor_plan_file` retains the first URL for compatibility. User-like IDs point to `wp_users.ID`. | `IDLM_DB::create_tables()` plus idempotent backfills in `IDLM_DB::init()` |
 | `idlm_lead_activity_log` | Append-style activity: `lead_id -> leads.id`, `user_id -> wp_users.ID`, type, text details, time. Some structured details are JSON strings interpreted by UI code. | `IDLM_DB::create_tables()` |
+| `idlm_lead_state_events` | Immutable reporting events for stage changes and owner assignments: prior/new state, origin, terminal-loss reason, actor, occurrence time, and the recorded Won/Lost amount when applicable. Event reporting begins on installation of schema `1.3.2`; the recorded amount column is reconciled by schema `1.3.3`. Historic current-state rows are never fabricated as events. | `IDLM_DB::create_tables()` |
 | `idlm_tasks` | Lead tasks: lead/assignee/creator IDs, title, type, priority, `pending|completed`, due/completion timestamps. Qualification and Sales Follow-up types have lifecycle behavior. | `IDLM_DB::create_tables()` |
 | `idlm_call_logs` | Provider-neutral call audit: lead/user, provider and unique provider event, direction/outcome, recording URL/hash, duration, JSON-like `metadata`. | `IDLM_DB::create_tables()` |
 | `idlm_lead_touchpoints` | Acquisition history linked to canonical lead; platform/source/external ID, attribution fields, raw JSON payload and submission/receipt time. Unique `(platform, external_id)`. | `IDLM_DB::create_tables()`; duplicate touchpoint backfill in `IDLM_DB::init()` |
@@ -37,6 +38,7 @@ Created and upgraded by `IDLM_Quotation_Schema::install()` behind `IDLM_Quotatio
 erDiagram
     WP_USERS ||--o{ IDLM_LEADS : assigned_or_qualified_by
     IDLM_LEADS ||--o{ IDLM_LEAD_ACTIVITY_LOG : has
+    IDLM_LEADS ||--o{ IDLM_LEAD_STATE_EVENTS : changes
     IDLM_LEADS ||--o{ IDLM_TASKS : has
     IDLM_LEADS ||--o{ IDLM_CALL_LOGS : has
     IDLM_LEADS ||--o{ IDLM_LEAD_TOUCHPOINTS : receives
@@ -69,7 +71,7 @@ erDiagram
 
 ## Options and transients
 
-Options fall into these groups: schema/migration markers (`idlm_schema_version`, quotation/backfill markers); release/roles; CRM vocabularies and targets; visibility/routing pools/capacity/working hours; field mappings; audience rules/queue; platform credentials and event mappings; retention; telemetry; and `idlm_quote_settings`. Scoped integration credentials use encrypted `idlm_webhook_api_key`, `idlm_mcp_api_key`, and `idlm_google_gadm_password` envelopes unless their environment constants are defined. `idlm_retention_policy` groups touchpoint, integration-log, and telemetry retention days. `IDLM_Settings` reads the grouped `idlm_routing_settings` snapshot while mirroring established standalone routing keys during the compatibility migration; the complete schema is documented in [SETTINGS.md](SETTINGS.md).
+Options fall into these groups: schema/migration markers (`idlm_schema_version`, quotation/backfill markers); release/roles; CRM vocabularies and targets; visibility/routing pools/capacity/working hours; field mappings; audience rules/queue; platform credentials and event mappings; retention; telemetry; and `idlm_quote_settings`. Scoped integration credentials use encrypted `idlm_webhook_api_key`, `idlm_mcp_api_key`, and `idlm_google_gadm_password` envelopes unless their environment constants are defined. `idlm_retention_policy` groups touchpoint, integration-log, and telemetry retention days; the versioned `idlm_diagnostic_log_retention_version` cleanup retains recurring per-lead audience/CAPI diagnostics and CAPI audit records for seven days. `IDLM_Settings` reads the grouped `idlm_routing_settings` snapshot while mirroring established standalone routing keys during the compatibility migration; the complete schema is documented in [SETTINGS.md](SETTINGS.md).
 
 Dynamic option families include `idlm_field_mappings_{platform}`. Round-robin indexes live in `idlm_routing_state`, and assignment overlap uses a database advisory lock. Important transients include throttled routing exceptions, per-IP REST fixed-window counters (`idlm_rl_*`), and per-user/per-revision quotation autosaves (`idlm_quote_autosave_*`, seven days).
 

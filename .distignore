@@ -8,6 +8,6 @@ AGENTS.md
 .github/
 build/
 tests/
-docs/CHANGELOG-DEV.md
-docs/TECH-DEBT.md
-docs/legacy/
+design-system/
+docs/
+graphify-out/

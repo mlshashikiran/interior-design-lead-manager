@@ -371,7 +371,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.78.1] - 2026-08-28
 ### Changed
-- Aligned quotation preview/PDF typography, colours, spacing, borders, radii, headings, totals, and line-item tables with the supplied Q Oak cover-page design (implemented by Shashi).
+- Aligned quotation preview/PDF typography, colours, spacing, borders, radii, headings, totals, and line-item tables with the supplied cover-page design (implemented by Shashi).
 - Replaced the mismatched olive print-table headers with the cover's soft neutral surface and gold-accent visual language (implemented by Shashi).
 
 ### Areas Changed
@@ -380,7 +380,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.78.0] - 2026-08-28
 ### Changed
-- Rebuilt the quotation preview/PDF middle content to match the supplied quote format, with document metadata, customer and Q Oak company cards, a section-wise summary, right-aligned editor totals, notes, and the section/item breakdown (implemented by Shashi).
+- Rebuilt the quotation preview/PDF middle content to match the supplied quote format, with document metadata, customer and company cards, a section-wise summary, right-aligned editor totals, notes, and the section/item breakdown (implemented by Shashi).
 - Preserved the configured cover page and after-quote content around the redesigned quotation body (implemented by Shashi).
 
 ### Areas Changed
@@ -2790,9 +2790,9 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.46] - 2026-06-13
 ### Changed
-- Redesigned the settings page layout, cards, grids, buttons, tables, and tabs to match the Q Oak Interiors theme and design system (implemented by Shashi).
+- Redesigned the settings page layout, cards, grids, buttons, tables, and tabs to match the configured theme and design system (implemented by Shashi).
 - Styled the interactive active representative pool checkbox items as toggleable green pills using CSS `:has()` selector logic (implemented by Shashi).
-- Restructured the Danger Zone section to use the mockup card layout and modern Q Oak styled confirmation modal (implemented by Shashi).
+- Restructured the Danger Zone section to use the mockup card layout and modern styled confirmation modal (implemented by Shashi).
 - Fixed unclosed container elements by adding the missing closing div tag for `.idlm-shell` (implemented by Shashi).
 
 ## [1.2.45] - 2026-06-13
@@ -2966,7 +2966,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.15] - 2026-06-11
 ### Changed
-- Styled the leads list table pagination toolbar (`.idlm-pagination`, `.idlm-pagination-btn`, and `.idlm-pagination-info`) in `assets/css/admin-style.css` to match Q Oak Interiors CRM mockup controls (implemented by Shashi).
+- Styled the leads list table pagination toolbar (`.idlm-pagination`, `.idlm-pagination-btn`, and `.idlm-pagination-info`) in `assets/css/admin-style.css` to match CRM mockup controls (implemented by Shashi).
 - Programmed premium rounded borders (`border-radius: 999px`), shadows, and hover transition states for pagination buttons, including disabled state visual overrides (implemented by Shashi).
 - Incremented the plugin version and stable tag references across `interior-design-lead-manager.php` and `readme.txt` to `1.2.15` (implemented by Shashi).
 
@@ -3017,12 +3017,12 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.7] - 2026-06-11
 ### Changed
-- Cleaned up old drawer layout media query overrides in `assets/css/admin-style.css` to prevent mobile display squishing and ensure the new Q Oak Interiors full-screen responsive layout renders correctly on mobile devices (implemented by Shashi).
+- Cleaned up old drawer layout media query overrides in `assets/css/admin-style.css` to prevent mobile display squishing and ensure the full-screen responsive layout renders correctly on mobile devices (implemented by Shashi).
 - Incremented the plugin version and stable tag references across `interior-design-lead-manager.php` and `readme.txt` to `1.2.7` (implemented by Shashi).
 
 ## [1.2.6] - 2026-06-11
 ### Changed
-- Updated the layout and style of the lead details pop-up modal to match the premium Q Oak Interiors design mockup layout, status grids, and tabs (implemented by Shashi).
+- Updated the layout and style of the lead details pop-up modal to match the premium design mockup layout, status grids, and tabs (implemented by Shashi).
 - Refactored `#idlm-lead-drawer` container wrapper in `includes/class-admin.php` to load its header, tabs, and body dynamically via AJAX to support dynamic status parameters (implemented by Shashi).
 - Refactored `ajax_get_lead_details()` PHP AJAX endpoint in `includes/class-admin.php` to output the new namespaced mockup layout, featuring a 5-item status grid, side-by-side details, campaign attribution parameters, and recent comments sidebar (implemented by Shashi).
 - Refactored JavaScript drawer loading, tab toggling, and comment saving controllers in `assets/js/admin-app.js` to support loading the entire modal dynamically, updating both comments timeline views, and saving new comments from the Details tab sidebar (implemented by Shashi).
@@ -3122,7 +3122,7 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.99] - 2026-06-11
 ### Changed
-- Redesigned the design variables of the CRM theme in `assets/css/admin-style.css` using the Q Oak Interiors style reference, switching primary accents to gold (`#c99644`) and gold-dark (`#9f6f25`), updating shadows, and soft neutral background shades (implemented by Shashi).
+- Redesigned the design variables of the CRM theme using the supplied style reference, switching primary accents to gold (`#c99644`) and gold-dark (`#9f6f25`), updating shadows, and soft neutral background shades (implemented by Shashi).
 - Integrated a dynamic Metrics Summary Grid (Lead Summary) above the filters toolbar displaying counts for New, Not Called, Follow-up, Unassigned, and Qualified leads, with interactive jQuery filtration triggers (implemented by Shashi).
 - Restructured the CRM filter toolbar into a primary row (Search, Date, Stage, Call Status, Assigned Rep, More Filters, and Clear) and a secondary collapsible panel (Channel Source, Quality, Follow-up) to optimize vertical scanning and usability (implemented by Shashi).
 - Improved the look, feel, and usability of the lead list database table: styled headers as uppercase bold, styled rows with custom hover transitions and cell alignments, bolded budget values, and polished cell hierarchy (implemented by Shashi).
@@ -3452,7 +3452,7 @@ All notable changes to this project will be documented in this file.
 ## [1.0.41] - 2026-06-05
 ### Added
 - Created the standalone utility script `generate_meta_upload.py` to extract, normalize, and format genuine leads for Meta Offline Conversions/CAPI upload (implemented by Shashi).
-- Processed 926 leads from `Q Oak Interiors Leads-New - 2026-2027 (1).csv` to export exactly 118 genuine leads.
+- Processed 926 leads from the supplied source file to export exactly 118 genuine leads.
 - Implemented robust digits-only phone normalization (prepending `91` Indian dialing code to 10-digit numbers), name splitting, budget-to-numeric mapping, and privacy-safe SHA-256 pre-hashing for customer identifiers (email, phone, first/last name, city, country) mapping to Meta standard fields.
 - Outputted the final uploadable CSV file `meta_qualified_leads_upload.csv` containing both plain text and hashed columns.
 

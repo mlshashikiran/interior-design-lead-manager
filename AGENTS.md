@@ -6,66 +6,56 @@ Builder/author attribution for project metadata and engineering documentation is
 
 This WordPress plugin is a custom-table CRM for interior-design leads. It captures advertising/form webhooks, deduplicates and routes leads, supports pre-sales qualification and sales handoff, provides admin and authenticated front-end workspaces, sends conversion/audience data to advertising services, records WhatsApp replies, and manages versioned quotations.
 
-Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PROJECT-MAP.md](docs/PROJECT-MAP.md), and [docs/DATA-MODEL.md](docs/DATA-MODEL.md) before behavioral work. Start feature-specific reviews with [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md) to identify the blast radius. Consult [docs/FLOWS.md](docs/FLOWS.md) for lifecycle changes, [docs/INTERFACES.md](docs/INTERFACES.md) before changing hooks/endpoints, and [docs/SECURITY.md](docs/SECURITY.md) for any request handler.
+Use the documentation as a targeted index, not a mandatory reading bundle. Consult [docs/PROJECT-MAP.md](docs/PROJECT-MAP.md) for unfamiliar areas; [docs/FEATURE-MAP.md](docs/FEATURE-MAP.md) before cross-module or feature work; [docs/FLOWS.md](docs/FLOWS.md) for lifecycle changes; [docs/INTERFACES.md](docs/INTERFACES.md) for hooks, AJAX, REST, webhooks, or MCP; [docs/DATA-MODEL.md](docs/DATA-MODEL.md) for schema or reporting work; and [docs/SECURITY.md](docs/SECURITY.md) for request handlers or data access. Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) when the change crosses module boundaries or conflicts with established structure.
 
 ## Runtime map
 
-- `interior-design-lead-manager.php`: constants, activation/deactivation, class loading, roles/capabilities, `plugins_loaded` boot.
-- `includes/class-db.php`: canonical lead persistence, transition normalization, duplicate/touchpoint handling, activities, tasks, and core schema.
-- `includes/class-admin.php`: thin compatibility facade for registrations, menus, and public delegates. Change narrowly.
-- `includes/class-admin-lead-reads.php`: focused authenticated lead-detail read and drawer-response handler behind `IDLM_Admin` and `IDLM_Admin_Ajax` delegates.
-- `includes/class-admin-assets.php`, `class-admin-shortcodes.php`: shared asset registration/context enqueueing and frontend shortcode/workspace orchestration behind facade callbacks.
-- `includes/class-admin-presenter.php`, `class-admin-lead-notifications.php`: display formatting plus WhatsApp read-state/reminder presentation support behind facade delegates.
-- `includes/class-admin-account-controller.php`: frontend account context and authenticated profile-update handling behind facade callbacks.
-- `includes/class-admin-settings-controller.php`: authenticated settings POST validation, sanitization, option/secret persistence, and grouped-routing synchronization.
-- `includes/class-admin-settings-renderer.php`, `templates/admin/settings/`: settings context/environment reads and guarded tab/section presentation behind the established callback.
-- `includes/class-admin-dashboard-renderer.php`, `class-admin-kanban-renderer.php`, `class-admin-logs-renderer.php`, `class-admin-leads-renderer.php`: focused page context/query boundaries behind the established admin callbacks.
-- `includes/class-integrations.php`: REST ingestion/feeds/MCP, attribution, lead routing, fallback handoff, and email notifications.
-- `includes/class-capi.php`, `class-audiences.php`, `class-interakt.php`: outbound advertising and messaging integrations.
-- `includes/class-quotations.php`: quotation compatibility facade, transaction/request coordination, CSV validation/streaming, rendering, browser-print/PDF view, and quotation AJAX/admin-post handlers.
-- `includes/class-quotation-policy.php`, `class-quotation-lead-read-model.php`: quotation capabilities, object-level lead access, and scoped lead search/editor reads.
-- `includes/class-quotation-repository.php`: quotation/catalogue table mapping, atomic numbering, aggregate and catalogue reads/writes, quotation/catalogue list read models, revision content replacement/copying, history, lead quote-value projection, cleanup, and reset persistence.
-- `includes/class-quotation-schema.php`: quotation table installation, independent schema version, legacy conversion, and snapshot/section backfills.
-- `includes/class-quotation-calculator.php`: deterministic quotation item/section normalization, decimal policy, and totals calculation.
-- `includes/class-dashboard.php`: read-only aggregate reporting.
-- `includes/class-settings.php`: grouped non-secret routing configuration with standalone-option compatibility mirrors.
-- `includes/class-view.php`, `templates/`: guarded reusable presentation boundary for extracted views, including nested `templates/admin/` page templates.
-- `includes/class-scheduler.php`: Action Scheduler/WP-Cron registration.
-- `includes/class-horizontal-readiness.php`: aggregate-only multi-node deployment preflight for shared infrastructure declarations, cache/queue/cron detection, and streamed-export safety.
-- `includes/class-operational-health.php`: aggregate-only administrator health checks and initial thresholds for schema/database/schedules/secrets/storage/cache, Action Scheduler backlog, and recent faults.
-- `includes/class-telemetry.php`, `class-mcp-core.php`, `mcp-server.php`: diagnostics and read-only CRM MCP access.
-- `assets/js/`: jQuery-based CRM clients; `admin-app.js` is shared by admin and shortcodes. `assets/css/`: shared and module styles. New reusable PHP views belong under `templates/` and receive a single context array.
+- `interior-design-lead-manager.php`: bootstrap, lifecycle registration, role/capability setup, and class loading.
+- `includes/class-db.php`: canonical lead persistence and core schema. Route lifecycle writes through its approved methods.
+- `includes/class-admin.php`: compatibility facade. Keep public callbacks stable and change narrowly.
+- `includes/class-integrations.php`, `class-capi.php`, `class-audiences.php`, and `class-interakt.php`: inbound and outbound integrations; review authentication and audit behavior first.
+- `includes/class-quotations.php`, `class-quotation-repository.php`, and `class-quotation-schema.php`: quotation transactions, persistence, and schema; preserve numbering, totals, history, and access rules.
+- `includes/class-admin-assets.php`, `class-admin-shortcodes.php`, `templates/`, `assets/js/`, and `assets/css/`: shared admin/shortcode presentation contracts.
+- `includes/class-scheduler.php`, `class-horizontal-readiness.php`, `class-operational-health.php`, and MCP/telemetry classes: operational behavior and diagnostics.
 
-## Agent and effort selection
+For the complete ownership map, read [docs/PROJECT-MAP.md](docs/PROJECT-MAP.md).
 
-- Treat Sol as the primary orchestrator for architectural decisions, security-sensitive work, ambiguous changes, cross-cutting behavior, and final review.
-- Escalate to Sol before changing authentication, authorization, permissions, secrets, database schemas or migrations, public APIs or endpoints, concurrency or transactions, destructive operations, or unclear architecture.
-- Where the current Codex environment supports model-specific subagent delegation, prefer Terra for bounded routine implementation and ordinary code review, and Luna for low-risk repository discovery, mechanical or repetitive edits, straightforward tests, and documentation maintenance.
-- If model-specific subagent delegation is not available, preserve the same risk-based division of work using the available subagent or primary-agent capabilities rather than failing the task.
-- The primary Sol agent must review and verify any subagent output that affects production behavior, public interfaces, security boundaries, data integrity, or architecture before those changes are accepted.
+## Knowledge graph
 
-### Reasoning effort
+When `graphify-out/graph.json` exists, use Graphify first for unfamiliar cross-module architecture, dependency, or change-impact questions. Query the focused question with a bounded result budget; state the query and its material finding in the task response before verifying implementation decisions against the cited source files and project documentation.
 
-Use only Low, Medium, or High effort:
+Refresh the graph with `/graphify . --update` after meaningful source or documentation changes. Do not rebuild it for small isolated edits, and do not rely on a graph snapshot that is missing or older than the relevant changes. Generated Graphify output remains local and is excluded from Git.
 
-- Low — low-risk discovery, mechanical edits, simple documentation, and deterministic changes.
-- Medium — bounded implementation, ordinary debugging, test creation, and routine review.
-- High — architecture, security, ambiguous behavior, cross-cutting changes, sensitive data, interface changes, migrations, concurrency, destructive operations, and final review of high-risk work.
-
-Do not use High effort for routine work unless complexity or risk justifies it.
-
-### Shared requirements
+## Shared requirements
 
 All agents must:
 
 - follow this guide and relevant files under `docs/`;
 - preserve existing project conventions and backward compatibility;
-- inspect both the current implementation and documented contracts, investigating and escalating material discrepancies rather than assuming either is automatically correct;
+- inspect both the current implementation and documented contracts, investigating material discrepancies rather than assuming either is automatically correct;
 - avoid unrelated refactoring;
 - preserve unrelated working-tree changes;
 - attribute authored metadata and engineering documentation to Shashi;
-- apply the repository's required version and changelog policy;
-- escalate uncertainty involving security, data integrity, architecture, or public interfaces rather than making risky assumptions.
+- apply the repository's required version and changelog policy.
+
+## Engineering execution policy
+
+- Follow the global model-routing policy. Model selection is configured outside this file; prefer one model completing a task end to end and delegate only when the work materially benefits from another capability or genuine parallelism.
+- Before editing, inspect only enough of the repository to understand the relevant implementation, existing patterns and utilities, applicable documentation and tests, and version/changelog conventions. Do not perform broad audits unless the task requires one, and reuse findings already established in the current conversation.
+- Make the smallest complete change that satisfies the requested behaviour. Reuse existing components, functions, APIs, design-system primitives, file organization, naming, and style. Do not add abstractions or dependencies when existing project mechanisms are adequate.
+- Avoid unrelated refactoring, cleanup, formatting, modernization, renaming, and architectural changes. Fix the underlying cause of a defect when practical instead of masking its visible symptom.
+- Preserve unrelated working-tree changes. If the requested approach conflicts with the existing architecture or creates meaningful risk, explain the conflict and use the safer compatible approach.
+- For existing UI, preserve the established styling, CSS variables, components, markup conventions, responsive behaviour, and admin/shortcode parity. Avoid duplicate CSS or JavaScript, and check affected desktop and mobile contexts.
+
+## Risk-proportionate verification
+
+The model implementing a change should normally verify its own work. Prefer `changed behaviour -> targeted tests -> relevant validation`; do not create separate review phases or run the full suite by default.
+
+- Low-risk documentation, copy, CSS, template, mechanical, and isolated UI changes require lightweight targeted checks.
+- Normal-risk bug fixes, features, application logic, JavaScript behaviour, refactors, and integrations require targeted regression tests where appropriate plus relevant syntax, lint, and build checks.
+- High-risk authentication, authorization, capabilities, nonces, secrets, database/schema, public API, transaction/concurrency, destructive, and cross-cutting changes require stronger reasoning, targeted tests, and broader verification proportional to the affected surface. Independent review is appropriate when production risk justifies it.
+- Run the full test suite when shared/core behaviour or multiple modules are materially affected, targeted tests are insufficient, release requirements demand it, or the user explicitly requests it.
+- When a test fails, investigate the relevant failure, fix failures caused by the change, rerun the failed or affected test first, and broaden verification only when necessary. Do not repeat successful tests or duplicate verification across agents without a concrete reason.
 
 ## Implementation rules
 
@@ -87,9 +77,9 @@ All agents must:
 
 ## Production deployment target
 
-- When Shashi requests deployment of this plugin to LIVE, use the saved `novamira-crm-qoakinterior` MCP connected to `https://crm.qoakinteriors.com`.
+- When Shashi requests deployment of this plugin to LIVE, use the saved production deployment MCP connection.
 - Confirm the MCP target domain before mutating production, deploy only the reviewed release artifact, and report the deployed version and verification result.
 
-For every successful change: follow the existing version pattern, increment the plugin version, keep the header/`IDLM_VERSION`/`readme.txt` stable tag aligned, update `CHANGELOG.md` with Shashi attribution, and record meaningful behavioral/architectural work in `docs/CHANGELOG-DEV.md`. Update the relevant focused document instead of duplicating details.
+For a release-ready or user-requested release change, follow the existing version pattern; keep the header/`IDLM_VERSION`/`readme.txt` stable tag aligned; update `CHANGELOG.md` with Shashi attribution; and record meaningful behavioral or architectural work in `docs/CHANGELOG-DEV.md`. For an unreleased local iteration or low-impact documentation/style change, update only the focused documentation needed to keep it accurate.
 
-At minimum, run `php -l` on every PHP file changed, search registrations/callers for renamed interfaces, verify nonce + capability + object access on handlers, review prepared SQL and output escaping, and manually exercise the affected admin and shortcode context. For schema or lifecycle work, test install/upgrade on a copy of existing data and verify downstream activities, tasks, hooks, integrations, and rollback behavior. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+Run `php -l` for every changed PHP file. Search registrations and callers only when changing an interface; review nonce, capability, object access, SQL, and escaping only where the affected code handles requests or data; and manually exercise the affected admin or shortcode context when the change alters it. For schema or lifecycle work, test install/upgrade on a copy of existing data and verify downstream activities, tasks, hooks, integrations, and rollback behavior. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).

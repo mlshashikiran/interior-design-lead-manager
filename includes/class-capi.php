@@ -840,8 +840,8 @@ class IDLM_CAPI {
             foreach ($stages_to_check as $stg) {
                 $key = $lead->id . '_' . $stg;
                 if (!isset($conversion_events[$key])) {
-                    $time = (strtolower($stg) === 'won' && !empty($lead->conversion_time) && $lead->conversion_time !== '0000-00-00 00:00:00')
-                        ? $lead->conversion_time
+                    $time = strtolower($stg) === 'won'
+                        ? ((!empty($lead->conversion_time) && $lead->conversion_time !== '0000-00-00 00:00:00') ? $lead->conversion_time : $lead->updated_at)
                         : (($stg === $lead->stage) ? $lead->updated_at : (!empty($lead->qualified_at) ? $lead->qualified_at : $lead->created_at));
                     $conversion_events[$key] = array(
                         'lead_id' => $lead->id,

@@ -10,9 +10,18 @@ Run the dependency-free suite from the plugin root:
 php tests/run.php
 ```
 
-The suite loads the production classes with small WordPress and `$wpdb` test doubles. It does not connect to or modify the site database. Its 99 contracts cover lead lifecycle and integrity, representative AJAX authorization, encrypted scoped REST/MCP authentication and limits, authorization/query scoping, signed cursor isolation/keyset compatibility, quotation calculations/persistence/autosave, schema migrations, scheduler fallback, retention redaction, stable states, guarded templates, grouped settings, environment-driven MCP paths, semantic print output, deterministic performance profiles/safety gates, read-only query-plan coverage/privacy gates, Phase 8 load-manifest/result/privacy safeguards, Phase 9 release inventory/version/private-file/CI-attestation, candidate-promotion, and disposable WordPress-root handoff gates, authorization-scoped read-cache reuse/invalidation, horizontal-readiness and operational-health evaluation/rendering, the admin facade's public/registration/asset/selector/capability contracts, the completed renderer/settings/shell boundaries, and the Phase 5 lead-detail AJAX read extraction.
+The suite loads the production classes with small WordPress and `$wpdb` test doubles. It does not connect to or modify the site database. Its 119 contracts cover lead lifecycle and integrity, representative AJAX authorization, encrypted scoped REST/MCP authentication and limits, authorization/query scoping, signed cursor isolation/keyset compatibility, quotation calculations/persistence/autosave, schema migrations, scheduler fallback, retention redaction, stable states, guarded templates, grouped settings, environment-driven MCP paths, semantic print output, deterministic performance profiles/safety gates, read-only query-plan coverage/privacy gates, Phase 8 load-manifest/result/privacy safeguards, Phase 9 release inventory/version/private-file/CI-attestation, candidate-promotion, and disposable WordPress-root handoff gates, authorization-scoped read-cache reuse/invalidation, horizontal-readiness and operational-health evaluation/rendering, the admin facade's public/registration/asset/selector/capability contracts, the completed renderer/settings/shell boundaries, the UI/UX Phase 1–7 contracts, frontend workspace style-isolation specificity, single-row drawer-status overflow, and the Phase 5 lead-detail AJAX read extraction.
 
 ## Native WordPress/MySQL integration suite
+
+The high-priority integrity regression additions also have focused runners:
+
+```bash
+php tests/inbound-task-integrity-contracts.php
+php tests/interakt-action-scheduler-contracts.php
+```
+
+The default fast suite includes ownership/read-all isolation, drawer field permissions, Interakt enqueue/replay/retry/cancellation and conflicting inbound identity checks. Native tests additionally exercise pre-sales partial saves and reset rollback with an injected database failure, then verify successful runtime/queue cleanup without lead-ID reuse. Native data remains confined to the disposable test database.
 
 The opt-in integration suite boots the WordPress installation containing this plugin against a newly created disposable MySQL database:
 

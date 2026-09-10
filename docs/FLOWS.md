@@ -1,6 +1,12 @@
 # Application Flows
 
+## Verification companion
+
+The end-to-end source verification, including registrations, persistence writes, hook consumers, authorization boundaries, failure paths, integration endpoints, file ownership, and the current issue register, is maintained in [LOGICS.md](LOGICS.md). It was verified against the runtime source and the project contracts on 2026-09-09; this document remains the concise lifecycle overview.
+
 ## Inbound lead creation and repeat touch
+
+From 1.101.63, multiple contact candidates or conflicting supplied email/full phone identity prevent automatic merging. The inquiry remains actionable with `duplicate_review` activity and a `requires_duplicate_review` result flag. Explicit country codes are preserved when checking identity. Unique platform/external touchpoints retain exact replay matching.
 
 **Trigger** REST `POST /interior-design-lead-manager/v1/webhook` → **Handler** `IDLM_Integrations::handle_webhook_request()` → **Validation** scoped webhook API key in the route permission callback and handler, rate limit, supported platform, non-empty/test payload → **Business logic** flatten field mappings, merge website attribution cookies, classify source, normalize rooms/property/budget → **Persistence** `IDLM_DB::upsert_inbound_lead()` finds a canonical identity, inserts or merges and records `idlm_lead_touchpoints` → **Side effects** new-lead routing, activities, qualification tasks, stage/CAPI hooks; attribution merges can re-fire prior successful conversion events → **Response** REST success with lead identity/status.
 
@@ -8,15 +14,17 @@ Manual creation and CSV import enter through `IDLM_Admin` AJAX handlers, require
 
 ## Lead update and qualification
 
-**Trigger** quick edit, lead drawer save, Kanban move, pre-sales decision, bulk action, or import → **Handler** corresponding `IDLM_Admin::ajax_*` method → **Validation** `idlm_admin_nonce`, CRM capability, object ownership/manager authority, allowed field/value and structured qualification gates → **Business logic** `IDLM_DB::update_lead()` normalizes stage/quality, disqualification, owner and handoff transitions → **Persistence** lead row plus activities/tasks/timestamps → **Side effects** `idlm_lead_stage_converted`, `idlm_lead_call_status_no_answer`, and configured Interakt hooks; CAPI jobs may be queued → **Response** JSON with message and refreshed counts/data.
+**Trigger** quick edit, lead drawer save, Kanban move, pre-sales decision, bulk action, or import → **Handler** corresponding `IDLM_Admin::ajax_*` method → **Validation** `idlm_admin_nonce`, CRM capability, object ownership/manager authority, allowed field/value and structured qualification gates → **Business logic** `IDLM_DB::update_lead()` normalizes stage/quality, disqualification, owner and handoff transitions → **Persistence** lead row plus activities/tasks/timestamps and an immutable `idlm_lead_state_events` record for each stage/owner transition (including Won/Lost value snapshot when applicable) → **Side effects** `idlm_lead_stage_converted`, `idlm_lead_call_status_no_answer`, and configured Interakt hooks; CAPI jobs may be queued → **Response** JSON with message and refreshed counts/data.
 
 Qualification is coupled to follow-up evidence and task completion. Qualified pre-sales leads enter `awaiting_manager`; a manager assignment or timed fallback completes handoff. Unqualification drives `Lost` plus mapped lost/disqualification reason. Duplicate early close has a dedicated policy.
 
 ## Assignment and handoff
 
-**Trigger** inbound insert, manager assignment, hourly schedule, or “run fallback now” → **Handler** `route_lead_assignment()` or `run_assignment_fallback()` → **Validation** configured mode/pools, roles, capacity, studio mapping, working-hour threshold; transient prevents overlap → **Business logic** round-robin/source/studio selection or qualified OOO handoff → **Persistence** compare-and-set update in `assign_lead_atomically()` and handoff fields/tasks/activity → **Side effects** optional handoff email; throttled telemetry/admin email for routing exceptions → **Response** background completion or AJAX status.
+**Trigger** inbound insert, manager assignment, hourly schedule, or “run fallback now” → **Handler** `route_lead_assignment()` or `run_assignment_fallback()` → **Validation** configured mode/pools, roles, capacity, studio mapping, working-hour threshold; transient prevents overlap → **Business logic** round-robin/source/studio selection or qualified OOO handoff → **Persistence** compare-and-set update in `assign_lead_atomically()` and handoff fields/tasks/activity plus an immutable assignment event → **Side effects** optional handoff email; throttled telemetry/admin email for routing exceptions → **Response** background completion or AJAX status.
 
 ## Follow-up and WhatsApp
+
+Manual task creation validates its type, priority, title and exact local due-date format. Qualification tasks are created/completed by the qualification workflow and cannot be manually added, toggled or deleted. Administrative historical Interakt sync now queues capped batches with request deduplication, worker overlap locks and up to three attempts; the UI reports queue acceptance separately from delivery.
 
 Assignment to pre-sales creates four working-day qualification tasks. Touch logging records call/WhatsApp evidence; no-answer status emits `idlm_lead_call_status_no_answer`, which maps to an Interakt event. Interakt events are queued with Action Scheduler or WP-Cron and posted to Interakt.
 
@@ -44,4 +52,4 @@ Print uses `admin-post.php?action=idlm_print_quote`, nonce, view/download capabi
 
 Authenticated shortcode user submits `admin-post.php?action=idlm_update_my_account` → login and nonce validation → sanitize identity/phone and validate unique email/password → update WordPress user plus `idlm_phone`, optionally send core password-reset email → safe redirect with status.
 
-Anonymous CRM user submits `admin-post.php?action=idlm_login` → nonce and safe-return validation → exact email lookup → WordPress `wp_signon()` authentication/cookie creation → generic failure or local workspace redirect. Password recovery uses the parallel request/reset handlers, generic request responses, WordPress-generated user-bound reset keys, core validation hooks, and core password/session reset behavior.
+Anonymous CRM user submits `admin-post.php?action=idlm_login` → nonce and safe-return validation → exact email lookup → WordPress `wp_signon()` authentication/cookie creation → generic failure or local workspace redirect. Password recovery uses the parallel request/reset handlers, generic request responses, an eight-character minimum, WordPress-generated user-bound reset keys, core validation hooks, and core password/session reset behavior.
