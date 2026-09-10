@@ -184,9 +184,6 @@ class IDLM_Audiences {
             $code = wp_remote_retrieve_response_code($response);
             $response_body = wp_remote_retrieve_body($response);
             if ($code == 200) {
-                foreach ($leads as $lead) {
-                    IDLM_DB::log_activity($lead->id, 'audience_sync', 'Lead successfully synchronized to Meta Custom Audience: ' . $audience_id, 0);
-                }
                 IDLM_DB::log_audience_sync('meta', $audience_id, count($leads), $payload, $response_body, 'success');
             } else {
                 IDLM_DB::log_audience_sync('meta', $audience_id, count($leads), $payload, $response_body, 'failed');
@@ -268,10 +265,6 @@ class IDLM_Audiences {
         $list_name = basename(trim($user_list_name));
         $lead_count = count($leads);
         
-        foreach ($leads as $lead) {
-            IDLM_DB::log_activity($lead->id, 'audience_sync', 'Lead mapped and ready for Google Ads Data Manager pull feed: ' . $list_name, 0);
-        }
-        
         IDLM_DB::log_audience_sync('google', $list_name, $lead_count, array('mode' => 'pull'), 'Pull Feed Active. Leads mapped: ' . $lead_count, 'success');
     }
 
@@ -320,9 +313,6 @@ class IDLM_Audiences {
             $code = wp_remote_retrieve_response_code($response);
             $response_body = wp_remote_retrieve_body($response);
             if ($code == 200 || $code == 201) {
-                foreach ($leads as $lead) {
-                    IDLM_DB::log_activity($lead->id, 'audience_sync', 'Lead successfully synchronized to LinkedIn Contact Segment URN: ' . basename($segment_urn), 0);
-                }
                 IDLM_DB::log_audience_sync('linkedin', basename($segment_urn), count($leads), $payload, $response_body, 'success');
             } else {
                 IDLM_DB::log_audience_sync('linkedin', basename($segment_urn), count($leads), $payload, $response_body, 'failed');

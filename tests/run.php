@@ -1232,6 +1232,26 @@ idlm_test('Phase 8 result recorder emits deterministic aggregate percentiles and
     assert_same('evidence_only', $summary['provisional_thresholds']['qualification_status']);
 });
 
+idlm_test('audience audit payloads are stored as fixed-size redacted summaries', static function(): void {
+    $summary = IDLM_Data_Retention::summarize_audience_payload(array(
+        'payload' => array('schema' => array('EMAIL'), 'data' => array(array('person@example.test'), array('other@example.test'))),
+        'token' => 'secret',
+    ));
+    assert_same('summary', $summary['storage']);
+    assert_same(2, $summary['item_count']);
+    assert_true($summary['original_bytes'] > 0);
+    assert_false(false !== strpos(wp_json_encode($summary), 'person@example.test'));
+    assert_false(false !== strpos(wp_json_encode($summary), 'secret'));
+});
+
+idlm_test('diagnostic audience and CAPI logs expire after seven days', static function(): void {
+    $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-data-retention.php');
+
+    foreach (array('DIAGNOSTIC_LOG_RETENTION_VERSION', 'DIAGNOSTIC_LOG_RETENTION_DAYS = 7', "'idlm_diagnostic_log_retention_version'", "'audience_sync', 'capi_sync', 'capi_queue', 'capi_abort'", 'idlm_lead_activity_log', 'idlm_capi_logs', 'diagnostic_log_retention') as $contract) {
+        assert_contains($contract, $source);
+    }
+});
+
 idlm_test('Phase 8 runner refuses production and excludes authentication and response material', static function(): void {
     $source = file_get_contents(__DIR__ . '/performance/run-load-qualification.php');
     $matrix = require __DIR__ . '/performance/qualification-matrix.php';

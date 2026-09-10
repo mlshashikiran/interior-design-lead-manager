@@ -1065,7 +1065,7 @@ class IDLM_DB {
             'platform' => $platform,
             'audience_id' => $audience_id,
             'lead_count' => $lead_count,
-            'payload' => maybe_serialize(IDLM_Data_Retention::redact($payload)),
+            'payload' => maybe_serialize(IDLM_Data_Retention::summarize_audience_payload($payload)),
             'response' => maybe_serialize(IDLM_Data_Retention::redact($response)),
             'status' => $status,
             'created_at' => current_time('mysql')
