@@ -6,11 +6,11 @@ The end-to-end source verification, including registrations, persistence writes,
 
 ## Inbound lead creation and repeat touch
 
-From 1.101.63, multiple contact candidates or conflicting supplied email/full phone identity prevent automatic merging. The inquiry remains actionable with `duplicate_review` activity and a `requires_duplicate_review` result flag. Explicit country codes are preserved when checking identity. Unique platform/external touchpoints retain exact replay matching.
+Multiple contact candidates or conflicting supplied email/full phone identity prevent automatic merging. The submission is retained in `idlm_inbound_submission_reviews`, candidate leads receive `duplicate_review` activity, and the response carries a `requires_identity_review` flag; it never becomes an actionable lead. A single matching email or normalized phone enriches the existing lead. Explicit country codes are preserved when checking identity. Unique platform/external touchpoints retain exact replay matching.
 
 **Trigger** REST `POST /interior-design-lead-manager/v1/webhook` → **Handler** `IDLM_Integrations::handle_webhook_request()` → **Validation** scoped webhook API key in the route permission callback and handler, rate limit, supported platform, non-empty/test payload → **Business logic** flatten field mappings, merge website attribution cookies, classify source, normalize rooms/property/budget → **Persistence** `IDLM_DB::upsert_inbound_lead()` finds a canonical identity, inserts or merges and records `idlm_lead_touchpoints` → **Side effects** new-lead routing, activities, qualification tasks, stage/CAPI hooks; attribution merges can re-fire prior successful conversion events → **Response** REST success with lead identity/status.
 
-Manual creation and CSV import enter through `IDLM_Admin` AJAX handlers, require admin/CRM permissions as applicable, sanitize mapped fields, and call `IDLM_DB::insert_lead()`. Manual leads remain creator-owned and do not use automatic intake routing.
+Manual creation and CSV import enter through `IDLM_Admin` AJAX handlers, require admin/CRM permissions as applicable, sanitize mapped fields, and use the same inbound upsert policy. A matching record is enriched without a new owner/task/routing event; a conflicting record is retained for review outside the lead queue. New manual leads remain creator-owned and do not use automatic intake routing.
 
 ## Lead update and qualification
 

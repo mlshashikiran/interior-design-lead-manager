@@ -71,6 +71,7 @@ final class IDLM_Data_Retention {
         ));
         $targets = array(
             'idlm_lead_touchpoints' => array('received_at', $policy['touchpoints_days']),
+            'idlm_inbound_submission_reviews' => array('received_at', $policy['touchpoints_days']),
             'idlm_capi_logs' => array('created_at', $policy['integration_logs_days']),
             'idlm_audience_sync_logs' => array('created_at', $policy['integration_logs_days']),
             'idlm_telemetry_logs' => array('created_at', $policy['telemetry_days']),

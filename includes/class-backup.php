@@ -15,7 +15,7 @@ final class IDLM_Backup {
     /** Tables are static plugin-owned names, ordered for a safe restore. */
     private static function table_suffixes() {
         return array(
-            'idlm_leads', 'idlm_lead_activity_log', 'idlm_lead_state_events', 'idlm_tasks', 'idlm_lead_touchpoints', 'idlm_call_logs',
+            'idlm_leads', 'idlm_lead_activity_log', 'idlm_lead_state_events', 'idlm_tasks', 'idlm_lead_touchpoints', 'idlm_inbound_submission_reviews', 'idlm_call_logs',
             'idlm_capi_logs', 'idlm_audience_sync_logs', 'idlm_telemetry_logs', 'idlm_routing_state',
             'idlm_quote_catalogue_items', 'idlm_quote_item_categories', 'idlm_quote_item_units', 'idlm_quotes',
             'idlm_quote_revisions', 'idlm_quote_revision_sections', 'idlm_quote_revision_items', 'idlm_quote_payment_milestones',

@@ -27,7 +27,7 @@ idlm_test('Phase 9 distribution inventory includes runtime files and excludes de
 idlm_test('Phase 9 release metadata authorities remain aligned', static function(): void {
     $evidence = IDLM_Release_Artifact::version_evidence(dirname(__DIR__));
     assert_true($evidence['aligned']);
-    assert_same('1.102.31', $evidence['version']);
+    assert_same('1.102.38', $evidence['version']);
     assert_count_value(5, $evidence['sources']);
     assert_count_value(1, array_unique(array_values($evidence['sources'])));
 });

@@ -1013,7 +1013,7 @@ idlm_test('quotation autosave stores a scoped working copy with server-calculate
 
 idlm_test('core schema baseline declares required lifecycle columns, defaults, and indexes', static function(): void {
     IDLM_DB::create_tables();
-    assert_count_value(9, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(10, $GLOBALS['wpdb']->dbdelta);
     $leads_sql = $GLOBALS['wpdb']->dbdelta[0];
     assert_contains("handoff_status varchar(30) DEFAULT 'not_ready'", $leads_sql);
     assert_contains('qualified_at datetime DEFAULT NULL', $leads_sql);
@@ -1030,6 +1030,9 @@ idlm_test('core schema baseline declares required lifecycle columns, defaults, a
     $tasks_sql = $GLOBALS['wpdb']->dbdelta[6];
     assert_contains("status varchar(50) DEFAULT 'pending'", $tasks_sql);
     assert_contains('KEY lead_status_due (lead_id, status, due_date)', $tasks_sql);
+    $reviews_sql = $GLOBALS['wpdb']->dbdelta[9];
+    assert_contains('idlm_inbound_submission_reviews', $reviews_sql);
+    assert_contains("status varchar(20) DEFAULT 'pending'", $reviews_sql);
 });
 
 idlm_test('core migration check is idempotent at the current schema version', static function(): void {
@@ -1057,7 +1060,7 @@ idlm_test('core migration upgrades an older schema and records the independent s
         'idlm_attribution_touchpoint_backfill_version' => '1.0.0',
     );
     IDLM_DB::init();
-    assert_count_value(9, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(10, $GLOBALS['wpdb']->dbdelta);
     assert_same(IDLM_DB_VERSION, get_option('idlm_schema_version'));
 });
 
@@ -1074,9 +1077,9 @@ idlm_test('core migration reconciles the state-event amount column from schema 1
 
     IDLM_DB::init();
 
-    assert_count_value(9, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(10, $GLOBALS['wpdb']->dbdelta);
     assert_contains('amount decimal(14,2) DEFAULT NULL', $GLOBALS['wpdb']->dbdelta[2]);
-    assert_same('1.3.3', get_option('idlm_schema_version'));
+    assert_same('1.3.4', get_option('idlm_schema_version'));
 });
 
 idlm_test('quotation installer declares transactional persistence tables and records schema state', static function(): void {

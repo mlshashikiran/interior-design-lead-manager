@@ -10,7 +10,7 @@ declare(strict_types=1);
 define('ABSPATH', __DIR__ . '/support/wp/');
 define('IDLM_TESTING', true);
 define('IDLM_VERSION', '1.101.75');
-define('IDLM_DB_VERSION', '1.3.3');
+define('IDLM_DB_VERSION', '1.3.4');
 define('IDLM_PATH', dirname(__DIR__) . '/');
 define('IDLM_URL', 'https://example.test/wp-content/plugins/interior-design-lead-manager/');
 define('ARRAY_A', 'ARRAY_A');
@@ -180,7 +180,7 @@ final class IDLM_Test_WPDB {
         $this->tables = array();
         foreach (array(
             'idlm_leads', 'idlm_lead_activity_log', 'idlm_tasks', 'idlm_call_logs',
-            'idlm_lead_touchpoints', 'idlm_capi_logs', 'idlm_audience_sync_logs',
+            'idlm_lead_touchpoints', 'idlm_inbound_submission_reviews', 'idlm_capi_logs', 'idlm_audience_sync_logs',
             'idlm_telemetry_logs', 'idlm_quotes', 'idlm_quote_revisions',
             'idlm_quote_revision_sections', 'idlm_quote_revision_items',
             'idlm_quote_payment_milestones', 'idlm_quote_status_history',

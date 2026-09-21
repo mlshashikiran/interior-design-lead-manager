@@ -217,7 +217,7 @@ try {
 
         $required_tables = array(
             'idlm_leads', 'idlm_lead_activity_log', 'idlm_lead_state_events', 'idlm_capi_logs', 'idlm_audience_sync_logs',
-            'idlm_telemetry_logs', 'idlm_tasks', 'idlm_call_logs', 'idlm_lead_touchpoints',
+            'idlm_telemetry_logs', 'idlm_tasks', 'idlm_call_logs', 'idlm_lead_touchpoints', 'idlm_inbound_submission_reviews',
             'idlm_quotes', 'idlm_quote_revisions', 'idlm_quote_revision_items',
             'idlm_quote_revision_sections', 'idlm_quote_catalogue_items', 'idlm_quote_item_categories',
             'idlm_quote_item_units', 'idlm_quote_payment_milestones', 'idlm_quote_status_history',

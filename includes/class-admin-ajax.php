@@ -892,23 +892,18 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         if (!self::current_user_has_rep_access()) {
             wp_send_json_error(array('message' => 'Permission denied.'));
         }
-
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $form_data_raw = isset($_POST['form_data']) ? wp_unslash($_POST['form_data']) : '';
         parse_str($form_data_raw, $form_fields);
-
         $first_name = isset($form_fields['first_name']) ? sanitize_text_field($form_fields['first_name']) : '';
         $email = isset($form_fields['email']) ? sanitize_email($form_fields['email']) : '';
         $phone = isset($form_fields['phone']) ? sanitize_text_field($form_fields['phone']) : '';
-
         if (empty($first_name) || empty($email) || empty($phone)) {
             wp_send_json_error(array('message' => 'First Name, Email Address, and Phone are required.'));
         }
-
         if (!is_email($email)) {
             wp_send_json_error(array('message' => 'Please enter a valid email address.'));
         }
-
         $lead_data = array(
             'first_name' => $first_name,
             'last_name' => sanitize_text_field($form_fields['last_name']),
@@ -926,11 +921,9 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             'call_status' => 'Not Called',
             'assigned_rep_id' => get_current_user_id()
         );
-
         if ($lead_data['source'] === 'Referral') {
             $lead_data['referrer_details'] = sanitize_textarea_field($form_fields['referrer_details']);
         }
-
         // Capture local UTMs if present in admin browser session
         $captured = IDLM_Integrations::get_captured_attribution();
         foreach ($captured as $k => $v) {
@@ -938,25 +931,33 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 $lead_data[$k] = $v;
             }
         }
-
-        $lead_id = IDLM_DB::insert_lead($lead_data);
-        if ($lead_id) {
+        $result = IDLM_DB::upsert_inbound_lead($lead_data, 'manual', $lead_data);
+        if ($result) {
+            if (!empty($result['requires_duplicate_review'])) {
+                wp_send_json_success(array(
+                    'message' => 'Submission retained for identity review; no new lead or task was created.',
+                    'pending_calls_count' => self::get_pending_calls_count(),
+                ));
+            }
+            $lead_id = absint($result['lead_id']);
+            $created = !empty($result['created']);
             $creator = wp_get_current_user();
-            IDLM_DB::log_activity(
-                $lead_id,
-                'assignment',
-                sprintf('Lead manually created and assigned to %s.', $creator->display_name),
-                get_current_user_id()
-            );
-            if (self::current_user_is_pre_sales()) {
-                IDLM_DB::create_presales_followup_tasks($lead_id, get_current_user_id());
+            if ($created) {
+                IDLM_DB::log_activity(
+                    $lead_id,
+                    'assignment',
+                    sprintf('Lead manually created and assigned to %s.', $creator->display_name),
+                    get_current_user_id()
+                );
+                if (self::current_user_is_pre_sales()) {
+                    IDLM_DB::create_presales_followup_tasks($lead_id, get_current_user_id());
+                }
             }
             wp_send_json_success(array(
-                'message' => 'Manual Lead added successfully!',
+                'message' => $created ? 'Manual Lead added successfully!' : 'Existing lead updated with the new submission data.',
                 'pending_calls_count' => self::get_pending_calls_count()
             ));
         }
-
         $validation_error = IDLM_DB::get_last_validation_error();
         wp_send_json_error(array('message' => $validation_error ?: 'Failed to create lead. Database write error.'));
     }
@@ -1225,8 +1226,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $out[] = "";
 
         $out[] = "=== DATABASE STATE ===";
-        $tables = array('idlm_leads', 'idlm_lead_activity_log', 'idlm_lead_touchpoints', 'idlm_capi_logs', 'idlm_audience_sync_logs', 'idlm_telemetry_logs');
-        foreach ($tables as $tbl) {
+        foreach (array('idlm_leads', 'idlm_lead_activity_log', 'idlm_lead_touchpoints', 'idlm_inbound_submission_reviews', 'idlm_capi_logs', 'idlm_audience_sync_logs', 'idlm_telemetry_logs') as $tbl) {
             $full_tbl = $wpdb->prefix . $tbl;
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $full_tbl)) === $full_tbl;
@@ -2891,25 +2891,24 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 }
             }
 
-            $lead_id = IDLM_DB::insert_lead($lead_data);
+            $result = IDLM_DB::upsert_inbound_lead($lead_data, 'csv', $lead_data);
 
-            if ($lead_id) {
-                // Determine duplicate status
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-                $is_duplicate = $wpdb->get_var($wpdb->prepare("SELECT is_duplicate FROM {$table_leads} WHERE id = %d", $lead_id));
-                if ($is_duplicate) {
+            if ($result) {
+                if (!empty($result['requires_duplicate_review']) || !empty($result['matched'])) {
                     $duplicates++;
                 } else {
                     $imported++;
                 }
 
+                $lead_id = absint($result['lead_id']);
+
                 // Apply dynamic routing assignments if checked
-                if ($run_routing && !$is_duplicate) {
+                if ($run_routing && !empty($result['created'])) {
                     IDLM_Integrations::route_lead_assignment($lead_id, $lead_data['source']);
                 }
 
                 // Trigger server-side Conversion API events if stage matches conversion hooks or quality is Qualified
-                if ($run_capi && !$is_duplicate && (in_array($lead_data['stage'], array('Qualified', 'Quote Shared', 'Won'), true) || $lead_data['lead_quality'] === 'Qualified')) {
+                if ($run_capi && !empty($result['created']) && (in_array($lead_data['stage'], array('Qualified', 'Quote Shared', 'Won'), true) || $lead_data['lead_quality'] === 'Qualified')) {
                     $capi_stage = in_array($lead_data['stage'], array('Qualified', 'Quote Shared', 'Won')) ? $lead_data['stage'] : 'Qualified';
                     // Triggers Action Scheduler background conversion CAPI enqueuing automatically
                     do_action('idlm_lead_stage_converted', $lead_id, $capi_stage, (object) array('stage' => ''));

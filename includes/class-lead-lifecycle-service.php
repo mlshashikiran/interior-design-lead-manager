@@ -15,11 +15,8 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
         $platform = sanitize_key($platform);
-        $identity = self::get_inbound_identity_key($data);
-        $lock_name = 'idlm_' . substr(hash('sha256', $identity), 0, 40);
-        $locked = (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 5)', $lock_name));
-
-        if (1 !== $locked) {
+        $lock_names = self::acquire_inbound_identity_locks($data, $platform);
+        if (false === $lock_names) {
             self::$last_validation_error = 'Lead matching is busy. Please retry the submission.';
             return false;
         }
@@ -49,47 +46,85 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
 
             $data['original_source'] = !empty($data['source']) ? sanitize_text_field($data['source']) : '';
             $data['latest_source'] = $data['original_source'];
-            // Do not turn an uncertain identity into a duplicate relationship. The
-            // original inquiry remains actionable and an administrator can use the
-            // existing duplicate-review workflow to resolve it deliberately.
-            $lead_id = self::insert_lead($data, !empty($match['ambiguous_candidate_ids']));
+            if (!empty($match['ambiguous_candidate_ids'])) {
+                $review_id = self::record_inbound_review($data, $platform, $payload, $match['ambiguous_candidate_ids']);
+                if (!$review_id) {
+                    self::$last_validation_error = 'Unable to retain the conflicting submission for review.';
+                    return false;
+                }
+                foreach ($match['ambiguous_candidate_ids'] as $candidate_id) {
+                    self::log_activity(
+                        $candidate_id,
+                        'duplicate_review',
+                        sprintf('Inbound %s submission was retained for identity review as submission #%d; it matched more than one existing lead.', $platform, $review_id)
+                    );
+                }
+                return array(
+                    'lead_id' => 0,
+                    'created' => false,
+                    'matched' => false,
+                    'requires_duplicate_review' => true,
+                    'review_id' => $review_id,
+                );
+            }
+
+            $lead_id = self::insert_lead($data);
             if (!$lead_id) {
                 return false;
-            }
-            if (!empty($match['ambiguous_candidate_ids'])) {
-                self::log_activity(
-                    $lead_id,
-                    'duplicate_review',
-                    sprintf(
-                        'Inbound %s inquiry requires duplicate review; uncertain or conflicting identity candidates: %s.',
-                        $platform,
-                        implode(', ', array_map('absint', $match['ambiguous_candidate_ids']))
-                    )
-                );
             }
             self::record_lead_touchpoint($lead_id, $platform, $data, $payload);
             return array(
                 'lead_id' => $lead_id,
                 'created' => true,
                 'matched' => false,
-                'requires_duplicate_review' => !empty($match['ambiguous_candidate_ids']),
+                'requires_duplicate_review' => false,
             );
         } finally {
+            self::release_inbound_identity_locks($lock_names);
+        }
+    }
+
+    /** Acquire deterministic locks for every supplied identity, preventing concurrent repeat inserts. */
+    private static function acquire_inbound_identity_locks($data, $platform) {
+        global $wpdb;
+        $lock_names = array();
+        foreach (self::get_inbound_identity_keys($data, $platform) as $identity) {
+            $lock_name = 'idlm_' . substr(hash('sha256', $identity), 0, 40);
+            if (1 !== (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 5)', $lock_name))) {
+                self::release_inbound_identity_locks($lock_names);
+                return false;
+            }
+            $lock_names[] = $lock_name;
+        }
+        return $lock_names;
+    }
+
+    private static function release_inbound_identity_locks($lock_names) {
+        global $wpdb;
+        foreach ((array) $lock_names as $lock_name) {
             $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
         }
     }
 
-    private static function get_inbound_identity_key($data) {
+    private static function get_inbound_identity_keys($data, $platform) {
+        $identities = array();
         $phone = preg_replace('/[^0-9]/', '', (string) ($data['phone'] ?? ''));
         if (strlen($phone) >= 10) {
-            return 'phone:' . substr($phone, -10);
+            $identities[] = 'phone:' . self::normalize_identity_phone($phone);
         }
         $email = strtolower(trim((string) ($data['email'] ?? '')));
         if ($email) {
-            return 'email:' . $email;
+            $identities[] = 'email:' . $email;
         }
         $external_id = self::get_inbound_external_id($data);
-        return $external_id ? 'external:' . $external_id : 'anonymous:' . wp_generate_uuid4();
+        if ($external_id) {
+            $identities[] = 'external:' . sanitize_key($platform) . ':' . $external_id;
+        }
+        if (!$identities) {
+            $identities[] = 'anonymous:' . wp_generate_uuid4();
+        }
+        sort($identities, SORT_STRING);
+        return array_values(array_unique($identities));
     }
 
     private static function get_inbound_external_id($data) {
@@ -158,29 +193,19 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $candidates = $wpdb->get_results($wpdb->prepare($sql, $params));
         $matching_ids = array();
-        $conflicting_ids = array();
         foreach ($candidates as $candidate) {
             $candidate_email = strtolower(trim((string) $candidate->email));
             $normalized_phone = self::normalize_identity_phone($phone);
             $candidate_normalized_phone = self::normalize_identity_phone($candidate->phone);
-            if (($email && $candidate_email && $email !== $candidate_email) ||
-                ($normalized_phone && $candidate_normalized_phone && $normalized_phone !== $candidate_normalized_phone)) {
-                $conflicting_ids[] = absint($candidate->id);
-                continue;
-            }
             if ($email && $email === strtolower(trim((string) $candidate->email))) {
                 $matching_ids[] = absint($candidate->id);
                 continue;
             }
-            $candidate_phone = preg_replace('/[^0-9]/', '', (string) $candidate->phone);
-            if ($phone && $candidate_phone && ($phone === $candidate_phone || (strlen($phone) >= 10 && strlen($candidate_phone) >= 10 && substr($phone, -10) === substr($candidate_phone, -10)))) {
+            if ($normalized_phone && $candidate_normalized_phone && $normalized_phone === $candidate_normalized_phone) {
                 $matching_ids[] = absint($candidate->id);
             }
         }
         $matching_ids = array_values(array_unique(array_filter($matching_ids)));
-        if ($conflicting_ids) {
-            return array('lead_id' => 0, 'ambiguous_candidate_ids' => array_values(array_unique(array_merge($matching_ids, $conflicting_ids))));
-        }
         return array(
             'lead_id' => 1 === count($matching_ids) ? $matching_ids[0] : 0,
             'ambiguous_candidate_ids' => count($matching_ids) > 1 ? $matching_ids : array(),
@@ -214,12 +239,12 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             $updates['latest_source'] = $incoming_source;
         }
         $generic_sources = array('', 'website', 'unknown', 'direct', 'organic');
-        $current_primary = strtolower(trim((string) $canonical->source));
+        $current_primary = strtolower(trim((string) ($canonical->source ?? '')));
         $incoming_primary = strtolower(trim($incoming_source));
         if ('meta' === $platform && 'meta ads' === $incoming_primary && in_array($current_primary, $generic_sources, true)) {
             $updates['source'] = $incoming_source;
             $updates['original_source'] = $incoming_source;
-        } elseif (empty($canonical->original_source) && $incoming_source) {
+        } elseif (empty($canonical->original_source ?? '') && $incoming_source) {
             $updates['original_source'] = $incoming_source;
         }
         return $updates;
@@ -245,6 +270,24 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         }
         // A repeated external webhook is idempotent; submissions without an external ID remain distinct touches.
         $wpdb->insert($table, $row);
+    }
+
+    /** Retain conflicting submissions without creating an actionable lead record. */
+    private static function record_inbound_review($data, $platform, $payload, $candidate_ids) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'idlm_inbound_submission_reviews';
+        $inserted = $wpdb->insert($table, array(
+            'platform' => sanitize_key($platform),
+            'source' => sanitize_text_field($data['source'] ?? ''),
+            'email' => sanitize_email($data['email'] ?? ''),
+            'phone' => sanitize_text_field($data['phone'] ?? ''),
+            'candidate_lead_ids' => wp_json_encode(array_values(array_unique(array_map('absint', $candidate_ids)))),
+            'payload' => wp_json_encode(IDLM_Data_Retention::redact($payload ?: $data)),
+            'submitted_at' => !empty($data['conversion_time']) ? sanitize_text_field($data['conversion_time']) : null,
+            'received_at' => current_time('mysql'),
+            'status' => 'pending',
+        ));
+        return $inserted ? absint($wpdb->insert_id) : 0;
     }
 
     protected static function backfill_duplicate_touchpoints() {

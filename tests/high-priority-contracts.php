@@ -94,19 +94,31 @@ idlm_test('Interakt batch endpoint rejects oversized and unconfigured requests b
     expect_json_response(array('IDLM_Admin_Ajax', 'ajax_sync_mapped_past_batch'), false);
 });
 
-idlm_test('inbound contact conflicts and explicit country-code collisions require review', static function(): void {
+idlm_test('inbound matches enrich one lead while conflicting lead identities retain a review record', static function(): void {
+    idlm_test_reset_environment();
+    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('id' => 1, 'email' => 'same@example.test', 'phone' => '+919876543210'))));
     foreach (array(
         array('email' => 'different@example.test', 'phone' => '9876543210'),
         array('email' => 'same@example.test', 'phone' => '+449876543210'),
         array('email' => 'same@example.test', 'phone' => '9123456789'),
     ) as $incoming) {
-        idlm_test_reset_environment();
-        $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('id' => 1, 'email' => 'same@example.test', 'phone' => '+919876543210'))));
-        $result = IDLM_DB::upsert_inbound_lead(array_merge(array('first_name' => 'Separate inquiry'), $incoming), 'website');
-        assert_true($result['created']);
-        assert_true($result['requires_duplicate_review']);
-        assert_false($result['matched']);
+        $result = IDLM_DB::upsert_inbound_lead(array_merge(array('first_name' => 'Repeat inquiry'), $incoming), 'website');
+        assert_false($result['created']);
+        assert_true($result['matched']);
+        assert_same(1, count($GLOBALS['wpdb']->rows('idlm_leads')));
     }
+
+    idlm_test_reset_environment();
+    $GLOBALS['wpdb']->seed('idlm_leads', array(
+        lead_fixture(array('id' => 1, 'email' => 'one@example.test', 'phone' => '+919876543210')),
+        lead_fixture(array('id' => 2, 'email' => 'two@example.test', 'phone' => '+919123456789')),
+    ));
+    $result = IDLM_DB::upsert_inbound_lead(array('first_name' => 'Conflict', 'email' => 'one@example.test', 'phone' => '9123456789'), 'website');
+    assert_false($result['created']);
+    assert_true($result['requires_duplicate_review']);
+    assert_false($result['matched']);
+    assert_same(1, count($GLOBALS['wpdb']->rows('idlm_inbound_submission_reviews')));
+    assert_same(2, count($GLOBALS['wpdb']->rows('idlm_leads')));
 });
 
 idlm_test('dashboard keeps pipeline and Won reporting separate without exposing implementation terminology', static function(): void {

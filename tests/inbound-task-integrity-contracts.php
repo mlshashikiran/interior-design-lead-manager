@@ -47,10 +47,25 @@ $ambiguous = IDLM_DB::upsert_inbound_lead(array(
     'email' => 'new@example.test',
     'phone' => '9876543210',
 ), 'website');
-idlm_integrity_assert($ambiguous['created'] && $ambiguous['requires_duplicate_review'], 'Ambiguous normalized identities must create a reviewable inquiry instead of merging.');
-$new_lead = $GLOBALS['wpdb']->rows('idlm_leads')[2];
-idlm_integrity_assert(empty($new_lead['is_duplicate']) && empty($new_lead['duplicate_of_id']), 'Ambiguous inquiries must not be linked to an arbitrary canonical lead.');
-idlm_integrity_assert('duplicate_review' === $GLOBALS['wpdb']->rows('idlm_lead_activity_log')[1]['activity_type'], 'Ambiguous inquiries must retain duplicate-review evidence.');
+idlm_integrity_assert(!$ambiguous['created'] && $ambiguous['requires_duplicate_review'], 'Ambiguous normalized identities must be retained for review without creating a lead.');
+idlm_integrity_assert(2 === count($GLOBALS['wpdb']->rows('idlm_leads')), 'Ambiguous submissions must not enter the actionable lead table.');
+idlm_integrity_assert(1 === count($GLOBALS['wpdb']->rows('idlm_inbound_submission_reviews')), 'Ambiguous submissions must retain a review record.');
+idlm_integrity_assert(2 === count($GLOBALS['wpdb']->rows('idlm_lead_activity_log')), 'Every candidate lead must retain duplicate-review evidence.');
+
+idlm_test_reset_environment();
+$GLOBALS['wpdb']->seed('idlm_leads', array(
+    array('id' => 3, 'email' => 'existing@example.test', 'phone' => '+91 90000 00003', 'source' => 'Website', 'original_source' => 'Website', 'is_duplicate' => 0),
+));
+$matched = IDLM_DB::upsert_inbound_lead(array(
+    'email' => 'existing@example.test',
+    'phone' => '9000000044',
+    'project_name' => 'New project detail',
+    'source' => 'Meta Ads',
+), 'meta', array('email' => 'existing@example.test'));
+idlm_integrity_assert(3 === $matched['lead_id'] && !$matched['created'] && $matched['matched'], 'A matching email must update the existing lead even when the incoming phone is new.');
+idlm_integrity_assert(1 === count($GLOBALS['wpdb']->rows('idlm_leads')), 'A matched inbound submission must not create a duplicate lead.');
+idlm_integrity_assert('New project detail' === $GLOBALS['wpdb']->rows('idlm_leads')[0]['project_name'], 'New non-empty details must fill blank canonical fields.');
+idlm_integrity_assert(1 === count($GLOBALS['wpdb']->rows('idlm_lead_touchpoints')), 'A matched inbound submission must retain its touchpoint history.');
 
 idlm_test_reset_environment();
 idlm_test_login(7, array('sales_executive'), array('idlm_access_leads'));

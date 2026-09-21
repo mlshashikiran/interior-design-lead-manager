@@ -12,6 +12,7 @@ Tables use `$wpdb->prefix`; names below omit the site prefix. No database foreig
 | `idlm_tasks` | Lead tasks: lead/assignee/creator IDs, title, type, priority, `pending|completed`, due/completion timestamps. Qualification and Sales Follow-up types have lifecycle behavior. | `IDLM_DB::create_tables()` |
 | `idlm_call_logs` | Provider-neutral call audit: lead/user, provider and unique provider event, direction/outcome, recording URL/hash, duration, JSON-like `metadata`. | `IDLM_DB::create_tables()` |
 | `idlm_lead_touchpoints` | Acquisition history linked to canonical lead; platform/source/external ID, attribution fields, raw JSON payload and submission/receipt time. Unique `(platform, external_id)`. | `IDLM_DB::create_tables()`; duplicate touchpoint backfill in `IDLM_DB::init()` |
+| `idlm_inbound_submission_reviews` | Conflicting inbound email/phone matches retained for administrator review, including candidate IDs and redacted payload. These rows are not leads and never enter routing, task, conversion, or reporting workflows. | `IDLM_DB::create_tables()` |
 | `idlm_capi_logs` | Lead/platform/event payload, response and status audit. Payload/response are JSON text. | `IDLM_DB::create_tables()` |
 | `idlm_audience_sync_logs` | Platform/audience/count plus JSON payload/response/status. | `IDLM_DB::create_tables()` |
 | `idlm_telemetry_logs` | Error type/severity/message/file/line/trace/time. | `IDLM_DB::create_tables()` |

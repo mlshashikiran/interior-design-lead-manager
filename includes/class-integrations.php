@@ -625,6 +625,16 @@ class IDLM_Integrations {
         // Every submission is retained as an attribution touchpoint.
         $result = IDLM_DB::upsert_inbound_lead($mapped_data, $platform, $payload);
         if ($result) {
+            if (!empty($result['requires_duplicate_review'])) {
+                return new WP_REST_Response(array(
+                    'success' => true,
+                    'created' => false,
+                    'matched_existing' => false,
+                    'requires_identity_review' => true,
+                    'review_id' => absint($result['review_id'] ?? 0),
+                    'message' => 'Submission retained for identity review; no lead was created or routed.',
+                ), 202);
+            }
             $lead_id = absint($result['lead_id']);
             if (!empty($result['created'])) {
                 self::route_lead_assignment($lead_id, $mapped_data['source']);

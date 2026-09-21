@@ -662,6 +662,27 @@ class IDLM_DB {
         ) $charset_collate;";
 
         dbDelta($sql_touchpoints);
+
+        // Conflicting email/phone matches are retained for administrator review
+        // without creating a second lead or adding work to the pre-sales queue.
+        $table_inbound_reviews = $wpdb->prefix . 'idlm_inbound_submission_reviews';
+        $sql_inbound_reviews = "CREATE TABLE $table_inbound_reviews (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            platform varchar(30) DEFAULT '',
+            source varchar(50) DEFAULT '',
+            email varchar(100) DEFAULT '',
+            phone varchar(50) DEFAULT '',
+            candidate_lead_ids longtext DEFAULT NULL,
+            payload longtext DEFAULT NULL,
+            submitted_at datetime DEFAULT NULL,
+            received_at datetime DEFAULT NULL,
+            status varchar(20) DEFAULT 'pending',
+            PRIMARY KEY  (id),
+            KEY status_received (status, received_at),
+            KEY received_at (received_at)
+        ) $charset_collate;";
+
+        dbDelta($sql_inbound_reviews);
     }
 
     /** Convert common Indian budget notation to rupees for the qualification gate. */
