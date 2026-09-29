@@ -2429,6 +2429,10 @@ body.idlm-filters-open {
     display: none;
 }
 
+#idlm-leads-table th {
+    text-transform: none;
+}
+
 @media (max-width: 1024px) {
     #idlm-leads-table .idlm-col-priority-low {
         display: none;
@@ -2515,7 +2519,7 @@ body.idlm-filters-open {
         font-size: 11px;
         font-weight: 700;
         letter-spacing: .03em;
-        text-transform: uppercase;
+        text-transform: none;
     }
 
     #idlm-leads-table .idlm-responsive-lead-row > .idlm-selection-column {

@@ -1975,7 +1975,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
              {$pagination_where_clause} ORDER BY {$order_by} {$pagination_limit_sql}",
             $query_params
         ));
-
         $outreach_by_lead = array();
         if ($is_pre_sales && $leads) {
             $lead_ids = array_map('absint', wp_list_pluck($leads, 'id'));
@@ -2006,10 +2005,9 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         ));
         $active_rep_ids = get_option('idlm_active_assignment_reps', array());
         $whatsapp_read_ids = self::get_whatsapp_read_activity_ids();
-
         ob_start();
         if (empty($leads)) {
-            echo '<tr><td colspan="' . ($is_pre_sales ? '13' : '10') . '" style="text-align:center;">No leads found matching your active filters.</td></tr>';
+            echo '<tr><td colspan="' . ($is_pre_sales ? '12' : '11') . '" style="text-align:center;">No leads found matching your active filters.</td></tr>';
         } else {
             foreach ($leads as $l) {
                 $name = esc_html($l->first_name . ' ' . $l->last_name);
@@ -2100,6 +2098,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                             <button type="button" class="idlm-lead-row-expand" aria-expanded="false" aria-controls="<?php echo esc_attr($responsive_row_id); ?>"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><span class="idlm-lead-row-expand-label">Show details</span></button>
                         </td>
                         <td class="idlm-col-priority-low" data-label="Channel"><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(array(' ', '/', '-'), '', $l->source))); ?>"><?php echo esc_html($l->source ?: 'Unknown'); ?></span></td>
+                        <td class="idlm-col-priority-low" data-label="Studio"><?php echo esc_html($l->preferred_studio ?: '—'); ?></td>
                         <td class="idlm-col-created-at idlm-col-priority-low" data-label="Assigned date"><?php echo wp_kses_post(IDLM_Admin_Presenter::render_lead_table_datetime($l->assigned_at)); ?></td>
                         <td class="idlm-col-priority-low" data-label="Age"><strong><?php echo esc_html(self::get_business_day_age($l->created_at)); ?></strong><small>business days</small></td>
                         <td class="idlm-col-priority-low" data-label="Today"><span class="idlm-progress-chip"><?php echo esc_html($cycle_outreach['calls']); ?>/<?php echo esc_html($outreach_targets['calls']); ?> calls</span><span class="idlm-progress-chip"><?php echo esc_html($cycle_outreach['whatsapp']); ?>/<?php echo esc_html($outreach_targets['whatsapp']); ?> WA</span><small><?php echo esc_html(min(6, $complete_cycles)); ?>/6 cycles</small></td>
@@ -2138,6 +2137,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                         <button type="button" class="idlm-lead-row-expand" aria-expanded="false" aria-controls="<?php echo esc_attr($responsive_row_id); ?>"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><span class="idlm-lead-row-expand-label">Show details</span></button>
                     </td>
                     <td class="idlm-col-priority-low" data-label="Channel"><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(' ', '', $l->source))); ?>"><?php echo esc_html($l->source); ?></span></td>
+                    <td class="idlm-col-priority-low" data-label="Studio"><?php echo esc_html($l->preferred_studio ?: '—'); ?></td>
                     <td class="idlm-col-priority-secondary" data-label="Budget"><strong><?php echo !empty($l->budget) ? esc_html($l->budget) : 'N/A'; ?></strong></td>
                     
                     <!-- Stage Quick Edit dropdown -->

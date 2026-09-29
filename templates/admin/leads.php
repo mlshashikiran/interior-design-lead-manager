@@ -364,6 +364,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             <?php if ($is_pre_sales): ?>
                             <th class="idlm-sortable-column idlm-col-priority-primary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="name">Lead<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
                             <th class="idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="source">Channel<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-col-priority-low">Studio</th>
                             <th class="idlm-col-created-at idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="assigned_at">Assigned Date<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
                             <th class="idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="age">Age<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
                             <th class="idlm-col-priority-low">Today</th>
@@ -375,6 +376,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             <?php else: ?>
                             <th class="idlm-sortable-column idlm-col-priority-primary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="name">Name<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
                             <th class="idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="source">Channel<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
+                            <th class="idlm-col-priority-low">Studio</th>
                             <th class="idlm-sortable-column idlm-col-priority-secondary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="budget">Budget<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
                             <th class="idlm-sortable-column idlm-col-priority-primary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="stage">Stage<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
                             <th class="idlm-sortable-column idlm-col-priority-secondary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="assigned_rep">Assigned Rep<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
