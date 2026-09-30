@@ -8,8 +8,37 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-
 final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
+    /** Mark the visible lead's inbound WhatsApp messages as read for this user. */
+    public static function ajax_mark_whatsapp_messages_read() {
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        if (!self::current_user_has_rep_access()) {
+            wp_send_json_error(array('message' => 'Permission denied.'), 403);
+        }
+        $lead_id = isset($_POST['lead_id']) ? absint(wp_unslash($_POST['lead_id'])) : 0;
+        if (!$lead_id || !self::current_user_can_view_lead($lead_id)) {
+            wp_send_json_error(array('message' => 'You can access only leads assigned to you.'), 403);
+        }
+        global $wpdb;
+        $whatsapp_reply_pattern = $wpdb->esc_like('[WhatsApp Reply]:') . '%';
+        $direct_reply_pattern = $wpdb->esc_like('[Direct WA Reply]:') . '%';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $latest_message_id = absint($wpdb->get_var($wpdb->prepare(
+            "SELECT MAX(id)
+             FROM {$wpdb->prefix}idlm_lead_activity_log
+             WHERE lead_id = %d
+               AND (activity_type = 'whatsapp_reply' OR (activity_type = 'comment' AND (details LIKE %s OR details LIKE %s)))",
+            $lead_id,
+            $whatsapp_reply_pattern,
+            $direct_reply_pattern
+        )));
+        if ($latest_message_id) {
+            self::mark_whatsapp_reply_read($lead_id, $latest_message_id);
+        }
+        wp_send_json_success(array(
+            'unread_whatsapp_count' => self::get_unread_whatsapp_count(),
+        ));
+    }
     public static function ajax_get_lead_details() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
         if (!self::current_user_has_rep_access()) {
@@ -95,6 +124,20 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             $lead_id
         ));
 
+        $whatsapp_reply_pattern = $wpdb->esc_like('[WhatsApp Reply]:') . '%';
+        $direct_reply_pattern = $wpdb->esc_like('[Direct WA Reply]:') . '%';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $whatsapp_messages = $wpdb->get_results($wpdb->prepare(
+            "SELECT a.*
+             FROM {$wpdb->prefix}idlm_lead_activity_log a
+             WHERE a.lead_id = %d
+               AND (a.activity_type = 'whatsapp_reply' OR (a.activity_type = 'comment' AND (a.details LIKE %s OR a.details LIKE %s)))
+             ORDER BY a.id DESC",
+            $lead_id,
+            $whatsapp_reply_pattern,
+            $direct_reply_pattern
+        ));
+
         // Include comments and protected Lost remarks in the Details tab sidebar.
         $comments = array();
         if (!empty($logs)) {
@@ -106,21 +149,15 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         }
         $recent_comments = array_slice($comments, 0, 5);
 
-        $latest_whatsapp_reply = null;
-        foreach ($logs as $log) {
-            $is_legacy_whatsapp_reply = 'comment' === $log->activity_type && (
-                0 === strpos($log->details, '[WhatsApp Reply]:') ||
-                0 === strpos($log->details, '[Direct WA Reply]:')
-            );
-            if ('whatsapp_reply' === $log->activity_type || $is_legacy_whatsapp_reply) {
-                $latest_whatsapp_reply = $log;
-                break;
-            }
-        }
-
         $whatsapp_read_ids = self::get_whatsapp_read_activity_ids();
         $last_read_whatsapp_id = isset($whatsapp_read_ids[$lead_id]) ? absint($whatsapp_read_ids[$lead_id]) : 0;
-        $has_unread_whatsapp = $latest_whatsapp_reply && absint($latest_whatsapp_reply->id) > $last_read_whatsapp_id;
+        $unread_whatsapp_count = 0;
+        foreach ($whatsapp_messages as $whatsapp_message) {
+            if (absint($whatsapp_message->id) > $last_read_whatsapp_id) {
+                $unread_whatsapp_count++;
+            }
+        }
+        $interakt_inbox_url = IDLM_Interakt::inbox_url($lead->phone); $can_open_interakt = '1' === get_option('idlm_interakt_enabled', '0') && !empty($whatsapp_messages) && $interakt_inbox_url;
         $show_presales_compliance = self::current_user_is_pre_sales();
         $followup = $show_presales_compliance ? IDLM_DB::get_followup_compliance($lead_id) : null;
         $qualification_fields = array(
@@ -210,19 +247,9 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         <nav class="idlm-drawer-tabs" aria-label="Lead sections">
             <button class="idlm-drawer-tab active" type="button" onclick="switchDrawerTab(event, 'drawer-tab-info')">Details</button>
             <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-activity')">Activity Log & Comments</button>
+            <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-whatsapp')">WhatsApp <span class="idlm-drawer-tab-notification idlm-drawer-whatsapp-count" aria-label="<?php echo esc_attr($unread_whatsapp_count); ?> unread WhatsApp messages"<?php echo $unread_whatsapp_count ? '' : ' hidden'; ?>><?php echo esc_html($unread_whatsapp_count); ?></span></button>
             <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-tasks')">Tasks <span class="idlm-drawer-tab-notification" id="idlm-drawer-overdue-task-count" aria-label="No overdue tasks" hidden>0</span></button>
         </nav>
-
-        <?php if ($has_unread_whatsapp): ?>
-            <div class="idlm-whatsapp-reply-alert" role="status">
-                <span class="dashicons dashicons-whatsapp idlm-whatsapp-reply-alert-icon" aria-hidden="true"></span>
-                <div>
-                    <strong>New WhatsApp reply</strong>
-                    <span><?php echo wp_kses_post(self::render_activity_details(preg_replace('/^\[(?:WhatsApp Reply|Direct WA Reply)\]:\s*/', '', $latest_whatsapp_reply->details))); ?></span>
-                    <small><?php echo esc_html(self::format_datetime($latest_whatsapp_reply->created_at)); ?></small>
-                </div>
-            </div>
-        <?php endif; ?>
 
         <div class="idlm-drawer-body">
             <div id="drawer-tab-info" class="idlm-drawer-tab-content active">
@@ -660,6 +687,32 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                 </div>
             </div>
 
+            <div id="drawer-tab-whatsapp" class="idlm-drawer-tab-content">
+                <section class="idlm-drawer-panel idlm-drawer-whatsapp-panel">
+                    <div class="idlm-drawer-panel-head">
+                        <h3 class="idlm-drawer-panel-title">WhatsApp messages</h3>
+                        <?php if ($can_open_interakt): ?>
+                            <a class="idlm-btn idlm-btn-secondary idlm-drawer-open-interakt" href="<?php echo esc_url($interakt_inbox_url); ?>" target="_blank" rel="noopener noreferrer" title="Open Interakt's WhatsApp Inbox">Open in Interakt <span class="dashicons dashicons-external" aria-hidden="true"></span></a>
+                        <?php endif; ?>
+                    </div>
+                    <div class="idlm-drawer-whatsapp-list">
+                        <?php if (empty($whatsapp_messages)): ?>
+                            <p class="idlm-drawer-whatsapp-empty">No WhatsApp messages have been received from this lead.</p>
+                        <?php else: ?>
+                            <?php foreach ($whatsapp_messages as $whatsapp_message): ?>
+                                <article class="idlm-drawer-whatsapp-message<?php echo absint($whatsapp_message->id) > $last_read_whatsapp_id ? ' is-unread' : ''; ?>">
+                                    <div class="idlm-drawer-whatsapp-message-meta">
+                                        <strong>Customer</strong>
+                                        <time datetime="<?php echo esc_attr($whatsapp_message->created_at); ?>"><?php echo esc_html(self::format_datetime($whatsapp_message->created_at)); ?></time>
+                                    </div>
+                                    <div class="idlm-drawer-whatsapp-message-body"><?php echo wp_kses_post(self::render_activity_details(preg_replace('/^\[(?:WhatsApp Reply|Direct WA Reply)\]:\s*/', '', $whatsapp_message->details))); ?></div>
+                                </article>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </section>
+            </div>
+
             <div id="drawer-tab-tasks" class="idlm-drawer-tab-content">
                 <div class="idlm-drawer-tasks-wrapper" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px;">
                     <!-- Left Column: Add Task Form -->
@@ -732,15 +785,12 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         </footer>
         <?php
         $html = ob_get_clean();
-        if ($latest_whatsapp_reply) {
-            self::mark_whatsapp_reply_read($lead_id, $latest_whatsapp_reply->id);
-        }
         wp_send_json_success(array(
             'html' => $html,
             'first_name' => $lead->first_name,
             'full_name' => $lead->first_name . ' ' . $lead->last_name,
             'source' => $lead->source,
-            'whatsapp_marked_read' => (bool) $latest_whatsapp_reply,
+            'whatsapp_marked_read' => false,
             'unread_whatsapp_count' => self::get_unread_whatsapp_count(),
             'lead_id' => $lead_id
         ));

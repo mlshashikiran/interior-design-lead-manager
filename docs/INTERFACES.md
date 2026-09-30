@@ -36,6 +36,7 @@ In 1.101.63, `idlm_upload_lead_file` additionally requires `lead_id` and current
 | Actions | Handler area | Authorization and purpose |
 |---|---|---|
 | `idlm_get_lead_details` | `class-admin.php` → `class-admin-ajax.php` → `class-admin-lead-reads.php` | CRM plus object visibility scoping; returns the established lead drawer JSON/HTML response |
+| `idlm_mark_whatsapp_messages_read` | `class-admin.php` → `class-admin-lead-reads.php` | CRM nonce plus lead visibility; marks the selected lead's inbound WhatsApp activity as read for the current user |
 | `idlm_get_lead_activity`, `idlm_get_leads_table`, `idlm_get_kanban_leads`, `idlm_get_dashboard_stats` | `class-admin.php` → `class-admin-ajax.php` | CRM plus visibility scoping; return activity/list/Kanban/dashboard JSON/HTML fragments |
 | `idlm_quick_edit_lead`, `idlm_save_lead_details`, `idlm_bulk_action` | `class-admin.php` | CRM + object checks; manager capability for assignment, admin for deletion; update lifecycle |
 | `idlm_log_presales_touch`, `idlm_presales_decision` | `class-admin.php` | CRM + assigned-lead/qualification policy; record outreach or qualify/close |

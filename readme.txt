@@ -42,6 +42,27 @@ No. Action Scheduler is used when available; WordPress Cron is the fallback.
 
 == Changelog ==
 
+= 1.102.38 =
+* Fixed inbound repeat submissions so they update the existing email/phone-matched lead and retain attribution history without creating duplicate lead records, assignments, or pre-sales tasks. Conflicting identities are retained for review outside the lead queue.
+
+= 1.102.37 =
+* Open in Interakt now opens the lead's WhatsApp Inbox conversation by normalized phone number. Builder: Shashi.
+
+= 1.102.36 =
+* Open in Interakt now uses the WhatsApp Inbox filter and latest-activity sort URL. Builder: Shashi.
+
+= 1.102.35 =
+* Added an Open in Interakt action to the lead-drawer WhatsApp tab when Interakt is enabled and inbound messages exist. Builder: Shashi.
+
+= 1.102.34 =
+* Changed Snooze Task to use a native date-and-time picker. Builder: Shashi.
+
+= 1.102.33 =
+* Removed the standalone WhatsApp inbox and replaced the lead-drawer reply alert with a WhatsApp tab that lists inbound messages and timestamps, with an unread count. Builder: Shashi.
+
+= 1.102.32 =
+* Added a scoped WhatsApp inbox with Interakt inbound conversations and administrator-approved template sending. Builder: Shashi.
+
 = 1.102.29 =
 * Added server-side sorting for catalogue items by code, category, item, unit, wood, rate, or status. Builder: Shashi.
 

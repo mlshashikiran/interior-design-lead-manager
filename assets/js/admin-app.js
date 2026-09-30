@@ -2891,6 +2891,24 @@ function switchDrawerTab(evt, tabId) {
             loadLeadActivityLog(leadId);
         }
     }
+    if (tabId === 'drawer-tab-whatsapp') {
+        var whatsappLeadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
+        if (whatsappLeadId) {
+            $.post(idlm_vars.ajax_url, {
+                action: 'idlm_mark_whatsapp_messages_read',
+                nonce: idlm_vars.nonce,
+                lead_id: whatsappLeadId
+            }).done(function(response) {
+                if (!response.success) return;
+                $('.idlm-drawer-whatsapp-count').text('0').prop('hidden', true);
+                $('.idlm-drawer-whatsapp-message').removeClass('is-unread');
+                $('.idlm-whatsapp-row-badge[data-lead-id="' + whatsappLeadId + '"]').remove();
+                if (response.data.hasOwnProperty('unread_whatsapp_count') && typeof window.idlmUpdateUnreadWhatsAppPill === 'function') {
+                    window.idlmUpdateUnreadWhatsAppPill(response.data.unread_whatsapp_count);
+                }
+            });
+        }
+    }
     if (tabId === 'drawer-tab-tasks') {
         var leadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
         if (leadId) {
@@ -3709,8 +3727,8 @@ function openQueueLead(leadId) {
 }
 function rescheduleGlobalTask(taskId) {
     window.IDLMDialog.prompt({
-        title: 'Snooze task', message: 'Enter a future site-local date and time.', label: 'Due date and time',
-        placeholder: 'YYYY-MM-DDTHH:MM', required: true, requiredMessage: 'A future date and time is required.', confirmLabel: 'Reschedule', trigger: document.activeElement
+        title: 'Snooze task', message: 'Choose a future site-local date and time.', label: 'Due date and time',
+        inputType: 'datetime-local', required: true, requiredMessage: 'A future date and time is required.', confirmLabel: 'Reschedule', trigger: document.activeElement
     }).then(function(value) {
         if (null === value) return;
         jQuery.post(idlm_vars.ajax_url, { action: 'idlm_get_rep_tasks', operation: 'reschedule', task_id: taskId, due_date: value, nonce: idlm_vars.nonce }).done(function(response) {

@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.102.38] - 2026-09-21
+
+### Fixed
+
+- Inbound repeat submissions now enrich the one lead matched by email or normalized phone and retain their touchpoint history without creating duplicate lead records, assignments, or pre-sales tasks. Conflicting identifiers are retained for review without entering the lead queue. Builder: Shashi.
+
+## [1.102.37] - 2026-09-11
+
+### Changed
+
+- Open in Interakt now opens the lead's WhatsApp Inbox conversation by normalized phone number. Builder: Shashi.
+
+## [1.102.36] - 2026-09-11
+
+### Changed
+
+- Changed Open in Interakt to open the WhatsApp Inbox with the configured filter and latest-activity sort. Builder: Shashi.
+
+## [1.102.35] - 2026-09-11
+
+### Added
+
+- Added an Open in Interakt action to the lead-drawer WhatsApp tab when Interakt is enabled and inbound messages exist. Builder: Shashi.
+
+## [1.102.34] - 2026-09-11
+
+### Changed
+
+- Changed Snooze Task to use a native date-and-time picker. Builder: Shashi.
+
+## [1.102.33] - 2026-09-11
+
+### Changed
+
+- Removed the standalone WhatsApp workspace inbox and replaced the lead-drawer reply alert with a WhatsApp tab that lists inbound messages and timestamps, with a per-lead unread count. Builder: Shashi.
+
+## [1.102.32] - 2026-09-11
+
+### Added
+
+- Added a scoped WhatsApp workspace inbox for Interakt customer replies, with lead context and an approved-template sender. Template names and variables are administrator-configured and validated on the server; live replies remain in Interakt. Builder: Shashi.
+
 ## [1.102.31] - 2026-09-10
 
 ### Changed

@@ -235,6 +235,7 @@
                 '<div class="idlm-dialog__body">' +
                     '<label class="idlm-dialog__field" for="idlm-action-dialog-input" hidden></label>' +
                     '<textarea class="idlm-input" id="idlm-action-dialog-input" rows="4" hidden></textarea>' +
+                    '<input class="idlm-input" id="idlm-action-dialog-datetime" type="datetime-local" hidden>' +
                     '<p class="idlm-dialog__error" role="alert" hidden></p>' +
                     '<div class="idlm-dialog__actions"><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-action-cancel>Cancel</button><button type="button" class="idlm-btn idlm-btn-primary" data-idlm-action-confirm>Continue</button></div>' +
                 '</div>' +
@@ -250,17 +251,26 @@
         var description = dialog.querySelector('#idlm-action-dialog-description');
         var field = dialog.querySelector('.idlm-dialog__field');
         var input = dialog.querySelector('#idlm-action-dialog-input');
+        var datetimeInput = dialog.querySelector('#idlm-action-dialog-datetime');
         var error = dialog.querySelector('.idlm-dialog__error');
         var confirmButton = dialog.querySelector('[data-idlm-action-confirm]');
         var cancelButton = dialog.querySelector('[data-idlm-action-cancel]');
 
         title.textContent = options.title || (promptMode ? 'Provide details' : 'Confirm action');
         description.textContent = options.message || '';
+        var useDatetimePicker = promptMode && options.inputType === 'datetime-local';
+        var control = useDatetimePicker ? datetimeInput : input;
         field.hidden = !promptMode;
-        input.hidden = !promptMode;
-        input.value = options.value || '';
-        input.placeholder = options.placeholder || '';
-        input.required = !!options.required;
+        input.hidden = !promptMode || useDatetimePicker;
+        datetimeInput.hidden = !promptMode || !useDatetimePicker;
+        input.value = useDatetimePicker ? '' : (options.value || '');
+        datetimeInput.value = useDatetimePicker ? (options.value || '') : '';
+        input.placeholder = useDatetimePicker ? '' : (options.placeholder || '');
+        datetimeInput.min = useDatetimePicker && options.min ? options.min : '';
+        datetimeInput.step = useDatetimePicker && options.step ? options.step : '60';
+        input.required = !useDatetimePicker && !!options.required;
+        datetimeInput.required = useDatetimePicker && !!options.required;
+        field.htmlFor = control.id;
         field.textContent = options.label || 'Details';
         error.hidden = true;
         error.textContent = '';
@@ -293,21 +303,21 @@
                 finish(promptMode ? null : false, 'cancel');
             }
             function onConfirm() {
-                var value = promptMode ? input.value.trim() : true;
+                var value = promptMode ? control.value.trim() : true;
                 if (promptMode && options.required && !value) {
                     error.textContent = options.requiredMessage || 'Complete this field to continue.';
                     error.hidden = false;
-                    input.setAttribute('aria-invalid', 'true');
-                    input.focus({preventScroll: true});
+                    control.setAttribute('aria-invalid', 'true');
+                    control.focus({preventScroll: true});
                     return;
                 }
-                input.removeAttribute('aria-invalid');
+                control.removeAttribute('aria-invalid');
                 finish(value, 'confirm');
             }
             dialog.addEventListener('idlm:dialogclose', onClose);
             confirmButton.addEventListener('click', onConfirm);
             cancelButton.addEventListener('click', onCancel);
-            open(dialog, {trigger: options.trigger, initialFocus: promptMode ? '#idlm-action-dialog-input' : '[data-idlm-action-confirm]'});
+            open(dialog, {trigger: options.trigger, initialFocus: promptMode ? '#' + control.id : '[data-idlm-action-confirm]'});
         });
     }
 

@@ -51,7 +51,7 @@ final class IDLM_Dashboard_Read_Model {
         );
 
         return array(
-            'dashboard_contract' => 2,
+            'dashboard_contract' => 3,
             'access' => IDLM_Dashboard::access_context(),
             'period' => sanitize_key($period),
             'ranges' => $ranges,

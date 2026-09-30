@@ -550,11 +550,15 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         }
 
         self::$last_validation_error = '';
+        // Stage moves into the sales pipeline may normalize lead_quality to
+        // Qualified, but the handoff remark belongs to the explicit pre-sales
+        // qualification decision only.
+        $explicit_quality_update = array_key_exists('lead_quality', $data);
         $data = self::normalize_workflow_transition($old_lead, $data);
         if (false === $data) {
             return false;
         }
-        if (!self::validate_quality_transition($lead_id, $old_lead, $data)) {
+        if (!self::validate_quality_transition($lead_id, $old_lead, $data, $explicit_quality_update)) {
             return false;
         }
 

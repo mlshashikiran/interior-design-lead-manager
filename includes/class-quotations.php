@@ -11,6 +11,13 @@ if (!defined('ABSPATH')) {
 
 class IDLM_Quotations {
     const SCHEMA_VERSION = IDLM_Quotation_Schema::VERSION;
+
+    /** Use local asset timestamps so quotation UI changes cannot remain cached. */
+    private static function asset_version($relative_path) {
+        $path = dirname(__DIR__) . '/assets/' . ltrim((string) $relative_path, '/');
+        return is_file($path) ? (string) filemtime($path) : IDLM_VERSION;
+    }
+
     public static function init() {
         if (self::SCHEMA_VERSION !== get_option('idlm_quotation_schema_version', '')) {
             self::install();
@@ -58,9 +65,9 @@ class IDLM_Quotations {
             wp_enqueue_style('idlm-admin-styles');
             wp_enqueue_script('idlm-dialog');
         }
-        wp_enqueue_style('idlm-quotations', IDLM_URL . 'assets/css/quotations.css', array(), IDLM_VERSION);
-        wp_enqueue_script('idlm-quotations', IDLM_URL . 'assets/js/quotations.js', array('idlm-dialog'), IDLM_VERSION, true);
-        wp_localize_script('idlm-quotations', 'idlmQuoteData', array('ajaxUrl' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('idlm_quote_catalogue_search'), 'autosaveNonce' => wp_create_nonce('idlm_quote_autosave')));
+        wp_enqueue_style('idlm-quotations', IDLM_URL . 'assets/css/quotations.css', array(), self::asset_version('css/quotations.css'));
+        wp_enqueue_script('idlm-quotations', IDLM_URL . 'assets/js/quotations.js', array('idlm-dialog'), self::asset_version('js/quotations.js'), true);
+        wp_localize_script('idlm-quotations', 'idlmQuoteData', array('ajaxUrl' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('idlm_quote_catalogue_search'), 'autosaveNonce' => wp_create_nonce('idlm_quote_autosave'), 'currencyCode' => self::settings()['currency_code']));
     }
 
     protected static function table($name) {
@@ -115,9 +122,9 @@ class IDLM_Quotations {
             wp_enqueue_style('idlm-admin-styles');
             wp_enqueue_script('idlm-dialog');
         }
-        wp_enqueue_style('idlm-quotations', IDLM_URL . 'assets/css/quotations.css', array(), IDLM_VERSION);
-        wp_enqueue_script('idlm-quotations', IDLM_URL . 'assets/js/quotations.js', array('idlm-dialog'), IDLM_VERSION, true);
-        wp_localize_script('idlm-quotations', 'idlmQuoteData', array('ajaxUrl' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('idlm_quote_catalogue_search'), 'autosaveNonce' => wp_create_nonce('idlm_quote_autosave')));
+        wp_enqueue_style('idlm-quotations', IDLM_URL . 'assets/css/quotations.css', array(), self::asset_version('css/quotations.css'));
+        wp_enqueue_script('idlm-quotations', IDLM_URL . 'assets/js/quotations.js', array('idlm-dialog'), self::asset_version('js/quotations.js'), true);
+        wp_localize_script('idlm-quotations', 'idlmQuoteData', array('ajaxUrl' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('idlm_quote_catalogue_search'), 'autosaveNonce' => wp_create_nonce('idlm_quote_autosave'), 'currencyCode' => self::settings()['currency_code']));
         ob_start();
         self::render_page();
         return ob_get_clean();
@@ -132,6 +139,7 @@ class IDLM_Quotations {
             'cover_page_enabled' => 0, 'cover_page_html' => '',
             'after_quote_enabled' => 0, 'after_quote_html' => '',
             'payment_structure' => '[]',
+            'currency_code' => 'INR',
             'soft_close_percent' => 0,
             'number_prefix' => 'Q', 'number_separator' => '-', 'number_padding' => 6,
         ));

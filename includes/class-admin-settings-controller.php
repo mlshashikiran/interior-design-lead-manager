@@ -98,6 +98,19 @@ class IDLM_Admin_Settings_Controller {
         $white_label_validation = IDLM_Settings::validate_white_label($white_label_raw);
         self::$white_label_values = $white_label_validation['settings'];
         self::$white_label_errors = $white_label_validation['errors'];
+        // A settings save posts every tab. Administrators who cannot edit an
+        // attachment selected by a previous administrator must be able to
+        // retain that unchanged white-label asset while saving unrelated
+        // settings such as pipeline stages. Changed asset IDs remain subject
+        // to the normal access validation above.
+        $saved_white_label = IDLM_Settings::get_white_label();
+        foreach (array('logo_id', 'compact_logo_id', 'favicon_id') as $asset_field) {
+            $submitted_asset_id = absint($white_label_validation['settings'][$asset_field] ?? 0);
+            $saved_asset_id = absint($saved_white_label[$asset_field] ?? 0);
+            if ($submitted_asset_id === $saved_asset_id) {
+                unset(self::$white_label_errors[$asset_field]);
+            }
+        }
         if (!empty(self::$white_label_errors)) {
             return false;
         }
@@ -401,4 +414,5 @@ class IDLM_Admin_Settings_Controller {
 
         return true;
     }
+
 }

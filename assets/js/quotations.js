@@ -14,6 +14,12 @@
         catalogueToolbar.insertBefore(catalogueSortForm, catalogueToolbar.querySelector('.idlm-bulk-action-bar'));
     }
     function escapeHtml(value) { var node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML; }
+    function currencyCode(value) { value = String(value || '').trim().toUpperCase(); return /^[A-Z]{3}$/.test(value) ? value : 'INR'; }
+    function formatMoney(value, code) {
+        code = currencyCode(code || (idlmQuoteData && idlmQuoteData.currencyCode));
+        try { return new Intl.NumberFormat('en-IN', {style: 'currency', currency: code, maximumFractionDigits: 2}).format(Number(value || 0)); }
+        catch (error) { return code + ' ' + Number(value || 0).toFixed(2); }
+    }
     function liveListUrl(args) {
         var url = new URL(window.location.href);
         Object.keys(args).forEach(function (key) { if (args[key]) { url.searchParams.set(key, args[key]); } else { url.searchParams.delete(key); } });
@@ -21,11 +27,11 @@
     }
     function quotationRow(row) {
         var customer = [row.first_name, row.last_name].filter(Boolean).join(' ') || '—';
-        return '<tr class="idlm-quote-row" data-href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '"><td><strong>' + escapeHtml(row.quote_number) + '</strong><br><small>' + escapeHtml(row.title) + '</small></td><td><strong>' + escapeHtml(customer) + '</strong><br><small>' + escapeHtml([row.phone, row.project_name].filter(Boolean).join(' · ')) + '</small></td><td>' + escapeHtml(row.revision_name || '—') + '</td><td>' + escapeHtml(new Intl.NumberFormat('en-IN', {style: 'currency', currency: 'INR', maximumFractionDigits: 2}).format(Number(row.grand_total || 0))) + '</td><td>' + escapeHtml(row.creator_name || 'Unknown') + '<br><small>' + escapeHtml(row.created_at) + '</small></td><td>' + escapeHtml(row.updated_at) + '</td><td><a class="button" href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '">Open</a></td></tr>';
+        return '<tr class="idlm-quote-row" data-href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '"><td><strong>' + escapeHtml(row.quote_number) + '</strong><br><small>' + escapeHtml(row.title) + '</small></td><td><strong>' + escapeHtml(customer) + '</strong><br><small>' + escapeHtml([row.phone, row.project_name].filter(Boolean).join(' · ')) + '</small></td><td>' + escapeHtml(row.revision_name || '—') + '</td><td>' + escapeHtml(formatMoney(row.grand_total)) + '</td><td>' + escapeHtml(row.creator_name || 'Unknown') + '<br><small>' + escapeHtml(row.created_at) + '</small></td><td>' + escapeHtml(row.updated_at) + '</td><td><a class="idlm-btn idlm-btn-secondary" href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '">Open</a></td></tr>';
     }
     function catalogueRow(row) {
         var editUrl = liveListUrl({workspace: 'catalogue', edit_item: row.id, catalogue_search: document.querySelector('[name="catalogue_search"]').value}).href;
-        return '<tr><td class="idlm-checkbox-column"><input type="checkbox" name="item_ids[]" value="' + escapeHtml(row.id) + '" data-row-select aria-label="Select ' + escapeHtml(row.item_name) + '"></td><td>' + escapeHtml(row.item_code) + '</td><td>' + escapeHtml(row.category) + '</td><td><strong>' + escapeHtml(row.item_name) + '</strong><br><small>' + escapeHtml(row.description) + '</small></td><td>' + escapeHtml(row.unit) + '</td><td>' + (Number(row.is_wood) ? 'Yes' : 'No') + '</td><td>' + escapeHtml(new Intl.NumberFormat('en-IN', {style: 'currency', currency: 'INR', maximumFractionDigits: 2}).format(Number(row.default_rate || 0))) + '</td><td>' + escapeHtml((row.status || '').charAt(0).toUpperCase() + (row.status || '').slice(1)) + '</td><td><div class="idlm-catalogue-actions"><a class="button-link" href="' + escapeHtml(editUrl) + '">Edit</a>' + ('active' === row.status ? '<button class="button-link-delete" name="bulk_action" value="archive" data-single-submit>Archive</button>' : '') + '<button class="button-link-delete" name="bulk_action" value="delete" data-single-submit>Delete</button></div></td></tr>';
+        return '<tr><td class="idlm-checkbox-column"><input type="checkbox" name="item_ids[]" value="' + escapeHtml(row.id) + '" data-row-select aria-label="Select ' + escapeHtml(row.item_name) + '"></td><td>' + escapeHtml(row.item_code) + '</td><td>' + escapeHtml(row.category) + '</td><td><strong>' + escapeHtml(row.item_name) + '</strong><br><small>' + escapeHtml(row.description) + '</small></td><td>' + escapeHtml(row.unit) + '</td><td>' + (Number(row.is_wood) ? 'Yes' : 'No') + '</td><td>' + escapeHtml(formatMoney(row.default_rate)) + '</td><td>' + escapeHtml((row.status || '').charAt(0).toUpperCase() + (row.status || '').slice(1)) + '</td><td><div class="idlm-catalogue-actions"><a class="button-link" href="' + escapeHtml(editUrl) + '">Edit</a>' + ('active' === row.status ? '<button class="button-link-delete" name="bulk_action" value="archive" data-single-submit>Archive</button>' : '') + '<button class="button-link-delete" name="bulk_action" value="delete" data-single-submit>Delete</button></div></td></tr>';
     }
     document.querySelectorAll('[data-live-list]').forEach(function (filterForm) {
         var type = filterForm.dataset.liveList;
@@ -59,7 +65,7 @@
                 rows.innerHTML = data.rows.length ? data.rows.map(rowMarkup).join('') : '<tr><td colspan="' + (type === 'catalogue' ? 9 : 7) + '">No ' + (type === 'catalogue' ? 'catalogue items' : 'quotations') + ' found.</td></tr>';
                 if ('quotations' === type) { bindQuotationRows(rows); }
                 var pages = Math.max(1, Math.ceil(Number(data.total) / Number(data.perPage)));
-                pagination.innerHTML = pages > 1 ? '<button type="button" class="button" data-live-list-page="' + Math.max(1, data.page - 1) + '" ' + (data.page <= 1 ? 'disabled' : '') + '>Previous</button> <span>Page ' + data.page + ' of ' + pages + '</span> <button type="button" class="button" data-live-list-page="' + Math.min(pages, data.page + 1) + '" ' + (data.page >= pages ? 'disabled' : '') + '>Next</button>' : '';
+                pagination.innerHTML = pages > 1 ? '<button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + Math.max(1, data.page - 1) + '" ' + (data.page <= 1 ? 'disabled' : '') + '>Previous</button> <span>Page ' + data.page + ' of ' + pages + '</span> <button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + Math.min(pages, data.page + 1) + '" ' + (data.page >= pages ? 'disabled' : '') + '>Next</button>' : '';
                 if (status) { status.textContent = data.total + ' result' + (Number(data.total) === 1 ? '' : 's') + ' found.'; }
                 var url = liveListUrl({[type === 'catalogue' ? 'catalogue_search' : 'quote_search']: searchInput.value, [type === 'catalogue' ? 'catalogue_page' : 'quote_page']: data.page > 1 ? data.page : null});
                 window.history.replaceState({}, '', url.href);
@@ -170,6 +176,11 @@
     });
     var paymentStructure = document.querySelector('[data-payment-structure]');
     if (paymentStructure) {
+        var paymentTotal = document.querySelector('[data-payment-total]');
+        function updatePaymentTotal() {
+            var total = Array.from(paymentStructure.querySelectorAll('input[name$="[percentage]"]')).reduce(function (sum, input) { return sum + Math.max(0, Number(input.value) || 0); }, 0);
+            if (paymentTotal) { paymentTotal.textContent = 'Milestone total: ' + total.toFixed(2) + '% of 100%.'; paymentTotal.classList.toggle('idlm-payment-total-error', total > 100); }
+        }
         function renumberPaymentRows() {
             paymentStructure.querySelectorAll('.idlm-payment-structure-row').forEach(function (row, index) {
                 row.querySelectorAll('[name]').forEach(function (input) { input.name = input.name.replace(/payment_structure\[\d+\]/, 'payment_structure[' + index + ']'); });
@@ -179,15 +190,17 @@
             var source = paymentStructure.querySelector('.idlm-payment-structure-row:last-child');
             var row = source.cloneNode(true);
             row.querySelectorAll('input').forEach(function (input) { input.value = ''; });
-            paymentStructure.appendChild(row); renumberPaymentRows();
+            paymentStructure.appendChild(row); renumberPaymentRows(); updatePaymentTotal();
         });
         paymentStructure.addEventListener('click', function (event) {
             if (!event.target.matches('[data-remove-payment-row]')) { return; }
             var rows = paymentStructure.querySelectorAll('.idlm-payment-structure-row');
             if (rows.length > 1) { event.target.closest('.idlm-payment-structure-row').remove(); }
             else { rows[0].querySelectorAll('input').forEach(function (input) { input.value = ''; }); }
-            renumberPaymentRows();
+            renumberPaymentRows(); updatePaymentTotal();
         });
+        paymentStructure.addEventListener('input', updatePaymentTotal);
+        updatePaymentTotal();
     }
     var form = document.getElementById('idlm-quote-form');
     if (!form) { return; }
@@ -262,6 +275,7 @@
             }
         });
         form.addEventListener('submit', function (event) {
+            if (!ensureRevisionReason(event)) { return; }
             window.clearTimeout(autosaveTimer);
             if (finalSubmitStarted) {
                 event.preventDefault();
@@ -334,26 +348,8 @@
     var selectedBulkItems = new Map();
     var bulkReturnFocus = null;
     var leadSearch = document.getElementById('idlm-lead-search');
-    var leadSelect = document.getElementById('idlm-quote-lead');
+    var leadField = document.getElementById('idlm-quote-lead');
     var createdByField = document.getElementById('idlm-quote-created-by');
-    var revisionReason = form.elements.revision_reason;
-    if (form.elements.quote_id.value && revisionReason) {
-        revisionReason.required = true;
-        revisionReason.value = '';
-        revisionReason.placeholder = 'Explain what changed and why';
-        var remarkLabel = revisionReason.closest('label');
-        var identityPanel = document.querySelector('.idlm-quote-identity');
-        if (remarkLabel && identityPanel) {
-            var remarkPanel = document.createElement('section');
-            remarkPanel.className = 'idlm-quote-panel idlm-edit-remark';
-            remarkPanel.innerHTML = '<h2>Edit remark</h2><p>Saving creates a new revision and preserves the previous version.</p>';
-            remarkPanel.appendChild(remarkLabel);
-            identityPanel.insertAdjacentElement('afterend', remarkPanel);
-        }
-        var saveButton = form.querySelector('.idlm-quote-actions button[type="submit"]');
-        if (saveButton) { saveButton.textContent = 'Save as New Revision'; }
-    }
-
     function num(input) { var value = parseFloat(input && input.value); return Number.isFinite(value) ? value : 0; }
     function field(row, suffix) { return row.querySelector('[name$="[' + suffix + ']"]'); }
     function escapeHtml(value) { var node = document.createElement('div'); node.textContent = value; return node.innerHTML; }
@@ -367,7 +363,7 @@
         }
     }
 
-    if (leadSearch && leadSelect) {
+    if (leadSearch && leadField) {
         var leadResults = document.createElement('div');
         leadResults.className = 'idlm-lead-search-results';
         leadResults.hidden = true;
@@ -392,33 +388,23 @@
                 }).catch(function (error) { if ('AbortError' !== error.name) { leadResults.innerHTML = '<p>' + escapeHtml(error.message || 'Lead search failed.') + '</p>'; leadResults.hidden = false; } });
             }, 250);
         });
+        function applyLead(lead) {
+            leadField.value = lead.id;
+            form.elements.customer_name.value = [lead.first_name, lead.last_name].filter(Boolean).join(' ');
+            form.elements.customer_email.value = lead.email || '';
+            form.elements.customer_phone.value = lead.phone || '';
+            form.elements.project_name.value = lead.project_name || '';
+            form.elements.property_location.value = lead.property_location || '';
+            document.getElementById('idlm-quote-studio').textContent = lead.preferred_studio || '—';
+            document.getElementById('idlm-quote-sales-rep').textContent = lead.assigned_rep_name || 'Unassigned';
+            leadSearch.value = [lead.first_name, lead.last_name].filter(Boolean).join(' ') + (lead.project_name ? ' — ' + lead.project_name : '');
+        }
         leadResults.addEventListener('click', function (event) {
             var result = event.target.closest('[data-lead-id]');
             if (!result) { return; }
             var lead = leadSearchRows.get(result.dataset.leadId);
-            if (lead && !Array.from(leadSelect.options).some(function (option) { return option.value === String(lead.id); })) {
-                var option = document.createElement('option');
-                option.value = lead.id;
-                option.textContent = [lead.first_name, lead.last_name].filter(Boolean).join(' ') + (lead.project_name ? ' — ' + lead.project_name : '');
-                option.dataset.name = [lead.first_name, lead.last_name].filter(Boolean).join(' ');
-                option.dataset.email = lead.email || ''; option.dataset.phone = lead.phone || ''; option.dataset.property = lead.project_name || ''; option.dataset.location = lead.property_location || ''; option.dataset.studio = lead.preferred_studio || ''; option.dataset.rep = lead.assigned_rep_name || 'Unassigned';
-                leadSelect.appendChild(option);
-            }
-            leadSelect.value = result.dataset.leadId;
-            leadSelect.dispatchEvent(new Event('change', {bubbles: true}));
-            leadSearch.value = leadSelect.options[leadSelect.selectedIndex].textContent.trim();
+            if (lead) { applyLead(lead); }
             leadResults.hidden = true;
-        });
-        leadSelect.addEventListener('change', function () {
-            var option = leadSelect.options[leadSelect.selectedIndex];
-            if (!option || !option.value) { return; }
-            form.elements.customer_name.value = option.dataset.name || '';
-            form.elements.customer_email.value = option.dataset.email || '';
-            form.elements.customer_phone.value = option.dataset.phone || '';
-            form.elements.project_name.value = option.dataset.property || '';
-            form.elements.property_location.value = option.dataset.location || '';
-            document.getElementById('idlm-quote-studio').textContent = option.dataset.studio || '—';
-            document.getElementById('idlm-quote-sales-rep').textContent = option.dataset.rep || 'Unassigned';
         });
         document.addEventListener('click', function (event) { if (event.target !== leadSearch && !leadResults.contains(event.target)) { leadResults.hidden = true; } });
         leadSearch.addEventListener('keydown', function (event) { if (event.key === 'Escape') { leadResults.hidden = true; } });
@@ -439,22 +425,29 @@
 
     function calculate() {
         function round2(value) { return Math.round((value + Number.EPSILON) * 100) / 100; }
+        var currencyInput = form.elements.currency_code;
+        var currentCurrency = currencyCode(currencyInput ? currencyInput.value : idlmQuoteData.currencyCode);
+        function money(value) { return formatMoney(value, currentCurrency); }
+        function updateCurrencySymbols() {
+            var symbol = money(0).replace(/[\d,.\s]/g, '') || currentCurrency + ' ';
+            form.querySelectorAll('.idlm-currency-input > span').forEach(function (element) { element.textContent = symbol; });
+        }
+        updateCurrencySymbols();
         var subtotal = 0, taxable = 0, woodGroups = {Wood: {base: 0}, Others: {base: 0}}, sectionTotals = [];
         sections.querySelectorAll('.idlm-quote-section').forEach(function (section) {
             var sectionTotal = 0;
             section.querySelectorAll('.idlm-quote-item-row').forEach(function (row) {
                 if (field(row, 'row_type') && 'header' === field(row, 'row_type').value) { return; }
-                var length = Math.max(0, num(field(row, 'length'))), height = Math.max(0, num(field(row, 'height'))), quantityField = field(row, 'quantity');
-                if (length > 0 && height > 0) { quantityField.value = (length * height).toFixed(2); }
-                var qty = Math.max(0, num(quantityField)), rate = Math.max(0, num(field(row, 'unit_rate'))), base = qty * rate;
+                var quantityField = field(row, 'quantity');
+                var qty = Math.max(0.01, num(quantityField)), rate = Math.max(0, num(field(row, 'unit_rate'))), base = qty * rate;
                 var net = base;
                 var optionalField = field(row, 'is_optional'), optional = 'checkbox' === optionalField.type ? optionalField.checked : '1' === optionalField.value, total = net;
-                row.querySelector('.idlm-line-total').textContent = optional ? 'Optional' : '₹' + total.toFixed(2); row.classList.toggle('is-optional', optional);
+                row.querySelector('.idlm-line-total').textContent = optional ? 'Optional' : money(total); row.classList.toggle('is-optional', optional);
                 if (!optional) { subtotal += base; sectionTotal += total; var woodGroup = Number(field(row, 'is_wood').value) === 1 ? 'Wood' : 'Others'; woodGroups[woodGroup].base += net; }
             });
             var sectionName = String(section.querySelector('.idlm-section-name').value || 'Untitled Section').trim() || 'Untitled Section';
             section.querySelector('.idlm-section-subtotal-label').textContent = sectionName + ' Subtotal';
-            section.querySelector('.idlm-section-subtotal').textContent = '₹' + sectionTotal.toFixed(2);
+            section.querySelector('.idlm-section-subtotal').textContent = money(sectionTotal);
             sectionTotals.push({name: sectionName, total: sectionTotal});
         });
         Object.keys(woodGroups).forEach(function (group) {
@@ -478,27 +471,27 @@
         var grand = Math.round(preRoundTotal);
         var roundOff = round2(grand - preRoundTotal);
         var hasAdditionalDiscount = additionalDiscount > 0;
-        form.querySelector('[data-total="subtotal"]').textContent = '₹' + subtotal.toFixed(2);
-        form.querySelector('[data-total="wooden-subtotal"]').textContent = '₹' + woodenSubtotal.toFixed(2);
-        form.querySelector('[data-total="wooden-discount"]').textContent = '₹' + woodenDiscount.toFixed(2);
-        form.querySelector('[data-total="after-wooden-discount"]').textContent = '₹' + afterWoodenDiscount.toFixed(2);
-        form.querySelector('[data-total="other-subtotal"]').textContent = '₹' + otherSubtotal.toFixed(2);
-        form.querySelector('[data-total="soft-close"]').textContent = '₹' + softClose.toFixed(2);
-        form.querySelector('[data-total="total"]').textContent = '₹' + total.toFixed(2);
+        form.querySelector('[data-total="subtotal"]').textContent = money(subtotal);
+        form.querySelector('[data-total="wooden-subtotal"]').textContent = money(woodenSubtotal);
+        form.querySelector('[data-total="wooden-discount"]').textContent = money(woodenDiscount);
+        form.querySelector('[data-total="after-wooden-discount"]').textContent = money(afterWoodenDiscount);
+        form.querySelector('[data-total="other-subtotal"]').textContent = money(otherSubtotal);
+        form.querySelector('[data-total="soft-close"]').textContent = money(softClose);
+        form.querySelector('[data-total="total"]').textContent = money(total);
         form.querySelector('[data-after-additional-discount-row]').hidden = !hasAdditionalDiscount;
-        form.querySelector('[data-total="after-additional-discount"]').textContent = '₹' + afterAdditionalDiscount.toFixed(2);
-        form.querySelector('[data-total="tax"]').textContent = '₹' + gst.toFixed(2);
+        form.querySelector('[data-total="after-additional-discount"]').textContent = money(afterAdditionalDiscount);
+        form.querySelector('[data-total="tax"]').textContent = money(gst);
         var roundOffOutput = form.querySelector('[data-total="round-off"]');
         if (!roundOffOutput) {
             var roundOffRow = document.createElement('div');
-            roundOffRow.innerHTML = '<dt>Round Off</dt><dd data-total="round-off">₹0.00</dd>';
+            roundOffRow.innerHTML = '<dt>Round Off</dt><dd data-total="round-off"></dd>';
             form.querySelector('.idlm-grand-total').before(roundOffRow);
             roundOffOutput = roundOffRow.querySelector('[data-total="round-off"]');
         }
-        roundOffOutput.textContent = '₹' + roundOff.toFixed(2);
-        form.querySelector('[data-total="grand"]').textContent = '₹' + grand.toFixed(2);
-        document.getElementById('idlm-wood-totals').innerHTML = Object.keys(woodGroups).map(function (group) { return '<div><span>' + group + '</span><strong>₹' + woodGroups[group].total.toFixed(2) + '</strong></div>'; }).join('');
-        document.getElementById('idlm-section-totals').innerHTML = sectionTotals.map(function (section) { return '<div><span>' + escapeHtml(section.name) + '</span><strong>₹' + section.total.toFixed(2) + '</strong></div>'; }).join('') || '<p>No section totals yet.</p>';
+        roundOffOutput.textContent = money(roundOff);
+        form.querySelector('[data-total="grand"]').textContent = money(grand);
+        document.getElementById('idlm-wood-totals').innerHTML = Object.keys(woodGroups).map(function (group) { return '<div><span>' + group + '</span><strong>' + escapeHtml(money(woodGroups[group].total)) + '</strong></div>'; }).join('');
+        document.getElementById('idlm-section-totals').innerHTML = sectionTotals.map(function (section) { return '<div><span>' + escapeHtml(section.name) + '</span><strong>' + escapeHtml(money(section.total)) + '</strong></div>'; }).join('') || '<p>No section totals yet.</p>';
     }
 
     var addAdditionalDiscount = form.querySelector('[data-add-additional-discount]');

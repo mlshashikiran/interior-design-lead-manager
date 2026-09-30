@@ -278,11 +278,9 @@ class IDLM_DB {
 
         $candidate_stage = isset($data['stage']) ? $data['stage'] : $old_lead->stage;
         $candidate_quality = isset($data['lead_quality']) ? $data['lead_quality'] : $old_lead->lead_quality;
-        $qualified_stages = array(
-            IDLM_State_Registry::STAGE_QUALIFIED, IDLM_State_Registry::STAGE_VISITED,
-            IDLM_State_Registry::STAGE_QUOTE_SHARED, IDLM_State_Registry::STAGE_NEGOTIATION,
-            IDLM_State_Registry::STAGE_WON,
-        );
+        // Qualification is an explicit pre-sales decision. Downstream sales
+        // stages must not implicitly qualify a lead or trigger handoff checks.
+        $qualified_stages = array(IDLM_State_Registry::STAGE_QUALIFIED);
 
         if (in_array($candidate_stage, $qualified_stages, true)) {
             $data['lead_quality'] = 'Qualified';
@@ -1037,7 +1035,7 @@ class IDLM_DB {
         }
     }
 
-    protected static function validate_quality_transition($lead_id, $old_lead, $data) {
+    protected static function validate_quality_transition($lead_id, $old_lead, $data, $explicit_quality_update = true) {
         $qualified_stages = array(
             IDLM_State_Registry::STAGE_QUALIFIED, IDLM_State_Registry::STAGE_VISITED,
             IDLM_State_Registry::STAGE_QUOTE_SHARED, IDLM_State_Registry::STAGE_NEGOTIATION,
@@ -1069,7 +1067,7 @@ class IDLM_DB {
                     $missing[] = $label;
                 }
             }
-            if (empty($candidate['floor_plan_received']) && empty(trim((string) ($candidate['qualification_handoff_remark'] ?? '')))) {
+            if ($explicit_quality_update && empty($candidate['floor_plan_received']) && empty(trim((string) ($candidate['qualification_handoff_remark'] ?? '')))) {
                 self::$last_validation_error = 'Add a handoff remark before qualifying a lead without a floor plan.';
                 return false;
             }

@@ -54,7 +54,10 @@ final class IDLM_Quotation_Calculator {
                 );
                 continue;
             }
-            $quantity = max(0.001, (float) ($raw['quantity'] ?? 1));
+            // The editor requires a positive, two-decimal quantity. Keep the
+            // server normalization identical so the saved value cannot differ
+            // from the amount shown to the user.
+            $quantity = self::clean_decimal($raw['quantity'] ?? 1, 0.01);
             $length = self::clean_decimal($raw['length'] ?? 0);
             $height = self::clean_decimal($raw['height'] ?? 0);
             $unit_rate = self::clean_decimal($raw['unit_rate'] ?? 0);

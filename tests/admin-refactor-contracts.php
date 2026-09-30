@@ -44,7 +44,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
         'redirect_legacy_admin_page', 'admin_utility_url', 'render_admin_utility_page',
         'render_dashboard_page', 'render_users_access_page', 'render_leads_list_page', 'render_common_overlays', 'render_kanban_page',
         'render_capi_logs_page', 'render_audience_sync_logs_page', 'render_settings_page',
-        'ajax_get_lead_details', 'ajax_get_lead_activity', 'ajax_get_capi_log_payload', 'ajax_get_audience_log_payload', 'ajax_quick_edit_lead',
+        'ajax_get_lead_details', 'ajax_mark_whatsapp_messages_read', 'ajax_get_lead_activity', 'ajax_get_capi_log_payload', 'ajax_get_audience_log_payload', 'ajax_quick_edit_lead',
         'ajax_log_presales_touch', 'ajax_presales_decision', 'ajax_save_activity_comment',
         'ajax_edit_activity_comment', 'ajax_delete_activity_comment', 'ajax_export_google_conversions',
         'ajax_export_leads', 'ajax_add_lead_manual', 'ajax_trigger_manual_audience_sync',
@@ -65,7 +65,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
     })));
 
     assert_same($expected, $actual, 'The IDLM_Admin public compatibility surface changed.');
-    assert_same(84, count($actual));
+    assert_same(85, count($actual));
     assert_true(count(file(dirname(__DIR__) . '/includes/class-admin.php')) <= 3240, 'The Phase 2 admin facade exceeded its 3,240-line size contract.');
 });
 
@@ -111,7 +111,7 @@ idlm_test('admin Phase 2 leads renderer retains delegates and presentation-only 
     assert_contains('idlm-lead-drawer', (string) file_get_contents($root . '/templates/admin/common-overlays.php'));
 });
 
-idlm_test('Kanban header reports overall leads and current-month wins by conversion date', static function(): void {
+idlm_test('Kanban header reports overall leads and filtered current-month wins by conversion date', static function(): void {
     $root = dirname(__DIR__);
     $ajax_source = (string) file_get_contents($root . '/includes/class-admin-ajax.php');
     $template = (string) file_get_contents($root . '/templates/admin/kanban.php');
@@ -120,6 +120,7 @@ idlm_test('Kanban header reports overall leads and current-month wins by convers
     assert_contains('COUNT(*) AS total_filtered', $ajax_source);
     assert_contains("l.conversion_time >= %s", $ajax_source);
     assert_contains("l.conversion_time < %s", $ajax_source);
+    assert_contains('$monthly_won_conditions = $where;', $ajax_source);
     assert_contains("'won_revenue_current_month'", $ajax_source);
     assert_contains('Overall Leads — Filtered', $template);
     assert_contains('Won Revenue This Month', $template);
@@ -220,6 +221,25 @@ idlm_test('lead drawer Tasks tab shows a live overdue-task notification count', 
     assert_contains('.idlm-drawer-tab-notification', $styles);
 });
 
+idlm_test('lead drawer WhatsApp tab lists recorded messages and marks them read only when opened', static function(): void {
+    $root = dirname(__DIR__);
+    $drawer_source = (string) file_get_contents($root . '/includes/class-admin-lead-reads.php');
+    $script_source = (string) file_get_contents($root . '/assets/js/admin-app.js');
+
+    assert_contains("'drawer-tab-whatsapp'", $drawer_source);
+    assert_contains('idlm-drawer-whatsapp-list', $drawer_source);
+    assert_contains('idlm-drawer-whatsapp-count', $drawer_source);
+    assert_contains("get_option('idlm_interakt_enabled', '0')", $drawer_source);
+    assert_contains('idlm-drawer-open-interakt', $drawer_source);
+    assert_contains('IDLM_Interakt::inbox_url($lead->phone)', $drawer_source);
+    assert_contains('https://app.interakt.ai/inbox?channelPhoneNumber=', (string) file_get_contents($root . '/includes/class-interakt.php'));
+    assert_contains('channelPhoneNumber=', (string) file_get_contents($root . '/includes/class-interakt.php'));
+    assert_contains('&chatType=All', (string) file_get_contents($root . '/includes/class-interakt.php'));
+    assert_false(false !== strpos($drawer_source, 'idlm-whatsapp-reply-alert'));
+    assert_contains("action: 'idlm_mark_whatsapp_messages_read'", $script_source);
+    assert_contains("tabId === 'drawer-tab-whatsapp'", $script_source);
+});
+
 idlm_test('lead drawer task list orders overdue and pending work before completed tasks', static function(): void {
     $ajax_source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-ajax.php');
 
@@ -269,7 +289,7 @@ idlm_test('admin hooks, AJAX actions, shortcodes, and menu callbacks remain regi
     $expected_actions = array(
         'admin_menu', 'admin_init', 'wp_enqueue_scripts',
         'admin_post_idlm_update_my_account', 'admin_post_idlm_rotate_api_credential', 'admin_post_idlm_create_user', 'admin_post_idlm_update_user', 'admin_post_idlm_update_role_scopes',
-        'wp_ajax_idlm_get_lead_details', 'wp_ajax_idlm_get_lead_activity', 'wp_ajax_idlm_get_capi_log_payload', 'wp_ajax_idlm_get_audience_log_payload',
+        'wp_ajax_idlm_get_lead_details', 'wp_ajax_idlm_mark_whatsapp_messages_read', 'wp_ajax_idlm_get_lead_activity', 'wp_ajax_idlm_get_capi_log_payload', 'wp_ajax_idlm_get_audience_log_payload',
         'wp_ajax_idlm_quick_edit_lead', 'wp_ajax_idlm_save_activity_comment',
         'wp_ajax_idlm_edit_activity_comment', 'wp_ajax_idlm_delete_activity_comment',
         'wp_ajax_idlm_export_leads', 'wp_ajax_idlm_export_google_conversions',
@@ -660,13 +680,17 @@ idlm_test('frontend UI UX Phase 3 preserves responsive workflow and interaction 
     assert_contains('.idlm-kanban-card-badges {', $kanban_styles);
     assert_contains('flex-wrap: wrap;', $kanban_styles);
 
-    foreach (array('idlm-quote-item-card', 'data-label="Item"', 'data-label="Area / quantity"', 'data-label="Rate"', 'data-label="Item actions"') as $contract) {
+    foreach (array('idlm-quote-item-card', 'data-label="Item"', 'data-label="Quantity"', 'data-label="Rate"', 'data-label="Item actions"') as $contract) {
         assert_contains($contract, $quotation_renderer);
     }
     assert_contains('data-label="Header actions"', $quotation_script);
     assert_contains('Phase 3 structured item-card editor', $quotation_styles);
     assert_contains('@media(max-width:782px)', $quotation_styles);
     assert_contains('@media(prefers-reduced-motion:reduce)', $quotation_styles);
+    assert_contains('class="idlm-btn idlm-btn-primary"', $quotation_renderer);
+    assert_contains('class="idlm-btn idlm-btn-secondary"', $quotation_renderer);
+    assert_contains('class="idlm-btn idlm-btn-secondary"', $quotation_script);
+    assert_contains('.button:not(.idlm-btn)', $quotation_styles);
 
     foreach (array("action: 'idlm_get_leads_table'", "action: 'idlm_get_kanban_leads'", "action: 'idlm_quick_edit_lead'") as $contract) {
         assert_contains($contract, $leads_script . $kanban_script);

@@ -337,6 +337,23 @@ idlm_test('qualification without a floor plan requires and records a handoff rem
     assert_true(in_array('qualification_handoff_remark', $types, true));
 });
 
+idlm_test('sales stage moves do not re-request the qualification handoff remark', static function(): void {
+    idlm_test_login(9, array('administrator'), array('manage_options'));
+    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array(
+        'stage' => 'Contacted',
+        'floor_plan_received' => 0,
+        'lead_quality' => '',
+    ))));
+    assert_true(IDLM_DB::update_lead(1, array(
+        'stage' => 'Quote Shared',
+        'quote_shared' => 1,
+        'quote_value' => 125000,
+    )));
+    $lead = $GLOBALS['wpdb']->rows('idlm_leads')[0];
+    assert_same('', $lead['lead_quality']);
+    assert_same('Quote Shared', $lead['stage']);
+});
+
 idlm_test('qualified owner reassignment completes handoff and transfers pending work', static function(): void {
     idlm_test_login(99, array('sales_manager'), array('idlm_access_leads', 'idlm_assign_leads'));
     $GLOBALS['idlm_test_users'][7] = (object) array('ID' => 7, 'roles' => array('idlm_pre_sales'), 'display_name' => 'Pre Sales', 'user_email' => 'pre@example.test');
@@ -716,6 +733,17 @@ idlm_test('quotation line items calculate quantity multiplied by rate and saniti
     assert_same(0, $items[2]['line_total']);
 });
 
+idlm_test('quotation quantities use the same positive two-decimal minimum as the editor', static function(): void {
+    $items = IDLM_Quotation_Calculator::parse_items(array(
+        array('description' => 'Zero quantity', 'quantity' => '0', 'unit_rate' => '100'),
+        array('description' => 'Negative quantity', 'quantity' => '-2', 'unit_rate' => '100'),
+    ));
+
+    assert_same(0.01, $items[0]['quantity']);
+    assert_same(1.0, $items[0]['line_total']);
+    assert_same(0.01, $items[1]['quantity']);
+});
+
 idlm_test('quotation totals apply wooden discount, optional soft close addition, additional discount, and fixed GST', static function(): void {
     $items = invoke_private('IDLM_Quotations', 'parse_items', array(array(
         array('description' => 'Woodwork', 'quantity' => '2', 'unit_rate' => '1000', 'is_wood' => '1'),
@@ -1000,7 +1028,6 @@ idlm_test('quotation autosave stores a scoped working copy with server-calculate
         'quote_id' => 1,
         'revision_id' => 1,
         'lead_id' => 1,
-        'title' => 'Proposal',
         'items' => array(array('description' => 'Design', 'quantity' => '2', 'unit_rate' => '1000')),
         'sections' => array(array('key' => 'general', 'section_name' => 'General')),
     );
@@ -1008,7 +1035,7 @@ idlm_test('quotation autosave stores a scoped working copy with server-calculate
     assert_same(2360.0, $response->data['grandTotal']);
     $copy = $GLOBALS['idlm_test_transients']['idlm_quote_autosave_5_1'];
     assert_same(2360.0, $copy['revision']['grand_total']);
-    assert_same('Proposal', $copy['title']);
+    assert_false(isset($copy['title']));
 });
 
 idlm_test('core schema baseline declares required lifecycle columns, defaults, and indexes', static function(): void {
@@ -1270,7 +1297,7 @@ idlm_test('quotation print source is semantic and has no DOM rewrite script', st
     $source = file_get_contents(dirname(__DIR__) . '/includes/class-quotation-renderer.php');
     assert_contains('idlm-print-document-head', $source);
     assert_contains('Section-wise subtotal before discount', $source);
-    assert_contains('idlm-print-additional-notes', $source);
+    assert_false(false !== strpos($source, 'idlm-print-additional-notes'));
     assert_false(false !== strpos($source, 'document.querySelector'));
     assert_false(false !== strpos($source, '<script'));
 });

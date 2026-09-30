@@ -1,5 +1,57 @@
 # Engineering Change Log
 
+## 2026-09-21 — Canonical inbound lead matching
+
+Builder: Shashi.
+
+- Changed inbound matching to enrich one existing lead when either normalized email or phone identifies it. Repeat submissions retain attribution touchpoints but cannot create duplicate lead rows, routing assignments, or pre-sales tasks.
+- Added the versioned `idlm_inbound_submission_reviews` table for submissions whose email and phone identify different existing leads. It retains a redacted payload and candidate IDs while remaining outside the lead lifecycle.
+- Plugin version advanced from `1.102.37` to `1.102.38`; core database schema advanced from `1.3.3` to `1.3.4`.
+
+## 2026-09-11 — Interakt lead conversation handoff
+
+Builder: Shashi.
+
+- Added the supplied `channelPhoneNumber` and `chatType=All` parameters to Open in Interakt. The link now opens the matching lead conversation using the existing Interakt phone normalization.
+- Plugin version advanced from `1.102.36` to `1.102.37`; database schema remains unchanged.
+
+## 2026-09-11 — Interakt filtered Inbox handoff
+
+Builder: Shashi.
+
+- Changed Open in Interakt to use the provided WhatsApp Inbox filter URL with most-recent activity first.
+- Plugin version advanced from `1.102.35` to `1.102.36`; database schema remains unchanged.
+
+## 2026-09-11 — Interakt drawer handoff
+
+Builder: Shashi.
+
+- Added an Open in Interakt action in the WhatsApp tab header when Interakt is enabled and the lead has recorded inbound WhatsApp messages. Interakt does not document a supported per-customer conversation URL, so the action opens its authenticated workspace rather than constructing an unsupported deep link.
+- Plugin version advanced from `1.102.34` to `1.102.35`; database schema remains unchanged.
+
+## 2026-09-11 — Snooze date-time picker
+
+Builder: Shashi.
+
+- Added date-time picker support to the shared action dialog and use it when rescheduling a Snoozed task; server-side future-date validation remains unchanged.
+- Plugin version advanced from `1.102.33` to `1.102.34`; database schema remains unchanged.
+
+## 2026-09-11 — Lead drawer WhatsApp history
+
+Builder: Shashi.
+
+- Removed the separate workspace WhatsApp inbox and its template-sending surface.
+- Replaced the inline unread-reply alert with a WhatsApp lead-drawer tab. It shows all inbound WhatsApp activity recorded for that lead, its timestamp, and the per-lead unread-message count.
+- Plugin version advanced from `1.102.32` to `1.102.33`; database schema remains unchanged.
+
+## 2026-09-11 — Lead drawer WhatsApp history
+
+Builder: Shashi.
+
+- Added a capability- and lead-scope-aware WhatsApp Inbox to the frontend workspace. It reads the existing incoming WhatsApp activity history and opens the established lead drawer for context.
+- Added a server-side Interakt template sender that accepts only administrator-configured approved templates and a fixed set of lead-variable substitutions. Browser requests never receive the Interakt API key or arbitrary template content; free-form replies remain in Interakt.
+- Plugin version advanced from `1.102.31` to `1.102.32`; database schema remains unchanged.
+
 ## 2026-09-10 — Task drawer interaction and density refinement
 
 Builder: Shashi.

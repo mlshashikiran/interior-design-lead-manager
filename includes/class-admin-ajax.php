@@ -1612,10 +1612,10 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $cursor_token = isset($_POST['cursor']) ? sanitize_text_field(wp_unslash($_POST['cursor'])) : '';
 
         $where = array();
-        
         // Rep permissions check
         $current_user_id = get_current_user_id();
         $is_admin = current_user_can('manage_options');
+        $is_pre_sales = self::current_user_is_pre_sales();
         $restricted_user_id = IDLM_Lead_Access_Policy::restriction_user_id();
 
         // Duplicate rows remain available to administrators for audit, but reps
@@ -1628,7 +1628,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $active_only = isset($_POST['active_only']) && '1' === sanitize_text_field(wp_unslash($_POST['active_only']));
         if ($is_pre_sales && 'my_qualified_history' === $requested_followup_filter) {
             $where[] = $wpdb->prepare(
-                "lead_quality = 'Qualified' AND (qualified_by_user_id = %d OR intake_owner_id = %d)",
+                "l.lead_quality = 'Qualified' AND (l.qualified_by_user_id = %d OR l.intake_owner_id = %d)",
                 $current_user_id,
                 $current_user_id
             );
@@ -2361,7 +2361,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             $where[] = $wpdb->prepare("(first_name LIKE %s OR last_name LIKE %s OR email LIKE %s OR phone LIKE %s)", $search, $search, $search, $search);
         }
 
-        $monthly_won_conditions = $where;
         $where = array_merge($where, $date_conditions);
         $where_clause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
 
@@ -2419,7 +2418,8 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
              FROM {$table_leads} l {$stats_where}"
         );
 
-        // Current-month wins use the actual Won transition timestamp, independently of the board's date-basis filter.
+        // Current-month wins stay within the board's active filters, including its date range.
+        $monthly_won_conditions = $where;
         $month_start = new DateTime('first day of this month 00:00:00', wp_timezone());
         $next_month_start = clone $month_start;
         $next_month_start->modify('first day of next month');

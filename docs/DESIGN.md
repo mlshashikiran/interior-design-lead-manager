@@ -74,7 +74,7 @@ Soft state backgrounds are `--idlm-success-soft`, `--idlm-warning-soft`, `--idlm
 - Standard card shadow: `--idlm-shadow`.
 - Elevated drawer/modal shadow: `--idlm-shadow-lg`.
 - Standard transition: `--idlm-transition`, approximately `200ms` with a smooth ease.
-- Canonical controls use `--idlm-control-height: 40px`; icon-only and mobile action targets use `--idlm-target-size: 44px`.
+- Canonical shared desktop controls use the compact `--idlm-control-height: 34px`; dense inline table controls may be smaller only where their existing compact variant requires it. Drawer and form controls may use the established 36px editing density. Icon-only and mobile action targets use `--idlm-target-size: 44px`.
 - Layer order uses the named `--idlm-layer-*` scale; responsive references are `480`, `782`, `1024`, and `1280px`.
 - Avoid heavy shadows on dense operational components such as Kanban stats and filters.
 

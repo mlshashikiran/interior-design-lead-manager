@@ -23,11 +23,6 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         if (!self::can_view_lead($lead_id)) {
             wp_die('You cannot create a quotation for this lead.', 403);
         }
-        $title = sanitize_text_field(wp_unslash($_POST['title'] ?? ''));
-        if ('' === $title) {
-            self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'lead_id' => $lead_id, 'idlm_error' => 'A quotation title is required.'));
-        }
-        $revision_reason = sanitize_text_field(wp_unslash($_POST['revision_reason'] ?? ''));
         $save_request_key = sanitize_text_field(wp_unslash($_POST['save_request_key'] ?? ''));
         if (!preg_match('/^[a-f0-9-]{36}$/i', $save_request_key)) {
             $save_request_key = wp_generate_uuid4();
@@ -38,9 +33,6 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             if ($existing_request_quote && self::can_view_lead($existing_request_quote->lead_id)) {
                 self::redirect(array('action' => 'view', 'quote_id' => absint($existing_request_quote->id), 'idlm_notice' => 'This quotation save was already completed.'));
             }
-        }
-        if ($quote_id && '' === $revision_reason) {
-            self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'idlm_error' => 'Enter an edit remark explaining why the quotation was changed.'));
         }
         $quote_settings = self::settings();
         $items = self::parse_items(wp_unslash((array) ($_POST['items'] ?? array())), $quote_settings);
@@ -70,7 +62,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             $quote_id = IDLM_Quotation_Repository::insert_quote(array(
                 'lead_id' => $lead_id,
                 'quote_number' => $number,
-                'title' => $title,
+                'title' => trim((string) ($lead->project_name ?? '')) ?: 'Interior Design Proposal',
                 'status' => 'Draft',
                 'owner_user_id' => absint($lead->assigned_rep_id ?? $user_id),
                 'created_by' => $user_id,
@@ -95,14 +87,9 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
                 $wpdb->query('ROLLBACK');
                 self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'Only the current quotation revision can be edited.'));
             }
-            $source_revision_id = absint($revision->id);
-            $revision_number = IDLM_Quotation_Repository::next_revision_number($quote_id);
-            $revision_name = $quote->quote_number . '-R' . str_pad((string) $revision_number, 2, '0', STR_PAD_LEFT);
-            $revision_id = 0;
-            $quote_updated = IDLM_Quotation_Repository::update_quote($quote_id, array('title' => $title, 'updated_at' => $now), array('%s', '%s'));
-            if (false === $quote_updated) {
-                self::rollback_save('Unable to update the quotation.', array('action' => 'edit', 'quote_id' => $quote_id), 'Quote title update failed');
-            }
+            $source_revision_id = absint($revision->source_revision_id ?? 0);
+            $revision_number = absint($revision->revision_number);
+            $revision_name = $revision->revision_name;
         }
 
         if (empty($lead)) {
@@ -115,10 +102,8 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             'revision_name' => $revision_name,
             'status' => 'Draft',
             'source_revision_id' => absint($source_revision_id ?? 0),
-            'revision_reason' => $revision_reason ?: 'Initial proposal',
-            'currency_code' => sanitize_text_field(wp_unslash($_POST['currency_code'] ?? get_option('idlm_currency_code', 'INR'))),
-            'valid_until' => self::clean_date(wp_unslash($_POST['valid_until'] ?? '')),
-            'customer_intro' => sanitize_textarea_field(wp_unslash($_POST['customer_intro'] ?? (isset($revision->customer_intro) ? $revision->customer_intro : ''))),
+            'revision_reason' => $revision->revision_reason ?? 'Initial proposal',
+            'currency_code' => self::currency_code($quote_settings['currency_code']),
             'customer_name' => sanitize_text_field(wp_unslash($_POST['customer_name'] ?? trim(($lead->first_name ?? '') . ' ' . ($lead->last_name ?? '')))),
             'customer_phone' => sanitize_text_field(wp_unslash($_POST['customer_phone'] ?? ($lead->phone ?? ''))),
             'customer_email' => sanitize_email(wp_unslash($_POST['customer_email'] ?? ($lead->email ?? ''))),
@@ -146,13 +131,6 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             $wpdb->query('ROLLBACK');
             self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'idlm_error' => 'Unable to save the quotation revision.'));
         }
-        if (!empty($source_revision_id)) {
-            $superseded = IDLM_Quotation_Repository::supersede_revision($source_revision_id, $now);
-            if (false === $superseded) {
-                self::rollback_save('Unable to finalize the previous quotation revision.', array('action' => 'edit', 'quote_id' => $quote_id), 'Previous revision supersede failed');
-            }
-        }
-
         $contents_saved = IDLM_Quotation_Repository::replace_revision_contents($revision_id, $sections, $items);
         if (is_wp_error($contents_saved)) {
             self::rollback_save($contents_saved->get_error_message(), array('action' => 'edit', 'quote_id' => $quote_id), $contents_saved->get_error_data());
@@ -164,8 +142,6 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         }
         if ($creating_quote) {
             $history_saved = self::insert_history($quote_id, $revision_id, '', 'Draft', 'Initial quotation created.');
-        } elseif (!empty($source_revision_id)) {
-            $history_saved = self::insert_history($quote_id, $revision_id, 'Draft', 'Draft', $revision_reason);
         } else {
             $history_saved = true;
         }
@@ -176,11 +152,9 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             self::rollback_save('Unable to commit the quotation changes.', array('action' => 'edit', 'quote_id' => $quote_id), 'Quotation transaction commit failed');
         }
         IDLM_Read_Model_Cache::invalidate('quotation_value');
-        if (!empty($source_revision_id)) {
-            delete_transient(self::autosave_key($source_revision_id));
-        }
+        delete_transient(self::autosave_key($revision_id));
         self::log_quote_activity($quote_id, $revision_id, 'Quotation ' . $revision_name . ' saved.');
-        self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_notice' => $creating_quote ? 'Quotation saved.' : 'New revision saved.'));
+        self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_notice' => $creating_quote ? 'Quotation saved.' : 'Draft saved.'));
     }
 
     public static function ajax_autosave_quote() {
@@ -196,22 +170,17 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         if (!$quote || !$revision || absint($quote->lead_id) !== $lead_id || absint($quote->current_revision_id) !== $revision_id || absint($revision->quote_id) !== $quote_id || !self::can_view_lead($lead_id)) {
             wp_send_json_error(array('message' => 'Only the current quotation revision can be autosaved.'), 409);
         }
-        $title = sanitize_text_field(wp_unslash($_POST['title'] ?? ''));
         $items = self::parse_items(wp_unslash((array) ($_POST['items'] ?? array())), self::settings());
         $line_items = array_filter($items, static function($item) {
             return 'item' === ($item['row_type'] ?? 'item');
         });
-        if ('' === $title || !$line_items) {
-            wp_send_json_error(array('message' => 'Autosave is waiting for a title and at least one complete line item.'), 422);
+        if (!$line_items) {
+            wp_send_json_error(array('message' => 'Autosave is waiting for at least one complete line item.'), 422);
         }
         $sections = self::parse_sections($_POST['sections'] ?? array());
         $totals = self::calculate_totals($items, $_POST, self::settings());
         $revision_data = array_merge(array(
-            'currency_code' => sanitize_text_field(wp_unslash($_POST['currency_code'] ?? $revision->currency_code)),
-            'valid_until' => self::clean_date(wp_unslash($_POST['valid_until'] ?? '')),
-            'customer_intro' => array_key_exists('customer_intro', $_POST)
-                ? sanitize_textarea_field(wp_unslash($_POST['customer_intro']))
-                : sanitize_textarea_field($revision->customer_intro ?? ''),
+            'currency_code' => self::currency_code(self::settings()['currency_code']),
             'customer_name' => sanitize_text_field(wp_unslash($_POST['customer_name'] ?? '')),
             'customer_phone' => sanitize_text_field(wp_unslash($_POST['customer_phone'] ?? '')),
             'customer_email' => sanitize_email(wp_unslash($_POST['customer_email'] ?? '')),
@@ -221,7 +190,6 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         ), $totals);
         $saved_at = time();
         $working_copy = array(
-            'title' => $title,
             'revision' => $revision_data,
             'sections' => $sections,
             'items' => $items,
@@ -437,6 +405,11 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         $value = sanitize_text_field($value);
         $date = DateTime::createFromFormat('Y-m-d', $value, wp_timezone());
         return $date && $date->format('Y-m-d') === $value ? $value : null;
+    }
+
+    private static function currency_code($value) {
+        $currency = strtoupper(sanitize_key(wp_unslash($value)));
+        return in_array($currency, array('INR', 'USD', 'EUR', 'GBP', 'AED', 'AUD', 'CAD', 'SGD', 'JPY'), true) ? $currency : 'INR';
     }
 
     public static function handle_save_catalogue_category() {
@@ -707,7 +680,12 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
                 $payment_structure[] = array('name' => $name, 'percentage' => $percentage);
             }
         }
+        $payment_total = array_sum(array_column($payment_structure, 'percentage'));
+        if ($payment_total > 100) {
+            self::redirect(array('workspace' => 'settings', 'idlm_error' => 'Payment milestones cannot total more than 100%.'));
+        }
         $settings['payment_structure'] = wp_json_encode($payment_structure);
+        $settings['currency_code'] = self::currency_code($_POST['currency_code'] ?? $settings['currency_code']);
         $settings['soft_close_percent'] = min(100, self::clean_decimal($_POST['soft_close_percent'] ?? 0));
         $settings['number_prefix'] = preg_replace('/[^A-Za-z0-9_-]/', '', sanitize_text_field(wp_unslash($_POST['number_prefix'] ?? 'Q')));
         $settings['number_separator'] = in_array(($_POST['number_separator'] ?? ''), array('-', '/', '_'), true) ? $_POST['number_separator'] : '-';

@@ -22,6 +22,7 @@ class IDLM_Admin {
 
         // AJAX endpoints
         add_action('wp_ajax_idlm_get_lead_details', array(__CLASS__, 'ajax_get_lead_details'));
+        add_action('wp_ajax_idlm_mark_whatsapp_messages_read', array(__CLASS__, 'ajax_mark_whatsapp_messages_read'));
         add_action('wp_ajax_idlm_get_lead_activity', array(__CLASS__, 'ajax_get_lead_activity'));
         add_action('wp_ajax_idlm_get_capi_log_payload', array(__CLASS__, 'ajax_get_capi_log_payload'));
         add_action('wp_ajax_idlm_get_audience_log_payload', array(__CLASS__, 'ajax_get_audience_log_payload'));
@@ -419,6 +420,7 @@ class IDLM_Admin {
         return IDLM_Admin_Settings_Renderer::render();
     }
     public static function ajax_get_lead_details() { return IDLM_Admin_Ajax::ajax_get_lead_details(); }
+    public static function ajax_mark_whatsapp_messages_read() { return IDLM_Admin_Lead_Reads::ajax_mark_whatsapp_messages_read(); }
     public static function ajax_get_lead_activity() { return IDLM_Admin_Ajax::ajax_get_lead_activity(); }
     public static function ajax_get_capi_log_payload() { return IDLM_Admin_Logs_Renderer::ajax_get_capi_log_payload(); }
     public static function ajax_get_audience_log_payload() { return IDLM_Admin_Logs_Renderer::ajax_get_audience_log_payload(); }

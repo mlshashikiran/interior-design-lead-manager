@@ -19,6 +19,21 @@ class IDLM_Interakt {
         add_action('rest_api_init', array(__CLASS__, 'register_webhook_route'));
     }
 
+    /** Return the filtered Interakt Inbox URL for a customer phone number. */
+    public static function inbox_url($phone) {
+        $formatted_phone = self::format_phone_for_interakt($phone);
+        $channel_phone_number = preg_replace('/\D+/', '', $formatted_phone['countryCode'] . $formatted_phone['phoneNumber']);
+        if (!$channel_phone_number) {
+            return '';
+        }
+        return 'https://app.interakt.ai/inbox?channelPhoneNumber=' . rawurlencode($channel_phone_number) . '&filter=' . rawurlencode(wp_json_encode(array(
+            'chatStatus' => null, 'channel' => array('Whatsapp'), 'label' => array(), 'assignee' => array(),
+            'chatReplyStatus' => array(), 'aiHandover' => null, 'tags' => array(), 'customerServiceWindow' => null,
+            'unreadStatus' => null, 'lastMessageTime' => null, 'showSpamChats' => null,
+            'sortData' => array('field' => 'last_activity_at_utc', 'order' => 'desc'),
+        ))) . '&chatType=All';
+    }
+
     /**
      * Legacy wrapper for "No Answer" status triggers
      */

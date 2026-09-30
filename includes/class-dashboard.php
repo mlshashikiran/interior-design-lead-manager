@@ -21,11 +21,12 @@ class IDLM_Dashboard {
             $marketing = $marketing || $is_marketing;
             $sales = $sales || (!$is_marketing && in_array($role, IDLM_Lead_Access_Policy::allowed_rep_roles(), true));
         }
+        $pre_sales = $allowed && !$manager && IDLM_Lead_Access_Policy::is_pre_sales();
         return array(
             'sales' => $allowed && ($manager || $sales),
-            'marketing' => $allowed && ($manager || $marketing),
+            'marketing' => $allowed && ($manager || $marketing || $pre_sales),
             'manager' => $manager,
-            'pre_sales' => $allowed && !$manager && IDLM_Lead_Access_Policy::is_pre_sales(),
+            'pre_sales' => $pre_sales,
             'scope' => IDLM_Lead_Access_Policy::restriction_user_id() ? 'Your currently assigned leads' : 'All leads permitted by your CRM visibility',
         );
     }
@@ -38,15 +39,23 @@ class IDLM_Dashboard {
         if (!$access['sales']) { unset($stats['sales']); }
         if (!$access['manager']) {
             unset($stats['targets']);
-            foreach (array('leads_by_rep', 'assignment_distribution', 'pre_sales_performance', 'pre_sales_activity', 'studio_performance') as $key) {
+            foreach (array('leads_by_rep', 'assignment_distribution', 'pre_sales_performance', 'studio_performance') as $key) {
                 unset($stats['sales'][$key]);
             }
+            if (!$access['pre_sales']) { unset($stats['sales']['pre_sales_activity']); }
         }
         if ($access['pre_sales']) {
             $stats['sales'] = array_intersect_key($stats['sales'], array_flip(array(
                 'funnel_data', 'open_pipeline_total', 'open_pipeline_as_of', 'open_pipeline_health',
-                'avg_time_connected', 'plan_collection_rate', 'qualified_with_plan', 'qualified_total',
-                'lead_quality_distribution', 'call_status_distribution'
+                'avg_time_connected', 'avg_time_connected_seconds', 'avg_time_connected_previous_seconds', 'plan_collection_rate', 'qualified_with_plan', 'qualified_with_plan_previous', 'qualified_total', 'qualified_total_previous', 'pending_qualification_total', 'pending_qualification_total_previous',
+                'lead_quality_distribution', 'call_status_distribution', 'pipeline_by_channel',
+                'lost_reasons', 'lost_reasons_basis', 'lost_reasons_legacy_count', 'business_mix',
+                'total_won', 'total_won_previous', 'won_revenue_total', 'won_revenue_previous', 'won_legacy_count', 'estimated_pipeline_total',
+                'estimated_pipeline_covered_leads', 'currency_symbol', 'pre_sales_portfolio_activity'
+            )));
+            $stats['marketing'] = array_intersect_key($stats['marketing'], array_flip(array(
+                'total_leads_period', 'total_leads_previous', 'growth_pct', 'qualified_total', 'qualified_total_previous', 'cohort_won_current', 'cohort_won_previous', 'leads_by_channel',
+                'leads_over_time', 'disqualification_reasons'
             )));
         }
         $stats['access'] = $access;
@@ -152,16 +161,33 @@ class IDLM_Dashboard {
         if ('' !== $filters['source']) { $rep_clause .= $wpdb->prepare(' AND source = %s', $filters['source']); }
         if ('' !== $filters['campaign']) { $rep_clause .= $wpdb->prepare(' AND utm_campaign = %s', $filters['campaign']); }
 
+        // Keep the live work queue scoped to currently assigned leads, while
+        // preserving completed handoffs in pre-sales reporting. A qualified
+        // lead is commonly reassigned to Sales, so assigned_rep_id alone would
+        // otherwise erase its qualification and revenue outcome.
+        $reporting_rep_clause = $rep_clause;
+        if ($rep_id && IDLM_Lead_Access_Policy::is_pre_sales()) {
+            $reporting_rep_clause = $wpdb->prepare(
+                ' AND (assigned_rep_id = %d OR intake_owner_id = %d OR qualified_by_user_id = %d)',
+                $rep_id,
+                $rep_id,
+                $rep_id
+            );
+            if ('' !== $filters['studio']) { $reporting_rep_clause .= $wpdb->prepare(' AND preferred_studio = %s', $filters['studio']); }
+            if ('' !== $filters['source']) { $reporting_rep_clause .= $wpdb->prepare(' AND source = %s', $filters['source']); }
+            if ('' !== $filters['campaign']) { $reporting_rep_clause .= $wpdb->prepare(' AND utm_campaign = %s', $filters['campaign']); }
+        }
+
         // 2. Lead Volumes & Growth
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $total_curr = intval($wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(id) FROM $table_leads WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $rep_clause",
+            "SELECT COUNT(id) FROM $table_leads WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $reporting_rep_clause",
             $curr_start, $curr_end
         )));
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $total_prev = intval($wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(id) FROM $table_leads WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $rep_clause",
+            "SELECT COUNT(id) FROM $table_leads WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $reporting_rep_clause",
             $prev_start, $prev_end
         )));
 
@@ -169,6 +195,9 @@ class IDLM_Dashboard {
         if ($total_prev > 0) {
             $percentage_change = (($total_curr - $total_prev) / $total_prev) * 100;
         }
+        $percentage_delta = static function($current, $previous) {
+            return $previous > 0 ? round((($current - $previous) / $previous) * 100, 1) : null;
+        };
 
         // Duplicate Lead Volumes & Growth
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
@@ -202,7 +231,7 @@ class IDLM_Dashboard {
                     SUM(CASE WHEN created_at BETWEEN %s AND %s AND stage = 'Lost' THEN 1 ELSE 0 END) as lost,
                     SUM(CASE WHEN created_at BETWEEN %s AND %s AND utm_source <> '' AND utm_medium <> '' THEN 1 ELSE 0 END) as attributed
              FROM $table_leads 
-             WHERE is_duplicate = 0 $rep_clause
+             WHERE is_duplicate = 0 $reporting_rep_clause
                AND (created_at BETWEEN %s AND %s OR (stage = 'Won' AND conversion_time BETWEEN %s AND %s))
              GROUP BY source 
              ORDER BY won DESC, count DESC",
@@ -321,6 +350,18 @@ class IDLM_Dashboard {
         if ('' !== $filters['studio']) { $event_rep_clause .= $wpdb->prepare(' AND l.preferred_studio = %s', $filters['studio']); }
         if ('' !== $filters['source']) { $event_rep_clause .= $wpdb->prepare(' AND l.source = %s', $filters['source']); }
         if ('' !== $filters['campaign']) { $event_rep_clause .= $wpdb->prepare(' AND l.utm_campaign = %s', $filters['campaign']); }
+        $reporting_event_rep_clause = $event_rep_clause;
+        if ($rep_id && IDLM_Lead_Access_Policy::is_pre_sales()) {
+            $reporting_event_rep_clause = $wpdb->prepare(
+                ' AND (l.assigned_rep_id = %d OR l.intake_owner_id = %d OR l.qualified_by_user_id = %d)',
+                $rep_id,
+                $rep_id,
+                $rep_id
+            );
+            if ('' !== $filters['studio']) { $reporting_event_rep_clause .= $wpdb->prepare(' AND l.preferred_studio = %s', $filters['studio']); }
+            if ('' !== $filters['source']) { $reporting_event_rep_clause .= $wpdb->prepare(' AND l.source = %s', $filters['source']); }
+            if ('' !== $filters['campaign']) { $reporting_event_rep_clause .= $wpdb->prepare(' AND l.utm_campaign = %s', $filters['campaign']); }
+        }
         $lost_reasons_basis = 'recorded_transitions';
         if (self::has_reporting_event_history($table_state_events, 'stage_change')) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
@@ -330,7 +371,7 @@ class IDLM_Dashboard {
                  FROM {$table_state_events} e
                  INNER JOIN {$table_leads} l ON l.id = e.lead_id
                  WHERE e.event_type = 'stage_change' AND e.to_value = 'Lost'
-                   AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$event_rep_clause}
+                   AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}
                  GROUP BY reason
                  ORDER BY count DESC, reason ASC",
                 $curr_start,
@@ -345,7 +386,7 @@ class IDLM_Dashboard {
                 "SELECT COALESCE(NULLIF(TRIM(l.lost_reason), ''), COALESCE(NULLIF(TRIM(l.disqualification_reason), ''), 'Uncategorized')) AS reason,
                         COUNT(l.id) AS count
                  FROM {$table_leads} l
-                 WHERE l.is_duplicate = 0 AND l.stage = 'Lost' AND l.created_at BETWEEN %s AND %s{$event_rep_clause}
+                 WHERE l.is_duplicate = 0 AND l.stage = 'Lost' AND l.created_at BETWEEN %s AND %s{$reporting_event_rep_clause}
                  GROUP BY reason
                  ORDER BY count DESC, reason ASC",
                 $curr_start,
@@ -369,7 +410,7 @@ class IDLM_Dashboard {
         $lost_legacy_rows = $wpdb->get_results($wpdb->prepare(
             "SELECT COALESCE(NULLIF(TRIM(l.lost_reason), ''), COALESCE(NULLIF(TRIM(l.disqualification_reason), ''), 'Uncategorized')) AS reason, COUNT(l.id) AS count
              FROM {$table_leads} l
-             WHERE l.is_duplicate = 0 AND l.stage = 'Lost' AND l.created_at BETWEEN %s AND %s{$event_rep_clause}
+             WHERE l.is_duplicate = 0 AND l.stage = 'Lost' AND l.created_at BETWEEN %s AND %s{$reporting_event_rep_clause}
                AND NOT EXISTS (SELECT 1 FROM {$table_state_events} legacy_event WHERE legacy_event.lead_id = l.id AND legacy_event.event_type = 'stage_change' AND legacy_event.to_value = 'Lost')
              GROUP BY reason ORDER BY count DESC, reason ASC",
             $curr_start,
@@ -405,7 +446,7 @@ class IDLM_Dashboard {
                     SUM(CASE WHEN quote_value > 0 THEN 1 ELSE 0 END) as quoted_leads,
                     SUM(CASE WHEN deal_value > 0 THEN 1 ELSE 0 END) as valued_deals
              FROM $table_leads
-             WHERE is_duplicate = 0 AND COALESCE(stage, '') NOT IN ('Won', 'Lost') $rep_clause
+             WHERE is_duplicate = 0 AND COALESCE(stage, '') NOT IN ('Won', 'Lost') $reporting_rep_clause
              GROUP BY source, stage"
         );
 
@@ -452,7 +493,7 @@ class IDLM_Dashboard {
             "SELECT SUM(COALESCE({$won_revenue_field}, 0)) FROM {$table_state_events} e
              INNER JOIN {$table_leads} l ON l.id = e.lead_id
              WHERE e.event_type = 'stage_change' AND e.to_value = 'Won'
-               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$event_rep_clause}",
+               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}",
             $curr_start,
             $curr_end
         )));
@@ -472,7 +513,7 @@ class IDLM_Dashboard {
                     SUM(CASE WHEN COALESCE(stage, '') NOT IN ('Won', 'Lost') THEN 1 ELSE 0 END) AS open_count,
                     SUM(CASE WHEN stage IN ('Won', 'Lost') THEN 1 ELSE 0 END) AS closed_count
              FROM $table_leads
-             WHERE is_duplicate = 0 $rep_clause
+             WHERE is_duplicate = 0 $reporting_rep_clause
              GROUP BY COALESCE(NULLIF(TRIM(source), ''), 'Direct / Unknown')
              HAVING open_count > 0 OR closed_count > 0
              ORDER BY (open_count + closed_count) DESC, channel ASC"
@@ -733,7 +774,7 @@ class IDLM_Dashboard {
                 FROM {$wpdb->prefix}idlm_lead_activity_log a
                 INNER JOIN {$table_leads} l ON l.id = a.lead_id
                 WHERE l.is_duplicate = 0 AND a.created_at BETWEEN %s AND %s
-                  AND a.user_id IN ({$pre_sales_placeholders}){$event_rep_clause}
+                  AND a.user_id IN ({$pre_sales_placeholders}){$reporting_event_rep_clause}
                 GROUP BY a.user_id";
             // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $activity_rows = $wpdb->get_results($wpdb->prepare($activity_sql, array_merge(array($curr_start, $curr_end), $pre_sales_ids)));
@@ -748,7 +789,7 @@ class IDLM_Dashboard {
                     AVG(TIMESTAMPDIFF(SECOND, l.created_at, l.qualified_at)) AS avg_qualification_seconds
                 FROM {$table_leads} l
                 WHERE l.is_duplicate = 0 AND l.qualified_at BETWEEN %s AND %s
-                  AND l.qualified_by_user_id IN ({$pre_sales_placeholders}){$rep_clause}
+                  AND l.qualified_by_user_id IN ({$pre_sales_placeholders}){$reporting_rep_clause}
                 GROUP BY l.qualified_by_user_id";
             // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $qualification_rows = $wpdb->get_results($wpdb->prepare($qualification_sql, array_merge(array($curr_start, $curr_end), $pre_sales_ids)));
@@ -762,7 +803,7 @@ class IDLM_Dashboard {
             $unqualified_sql = "SELECT l.disqualified_by_user_id AS user_id, COUNT(l.id) AS unqualified
                 FROM {$table_leads} l
                 WHERE l.is_duplicate = 0 AND l.disqualified_at BETWEEN %s AND %s
-                  AND l.disqualified_by_user_id IN ({$pre_sales_placeholders}){$rep_clause}
+                  AND l.disqualified_by_user_id IN ({$pre_sales_placeholders}){$reporting_rep_clause}
                 GROUP BY l.disqualified_by_user_id";
             // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $unqualified_rows = $wpdb->get_results($wpdb->prepare($unqualified_sql, array_merge(array($curr_start, $curr_end), $pre_sales_ids)));
@@ -774,7 +815,7 @@ class IDLM_Dashboard {
                 FROM {$table_leads} l
                 WHERE l.is_duplicate = 0 AND l.handoff_at BETWEEN %s AND %s
                   AND l.handoff_status IN ('auto_assigned', 'manually_assigned')
-                  AND l.intake_owner_id IN ({$pre_sales_placeholders}){$rep_clause}
+                  AND l.intake_owner_id IN ({$pre_sales_placeholders}){$reporting_rep_clause}
                 GROUP BY l.intake_owner_id";
             // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $handoff_rows = $wpdb->get_results($wpdb->prepare($handoff_sql, array_merge(array($curr_start, $curr_end), $pre_sales_ids)));
@@ -795,6 +836,35 @@ class IDLM_Dashboard {
             });
         }
 
+        // Older records did not always retain the acting pre-sales user. The
+        // individual workspace therefore reports recorded activity and outcomes
+        // on the user's attributed lead portfolio. The manager team widget
+        // above intentionally remains actor-attributed.
+        $pre_sales_portfolio_activity = array();
+        if ($rep_id && IDLM_Lead_Access_Policy::is_pre_sales()) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $pre_sales_portfolio_activity = (array) $wpdb->get_row($wpdb->prepare(
+                "SELECT
+                    COUNT(DISTINCT CASE WHEN a.id IS NOT NULL THEN l.id END) AS leads_touched,
+                    SUM(CASE WHEN a.activity_type = 'outbound_call' THEN 1 ELSE 0 END) AS calls,
+                    SUM(CASE WHEN a.activity_type = 'whatsapp_outbound' THEN 1 ELSE 0 END) AS whatsapp_outbound,
+                    SUM(CASE WHEN a.activity_type = 'whatsapp_reply' THEN 1 ELSE 0 END) AS whatsapp_replies,
+                    SUM(CASE WHEN a.activity_type = 'call_status_change' THEN 1 ELSE 0 END) AS status_updates,
+                    SUM(CASE WHEN a.activity_type = 'task' THEN 1 ELSE 0 END) AS tasks,
+                    COUNT(DISTINCT CASE WHEN l.qualified_at BETWEEN %s AND %s THEN l.id END) AS qualified,
+                    COUNT(DISTINCT CASE WHEN l.disqualified_at BETWEEN %s AND %s THEN l.id END) AS unqualified,
+                    COUNT(DISTINCT CASE WHEN l.handoff_at BETWEEN %s AND %s AND l.handoff_status IN ('auto_assigned', 'manually_assigned') THEN l.id END) AS handed_off
+                 FROM {$table_leads} l
+                 LEFT JOIN {$wpdb->prefix}idlm_lead_activity_log a
+                    ON a.lead_id = l.id AND a.created_at BETWEEN %s AND %s
+                 WHERE l.is_duplicate = 0{$reporting_event_rep_clause}",
+                $curr_start, $curr_end,
+                $curr_start, $curr_end,
+                $curr_start, $curr_end,
+                $curr_start, $curr_end
+            ));
+        }
+
         // 9. Averages Speeds to conversion (Speed to Lead)
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $avg_speeds = $wpdb->get_row($wpdb->prepare(
@@ -808,13 +878,18 @@ class IDLM_Dashboard {
         // Convert seconds to human readable hours/days
         $avg_time_connected = $avg_speeds->avg_connected ? self::format_seconds($avg_speeds->avg_connected) : 'N/A';
         $avg_time_won = $avg_speeds->avg_won ? self::format_seconds($avg_speeds->avg_won) : 'N/A';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $avg_time_connected_previous_seconds = floatval($wpdb->get_var($wpdb->prepare(
+            "SELECT AVG(time_to_connected) FROM $table_leads WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $reporting_rep_clause",
+            $prev_start, $prev_end
+        )));
 
         // 10. Call Status Distribution
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $call_status_dist = $wpdb->get_results($wpdb->prepare(
             "SELECT call_status, COUNT(id) as count 
              FROM $table_leads 
-             WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $rep_clause
+             WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $reporting_rep_clause
              GROUP BY call_status",
             $curr_start, $curr_end
         ));
@@ -824,7 +899,7 @@ class IDLM_Dashboard {
         $quality_dist_raw = $wpdb->get_results($wpdb->prepare(
             "SELECT lead_quality, floor_plan_received, COUNT(id) as count 
              FROM $table_leads 
-             WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $rep_clause
+             WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $reporting_rep_clause
              GROUP BY lead_quality, floor_plan_received",
             $curr_start, $curr_end
         ));
@@ -849,6 +924,32 @@ class IDLM_Dashboard {
         $qualified_with_plan = $quality_dist['Qualified · Plan Received'];
         $qualified_total = $qualified_with_plan + $quality_dist['Qualified · Plan Pending'];
         $plan_collection_rate = $qualified_total > 0 ? round(($qualified_with_plan / $qualified_total) * 100, 1) : 0;
+        // Compare the same acquisition-cohort quality fields against the
+        // equivalent previous window. These are intentionally separate from
+        // the current pipeline snapshots below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $cohort_comparison = $wpdb->get_row($wpdb->prepare(
+            "SELECT
+                SUM(CASE WHEN created_at BETWEEN %s AND %s AND LOWER(lead_quality) = 'qualified' THEN 1 ELSE 0 END) AS qualified_previous,
+                SUM(CASE WHEN created_at BETWEEN %s AND %s AND LOWER(lead_quality) = 'qualified' AND COALESCE(floor_plan_received, 0) != 0 THEN 1 ELSE 0 END) AS qualified_with_plan_previous,
+                SUM(CASE WHEN created_at BETWEEN %s AND %s AND (lead_quality = '' OR lead_quality IS NULL) THEN 1 ELSE 0 END) AS pending_qualification_current,
+                SUM(CASE WHEN created_at BETWEEN %s AND %s AND (lead_quality = '' OR lead_quality IS NULL) THEN 1 ELSE 0 END) AS pending_qualification_previous,
+                SUM(CASE WHEN created_at BETWEEN %s AND %s AND stage = 'Won' THEN 1 ELSE 0 END) AS cohort_won_previous
+             FROM $table_leads
+             WHERE is_duplicate = 0 AND (created_at BETWEEN %s AND %s OR created_at BETWEEN %s AND %s)$reporting_rep_clause",
+            $prev_start, $prev_end,
+            $prev_start, $prev_end,
+            $curr_start, $curr_end,
+            $prev_start, $prev_end,
+            $prev_start, $prev_end,
+            $curr_start, $curr_end,
+            $prev_start, $prev_end
+        ));
+        $qualified_total_previous = intval($cohort_comparison->qualified_previous ?? 0);
+        $qualified_with_plan_previous = intval($cohort_comparison->qualified_with_plan_previous ?? 0);
+        $pending_qualification_total = intval($cohort_comparison->pending_qualification_current ?? 0);
+        $pending_qualification_total_previous = intval($cohort_comparison->pending_qualification_previous ?? 0);
+        $cohort_won_previous = intval($cohort_comparison->cohort_won_previous ?? 0);
 
         // 10.5. Leads Over Time: acquisition volume/quality and Won closes.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
@@ -856,7 +957,7 @@ class IDLM_Dashboard {
             "SELECT DATE(created_at) as lead_date, COUNT(id) as count,
                     SUM(LOWER(lead_quality) = 'qualified') AS qualified
              FROM $table_leads 
-             WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $rep_clause
+             WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $reporting_rep_clause
              GROUP BY DATE(created_at) 
              ORDER BY lead_date ASC",
             $curr_start, $curr_end
@@ -881,7 +982,7 @@ class IDLM_Dashboard {
         $won_over_time_raw = $wpdb->get_results($wpdb->prepare(
             "SELECT DATE(conversion_time) AS close_date, COUNT(id) AS won
              FROM {$table_leads}
-             WHERE is_duplicate = 0 AND stage = 'Won' AND conversion_time BETWEEN %s AND %s {$rep_clause}
+             WHERE is_duplicate = 0 AND stage = 'Won' AND conversion_time BETWEEN %s AND %s {$reporting_rep_clause}
              GROUP BY DATE(conversion_time) ORDER BY close_date ASC",
             $curr_start,
             $curr_end
@@ -907,7 +1008,7 @@ class IDLM_Dashboard {
         $won_trend_raw = $wpdb->get_results($wpdb->prepare(
             "SELECT DATE(e.occurred_at) AS event_date, COUNT(e.id) AS won, SUM(COALESCE({$won_revenue_field}, 0)) AS revenue
              FROM {$table_state_events} e INNER JOIN {$table_leads} l ON l.id = e.lead_id
-             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won' AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$event_rep_clause}
+             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won' AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}
              GROUP BY DATE(e.occurred_at) ORDER BY event_date ASC",
             $curr_start,
             $curr_end
@@ -923,7 +1024,7 @@ class IDLM_Dashboard {
         $won_legacy_rows = $wpdb->get_results($wpdb->prepare(
             "SELECT DATE(l.conversion_time) AS event_date, COUNT(l.id) AS won, SUM(COALESCE(l.deal_value, 0)) AS revenue
              FROM {$table_leads} l
-             WHERE l.is_duplicate = 0 AND l.stage = 'Won' AND l.conversion_time BETWEEN %s AND %s{$event_rep_clause}
+             WHERE l.is_duplicate = 0 AND l.stage = 'Won' AND l.conversion_time BETWEEN %s AND %s{$reporting_event_rep_clause}
                AND NOT EXISTS (SELECT 1 FROM {$table_state_events} legacy_event WHERE legacy_event.lead_id = l.id AND legacy_event.event_type = 'stage_change' AND legacy_event.to_value = 'Won')
              GROUP BY DATE(l.conversion_time) ORDER BY event_date ASC",
             $curr_start,
@@ -953,7 +1054,7 @@ class IDLM_Dashboard {
         // Reference-body marketing panels use these cohort dimensions directly.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $disqualification_reasons = $wpdb->get_results($wpdb->prepare(
-            "SELECT COALESCE(NULLIF(TRIM(disqualification_reason), ''), 'Not specified') AS reason, COUNT(id) AS count FROM {$table_leads} WHERE is_duplicate = 0 AND LOWER(lead_quality) = 'unqualified' AND created_at BETWEEN %s AND %s {$rep_clause} GROUP BY reason ORDER BY count DESC LIMIT 5",
+            "SELECT COALESCE(NULLIF(TRIM(disqualification_reason), ''), 'Not specified') AS reason, COUNT(id) AS count FROM {$table_leads} WHERE is_duplicate = 0 AND LOWER(lead_quality) = 'unqualified' AND created_at BETWEEN %s AND %s {$reporting_rep_clause} GROUP BY reason ORDER BY count DESC LIMIT 5",
             $curr_start,
             $curr_end
         ), ARRAY_A);
@@ -988,7 +1089,7 @@ class IDLM_Dashboard {
                         SUM(CASE WHEN stage = 'Won' AND conversion_time BETWEEN %s AND %s THEN 1 ELSE 0 END) AS won,
                         SUM(CASE WHEN stage = 'Won' AND conversion_time BETWEEN %s AND %s THEN COALESCE(deal_value, 0) ELSE 0 END) AS revenue
                  FROM {$table_leads}
-                 WHERE is_duplicate = 0 {$rep_clause}
+                 WHERE is_duplicate = 0 {$reporting_rep_clause}
                    AND (created_at BETWEEN %s AND %s OR (stage = 'Won' AND conversion_time BETWEEN %s AND %s))
                  GROUP BY segment ORDER BY won DESC, count DESC LIMIT 10",
                 $curr_start, $curr_end, $curr_start, $curr_end, $curr_start, $curr_end,
@@ -1115,12 +1216,42 @@ class IDLM_Dashboard {
             "SELECT COUNT(e.id) FROM {$table_state_events} e
              INNER JOIN {$table_leads} l ON l.id = e.lead_id
              WHERE e.event_type = 'stage_change' AND e.to_value = 'Won'
-               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$event_rep_clause}",
+               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}",
             $curr_start,
             $curr_end
         )));
         $total_won += $won_legacy_count;
         $won_revenue_total += $won_legacy_revenue;
+        // The prior Won baseline uses the same event-first, legacy-fallback
+        // reporting basis as the current period.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $total_won_previous = intval($wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(e.id) FROM {$table_state_events} e
+             INNER JOIN {$table_leads} l ON l.id = e.lead_id
+             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won'
+               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}",
+            $prev_start,
+            $prev_end
+        )));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $won_revenue_previous = floatval($wpdb->get_var($wpdb->prepare(
+            "SELECT SUM(COALESCE({$won_revenue_field}, 0)) FROM {$table_state_events} e
+             INNER JOIN {$table_leads} l ON l.id = e.lead_id
+             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won'
+               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}",
+            $prev_start,
+            $prev_end
+        )));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $won_legacy_previous = $wpdb->get_row($wpdb->prepare(
+            "SELECT COUNT(l.id) AS count, SUM(COALESCE(l.deal_value, 0)) AS revenue FROM {$table_leads} l
+             WHERE l.is_duplicate = 0 AND l.stage = 'Won' AND l.conversion_time BETWEEN %s AND %s{$reporting_event_rep_clause}
+               AND NOT EXISTS (SELECT 1 FROM {$table_state_events} legacy_event WHERE legacy_event.lead_id = l.id AND legacy_event.event_type = 'stage_change' AND legacy_event.to_value = 'Won')",
+            $prev_start,
+            $prev_end
+        ));
+        $total_won_previous += intval($won_legacy_previous->count ?? 0);
+        $won_revenue_previous += floatval($won_legacy_previous->revenue ?? 0);
         $won_reporting_basis = $won_legacy_count ? 'recorded_transitions_with_conversion_time_fallback' : 'recorded_transitions';
         // Use elapsed calendar time from lead creation to the actual close
         // timestamp. Event occurrence is authoritative; conversion_time fills
@@ -1129,14 +1260,14 @@ class IDLM_Dashboard {
         $won_event_close_seconds = floatval($wpdb->get_var($wpdb->prepare(
             "SELECT SUM(GREATEST(0, TIMESTAMPDIFF(SECOND, l.created_at, e.occurred_at))) FROM {$table_state_events} e
              INNER JOIN {$table_leads} l ON l.id = e.lead_id
-             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won' AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$event_rep_clause}",
+             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won' AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}",
             $curr_start,
             $curr_end
         )));
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $won_legacy_close_seconds = floatval($wpdb->get_var($wpdb->prepare(
             "SELECT SUM(GREATEST(0, TIMESTAMPDIFF(SECOND, l.created_at, l.conversion_time))) FROM {$table_leads} l
-             WHERE l.is_duplicate = 0 AND l.stage = 'Won' AND l.conversion_time BETWEEN %s AND %s{$event_rep_clause}
+             WHERE l.is_duplicate = 0 AND l.stage = 'Won' AND l.conversion_time BETWEEN %s AND %s{$reporting_event_rep_clause}
                AND NOT EXISTS (SELECT 1 FROM {$table_state_events} legacy_event WHERE legacy_event.lead_id = l.id AND legacy_event.event_type = 'stage_change' AND legacy_event.to_value = 'Won')",
             $curr_start,
             $curr_end
@@ -1241,6 +1372,10 @@ class IDLM_Dashboard {
                 'total_leads_period' => $total_curr,
                 'total_leads_previous' => $total_prev,
                 'growth_pct' => null === $percentage_change ? null : round($percentage_change, 1),
+                'qualified_total' => $qualified_total,
+                'qualified_total_previous' => $qualified_total_previous,
+                'cohort_won_current' => $cohort_won_current,
+                'cohort_won_previous' => $cohort_won_previous,
                 'total_duplicates_period' => $dup_curr,
                 'total_duplicates_previous' => $dup_prev,
                 'duplicates_growth_pct' => null === $dup_percentage_change ? null : round($dup_percentage_change, 1),
@@ -1278,14 +1413,21 @@ class IDLM_Dashboard {
                 'pre_sales_performance' => $pre_sales_metrics,
                 'pre_sales_activity' => $pre_sales_activity,
                 'avg_time_connected' => $avg_time_connected,
+                'avg_time_connected_seconds' => floatval($avg_speeds->avg_connected ?? 0),
+                'avg_time_connected_previous_seconds' => $avg_time_connected_previous_seconds,
                 'avg_time_won' => $avg_time_won,
                 'avg_time_to_close' => $avg_time_to_close,
                 'call_status_distribution' => $call_status_dist,
                 'lead_quality_distribution' => $quality_dist,
                 'plan_collection_rate' => $plan_collection_rate,
                 'qualified_with_plan' => $qualified_with_plan,
+                'qualified_with_plan_previous' => $qualified_with_plan_previous,
                 'qualified_total' => $qualified_total,
+                'qualified_total_previous' => $qualified_total_previous,
+                'pending_qualification_total' => $pending_qualification_total,
+                'pending_qualification_total_previous' => $pending_qualification_total_previous,
                 'total_won' => $total_won,
+                'total_won_previous' => $total_won_previous,
                 'cohort_won_current' => $cohort_won_current,
                 'overall_conversion_rate' => $overall_conversion_rate,
                 'leads_by_studio' => $leads_by_studio,
@@ -1294,6 +1436,7 @@ class IDLM_Dashboard {
                 'pipeline_by_channel' => $pipeline_by_channel,
                 'estimated_pipeline_total' => round($estimated_pipeline_total, 2),
                 'estimated_pipeline_covered_leads' => $estimated_pipeline_covered_leads,
+                'pre_sales_portfolio_activity' => $pre_sales_portfolio_activity,
                 'estimated_pipeline_stages' => array_keys($estimated_pipeline_stages),
                 'open_pipeline_total' => $visible_pipeline_total,
                 'open_pipeline_as_of' => $now,
@@ -1306,6 +1449,7 @@ class IDLM_Dashboard {
                     'overdue_task' => intval($open_pipeline_health->overdue_task ?? 0),
                 ),
                 'won_revenue_total' => round($won_revenue_total, 2),
+                'won_revenue_previous' => round($won_revenue_previous, 2),
                 'won_over_time' => $won_over_time,
                 'won_reporting_basis' => $won_reporting_basis,
                 'won_legacy_count' => $won_legacy_count,

@@ -26,6 +26,9 @@ button.idlm-dashboard-kpi:hover:not(:disabled) { transform: translateY(-1px); bo
 .idlm-dashboard-kpi-label { display: block; color: var(--idlm-text-muted); font-size: 12px; font-weight: 600; margin-bottom: 9px; }
 .idlm-dashboard-kpi-value { display: block; font-size: 26px; line-height: 1.1; letter-spacing: -.03em; font-weight: 700; font-variant-numeric: tabular-nums; }
 .idlm-dashboard-kpi-meta { display: block; margin-top: 10px; color: var(--idlm-text-muted); font-size: 11px; line-height: 1.35; }
+.idlm-dashboard-kpi.is-positive .idlm-dashboard-kpi-meta { color: var(--idlm-success, #2f7a55); }
+.idlm-dashboard-kpi.is-negative .idlm-dashboard-kpi-meta { color: var(--idlm-danger, #a64040); }
+.idlm-dashboard-kpi.is-neutral .idlm-dashboard-kpi-meta { color: var(--idlm-text-muted); }
 .idlm-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(330px, .85fr); gap: 16px; margin-bottom: 16px; }
 .idlm-dashboard-panel { min-width: 0; margin: 0 0 16px; overflow: hidden; background: var(--idlm-surface); border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); box-shadow: var(--idlm-shadow, 0 8px 24px rgba(20,24,32,.04)); }
 .idlm-dashboard-grid > .idlm-dashboard-panel { margin: 0; }

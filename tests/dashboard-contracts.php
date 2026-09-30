@@ -7,7 +7,7 @@ idlm_test('dashboard context respects role groups, disabled users and mixed role
         array(array('marketing'), array('idlm_access_leads'), false, true, false),
         array(array('campaign_team'), array('idlm_access_leads'), false, true, false),
         array(array('sales_executive'), array('idlm_access_leads'), true, false, false),
-        array(array('idlm_pre_sales'), array('idlm_access_leads'), true, false, true),
+        array(array('idlm_pre_sales'), array('idlm_access_leads'), true, true, true),
         array(array('marketing', 'sales_executive'), array('idlm_access_leads'), true, true, false),
         array(array('subscriber'), array(), false, false, false),
     ) as $case) {
@@ -29,7 +29,7 @@ idlm_test('dashboard payload removes unauthorized contexts and individual perfor
     $raw = array('marketing' => array('total_leads_period' => 40), 'targets' => array('lead_target' => 100), 'data_quality' => array('total_leads' => 100), 'sales' => array(
         'open_pipeline_total' => 20, 'won_revenue_total' => 5000, 'leads_by_rep' => array('private'),
         'assignment_distribution' => array('private'), 'pre_sales_performance' => array('private'),
-        'studio_performance' => array('private'),
+        'studio_performance' => array('private'), 'pre_sales_portfolio_activity' => array('calls' => 2),
     ));
     unset($GLOBALS['idlm_test_users'][7]);
     idlm_test_login(7, array('sales_executive'), array('idlm_access_leads'));
@@ -45,11 +45,22 @@ idlm_test('dashboard payload removes unauthorized contexts and individual perfor
     unset($GLOBALS['idlm_test_users'][7]);
     idlm_test_login(7, array('idlm_pre_sales'), array('idlm_access_leads'));
     $presales = IDLM_Dashboard::filter_stats($raw);
-    assert_false(isset($presales['sales']['won_revenue_total']));
+    assert_same(5000, $presales['sales']['won_revenue_total']);
+    assert_same(array('calls' => 2), $presales['sales']['pre_sales_portfolio_activity']);
     assert_same(20, $presales['sales']['open_pipeline_total']);
     unset($GLOBALS['idlm_test_users'][7]);
     idlm_test_login(7, array('subscriber'), array());
     assert_same(array('access'), array_keys(IDLM_Dashboard::filter_stats($raw)));
+});
+
+idlm_test('pre-sales reporting retains outcomes after a Sales handoff', static function(): void {
+    $dashboard = (string) file_get_contents(dirname(__DIR__) . '/includes/class-dashboard.php');
+    assert_contains('assigned_rep_id = %d OR intake_owner_id = %d OR qualified_by_user_id = %d', $dashboard);
+    assert_contains('l.assigned_rep_id = %d OR l.intake_owner_id = %d OR l.qualified_by_user_id = %d', $dashboard);
+    assert_contains('$reporting_rep_clause', $dashboard);
+    assert_contains('$reporting_event_rep_clause', $dashboard);
+    assert_contains('a.user_id IN ({$pre_sales_placeholders}){$reporting_event_rep_clause}', $dashboard);
+    assert_contains('l.qualified_by_user_id IN ({$pre_sales_placeholders}){$reporting_rep_clause}', $dashboard);
 });
 
 idlm_test('dashboard investigations enforce context before querying and bind current ownership', static function(): void {
@@ -107,6 +118,17 @@ idlm_test('dashboard breakdowns separate acquisition measures from Won-close out
     assert_contains("label: 'Won Closed'", $script);
 });
 
+idlm_test('dashboard KPI comparisons retain metric grain and omit date ranges', static function(): void {
+    $dashboard = (string) file_get_contents(dirname(__DIR__) . '/includes/class-dashboard.php');
+    $script = (string) file_get_contents(dirname(__DIR__) . '/assets/js/dashboard.js');
+    assert_contains("'qualified_total_previous'", $dashboard);
+    assert_contains("'total_won_previous'", $dashboard);
+    assert_contains("'won_revenue_previous'", $dashboard);
+    assert_contains('function comparedKpi(', $script);
+    assert_contains("'% vs previous'", $script);
+    assert_false(false !== strpos($script, "ranges.prev_start"), 'KPI comparisons must not append a previous period range.');
+});
+
 idlm_test('conversion timestamps remain exclusive to current Won leads', static function(): void {
     $database = (string) file_get_contents(dirname(__DIR__) . '/includes/class-db.php');
     $lifecycle = (string) file_get_contents(dirname(__DIR__) . '/includes/class-lead-lifecycle-service.php');
@@ -129,7 +151,19 @@ idlm_test('dashboard renders standard header and only authorized body tabs', sta
     unset($GLOBALS['idlm_test_users'][7]);
     idlm_test_login(7, array('idlm_pre_sales'), array('idlm_access_leads'));
     $html = IDLM_View::render('admin/dashboard.php', array('access' => IDLM_Dashboard::access_context()));
+    assert_contains('Pre-sales workspace', $html);
     assert_contains('Qualification readiness', $html);
-    assert_false(strpos($html, 'id="idlm-marketing-tab"') !== false);
+    assert_contains('Qualification queue', $html);
+    assert_contains('id="idlm-presales-quality"', $html);
+    assert_contains('id="idlm-presales-call-status"', $html);
+    assert_contains('id="idlm-presales-activity"', $html);
+    assert_contains('Open &amp; Closed Pipeline by Channel', $html);
+    assert_contains('Revenue progress', $html);
+    assert_contains('Business Mix', $html);
+    assert_contains('id="idlm-marketing-tab"', $html);
+    assert_contains('Lead Volume &amp; Quality Trend', $html);
+    assert_contains('Lead Quality by Source', $html);
+    assert_contains('Disqualification Reasons', $html);
+    assert_false(strpos($html, 'Channel Performance') !== false);
     assert_false(strpos($html, 'Value still in the pipeline') !== false);
 });

@@ -37,12 +37,12 @@ Use this map to identify the likely blast radius before changing a business feat
 ## WhatsApp and Interakt
 
 - **PHP:** `IDLM_Interakt` queues/sends outbound tracking events and accepts Interakt/Meta WhatsApp callbacks; `IDLM_DB` emits mapped events; `IDLM_Admin_Lead_Notifications` calculates unread/read state while `IDLM_Admin_Ajax` records manual WhatsApp touches behind facade delegates.
-- **Tables/meta:** replies and sends are represented in `idlm_lead_activity_log`; lead matching uses `idlm_leads.phone`; per-user read state is `idlm_whatsapp_read_activity_ids` user meta.
+- **Tables/meta:** replies are represented in `idlm_lead_activity_log`; lead matching uses `idlm_leads.phone`; per-user read state is `idlm_whatsapp_read_activity_ids` user meta.
 - **REST:** `POST /idlm/v1/interakt-webhook`; `GET|POST /idlm/v1/meta-webhook`.
 - **Hooks:** `idlm_lead_call_status_no_answer`, `idlm_trigger_interakt_event`, `idlm_async_interakt_track_event`.
 - **AJAX:** `idlm_log_presales_touch`; lead/activity endpoints surface replies and read state.
 - **Settings:** Interakt enable/key/secret/event mappings; Meta webhook enable/verify token/app secret.
-- **JS/CSS:** WhatsApp actions, unread indicators and activity rendering live in `assets/js/admin-app.js` and `assets/css/admin-style.css`.
+- **JS/CSS:** WhatsApp actions, the guarded Interakt workspace handoff, unread indicators and activity rendering live in `assets/js/admin-app.js` and `assets/css/admin-style.css`.
 - **Boundary:** the plugin logs inbound replies and sends Interakt event triggers; it does not contain a general outbound WhatsApp chat API.
 
 ## Users, roles and access

@@ -389,6 +389,7 @@ idlm_test('final UI acceptance uses shared dialogs and non-blocking feedback ins
     assert_contains('IDLMDialog.confirm', $sources);
     assert_contains('IDLMDialog.prompt', $sources);
     assert_contains('IDLMDialog.notify', $sources);
+    assert_contains("inputType: 'datetime-local'", $sources);
     assert_contains('data-idlm-confirm-submit', $sources);
     assert_false((bool) preg_match('/(?<!IDLMDialog\\.)\\b(?:window\\.)?(?:alert|confirm|prompt)\\s*\\(/', $sources), 'Runtime workflows must not use native browser feedback dialogs.');
 });

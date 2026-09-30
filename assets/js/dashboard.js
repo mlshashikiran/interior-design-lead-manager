@@ -20,10 +20,21 @@ jQuery(function($) {
     function num(value) { return Number(value) || 0; }
     function count(value) { return num(value).toLocaleString(); }
     function rate(part, total) { return num(total) ? (num(part) / num(total) * 100).toFixed(1) + '%' : '—'; }
+    function comparison(current, previous) {
+        current = num(current); previous = num(previous);
+        if (!previous) return { note: 'No previous baseline', state: '' };
+        var change = ((current - previous) / previous) * 100;
+        var state = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+        return { note: (change > 0 ? '▲ +' : (change < 0 ? '▼ ' : '• ')) + change.toFixed(1) + '% vs previous', state: state };
+    }
+    function comparedKpi(label, value, current, previous, kind, title) {
+        var delta = comparison(current, previous);
+        return kpi(label, value, delta.note, kind, title, delta.state);
+    }
     function dashboardToken(name, fallback) { return getComputedStyle($root[0]).getPropertyValue(name).trim() || fallback; }
     function money(value, symbol) { return (symbol || '') + num(value).toLocaleString(undefined, { maximumFractionDigits: 0 }); }
     function summary(label, value, note) { return '<article><span>' + text(label) + '</span><strong>' + text(value) + '</strong><small>' + text(note) + '</small></article>'; }
-    function kpi(label, value, note, kind, title) { return '<button type="button" class="idlm-dashboard-kpi" data-investigate="' + text(kind) + '" data-title="' + text(title || label) + '"' + (kind ? '' : ' disabled') + '><span class="idlm-dashboard-kpi-label">' + text(label) + '</span><strong class="idlm-dashboard-kpi-value">' + text(value) + '</strong><small class="idlm-dashboard-kpi-meta">' + text(note) + '</small></button>'; }
+    function kpi(label, value, note, kind, title, comparisonState) { return '<button type="button" class="idlm-dashboard-kpi' + (comparisonState ? ' is-' + text(comparisonState) : '') + '" data-investigate="' + text(kind) + '" data-title="' + text(title || label) + '"' + (kind ? '' : ' disabled') + '><span class="idlm-dashboard-kpi-label">' + text(label) + '</span><strong class="idlm-dashboard-kpi-value">' + text(value) + '</strong><small class="idlm-dashboard-kpi-meta">' + text(note) + '</small></button>'; }
     function empty(cols, message) { return '<tr><td colspan="' + cols + '"><p class="idlm-dashboard-empty">' + text(message) + '</p></td></tr>'; }
     function link(kind, value, label) { return '<button type="button" class="idlm-dashboard-link" data-investigate="' + text(kind) + '" data-value="' + text(value) + '" data-title="' + text(label) + '">' + text(label) + '</button>'; }
     function queue(kind, value, label, note, critical) { return '<button type="button" class="idlm-dashboard-action' + (critical ? ' is-critical' : '') + '" data-investigate="' + kind + '" data-title="' + text(label) + '"' + (num(value) ? '' : ' disabled') + '><strong>' + count(value) + '</strong><span><b>' + text(label) + '</b><small>' + text(note) + '</small></span><i aria-hidden="true">›</i></button>'; }
@@ -126,16 +137,88 @@ jQuery(function($) {
         if (data.sales) renderSales(data.sales, data.marketing || {}, data.access, data.ranges);
         if (data.marketing) renderMarketing(data.marketing, data.ranges);
     }
+    function renderPreSales(s, ranges) {
+        var health = s.open_pipeline_health || {}, quality = s.lead_quality_distribution || {};
+        var planPending = num(quality['Qualified · Plan Pending']);
+        var pendingQualification = num(quality['Pending Qualification']);
+        function bars(rows, target, message) {
+            var max = Math.max.apply(null, rows.map(function(row) { return num(row.count); }).concat([1]));
+            $(target).html(rows.length && rows.some(function(row) { return num(row.count); }) ? rows.map(function(row) {
+                return '<div class="idlm-dashboard-bar"><span>' + text(row.label) + '</span><span class="idlm-dashboard-track" aria-hidden="true"><span style="width:' + (num(row.count) / max * 100) + '%"></span></span><strong>' + count(row.count) + '</strong></div>';
+            }).join('') : '<p class="idlm-dashboard-empty">' + text(message) + '</p>');
+        }
+        $('#idlm-sales-kpis').html(
+            kpi('Active leads', count(s.open_pipeline_total), 'Your current qualification queue', '', '') +
+            comparedKpi('Pending qualification', count(pendingQualification), pendingQualification, s.pending_qualification_total_previous, '', '') +
+            comparedKpi('Plans to collect', count(planPending), planPending, num(s.qualified_total_previous) - num(s.qualified_with_plan_previous), '', '') +
+            kpi('Overdue callbacks', count(health.overdue_task), 'Active leads needing follow-up', 'overdue', 'Callbacks overdue') +
+            kpi('No next task', count(health.without_next_task), 'Set a next step for active leads', 'no_task', 'No next task')
+        );
+        var queues = queue('overdue', health.overdue_task, 'Callbacks overdue', 'Pending task due date has passed', true) +
+            queue('no_task', health.without_next_task, 'No next task', 'Set a next step for these active leads') +
+            queue('aged', health.aged_61_plus, 'Open more than 60 days', 'Review older leads; age is since creation');
+        $('#idlm-attention-list').html(queues);
+        $('#sales-open-pipeline-total').text(count(s.open_pipeline_total) + ' leads');
+        var stages = (s.funnel_data || []).filter(function(row) { return num(row.active_count) > 0; });
+        var stageMax = Math.max.apply(null, stages.map(function(row) { return num(row.active_count); }).concat([1]));
+        $('#sales-funnel-container').html(stages.length ? stages.map(function(row) {
+            return '<button type="button" class="idlm-dashboard-bar" data-investigate="stage" data-value="' + text(row.stage) + '" data-title="' + text(row.stage) + ' · active leads"><span>' + text(row.stage) + '</span><span class="idlm-dashboard-track" aria-hidden="true"><span style="width:' + (num(row.active_count) / stageMax * 100) + '%"></span></span><strong>' + count(row.active_count) + '</strong></button>';
+        }).join('') : '<p class="idlm-dashboard-empty">No active leads are assigned to you.</p>');
+        bars(Object.keys(quality).map(function(label) { return { label: label, count: quality[label] }; }), '#idlm-presales-quality', 'No qualification activity in this reporting period.');
+        bars((s.call_status_distribution || []).map(function(row) { return { label: row.call_status || 'Not recorded', count: row.count }; }), '#idlm-presales-call-status', 'No call statuses recorded in this reporting period.');
+        $('#idlm-sales-summary').html(
+            summary('Qualified', count(s.qualified_total), 'Owned or qualified in the selected period') +
+            summary('Plans collected', count(s.qualified_with_plan), rate(s.qualified_with_plan, s.qualified_total) + ' of qualified leads') +
+            summary('Average time to connect', s.avg_time_connected, 'Recorded timing for leads in the period') +
+            summary('Awaiting handoff', count(health.awaiting_manager), 'Qualified leads awaiting sales assignment')
+        );
+        var activity = s.pre_sales_portfolio_activity || {};
+        $('#idlm-presales-activity').html(
+            summary('Leads touched', count(activity.leads_touched), 'Leads with recorded activity') +
+            summary('Calls', count(activity.calls), 'Outbound calls recorded') +
+            summary('WhatsApp', count(activity.whatsapp_outbound), count(activity.whatsapp_replies) + ' customer replies') +
+            summary('Tasks', count(activity.tasks), count(activity.status_updates) + ' call-status updates') +
+            summary('Qualified', count(activity.qualified), count(activity.unqualified) + ' marked unqualified') +
+            summary('Handed off', count(activity.handed_off), 'Completed Sales handoffs')
+        );
+        $('#idlm-sales-period-note').text((ranges.curr_start || '').slice(0, 10) + ' – ' + (ranges.curr_end || '').slice(0, 10));
+        $('#idlm-events-note').text('Action queues use your currently assigned active leads. Reporting retains leads you owned or qualified after their Sales handoff.');
+        renderPipelineByChannel(s);
+        $('#idlm-presales-commercial-summary').html(
+            summary('Won deals', count(s.total_won), 'Closed in the selected period') +
+            summary('Won revenue', money(s.won_revenue_total, s.currency_symbol), 'Closed in the selected period') +
+            summary('Estimated pipeline', money(s.estimated_pipeline_total, s.currency_symbol), count(s.estimated_pipeline_covered_leads) + ' active leads with a configured value')
+        );
+        var reasons = s.lost_reasons || [], reasonMax = Math.max.apply(null, reasons.map(function(row) { return num(row.count); }).concat([1]));
+        $('#idlm-lost-reasons').html(reasons.length ? reasons.map(function(row) {
+            return '<div class="idlm-dashboard-bar"><span>' + text(row.reason) + '</span><span class="idlm-dashboard-track" aria-hidden="true"><span style="width:' + (num(row.count) / reasonMax * 100) + '%"></span></span><strong>' + count(row.count) + '</strong></div>';
+        }).join('') : '<p class="idlm-dashboard-empty">No Lost leads are recorded for this period.</p>');
+        $('#idlm-lost-reasons-note').text(num(s.lost_reasons_legacy_count) ? 'Includes ' + count(s.lost_reasons_legacy_count) + ' legacy Lost records.' : 'Recorded Lost transitions in the selected period.');
+        var mixes = s.business_mix || {};
+        function renderMix(kind) {
+            var rows = mixes[kind] || [];
+            $('#idlm-business-mix').html(rows.length ? rows.map(function(row) {
+                return '<tr><th scope="row">' + text(row.segment) + '</th><td>' + count(row.count) + '</td><td>' + count(row.opportunities) + '</td><td>' + count(row.won) + '</td><td>' + money(row.revenue, s.currency_symbol) + '</td></tr>';
+            }).join('') : empty(5, 'No ' + kind + ' segment data is available for this period.'));
+        }
+        renderMix('rooms');
+        $root.find('[data-segment]').prop('disabled', false);
+        $root.off('click.idlmMix').on('click.idlmMix', '[data-segment]', function() { $root.find('[data-segment]').removeClass('active'); $(this).addClass('active'); renderMix($(this).data('segment')); });
+    }
     function renderSales(s, marketing, access, ranges) {
+        if (access.pre_sales) {
+            renderPreSales(s, ranges);
+            return;
+        }
         var health = s.open_pipeline_health || {};
         var avgDeal = num(s.total_won) ? num(s.won_revenue_total) / num(s.total_won) : 0;
         var wonDetail = num(s.won_legacy_count) ? 'Includes legacy closes by recorded conversion time' : 'Transitions in selected period';
         $('#idlm-sales-kpis').html(
             kpi('Active Opportunities', count(s.open_pipeline_total), 'Current open pipeline', '', '') +
-            kpi(access.pre_sales ? 'Qualified Leads' : 'Won Deals', count(access.pre_sales ? s.qualified_total : s.total_won), access.pre_sales ? 'Created in selected period' : wonDetail, '', '') +
-            kpi(access.pre_sales ? 'Plans Collected' : 'Win Rate', access.pre_sales ? count(s.qualified_with_plan) : rate(s.total_won, num(s.total_won) + num(s.open_pipeline_total)), access.pre_sales ? rate(s.qualified_with_plan, s.qualified_total) + ' of qualified leads' : 'Won vs open and won opportunities', '', '') +
-            kpi(access.pre_sales ? 'Avg. Time to Connect' : 'Revenue Won', access.pre_sales ? s.avg_time_connected : money(s.won_revenue_total, s.currency_symbol), 'Selected reporting period', '', '') +
-            kpi(access.pre_sales ? 'Awaiting Handoff' : 'Avg. Deal Value', access.pre_sales ? count(health.awaiting_manager) : money(avgDeal, s.currency_symbol), access.pre_sales ? 'Current snapshot' : 'Recorded won value ÷ won deals', access.pre_sales ? 'handoff' : '', 'Awaiting sales handoff')
+            comparedKpi('Won Deals', count(s.total_won), s.total_won, s.total_won_previous, '', '') +
+            kpi('Win Rate', rate(s.total_won, num(s.total_won) + num(s.open_pipeline_total)), 'Won vs open and won opportunities', '', '') +
+            comparedKpi('Revenue Won', money(s.won_revenue_total, s.currency_symbol), s.won_revenue_total, s.won_revenue_previous, '', '') +
+            comparedKpi('Avg. Deal Value', money(avgDeal, s.currency_symbol), avgDeal, num(s.total_won_previous) ? num(s.won_revenue_previous) / num(s.total_won_previous) : 0, '', '')
         );
         var queues = queue('overdue', health.overdue_task, 'Callbacks overdue', 'Pending task due date has passed', true) +
             queue('no_task', health.without_next_task, 'No next task', 'Set a next step for these open leads') +
@@ -236,9 +319,8 @@ jQuery(function($) {
         $campaign.val(campaignValue);
         var qualified = 0, pending = 0, attributed = 0, won = 0;
         channels.forEach(function(row) { qualified += num(row.qualified); pending += num(row.pending); attributed += num(row.attributed); won += num(row.cohort_won); });
-        var comparison = m.growth_pct == null ? 'No previous-period baseline (' + count(m.total_leads_previous) + ' leads)' : (num(m.growth_pct) > 0 ? '+' : '') + m.growth_pct + '% vs ' + count(m.total_leads_previous) + ' previously';
-        comparison += ' · ' + (ranges.prev_start || '').slice(0, 10) + ' – ' + (ranges.prev_end || '').slice(0, 10);
-        $('#idlm-marketing-kpis').html(kpi('Leads Generated', count(total), comparison, '', '') + kpi('Qualified Leads', count(qualified), 'Current quality of this cohort', '', '') + kpi('Qualification Rate', rate(qualified, total), count(pending) + ' pending assessment', '', '') + kpi('Won Customers', count(won), 'Current outcomes of this cohort', '', '') + kpi('Lead → Win Rate', rate(won, total), 'Current won ÷ leads generated', '', ''));
+        var qualifiedPrevious = num(m.qualified_total_previous), wonPrevious = num(m.cohort_won_previous);
+        $('#idlm-marketing-kpis').html(comparedKpi('Leads Generated', count(total), total, m.total_leads_previous, '', '') + comparedKpi('Qualified Leads', count(qualified), qualified, qualifiedPrevious, '', '') + comparedKpi('Qualification Rate', rate(qualified, total), total ? qualified / total * 100 : 0, num(m.total_leads_previous) ? qualifiedPrevious / num(m.total_leads_previous) * 100 : 0, '', '') + comparedKpi('Won Customers', count(won), won, wonPrevious, '', '') + comparedKpi('Lead → Win Rate', rate(won, total), total ? won / total * 100 : 0, num(m.total_leads_previous) ? wonPrevious / num(m.total_leads_previous) * 100 : 0, '', ''));
         $('#idlm-source-quality').html(channels.length ? channels.map(function(row) {
             var detail = count(row.count) + ' leads · ' + count(row.qualified) + ' qualified · ' + count(row.unqualified) + ' unqualified · ' + count(row.pending) + ' pending';
             return '<button type="button" class="idlm-dashboard-quality-row" data-investigate="channel" data-value="' + text(row.source_value) + '" data-title="' + text(row.channel) + ' · leads" aria-label="' + text(row.channel + ': ' + detail + '. Open matching leads.') + '"><span>' + text(row.channel) + '</span><span class="idlm-dashboard-quality" aria-hidden="true"><i class="is-qualified" style="width:' + (num(row.count) ? num(row.qualified) / num(row.count) * 100 : 0) + '%"></i><i class="is-unqualified" style="width:' + (num(row.count) ? num(row.unqualified) / num(row.count) * 100 : 0) + '%"></i><i class="is-pending" style="width:' + (num(row.count) ? num(row.pending) / num(row.count) * 100 : 0) + '%"></i></span><span class="idlm-dashboard-quality-detail" role="tooltip">' + text(detail) + '</span></button>';

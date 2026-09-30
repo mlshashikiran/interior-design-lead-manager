@@ -93,7 +93,8 @@
         }
 
         var isPipeline = $editor.is('[data-idlm-pipeline-editor]');
-        var $item = $('<li>', {'class': 'idlm-token-editor__item idlm-token-editor__item--movable' + (isPipeline ? ' idlm-pipeline-stage-editor__item' : ''), draggable: 'true'});
+        var $item = $('<li>', {'class': 'idlm-token-editor__item idlm-token-editor__item--movable' + (isPipeline ? ' idlm-pipeline-stage-editor__item' : '')})
+            .attr('draggable', 'true');
         $('<span>', {'class': 'idlm-token-editor__position' + (isPipeline ? ' idlm-pipeline-stage-editor__position' : ''), 'aria-hidden': 'true'}).appendTo($item);
         $('<span>', {'class': 'dashicons dashicons-menu idlm-token-editor__drag', 'aria-hidden': 'true'}).appendTo($item);
         $('<span>', {'class': 'idlm-token-editor__value'}).text(value).appendTo($item);
