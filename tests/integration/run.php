@@ -547,6 +547,7 @@ try {
     });
 
     idlm_integration_test('MCP PII access succeeds only with the scoped key after real lead persistence', static function(): void {
+        update_option('idlm_mcp_allow_pii', '1');
         $lead_id = (int) ($GLOBALS['idlm_integration_lead_id'] ?? 0);
         $request_body = array(
             'jsonrpc' => '2.0',
@@ -630,7 +631,7 @@ try {
     idlm_integration_test('quotation number reservation is monotonic under concurrent database workers', static function(): void {
         global $wpdb;
         $method = new ReflectionMethod('IDLM_Quotations', 'next_quote_number');
-        $method->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) { $method->setAccessible(true); }
         $first = $method->invoke(null);
         idlm_integration_assert_true(!is_wp_error($first));
 
@@ -758,6 +759,8 @@ try {
         global $wpdb;
         $rep = wp_insert_user(array('user_login' => 'dashboard_rep_' . wp_rand(), 'user_pass' => wp_generate_password(), 'role' => 'author'));
         $other = wp_insert_user(array('user_login' => 'dashboard_other_' . wp_rand(), 'user_pass' => wp_generate_password(), 'role' => 'author'));
+        (new WP_User($rep))->add_cap('idlm_access_leads');
+        (new WP_User($other))->add_cap('idlm_access_leads');
         update_option('timezone_string', 'Asia/Kolkata');
         $created = (new DateTime('now', wp_timezone()))->modify('-45 days')->format('Y-m-d H:i:s');
         $older = (new DateTime('now', wp_timezone()))->modify('-65 days')->format('Y-m-d H:i:s');
@@ -798,11 +801,42 @@ try {
         wp_set_current_user($administrator_id);
     });
 
+    require_once __DIR__ . '/package-dashboard-contracts.php';
     require_once __DIR__ . '/high-priority-contracts.php';
+    require_once __DIR__ . '/lead-access-contracts.php';
+    require_once __DIR__ . '/mcp-query-contracts.php';
+    require_once __DIR__ . '/private-file-contracts.php';
+    require_once __DIR__ . '/backup-contracts.php';
+    require_once __DIR__ . '/schema-migration-contracts.php';
+    require_once __DIR__ . '/lifecycle-persistence-contracts.php';
+    require_once __DIR__ . '/handoff-notification-contracts.php';
+    require_once __DIR__ . '/task-plan-repair-contracts.php';
+    require_once __DIR__ . '/assignment-eligibility-contracts.php';
+    require_once __DIR__ . '/capacity-contracts.php';
+    require_once __DIR__ . '/identity-review-contracts.php';
+    require_once __DIR__ . '/bounded-work-contracts.php';
+    require_once __DIR__ . '/state-policy-contracts.php';
+    require_once __DIR__ . '/quotation-migration-contracts.php';
+    require_once __DIR__ . '/quotation-classification-contracts.php';
+    require_once __DIR__ . '/quotation-history-contracts.php';
+    require_once __DIR__ . '/quotation-engine-contracts.php';
+    require_once __DIR__ . '/quotation-numeric-contracts.php';
+    require_once __DIR__ . '/quotation-document-contracts.php';
+    require_once __DIR__ . '/interakt-dispatch-contracts.php';
+    require_once __DIR__ . '/capi-retry-contracts.php';
+    require_once __DIR__ . '/capi-retention-contracts.php';
+    require_once __DIR__ . '/whatsapp-inbound-contracts.php';
+    require_once __DIR__ . '/lead-connector-contracts.php';
+    require_once __DIR__ . '/google-audience-contracts.php';
+    require_once __DIR__ . '/audience-retry-contracts.php';
+    require_once __DIR__ . '/secret-store-contracts.php';
+
+    require_once __DIR__ . '/runtime-topology-contracts.php';
 
     $passed = 0;
     $failed = 0;
     foreach ($tests as $name => $test) {
+        if (getenv('IDLM_TEST_FILTER') && strpos($name, getenv('IDLM_TEST_FILTER')) === false && strpos($name, 'fresh schema installation') !== 0) { continue; }
         try {
             $test();
             $passed++;

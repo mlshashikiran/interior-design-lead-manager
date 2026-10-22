@@ -1,0 +1,12 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T11-T17-N-QUO005-pre-2.5-upgrade-and-reinstall-preserve-every-item-and-monetary-field
+PASS T11-T17-N-QUO005-old-physical-inventories-preserve-zero-one-custom-optional-header-and-detached-items
+PASS T17-N-QUO005-missing-old-classification-column-is-unverified-without-catalogue-inference
+PASS T10-T11-N-QUO005-new-submissions-and-revision-copies-retain-source-and-financials
+PASS T17-N-QUO005-denied-provenance-DDL-retains-history-and-retries
+PASS T17-C-QUO005-process-death-after-additive-DDL-preserves-provenance-on-retry
+PASS T17-C-QUO005-two-installers-converge-without-classification-or-money-drift
+PASS T16-T17-N-QUO005-complete-old-quotation-and-core-backups-normalize-without-changing-bits-or-money
+PASS T16-N-QUO005-current-and-incomplete-old-backups-cannot-fabricate-provenance
+
+10 passed, 0 failed

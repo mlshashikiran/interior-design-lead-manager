@@ -1,0 +1,8 @@
+{
+  "same_normalized_multiset_as_INT009": true,
+  "warning_count": 7,
+  "warnings": {
+    "Warning: Undefined property: stdClass::$num_rooms in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-capi.php on line <N>": 6,
+    "Warning: Undefined property: stdClass::$phone in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-lead-lifecycle-service.php on line <N>": 1
+  }
+}

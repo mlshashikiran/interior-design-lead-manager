@@ -1,0 +1,22 @@
+{
+  "builder": "Shashi",
+  "php": "8.5.12",
+  "files": [
+    {
+      "file": "includes/class-admin.php",
+      "passed": true
+    },
+    {
+      "file": "tests/bootstrap.php",
+      "passed": true
+    },
+    {
+      "file": "tests/admin-refactor-contracts.php",
+      "passed": true
+    },
+    {
+      "file": "tests/integration/runtime-topology-contracts.php",
+      "passed": true
+    }
+  ]
+}

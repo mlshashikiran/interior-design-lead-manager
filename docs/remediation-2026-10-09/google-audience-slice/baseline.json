@@ -1,0 +1,20 @@
+{
+  "builder": "Shashi",
+  "version": "1.102.67",
+  "source_hashes": {
+    "includes/class-audiences.php": "f04bd67637715242e9d65dd126afc7e7c79e2e6353175b0063b555ea661ecf09",
+    "includes/class-integrations.php": "2a0e9e9d1f03babfb912fac13923455ca8ffd9da31f389cf1f645ee0f309c48f",
+    "tests/run.php": "0cd4f3c5d09d4ed48db76e8c3c19666cc1715e3fccc5ea6fa947fc4e7d0f38de",
+    "tests/integration/run.php": "449beef19e648eda207e68a01f8b042c46eaa377c9a7f4ca50c8a0f67f71cdfd",
+    "tests/integration/quotation-http.php": "a4a93c8a310137dbc757c16095ffa1f0c2a1a64014873d09f3cb06e68a36f1e3",
+    "interior-design-lead-manager.php": "c472ea754fe1d23a270f73fea7fd513a5c137649b4153d710bbc4a5f1b037c25",
+    "readme.txt": "07103453ea2fa72bfdd16ccbdba11c473d97a74a968498c575a182c4b002fbcc",
+    "CHANGELOG.md": "6bea8726ed406dae40a6e87a9ebb17ce320dab817e31f8dd78eb4bd2bc20dd4e",
+    "docs/CHANGELOG-DEV.md": "1be0b04bf833edafe14761d4bec9d6639717446b181f2cf81a7d9d406896e23f",
+    "docs/INTERFACES.md": "005e3450a34d24af3a7d2709fe0dd868ec6f3f722acf8f3bdaa1a56861804515",
+    "docs/SECURITY.md": "97ae45f8984a54e56224bdada90fba43a6c5a7c3fc5abfffcbc96f94be25a20f",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "3acad8ed6b6c1f023b26b1ad79de6a746eede9809636f03db46612b572f010f6",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "d503d926fa88af7259254f80ea2e372242da8279d361fdc6cc43113d77157a71",
+    "docs/audit-remediation-backlog.csv": "10a1d92167b6f74150653db2cbc61ff8b374d8243fee9148ff5c7dca6e458473"
+  }
+}

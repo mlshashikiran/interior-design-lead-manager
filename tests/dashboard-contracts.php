@@ -3,7 +3,7 @@
 idlm_test('dashboard context respects role groups, disabled users and mixed roles', static function(): void {
     foreach (array(
         array(array('administrator'), array('manage_options'), true, true, false),
-        array(array('sales_manager'), array('idlm_assign_leads'), true, true, false),
+        array(array('sales_manager'), array('idlm_access_leads', 'idlm_assign_leads'), true, true, false),
         array(array('marketing'), array('idlm_access_leads'), false, true, false),
         array(array('campaign_team'), array('idlm_access_leads'), false, true, false),
         array(array('sales_executive'), array('idlm_access_leads'), true, false, false),

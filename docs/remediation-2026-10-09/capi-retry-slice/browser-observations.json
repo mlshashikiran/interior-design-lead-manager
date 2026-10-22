@@ -1,0 +1,19 @@
+{
+  "builder": "Shashi",
+  "route": "/crm-workspace?idlm_view=capi-logs",
+  "desktop": {
+    "source_log_ids": [
+      6,
+      7
+    ],
+    "message": "1 succeeded, 1 failed",
+    "prior_success_refused": true
+  },
+  "mobile": {
+    "width": 390,
+    "height": 844,
+    "source_log_id": 6,
+    "message": "0 succeeded, 1 failed",
+    "replay_refused": true
+  }
+}

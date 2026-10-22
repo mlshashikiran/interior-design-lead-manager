@@ -1,0 +1,22 @@
+[
+  {
+    "file": "interior-design-lead-manager.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in interior-design-lead-manager.php\n"
+  },
+  {
+    "file": "tests/release-contracts.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/release-contracts.php\n"
+  },
+  {
+    "file": "tests/release/class-release-artifact.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/release/class-release-artifact.php\n"
+  },
+  {
+    "file": "docs/remediation-2026-10-09/public-disclosures-slice/focused-runner.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in docs/remediation-2026-10-09/public-disclosures-slice/focused-runner.php\n"
+  }
+]

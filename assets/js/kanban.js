@@ -8,6 +8,10 @@ jQuery(document).ready(function($) {
     var dragPointerX = null;
     var dragScrollFrame = null;
     var kanbanRequest = null;
+    var boardCursor = '';
+    var boardHistory = [];
+    var boardNext = '';
+    var boardRequestSequence = 0;
     var kanbanFiltersReturnFocus = null;
     var kanbanDialogTrigger = null;
     var pendingFocusLeadId = null;
@@ -510,7 +514,22 @@ jQuery(document).ready(function($) {
     }
 
     // AJAX fetching of leads grouped by stage
-    function loadKanbanBoard() {
+    $('#idlm-kanban-next-page').on('click', function() {
+        if (!boardNext) return;
+        boardHistory.push(boardCursor);
+        loadKanbanBoard(boardNext, true);
+    });
+    $('#idlm-kanban-prev-page').on('click', function() {
+        if (!boardHistory.length) return;
+        loadKanbanBoard(boardHistory.pop(), true);
+    });
+
+    function loadKanbanBoard(cursor, navigation) {
+        if (!navigation) { boardHistory = []; cursor = ''; }
+        boardCursor = cursor || '';
+        boardNext = '';
+        var sequence = ++boardRequestSequence;
+        $('#idlm-kanban-next-page, #idlm-kanban-prev-page').prop('disabled', true);
         var $board = $('#idlm-kanban-board');
         if (!$board.length) return;
 
@@ -519,6 +538,7 @@ jQuery(document).ready(function($) {
 
         var filters = {
             action: 'idlm_get_kanban_leads',
+            cursor: boardCursor,
             nonce: idlm_vars.nonce,
             search: $('#idlm-kanban-filter-search').val(),
             date_range: $('#idlm-kanban-filter-date-range').val(),
@@ -536,8 +556,17 @@ jQuery(document).ready(function($) {
             type: 'POST',
             data: filters,
             success: function(response) {
+                if (sequence !== boardRequestSequence) return;
                 if (response.success) {
-                    renderKanbanLeads(response.data.leads);
+                    renderKanbanLeads(response.data.leads, response.data.stage_summaries || {});
+                    var page = response.data.page || {};
+                    boardNext = page.next_cursor || '';
+                    $('#idlm-kanban-prev-page').prop('disabled', !boardHistory.length);
+                    $('#idlm-kanban-next-page').prop('disabled', !boardNext);
+                    var total = Number((response.data.stats || {}).total_filtered) || 0;
+                    var offset = Number(page.offset) || 0;
+                    var size = Number(page.size) || 0;
+                    $('#idlm-kanban-page-status').text(total ? 'Showing ' + (offset + 1) + '–' + (offset + size) + ' of ' + total + ' leads' : 'No leads match these filters');
                     renderKanbanStats(response.data.stats || {});
                 } else {
                     if (typeof window.idlmShowToast === 'function') {
@@ -579,7 +608,7 @@ jQuery(document).ready(function($) {
     }
 
     // Render cards inside columns dynamically
-    function renderKanbanLeads(leadsData) {
+    function renderKanbanLeads(leadsData, summaries) {
         kanbanLeadLookup = {};
 
         // Loop over each stage column present in the board
@@ -594,8 +623,10 @@ jQuery(document).ready(function($) {
             $body.empty();
             
             var leads = leadsData[stage] || [];
-            $count.text(leads.length);
-            $('.idlm-kanban-stage-tab').filter(function() { return String($(this).data('stage')) === String(stage); }).find('.idlm-kanban-stage-tab-count').text(leads.length).attr('aria-label', leads.length + ' lead' + (leads.length === 1 ? '' : 's'));
+            var summary = summaries[stage] || {};
+            var stageCount = Number(summary.count) || leads.length;
+            $count.text(stageCount);
+            $('.idlm-kanban-stage-tab').filter(function() { return String($(this).data('stage')) === String(stage); }).find('.idlm-kanban-stage-tab-count').text(stageCount).attr('aria-label', stageCount + ' lead' + (stageCount === 1 ? '' : 's'));
             if (totalSource === 'quote_value' || totalSource === 'deal_value') {
                 var stageTotal = 0;
                 $.each(leads, function(i, lead) {
@@ -604,6 +635,7 @@ jQuery(document).ready(function($) {
                         stageTotal += monetaryValue;
                     }
                 });
+                if (summary[totalSource] !== undefined) stageTotal = Number(summary[totalSource]) || 0;
                 var totalLabel = totalSource === 'quote_value' ? 'Quote Total' : 'Deal Total';
                 $pipelineValue
                     .text(totalLabel + ': ' + ($('#idlm-kanban-board').data('currency-symbol') || '') + formatPipelineValue(stageTotal))
@@ -613,7 +645,7 @@ jQuery(document).ready(function($) {
             }
 
             if (leads.length === 0) {
-                $body.append('<div class="idlm-kanban-column-empty">No leads in this stage</div>');
+                $body.append('<div class="idlm-kanban-column-empty">' + (stageCount ? 'No leads from this stage on this page' : 'No leads in this stage') + '</div>');
                 return;
             }
 

@@ -1,0 +1,5 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+FAIL T10-N-QUO007-standalone-number-reservation-refuses-MyISAM-without-advancing-sequence
+  Unsupported reservation was acknowledged; nontransactional numbering can advance.
+
+1 passed, 1 failed

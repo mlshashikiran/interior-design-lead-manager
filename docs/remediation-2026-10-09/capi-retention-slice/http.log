@@ -1,0 +1,5 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T08-T16-H-INT008 pruned acceptance blocks a different failed-log retry root
+PASS T08-T16-H-INT008 legacy adoption before pruning blocks credentialed retry
+PASS T08-T14-H-INT008 failed delivery acknowledgement remains uncertain after logs disappear
+3 passed, 0 failed

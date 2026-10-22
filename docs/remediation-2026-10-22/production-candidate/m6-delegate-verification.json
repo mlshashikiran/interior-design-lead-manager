@@ -1,0 +1,329 @@
+{
+  "builder": "Shashi",
+  "checked_methods": 46,
+  "all_pass": true,
+  "checks": [
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "maybe_migrate_api_credentials",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "rotate_api_credential",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "generate_api_credential",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "credential_matches",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "validate_scoped_api_key",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "check_rest_rate_limit",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "rest_permission_error",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "permission_webhook",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "permission_google_feed",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "permission_mcp",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "validate_gadm_request",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-integration-auth.php",
+      "method": "validate_mcp_api_key",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-webhook-intake.php",
+      "method": "handle_webhook_request",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-webhook-intake.php",
+      "method": "apply_field_mappings",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-webhook-intake.php",
+      "method": "classify_lead_source",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-webhook-intake.php",
+      "method": "normalize_property_type",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-webhook-intake.php",
+      "method": "normalize_num_rooms",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-webhook-intake.php",
+      "method": "normalize_budget",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-webhook-intake.php",
+      "method": "flatten_array",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-webhook-intake.php",
+      "method": "is_truthy_webhook_value",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-google-feed-controller.php",
+      "method": "add_google_feed_auth_challenge",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-google-feed-controller.php",
+      "method": "send_gadm_401",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-google-feed-controller.php",
+      "method": "clean_rest_headers_for_gadm",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-google-feed-controller.php",
+      "method": "handle_google_ads_conversions_feed",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "owner": "includes/class-google-feed-controller.php",
+      "method": "handle_google_ads_audience_feed",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-capi.php",
+      "owner": "includes/class-capi-transport.php",
+      "method": "uses_whatsapp_attribution",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-capi.php",
+      "owner": "includes/class-capi-transport.php",
+      "method": "record_attempt",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-capi.php",
+      "owner": "includes/class-capi-transport.php",
+      "method": "record_provider_response",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-capi.php",
+      "owner": "includes/class-capi-transport.php",
+      "method": "fire_meta_capi_work",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-capi.php",
+      "owner": "includes/class-capi-transport.php",
+      "method": "fire_google_capi_work",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-capi.php",
+      "owner": "includes/class-capi-transport.php",
+      "method": "fire_linkedin_capi_work",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-capi.php",
+      "owner": "includes/class-google-conversion-feed.php",
+      "method": "get_google_ads_conversion_events",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-capi.php",
+      "owner": "includes/class-google-conversion-feed.php",
+      "method": "generate_google_ads_conversions_csv_response",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-capi.php",
+      "owner": "includes/class-google-conversion-feed.php",
+      "method": "clear_csv_output_buffers",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-capi.php",
+      "owner": "includes/class-google-conversion-feed.php",
+      "method": "format_google_ads_conversion_time",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-task-controller.php",
+      "method": "ajax_get_lead_tasks",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-task-controller.php",
+      "method": "ajax_add_lead_task",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-task-controller.php",
+      "method": "ajax_toggle_task_status",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-task-controller.php",
+      "method": "ajax_delete_lead_task",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-task-controller.php",
+      "method": "manual_task_types",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-task-controller.php",
+      "method": "normalize_manual_task_due_date",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-task-controller.php",
+      "method": "is_system_qualification_task",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-task-controller.php",
+      "method": "ajax_get_rep_tasks",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-collection-reads.php",
+      "method": "ajax_get_leads_table",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-collection-reads.php",
+      "method": "ajax_get_kanban_leads",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "owner": "includes/class-admin-collection-reads.php",
+      "method": "ajax_get_total_leads_count",
+      "original_facade_signature_preserved": true,
+      "delegate_verified": true
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "baseline-hashes.json": "0a11ad92f68550fc5bf51975c7c9e071892cf38d1109ec6223f145dbcd7e347a",
+  "baseline-release.log": "84aa23f63f83d389f3f203873f6e3116267ea1eee30ec65ecb222ea46d1f463d",
+  "build.json": "1f0d1cb75a1e5b8882ced6a970de8082aef2e85c2b4c3aa0579953960aca4a3d",
+  "changed-php-files.json": "76dd2fc6981050205557a53636c24489574be87f006d0b9986b238194d9762b0",
+  "diff-check.log": "9783e98677846f3b2ab0556b2a173bf205249612fcbab028769b45cf911538ca",
+  "disclosure-source-review.json": "8b2096feac488b44db1141ae9854d5589ffbac3e61949208e0956488a74475ed",
+  "focused-runner.php": "4d3ae6f77854fa04ec0674cf8e63fd1a121a963768eceb51266521a90761f66c",
+  "graph-refresh.json": "8881db19ef91ac4a0a517b938ad658fe43aebfd97220c4cf6a3457ec96b132d1",
+  "installed-identity.json": "1a33d446b6b44a9a8fcd6c9dd18b17d50e52d5b98bf942c807fa4abf5d80e35b",
+  "omission-negative.json": "7c4ee84dbc0a6068fbf938f23f603dbd3b531458fefa5c777d39d0ef10155453",
+  "package/interior-design-lead-manager-1.102.74.manifest.json": "6e07213e6285734a9493462856ec613a2e97bca8dc080c86d35978fe77ae8bdc",
+  "package/interior-design-lead-manager-1.102.74.sha256": "93bce6e839d5259e3a1efec5b6f37c07276300980b87c1a8c8ace629c42e4434",
+  "package/interior-design-lead-manager-1.102.74.zip": "23e16e84bec6fbe83ed66a8b7227615d27d97327253b221680f6363980b6e085",
+  "php-lint.log": "0b95690d9793b259ee48eef311e753c33a09071218b6d56aea9bdb3e61af19c9",
+  "release-final.log": "84aa23f63f83d389f3f203873f6e3116267ea1eee30ec65ecb222ea46d1f463d",
+  "reproduction.json": "37cac598ff484e0ebeb5fc5fac109f22b6880376b834cee0544f0184867239fd",
+  "source-hashes.json": "a1627749520ce07e1104bbd47cc196648b94384821df49221046f51a53bab8eb",
+  "verification.json": "9beb7904d7cfa0b98b931bda29756898b034f1bf85cdff6a33a3710b485dda19"
+}

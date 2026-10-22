@@ -1,0 +1,84 @@
+{
+  "builder": "Shashi",
+  "candidate": "1.102.83",
+  "finding": "REL-007",
+  "status": "IMPLEMENTED",
+  "static_gate": "PASS",
+  "artifact_sha256": "c970e2751c67b8c7ce8b27cbcea5da285cafbd6b21896dea8d750634fb2173d1",
+  "zip_file_count": 453,
+  "runtime": {
+    "WordPress": "6.6",
+    "PHP": "8.4.14",
+    "MySQL": "8.4.0",
+    "cache": "off",
+    "scheduler": "WP-Cron"
+  },
+  "fast": {
+    "passed": 385,
+    "failed": 0,
+    "release_cases_included": 16,
+    "exit_code": 0
+  },
+  "native_full": {
+    "passed": 331,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "HTTP_stdio_full": {
+    "passed": 445,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "HTTP_focused": {
+    "passed": 2,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "PHP_lint": {
+    "files": 88,
+    "failed": 0
+  },
+  "templates_token_and_markup_parity": {
+    "files": 26,
+    "failed": 0
+  },
+  "actual_positive_gate": {
+    "runner_exit": 0,
+    "errors": 0,
+    "warnings": 0
+  },
+  "actual_negative_gate": {
+    "checker_exit": 0,
+    "runner_exit": 1,
+    "diagnostics_retained": 1744
+  },
+  "development_failures_and_repairs": [
+    "UI contracts adjusted only for renamed template locals",
+    "3360-line implementation budget excludes bounded review-comment lines; threshold unchanged",
+    "Native timestamp fixture explicitly sets UTC then restores inherited timezone",
+    "New HTTP cases corrected to create their own quotation and use the production login shortcode",
+    "Pinned checker returns exact plain-text success before its format switch when both errors and warnings are empty; decoder now handles only that exact exit-zero response and retains raw stdout"
+  ],
+  "source_review": "source-review.json",
+  "release_channel": "Private managed ZIP (explicit user selection)",
+  "production_release_approved": false,
+  "not_run": [
+    "Complete PHP 7.4/8.1/8.4 x WordPress 6.6/latest matching CI matrix",
+    "Clean committed candidate and matching CI attestation",
+    "Installation and qualification of the exact release artifact",
+    "M6/M7 deployment/topology/performance qualification",
+    "Actual absent-extension hosts, installed Action Scheduler/version matrix, persistent cache and multi-node production qualification"
+  ],
+  "scope": "Source-tree runtime suites; static scanner alone ran extracted hash-bound ZIP. No production, commit, push, tag, deployment or publication.",
+  "native_sample_output_focused": {
+    "passed": 2,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "preservation_exception": "Native test regenerated historical bounded-work-slice/read-sample.json; initial hash retained but original bytes unavailable. Future samples now write to disposable content or explicit path.",
+  "whitespace": {
+    "exit_code": 0,
+    "tracked_diff_clean": true
+  },
+  "runtime_test_final_delta": "After full suites: only template trailing PHP whitespace (26 template token/markup parity checks and affected PHP lint pass) and native sample evidence destination (2 focused native cases pass). No runtime semantics changed."
+}

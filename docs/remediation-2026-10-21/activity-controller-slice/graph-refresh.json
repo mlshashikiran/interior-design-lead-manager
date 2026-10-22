@@ -1,0 +1,42 @@
+{
+  "builder": "Shashi",
+  "updated_at": "2026-10-21T05:47:25.339801+00:00",
+  "method": "Scoped Graphify AST plus four source-verified delegate edges and literal document headings; outside-scope relationships retained. No full semantic/HTML rebuild.",
+  "code_files": [
+    "includes/class-admin-activity-controller.php",
+    "includes/class-admin-ajax.php",
+    "interior-design-lead-manager.php",
+    "tests/bootstrap.php",
+    "tests/run.php",
+    "tests/release-contracts.php",
+    "tests/integration/quotation-http.php",
+    "tests/integration/activity-controller-http-cases.php"
+  ],
+  "document_files": [
+    "docs/AUDIT-REMEDIATION-PLAN.md",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md",
+    "docs/CHANGELOG-DEV.md",
+    "docs/ARCHITECTURE.md",
+    "docs/FEATURE-MAP.md",
+    "docs/PROJECT-MAP.md",
+    "docs/DEVELOPMENT.md",
+    "docs/INTERFACES.md",
+    "tests/README.md",
+    "docs/AUDIT-REMEDIATION-ACTIVITY-CONTROLLER-SLICE.md"
+  ],
+  "extracted_nodes": 247,
+  "extracted_edges": 288,
+  "document_headings": 390,
+  "source_sha256": {
+    "includes/class-admin-activity-controller.php": "b0e7a3124fb2059d8d16367eb056f7aa0940daaae58dbc6cf0b5698571e237c1",
+    "includes/class-admin-ajax.php": "99a32053c151b5e7992c49f18b37d8e569decd24c25c28536ba0be3b6eedeb11",
+    "interior-design-lead-manager.php": "991dc9e6a30ac10b1819481ea0cba4d33b16b940d0830ef335c24afe67be27d0",
+    "tests/bootstrap.php": "ae1eda43cca3f286ea0d44f74b514c90d572dcd53b6fb2842a878343bd5feb14",
+    "tests/run.php": "d7cef35d4549a1218df46fbbc7cebf0ede50c7e7fdc94774c208061e16ebb208",
+    "tests/release-contracts.php": "adae589f5a059e2b4e26353a3d9632754be31418e546191da2227ed4b60420d4",
+    "tests/integration/quotation-http.php": "35a7015242e3690b79c587ba3da8dd4d29bb76a3e1d03be6bb4b4c2ea03e60b3",
+    "tests/integration/activity-controller-http-cases.php": "8adb4b60ee8ce7fa7d7cd06277bde5ff48dff9054b1c186e870d36bc88353055"
+  },
+  "semantic_tokens": "Not measured; no token reduction claim"
+}

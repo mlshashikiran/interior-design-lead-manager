@@ -3,12 +3,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$currency_code = isset($context['currency_code']) ? (string) $context['currency_code'] : 'INR';
-$stages = isset($context['stages']) && is_array($context['stages']) ? $context['stages'] : array();
-$lost_reasons = isset($context['lost_reasons']) && is_array($context['lost_reasons']) ? $context['lost_reasons'] : array();
-$reps = isset($context['reps']) && is_array($context['reps']) ? $context['reps'] : array();
-$can_assign_leads = !empty($context['can_assign_leads']);
-$can_manage_options = !empty($context['can_manage_options']);
+$idlm_currency_code = isset($context['currency_code']) ? (string) $context['currency_code'] : 'INR';
+$idlm_stages = isset($context['stages']) && is_array($context['stages']) ? $context['stages'] : array();
+$idlm_lost_reasons = isset($context['lost_reasons']) && is_array($context['lost_reasons']) ? $context['lost_reasons'] : array();
+$idlm_reps = isset($context['reps']) && is_array($context['reps']) ? $context['reps'] : array();
+$idlm_can_assign_leads = !empty($context['can_assign_leads']);
+$idlm_can_manage_options = !empty($context['can_manage_options']);
 ?>
         <!-- Sliding Drawer Panel (Right side slideout) -->
         <div class="idlm-drawer" id="idlm-lead-drawer" role="dialog" aria-modal="true" aria-labelledby="lead-title" aria-hidden="true" tabindex="-1">
@@ -51,7 +51,7 @@ $can_manage_options = !empty($context['can_manage_options']);
                     <button type="button" class="idlm-dialog__close" id="idlm-deal-value-modal-close" data-idlm-dialog-close aria-label="Close Won dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
                 </header>
                 <div class="idlm-dialog__body">
-                    <div class="idlm-form-group"><label for="idlm-deal-value-input">Deal value (<?php echo esc_html($currency_code); ?>) <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0.01" inputmode="decimal" id="idlm-deal-value-input" class="idlm-input" required aria-errormessage="idlm-deal-value-error" placeholder="e.g. 150000"><p class="idlm-field-error" id="idlm-deal-value-error" role="alert" hidden></p></div>
+                    <div class="idlm-form-group"><label for="idlm-deal-value-input">Deal value (<?php echo esc_html($idlm_currency_code); ?>) <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0.01" inputmode="decimal" id="idlm-deal-value-input" class="idlm-input" required aria-errormessage="idlm-deal-value-error" placeholder="e.g. 150000"><p class="idlm-field-error" id="idlm-deal-value-error" role="alert" hidden></p></div>
                     <div class="idlm-form-group"><label for="idlm-discount-percentage-input">Discount percentage <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0" max="100" inputmode="decimal" id="idlm-discount-percentage-input" class="idlm-input" required aria-errormessage="idlm-discount-percentage-error" placeholder="e.g. 10"><p class="idlm-field-error" id="idlm-discount-percentage-error" role="alert" hidden></p></div>
                     <div class="idlm-form-group"><label for="idlm-won-property-location-input">Property location or pincode</label><input type="text" id="idlm-won-property-location-input" class="idlm-input" maxlength="255" autocomplete="street-address" placeholder="e.g. North Bangalore / 560001"></div>
                 </div>
@@ -67,7 +67,7 @@ $can_manage_options = !empty($context['can_manage_options']);
                     <button type="button" class="idlm-dialog__close" id="idlm-quote-value-modal-close" data-idlm-dialog-close aria-label="Close Quote Shared dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
                 </header>
                 <div class="idlm-dialog__body">
-                    <div class="idlm-form-group"><label for="idlm-quote-value-input">Quote value (<?php echo esc_html($currency_code); ?>) <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0.01" inputmode="decimal" id="idlm-quote-value-input" class="idlm-input" required aria-errormessage="idlm-quote-value-error" placeholder="e.g. 150000"><p class="idlm-field-error" id="idlm-quote-value-error" role="alert" hidden></p></div>
+                    <div class="idlm-form-group"><label for="idlm-quote-value-input">Quote value (<?php echo esc_html($idlm_currency_code); ?>) <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0.01" inputmode="decimal" id="idlm-quote-value-input" class="idlm-input" required aria-errormessage="idlm-quote-value-error" placeholder="e.g. 150000"><p class="idlm-field-error" id="idlm-quote-value-error" role="alert" hidden></p></div>
                     <div class="idlm-form-group"><span class="idlm-form-label">Quote file</span><div class="idlm-drawer-file-row"><input type="hidden" id="idlm-stage-quote-file" value=""><label class="screen-reader-text" for="idlm-stage-quote-file-input">Choose quote file</label><input type="file" id="idlm-stage-quote-file-input" class="idlm-file-input" data-input-id="idlm-stage-quote-file" data-preview-id="idlm-stage-quote-preview" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" hidden><button type="button" class="idlm-drawer-btn-file idlm-direct-upload-trigger">Upload quote</button><span id="idlm-stage-quote-preview" class="idlm-drawer-file-note" role="status">No file uploaded</span></div></div>
                 </div>
                 <footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-quote-value-modal-cancel" data-idlm-dialog-close>Cancel</button><button type="button" class="idlm-btn idlm-btn-primary" id="idlm-quote-value-modal-save">Save and share quote</button></footer>
@@ -82,7 +82,7 @@ $can_manage_options = !empty($context['can_manage_options']);
                     <button type="button" class="idlm-dialog__close" id="idlm-lost-remark-modal-close" data-idlm-dialog-close aria-label="Close Lost dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
                 </header>
                 <div class="idlm-dialog__body">
-                    <div class="idlm-form-group"><label for="idlm-lost-reason-select">Lost reason <span class="idlm-required-indicator" aria-hidden="true">*</span></label><select id="idlm-lost-reason-select" class="idlm-input" required aria-errormessage="idlm-lost-reason-error"><option value="">Select a reason</option><?php foreach ($lost_reasons as $lost_reason): ?><option value="<?php echo esc_attr($lost_reason); ?>"><?php echo esc_html($lost_reason); ?></option><?php endforeach; ?></select><p class="idlm-field-error" id="idlm-lost-reason-error" role="alert" hidden></p></div>
+                    <div class="idlm-form-group"><label for="idlm-lost-reason-select">Lost reason <span class="idlm-required-indicator" aria-hidden="true">*</span></label><select id="idlm-lost-reason-select" class="idlm-input" required aria-errormessage="idlm-lost-reason-error"><option value="">Select a reason</option><?php foreach ($idlm_lost_reasons as $idlm_lost_reason): ?><option value="<?php echo esc_attr($idlm_lost_reason); ?>"><?php echo esc_html($idlm_lost_reason); ?></option><?php endforeach; ?></select><p class="idlm-field-error" id="idlm-lost-reason-error" role="alert" hidden></p></div>
                     <div class="idlm-form-group"><label for="idlm-lost-remark-input">Lost remark <span class="idlm-required-indicator" aria-hidden="true">*</span></label><textarea id="idlm-lost-remark-input" class="idlm-input" rows="4" maxlength="1000" required aria-errormessage="idlm-lost-remark-error" placeholder="Add the reason the lead was lost..."></textarea><p class="idlm-field-error" id="idlm-lost-remark-error" role="alert" hidden></p></div>
                 </div>
                 <footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-lost-remark-modal-cancel" data-idlm-dialog-close>Cancel</button><button type="button" class="idlm-btn idlm-btn-primary" id="idlm-lost-remark-modal-save">Save and mark Lost</button></footer>

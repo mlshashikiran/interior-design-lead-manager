@@ -1,0 +1,11 @@
+{
+    "builder": "Shashi",
+    "php": "8.5.12",
+    "wordpress": "7.1.3",
+    "external_object_cache": true,
+    "cache": "Docket Cache 26.04.11",
+    "cross_process_persistence": true,
+    "actor_isolation": true,
+    "revocation_denies_and_invalidates": true,
+    "rebuild": true
+}

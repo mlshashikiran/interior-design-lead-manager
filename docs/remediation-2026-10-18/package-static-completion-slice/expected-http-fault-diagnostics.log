@@ -1,0 +1,6 @@
+[18-Oct-2026 05:14:39 UTC] [IDLM Quotations] Revision item insert failed: Table 'idlm_test_79513_81f3f862.idlm_absent_table' doesn't exist
+[18-Oct-2026 05:14:39 UTC] [IDLM Quotations] Quotation history insert failed: Table 'idlm_test_79513_81f3f862.idlm_absent_table' doesn't exist
+[18-Oct-2026 05:14:39 UTC] [IDLM Quotations] Quotation transaction commit failed: Table 'idlm_test_79513_81f3f862.idlm_absent_table' doesn't exist
+[18-Oct-2026 05:21:05 UTC] [IDLM Quotations] Revision item insert failed: Table 'idlm_test_92379_c2a1382c.idlm_absent_table' doesn't exist
+[18-Oct-2026 05:21:05 UTC] [IDLM Quotations] Quotation history insert failed: Table 'idlm_test_92379_c2a1382c.idlm_absent_table' doesn't exist
+[18-Oct-2026 05:21:05 UTC] [IDLM Quotations] Quotation transaction commit failed: Table 'idlm_test_92379_c2a1382c.idlm_absent_table' doesn't exist

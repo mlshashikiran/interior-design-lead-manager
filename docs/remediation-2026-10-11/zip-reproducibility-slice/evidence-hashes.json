@@ -1,0 +1,21 @@
+{
+  "baseline-contracts.txt": "84aa23f63f83d389f3f203873f6e3116267ea1eee30ec65ecb222ea46d1f463d",
+  "baseline-hashes.json": "d2030a7a08b24a26347dfc58b1ac1766d098e4079cfd55da6108b9ee803330fa",
+  "final-a-build.json": "e8d3687e4a8b403b151b1d8c2618c07feaa67789c533fb10bcbb92c856138cd0",
+  "final-b-build.json": "e8d3687e4a8b403b151b1d8c2618c07feaa67789c533fb10bcbb92c856138cd0",
+  "final-c-build.json": "698cfc53df111f9cc9707151fc6d08c199436c5ab94c7e3c6a06b0b8352b14ef",
+  "final-contracts.txt": "ccd474c541198246e7d68a329ee201698e692a951c2536abbeac243e301c17f4",
+  "graph-refresh.json": "a4ee7a10456ee61b77d2b054401981fbcdb337f4d8a8def60a1bb978c59fbd1d",
+  "php-lint.json": "8c1e5111ec02902d5a449c01432656c429efc11e0575791a5e87d6bfb9234a2c",
+  "post-fix-contracts.txt": "ccd474c541198246e7d68a329ee201698e692a951c2536abbeac243e301c17f4",
+  "pre-a-build.json": "0ac30e694ec6f20b34052af2b28937803fcf9c7d961caed90fa907dfe3251e52",
+  "pre-b-build.json": "c4d0112ad73e6d610ca176c82cd477edc4e4f7c0e8f5a192f495af9c51e4fea4",
+  "pre-fix-contracts.txt": "4cd544612c556a650917558acb6d7370dbbe6c75500e3f57aa34294ee2cd3acf",
+  "pre-fix-reproducibility.json": "049576325d21345ff10aef6d7c55059b157f7212b2ae014aa5deb0b485723756",
+  "promotion-rejection-stderr.txt": "ef0d672408f85074c3b10563303c868f3abc651be720bd17a175f30a0e25da7d",
+  "promotion-rejection.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "reproducibility.json": "ae487bf6cf74919537e0d7c17e437ab90d09d2f7e507c537577f7d2acdcba1c6",
+  "source-hashes.json": "5e480f8f5e2319253199c925d8427b7f71cc4560ed6ebe3747010deb8efae669",
+  "verification.json": "23a0ac37fee2150ab0441a1f55c7b676d0b13885e1d049c731eb60ad617d96e5",
+  "workflow-check.json": "89ff1882ea9eda0fe4fec99694882bc33a5d2a163fde0e1e54c34d9e7ee31223"
+}

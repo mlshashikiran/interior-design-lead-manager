@@ -1,0 +1,80 @@
+Original contractual cover
+                                          Quotation #:                                                          Q-2026-000121
+IDLM Integration Tests                    Revision:                                                                         R01
+
+                                          Created / Modified By:                                   fixture_owner / fixture_owner
+
+                                          Created / Updated Date:                    07-10-2026 11:08 AM / 07-10-2026 11:08 AM
+
+
+
+
+    Customer Details
+
+CLIENT NAME                PHONE NUMBER             EMAIL ID                 PROPERTY NAME           LOCATION
+
+
+Synthetic commercial       —                        —                        —                       —
+history
+
+
+
+
+    Quotation Summary
+
+ Section-wise subtotal before discount
+
+
+Sl No                                     Section                                    Subtotal before discount
+
+
+1                                         General                                                                     ₹100.00
+
+
+
+                                                               Subtotal                                              ₹100.00
+
+                                                               Wooden Subtotal                                         ₹0.00
+
+                                                               Wooden Discount (0.00%)                                 ₹0.00
+
+                                                               Total                                                 ₹100.00
+
+                                                               GST (18%)                                              ₹18.00
+
+
+                                                               Grand Total                                         ₹118.00
+    Section & Item Breakdown
+
+
+    General
+
+S.NO ITEM             DESCRIPTION               WIDTH   HEIGHT   AREA / QTY   UNIT      RATE             SUBTOTAL
+
+
+1     Uncategorised   SYNTHETIC-ITEM-ORIGINAL   0.00     0.00         1.00    Nos    ₹100.00             ₹100.00
+
+
+GENERAL SUBTOTAL                                                                               ₹100.00
+Original contractual closing
+
+
+
+Payment Structure
+
+ Milestone                     Percentage                                 Amount
+
+
+ Original deposit              50.00%                                      ₹59.00
+
+
+ Original completion           50.00%                                      ₹59.00
+
+
+ Total                         100.00%                                    ₹118.00
+
+
+
+
+                                            Original contractual footer
+

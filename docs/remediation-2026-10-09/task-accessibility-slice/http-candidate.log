@@ -1,0 +1,4 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T04-T19-H-UI003-task-labels-submit-and-error-associations
+1 passed, 0 failed
+BROWSER URL=http://127.0.0.1:61380 LEAD=5 STOP=/var/folders/7z/fv8kbkrn4pxdw8wj17g20t7h0000gn/T/idlm_test_41789_31f1ed8b-content/stop

@@ -1,0 +1,6 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T10-T18-H-UI001-manual-quantities-working-copy-save-and-repeat-retain-values
+PASS T10-T18-H-UI001-tiny-dimension-derived-quantity-prices-the-normalized-value
+FAIL T18-T19-H-UI001-rendered-admin-shortcode-new-edit-and-template-use-hundredth-step: Missing initial/template quantity inputs
+2 passed, 1 failed
+BROWSER URL=http://127.0.0.1:54926 STOP=/var/folders/7z/fv8kbkrn4pxdw8wj17g20t7h0000gn/T/idlm_test_94139_576f7657-content/stop

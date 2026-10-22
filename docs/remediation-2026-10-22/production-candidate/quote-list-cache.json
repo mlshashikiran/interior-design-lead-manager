@@ -1,0 +1,86 @@
+{
+  "schema": "idlm-team-load/v1",
+  "builder": "Shashi",
+  "profile": "team-stress-cache-quote-list",
+  "actors": 45,
+  "action": "idlm_filter_quotation_list",
+  "requests": 450,
+  "concurrency": 25,
+  "read_only": true,
+  "contains_credentials_or_response_bodies": false,
+  "php_server": "8.5.12",
+  "wordpress": "7.1.3",
+  "artifact_sha256": "9e92ad6949cce4a015cbcd51fdbb6b87019f7f719d35e48499d5cd3bc588a959",
+  "executed": true,
+  "duration_seconds": 1.302,
+  "summary": {
+    "requests": 450,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "latency_ms": {
+      "p50": 43.922,
+      "p95": 153.736,
+      "p99": 369.85,
+      "max": 552.862
+    },
+    "response_bytes_max": 36519
+  },
+  "actions": {
+    "idlm_filter_quotation_list": {
+      "requests": 450,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 43.922,
+        "p95": 153.736,
+        "p99": 369.85,
+        "max": 552.862
+      },
+      "response_bytes_max": 36519
+    }
+  },
+  "server": {
+    "samples": 450,
+    "peak_memory_bytes": 20971520,
+    "queries_p95": 61,
+    "database_ms_p95": 86.082
+  },
+  "roles": {
+    "administrator": {
+      "requests": 10,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 38.772,
+        "p95": 111.515,
+        "p99": 111.515,
+        "max": 111.515
+      },
+      "response_bytes_max": 902
+    },
+    "sales_executive": {
+      "requests": 430,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 43.577,
+        "p95": 143.372,
+        "p99": 173.027,
+        "max": 211.719
+      },
+      "response_bytes_max": 36519
+    },
+    "sales_manager": {
+      "requests": 10,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 344.695,
+        "p95": 552.862,
+        "p99": 552.862,
+        "max": 552.862
+      },
+      "response_bytes_max": 36494
+    }
+  }
+}

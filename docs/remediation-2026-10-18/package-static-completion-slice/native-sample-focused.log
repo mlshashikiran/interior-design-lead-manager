@@ -1,0 +1,4 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T21-N-CORE012-local-5000-lead-20000-task-25000-message-read-plan-time-memory-sample
+
+2 passed, 0 failed

@@ -1,0 +1,27 @@
+# UI-001 — Ordinary quotation quantities
+
+Author / Builder: **Shashi**. Date: **2026-10-08**. Local candidate **1.102.63**, base `ff148ba62ec710a622d9b1af7e8f511b7e0b7385`. Core **1.3.9**, routing **1.0.1**, quotation **2.5.4** and lifecycle receipt **1.1.0** remain unchanged.
+
+## Finding and current source
+
+The immutable [UI-001 audit](audit-2026-10-06/UI-REVIEW.md#ui-001--p1-high-ordinary-quotation-quantities-cannot-pass-browser-validation) records `min="0.01" step="0.10"`, which makes ordinary quantities 1 and 2 fail native browser validation. The bounded Graphify query for **UI-001 / render_row / recalculate** located the audit finding; it did not establish the current control behavior. Current source and actual forms establish that the quantity input already uses **min 0.01, step 0.01, default 1.00**. The [earlier numeric report](AUDIT-REMEDIATION-QUOTATION-NUMERIC-SLICE.md) explicitly records that this repair predates its slice and that UI-001 still required separate qualification.
+
+No additional production edit is needed. `IDLM_Quotation_Renderer` supplies the shared admin/shortcode control; `assets/js/quotations.js` clones its attributes for added lines, duplicated lines and new sections. The numeric helper rounds dimensions/derived quantity to hundredths and applies the billable minimum before pricing. This slice adds regression coverage and records actual browser qualification of that existing repair. Version stays **1.102.63**; no schema, production metadata or historical monetary values are changed by this slice.
+
+## Executed verification
+
+- **312 fast / 0 failed**, including the existing quantity-step assertions; **28 JavaScript golden vectors PASS** against production numeric helpers. `node --check assets/js/quotations.js` passes. Fast stderr retains the pre-existing synthetic missing-phone warning.
+- **3 focused native HTTP / 0 failed** using `php tests/integration/quotation-http.php --quantity-only` on a fresh owned disposable WordPress/MySQL schema. Cases cover working-copy values and repeated revision saves of **1, 2, 0.01, 2.05**; tiny `.01 × .01` dimensions producing billable quantity `.01` and price `1.00` at rate `100`; exact new/edit quantity attributes in both admin and shortcode renderings, with read-only aggregate snapshots unchanged. Repeated save retains historical item rows. The module is also included in the standard HTTP runner; the full accumulated suite was not rerun for this isolated test/documentation change.
+- **17 recorded actual browser observations**, desktop admin **1280 × 900** and mobile shortcode **390 × 844**. Fresh default 1 and all four manual quantities pass native validity without a step mismatch. Add Line, Duplicate Line and Add Section inherit the correct controls. A quotation created through the browser saves subtotal **506.00**, grand total **597.00**, then reopens with the same quantities. Adding tiny dimensions saves subtotal **507.00**, grand total **598.00**. Negative input refuses submission while retaining entered data; valid autosave restores all five lines after reload. A mobile repeat save preserves the values and total. The mobile editor page width is **384**; the saved table uses its internal horizontal scroll. Representative [desktop](remediation-2026-10-08/quotation-quantity-slice/browser-saved-desktop.jpg) and [mobile](remediation-2026-10-08/quotation-quantity-slice/browser-saved-mobile.jpg) screenshots were visually inspected.
+- Independent SQL assertions after browser R03 verify **14 rows across R01/R02/R03**, exact stored quantities/prices/dimensions, original R01 values and current revision pointer. [Browser observations](remediation-2026-10-08/quotation-quantity-slice/browser-checks.json) and [saved database evidence](remediation-2026-10-08/quotation-quantity-slice/browser-persistence.json). Browser warning/error observations and affected-request PHP diagnostics are empty.
+- Both changed PHP test files pass `php -l`; `git diff --check` passes. [Commands, results, hashes and cleanup](remediation-2026-10-08/quotation-quantity-slice/verification.json).
+
+The initial focused run passed persistence/dimensions but failed an incorrect test assumption that a fresh form contains a second template input. Current UI has one initial row and clones it through JavaScript. The test now asserts one new-form control and five saved edit controls; final fresh-fixture results are **3 passed / 0 failed**. Initial and final logs are retained.
+
+Environment: PHP **8.4.14**, WordPress **7.1.3**, MySQL **8.4.0**, WP-Cron, no persistent cache. Only owned `idlm_test_*` databases, synthetic accounts and isolated content were used; provider HTTP/mail were intercepted. The configured site database was untouched. The owned schemas/content were removed, socket-only MySQL server stopped, temporary browser tab closed and viewport reset. No commit, packaging or deployment.
+
+## Qualification and next work
+
+**UI-001 is IMPLEMENTED, not CLOSED.** Backlog: **16 OPEN / 28 IMPLEMENTED**, none CLOSED. This evidence qualifies the working tree and representative desktop/mobile browser flows. Exact release artifact/CI, minimum/older runtimes, additional browser engines/locales/devices and whole T10/T18/T19/M0 gates remain open. Graph refresh is limited to changed test structure and explicit documentation headings; no full semantic/report regeneration claim.
+
+Next: **UI-002 — mobile task form layout**, then UI-003 accessibility.

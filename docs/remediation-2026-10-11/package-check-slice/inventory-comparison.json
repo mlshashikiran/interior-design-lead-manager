@@ -1,0 +1,23 @@
+{
+  "builder": "Shashi",
+  "baseline_files": 455,
+  "final_files": 450,
+  "removed": [
+    ".graphifyignore",
+    "design.md",
+    "includes/graphify-out/cache/794a3372d60e3a3d483562abf7f33bde8f9cdfe8adae35b55ca9e082ab39e56d.json",
+    "includes/graphify-out/cache/f16f3d3a1a2cc9de80bf394b1ba465465c628eecaee6c6e4921a3d91f13aa2d6.json",
+    "quote-builder-redesign.html"
+  ],
+  "changed": [
+    "CHANGELOG.md",
+    "includes/class-mcp-query-policy.php",
+    "includes/class-quotation-exporter.php",
+    "includes/class-quotation-renderer.php",
+    "interior-design-lead-manager.php",
+    "readme.txt"
+  ],
+  "source_identity_pass": true,
+  "licenses_and_runtime_retained": true,
+  "artifact_sha256": "56155fadcdd22181633f70cc2653dca690948abd7ffcc64372f87c101722ba71"
+}

@@ -46,7 +46,7 @@ class IDLM_Admin_Leads_Renderer {
         $is_pre_sales = IDLM_Admin::current_user_is_pre_sales();
         $can_assign_leads = IDLM_Admin::current_user_can_assign_leads();
         $can_manage_options = current_user_can('manage_options');
-        $reps_see_all = '1' === get_option('idlm_reps_see_all_leads', '1');
+        $reps_see_all = '1' === IDLM_Settings::get('idlm_reps_see_all_leads', '0');
         $pending_calls_count = $is_pre_sales ? IDLM_Admin::get_pending_calls_count() : 0;
         $unread_whatsapp_count = IDLM_Admin::get_unread_whatsapp_count();
         $stale_lead_count = IDLM_Admin_Lead_Notifications::get_stale_lead_count();
@@ -61,8 +61,10 @@ class IDLM_Admin_Leads_Renderer {
         $not_called_count = intval($wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table_leads} WHERE call_status = %s AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0 {$rep_clause}", 'Not Called')));
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $followup_count = intval($wpdb->get_var($wpdb->prepare(
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0469: build_context(): prefixed lead table and fixed metric predicates; current rep restriction and date values are prepared; manager-only handoff metrics and live view context have no separate query cache.
             "SELECT COUNT(*) FROM {$table_leads}
              WHERE call_status = %s AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0 {$rep_clause}",
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             'Call Back Requested'
         )));
         $unassigned_count = 0;
@@ -83,15 +85,19 @@ class IDLM_Admin_Leads_Renderer {
         $qualified_fallback_hours = get_option('idlm_qualified_fallback_hours', '4');
         $handoff_threshold_hours = max(1, intval($qualified_fallback_hours));
         if ($can_assign_leads) {
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0470: build_context(): prefixed lead table and fixed metric predicates; current rep restriction and date values are prepared; manager-only handoff metrics and live view context have no separate query cache.
             $qualified_handoff_count = intval($wpdb->get_var(
                 "SELECT COUNT(*) FROM {$table_leads}
                  WHERE lead_quality = 'Qualified' AND handoff_status IN ('awaiting_manager', 'exception')
                    AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0"
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             ));
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0471: build_context(): prefixed lead table and fixed metric predicates; current rep restriction and date values are prepared; manager-only handoff metrics and live view context have no separate query cache.
             $handoff_started_values = $wpdb->get_col(
                 "SELECT COALESCE(qualified_at, updated_at, created_at) FROM {$table_leads}
                  WHERE lead_quality = 'Qualified' AND handoff_status IN ('awaiting_manager', 'exception')
                    AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0"
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             );
             $handoff_now = current_time('mysql');
             $handoff_work_start = get_option('idlm_working_hours_start', '09:00');
@@ -102,24 +108,30 @@ class IDLM_Admin_Leads_Renderer {
                     $overdue_handoff_count++;
                 }
             }
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0472: build_context(): prefixed lead table and fixed metric predicates; current rep restriction and date values are prepared; manager-only handoff metrics and live view context have no separate query cache.
             $handoff_exception_count = intval($wpdb->get_var(
                 "SELECT COUNT(*) FROM {$table_leads}
                  WHERE lead_quality = 'Qualified' AND handoff_status = 'exception'
                    AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0"
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             ));
             $timezone = wp_timezone();
             $yesterday = new DateTime('yesterday', $timezone);
             $yesterday_start = $yesterday->format('Y-m-d 00:00:00');
             $yesterday_end = $yesterday->format('Y-m-d 23:59:59');
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0473: build_context(): prefixed lead table and fixed metric predicates; current rep restriction and date values are prepared; manager-only handoff metrics and live view context have no separate query cache.
             $qualified_yesterday_count = intval($wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM {$table_leads} WHERE qualified_at BETWEEN %s AND %s AND is_duplicate = 0",
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 $yesterday_start,
                 $yesterday_end
             )));
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0474: build_context(): prefixed lead table and fixed metric predicates; current rep restriction and date values are prepared; manager-only handoff metrics and live view context have no separate query cache.
             $delivered_yesterday_count = intval($wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM {$table_leads}
                  WHERE handoff_at BETWEEN %s AND %s
                    AND handoff_status IN ('manually_assigned', 'auto_assigned') AND is_duplicate = 0",
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 $yesterday_start,
                 $yesterday_end
             )));
@@ -181,8 +193,10 @@ class IDLM_Admin_Leads_Renderer {
             'active_pre_sales_reps'                   => $active_pre_sales_reps,
             'fallback_last_completed'                 => get_option('idlm_fallback_last_completed_at', 'Never'),
             'fallback_last_status'                    => get_option('idlm_fallback_last_status', 'not_run'),
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0475: build_context(): prefixed lead table and fixed metric predicates; current rep restriction and date values are prepared; manager-only handoff metrics and live view context have no separate query cache.
             'routing_exception_count'                 => intval($wpdb->get_var("SELECT COUNT(*) FROM {$table_leads} WHERE handoff_status = 'exception' AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0")),
             'unassigned_intake_count'                 => intval($wpdb->get_var("SELECT COUNT(*) FROM {$table_leads} WHERE assigned_rep_id = 0 AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0")),
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             'active_pre_sales_count'                  => count(array_intersect(array_map('absint', (array) $active_pre_sales_reps), array_map('absint', wp_list_pluck($pre_sales_reps, 'ID')))),
             'assignment_mode_label'                   => isset($assignment_mode_labels[$assignment_mode]) ? $assignment_mode_labels[$assignment_mode] : 'Not configured',
             'working_hours_start'                     => get_option('idlm_working_hours_start', '09:00'),

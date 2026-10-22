@@ -1,0 +1,12 @@
+[
+  "includes/class-audiences.php",
+  "includes/class-integrations.php",
+  "interior-design-lead-manager.php",
+  "tests/run.php",
+  "tests/release-contracts.php",
+  "tests/google-audience-contracts.php",
+  "tests/integration/run.php",
+  "tests/integration/quotation-http.php",
+  "tests/integration/google-audience-contracts.php",
+  "tests/integration/google-audience-http-cases.php"
+]

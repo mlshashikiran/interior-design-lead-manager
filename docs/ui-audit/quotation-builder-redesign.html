@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quotation Builder – UI/UX Refinement Reference</title>
+<!--
+=====================================================================
+BRIEF FOR THE CODING AGENT
+Plugin: interior-design-lead-manager. Files to change:
+  assets/css/quotations.css   assets/js/quotations.js   (+ the PHP that renders
+  the quotation list / view / editor under includes/ or templates/)
+
+THIS FILE IS A VISUAL TARGET, NOT PRODUCTION CODE.
+ - It uses the plugin's REAL design tokens (--idlm-*, copied from admin-style.css),
+   Inter, the real 248px workspace sidebar and the real class names
+   (idlm-quote-panel, idlm-quote-summary, idlm-quote-section, idlm-quote-items,
+   idlm-line-actions, idlm-quote-totals, idlm-quote-actions, idlm-autosave-status…).
+ - Anything not in the existing app's markup is namespaced `idlm-qb-*` below and is
+   the NEW part to implement. Keep existing PHP/AJAX contracts, nonces, permissions,
+   field names (name="…") and JS hooks (data-*, ids) – only re-skin / re-layout.
+ - FRONTEND ONLY. No new database fields, no status workflow, no new endpoints.
+ - Follow design.md + docs/DESIGN.md: tokens only, no one-off colours, 4px rhythm,
+   44px touch targets on mobile, visible focus, sentence case.
+
+CHANGES (marked with purple badges in the mockup, e.g. [E1]):
+ EDITOR
+  E1 Replace the tall 3-line item cell with a single compact row. Description,
+     item code and category move into a per-row "Details" disclosure (closed by default,
+     auto-open if description is empty or the row is custom).
+  E2 Currency/measure inputs: Rate ≥120px, right aligned, tabular-nums, no clipping;
+     show thousands separators on blur (en-IN), raw number on focus.
+     Width/Height empty + "—" placeholder when not applicable (qty-only lines).
+  E3 Row actions: 32px hit area (24px today), tooltip + aria-label on every icon button,
+     drag handle replaces ↑/↓ (keep them in the DOM for keyboard users, visually hidden
+     until focus). Delete = no confirm; show Undo toast for 6s.
+  E4 Catalogue-locked fields (code/category) use .is-readonly look (dashed, soft surface)
+     with the label "From catalogue", not the disabled/not-allowed look.
+  E5 Summary row under sections: three cards become one compact strip — Totals gets
+     priority (wider), Section-wise and Wood/Others become tight lists (no 300px empty cards).
+  E6 Page bottom padding ≥ 96px so the sticky action bar never hides the last row
+     (#idlm-quote-form already has 76px – raise it).
+  E7 Sticky action bar shows: autosave status · revision note field · running Grand total
+     · Cancel · Save Revision. (Autosave status and cancel modal already exist – reuse.)
+  E8 Section header: name input + move/remove actions grouped; "Remove section" becomes a
+     text-danger icon button with confirm modal only when the section has lines.
+ VIEW (read-only quotation)
+  V1 Summary tiles (existing .idlm-quote-summary) get: customer+phone, project/studio,
+     revision, grand total (+ subtotal & GST line).
+  V2 Header actions grouped: Preview/Print · Download ▾ (PDF/CSV/XLSX) · Edit (primary).
+  V3 Revision list shows amount delta vs previous revision, author, short date, note.
+  V4 Non-applicable W/H show "—" instead of 0.00. Totals card beside the line table.
+ LIST
+  L1 Live filters (debounced 250ms) – keep the Filter button for no-JS fallback.
+  L2 Dates: relative within 7 days, else "6 Oct 2026"; full timestamp in title.
+  L3 Revision column shows "R02" only; show "—" (muted) instead of "Unknown".
+  L4 Row = link target; row actions in a kebab menu (Open · Download PDF).
+  L5 Sortable headers (aria-sort). Result count (aria-live). Mobile (<782px): cards.
+ GLOBAL
+  G1 Secondary text ≥ 12px where it carries meaning (table meta is 10–11px today).
+  G2 No horizontal page scroll at 360px; editor rows stack (see media query).
+=====================================================================
+-->
+<style>
+/* ---------- REAL TOKENS (assets/css/admin-style.css) ---------- */
+:root{
+  --idlm-brand-gold:#c99644;--idlm-action:#7a5017;--idlm-action-hover:#603d10;--idlm-action-soft:#fff4df;--idlm-action-contrast:#fff;
+  --idlm-info:#176a9e;--idlm-success:#177c51;--idlm-warning:#855a00;--idlm-danger:#c84635;
+  --idlm-info-soft:#e7f4ff;--idlm-success-soft:#e8f6ef;--idlm-warning-soft:#fff6d7;--idlm-danger-soft:#fff0ec;
+  --idlm-canvas:#eef2f6;--idlm-surface:#fff;--idlm-surface-soft:#f8fafc;--idlm-surface-tint:#f5f9ff;
+  --idlm-text:#17212b;--idlm-text-muted:#56657a;--idlm-border:#d9e1eb;--idlm-border-strong:#b9c6d5;
+  --idlm-sidebar:#111a24;--idlm-readonly:#f1f5f9;--idlm-dark:var(--idlm-sidebar);
+  --idlm-control-height:34px;--idlm-radius:8px;--idlm-radius-panel:12px;--idlm-radius-pill:999px;
+  --idlm-shadow:0 16px 36px rgba(23,33,43,.07);--idlm-shadow-lg:0 24px 80px rgba(15,23,42,.24);
+  --idlm-focus-ring:var(--idlm-action);--idlm-focus-offset:2px;
+  --idlm-ease:cubic-bezier(.4,0,.2,1);
+  --idlm-transition:color .2s var(--idlm-ease),background-color .2s var(--idlm-ease),border-color .2s var(--idlm-ease),box-shadow .2s var(--idlm-ease),opacity .2s var(--idlm-ease),transform .2s var(--idlm-ease);
+  --idlm-workspace-sidebar:248px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--idlm-canvas);color:var(--idlm-text);font:500 13px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- REAL WORKSPACE SHELL (workspace.css) ---------- */
+.idlm-workspace{display:grid;grid-template-columns:var(--idlm-workspace-sidebar) minmax(0,1fr);min-height:100dvh;background:var(--idlm-canvas)}
+.idlm-workspace-sidebar{position:sticky;top:0;align-self:start;display:flex;flex-direction:column;width:var(--idlm-workspace-sidebar);height:100dvh;padding:12px;background:var(--idlm-dark);color:#fff}
+.idlm-workspace-brand{display:flex;align-items:center;min-height:40px;gap:12px;padding:0 4px 18px;margin-bottom:8px;border-bottom:1px solid rgb(255 255 255/.1)}
+.idlm-avatar{width:32px;height:32px;border-radius:50%;background:var(--idlm-brand-gold);color:#111a24;display:grid;place-items:center;font-weight:800;flex:0 0 32px}
+.idlm-workspace-brand-text{flex:1;font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idlm-workspace-nav{display:flex;flex-direction:column;gap:4px;flex:1}
+.idlm-workspace-nav-item{display:flex;align-items:center;min-height:40px;gap:12px;padding:0 12px;border:1px solid transparent;border-radius:8px;color:color-mix(in srgb,#fff 78%,transparent);font-size:12px;font-weight:600;text-decoration:none;transition:var(--idlm-transition)}
+.idlm-workspace-nav-item:hover{background:rgb(255 255 255/.06);color:#fff}
+.idlm-workspace-nav-item.is-active{background:color-mix(in srgb,var(--idlm-brand-gold) 18%,transparent);box-shadow:inset 2px 0 0 var(--idlm-brand-gold);color:#fff}
+.idlm-workspace-nav-item svg{width:20px;height:20px;flex:0 0 20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.idlm-workspace-footer{padding:12px 4px 4px;border-top:1px solid rgb(255 255 255/.1);font-size:12px;color:color-mix(in srgb,#fff 78%,transparent)}
+.idlm-workspace-content{min-width:0;padding:0 28px 28px}
+.idlm-header{position:sticky;top:0;z-index:20;display:flex;min-height:64px;align-items:center;gap:16px;padding:0 28px;margin:0 -28px 20px;border-bottom:1px solid var(--idlm-border);background:var(--idlm-canvas)}
+.idlm-header h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idlm-header-actions{display:flex;gap:8px;align-items:center}
+.idlm-quotes-wrap{max-width:1600px}
+
+/* ---------- REAL COMPONENTS (quotations.css) ---------- */
+.idlm-quotes-wrap input,.idlm-quotes-wrap select,.idlm-quotes-wrap textarea{width:100%;min-height:var(--idlm-control-height);padding:8px 11px;border:1px solid var(--idlm-border);border-radius:8px;background:var(--idlm-surface);transition:var(--idlm-transition)}
+.idlm-quotes-wrap textarea{min-height:92px;resize:vertical}
+.idlm-quotes-wrap input:hover,.idlm-quotes-wrap select:hover,.idlm-quotes-wrap textarea:hover{border-color:var(--idlm-border-strong)}
+:focus-visible{outline:2px solid var(--idlm-focus-ring)!important;outline-offset:2px!important}
+.idlm-quotes-wrap label{color:var(--idlm-text-muted);font-size:12px;font-weight:700}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:var(--idlm-control-height);padding:7px 13px;border:1px solid var(--idlm-border);border-radius:8px;background:var(--idlm-surface);color:var(--idlm-text);font:600 13px/1.3 Inter,sans-serif;cursor:pointer;text-decoration:none;transition:var(--idlm-transition);white-space:nowrap}
+.button:hover{border-color:var(--idlm-border-strong);background:var(--idlm-surface-soft);color:var(--idlm-action-hover)}
+.button-primary{border-color:var(--idlm-action);background:var(--idlm-action);color:#fff;box-shadow:0 5px 14px color-mix(in srgb,var(--idlm-action) 20%,transparent)}
+.button-primary:hover{border-color:var(--idlm-action-hover);background:var(--idlm-action-hover);color:#fff;transform:translateY(-1px)}
+.button-sm{min-height:28px;padding:4px 10px;font-size:12px}
+.button-link-delete{color:var(--idlm-danger)!important}
+.idlm-quote-panel{margin:0 0 20px;padding:20px;border:1px solid var(--idlm-border);border-radius:12px;background:var(--idlm-surface);box-shadow:0 8px 24px rgba(23,33,43,.05)}
+.idlm-quote-panel h2{margin:0 0 18px;font-size:16px;font-weight:700}
+.idlm-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.idlm-panel-heading h2{margin:0}
+.idlm-quotation-workspace-nav{display:flex;gap:5px;margin:0 0 20px;padding:6px;overflow-x:auto;border:1px solid var(--idlm-border);border-radius:10px;background:var(--idlm-surface);box-shadow:0 1px 3px rgba(15,23,42,.04)}
+.idlm-quotation-workspace-nav a{flex:0 0 auto;padding:9px 14px;border-radius:8px;color:var(--idlm-text-muted);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;transition:var(--idlm-transition)}
+.idlm-quotation-workspace-nav a:hover{background:var(--idlm-surface-soft);color:var(--idlm-text)}
+.idlm-quotation-workspace-nav a.is-active{background:var(--idlm-sidebar);color:#fff}
+.idlm-quote-filter{display:grid;grid-template-columns:minmax(220px,1.5fr) repeat(3,minmax(130px,.7fr)) auto;gap:8px;margin:0 0 18px;padding:14px;border:1px solid var(--idlm-border);border-radius:10px;background:var(--idlm-surface-soft);align-items:end}
+.idlm-quote-filter label{display:grid;gap:5px}
+.idlm-table-wrapper{width:100%;overflow:auto}
+.idlm-table{width:100%;border:1px solid var(--idlm-border);border-spacing:0;border-collapse:separate;border-radius:10px;background:var(--idlm-surface);overflow:hidden}
+.idlm-table th,.idlm-table td{padding:11px 12px;border-bottom:1px solid var(--idlm-border);text-align:left;vertical-align:middle}
+.idlm-table th{background:var(--idlm-surface-soft);color:var(--idlm-text-muted);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.idlm-table th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
+.idlm-table th button:hover{color:var(--idlm-text)}
+.idlm-table tbody tr:last-child td{border-bottom:0}
+.idlm-quote-row{cursor:pointer;transition:var(--idlm-transition)}.idlm-quote-row:hover{background:var(--idlm-surface-soft)}
+.idlm-quote-row small{display:block;margin-top:2px;color:var(--idlm-text-muted);font-size:12px}
+.idlm-num{text-align:right;font-variant-numeric:tabular-nums}
+.idlm-muted{color:var(--idlm-text-muted)}
+.idlm-pill{display:inline-block;padding:2px 8px;border:1px solid var(--idlm-border);border-radius:999px;background:var(--idlm-surface-soft);font-size:12px;font-weight:700;color:var(--idlm-text-muted)}
+.idlm-quote-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.idlm-quote-summary>div{min-width:0;padding:15px 16px;border:1px solid var(--idlm-border);border-left:3px solid var(--idlm-action);border-radius:9px;background:var(--idlm-surface);box-shadow:0 2px 8px rgba(15,23,42,.04)}
+.idlm-quote-summary span,.idlm-quote-summary strong{display:block}
+.idlm-quote-summary span{margin-bottom:6px;color:var(--idlm-text-muted);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.idlm-quote-summary strong{font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.idlm-quote-summary small{display:block;margin-top:3px;color:var(--idlm-text-muted);font-size:12px;font-weight:500}
+.idlm-quote-summary .is-total strong{font-size:20px;font-variant-numeric:tabular-nums}
+.idlm-quote-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);gap:20px;align-items:start}
+.idlm-quote-section{margin:0 0 16px;overflow:hidden;border:1px solid var(--idlm-border);border-radius:10px;background:var(--idlm-surface-soft)}
+.idlm-quote-section>header{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;gap:8px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--idlm-border);background:#f3f6f9}
+.idlm-quote-section>header strong{font-size:14px}
+.idlm-quote-items-wrap{background:var(--idlm-surface)}
+.idlm-quote-totals{position:sticky;top:84px;border-top:3px solid var(--idlm-action)}
+.idlm-quote-totals h2{margin:0 0 4px}
+.idlm-quote-totals dl{margin:8px 0 0}
+.idlm-quote-totals dl div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--idlm-border)}
+.idlm-quote-totals dt{color:var(--idlm-text-muted)}.idlm-quote-totals dd{margin:0;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700}
+.idlm-grand-total{color:var(--idlm-text);font-size:18px;font-weight:800}
+.idlm-revision-list{margin:0;padding:0;list-style:none}
+.idlm-revision-list li{display:grid;gap:3px;padding:12px 0;border-bottom:1px solid var(--idlm-border)}
+.idlm-revision-list li:last-child{border:0}
+.idlm-revision-list a{color:var(--idlm-info);font-weight:700;text-decoration:none}
+.idlm-revision-list small{color:var(--idlm-text-muted);font-size:12px}
+.idlm-quote-actions{position:fixed;left:var(--idlm-workspace-sidebar);right:0;bottom:0;z-index:20;display:flex;align-items:center;gap:12px;padding:12px 28px;border-top:1px solid var(--idlm-border);background:rgba(255,255,255,.96);box-shadow:0 -10px 25px rgba(15,23,42,.06);backdrop-filter:blur(8px)}
+.idlm-autosave-status{display:inline-flex;align-items:center;color:var(--idlm-text-muted);font-size:12px;font-weight:700;white-space:nowrap}
+.idlm-autosave-status::before{width:7px;height:7px;margin-right:7px;border-radius:50%;background:#94a3b8;content:''}
+.idlm-autosave-status[data-state=dirty]::before{background:#f59e0b}
+.idlm-autosave-status[data-state=saving]::before{background:var(--idlm-info);animation:pulse 1s ease-in-out infinite}
+.idlm-autosave-status[data-state=saved]::before{background:var(--idlm-success)}
+@keyframes pulse{50%{opacity:.35;transform:scale(.8)}}
+.idlm-autosave-cancel-modal{position:fixed;inset:0;z-index:100100;display:none;place-items:center;padding:24px;background:rgba(15,23,42,.52);backdrop-filter:blur(3px)}
+.idlm-autosave-cancel-modal.is-open{display:grid}
+.idlm-autosave-cancel-modal>div{width:min(520px,100%);padding:24px;border:1px solid var(--idlm-border);border-radius:14px;background:var(--idlm-surface);box-shadow:var(--idlm-shadow-lg)}
+.idlm-autosave-cancel-modal h2{margin:0 0 8px;font-size:19px}.idlm-autosave-cancel-modal p{margin:0 0 22px;color:var(--idlm-text-muted);line-height:1.55}
+.idlm-autosave-cancel-modal>div>div{display:flex;justify-content:flex-end;gap:8px}
+
+/* =====================================================================
+   NEW — idlm-qb-*  (implement these)
+   ===================================================================== */
+/* [E1][E2] compact line grid inside the existing .idlm-quote-items-wrap */
+.idlm-qb-lines{display:block}
+.idlm-qb-head,.idlm-qb-line{display:grid;grid-template-columns:24px minmax(240px,1fr) 76px 76px 88px 78px 124px 120px 104px;gap:8px;align-items:center;padding:8px 12px}
+.idlm-qb-head{background:var(--idlm-surface-soft);border-bottom:1px solid var(--idlm-border);color:var(--idlm-text-muted);font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.idlm-qb-head .r{text-align:right}
+.idlm-qb-line{border-bottom:1px solid var(--idlm-border);background:var(--idlm-surface);transition:var(--idlm-transition)}
+.idlm-qb-line:hover{background:var(--idlm-surface-soft)}
+.idlm-qb-line input{margin:0;min-height:32px;padding:5px 9px}
+.idlm-qb-item{font-weight:700}
+.idlm-qb-line .is-na{background:var(--idlm-surface-soft);color:var(--idlm-text-muted)}
+.idlm-qb-line .is-derived{background:var(--idlm-readonly);font-weight:700}
+.idlm-qb-handle{color:var(--idlm-text-muted);cursor:grab;text-align:center;user-select:none;letter-spacing:-2px}
+.idlm-qb-rate{position:relative}
+.idlm-qb-rate>span{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--idlm-text-muted);font-size:12px;pointer-events:none}
+.idlm-qb-rate>input{padding-left:22px;text-align:right;font-variant-numeric:tabular-nums}
+.idlm-qb-line input[type=number],.idlm-qb-line .num{text-align:right;font-variant-numeric:tabular-nums}
+.idlm-line-total{font-size:14px;font-weight:800;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.idlm-line-actions{display:flex;justify-content:flex-end;gap:2px}
+/* [E3] 32px icon buttons with tooltip */
+.idlm-qb-icon{position:relative;display:inline-grid;place-items:center;width:32px;height:32px;padding:0!important;min-height:32px!important;border:1px solid transparent!important;border-radius:6px!important;background:transparent!important;color:var(--idlm-text-muted);cursor:pointer;transition:var(--idlm-transition)}
+.idlm-qb-icon:hover{background:var(--idlm-readonly)!important;color:var(--idlm-text)}
+.idlm-qb-icon.is-danger:hover{background:var(--idlm-danger-soft)!important;color:var(--idlm-danger)}
+.idlm-qb-icon svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.idlm-qb-line.is-open .idlm-qb-chevron svg{transform:rotate(90deg)}
+[data-tip]:hover::after,[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);padding:4px 8px;border-radius:6px;background:var(--idlm-text);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;z-index:50;pointer-events:none}
+/* [E1][E4] details disclosure */
+.idlm-qb-details{display:none;grid-column:2/-1;grid-template-columns:minmax(0,1fr) 150px minmax(0,220px);gap:10px;padding:2px 0 8px}
+.idlm-qb-line.is-open .idlm-qb-details{display:grid}
+.idlm-qb-details textarea{min-height:64px}
+.idlm-qb-field{display:grid;gap:5px;align-content:start}
+.idlm-qb-readonly{display:flex;align-items:center;min-height:34px;padding:6px 10px;border:1px dashed var(--idlm-border-strong);border-radius:8px;background:var(--idlm-surface-soft);color:var(--idlm-text-muted);font-weight:600}
+.idlm-qb-subtotal{display:flex;justify-content:flex-end;align-items:baseline;gap:16px;padding:12px 16px;border-top:1px solid var(--idlm-border);background:#f3f6f9}
+.idlm-qb-subtotal span{color:var(--idlm-text-muted);font-weight:700}
+.idlm-qb-subtotal strong{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+.idlm-qb-addbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 20px}
+.idlm-qb-hint{margin-left:auto;color:var(--idlm-text-muted);font-size:12px}
+/* [E5] summary strip */
+.idlm-qb-summary{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;margin-bottom:20px;align-items:start}
+.idlm-qb-summary>.idlm-quote-totals{grid-row:span 2}
+.idlm-qb-summary .idlm-quote-totals{position:static;margin:0}
+.idlm-qb-list{display:grid;gap:6px}
+.idlm-qb-list div{display:flex;justify-content:space-between;gap:12px;padding:9px 11px;border:1px solid var(--idlm-border);border-radius:7px;background:var(--idlm-surface-soft);font-variant-numeric:tabular-nums}
+.idlm-qb-list b{font-weight:700}
+.idlm-qb-card h3{margin:0 0 10px;font-size:14px}
+.idlm-qb-toggle{display:inline-flex;align-items:center;gap:8px}
+.idlm-qb-toggle input{width:auto!important;min-height:0!important;margin:0}
+/* [E7] action bar */
+.idlm-qb-note{flex:1;max-width:380px}
+.idlm-qb-note input{margin:0}
+.idlm-qb-running{margin-left:auto;text-align:right;line-height:1.15}
+.idlm-qb-running small{display:block;color:var(--idlm-text-muted);font-size:12px;font-weight:700}
+.idlm-qb-running strong{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+#idlm-quote-form{padding-bottom:104px}                       /* [E6] */
+/* [E4] toast with undo */
+.idlm-qb-toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:100200;display:none;align-items:center;gap:14px;padding:10px 14px;border-radius:10px;background:var(--idlm-text);color:#fff;box-shadow:var(--idlm-shadow-lg)}
+.idlm-qb-toast.show{display:flex}
+.idlm-qb-toast button{border:0;background:none;color:var(--idlm-brand-gold);font-weight:800;cursor:pointer}
+/* [L4] kebab */
+.idlm-qb-menu-wrap{position:relative}
+.idlm-qb-menu{position:absolute;right:0;top:calc(100% + 4px);z-index:1000;display:none;min-width:180px;padding:6px;border:1px solid var(--idlm-border);border-radius:10px;background:var(--idlm-surface);box-shadow:var(--idlm-shadow-lg)}
+.idlm-qb-menu.is-open{display:block}
+.idlm-qb-menu button{display:block;width:100%;padding:8px 10px;border:0;border-radius:6px;background:none;text-align:left;font-weight:600;cursor:pointer}
+.idlm-qb-menu button:hover{background:var(--idlm-surface-soft)}
+/* [V3] revisions */
+.idlm-qb-delta{font-weight:800;font-size:12px}.idlm-qb-delta.up{color:var(--idlm-success)}.idlm-qb-delta.down{color:var(--idlm-danger)}
+.idlm-qb-cards{display:none}
+.idlm-qb-count{color:var(--idlm-text-muted);font-size:12px;font-weight:700}
+/* ---- review chrome (NOT part of the product) ---- */
+.spec{display:inline-grid;place-items:center;min-width:22px;height:17px;padding:0 5px;margin-left:6px;border-radius:9px;background:#7c3aed;color:#fff;font:700 10px/1 Inter,sans-serif;letter-spacing:0;text-transform:none;vertical-align:middle;cursor:help}
+body.nospec .spec{display:none}
+.review-bar{display:flex;align-items:center;gap:12px;padding:8px 28px;background:#fff7e6;border-bottom:1px solid var(--idlm-border);font-size:12px;color:var(--idlm-text-muted);grid-column:1/-1}
+.review-bar label{display:flex;gap:6px;align-items:center;color:inherit;font-size:12px}
+.review-bar input{width:auto!important;min-height:0!important}
+.panel{display:none}.panel.on{display:block}
+.notes{columns:2 360px;column-gap:20px}
+.notes section{break-inside:avoid;margin-bottom:16px}
+.notes h3{margin:0 0 6px;font-size:14px}.notes ul{margin:0;padding-left:18px;color:var(--idlm-text-muted)}.notes li{margin:4px 0}
+code{padding:1px 6px;border-radius:5px;background:var(--idlm-readonly);font-size:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ---------- responsive (existing breakpoints 1024 / 782) ---------- */
+@media(max-width:1280px){
+  .idlm-qb-head,.idlm-qb-line{grid-template-columns:24px minmax(200px,1fr) 68px 68px 80px 70px 112px 108px 100px}
+}
+@media(max-width:1024px){
+  .idlm-quote-layout,.idlm-qb-summary{grid-template-columns:1fr}
+  .idlm-quote-summary{grid-template-columns:repeat(2,1fr)}
+  .idlm-quote-filter{grid-template-columns:repeat(2,minmax(150px,1fr))}
+  .idlm-quote-totals{position:static}
+}
+@media(max-width:782px){
+  .idlm-workspace{grid-template-columns:1fr}.idlm-workspace-sidebar{display:none}
+  .idlm-workspace-content{padding:0 12px 20px}.idlm-header{padding:0 12px;margin:0 -12px 16px}
+  .idlm-quote-actions{left:0;padding:10px 12px;flex-wrap:wrap}.idlm-qb-note{display:none}
+  .idlm-table{display:none}.idlm-qb-cards{display:grid;gap:10px}
+  .idlm-qb-card-row{padding:14px;border:1px solid var(--idlm-border);border-radius:10px;background:var(--idlm-surface);display:grid;gap:4px}
+  .idlm-qb-head{display:none}
+  .idlm-qb-line{grid-template-columns:1fr 1fr;padding:12px}
+  .idlm-qb-line .idlm-qb-handle{display:none}
+  .idlm-qb-item{grid-column:1/-1}
+  .idlm-qb-line .idlm-line-total{text-align:left}
+  .idlm-qb-details{grid-column:1/-1;grid-template-columns:1fr}
+  .idlm-qb-icon{width:44px;height:44px}
+}
+</style>
+</head>
+<body>
+<div class="idlm-workspace">
+  <div class="review-bar"><b>Reference mockup</b> · uses the plugin's real tokens &amp; class names; purple badges = change IDs from the brief
+    <label style="margin-left:auto"><input type="checkbox" id="specToggle" checked> Show change badges</label></div>
+
+  <aside class="idlm-workspace-sidebar" aria-label="Workspace">
+    <div class="idlm-workspace-brand"><span class="idlm-avatar">Q</span><span class="idlm-workspace-brand-text">Q Oak Interiors</span></div>
+    <nav class="idlm-workspace-nav">
+      <a class="idlm-workspace-nav-item"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 16V9m6 7V5m6 11v-6"/></svg>Dashboard</a>
+      <a class="idlm-workspace-nav-item"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 1 0 0-6M17 14a5 5 0 0 1 4 6"/></svg>Leads</a>
+      <a class="idlm-workspace-nav-item"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Pipeline</a>
+      <a class="idlm-workspace-nav-item is-active" aria-current="page"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/></svg>Quotations</a>
+      <a class="idlm-workspace-nav-item"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>CAPI Audit</a>
+      <a class="idlm-workspace-nav-item"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 1-14 5M4 12a8 8 0 0 1 14-5M18 3v4h-4M6 21v-4h4"/></svg>Audience Sync</a>
+      <a class="idlm-workspace-nav-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Settings</a>
+      <a class="idlm-workspace-nav-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Users &amp; Access</a>
+    </nav>
+    <div class="idlm-workspace-footer">My Account</div>
+  </aside>
+
+  <main class="idlm-workspace-content">
+    <div class="idlm-quotes-wrap">
+      <header class="idlm-header">
+        <h1 id="title">Quotations</h1>
+        <div class="idlm-header-actions" id="hdrActions"></div>
+      </header>
+
+      <nav class="idlm-quotation-workspace-nav" aria-label="Quotation sections">
+        <a class="is-active" data-p="list">Quotations</a><a data-p="view">View quotation</a><a data-p="edit">Edit quotation</a><a data-p="notes">Notes for agent</a>
+      </nav>
+
+      <!-- ===================== LIST ===================== -->
+      <section class="panel on" id="p-list">
+        <form class="idlm-quote-filter" onsubmit="return false" role="search">
+          <label>Search<input id="q" type="search" placeholder="Quote, customer, phone or project"></label>
+          <label>Created by<select id="by"><option value="">All creators</option><option>Shashikiran ML</option></select></label>
+          <label>From<input type="date" id="from"></label>
+          <label>To<input type="date" id="to"></label>
+          <div style="display:flex;gap:8px"><button class="button" id="reset" type="button">Reset</button></div>
+        </form>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:-6px 0 10px"><span class="idlm-qb-count" id="count" aria-live="polite"></span><span class="spec">L1</span></div>
+        <div class="idlm-table-wrapper">
+          <table class="idlm-table" id="tbl">
+            <thead><tr>
+              <th><button data-s="no">Quotation <span id="a-no"></span></button><span class="spec">L5</span></th>
+              <th><button data-s="cust">Customer / project</button></th>
+              <th>Revision<span class="spec">L3</span></th>
+              <th class="idlm-num"><button data-s="val">Value (₹) <span id="a-val"></span></button></th>
+              <th><button data-s="by">Created by</button></th>
+              <th><button data-s="upd">Updated <span id="a-upd">↓</span></button><span class="spec">L2</span></th>
+              <th style="width:48px"><span class="sr">Actions</span></th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="idlm-qb-cards" id="cards"></div>
+      </section>
+
+      <!-- ===================== VIEW ===================== -->
+      <section class="panel" id="p-view">
+        <div class="idlm-quote-summary">
+          <div><span>Customer <i class="spec">V1</i></span><strong>B S Shashidhara</strong><small>+91 98457 70207 · South Bangalore</small></div>
+          <div><span>Project</span><strong>Interior Design Proposal</strong><small>JP Nagar studio · Rep: test_sales_rep</small></div>
+          <div><span>Revision</span><strong>R02</strong><small>Updated 6 Oct 2026, 6:50 pm</small></div>
+          <div class="is-total"><span>Grand total</span><strong>₹38,822.00</strong><small>Subtotal ₹32,900 + GST ₹5,922</small></div>
+        </div>
+        <div class="idlm-quote-layout">
+          <div>
+            <div class="idlm-quote-panel" style="padding:0;overflow:hidden">
+              <div class="idlm-panel-heading" style="padding:16px 20px 0"><h2>Sections and line items</h2><span class="idlm-muted" style="font-size:12px">Section-wise breakdown for this revision</span></div>
+              <div class="idlm-quote-section" style="margin:0 20px 20px">
+                <header style="grid-template-columns:1fr auto"><strong>General</strong><span class="idlm-muted" style="font-size:12px">2 items</span></header>
+                <div class="idlm-quote-items-wrap" style="overflow:auto">
+                  <table class="idlm-table" style="border:0;border-radius:0;min-width:900px">
+                    <thead><tr><th style="width:44px">#</th><th>Item</th><th>Description</th><th class="idlm-num">W</th><th class="idlm-num">H</th><th class="idlm-num">Area / Qty</th><th>Unit</th><th class="idlm-num">Rate (₹)</th><th class="idlm-num">Subtotal (₹)</th></tr></thead>
+                    <tbody>
+                      <tr><td>1</td><td><b>Kitchen Base Cabinet</b><small class="idlm-muted" style="display:block;font-size:12px">Kitchen · #1</small></td>
+                        <td style="max-width:300px;font-size:12px;color:var(--idlm-text-muted)">Fabrication of base cabinets using BWP-grade plywood with laminate finish (SF / HGL / Texture), complete with shutters, shelves, edge banding and required hardware provisions.</td>
+                        <td class="idlm-num">1.00</td><td class="idlm-num">10.00</td><td class="idlm-num">10.00</td><td>Sq Ft</td><td class="idlm-num">1,790.00</td><td class="idlm-num"><b>17,900.00</b></td></tr>
+                      <tr><td>2</td><td><b>Shoe Rack Mechanism</b><small class="idlm-muted" style="display:block;font-size:12px">Accessories / Internal Storage · #116</small></td>
+                        <td style="max-width:300px;font-size:12px;color:var(--idlm-text-muted)">Supply and installation of shoe rack from Hafele / Hettich or approved equivalent, complete with required fixing components.</td>
+                        <td class="idlm-num idlm-muted" title="Not applicable">—<span class="spec">V4</span></td><td class="idlm-num idlm-muted">—</td><td class="idlm-num">1.00</td><td>PCS</td><td class="idlm-num">15,000.00</td><td class="idlm-num"><b>15,000.00</b></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="idlm-qb-subtotal"><span>General subtotal</span><strong>₹32,900.00</strong></div>
+              </div>
+            </div>
+          </div>
+          <aside style="display:grid;gap:20px;align-content:start">
+            <div class="idlm-quote-panel idlm-quote-totals" style="margin:0">
+              <h2>Totals</h2>
+              <dl><div><dt>Subtotal</dt><dd>₹32,900.00</dd></div><div><dt>GST (18%)</dt><dd>₹5,922.00</dd></div><div><dt>Round off</dt><dd>₹0.00</dd></div>
+              <div><dt><b>Grand total</b></dt><dd class="idlm-grand-total">₹38,822.00</dd></div></dl>
+            </div>
+            <div class="idlm-quote-panel" style="margin:0">
+              <h2>Revisions <i class="spec">V3</i></h2>
+              <ul class="idlm-revision-list">
+                <li><a href="#">Q-OAK-2026-000081-R02</a><span style="font-weight:800;font-variant-numeric:tabular-nums">₹38,822.00 <span class="idlm-qb-delta up">▲ ₹17,700</span></span><small>Shashikiran ML · 6 Oct 2026, 6:50 pm</small><small>“change”</small></li>
+                <li><a href="#">Q-OAK-2026-000081-R01</a><span style="font-weight:800;font-variant-numeric:tabular-nums">₹21,122.00</span><small>Shashikiran ML · 6 Oct 2026, 6:50 pm</small><small>“Initial proposal”</small></li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ===================== EDITOR ===================== -->
+      <section class="panel" id="p-edit">
+        <form id="idlm-quote-form" onsubmit="return false">
+          <div class="idlm-quote-panel" style="padding:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(330px,.8fr)">
+            <div style="padding:16px 18px;display:grid;gap:10px;align-content:start">
+              <h2 style="margin:0 0 2px">Customer</h2>
+              <label style="display:grid;gap:5px">Search lead<input type="search" value="B S Shashidhara"></label>
+              <label style="display:grid;gap:5px">Customer name<input type="text" value="B S Shashidhara"></label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <label style="display:grid;gap:5px">Email<input type="text" value="belvethagrovet@gmail.com"></label>
+                <label style="display:grid;gap:5px">Phone number<input type="text" value="+91 98457 70207"></label>
+                <label style="display:grid;gap:5px">Property name<input type="text" placeholder="e.g. Prestige Lakeside, Tower B"></label>
+                <label style="display:grid;gap:5px">Location<input type="text" value="South Bangalore"></label>
+              </div>
+            </div>
+            <div style="padding:16px 18px;border-left:1px solid var(--idlm-border);background:var(--idlm-surface-soft)">
+              <h2 style="margin:0 0 6px">Quotation</h2>
+              <dl style="margin:0">
+                <div class="kv"><dt>Full quote number</dt><dd>Q-OAK-2026-000081 · R02</dd></div>
+                <div class="kv"><dt>Company</dt><dd>Q Oak Interiors</dd></div>
+                <div class="kv"><dt>Branch / studio</dt><dd>JP Nagar</dd></div>
+                <div class="kv"><dt>Sales rep</dt><dd>test_sales_rep</dd></div>
+                <div class="kv"><dt>Created by</dt><dd>Shashikiran ML</dd></div>
+                <div class="kv"><dt>Created / modified</dt><dd>6 Oct 2026, 6:50 pm</dd></div>
+              </dl>
+            </div>
+          </div>
+
+          <div class="idlm-quote-panel">
+            <div class="idlm-panel-heading"><div><h2>Sections and line items</h2>
+              <p class="idlm-muted" style="margin:2px 0 0;font-size:12px">Search the catalogue or type a custom item. Width × height sets the area; clear them to enter a quantity.</p></div></div>
+            <div id="sections"></div>
+            <div class="idlm-qb-addbar">
+              <button type="button" class="button" id="addLine">+ Add line</button>
+              <button type="button" class="button" id="addHeader">+ Add header</button>
+              <button type="button" class="button" id="addSection">+ Add section</button>
+              <button type="button" class="button">Bulk items</button>
+              <span class="idlm-qb-hint">Enter in Rate jumps to the next row</span>
+            </div>
+
+            <!-- [E5] summary strip -->
+            <div class="idlm-qb-summary">
+              <div class="idlm-quote-panel idlm-quote-totals" style="margin:0" aria-live="polite">
+                <h2>Totals <i class="spec">E5</i></h2>
+                <dl>
+                  <div><dt>Subtotal</dt><dd id="t-sub"></dd></div>
+                  <div><dt>Wooden subtotal</dt><dd id="t-wood"></dd></div>
+                  <div><dt><label class="idlm-qb-toggle"><input type="checkbox" id="soft"> Soft close addition (5%)</label></dt><dd id="t-soft">₹0.00</dd></div>
+                  <div><dt>Additional discount</dt><dd><input id="disc" type="number" min="0" placeholder="₹0" style="width:96px;min-height:30px;text-align:right" aria-label="Additional discount in rupees"></dd></div>
+                  <div><dt>GST (18%)</dt><dd id="t-gst"></dd></div>
+                  <div><dt>Round off</dt><dd id="t-rnd"></dd></div>
+                  <div><dt><b>Grand total</b></dt><dd class="idlm-grand-total" id="t-grand"></dd></div>
+                </dl>
+              </div>
+              <div class="idlm-qb-card idlm-quote-panel" style="margin:0"><h3>Section-wise summary</h3><div class="idlm-qb-list" id="secList"></div></div>
+              <div class="idlm-qb-card idlm-quote-panel" style="margin:0"><h3>Wood and others</h3><div class="idlm-qb-list" id="woodList"></div></div>
+            </div>
+          </div>
+
+          <div class="idlm-quote-panel">
+            <h2>Internal notes</h2>
+            <p class="idlm-muted" style="margin:-8px 0 10px;font-size:12px">Visible only inside the CRM. Never included in customer print or PDF output.</p>
+            <textarea rows="4" placeholder="Add an internal note for this quotation…"></textarea>
+          </div>
+
+          <div class="idlm-quote-actions" id="actions">
+            <span class="idlm-autosave-status" id="autosave" data-state="saved" aria-live="polite">Autosave on</span><i class="spec">E7</i>
+            <div class="idlm-qb-note"><label class="sr" for="rn">Revision note</label><input id="rn" type="text" placeholder="Revision note (optional) — e.g. client added shoe rack"></div>
+            <div class="idlm-qb-running"><small>Grand total</small><strong id="f-grand"></strong></div>
+            <button type="button" class="button" id="cancel">Cancel</button>
+            <button type="button" class="button button-primary" id="save">Save revision</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ===================== NOTES ===================== -->
+      <section class="panel" id="p-notes">
+        <div class="idlm-quote-panel notes">
+          <section><h3>Editor</h3><ul>
+            <li><b>E1</b> Line item = one grid row (~52px vs ~170px). Selectors to touch: <code>.idlm-quote-section .idlm-quote-items</code> (table, min-width 1080px, 40% item column) → replace with grid/flex rows; keep the same input <code>name</code>s so the PHP save handler is unchanged.</li>
+            <li><b>E2</b> Rate column 124px, <code>font-variant-numeric:tabular-nums</code>, right aligned. Existing <code>.idlm-currency-input</code> ₹ prefix is positioned with <code>top:20px</code> – replace with vertical centering. Format on blur (en-IN), raw on focus.</li>
+            <li><b>E3</b> <code>.idlm-line-action</code> is 24×24 → 32×32 (44×44 below 782px). Add <code>aria-label</code> + <code>data-tip</code>. Delete: remove row immediately + toast with Undo (6s); re-insert at the same index.</li>
+            <li><b>E4</b> <code>.is-catalogue-item .idlm-catalogue-locked</code> currently uses <code>cursor:not-allowed</code> (reads as broken). Use dashed soft surface + label “From catalogue”.</li>
+            <li><b>E5</b> <code>.idlm-subtotals-layout</code> 3 equal columns → 1.1fr / 1fr / 1fr, remove fixed heights/empty space; section/wood lists as tight rows.</li>
+            <li><b>E6</b> <code>#idlm-quote-form{padding-bottom:76px}</code> → 104px.</li>
+            <li><b>E7</b> Action bar adds revision note + running grand total next to the existing <code>.idlm-autosave-status</code>. Update total from the same calculation function that fills <code>#idlm-grand-total</code>.</li>
+          </ul></section>
+          <section><h3>View</h3><ul>
+            <li><b>V1</b> Extend <code>.idlm-quote-summary</code> tiles with second-line <code>small</code> text (phone/location, studio/rep, updated, subtotal+GST).</li>
+            <li><b>V2</b> Header: Preview/Print · Download ▾ (menu with PDF, CSV, XLSX) · Edit quotation (primary).</li>
+            <li><b>V3</b> <code>.idlm-revision-list</code>: add amount + delta vs previous revision (computed in PHP from the stored totals), author, short date, note.</li>
+            <li><b>V4</b> Show “—” when width/height are 0 or empty. Move totals into a right column using <code>.idlm-quote-layout</code>.</li>
+          </ul></section>
+          <section><h3>List</h3><ul>
+            <li><b>L1</b> Debounced live filtering via the existing list endpoint/URL params; keep the form submit as fallback.</li>
+            <li><b>L2</b> Relative dates ≤7 days; <code>title</code> keeps full timestamp.</li>
+            <li><b>L3</b> Revision cell: “R02” (strip the quote number prefix); creator “Unknown” → muted “—”.</li>
+            <li><b>L4</b> Whole row navigates (keep an <code>&lt;a&gt;</code> inside for middle-click/a11y); kebab: Open, Download PDF.</li>
+            <li><b>L5</b> Sortable headers with <code>aria-sort</code>; &lt;782px render cards.</li>
+          </ul></section>
+          <section><h3>Acceptance</h3><ul>
+            <li>Two lines + customer panel visible at 1440×800 without scrolling the line list.</li>
+            <li>Rate <code>1,23,456.50</code> fully visible at 1280px.</li>
+            <li>Editing W/H/Qty/Rate updates row total, section subtotal, totals strip and action-bar total in the same tick; typing never loses focus.</li>
+            <li>Delete → Undo restores line and totals.</li>
+            <li>Tab order: item → W → H → Qty → Unit → Rate → row actions. Visible focus everywhere.</li>
+            <li>No horizontal page scroll at 360px; no console errors; existing PHP/JS tests still pass (<code>tests/</code>).</li>
+            <li>Run the visual regression matrix in <code>docs/UI-VISUAL-REGRESSION-MATRIX.md</code>.</li>
+          </ul></section>
+          <section><h3>Out of scope (needs backend)</h3><ul>
+            <li>Quotation status (draft/sent/accepted), validity date, Compare/Restore revision, Archive.</li>
+          </ul></section>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="idlm-qb-toast" id="toast" role="status"><span id="toastTxt"></span><button type="button" id="undo">Undo</button></div>
+<div class="idlm-autosave-cancel-modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mh">
+  <div><h2 id="mh">Discard unsaved changes?</h2><p>Autosave has stored your edits as a draft, but they have not been saved as a new revision.</p>
+    <div><button type="button" class="button" id="keep">Keep editing</button><button type="button" class="button button-link-delete" id="discard" style="background:var(--idlm-danger-soft);border-color:#fecaca">Discard changes</button></div></div>
+</div>
+
+<style>.kv{display:grid;grid-template-columns:minmax(125px,.7fr) minmax(0,1.3fr);gap:12px;padding:8px 0;border-bottom:1px solid var(--idlm-border)}.kv dt{color:var(--idlm-text-muted);font-size:12px;font-weight:700}.kv dd{margin:0;font-size:12px;font-weight:700;text-align:right}</style>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const inr=n=>'₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const NOW=new Date('2026-10-07T10:00:00');
+const rel=iso=>{const d=new Date(iso),h=(NOW-d)/36e5;if(h<1)return'Just now';if(h<24)return Math.floor(h)+' h ago';if(h<168)return Math.floor(h/24)+' d ago';return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})};
+const ICON={
+ chev:'<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>',
+ dup:'<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>',
+ del:'<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+ dots:'<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>'};
+
+/* ---------- tabs ---------- */
+const TITLES={list:'Quotations',view:'Q-OAK-2026-000081 · Interior Design Proposal',edit:'Edit Q-OAK-2026-000081 · R02',notes:'Notes for the coding agent'};
+const HDR={list:'<button class="button button-primary">Create quotation</button>',
+ view:'<button class="button">Preview / Print</button><span class="idlm-qb-menu-wrap"><button class="button" id="dl" aria-haspopup="menu">Download ▾</button><div class="idlm-qb-menu" id="dlm" role="menu"><button>PDF</button><button>CSV</button><button>XLSX</button></div></span><button class="button button-primary" data-go="edit">Edit quotation</button><i class="spec">V2</i>',edit:'',notes:''};
+function go(p){
+  $$('.idlm-quotation-workspace-nav a').forEach(a=>a.classList.toggle('is-active',a.dataset.p===p));
+  $$('.panel').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));
+  $('#title').textContent=TITLES[p];$('#hdrActions').innerHTML=HDR[p];
+  $('#actions').style.display=p==='edit'?'flex':'none';
+  $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+  const dl=$('#dl');if(dl)dl.onclick=e=>{e.stopPropagation();$('#dlm').classList.toggle('is-open')};
+  window.scrollTo(0,0);
+}
+$$('.idlm-quotation-workspace-nav a').forEach(a=>a.onclick=()=>go(a.dataset.p));
+document.addEventListener('click',()=>$$('.idlm-qb-menu.is-open').forEach(m=>m.classList.remove('is-open')));
+$('#specToggle').onchange=e=>document.body.classList.toggle('nospec',!e.target.checked);
+
+/* ---------- list ---------- */
+const Q=[
+ {no:'Q-OAK-2026-000081',proj:'Interior Design Proposal',cust:'B S Shashidhara',ph:'+91 98457 70207',rev:'R02',val:38822,by:'Shashikiran ML',upd:'2026-10-06T18:50:34'},
+ {no:'Q-OAK-2026-000079',proj:'Interior Design Proposal',cust:'AAMIR',ph:'7676797003',rev:'R06',val:945280,by:'—',upd:'2026-10-02T08:03:42'},
+ {no:'Q-OAK-2026-000080',proj:'Interior Design Proposal',cust:'A Ramachandra',ph:'+91 94494 89276',rev:'R01',val:96748.2,by:'—',upd:'2026-09-06T14:25:33'},
+ {no:'Q-OAK-2026-000078',proj:'Interior Design Proposal',cust:'Habizur Rahman',ph:'+91 69003 03377',rev:'R03',val:247530.96,by:'—',upd:'2026-09-02T16:51:38'},
+ {no:'Q-OAK-2026-000077',proj:'Interior Design Proposal',cust:'Abcd',ph:'7510613788',rev:'R03',val:174364.18,by:'—',upd:'2026-09-01T17:01:57'},
+ {no:'Q-OAK-2026-000076',proj:'Interior Design Proposal',cust:'Adarsh Nanda',ph:'+91 94396 64969',rev:'R01',val:95049,by:'—',upd:'2026-09-01T16:11:55'},
+ {no:'Q-2026-000059',proj:'Green Edge Signature, Varthur',cust:'Prasenjit Patra',ph:'7411108366',rev:'R01',val:978200,by:'—',upd:'2026-08-30T19:31:42'},
+ {no:'Q-2026-000075',proj:'Ssvr property',cust:'Arockia M',ph:'+91 70101 60251',rev:'R01',val:830360,by:'—',upd:'2026-08-30T19:16:06'}];
+let sort={k:'upd',d:-1};
+function list(){
+  const q=$('#q').value.toLowerCase(),by=$('#by').value,f=$('#from').value,t=$('#to').value;
+  let r=Q.filter(x=>(!q||(x.no+x.cust+x.ph+x.proj).toLowerCase().includes(q))&&(!by||x.by===by)&&(!f||x.upd.slice(0,10)>=f)&&(!t||x.upd.slice(0,10)<=t));
+  const g={no:x=>x.no,cust:x=>x.cust,val:x=>x.val,by:x=>x.by,upd:x=>x.upd}[sort.k];
+  r.sort((a,b)=>(g(a)>g(b)?1:-1)*sort.d);
+  $('#count').textContent=r.length+' of '+Q.length+' quotations';
+  $('#tbody').innerHTML=r.length?r.map((x,i)=>`<tr class="idlm-quote-row" data-open tabindex="0">
+   <td><b>${x.no}</b><small>${x.proj}</small></td><td>${x.cust}<small>${x.ph}</small></td>
+   <td><span class="idlm-pill">${x.rev}</span></td><td class="idlm-num"><b>${inr(x.val)}</b></td>
+   <td class="${x.by==='—'?'idlm-muted':''}">${x.by}</td><td title="${x.upd.replace('T',' ')}">${rel(x.upd)}</td>
+   <td><span class="idlm-qb-menu-wrap"><button type="button" class="idlm-qb-icon" data-tip="More actions" aria-label="More actions for ${x.no}" data-m="${i}">${ICON.dots}</button>
+   <div class="idlm-qb-menu" id="m${i}" role="menu"><button>Open</button><button>Download PDF</button></div></span></td></tr>`).join('')
+   :'<tr><td colspan="7" class="idlm-muted" style="padding:24px;text-align:center">No quotations match these filters.</td></tr>';
+  $('#cards').innerHTML=r.map(x=>`<div class="idlm-qb-card-row" data-open><div style="display:flex;justify-content:space-between"><b>${x.no}</b><span class="idlm-pill">${x.rev}</span></div><div>${x.cust}</div><small class="idlm-muted">${x.proj}</small><div style="display:flex;justify-content:space-between"><b>${inr(x.val)}</b><small class="idlm-muted">${rel(x.upd)}</small></div></div>`).join('');
+  $$('[data-open]').forEach(el=>{el.onclick=e=>{if(e.target.closest('.idlm-qb-menu-wrap'))return;go('view')};el.onkeydown=e=>{if(e.key==='Enter')go('view')}});
+  $$('[data-m]').forEach(b=>b.onclick=e=>{e.stopPropagation();const m=$('#m'+b.dataset.m),o=m.classList.contains('is-open');$$('.idlm-qb-menu.is-open').forEach(x=>x.classList.remove('is-open'));if(!o)m.classList.add('is-open')});
+  $$('#tbl th').forEach(th=>{const b=th.querySelector('[data-s]');if(b)th.setAttribute('aria-sort',sort.k===b.dataset.s?(sort.d>0?'ascending':'descending'):'none')});
+  ['no','val','upd'].forEach(k=>{const a=$('#a-'+k);if(a)a.textContent=sort.k===k?(sort.d>0?'↑':'↓'):''});
+}
+let t0;['q','by','from','to'].forEach(id=>$('#'+id).addEventListener('input',()=>{clearTimeout(t0);t0=setTimeout(list,id==='q'?250:0)}));
+$$('#tbl th [data-s]').forEach(b=>b.onclick=()=>{sort=sort.k===b.dataset.s?{k:sort.k,d:-sort.d}:{k:b.dataset.s,d:1};list()});
+$('#reset').onclick=()=>{['q','by','from','to'].forEach(id=>$('#'+id).value='');list()};
+
+/* ---------- editor ---------- */
+let S=[{name:'General',items:[
+ {name:'Kitchen Base Cabinet',desc:'Fabrication of base cabinets using BWP-grade plywood with laminate finish (SF / HGL / Texture), complete with shutters, shelves, edge banding and required hardware provisions.',code:'1',cat:'Kitchen',w:1,h:10,qty:10,unit:'Sq Ft',rate:1790,wood:true},
+ {name:'Shoe Rack Mechanism',desc:'Supply and installation of shoe rack from Hafele / Hettich or approved equivalent, complete with required fixing components.',code:'116',cat:'Accessories / Internal Storage',w:0,h:0,qty:1,unit:'PCS',rate:15000,wood:false}]}];
+const area=i=>(i.w>0&&i.h>0)?+(i.w*i.h).toFixed(2):i.qty, lt=i=>area(i)*i.rate, fr=n=>Number(n).toLocaleString('en-IN',{maximumFractionDigits:2});
+let dirty=false,saveT,last=null;
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+function render(){
+ $('#sections').innerHTML=S.map((s,si)=>`<div class="idlm-quote-section" data-si="${si}">
+  <header><span class="idlm-qb-handle" aria-hidden="true">⠿</span><input type="text" value="${esc(s.name)}" aria-label="Section name" data-sn="${si}" style="font-weight:700">
+   <span style="display:flex;gap:4px"><button type="button" class="button button-sm button-link-delete" data-rs="${si}">Remove section</button><i class="spec">E8</i></span></header>
+  <div class="idlm-quote-items-wrap"><div class="idlm-qb-lines">
+   <div class="idlm-qb-head"><span></span><span>Item<i class="spec">E1</i></span><span class="r">Width</span><span class="r">Height</span><span class="r">Area / qty</span><span>Unit</span><span class="r">Rate (₹)<i class="spec">E2</i></span><span class="r">Total (₹)</span><span></span></div>
+   ${s.items.map((it,ii)=>{const dim=it.w>0&&it.h>0;return`<div class="idlm-qb-line" data-si="${si}" data-ii="${ii}">
+    <span class="idlm-qb-handle" data-tip="Drag to reorder" aria-label="Drag to reorder">⠿</span>
+    <input class="idlm-qb-item" type="text" value="${esc(it.name)}" data-f="name" aria-label="Item" placeholder="Search catalogue or type custom item">
+    <input type="number" step="0.01" min="0" value="${dim?it.w.toFixed(2):''}" placeholder="—" class="${dim?'':'is-na'}" data-f="w" aria-label="Width">
+    <input type="number" step="0.01" min="0" value="${dim?it.h.toFixed(2):''}" placeholder="—" class="${dim?'':'is-na'}" data-f="h" aria-label="Height">
+    <input type="number" step="0.01" min="0" value="${area(it).toFixed(2)}" data-f="qty" aria-label="Area or quantity" ${dim?'readonly class="is-derived"':''}>
+    <input type="text" value="${esc(it.unit)}" data-f="unit" aria-label="Unit">
+    <div class="idlm-qb-rate"><span>₹</span><input type="text" inputmode="decimal" value="${fr(it.rate)}" data-f="rate" aria-label="Rate in rupees"></div>
+    <div class="idlm-line-total">${inr(lt(it))}</div>
+    <div class="idlm-line-actions">
+      <button type="button" class="idlm-qb-icon idlm-qb-chevron" data-tip="Details" aria-label="Show details" aria-expanded="false" data-x>${ICON.chev}</button>
+      <button type="button" class="idlm-qb-icon" data-tip="Duplicate line" aria-label="Duplicate line" data-dup>${ICON.dup}</button>
+      <button type="button" class="idlm-qb-icon is-danger" data-tip="Delete line" aria-label="Delete line" data-del>${ICON.del}</button>
+    </div>
+    <div class="idlm-qb-details">
+      <div class="idlm-qb-field"><label>Description</label><textarea data-f="desc">${esc(it.desc)}</textarea></div>
+      <div class="idlm-qb-field"><label>Item code<i class="spec">E4</i></label><div class="idlm-qb-readonly">#${esc(it.code)}</div></div>
+      <div class="idlm-qb-field"><label>Category</label><div class="idlm-qb-readonly">${esc(it.cat)}</div><small class="idlm-muted" style="font-size:12px">From catalogue</small></div>
+    </div></div>`}).join('')}
+  </div></div>
+  <div class="idlm-qb-subtotal"><span>${esc(s.name)} subtotal</span><strong data-sub="${si}">${inr(s.items.reduce((a,i)=>a+lt(i),0))}</strong></div></div>`).join('');
+ bind();totals();
+}
+function bind(){
+ $$('.idlm-qb-line').forEach(row=>{
+  const si=+row.dataset.si,ii=+row.dataset.ii,it=S[si].items[ii];
+  $$('[data-f]',row).forEach(inp=>{
+   inp.addEventListener('input',()=>{const f=inp.dataset.f,v=inp.value;
+    if(['w','h','qty'].includes(f))it[f]=parseFloat(v)||0;else if(f==='rate')it.rate=parseFloat(v.replace(/,/g,''))||0;else it[f]=v;
+    dirtyNow();if(!['name','desc','unit'].includes(f))refresh(row,it)});
+   if(inp.dataset.f==='rate'){
+    inp.addEventListener('focus',()=>inp.value=it.rate||'');
+    inp.addEventListener('blur',()=>inp.value=fr(it.rate));
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const n=row.nextElementSibling;n&&n.classList.contains('idlm-qb-line')&&$('.idlm-qb-item',n).focus()}})}
+  });
+  $('[data-x]',row).onclick=e=>{const o=row.classList.toggle('is-open');e.currentTarget.setAttribute('aria-expanded',o)};
+  $('[data-dup]',row).onclick=()=>{S[si].items.splice(ii+1,0,{...it,name:it.name+' (copy)'});dirtyNow();render()};
+  $('[data-del]',row).onclick=()=>{last={si,ii,it};S[si].items.splice(ii,1);dirtyNow();render();toast('Line deleted',true)};
+ });
+ $$('[data-sn]').forEach(i=>i.oninput=()=>{S[+i.dataset.sn].name=i.value;dirtyNow()});
+ $$('[data-rs]').forEach(b=>b.onclick=()=>{S.splice(+b.dataset.rs,1);dirtyNow();render()});
+}
+function refresh(row,it){
+ const dim=it.w>0&&it.h>0,q=$('[data-f=qty]',row);
+ if(document.activeElement!==q)q.value=area(it).toFixed(2);
+ q.readOnly=dim;q.classList.toggle('is-derived',dim);
+ $$('[data-f=w],[data-f=h]',row).forEach(x=>x.classList.toggle('is-na',!dim&&!x.value));
+ $('.idlm-line-total',row).textContent=inr(lt(it));
+ const si=+row.dataset.si;$('[data-sub="'+si+'"]').textContent=inr(S[si].items.reduce((a,i)=>a+lt(i),0));totals();
+}
+function totals(){
+ const all=S.flatMap(s=>s.items),sub=all.reduce((a,i)=>a+lt(i),0),wood=all.filter(i=>i.wood).reduce((a,i)=>a+lt(i),0);
+ const soft=$('#soft').checked?wood*.05:0,disc=+$('#disc').value||0,base=sub+soft-disc,gst=base*.18,raw=base+gst,g=Math.round(raw);
+ $('#t-sub').textContent=inr(sub);$('#t-wood').textContent=inr(wood);$('#t-soft').textContent=inr(soft);
+ $('#t-gst').textContent=inr(gst);$('#t-rnd').textContent=inr(g-raw);$('#t-grand').textContent=inr(g);$('#f-grand').textContent=inr(g);
+ $('#secList').innerHTML=S.map(s=>`<div><span>${esc(s.name)}</span><b>${inr(s.items.reduce((a,i)=>a+lt(i),0))}</b></div>`).join('')||'<span class="idlm-muted">No sections</span>';
+ $('#woodList').innerHTML=`<div><span>Wood</span><b>${inr(wood)}</b></div><div><span>Others</span><b>${inr(sub-wood)}</b></div>`;
+}
+$('#soft').onchange=()=>{dirtyNow();totals()};$('#disc').oninput=()=>{dirtyNow();totals()};
+$('#addLine').onclick=()=>{if(!S.length)S.push({name:'New section',items:[]});S[S.length-1].items.push({name:'',desc:'',code:'—',cat:'Custom item',w:0,h:0,qty:1,unit:'PCS',rate:0});dirtyNow();render();const n=$$('.idlm-qb-item');n[n.length-1].focus()};
+$('#addSection').onclick=()=>{S.push({name:'New section',items:[]});dirtyNow();render()};
+$('#addHeader').onclick=()=>toast('Header row added (demo)');
+/* autosave state */
+function setState(s,txt){const a=$('#autosave');a.dataset.state=s;a.textContent=txt}
+function dirtyNow(){dirty=true;setState('dirty','Unsaved changes');clearTimeout(saveT);saveT=setTimeout(()=>{setState('saving','Saving…');setTimeout(()=>{setState('saved','Saved just now');dirty=false},700)},1100)}
+/* toast + undo */
+let tt;function toast(m,undo){$('#toastTxt').textContent=m;$('#undo').style.display=undo?'':'none';$('#toast').classList.add('show');clearTimeout(tt);tt=setTimeout(()=>$('#toast').classList.remove('show'),6000)}
+$('#undo').onclick=()=>{if(!last)return;S[last.si].items.splice(last.ii,0,last.it);last=null;$('#toast').classList.remove('show');render()};
+$('#cancel').onclick=()=>dirty?$('#modal').classList.add('is-open'):go('view');
+$('#keep').onclick=()=>$('#modal').classList.remove('is-open');
+$('#discard').onclick=()=>{$('#modal').classList.remove('is-open');dirty=false;go('view')};
+$('#save').onclick=()=>{setState('saved','Saved as R03 (demo)');dirty=false;toast('Revision saved (demo)')};
+
+list();render();go('list');
+</script>
+</body>
+</html>

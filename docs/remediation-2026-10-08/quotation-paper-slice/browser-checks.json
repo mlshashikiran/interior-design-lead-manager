@@ -1,0 +1,29 @@
+{
+  "author": "Shashi",
+  "date": "2026-10-08",
+  "save_reload": "Letter selected after actual form submission",
+  "desktop": {
+    "viewport": [
+      1280,
+      900
+    ],
+    "context": "administrator utility",
+    "selected": "Letter",
+    "screenshot": "browser-desktop.jpg"
+  },
+  "mobile": {
+    "viewport": [
+      390,
+      844
+    ],
+    "context": "shortcode workspace",
+    "selected": "Letter",
+    "page_width": 384,
+    "screenshot": "browser-mobile.jpg"
+  },
+  "console_errors_warnings": [],
+  "cleanup": {
+    "tab_closed": true,
+    "viewport_reset": true
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "readme.txt": "717336e91cff8d465c083599bbfd77d00441236b62f2d9f08415971173cfeeeb",
+  "CHANGELOG.md": "6045b992cd1ad684f7d4b4dd661ace50c2c49fa41f585376a24f97cc06e031c8",
+  "interior-design-lead-manager.php": "66387ddb7538189d8773f295a082d53aaae60d6483a52ea031d780e69ea0df5d",
+  "tests/release-contracts.php": "788e3933bece3292ebe138eca3f40b2db77204589c11d4f1710e27a26d351128",
+  "tests/release/class-release-artifact.php": "e972fb6f10e9d05775c8fbcc10d900d0723d9a56b543a13efa18e5464c541474",
+  "docs/PRODUCTION-SCALABILITY-PLAN.md": "03ea56da6bba36092284908d02cdd697ad5ca38a72d29f79d13f6dd6d72ff0e1",
+  "docs/PRODUCTION-RELEASE.md": "c189f56077a94819d9d0200aed5b430fd444d44ff7142cdf55d4300f2ef30d4f",
+  "docs/CHANGELOG-DEV.md": "d18f50035f1a684a4ec9f65ec917570293323dcb1e2af59f592f7729ee809728",
+  "docs/AUDIT-REMEDIATION-PLAN.md": "da517c944c6a2d67bd412088cde21fd56d11a0c7a0acf06ca7d1de2b4a9b699d",
+  "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "8b88239127a9ce34110d709cada866579249f9a297b3bff8e024af8dc35916c5",
+  "docs/audit-remediation-backlog.csv": "fcd84dbb4a32e01d02540b849945a85664d0107e445bfbb5487a2e78819e46d9"
+}

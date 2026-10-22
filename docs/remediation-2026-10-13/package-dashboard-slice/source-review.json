@@ -1,0 +1,70 @@
+{
+  "builder": "Shashi",
+  "classification_is_not_checker_suppression": true,
+  "statement_count": 3,
+  "sites": [
+    {
+      "file": "includes/class-dashboard.php",
+      "line": 614,
+      "file_sha256": "9ede393d5ade6e6e6fbac6e08221791375e33f3ebe8b988beb287f707a85c084",
+      "source_line": "            $assignment_rows = $wpdb->get_results($wpdb->prepare(",
+      "rationale": "Assignment reporting requires live CRM admission. The optional rep filter is manager-only; restriction_user_id supplies actor scope. Lead/user/event table names are trusted WordPress-prefix identifiers. event_rep_clause at lines 349-353 contains only fixed predicates whose actor/rep IDs use %d and whose sanitized studio/source/campaign values use %s before composition. assignment_rep_clause is that prepared fragment. The event query at line 614 prepares two esc_like(\"automatic_\")+\"%\" patterns and two period dates; no caller projection/order/SQL identifier is accepted. The legacy queries at lines 635 and 666 prepare period dates, retain the same scoped clause, and use fixed NOT EXISTS conditions for missing historical assignment evidence. Fresh construction observes current scope; the outer authorization-scoped read model caches aggregates under contract 4 rather than contract 3. Native stored-event tests assert prefix classification, special-character source filters, periods, reassignment scope, read-only event rows and old/warm cache behavior. Legacy fallback semantics are source-reviewed, not newly qualified by this test. No additional suppression is added."
+    },
+    {
+      "file": "includes/class-dashboard.php",
+      "line": 619,
+      "file_sha256": "9ede393d5ade6e6e6fbac6e08221791375e33f3ebe8b988beb287f707a85c084",
+      "source_line": "                 FROM {$table_state_events} e",
+      "rationale": "Assignment reporting requires live CRM admission. The optional rep filter is manager-only; restriction_user_id supplies actor scope. Lead/user/event table names are trusted WordPress-prefix identifiers. event_rep_clause at lines 349-353 contains only fixed predicates whose actor/rep IDs use %d and whose sanitized studio/source/campaign values use %s before composition. assignment_rep_clause is that prepared fragment. The event query at line 614 prepares two esc_like(\"automatic_\")+\"%\" patterns and two period dates; no caller projection/order/SQL identifier is accepted. The legacy queries at lines 635 and 666 prepare period dates, retain the same scoped clause, and use fixed NOT EXISTS conditions for missing historical assignment evidence. Fresh construction observes current scope; the outer authorization-scoped read model caches aggregates under contract 4 rather than contract 3. Native stored-event tests assert prefix classification, special-character source filters, periods, reassignment scope, read-only event rows and old/warm cache behavior. Legacy fallback semantics are source-reviewed, not newly qualified by this test. No additional suppression is added."
+    },
+    {
+      "file": "includes/class-dashboard.php",
+      "line": 620,
+      "file_sha256": "9ede393d5ade6e6e6fbac6e08221791375e33f3ebe8b988beb287f707a85c084",
+      "source_line": "                 INNER JOIN {$table_leads} l ON l.id = e.lead_id",
+      "rationale": "Assignment reporting requires live CRM admission. The optional rep filter is manager-only; restriction_user_id supplies actor scope. Lead/user/event table names are trusted WordPress-prefix identifiers. event_rep_clause at lines 349-353 contains only fixed predicates whose actor/rep IDs use %d and whose sanitized studio/source/campaign values use %s before composition. assignment_rep_clause is that prepared fragment. The event query at line 614 prepares two esc_like(\"automatic_\")+\"%\" patterns and two period dates; no caller projection/order/SQL identifier is accepted. The legacy queries at lines 635 and 666 prepare period dates, retain the same scoped clause, and use fixed NOT EXISTS conditions for missing historical assignment evidence. Fresh construction observes current scope; the outer authorization-scoped read model caches aggregates under contract 4 rather than contract 3. Native stored-event tests assert prefix classification, special-character source filters, periods, reassignment scope, read-only event rows and old/warm cache behavior. Legacy fallback semantics are source-reviewed, not newly qualified by this test. No additional suppression is added."
+    },
+    {
+      "file": "includes/class-dashboard.php",
+      "line": 622,
+      "file_sha256": "9ede393d5ade6e6e6fbac6e08221791375e33f3ebe8b988beb287f707a85c084",
+      "source_line": "                   AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$assignment_rep_clause}",
+      "rationale": "Assignment reporting requires live CRM admission. The optional rep filter is manager-only; restriction_user_id supplies actor scope. Lead/user/event table names are trusted WordPress-prefix identifiers. event_rep_clause at lines 349-353 contains only fixed predicates whose actor/rep IDs use %d and whose sanitized studio/source/campaign values use %s before composition. assignment_rep_clause is that prepared fragment. The event query at line 614 prepares two esc_like(\"automatic_\")+\"%\" patterns and two period dates; no caller projection/order/SQL identifier is accepted. The legacy queries at lines 635 and 666 prepare period dates, retain the same scoped clause, and use fixed NOT EXISTS conditions for missing historical assignment evidence. Fresh construction observes current scope; the outer authorization-scoped read model caches aggregates under contract 4 rather than contract 3. Native stored-event tests assert prefix classification, special-character source filters, periods, reassignment scope, read-only event rows and old/warm cache behavior. Legacy fallback semantics are source-reviewed, not newly qualified by this test. No additional suppression is added."
+    },
+    {
+      "file": "includes/class-dashboard.php",
+      "line": 637,
+      "file_sha256": "9ede393d5ade6e6e6fbac6e08221791375e33f3ebe8b988beb287f707a85c084",
+      "source_line": "                 FROM {$table_leads} l",
+      "rationale": "Assignment reporting requires live CRM admission. The optional rep filter is manager-only; restriction_user_id supplies actor scope. Lead/user/event table names are trusted WordPress-prefix identifiers. event_rep_clause at lines 349-353 contains only fixed predicates whose actor/rep IDs use %d and whose sanitized studio/source/campaign values use %s before composition. assignment_rep_clause is that prepared fragment. The event query at line 614 prepares two esc_like(\"automatic_\")+\"%\" patterns and two period dates; no caller projection/order/SQL identifier is accepted. The legacy queries at lines 635 and 666 prepare period dates, retain the same scoped clause, and use fixed NOT EXISTS conditions for missing historical assignment evidence. Fresh construction observes current scope; the outer authorization-scoped read model caches aggregates under contract 4 rather than contract 3. Native stored-event tests assert prefix classification, special-character source filters, periods, reassignment scope, read-only event rows and old/warm cache behavior. Legacy fallback semantics are source-reviewed, not newly qualified by this test. No additional suppression is added."
+    },
+    {
+      "file": "includes/class-dashboard.php",
+      "line": 638,
+      "file_sha256": "9ede393d5ade6e6e6fbac6e08221791375e33f3ebe8b988beb287f707a85c084",
+      "source_line": "                 WHERE l.is_duplicate = 0 AND l.assigned_rep_id > 0 AND l.assigned_at BETWEEN %s AND %s{$assignment_rep_clause}",
+      "rationale": "Assignment reporting requires live CRM admission. The optional rep filter is manager-only; restriction_user_id supplies actor scope. Lead/user/event table names are trusted WordPress-prefix identifiers. event_rep_clause at lines 349-353 contains only fixed predicates whose actor/rep IDs use %d and whose sanitized studio/source/campaign values use %s before composition. assignment_rep_clause is that prepared fragment. The event query at line 614 prepares two esc_like(\"automatic_\")+\"%\" patterns and two period dates; no caller projection/order/SQL identifier is accepted. The legacy queries at lines 635 and 666 prepare period dates, retain the same scoped clause, and use fixed NOT EXISTS conditions for missing historical assignment evidence. Fresh construction observes current scope; the outer authorization-scoped read model caches aggregates under contract 4 rather than contract 3. Native stored-event tests assert prefix classification, special-character source filters, periods, reassignment scope, read-only event rows and old/warm cache behavior. Legacy fallback semantics are source-reviewed, not newly qualified by this test. No additional suppression is added."
+    },
+    {
+      "file": "includes/class-dashboard.php",
+      "line": 667,
+      "file_sha256": "9ede393d5ade6e6e6fbac6e08221791375e33f3ebe8b988beb287f707a85c084",
+      "source_line": "             FROM {$table_leads} l",
+      "rationale": "Assignment reporting requires live CRM admission. The optional rep filter is manager-only; restriction_user_id supplies actor scope. Lead/user/event table names are trusted WordPress-prefix identifiers. event_rep_clause at lines 349-353 contains only fixed predicates whose actor/rep IDs use %d and whose sanitized studio/source/campaign values use %s before composition. assignment_rep_clause is that prepared fragment. The event query at line 614 prepares two esc_like(\"automatic_\")+\"%\" patterns and two period dates; no caller projection/order/SQL identifier is accepted. The legacy queries at lines 635 and 666 prepare period dates, retain the same scoped clause, and use fixed NOT EXISTS conditions for missing historical assignment evidence. Fresh construction observes current scope; the outer authorization-scoped read model caches aggregates under contract 4 rather than contract 3. Native stored-event tests assert prefix classification, special-character source filters, periods, reassignment scope, read-only event rows and old/warm cache behavior. Legacy fallback semantics are source-reviewed, not newly qualified by this test. No additional suppression is added."
+    },
+    {
+      "file": "includes/class-dashboard.php",
+      "line": 668,
+      "file_sha256": "9ede393d5ade6e6e6fbac6e08221791375e33f3ebe8b988beb287f707a85c084",
+      "source_line": "             WHERE l.is_duplicate = 0 AND l.assigned_rep_id > 0 AND l.assigned_at BETWEEN %s AND %s{$assignment_rep_clause}",
+      "rationale": "Assignment reporting requires live CRM admission. The optional rep filter is manager-only; restriction_user_id supplies actor scope. Lead/user/event table names are trusted WordPress-prefix identifiers. event_rep_clause at lines 349-353 contains only fixed predicates whose actor/rep IDs use %d and whose sanitized studio/source/campaign values use %s before composition. assignment_rep_clause is that prepared fragment. The event query at line 614 prepares two esc_like(\"automatic_\")+\"%\" patterns and two period dates; no caller projection/order/SQL identifier is accepted. The legacy queries at lines 635 and 666 prepare period dates, retain the same scoped clause, and use fixed NOT EXISTS conditions for missing historical assignment evidence. Fresh construction observes current scope; the outer authorization-scoped read model caches aggregates under contract 4 rather than contract 3. Native stored-event tests assert prefix classification, special-character source filters, periods, reassignment scope, read-only event rows and old/warm cache behavior. Legacy fallback semantics are source-reviewed, not newly qualified by this test. No additional suppression is added."
+    },
+    {
+      "file": "includes/class-dashboard.php",
+      "line": 669,
+      "file_sha256": "9ede393d5ade6e6e6fbac6e08221791375e33f3ebe8b988beb287f707a85c084",
+      "source_line": "               AND NOT EXISTS (SELECT 1 FROM {$table_state_events} legacy_event WHERE legacy_event.lead_id = l.id AND legacy_event.event_type = 'assignment' AND CAST(legacy_event.to_value AS UNSIGNED) = l.assigned_rep_id)",
+      "rationale": "Assignment reporting requires live CRM admission. The optional rep filter is manager-only; restriction_user_id supplies actor scope. Lead/user/event table names are trusted WordPress-prefix identifiers. event_rep_clause at lines 349-353 contains only fixed predicates whose actor/rep IDs use %d and whose sanitized studio/source/campaign values use %s before composition. assignment_rep_clause is that prepared fragment. The event query at line 614 prepares two esc_like(\"automatic_\")+\"%\" patterns and two period dates; no caller projection/order/SQL identifier is accepted. The legacy queries at lines 635 and 666 prepare period dates, retain the same scoped clause, and use fixed NOT EXISTS conditions for missing historical assignment evidence. Fresh construction observes current scope; the outer authorization-scoped read model caches aggregates under contract 4 rather than contract 3. Native stored-event tests assert prefix classification, special-character source filters, periods, reassignment scope, read-only event rows and old/warm cache behavior. Legacy fallback semantics are source-reviewed, not newly qualified by this test. No additional suppression is added."
+    }
+  ]
+}

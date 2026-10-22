@@ -10,70 +10,38 @@ class IDLM_DB {
         return self::$last_validation_error;
     }
     public static function init() {
-        // Keep schema migrations independent from UI/plugin release versions.
-        // Older releases stored IDLM_VERSION in idlm_db_version, which caused
-        // dbDelta() to run during every release, including wp-login.php requests.
-        $saved_schema_version = get_option('idlm_schema_version', '');
-
-        if (empty($saved_schema_version)) {
-            $legacy_db_version = get_option('idlm_db_version', '');
-
-            // Plugin version 1.14.0 matched schema 1.0.0. Adopt that baseline
-            // first so newer schema migrations still run normally.
-            if (!empty($legacy_db_version) && version_compare($legacy_db_version, '1.14.0', '>=')) {
-                $saved_schema_version = '1.0.0';
-                update_option('idlm_schema_version', $saved_schema_version);
+        $steps = array(
+            'idlm_handoff_state_version' => 'backfill_handoff_state',
+            'idlm_duplicate_quality_version' => 'backfill_duplicate_early_close_quality',
+            'idlm_workflow_integrity_version' => 'repair_workflow_integrity',
+            'idlm_assignment_timestamp_version' => 'backfill_assignment_timestamps',
+            'idlm_attribution_touchpoint_backfill_version' => 'backfill_duplicate_touchpoints',
+            'idlm_conversion_time_integrity_version' => 'clear_non_won_conversion_times',
+            'idlm_task_queue_cleanup_version' => 'cleanup_stale_pending_tasks',
+        );
+        $complete = IDLM_DB_VERSION === get_option('idlm_schema_version', '');
+        foreach ($steps as $option => $method) { $complete = $complete && '1.0.1' === get_option($option, ''); }
+        if ($complete) { return true; }
+        return IDLM_Schema_Migration::run(static function () use ($steps) {
+            $version = IDLM_Schema_Migration::version('idlm_schema_version');
+            if (null === $version) { return IDLM_Schema_Migration::error('version_read'); }
+            if ($version && version_compare($version, IDLM_DB_VERSION, '>')) { return IDLM_Schema_Migration::error('future_version', 'CRM schema is newer than this plugin. Install a matching plugin version or recover the matching database backup.'); }
+            if (!$version || version_compare($version, IDLM_DB_VERSION, '<')) {
+                $result = self::create_tables();
+                if (is_wp_error($result)) { return $result; }
             }
-        }
-
-        if (empty($saved_schema_version) || version_compare($saved_schema_version, IDLM_DB_VERSION, '<')) {
-            self::create_tables();
-            update_option('idlm_schema_version', IDLM_DB_VERSION);
-        }
-
-        if ('1.0.0' !== get_option('idlm_handoff_state_version', '')) {
-            if (self::backfill_handoff_state()) {
-                update_option('idlm_handoff_state_version', '1.0.0');
+            // v1.0.1 rechecks legacy markers whose writers did not check SQL.
+            foreach ($steps as $option => $method) {
+                $saved = IDLM_Schema_Migration::version($option);
+                if (null === $saved) { return IDLM_Schema_Migration::error('marker_read'); }
+                if ('1.0.1' === $saved) { continue; }
+                $result = self::$method();
+                if (false === $result || is_wp_error($result)) { return is_wp_error($result) ? $result : IDLM_Schema_Migration::error($method); }
+                $result = IDLM_Schema_Migration::publish($option, '1.0.1');
+                if (is_wp_error($result)) { return $result; }
             }
-        }
-
-        if ('1.0.0' !== get_option('idlm_duplicate_quality_version', '')) {
-            self::backfill_duplicate_early_close_quality();
-            update_option('idlm_duplicate_quality_version', '1.0.0');
-        }
-
-        if ('1.0.0' !== get_option('idlm_workflow_integrity_version', '')) {
-            self::repair_workflow_integrity();
-            update_option('idlm_workflow_integrity_version', '1.0.0');
-        }
-
-        if ('1.0.0' !== get_option('idlm_assignment_timestamp_version', '')) {
-            if (self::backfill_assignment_timestamps()) {
-                update_option('idlm_assignment_timestamp_version', '1.0.0');
-            }
-        }
-
-        if ('1.0.0' !== get_option('idlm_attribution_touchpoint_backfill_version', '')) {
-            self::backfill_duplicate_touchpoints();
-            update_option('idlm_attribution_touchpoint_backfill_version', '1.0.0');
-        }
-
-        // conversion_time is the canonical timestamp of a current Won lead.
-        // Older imports populated it for other stages, risking false closes in
-        // any report that filters by this timestamp.
-        if ('1.0.0' !== get_option('idlm_conversion_time_integrity_version', '')) {
-            if (self::clear_non_won_conversion_times()) {
-                update_option('idlm_conversion_time_integrity_version', '1.0.0');
-            }
-        }
-
-        // The daily queue must never inherit work from terminal leads or
-        // accounts that no longer exist. This is intentionally a one-time,
-        // idempotent archive rather than a destructive delete.
-        if ('1.0.0' !== get_option('idlm_task_queue_cleanup_version', '')) {
-            self::cleanup_stale_pending_tasks();
-            update_option('idlm_task_queue_cleanup_version', '1.0.0');
-        }
+            return true;
+        });
     }
 
     /** Archive pending work which cannot be actioned safely. */
@@ -84,23 +52,28 @@ class IDLM_DB {
         $users = $wpdb->users;
         $now = current_time('mysql');
 
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0228: cleanup_stale_pending_tasks(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $lost = $wpdb->query($wpdb->prepare(
             "UPDATE {$tasks} t INNER JOIN {$leads} l ON l.id = t.lead_id
              SET t.status = 'cancelled', t.completed_at = NULL, t.updated_at = %s
              WHERE t.status = 'pending' AND l.stage = 'Lost'",
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $now
         ));
         // A task can retain an obsolete task owner even when its lead is still
         // active. Archive it for a manager to recreate/reassign deliberately.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0229: cleanup_stale_pending_tasks(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $orphaned = $wpdb->query($wpdb->prepare(
             "UPDATE {$tasks} t LEFT JOIN {$users} u ON u.ID = t.assigned_rep_id
              SET t.status = 'cancelled', t.completed_at = NULL, t.updated_at = %s
              WHERE t.status = 'pending' AND t.assigned_rep_id > 0 AND u.ID IS NULL",
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $now
         ));
 
+        if (false === $lost || false === $orphaned) { return false; }
         return array('lost' => max(0, (int) $lost), 'orphaned' => max(0, (int) $orphaned));
     }
 
@@ -120,12 +93,14 @@ class IDLM_DB {
         global $wpdb;
         $leads = $wpdb->prefix . 'idlm_leads';
 
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0230: clear_non_won_conversion_times(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $result = $wpdb->query(
             "UPDATE {$leads}
              SET conversion_time = NULL
              WHERE COALESCE(stage, '') <> 'Won'
                AND conversion_time IS NOT NULL"
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         );
 
         return false !== $result;
@@ -141,6 +116,7 @@ class IDLM_DB {
 
         // Prefer the latest explicit assignment event, then the qualified handoff.
         // updated_at is only a last-resort legacy estimate because unrelated edits also change it.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0231: backfill_assignment_timestamps(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $result = $wpdb->query(
             "UPDATE {$leads} l
@@ -155,6 +131,7 @@ class IDLM_DB {
                  ELSE COALESCE(a.latest_assignment_at, l.handoff_at, l.updated_at, l.created_at)
              END
              WHERE l.assigned_at IS NULL"
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         );
 
         return false !== $result;
@@ -167,15 +144,18 @@ class IDLM_DB {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
 
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0232: backfill_duplicate_early_close_quality(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query(
+        if (false === $wpdb->query(
             "UPDATE {$table_leads}
              SET lead_quality = 'Unqualified'
              WHERE is_duplicate = 1
                AND disqualification_method = 'early_close'
                AND disqualification_reason = 'duplicate'
                AND (lead_quality = '' OR lead_quality IS NULL)"
-        );
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        )) { return false; }
+        return true;
     }
 
     /**
@@ -188,20 +168,23 @@ class IDLM_DB {
         $now = current_time('mysql');
 
         // Every duplicate is a closed, unqualified record linked to its canonical lead.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0233: repair_workflow_integrity(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query($wpdb->prepare(
+        if (false === $wpdb->query($wpdb->prepare(
             "UPDATE {$leads}
              SET lead_quality = 'Unqualified', stage = 'Lost', lost_reason = 'Duplicate or Invalid Lead',
                  disqualification_reason = 'duplicate', disqualification_method = 'duplicate_detection',
                  disqualified_at = COALESCE(disqualified_at, updated_at, created_at, %s),
                  handoff_status = 'not_ready', handoff_at = NULL, handoff_method = '', handoff_exception_reason = ''
              WHERE is_duplicate = 1 AND duplicate_of_id > 0",
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $now
-        ));
+        ))) { return false; }
 
         // Every Unqualified decision is terminal, not an active-pipeline record.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0234: repair_workflow_integrity(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query(
+        if (false === $wpdb->query(
             "UPDATE {$leads}
              SET stage = 'Lost', lost_reason = CASE
                  WHEN disqualification_reason = 'duplicate' THEN 'Duplicate or Invalid Lead'
@@ -212,44 +195,56 @@ class IDLM_DB {
                  WHEN disqualification_reason = 'unable_to_contact' THEN 'Unable to Contact'
                  ELSE 'Other' END
              WHERE lead_quality = 'Unqualified' AND stage <> 'Lost'"
-        );
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        )) { return false; }
 
         // A Qualified quality decision cannot remain in a pre-qualification stage.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0235: repair_workflow_integrity(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query("UPDATE {$leads} SET stage = 'Qualified' WHERE lead_quality = 'Qualified' AND stage IN ('', 'New', 'Contacted')");
+        if (false === $wpdb->query("UPDATE {$leads} SET stage = 'Qualified' WHERE lead_quality = 'Qualified' AND stage IN ('', 'New', 'Contacted')")) { return false; }
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         // Advanced sales stages require a qualified lead unless the record was explicitly closed.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0236: repair_workflow_integrity(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query($wpdb->prepare(
+        if (false === $wpdb->query($wpdb->prepare(
             "UPDATE {$leads}
              SET lead_quality = 'Qualified', qualified_at = COALESCE(qualified_at, updated_at, created_at, %s),
                  qualified_by_user_id = COALESCE(NULLIF(qualified_by_user_id, 0), 0),
                  disqualification_reason = '', disqualification_method = '', disqualified_at = NULL, disqualified_by_user_id = 0
              WHERE is_duplicate = 0 AND stage IN ('Qualified', 'Quote Shared', 'Negotiation', 'Won')
                AND COALESCE(lead_quality, '') <> 'Qualified' AND COALESCE(disqualification_method, '') <> 'early_close'",
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $now
-        ));
+        ))) { return false; }
 
         // Legacy terminal stages missing their required commercial values cannot stay terminal.
         // Downgrade them to the nearest valid state without inventing revenue or quote amounts.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0237: repair_workflow_integrity(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query("UPDATE {$leads} SET stage = 'Negotiation', conversion_time = NULL WHERE stage = 'Won' AND COALESCE(deal_value, 0) <= 0");
+        if (false === $wpdb->query("UPDATE {$leads} SET stage = 'Negotiation', conversion_time = NULL WHERE stage = 'Won' AND COALESCE(deal_value, 0) <= 0")) { return false; }
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query("UPDATE {$leads} SET stage = 'Qualified' WHERE stage = 'Quote Shared' AND (COALESCE(quote_shared, 0) = 0 OR COALESCE(quote_value, 0) <= 0)");
+        if (false === $wpdb->query("UPDATE {$leads} SET stage = 'Qualified' WHERE stage = 'Quote Shared' AND (COALESCE(quote_shared, 0) = 0 OR COALESCE(quote_value, 0) <= 0)")) { return false; }
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
         // Preserve historical Unqualified decisions with explicit legacy audit metadata.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0238: repair_workflow_integrity(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query($wpdb->prepare(
+        if (false === $wpdb->query($wpdb->prepare(
             "UPDATE {$leads}
              SET disqualification_reason = COALESCE(NULLIF(disqualification_reason, ''), 'legacy_unqualified'),
                  disqualification_method = COALESCE(NULLIF(disqualification_method, ''), 'legacy_import'),
                  disqualified_at = COALESCE(disqualified_at, updated_at, created_at, %s)
              WHERE lead_quality = 'Unqualified'",
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $now
-        ));
+        ))) { return false; }
 
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0239: repair_workflow_integrity(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query("DELETE t FROM {$tasks} t LEFT JOIN {$leads} l ON l.id = t.lead_id WHERE l.id IS NULL");
+        if (false === $wpdb->query("DELETE t FROM {$tasks} t LEFT JOIN {$leads} l ON l.id = t.lead_id WHERE l.id IS NULL")) { return false; }
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        return true;
     }
 
     /**
@@ -280,7 +275,7 @@ class IDLM_DB {
         $candidate_quality = isset($data['lead_quality']) ? $data['lead_quality'] : $old_lead->lead_quality;
         // Qualification is an explicit pre-sales decision. Downstream sales
         // stages must not implicitly qualify a lead or trigger handoff checks.
-        $qualified_stages = array(IDLM_State_Registry::STAGE_QUALIFIED);
+        $qualified_stages = IDLM_State_Registry::quality_coupled_stages();
 
         if (in_array($candidate_stage, $qualified_stages, true)) {
             $data['lead_quality'] = 'Qualified';
@@ -335,21 +330,24 @@ class IDLM_DB {
             'role' => 'idlm_pre_sales',
             'fields' => 'ID',
         )))));
+        if ($wpdb->last_error) { return false; }
         if (empty($pre_sales_ids)) {
-            return false;
+            return true;
         }
 
         $owner_sql = implode(',', $pre_sales_ids);
         $table_leads = $wpdb->prefix . 'idlm_leads';
         // The owner list contains only absint-normalized IDs.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0240: backfill_handoff_state(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        $wpdb->query(
+        if (false === $wpdb->query(
             "UPDATE {$table_leads}
              SET handoff_status = 'awaiting_manager', intake_owner_id = assigned_rep_id
              WHERE handoff_status = 'not_ready' AND lead_quality = 'Qualified'
                AND assigned_rep_id IN ({$owner_sql})
                AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0"
-        );
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        )) { return false; }
         return true;
     }
 
@@ -357,10 +355,63 @@ class IDLM_DB {
      * Create/Update custom DB tables on plugin activation
      */
     public static function create_tables() {
+        return IDLM_Schema_Migration::run(static function () {
+            global $wpdb;
+            require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+            $statements = self::schema_statements();
+            foreach ($statements as $sql) { dbDelta($sql); }
+            $result = IDLM_Schema_Migration::verify($statements);
+            if (is_wp_error($result)) { return $result; }
+            if (!IDLM_Private_Files::install()) { return IDLM_Schema_Migration::error('private_files'); }
+            $table_leads = $wpdb->prefix . 'idlm_leads';
+            $table_activity = $wpdb->prefix . 'idlm_lead_activity_log';
+            // Backfill the qualification clock for leads created before schema 1.0.2.
+            // updated_at is the safest available fallback because older records did
+            // not store a dedicated qualification transition timestamp.
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0241: create_tables(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+            if (false === $wpdb->query(
+                "UPDATE {$table_leads}
+                 SET qualified_at = COALESCE(updated_at, conversion_time, created_at)
+                 WHERE lead_quality = 'Qualified' AND qualified_at IS NULL"
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            )) { return IDLM_Schema_Migration::error('legacy_clocks'); }
+            // Repair legacy Won records that predate canonical close timestamps.
+            // The latest transition to Won is authoritative when a lead was reopened;
+            // updated_at is the safest fallback when no historical activity survives.
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0242: create_tables(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+            if (false === $wpdb->query(
+                "UPDATE {$table_leads} l
+                 LEFT JOIN (
+                    SELECT lead_id, MAX(created_at) AS won_at
+                    FROM {$table_activity}
+                    WHERE activity_type = 'stage_change'
+                      AND details LIKE CONCAT('%to ', CHAR(39), 'Won', CHAR(39), '%')
+                    GROUP BY lead_id
+                 ) won_history ON won_history.lead_id = l.id
+                 SET l.conversion_time = COALESCE(won_history.won_at, l.updated_at)
+                 WHERE l.stage = 'Won'
+                   AND (won_history.won_at IS NOT NULL
+                        OR l.conversion_time IS NULL
+                        OR l.conversion_time < '1000-01-01 00:00:00')"
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            )) { return IDLM_Schema_Migration::error('legacy_clocks'); }
+            $reporting_started = IDLM_Schema_Migration::version('idlm_reporting_events_started_at');
+            if (null === $reporting_started) { return IDLM_Schema_Migration::error('reporting_marker_read'); }
+            if (!$reporting_started) {
+                $result = IDLM_Schema_Migration::publish('idlm_reporting_events_started_at', current_time('mysql'));
+                if (is_wp_error($result)) { return $result; }
+            }
+            return IDLM_Schema_Migration::publish('idlm_schema_version', IDLM_DB_VERSION);
+        });
+    }
+
+    public static function schema_statements() {
         global $wpdb;
         $charset_collate = $wpdb->get_charset_collate();
 
-        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        $statements = array();
 
         // 1. Leads Table
         $table_leads = $wpdb->prefix . 'idlm_leads';
@@ -449,19 +500,9 @@ class IDLM_DB {
             KEY intake_owner_id (intake_owner_id),
             KEY handoff_status (handoff_status),
             KEY duplicate_of_id (duplicate_of_id)
-        ) $charset_collate;";
+        ) ENGINE=InnoDB $charset_collate;";
 
-        dbDelta($sql_leads);
-
-        // Backfill the qualification clock for leads created before schema 1.0.2.
-        // updated_at is the safest available fallback because older records did
-        // not store a dedicated qualification transition timestamp.
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query(
-            "UPDATE {$table_leads}
-             SET qualified_at = COALESCE(updated_at, conversion_time, created_at)
-             WHERE lead_quality = 'Qualified' AND qualified_at IS NULL"
-        );
+        $statements[] = $sql_leads;
 
         // 2. Activity Log Table
         $table_activity = $wpdb->prefix . 'idlm_lead_activity_log';
@@ -477,9 +518,9 @@ class IDLM_DB {
             KEY activity_lead_id (activity_type, lead_id, id),
             KEY lead_activity_id (lead_id, activity_type, id),
             KEY created_at (created_at)
-        ) $charset_collate;";
+        ) ENGINE=InnoDB $charset_collate;";
 
-        dbDelta($sql_activity);
+        $statements[] = $sql_activity;
 
         // Immutable reporting events make period-based dashboard metrics
         // truthful even when a lead's current stage or owner changes later.
@@ -499,31 +540,8 @@ class IDLM_DB {
             KEY lead_event_time (lead_id, event_type, occurred_at),
             KEY event_time (event_type, occurred_at),
             KEY event_target_time (event_type, to_value, occurred_at)
-        ) $charset_collate;";
-        dbDelta($sql_state_events);
-        if (!get_option('idlm_reporting_events_started_at', '')) {
-            update_option('idlm_reporting_events_started_at', current_time('mysql'), false);
-        }
-
-        // Repair legacy Won records that predate canonical close timestamps.
-        // The latest transition to Won is authoritative when a lead was reopened;
-        // updated_at is the safest fallback when no historical activity survives.
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->query(
-            "UPDATE {$table_leads} l
-             LEFT JOIN (
-                SELECT lead_id, MAX(created_at) AS won_at
-                FROM {$table_activity}
-                WHERE activity_type = 'stage_change'
-                  AND details LIKE CONCAT('%to ', CHAR(39), 'Won', CHAR(39), '%')
-                GROUP BY lead_id
-             ) won_history ON won_history.lead_id = l.id
-             SET l.conversion_time = COALESCE(won_history.won_at, l.updated_at)
-             WHERE l.stage = 'Won'
-               AND (won_history.won_at IS NOT NULL
-                    OR l.conversion_time IS NULL
-                    OR l.conversion_time < '1000-01-01 00:00:00')"
-        );
+        ) ENGINE=InnoDB $charset_collate;";
+        $statements[] = $sql_state_events;
 
         // 3. Conversion API Log Table
         $table_capi = $wpdb->prefix . 'idlm_capi_logs';
@@ -539,9 +557,9 @@ class IDLM_DB {
             PRIMARY KEY  (id),
             KEY lead_id (lead_id),
             KEY created_at (created_at)
-        ) $charset_collate;";
+        ) ENGINE=InnoDB $charset_collate;";
 
-        dbDelta($sql_capi);
+        $statements[] = $sql_capi;
 
         // 4. Audience Sync Log Table
         $table_audience_logs = $wpdb->prefix . 'idlm_audience_sync_logs';
@@ -556,9 +574,9 @@ class IDLM_DB {
             created_at datetime DEFAULT NULL,
             PRIMARY KEY  (id),
             KEY created_at (created_at)
-        ) $charset_collate;";
+        ) ENGINE=InnoDB $charset_collate;";
 
-        dbDelta($sql_audience);
+        $statements[] = $sql_audience;
 
         // 6. Telemetry & Diagnostics Log Table
         $table_telemetry = $wpdb->prefix . 'idlm_telemetry_logs';
@@ -573,9 +591,9 @@ class IDLM_DB {
             created_at datetime DEFAULT NULL,
             PRIMARY KEY  (id),
             KEY created_at (created_at)
-        ) $charset_collate;";
+        ) ENGINE=InnoDB $charset_collate;";
 
-        dbDelta($sql_telemetry);
+        $statements[] = $sql_telemetry;
 
         // 7. Tasks & To-Dos Table
         $table_tasks = $wpdb->prefix . 'idlm_tasks';
@@ -585,6 +603,7 @@ class IDLM_DB {
             assigned_rep_id bigint(20) unsigned DEFAULT 0,
             title varchar(255) NOT NULL,
             task_type varchar(50) DEFAULT 'General',
+            qualification_cycle tinyint unsigned DEFAULT NULL,
             priority varchar(20) DEFAULT 'Medium',
             status varchar(50) DEFAULT 'pending',
             due_date datetime DEFAULT NULL,
@@ -595,12 +614,13 @@ class IDLM_DB {
             PRIMARY KEY  (id),
             KEY lead_id (lead_id),
             KEY lead_status_due (lead_id, status, due_date),
+            UNIQUE KEY lead_qualification_cycle (lead_id, qualification_cycle),
             KEY assigned_rep_id (assigned_rep_id),
             KEY status (status),
             KEY due_date (due_date)
-        ) $charset_collate;";
+        ) ENGINE=InnoDB $charset_collate;";
 
-        dbDelta($sql_tasks);
+        $statements[] = $sql_tasks;
 
         // 8. Provider-neutral call records. Manual entries and future cloud
         // telephony webhooks share this append-only audit structure.
@@ -624,9 +644,9 @@ class IDLM_DB {
             KEY lead_id (lead_id),
             KEY user_id (user_id),
             KEY started_at (started_at)
-        ) $charset_collate;";
+        ) ENGINE=InnoDB $charset_collate;";
 
-        dbDelta($sql_calls);
+        $statements[] = $sql_calls;
 
         // 9. Append-only acquisition and form-submission history. Representatives
         // work only on the canonical lead while every channel touch remains auditable.
@@ -657,9 +677,9 @@ class IDLM_DB {
             KEY lead_id (lead_id),
             KEY source (source),
             KEY received_at (received_at)
-        ) $charset_collate;";
+        ) ENGINE=InnoDB $charset_collate;";
 
-        dbDelta($sql_touchpoints);
+        $statements[] = $sql_touchpoints;
 
         // Conflicting email/phone matches are retained for administrator review
         // without creating a second lead or adding work to the pre-sales queue.
@@ -671,16 +691,26 @@ class IDLM_DB {
             email varchar(100) DEFAULT '',
             phone varchar(50) DEFAULT '',
             candidate_lead_ids longtext DEFAULT NULL,
+            submission_data longtext DEFAULT NULL,
+            external_id varchar(191) DEFAULT NULL,
+            resolved_lead_id bigint(20) unsigned DEFAULT NULL,
+            resolved_by bigint(20) unsigned DEFAULT NULL,
+            resolved_at datetime DEFAULT NULL,
+            resolution_note text DEFAULT NULL,
             payload longtext DEFAULT NULL,
             submitted_at datetime DEFAULT NULL,
             received_at datetime DEFAULT NULL,
             status varchar(20) DEFAULT 'pending',
             PRIMARY KEY  (id),
+            UNIQUE KEY platform_external (platform, external_id),
+            KEY resolved_lead (resolved_lead_id),
             KEY status_received (status, received_at),
             KEY received_at (received_at)
-        ) $charset_collate;";
+        ) ENGINE=InnoDB $charset_collate;";
 
-        dbDelta($sql_inbound_reviews);
+        $statements[] = $sql_inbound_reviews;
+        $statements[] = IDLM_Lead_Outbox::schema();
+        return $statements;
     }
 
     /** Convert common Indian budget notation to rupees for the qualification gate. */
@@ -699,7 +729,7 @@ class IDLM_DB {
         return (int) round($amount);
     }
 
-    protected static function get_normalized_working_days() {
+    public static function get_normalized_working_days() {
         $days = array_map('intval', (array) IDLM_Settings::get('idlm_working_days', array(1, 2, 3, 4, 5, 6)));
         $days = array_map(static function ($day) { return 0 === $day ? 7 : $day; }, $days);
         $days = array_values(array_unique(array_filter($days, static function ($day) { return $day >= 1 && $day <= 7; })));
@@ -766,7 +796,9 @@ class IDLM_DB {
     public static function refresh_presales_task_titles() {
         global $wpdb;
         $targets = self::get_presales_outreach_targets();
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0243: refresh_presales_task_titles(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         $tasks = $wpdb->get_results(
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             "SELECT t.id, t.lead_id, t.title, l.lead_quality, l.stage
              FROM {$wpdb->prefix}idlm_tasks t
              INNER JOIN {$wpdb->prefix}idlm_leads l ON l.id = t.lead_id
@@ -789,7 +821,9 @@ class IDLM_DB {
                 $targets['whatsapp']
             );
             if ($title !== $task->title) {
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0244: refresh_presales_task_titles(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
                 $wpdb->update(
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                     $wpdb->prefix . 'idlm_tasks',
                     array('title' => $title, 'updated_at' => current_time('mysql')),
                     array('id' => absint($task->id))
@@ -801,10 +835,43 @@ class IDLM_DB {
         }
     }
 
-    /** Return the six-day outreach checklist used by the UI and status gates. */
-    public static function get_followup_compliance($lead_id) {
+    /** Queue-only bounded history reader; carry the same calendar-day policy
+     * across 100-date pages without retaining the complete activity history. */
+    private static function bounded_followup_progress($lead_id, $request_deadline = null) {
         global $wpdb;
+        $last = ''; $deadline = min(microtime(true) + 5, $request_deadline ?? PHP_FLOAT_MAX);
+        $targets = self::get_presales_outreach_targets();
+        $result = array('completed_cycles'=>array(), 'active_cycle'=>array('date'=>'','calls'=>0,'whatsapp'=>0,'complete'=>false), 'closure_count'=>0);
+        do {
+            if (microtime(true) > $deadline) { return new WP_Error('idlm_task_history_time', 'Task history took too long. Retry shortly.'); }
+            $after = $last !== '' ? $wpdb->prepare(" AND COALESCE(DATE(created_at), '0000-00-00') > %s", $last) : '';
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0245: bounded_followup_progress(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
+            $rows = $wpdb->get_results($wpdb->prepare("SELECT DATE(created_at) activity_date,
+                SUM(activity_type = 'outbound_call') calls, SUM(activity_type = 'whatsapp_outbound') whatsapp, SUM(activity_type = 'closure_message') closure
+                FROM {$wpdb->prefix}idlm_lead_activity_log WHERE lead_id = %d AND activity_type IN ('outbound_call','whatsapp_outbound','closure_message'){$after}
+                GROUP BY DATE(created_at) ORDER BY DATE(created_at) ASC LIMIT 100", absint($lead_id)));
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            if ($wpdb->last_error) { return new WP_Error('idlm_task_history_read', 'Unable to load task history. Retry shortly.'); }
+            $count = count($rows);
+            if ($count) { $last = end($rows)->activity_date ?: '0000-00-00'; }
+            $carry = $result['active_cycle']; $carry['activity_date'] = $carry['date']; $carry['closure'] = 0;
+            array_unshift($rows, (object) $carry);
+            $page = self::calculate_presales_outreach_progress($rows, $targets);
+            $result['completed_cycles'] = array_slice(array_merge($result['completed_cycles'], $page['completed_cycles']), 0, 6);
+            $result['active_cycle'] = $page['active_cycle']; $result['closure_count'] += $page['closure_count'];
+        } while ($count === 100);
+        if (microtime(true) > $deadline) { return new WP_Error('idlm_task_history_time', 'Task history took too long. Retry shortly.'); }
+        return $result;
+    }
+
+    /** Return the six-day outreach checklist used by the UI and status gates. */
+    public static function get_followup_compliance($lead_id, $bounded = false, $request_deadline = null) {
+        global $wpdb;
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0246: get_followup_compliance(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", absint($lead_id)));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        if ($bounded && $wpdb->last_error) { return new WP_Error('idlm_task_lead_read', 'Unable to load task lead. Retry shortly.'); }
+        if (IDLM_Lead_Transaction::active()) { IDLM_Lead_Transaction::read($lead); }
         if (!$lead) {
             return array(
                 'eligible' => false,
@@ -820,20 +887,29 @@ class IDLM_DB {
 
         $today = new DateTime('today', wp_timezone());
 
-        $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT DATE(created_at) activity_date,
-                    SUM(activity_type = 'outbound_call') calls,
-                    SUM(activity_type = 'whatsapp_outbound') whatsapp,
-                    SUM(activity_type = 'closure_message') closure
-             FROM {$wpdb->prefix}idlm_lead_activity_log
-             WHERE lead_id = %d AND activity_type IN ('outbound_call','whatsapp_outbound','closure_message')
-             GROUP BY DATE(created_at)
-             ORDER BY DATE(created_at) ASC",
-            absint($lead_id)
-        ));
+        if ($bounded) {
+            $calculated = self::bounded_followup_progress($lead_id, $request_deadline);
+            if (is_wp_error($calculated)) { return $calculated; }
+            $targets = self::get_presales_outreach_targets();
+        } else {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0247: get_followup_compliance(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
+            $rows = $wpdb->get_results($wpdb->prepare(
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                "SELECT DATE(created_at) activity_date,
+                        SUM(activity_type = 'outbound_call') calls,
+                        SUM(activity_type = 'whatsapp_outbound') whatsapp,
+                        SUM(activity_type = 'closure_message') closure
+                 FROM {$wpdb->prefix}idlm_lead_activity_log
+                 WHERE lead_id = %d AND activity_type IN ('outbound_call','whatsapp_outbound','closure_message')
+                 GROUP BY DATE(created_at)
+                 ORDER BY DATE(created_at) ASC",
+                absint($lead_id)
+            ));
 
-        $targets = self::get_presales_outreach_targets();
-        $calculated = self::calculate_presales_outreach_progress($rows, $targets);
+            $targets = self::get_presales_outreach_targets();
+            if (IDLM_Lead_Transaction::active()) { IDLM_Lead_Transaction::read($rows); }
+            $calculated = self::calculate_presales_outreach_progress($rows, $targets);
+        }
         $completed_cycles = $calculated['completed_cycles'];
         $active_cycle = $calculated['active_cycle'];
         $closure_count = (int) $calculated['closure_count'];
@@ -860,50 +936,9 @@ class IDLM_DB {
         );
     }
 
-    /** Create one qualification checklist task for each of the six outreach cycles. */
+    /** Fill missing stable qualification cycles; keep the public facade. */
     public static function create_presales_followup_tasks($lead_id, $assigned_rep_id) {
-        global $wpdb;
-        $lead_id = absint($lead_id);
-        $assigned_rep_id = absint($assigned_rep_id);
-        $exists = $wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM {$wpdb->prefix}idlm_tasks WHERE lead_id = %d AND task_type = 'Qualification' LIMIT 1",
-            $lead_id
-        ));
-        if ($exists) {
-            return;
-        }
-        $lead_created = $wpdb->get_var($wpdb->prepare("SELECT created_at FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id));
-        $working_days = self::get_normalized_working_days();
-        $work_end = substr((string) IDLM_Settings::get('idlm_working_hours_end', '18:00'), 0, 5);
-        $cursor = new DateTime($lead_created ?: current_time('mysql'), wp_timezone());
-        $cursor->setTime(0, 0, 0);
-        $created = 0;
-        while ($created < 6) {
-            if (in_array((int) $cursor->format('N'), $working_days, true)) {
-                $created++;
-                $due = $cursor->format('Y-m-d') . ' ' . $work_end . ':00';
-                $wpdb->insert($wpdb->prefix . 'idlm_tasks', array(
-                    'lead_id' => $lead_id,
-                    'assigned_rep_id' => $assigned_rep_id,
-                    'title' => sprintf(
-                        'Qualification cycle %d: log %d call%s and %d WhatsApp',
-                        $created,
-                        self::get_presales_outreach_targets()['calls'],
-                        1 === self::get_presales_outreach_targets()['calls'] ? '' : 's',
-                        self::get_presales_outreach_targets()['whatsapp']
-                    ),
-                    'task_type' => 'Qualification',
-                    'priority' => 'High',
-                    'status' => 'pending',
-                    'due_date' => $due,
-                    'created_by' => 0,
-                    'created_at' => current_time('mysql'),
-                    'updated_at' => current_time('mysql'),
-                ));
-            }
-            $cursor->modify('+1 day');
-        }
-        self::log_activity($lead_id, 'task', 'Created the six-cycle pre-sales qualification task plan.', 0);
+        return IDLM_Presales_Task_Plan::ensure($lead_id, $assigned_rep_id);
     }
 
     /** Ensure every completed qualified handoff creates visible sales work. */
@@ -916,19 +951,24 @@ class IDLM_DB {
         }
 
         $table_tasks = $wpdb->prefix . 'idlm_tasks';
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0248: ensure_qualified_handoff_task(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         $existing = $wpdb->get_var($wpdb->prepare(
             "SELECT id FROM {$table_tasks}
              WHERE lead_id = %d AND assigned_rep_id = %d AND status = 'pending'
                AND task_type = 'Sales Follow-up' LIMIT 1",
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $lead_id,
             $assigned_rep_id
         ));
+        if ($wpdb->last_error) { return false; }
         if ($existing) {
             return true;
         }
 
         $now = current_time('mysql');
-        return false !== $wpdb->insert($table_tasks, array(
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0249: ensure_qualified_handoff_task(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
+        return 1 === $wpdb->insert($table_tasks, array(
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
             'lead_id' => $lead_id,
             'assigned_rep_id' => $assigned_rep_id,
             'title' => 'Contact newly assigned qualified lead',
@@ -942,105 +982,22 @@ class IDLM_DB {
         ));
     }
 
-    /** Complete today's qualification task when its required outreach is logged. */
+    /** Reconcile qualification cycles from outreach evidence, then roll pending dates. */
     public static function sync_presales_task_status($lead_id) {
-        global $wpdb;
-        $progress = self::get_followup_compliance($lead_id);
-        $completed_task_count = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}idlm_tasks WHERE lead_id = %d AND task_type = 'Qualification' AND status = 'completed'",
-            absint($lead_id)
-        ));
-        while ($completed_task_count > (int) $progress['complete_days']) {
-            $task_id = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}idlm_tasks
-                 WHERE lead_id = %d AND task_type = 'Qualification' AND status = 'completed'
-                 ORDER BY due_date DESC, id DESC LIMIT 1",
-                absint($lead_id)
-            ));
-            if (!$task_id) {
-                break;
-            }
-            $wpdb->update($wpdb->prefix . 'idlm_tasks', array(
-                'status' => 'pending',
-                'completed_at' => null,
-                'updated_at' => current_time('mysql'),
-            ), array('id' => absint($task_id)));
-            $completed_task_count--;
-        }
-        while ($completed_task_count < (int) $progress['complete_days']) {
-            $task_id = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM {$wpdb->prefix}idlm_tasks
-                 WHERE lead_id = %d AND task_type = 'Qualification' AND status = 'pending'
-                 ORDER BY due_date ASC, id ASC LIMIT 1",
-                absint($lead_id)
-            ));
-            if ($task_id) {
-                $wpdb->update($wpdb->prefix . 'idlm_tasks', array(
-                    'status' => 'completed',
-                    'completed_at' => current_time('mysql'),
-                    'updated_at' => current_time('mysql'),
-                ), array('id' => absint($task_id)));
-                $completed_task_count++;
-            } else {
-                break;
-            }
-        }
-        self::reschedule_pending_presales_tasks($lead_id);
+        return IDLM_Presales_Task_Plan::sync($lead_id);
     }
 
-    /** Roll unfinished outreach forward without allowing multiple cycles on one day. */
     public static function reschedule_pending_presales_tasks($lead_id) {
-        global $wpdb;
-        $task_ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT id FROM {$wpdb->prefix}idlm_tasks
-             WHERE lead_id = %d AND task_type = 'Qualification' AND status = 'pending'
-             ORDER BY due_date ASC, id ASC",
-            absint($lead_id)
-        ));
-        if (!$task_ids) {
-            return;
-        }
-        $working_days = self::get_normalized_working_days();
-        $work_end = substr((string) IDLM_Settings::get('idlm_working_hours_end', '18:00'), 0, 5);
-        $cursor = new DateTime('today', wp_timezone());
-        $progress = self::get_followup_compliance($lead_id);
-        $last_completed_cycle = !empty($progress['complete_days']) ? $progress['days'][$progress['complete_days'] - 1] : null;
-        if ($last_completed_cycle && current_time('Y-m-d') === $last_completed_cycle['date'] && empty($progress['active_cycle']['calls']) && empty($progress['active_cycle']['whatsapp'])) {
-            $cursor->modify('+1 day');
-        }
-        foreach ($task_ids as $task_id) {
-            while (!in_array((int) $cursor->format('N'), $working_days, true)) {
-                $cursor->modify('+1 day');
-            }
-            $wpdb->update($wpdb->prefix . 'idlm_tasks', array(
-                'due_date' => $cursor->format('Y-m-d') . ' ' . $work_end . ':00',
-                'updated_at' => current_time('mysql'),
-            ), array('id' => absint($task_id)));
-            $cursor->modify('+1 day');
-        }
+        return IDLM_Presales_Task_Plan::sync($lead_id);
     }
 
-    /** Periodic recovery keeps dormant lead task dates aligned with the next working days. */
+    /** Bounded, checkpointed repair also discovers assigned leads with no task rows. */
     public static function roll_forward_presales_tasks() {
-        global $wpdb;
-        $lead_ids = $wpdb->get_col(
-            "SELECT DISTINCT t.lead_id FROM {$wpdb->prefix}idlm_tasks t
-             INNER JOIN {$wpdb->prefix}idlm_leads l ON l.id = t.lead_id
-             WHERE t.task_type = 'Qualification' AND t.status = 'pending'
-               AND l.lead_quality NOT IN ('Qualified', 'Unqualified') AND l.stage NOT IN ('Won', 'Lost')
-             ORDER BY t.lead_id ASC LIMIT 500"
-        );
-        foreach ($lead_ids as $lead_id) {
-            self::reschedule_pending_presales_tasks($lead_id);
-        }
+        return IDLM_Presales_Task_Plan::sweep();
     }
 
     protected static function validate_quality_transition($lead_id, $old_lead, $data, $explicit_quality_update = true) {
-        $qualified_stages = array(
-            IDLM_State_Registry::STAGE_QUALIFIED, IDLM_State_Registry::STAGE_VISITED,
-            IDLM_State_Registry::STAGE_QUOTE_SHARED, IDLM_State_Registry::STAGE_NEGOTIATION,
-            IDLM_State_Registry::STAGE_WON,
-        );
+        $qualified_stages = IDLM_State_Registry::qualification_validation_stages();
         $requires_qualification_validation = isset($data['stage'])
             && in_array($data['stage'], $qualified_stages, true)
             && !in_array($old_lead->stage, $qualified_stages, true);
@@ -1092,14 +1049,16 @@ class IDLM_DB {
     /**
      * Route inbound lead persistence through the lifecycle service.
      */
-    public static function upsert_inbound_lead($data, $platform, $payload = array()) {
-        return IDLM_Lead_Lifecycle_Service::upsert_inbound_lead($data, $platform, $payload);
+    public static function upsert_inbound_lead($data, $platform, $payload = array(), $options = array()) {
+        return IDLM_Lead_Lifecycle_Service::upsert_inbound_lead($data, $platform, $payload, $options);
     }
 
     /**
      * Route lead creation through the lifecycle service.
      */
     public static function insert_lead($data) {
+        $binding = IDLM_Private_Files::validate_fields(0, $data);
+        if (is_wp_error($binding)) { self::$last_validation_error = $binding->get_error_message(); return 0; }
         return IDLM_Lead_Lifecycle_Service::insert_lead($data);
     }
 
@@ -1107,14 +1066,18 @@ class IDLM_DB {
      * Route lead updates through the lifecycle service.
      */
     public static function update_lead($lead_id, $data) {
-        return IDLM_Lead_Lifecycle_Service::update_lead($lead_id, $data);
+        $binding = IDLM_Private_Files::validate_fields($lead_id, $data);
+        if (is_wp_error($binding)) { self::$last_validation_error = $binding->get_error_message(); return false; }
+        $updated = IDLM_Lead_Lifecycle_Service::update_lead($lead_id, $data);
+        if (false !== $updated && array_intersect(array_keys($data), array('floor_plan_file','floor_plan_files','quote_file'))) { IDLM_Private_Files::reconcile_lead($lead_id); }
+        return $updated;
     }
 
     /**
      * Preserve the upgrade hook while delegating lifecycle-specific backfills.
      */
     protected static function backfill_duplicate_touchpoints() {
-        IDLM_Lead_Lifecycle_Service::backfill_duplicate_touchpoints();
+        return IDLM_Lead_Lifecycle_Service::backfill_duplicate_touchpoints();
     }
 
     /**
@@ -1123,7 +1086,9 @@ class IDLM_DB {
     public static function find_canonical_duplicate_id($lead_id) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0250: find_canonical_duplicate_id(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         $lead = $wpdb->get_row($wpdb->prepare("SELECT id, email, phone, duplicate_of_id FROM {$table_leads} WHERE id = %d", $lead_id));
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         if (!$lead) {
             return 0;
         }
@@ -1133,8 +1098,10 @@ class IDLM_DB {
 
         $email = strtolower(trim((string) $lead->email));
         $phone = preg_replace('/[^0-9]/', '', (string) $lead->phone);
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0251: find_canonical_duplicate_id(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
         $candidates = $wpdb->get_results($wpdb->prepare(
             "SELECT id, email, phone FROM {$table_leads} WHERE id <> %d AND is_duplicate = 0 ORDER BY id ASC",
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $lead_id
         ));
         foreach ($candidates as $candidate) {
@@ -1161,7 +1128,7 @@ class IDLM_DB {
         }
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->insert($table_activity, array(
+        return 1 === $wpdb->insert($table_activity, array(
             'lead_id' => $lead_id,
             'user_id' => $user_id,
             'activity_type' => $activity_type,
@@ -1188,7 +1155,7 @@ class IDLM_DB {
         }
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        return false !== $wpdb->insert($wpdb->prefix . 'idlm_lead_state_events', array(
+        return 1 === $wpdb->insert($wpdb->prefix . 'idlm_lead_state_events', array(
             'lead_id' => $lead_id,
             'event_type' => $event_type,
             'event_origin' => sanitize_key($event_origin),
@@ -1209,7 +1176,7 @@ class IDLM_DB {
         $table_capi = $wpdb->prefix . 'idlm_capi_logs';
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->insert($table_capi, array(
+        $saved = $wpdb->insert($table_capi, array(
             'lead_id' => $lead_id,
             'platform' => $platform,
             'event_name' => $event_name,
@@ -1218,6 +1185,7 @@ class IDLM_DB {
             'status' => $status,
             'created_at' => current_time('mysql')
         ));
+        return 1 === $saved ? (int) $wpdb->insert_id : 0;
     }
 
     /**
@@ -1228,7 +1196,7 @@ class IDLM_DB {
         $table_audience_logs = $wpdb->prefix . 'idlm_audience_sync_logs';
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $wpdb->insert($table_audience_logs, array(
+        $saved = $wpdb->insert($table_audience_logs, array(
             'platform' => $platform,
             'audience_id' => $audience_id,
             'lead_count' => $lead_count,
@@ -1237,5 +1205,6 @@ class IDLM_DB {
             'status' => $status,
             'created_at' => current_time('mysql')
         ));
+        return 1 === $saved ? (int) $wpdb->insert_id : 0;
     }
 }

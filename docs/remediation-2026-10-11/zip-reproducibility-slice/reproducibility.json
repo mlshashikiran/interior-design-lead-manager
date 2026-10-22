@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "identical_zip_bytes": true,
+  "same_toolchain_and_TZ_UTC": true,
+  "source_metadata_and_order_perturbed_for_third_build": true,
+  "root_timestamp": [
+    2000,
+    1,
+    1,
+    0,
+    0,
+    0
+  ],
+  "archives": [
+    {
+      "archive": "/private/tmp/idlm-rel006/final-a/interior-design-lead-manager-1.102.76.zip",
+      "sha256": "f3429a7756121404d9f37e8dd5b707b14f76d06e03f3f04ce324d978d4b137ba",
+      "size_bytes": 5221193,
+      "file_count": 455,
+      "all_times_modes_compression_and_bytes_verified": true
+    },
+    {
+      "archive": "/private/tmp/idlm-rel006/final-b/interior-design-lead-manager-1.102.76.zip",
+      "sha256": "f3429a7756121404d9f37e8dd5b707b14f76d06e03f3f04ce324d978d4b137ba",
+      "size_bytes": 5221193,
+      "file_count": 455,
+      "all_times_modes_compression_and_bytes_verified": true
+    },
+    {
+      "archive": "/private/tmp/idlm-rel006/final-c/interior-design-lead-manager-1.102.76.zip",
+      "sha256": "f3429a7756121404d9f37e8dd5b707b14f76d06e03f3f04ce324d978d4b137ba",
+      "size_bytes": 5221193,
+      "file_count": 455,
+      "all_times_modes_compression_and_bytes_verified": true
+    }
+  ],
+  "installed_execution_claimed": false,
+  "production_release_approved": false
+}

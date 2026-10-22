@@ -1,0 +1,27 @@
+{
+  "builder": "Shashi",
+  "query": "REL-004 service privacy retention erasure uninstall support",
+  "finding": "Bounded graph query linked public release findings, identity-review erasure, CAPI retention and backup recovery; current source confirmed cookie/payload/cleanup/backup distinctions before authoring disclosures.",
+  "mode": "Scoped structural PHP extraction and explicit public/internal document-section refresh",
+  "source_nodes": 29,
+  "source_edges": 30,
+  "removed_stale_nodes": 458,
+  "files": {
+    "interior-design-lead-manager.php": "f7526896856f4a5b8603339c52476e1859b19b8bbe9a3780538aba14cb68a9e2",
+    "tests/release-contracts.php": "0d294da2fbaa72244657ed687166dbc0067914f2ae87a28e2ab6caebff2ba351",
+    "tests/release/class-release-artifact.php": "21d01e26661348e575286cb31844ddd2f7f93daf87c9ceaec6f2fb09e13c5015",
+    "readme.txt": "9c6bff99ce48ff34f171ced6348a4222ceb5ff641c39d03fef8f31465b3cf897",
+    "PRIVACY.md": "168528298eb4b197c2a70ef9247c2f33c526e363c257be449b1da86b4882760e",
+    "SUPPORT.md": "36f75606a73f892d31fbc97060986b0f8ca130d50eaf6de711cf682cef6a5942",
+    "CHANGELOG.md": "84ef16b9521ef3cb08264fccc0b54132079998466d3c5a7d5c5988a1fa655019",
+    "docs/AUDIT-REMEDIATION-PUBLIC-DISCLOSURES-SLICE.md": "1cb14a9995ddba18d0b1ece85570dedb3a1c810a096eabd71e9833ee88799bce",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "ac3a61a708cb114e12754b416fd831f82a2fe7d0ca2068cf13846aaea1db4e07",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "7490a5ad6181910dc2b47e85033456e66e6eaf099e3110d160bd2eb16f3c170a",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "b1fc65ad0a726a6581c32bc0059da320ead0510ae0d9938d4a6b2f1c1c86c00c",
+    "docs/PRODUCTION-RELEASE.md": "cf4dfc3ab24a4938ceeb2589cf257ba46bb4c7e547eb86f5e6f1bf5824f8cafa",
+    "docs/CHANGELOG-DEV.md": "dbf2eee2120bb8024bf7e98ae33645e77994abf1de5edcb11d6c594e25fd3577"
+  },
+  "scope": "Unrelated graph retained; no full semantic/report/HTML regeneration",
+  "input_tokens": 0,
+  "output_tokens": 0
+}

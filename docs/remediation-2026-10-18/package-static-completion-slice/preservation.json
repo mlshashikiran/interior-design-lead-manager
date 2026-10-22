@@ -1,0 +1,623 @@
+{
+  "builder": "Shashi",
+  "baseline_file_count": 1854,
+  "unchanged_file_count": 1754,
+  "changed_existing_files": [
+    {
+      "file": "mcp-server.php",
+      "before_sha256": "d522f5c2ba5c98367a668985bb29f87339ea1d982e297cf9fb717ba225d31694",
+      "after_sha256": "d57e11bfb7973822d43ce5a58d9634934270fca4a83129dd7db0b6d56727a9e0",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "CHANGELOG.md",
+      "before_sha256": "47a9a25d9b8b21910e66df85967b11e4033a89a4ab29bdb20761685d1e6ac182",
+      "after_sha256": "011e8b2b88ab1fe3ea7233e6b7c37efd04d6c64fef6ce2e6ca69d34234966869",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "PRIVACY.md",
+      "before_sha256": "c235019efee44d5f18d70ea1912c859237d4e88768ca564ec6b4a2f46521c241",
+      "after_sha256": null,
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "SUPPORT.md",
+      "before_sha256": "1eae2b2df13d42da9994e21d9ed5be34c940817a4b77aea58e05acaf2178d773",
+      "after_sha256": null,
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "interior-design-lead-manager.php",
+      "before_sha256": "fcdabd78b1631fe9d2490b7fb3b5d30ff7720f155207ddd422d0d0e7912e425a",
+      "after_sha256": "54dff5b01d62e774cb05f42e09646aafe3126a2effa19da082c66fdd926c7caf",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "readme.txt",
+      "before_sha256": "6a23ef18ec3ce5f0f3f541189a00be0d3b2b49489dcac349a214e83f79a4ea22",
+      "after_sha256": "56afcd1ebf6f30fbe9d7b4bdc1bb7e62f068c5e1a1f262e15078d000011477db",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "tests/admin-refactor-contracts.php",
+      "before_sha256": "656fa52e6cd0349e8e569960a33a3457c22b9a0db4bbf69bc23fc93020c223e2",
+      "after_sha256": "595deee9ef525308937993edfda1306122c77932f86b7c027256beea94d4e9cc",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "tests/ui-regression-contracts.php",
+      "before_sha256": "1f73524bec44400e3ab914231b5a201461a7a179c5c8ce040b86f20fd4a1177a",
+      "after_sha256": "c0d29fa11e381f1cd0b964e895bbd933ead883c7723314bba8a00676dd085917",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "tests/quotation-authorization-contracts.php",
+      "before_sha256": "a640691bdc7aa249b7270883bddf5789f638de7ef059649da5c8c9561fce808f",
+      "after_sha256": "0b66e655bba8f96762e0863b3e30d082b3f4e6e63aa657e7121d0ba1bd536acc",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "tests/README.md",
+      "before_sha256": "912a715a23df37df14f181bf8d9d12d09901d34129877b7c64d8c5260d9cdc7b",
+      "after_sha256": "0723d4d15af0c8107c577a0c6d061a7e2923d1617425a1ab94facd40596f437f",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "tests/release-contracts.php",
+      "before_sha256": "7842579afdace0bc143f5a300a93e28c9cb15732fe047ee2705b59130cd88d39",
+      "after_sha256": "3ce99d2c7d01dd6c3053c13b4168e70275526e5d541f3f9e26549b5e0aaefbd6",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-dashboard.php",
+      "before_sha256": "9ede393d5ade6e6e6fbac6e08221791375e33f3ebe8b988beb287f707a85c084",
+      "after_sha256": "a2265193d97298c2dbf2922ad32cefb2c11997b7e55d0aeb0e1b5503a6a7d201",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-mcp-core.php",
+      "before_sha256": "66985462fb6b7b5eea6bdc3f593ceb733d15d2fd89ddbba42a4cd256fd1814e4",
+      "after_sha256": "12293091a9536f42b14a7d1f5a634c5f6dac735b157312cf1a5e498ae6121bac",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-audiences.php",
+      "before_sha256": "e0f31a7c3ffb3cdb40d5f8548df84807ae21721a10f2d58a695d4c89996b3063",
+      "after_sha256": "5886c139dd2a02920a899b88f5bb1f45d75e22105e9bf807ccc2e3e96b1c09fa",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-schema-migration.php",
+      "before_sha256": "c456564944097e682792e20ad33feaa9c6bc0564cef8f699243e46d599f404c3",
+      "after_sha256": "32e9023a73fcea987b7d37f2c0f783d42b43d850a2aaef077b90215aca22a5ca",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-telemetry.php",
+      "before_sha256": "b328b88b67268c4ec614a8218b8afd8c2143fcf76f38220bd430f76cd6b32d6f",
+      "after_sha256": "94ee24338a59356ee30b38ee2875f6e9b63d1b95a35d1c81145e796ecbf1d018",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-lead-transaction.php",
+      "before_sha256": "805aa39098f61c39418a08a141efb0761a0a24b5c43084fcd93a6f1c8cf6c462",
+      "after_sha256": "2f393c0f0c0207f60663ee1779c299cc8a14201ed0e7bfaae7ff1b19405c4060",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-lead-lifecycle-service.php",
+      "before_sha256": "875cfe8652b2696eff7f39f6817e42dd492ae6e1b8bce5d754c87311502e91cf",
+      "after_sha256": "735dd05308d34f75fbfc42a2ea0fd22b3cad19494057b5f020e70b91439b15ad",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-capi-delivery.php",
+      "before_sha256": "ae945c5a97556a174f3843d9ac69d268467452186036383ffb21b63c4015144a",
+      "after_sha256": "8354aa7cbe81313ffe966f4df1f20734307717d0ac23e17cffd1f08126a6bcd7",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-assignment-capacity.php",
+      "before_sha256": "ef81f0f2e607a2cb924c7686ce88f14cb4338dc7aebede8e4d44174fa4b22066",
+      "after_sha256": "358ad659f29d98de59b6c1d37dc83e9b641ee99c149587cf81765560ae2a501b",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-data-retention.php",
+      "before_sha256": "11c9cfa9a4580a113acd6ef996086b1a044fdbaa39a92d61ab7191b6dbc878fc",
+      "after_sha256": "7bab03ed964218447011db8f3997804de9d8eb1f46605f39634a478349b4cc2c",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-auth.php",
+      "before_sha256": "dbb784549dad23ac4fac5ad07556251aace0d3498c72d84336c6cf25fc03922c",
+      "after_sha256": "fb39735807f2742ff9d2a633f1f5436bf3c6738d78d0ffc6e2bf18efc3f75e57",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-admin.php",
+      "before_sha256": "cc6cc19b0859dac6fbdcc1b3199b33649fe1fcdeac5bc6a831254e8e92bb2dbc",
+      "after_sha256": "c118f655acb7c85aa1f2c8e81ff7c63ce46248d36a7004d4ac9566b46e557cb2",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-routing-state.php",
+      "before_sha256": "a455287a17caf7738a068cffddf4a8902f74cb13d396a99251c4b2c995427293",
+      "after_sha256": "b5ead0e20c972380e90f41842235ac9de4235c6a85c38d99785443c82ab6d2cf",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-integrations.php",
+      "before_sha256": "2dfec82ff1b6932c7e42650cf747943520895bc4fdbf4bc183c58ef2c0b55bdf",
+      "after_sha256": "df8f102828fdaf768d750f6ae08206300a2a2aaac020a66c79577c1c50addb7a",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-admin-settings-renderer.php",
+      "before_sha256": "7bf7041b592623e86c6824086fa4151570cc8fb926414ebfbdbd32068407e367",
+      "after_sha256": "81589dffab788155f5e3937aa2a3f47e7e959128cc2a2c9b7fdb74e8b56aea40",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-capi.php",
+      "before_sha256": "c333017be3044a627b9f68df51f530db76de5a5855ebebed4defa0e55b0cfff8",
+      "after_sha256": "98d32cd492037e8d591791ea045d23b1dd6ca39bc2b17eef1b8640df6fb3e2f1",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-db.php",
+      "before_sha256": "fd3fcc4ece05e6ceaf2e4b5231a799f13d301daf3aaef6b6081331568e9d62f0",
+      "after_sha256": "3bcddef99fadf1f5b2538e99a0614ae8e312284d6701420d3bbc2a835f59159a",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-lead-outbox.php",
+      "before_sha256": "5730de65880f1d2ede9fd5764bf6dc4f368ed27b7f9e79ffb19387d531362a08",
+      "after_sha256": "8420ead74d34765772f5903b6f80d16019d8191964331d149d2d1069de9e7cd2",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-lead-deletion-service.php",
+      "before_sha256": "8dbf4f15bde3751ec31ef425167632267e1f7d2f5f821ba87959d1a1c511413c",
+      "after_sha256": "06bcd680eeb8e32173bbd69071f581232db3d650f22e59bbb02d83bb5ff865c0",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-interakt-batch.php",
+      "before_sha256": "b66a848191ace9f14404ae57a1c03e140dfc7ba4dfbb1805210e66c665ce444d",
+      "after_sha256": "f2b632304c4da6cf2e46d24a09cb09ed5ce45b6cba40556129f8cf9e9a441ce6",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-admin-logs-renderer.php",
+      "before_sha256": "f7b8e8b6be44a81ed348277eff74140c6ca26d5b4cbb13b6cc4618f4965fad0b",
+      "after_sha256": "58a150213f57d45568ab0aeb020b4efabe07d72028e4cbee89ecb613fb889759",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-quotation-controller.php",
+      "before_sha256": "48367aca62c7ca21175960b788c643bc02ac828b58c665c17b6222be98d50e16",
+      "after_sha256": "530a83113a8d6959ccf0b9ec20a05d5ccc1639765effa5d7f683b1f961b0a209",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "before_sha256": "1e694d29e15246aba27996530dadc98a1fc9bf1c7b11ef48047a2ed19963f23b",
+      "after_sha256": "4f0f7f3c86198d8c397c727a659dac7f62e8a46b1621583515420457c60ba03a",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-quotation-exporter.php",
+      "before_sha256": "1be1730833c082ff345dbacb98484bb0f3a2bafa21314d36e22e4f3c2ee0e7a1",
+      "after_sha256": "2db708b3787b318f66a294b1654c93337c88b6b02628b8e6cd493e97bfec768c",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-admin-leads-renderer.php",
+      "before_sha256": "2130956ba7f6df398d4366dddc5101f6a629c9821dac9c79f4eb1a189cdca753",
+      "after_sha256": "8addffb8ea49c227e72c982acf99e757480ab1d0bcef494a273e23186d77f42d",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-lead-connector.php",
+      "before_sha256": "297eba4b5d56a04171667f6962be9ba3c8e57b5ffc5df767d1f42ca986c0541c",
+      "after_sha256": "946bf683eaed67c782230e55dbea04349ee1552963425b6d47f89d5004488f5b",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-presales-task-plan.php",
+      "before_sha256": "d86591c6dab12a7f272086dc3c7aec08ae1bb74f46690886f1e7349748c418a8",
+      "after_sha256": "33aad6d22bf0df44299fb3a6af790a90b83f5293cf25ebedb6907b9e16d7da2b",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-whatsapp-inbox.php",
+      "before_sha256": "21a2b27dd746faef59d590b58162a4d924284b6c0b96536dd5d75f7d01ab1787",
+      "after_sha256": "8697a1eaa43e4c848e075032f44a5b9e3bd1d3ae47800e1e610e147e7c4e44ca",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-operational-health.php",
+      "before_sha256": "7b709c70c2be2bfafa1ff57cad37223c63dd38287430f7b2be73860c85a725d5",
+      "after_sha256": "c141aaf20b861d46a1aae43d5fc2d21c6a60a1c2f8634fe3fa0f638909940e0d",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-quotation-repository.php",
+      "before_sha256": "da12368abcc1aed872809e9d1c363ddae721263ba0a36bfc7c73d6fcf8fcc29e",
+      "after_sha256": "4318a755020489f707a0c7f96a44a4d48b180299f8188f05e737d118a3a4c652",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "before_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "after_sha256": "b61a38eba165b14c7c4a5431562fdbe9123a08f5b7c413bbf0629f81371aebbc",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-interakt.php",
+      "before_sha256": "c892bc879dea06a05374075f2afd2acb9666052209af07674c22477b9b5fedae",
+      "after_sha256": "46bdc731134b2b63a403c58c316b8cf146f317c5d2d8ce4b82aef030c053486f",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-quotation-schema.php",
+      "before_sha256": "01c3dcfb08b9e3c9b75b723020bea43c9c55f70681c579f4da592628f821d821",
+      "after_sha256": "74b628f07052c58a06ad8cff2b400caa8ba8e485c848a7f2373c94892c4dc896",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-backup.php",
+      "before_sha256": "8b4b9edcbd26d3f4c91381f65c7ca0796d121529a017ed7000e3e63bec12ddcd",
+      "after_sha256": "362b7441c56edc51800d1b3c8ae8d7a39b9285c71afc83a678e6f459cc22da60",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-secret-store.php",
+      "before_sha256": "14996c68de50bde3f72e7eb5f2504ea81d4a838d4de7e0b121dd4d3c2ae1c717",
+      "after_sha256": "b2bf55934ca9a45684d09257ce4b46f5bdf8664fffb87f99a0def001d52cdc53",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-identity-review.php",
+      "before_sha256": "da3f0fb75c3e8b3dcdd74240dd38161fdec577214552e53c669e67b81cddd818",
+      "after_sha256": "b418e20304b77d8b723a0b0f18aac7aa960c66241cab1dc946e7151dff879ada",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-admin-account-controller.php",
+      "before_sha256": "a743ebaee998c58be7ce32f9f1558a646c7796ce149e3f5dbb0c987dde168272",
+      "after_sha256": "adcb343e2647b5d3c7f7f0655f5d14531243cd29db14a9144d2313c447d1a499",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-admin-shortcodes.php",
+      "before_sha256": "30898a633fb87c978e9c0ccbe265bc36554f9cdb4392f3db0b4b699127027c6b",
+      "after_sha256": "72a4de3d2f0b98bba0393110e08341868c949ec7e004a83823e9a3b9a8087a86",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-admin-lead-notifications.php",
+      "before_sha256": "961bf9763db99ab3fafb740ef68286d92085e54ea5dbe08fd0d014d7c0ae180f",
+      "after_sha256": "16ed1e2614a4fcc09955021eb566eea43c91e5af54600a486ed13c3134f6249b",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-quotations.php",
+      "before_sha256": "9b25eea7259330d117c5c1191504223f3b2ed5d69f0b0a7cdfe25a0d5ab3d9d5",
+      "after_sha256": "948ddc44f0ef4dfa597c85183224496fc9a89d6b4db8f429e3bf953af0fdf3ef",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-quotation-lead-read-model.php",
+      "before_sha256": "88bf8f07d07ca01d41295234c8fd6cb95219af53c62b88e0e88e51c6a4c2f18c",
+      "after_sha256": "f2f252f59632e923f2477e52a4f4bfbbea3428baf83e16ce0b4cf51805333a36",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-admin-settings-controller.php",
+      "before_sha256": "d9e9a451a50c6b6d1875ed4af7118b6680cf55267da219d9cc5ac82c40199d35",
+      "after_sha256": "89985d674148054013a3eccd947422b46e817992a5f40933fe41a727b21bd3dc",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-quotation-renderer.php",
+      "before_sha256": "f26ca10d0b7ff525b7b9ffa6e27747bb653b1ba060b864eaf98260690c19141b",
+      "after_sha256": "f7dabe3763f0bf8528c573f5332e7e381ea796e3130997b4898d02377e5eec83",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-audience-dispatch.php",
+      "before_sha256": "dc07d9998ffd37fe9f87aecbb4101206f993223ffa99207562de457915b1c86f",
+      "after_sha256": "942653890a31c62ca66c45bf48fde8e3131086c617793a9658ae1fe23a05e49f",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-admin-ajax.php",
+      "before_sha256": "866a96f94a191800e3f32b56748afd1bdf6f4b13ce0913fe6ceb4d837939ff1f",
+      "after_sha256": "3d9a5d153be3430a87c06385ab1492c2074b61ae2f00b88c18c3e77a85169e2f",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-interakt-dispatch.php",
+      "before_sha256": "f37af39cc4e18fe3285f44a84e0648061ad051e26b036d59bc50e92db6b11421",
+      "after_sha256": "240ea991837cdcdc7ec3493faf750aec211e5b258983475d8466511c51ba5563",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-admin-users-controller.php",
+      "before_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "after_sha256": "eef595243508d0a14632a932e7a667e648e0e82eb4f81e91bc1855c3990d5237",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-lead-access-policy.php",
+      "before_sha256": "d465634e69ece75dae1b7604d8059c99dd14d9ab6115c2c054d53bcb9cef2b51",
+      "after_sha256": "2396735cbccbd7394773bfecf0168fe7105b3ca292d226cd2d9da735dd5cfb7d",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "includes/class-private-files.php",
+      "before_sha256": "946564b2272f382c45e7cb9a721bd9fafd8de8e16b6582fb105a669490fba1c7",
+      "after_sha256": "284e56fcf373622ebb7921ac28966dfcd9c12fb7697069d2f209dce80fcbbb09",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "docs/audit-remediation-backlog.csv",
+      "before_sha256": "701310e3a4f2be228ce30bbcf13d3eb5ae4b914e1426b6f3bead0e273a99a86d",
+      "after_sha256": "820e31c218c3ebe390a5eedd56c238de14ed82d6e5a3d96cc8a23b7181bb5338",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "docs/CHANGELOG-DEV.md",
+      "before_sha256": "eed80d1eb24673c09643d287c9593233925f6761cda6c03e840e66d53f7608e0",
+      "after_sha256": "87be62ca3ef90b3ac0198dca262ba10cbd61b4d3791c7d2d530e3518c017335a",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "docs/PRODUCTION-SCALABILITY-PLAN.md",
+      "before_sha256": "5a0922cc5e4df914be48650ff935356b2e33bda9ea65a40f4cd9c40c20124c67",
+      "after_sha256": "9598ec6348a1f80e803f2d1019319dd38d8a91edf35312e71c76d0a774b21818",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "docs/PRODUCTION-RELEASE.md",
+      "before_sha256": "3b565f529983a3cfb0bad24d53332722f0498544b91c00ecc1f27de2014b0095",
+      "after_sha256": "429bf8d247b130c546ca529a04c6a01d206d3caa1d1defbf0c6b8ef2d1483215",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+      "before_sha256": "9fe35f09abfc64d4ad2de989cb37bb968b93c34ce02c311a3d6e9210ed7c504a",
+      "after_sha256": "a8decff766ad7eced791d9d301d397c15e45ca3f460a8794da70a206fd9e3b14",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "docs/AUDIT-REMEDIATION-PLAN.md",
+      "before_sha256": "5e7968261b199405fb7bad82485ed6db35ec8bdbf035c1c5cdc470ca22939d74",
+      "after_sha256": "8cba3aa86fee28cfb0fb3632bb136b6b8cf3c4f5d272fc22a3af305a664ee41a",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "docs/SECURITY.md",
+      "before_sha256": "8e8a138e96294fb29f7df6d82dd131eb5518e1c4dc2b23d7256b03489943108b",
+      "after_sha256": "ef62a9fca788da8546be8410e9adebac6e031bca9bb36b68dca65484457856c4",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/access-restricted.php",
+      "before_sha256": "12c981761292f3548e9e26e6cf41d9fef6185c42c79aa788c03ecebac2f20453",
+      "after_sha256": "ca728af4786c53e762c58362a8036ad7166382a1acdb7d643a908e54f6dba0e4",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/workspace.php",
+      "before_sha256": "faee6dc624c589c238ff243c97aaf3803190fe34196b9c09c10317ce428e3dfa",
+      "after_sha256": "64dbe490aab9a5799708ec025c8dff2a2104773f159f60813e2fa5f3520294d3",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/my-account.php",
+      "before_sha256": "c4d10dc17c066315a7c6a2ce25b62cc8c3f17ad1f6dbd9c87c44b8ed84f64a72",
+      "after_sha256": "4e984ca513e3fa778588833d3d63c2b8193b55e6e1037881d1b761efcd773121",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "build/.DS_Store",
+      "before_sha256": "fadb59068483cdd828ca2efe1765173cbc9f7be2858f279289db9271c6482e98",
+      "after_sha256": "9d099ebe1a61c11f62d0272ad8723a8ddf61cf66693727a776e92a7d08948191",
+      "category": "generated metadata or test output"
+    },
+    {
+      "file": "templates/admin/identity-reviews.php",
+      "before_sha256": "dac3f852f98a20330e6efed97d14e2feb5201377f802c512c211362e969790fb",
+      "after_sha256": "4537645376cbb7190d0bb216a5fd68878632f50ee8d95df210c42afba2a539b4",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/dashboard.php",
+      "before_sha256": "94517eb01ca9ba36cb04efd387be4a510b14ec8c672357171a89698f63d4c73a",
+      "after_sha256": "9ad2f4efe09b7af22cbbcaa42783ff14ecb92f57b2f6a505ad39c4c9012421e9",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/kanban.php",
+      "before_sha256": "370a0147d01d11b3929bc7631727a0cb61216b084fce00f226f6820447a361fd",
+      "after_sha256": "98cd8efa1c979ebaa6918eb60fe909a9e958e2a66341d9c36b4b1293c19a8e54",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/common-overlays.php",
+      "before_sha256": "ea9b4f993e8e1df3238b54e6b8348d97dc92e16547667cb828302aedf64cc83b",
+      "after_sha256": "664b9da3accac31b64c40e5b991afce23c5b124c179ae3e59724335967ab8f83",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/users.php",
+      "before_sha256": "200bd3311df2e40f2a48a1c0363a6326dd3a3ff3bc4c1096ca51ad308019f1ed",
+      "after_sha256": "bb2a94e6a28146b2db7d35945ad9c33904242e6beb1fd219a31cf505ece9dd90",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/leads.php",
+      "before_sha256": "0fa1fbae38d03518edde71eb9adc5b2952421505ce5a1d1d240dfa89f836881f",
+      "after_sha256": "215ab3e19ce80d338ba5f5c6f4de44af350684cd88620b6b8df0b486c5df3146",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/webhooks.php",
+      "before_sha256": "c14ad0601b8f4c7508709a0842b84d20a5d7ac03bc6352ebe0f911b97e4ff930",
+      "after_sha256": "518ffb361048018c9d5a6833b6e261b411c08073f7caa0da2d5cf70801d2909c",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/capi.php",
+      "before_sha256": "00050440610c2020e6883bb64a08fd2cacd4cdb2665b0a31366fc0668823f599",
+      "after_sha256": "13e50063faadaa2c8b5323c8ad25a7e7b3b0fa7711133f843a5eeb3aee3bc7dc",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/health.php",
+      "before_sha256": "76f92172d507e31c97bbf755c0e7a229e58ffd1c2530d2f936e3f70502762ce9",
+      "after_sha256": "4567866fd402123427ff8085ccae79c9305d5833b104e659da6231364a1bf123",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/shell.php",
+      "before_sha256": "1b5345889c2bb820672253df213ebc848f86af8882864d8d769f64b7f8356d69",
+      "after_sha256": "9063cb750b7c9a597ba015600e6f90c3da20c01d1ba7890a993638755c8d9faa",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/lead-connector.php",
+      "before_sha256": "7dad661c1b25399e22c08950e48a9b0c74407b8349f1ffba0daf7ba377d36eac",
+      "after_sha256": "c169c0410079c0a90ccb271227722bfcfa72b4803ff04fb76941de757f5cded0",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/danger-zone.php",
+      "before_sha256": "66c5608202a093c5a38b5c50cf4562a37e7e917f87629adae281b783caaff3b7",
+      "after_sha256": "01a5597c1cad6b2b6c5c04fdeb65e07607f0c77557ba06f0d05648f6c6332389",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/backup.php",
+      "before_sha256": "152568a919cd43d71b2600106830d6b13ff109606e2ca3e1f074a088fcaaf59a",
+      "after_sha256": "254cc6b9452a0af71ba6ce975334eda69118ca4900dc315ac81be29714c86974",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/mcp.php",
+      "before_sha256": "a88d166638a5cd1dc282a634d9b5bd08f0c343deb3bba57a93364e425eb263cf",
+      "after_sha256": "279a9b88712fe20499ee182db03b93a49282dd3681a276676b9c2cc2574018b3",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/routing.php",
+      "before_sha256": "83e7af77010b5421e3b0fdeabb093d92b6069938c4f9ac2bb14daea25a4dae59",
+      "after_sha256": "c886f33aa107179142903686c0348f5f4aaf38fdb36427faa6a20fb9ac0e8ab0",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/white-label.php",
+      "before_sha256": "8a5049932bb7ec30b935713471a307600906f3f37572a2744f49393ad63e7742",
+      "after_sha256": "4a6ac33396c2d4ef87aec224cd61228bc09906f8491ada95086028cd61a5527d",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/help.php",
+      "before_sha256": "2e5ab9ff6d0f51752ed25b0e40ea1150c396ea6b3a6d36960389c43dcb60f99d",
+      "after_sha256": "10c5ab371bff3e0a4210256cbfe8fe112db57497315ca3680c746dd8616402c9",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/token-editor.php",
+      "before_sha256": "eba671bef676d60d589083577767c88b02be56b07d3423a0d52b54098dbaf2a2",
+      "after_sha256": "201c805bb71b9d2e37e63578a17b05008e0d958f73c62c3e89d528529e3b5fcf",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/general.php",
+      "before_sha256": "b1069156e8d45bc0827071c9b0bb792188e08a31250c8b68179d9bf082effd22",
+      "after_sha256": "02d71a1c43761194f7916804ddf9368ce4093488459ede5e2e969310776b4964",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/settings/sync-reminders.php",
+      "before_sha256": "40e55be6e1b1b54a9c679d7fafe2fe1f199e5e74ce27863b90b961a0db10e9e1",
+      "after_sha256": "cc3429506b5d815620a4717e06bd6f528ece506cb6b41496c23c6df7f6bd26d2",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/logs/audience.php",
+      "before_sha256": "7f0dfb31bd3becc16e3270768555bbcbb6d4a65f5f093b220a2ab3fc1d97017f",
+      "after_sha256": "1fc75eb992b0d91caa1ff6022fbc96044937ceb571e749d27ac5762fc98f9960",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/logs/capi.php",
+      "before_sha256": "7661b50280f1738520fa0aa9c163f54dd2701cea38416b03d29ee41087a32738",
+      "after_sha256": "ca660cae2eec91d1dd0e9f3ef22690cd10ed1094343267bbfbe3ca676e195a98",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "templates/admin/logs/payload-dialog.php",
+      "before_sha256": "20fdad3de2c622f84bf0b3c4f33d11ec7edc2c974da4653786e9048e4a135f14",
+      "after_sha256": "7be25af7c0c0f0e7c60512cd3d26c42886f5fc1479c34e3781fad1e347477ff4",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "docs/remediation-2026-10-07/bounded-work-slice/read-sample.json",
+      "before_sha256": "12f63effdb8ae26ec9696fc712344d9af26c315129babe8294338739ae440e50",
+      "after_sha256": "43ba35484615d41434a457053f994fd38ef2f6e149a129aa24244bf95ef79379",
+      "category": "generated metadata or test output"
+    },
+    {
+      "file": "tests/integration/bounded-work-contracts.php",
+      "before_sha256": "6fbd5a1adcdd2a242e8d609d72cd873403e38e200343c9d7843db90775ab2a8e",
+      "after_sha256": "13b11c10d975bbd755aae00952528e5b38b9521a55ff6fcb102ab2b58dd6b2af",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "tests/integration/lead-connector-contracts.php",
+      "before_sha256": "7d0cb55939e5efa42141e3f791c23e24570a3321af93ee88c61734c85db8fcd5",
+      "after_sha256": "6e0794be0bd2aebaf2c31b9cf613ae87ce4361d11fba776c2a472a74f30144b8",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "tests/integration/quotation-http.php",
+      "before_sha256": "8cdd1fe118e064b6768f45d481142eded0eefda07ffbe72407d32ce2ffe8e49e",
+      "after_sha256": "83d5d1f597ecf476a73794d72f82c8ffadaaa130f4e2207f7bd7e05e62868b8e",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "tests/release/check-package.php",
+      "before_sha256": "462a5259a6d77296b1fe9d97d54afaf5287e097937410e0aee8150c3b6ab3bd7",
+      "after_sha256": "9e9b110d09b89edb3c111408b9bb739c36ae53f0a95809e1b501c5024ae37757",
+      "category": "REL-007 source/test/document change"
+    },
+    {
+      "file": "tests/release/class-release-artifact.php",
+      "before_sha256": "eceb2d22a388b5e1900b114bf764d626ee44ec0695ccb765c993e83ed2965393",
+      "after_sha256": "d1b7193ed16308ffd0bc02b7bd693dc214a476c90a2efcb3ce628fbdd331913b",
+      "category": "REL-007 source/test/document change"
+    }
+  ],
+  "unexpected_source_changes": [],
+  "unrelated_source_edits_preserved": true,
+  "all_historical_generated_outputs_preserved": false,
+  "known_exception": {
+    "file": "docs/remediation-2026-10-07/bounded-work-slice/read-sample.json",
+    "cause": "Existing native full-suite case wrote to hardcoded historical path before output-destination repair",
+    "original_bytes_recoverable": false,
+    "initial_sha256": "12f63effdb8ae26ec9696fc712344d9af26c315129babe8294338739ae440e50",
+    "replacement_evidence": "read-sample-full-regenerated.json",
+    "future_prevention": "Disposable WP_CONTENT_DIR default or explicit IDLM_TEST_READ_SAMPLE_PATH; focused native rerun passed"
+  },
+  "external_metadata_left_untouched": [
+    "build/.DS_Store"
+  ],
+  "historical_HTTP_fault_log_restored_exactly": true,
+  "no_reset_commit_push_deploy": true
+}

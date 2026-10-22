@@ -1,0 +1,166 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-18",
+  "finding": "REL-007",
+  "candidate": "1.102.82",
+  "status": "IN PROGRESS, not IMPLEMENTED or CLOSED",
+  "schema_changed": false,
+  "production_release_approved": false,
+  "artifact": {
+    "sha256": "91fdacc6a3cb5ca91a169cf81b26b6bb6753a5b6fc4aba5b377dcb49d525bedf",
+    "file_count": 453,
+    "status": "local_rehearsal_only",
+    "location": "/private/tmp/idlm-rel007-bootstrap-20261018/artifact/interior-design-lead-manager-1.102.82.zip"
+  },
+  "checks": {
+    "focused_HTTP_before": "2 passed / 3 failed: array metadata produced PHP diagnostics in healthy bootstrap and pending-migration branches; existing REST 503 and request-lifetime fence passed",
+    "focused_HTTP_final": "5 passed / 0 failed",
+    "accumulated_HTTP_stdio": "443 passed / 0 failed",
+    "native_focused": "2 passed / 0 failed: fresh schema plus independent-connection restore/reset/stale-epoch fence",
+    "fast": "382 passed / 0 failed; existing missing-phone fixture warning retained",
+    "release_contracts": "14 cases included in the passing fast suite; no duplicate standalone rerun",
+    "environment": {
+      "wordpress": "6.6",
+      "php": "8.4.14",
+      "mysql": "8.4.0",
+      "scheduler": "WP-Cron",
+      "persistent_cache": false
+    },
+    "unfiltered_static": {
+      "builder": "Shashi",
+      "mode": "static_default_checks_no_exclusions",
+      "artifact_sha256": "91fdacc6a3cb5ca91a169cf81b26b6bb6753a5b6fc4aba5b377dcb49d525bedf",
+      "checker_zip_sha256": "6ff4bd2145f3befcf907df158cc466b1649dafed5686de8369907403c3013fc4",
+      "checker_version": "2.1.0",
+      "wordpress": "6.6",
+      "php": "8.4.14",
+      "command": [
+        "/opt/homebrew/Cellar/php/8.4.14_1/bin/php",
+        "/Applications/Local.app/Contents/Resources/extraResources/bin/wp-cli/wp-cli.phar",
+        "--path=/private/tmp/idlm-rel007-input-20261018/wordpress",
+        "--skip-plugins=interior-design-lead-manager",
+        "--skip-themes",
+        "plugin",
+        "check",
+        "interior-design-lead-manager",
+        "--format=strict-json",
+        "--fields=file,line,column,type,code,message,docs"
+      ],
+      "exit_code": 0,
+      "runner_exit_code": 1,
+      "diagnostics_pass": false,
+      "diagnostic_count": 2178,
+      "types": {
+        "WARNING": 2042,
+        "ERROR": 136
+      },
+      "codes": {
+        "WordPress.DB.DirectDatabaseQuery.DirectQuery": 467,
+        "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound": 422,
+        "WordPress.DB.DirectDatabaseQuery.NoCaching": 403,
+        "WordPress.DB.PreparedSQL.InterpolatedNotPrepared": 402,
+        "PluginCheck.Security.DirectDB.UnescapedDBParameter": 175,
+        "WordPress.DB.PreparedSQL.NotPrepared": 78,
+        "WordPress.Security.NonceVerification.Recommended": 73,
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized": 49,
+        "WordPress.Security.NonceVerification.Missing": 45,
+        "WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare": 12,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose": 11,
+        "WordPress.Security.ValidatedSanitizedInput.MissingUnslash": 9,
+        "Squiz.PHP.DiscouragedFunctions.Discouraged": 4,
+        "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 3,
+        "WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber": 3,
+        "WordPress.DB.DirectDatabaseQuery.SchemaChange": 3,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fopen": 2,
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall": 2,
+        "WordPress.WP.AlternativeFunctions.unlink_unlink": 2,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_is_writable": 2,
+        "unexpected_markdown_file": 2,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fread": 1,
+        "WordPress.Security.EscapeOutput.OutputNotEscaped": 1,
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors": 1,
+        "WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting": 1,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fwrite": 1,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_readfile": 1,
+        "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound": 1,
+        "WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound": 1,
+        "readme_parser_warnings_trimmed_section_changelog": 1
+      },
+      "production_release_approved": false
+    },
+    "static_gate_pass": false
+  },
+  "source_review": {
+    "metadata_input_sites": 6,
+    "new_justifications": 12,
+    "dispositions": {
+      "REVIEW_REQUIRED": 1521,
+      "JUSTIFICATION_RECORDED": 656,
+      "RELEASE_CHANNEL_LIMITATION": 1
+    },
+    "prior_matching_policy": "exact path, line, column, code and source line only"
+  },
+  "backlog_counts": {
+    "IMPLEMENTED": 42,
+    "IN_PROGRESS": 2,
+    "CLOSED": 0
+  },
+  "limits": [
+    "No full native suite, browser/PDF qualification, PHP 7.4/8.1/latest-WordPress matrix, provider acceptance, matching remote CI or installed-artifact behavioral qualification.",
+    "Recovery guard namespace scope, capability/nonce/object policies, lock SQL, worker slots and generation algorithms remain as before.",
+    "Isolated bootstrap metadata edits introduce no architectural edges; graph lookup is structural navigation, and no full graph regeneration is claimed.",
+    "No configured-site database mutation, commit, push, tag, email, live provider send or deployment. Outbound HTTP/mail intercepted in owned synthetic fixtures."
+  ],
+  "commands": [
+    "php tests/integration/quotation-http.php --bootstrap-input-only (owned disposable IDLM_TEST_* environment)",
+    "php tests/integration/quotation-http.php (owned disposable IDLM_TEST_* environment)",
+    "IDLM_TEST_FILTER=\"active native connection\" php tests/integration/run.php (owned disposable IDLM_TEST_* environment)",
+    "php tests/run.php",
+    "php tests/release/build-release.php --build --confirm=build-idlm-release-artifact --allow-dirty --output-dir=<owned temp directory>",
+    "php tests/release/check-package.php --artifact=<1.102.82 rehearsal ZIP> --checker-zip=<pinned official Plugin Check 2.1.0 ZIP> --wp-cli=<local WP-CLI> --output-dir=<owned evidence directory>"
+  ],
+  "php_lint": [
+    {
+      "file": "includes/class-recovery-guard.php",
+      "exit_code": 0,
+      "output": "No syntax errors detected in includes/class-recovery-guard.php\n"
+    },
+    {
+      "file": "interior-design-lead-manager.php",
+      "exit_code": 0,
+      "output": "No syntax errors detected in interior-design-lead-manager.php\n"
+    },
+    {
+      "file": "tests/release-contracts.php",
+      "exit_code": 0,
+      "output": "No syntax errors detected in tests/release-contracts.php\n"
+    },
+    {
+      "file": "tests/integration/quotation-http.php",
+      "exit_code": 0,
+      "output": "No syntax errors detected in tests/integration/quotation-http.php\n"
+    },
+    {
+      "file": "tests/integration/http-router.php",
+      "exit_code": 0,
+      "output": "No syntax errors detected in tests/integration/http-router.php\n"
+    },
+    {
+      "file": "tests/integration/bootstrap-request-http-cases.php",
+      "exit_code": 0,
+      "output": "No syntax errors detected in tests/integration/bootstrap-request-http-cases.php\n"
+    }
+  ],
+  "whitespace_exit_code": 0,
+  "preservation": {
+    "unexpected_changed_or_removed_files": [],
+    "baseline_file_count": 1823
+  },
+  "cleanup": {
+    "remaining_disposable_databases": [],
+    "mysql_server_stopped": true,
+    "owned_mysql_data_removed": true,
+    "fixture_configuration_removed": true,
+    "rehearsal_artifact_retained_locally": true
+  }
+}

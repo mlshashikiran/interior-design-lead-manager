@@ -1,0 +1,27 @@
+{
+  "status": "FAIL reproduced",
+  "same_names_and_contents": true,
+  "first_sha256": "e0b215ab114733bd5738e525c034b4060084bf6d2d62bb357447ab8afd86a00b",
+  "second_sha256": "a5826c8f2e8f7a3fb925d2bb0c0b02388806ab20d364e65980400d238c16c94d",
+  "timestamp_differences": [
+    {
+      "path": "interior-design-lead-manager/",
+      "first_time": [
+        2026,
+        10,
+        11,
+        11,
+        22,
+        46
+      ],
+      "second_time": [
+        2026,
+        10,
+        11,
+        11,
+        22,
+        50
+      ]
+    }
+  ]
+}

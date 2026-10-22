@@ -1,0 +1,52 @@
+{
+  "builder": "Shashi",
+  "candidate": "1.102.84",
+  "scope": "M6 handoff notification ownership slice; M6 not complete",
+  "finding": "REL-001 prerequisite progress; remains IN PROGRESS",
+  "artifact_sha256": "0ff180abceaea742652f2bf4eab11c74583d0340f8699db7a4aef8ec49fa7f0b",
+  "fast": {
+    "passed": 385,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "native_focused": {
+    "passed": 4,
+    "failed": 0,
+    "includes_fresh_schema": true,
+    "exit_code": 0
+  },
+  "native_full": {
+    "passed": 334,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "PHP_lint": {
+    "files": 7,
+    "failed": 0
+  },
+  "extraction_executable_token_parity": true,
+  "static_default_gate": {
+    "errors": 0,
+    "warnings": 0,
+    "exit_code": 0
+  },
+  "review_exception": "REL007-SQL-0436 moved with its query; rationale narrowed to the actual dispatch read. No new sniff exclusions/filters.",
+  "package_file_count": 454,
+  "runtime": {
+    "WordPress": "6.6",
+    "PHP": "8.4.14",
+    "MySQL": "8.4.0",
+    "cache": "off",
+    "scheduler": "WP-Cron"
+  },
+  "development_failure": "First focused native run skipped an earlier suite case that initializes integration hooks; the new first case now calls the production init before assertions. No production fix was needed.",
+  "not_run": [
+    "HTTP/browser suite: no HTTP/UI contract changed; prior 1.102.83 run is historical evidence only",
+    "Remote supported CI matrix and clean commit attestation",
+    "Installation and qualification of the exact candidate ZIP",
+    "Remaining M6 hotspot ownership review/extractions",
+    "M7 signed workload/topology/cache/scheduler/provider/lifecycle acceptance"
+  ],
+  "production_release_approved": false,
+  "commit_push_deploy": false
+}

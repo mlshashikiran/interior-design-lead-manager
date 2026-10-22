@@ -61,7 +61,7 @@ function expect_json_response(callable $callback, bool $success, ?int $status = 
 
 function invoke_private(string $class, string $method, array $args = array()) {
     $reflection = new ReflectionMethod($class, $method);
-    $reflection->setAccessible(true);
+    if (PHP_VERSION_ID < 80100) { $reflection->setAccessible(true); }
     return $reflection->invokeArgs(null, $args);
 }
 
@@ -119,21 +119,22 @@ idlm_test('backup restore accepts generated backups smaller than 100 MB', static
 
     assert_contains('const MAX_FILE_SIZE = 104857600; // 100 MB.', $backup);
     assert_contains('$size > self::MAX_FILE_SIZE', $backup);
-    assert_contains('IDLM_Data_Retention::prune();', $backup);
+    assert_true(strpos($backup, 'IDLM_Data_Retention::prune();') === false);
+    assert_contains('WITH CONSISTENT SNAPSHOT', $backup);
     assert_contains('smaller than 100 MB.', $template);
 });
 
 idlm_test('heavy CRM log reads are bounded and audience payloads are lazy loaded', static function(): void {
     $root = dirname(__DIR__) . '/';
     $lead_reads = file_get_contents($root . 'includes/class-admin-lead-reads.php');
-    $ajax_reads = file_get_contents($root . 'includes/class-admin-ajax.php');
+    $activity_reads = file_get_contents($root . 'includes/class-admin-activity-controller.php');
     $log_renderer = file_get_contents($root . 'includes/class-admin-logs-renderer.php');
     $log_template = file_get_contents($root . 'templates/admin/logs/audience.php');
     $log_script = file_get_contents($root . 'assets/js/users-logs.js');
     $admin = file_get_contents($root . 'includes/class-admin.php');
 
     assert_contains('ORDER BY a.id DESC LIMIT 100', $lead_reads);
-    assert_contains('ORDER BY a.id DESC LIMIT 100', $ajax_reads);
+    assert_contains('ORDER BY a.id DESC LIMIT 100', $activity_reads);
     assert_contains('SELECT id, platform, audience_id, lead_count, status, created_at', $log_renderer);
     assert_false(false !== strpos($log_renderer, 'SELECT *\n            FROM {$wpdb->prefix}idlm_audience_sync_logs'));
     assert_contains("check_ajax_referer('idlm_admin_nonce', 'nonce')", $log_renderer);
@@ -166,7 +167,7 @@ idlm_test('signed cursor pagination binds position to actor and normalized reque
 });
 
 idlm_test('lead table keeps offset compatibility and adds bounded default keyset navigation', static function(): void {
-    $ajax_source = file_get_contents(dirname(__DIR__) . '/includes/class-admin-ajax.php');
+    $ajax_source = file_get_contents(dirname(__DIR__) . '/includes/class-admin-collection-reads.php');
     $client_source = file_get_contents(dirname(__DIR__) . '/assets/js/admin-app.js');
 
     assert_contains("isset(\$_POST['page'])", $ajax_source);
@@ -240,7 +241,7 @@ idlm_test('lead lifecycle and dashboard settings rotate the read-cache generatio
 
 idlm_test('dashboard cache invalidation covers routing, deletion, reset, quotations, and retention', static function(): void {
     $root = dirname(__DIR__) . '/includes/';
-    assert_contains("IDLM_Read_Model_Cache::invalidate('lead_assignment')", file_get_contents($root . 'class-integrations.php'));
+    assert_contains("IDLM_Lead_Transaction::invalidate('lead_assignment', \$lead_id)", file_get_contents($root . 'class-integrations.php'));
     assert_contains("IDLM_Read_Model_Cache::invalidate('lead_delete')", file_get_contents($root . 'class-lead-deletion-service.php'));
     assert_contains("IDLM_Read_Model_Cache::invalidate('crm_reset')", file_get_contents($root . 'class-lead-deletion-service.php'));
 
@@ -412,6 +413,41 @@ idlm_test('quick edit enforces object ownership for restricted representatives',
     assert_same('New', $GLOBALS['wpdb']->rows('idlm_leads')[0]['stage']);
 });
 
+idlm_test('quick stage edit preserves the structured quotation total', static function(): void {
+    idlm_test_login(5, array('sales_executive'), array('idlm_access_leads'));
+    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array(
+        'assigned_rep_id' => 5,
+        'quote_value' => 125000,
+        'quote_file' => 'https://example.test/original-quote.pdf',
+    ))));
+    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 8, 'lead_id' => 1, 'quote_number' => 'Q-2026-000008')));
+    $_POST = array(
+        'lead_id' => 1,
+        'field' => 'stage',
+        'value' => 'Quote Shared',
+        'quote_value' => '1',
+        'quote_file' => 'https://example.test/legacy-upload.pdf',
+    );
+
+    expect_json_response(static fn() => IDLM_Admin::ajax_quick_edit_lead(), true);
+    $lead = $GLOBALS['wpdb']->rows('idlm_leads')[0];
+    assert_same('Quote Shared', $lead['stage']);
+    assert_same(1, $lead['quote_shared']);
+    assert_same(125000, $lead['quote_value']);
+    assert_same('https://example.test/original-quote.pdf', $lead['quote_file']);
+});
+
+idlm_test('structured zero-total quotations cannot move a lead to Quote Shared', static function(): void {
+    idlm_test_login(5, array('sales_executive'), array('idlm_access_leads'));
+    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 5, 'quote_value' => 0))));
+    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 8, 'lead_id' => 1, 'quote_number' => 'Q-2026-000008')));
+    $_POST = array('lead_id' => 1, 'field' => 'stage', 'value' => 'Quote Shared');
+
+    $response = expect_json_response(static fn() => IDLM_Admin::ajax_quick_edit_lead(), false);
+    assert_contains('structured quotation total', (string) $response->data['message']);
+    assert_same('New', $GLOBALS['wpdb']->rows('idlm_leads')[0]['stage']);
+});
+
 idlm_test('pre-sales cannot change stage from the lead drawer header', static function(): void {
     idlm_test_login(5, array('idlm_pre_sales'), array('idlm_access_leads', 'idlm_qualify_leads'));
     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 5))));
@@ -535,8 +571,9 @@ idlm_test('lead attachment policies are field-specific and reject unknown purpos
 
     $source = file_get_contents(dirname(__DIR__) . '/includes/class-admin-ajax.php');
     assert_contains('IDLM_Production_Security::validate_upload', $source);
-    assert_contains('_idlm_attachment_owner_id', $source);
-    assert_contains('wp_delete_attachment($attachment_id, true)', $source);
+    $storage = file_get_contents(dirname(__DIR__) . '/includes/class-private-files.php');
+    assert_contains('_idlm_attachment_owner_id', $storage);
+    assert_contains('wp_delete_attachment($row->attachment_id, true)', $storage);
 });
 
 idlm_test('floor plan attachments normalize legacy and multi-file values safely', static function(): void {
@@ -571,6 +608,7 @@ idlm_test('Google feed permission uses dedicated Basic Auth and preserves its ch
 });
 
 idlm_test('MCP PII tool rejects unauthorized requests and returns lead data only with a valid API key', static function(): void {
+    update_option('idlm_mcp_allow_pii', '1');
     $GLOBALS['idlm_test_options']['idlm_mcp_api_key'] = 'secret-key';
     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture()));
     $body = wp_json_encode(array(
@@ -601,15 +639,14 @@ idlm_test('MCP rejects oversized bodies and oversized JSON-RPC batches', static 
 });
 
 idlm_test('MCP SQL guard rejects mutation, comments, unsafe functions, and non-CRM tables', static function(): void {
-    assert_contains('Only read-only SELECT', IDLM_MCP_Core::execute_tool('run_custom_query', array('sql' => 'UPDATE wp_idlm_leads SET stage = "Won"'))['error']);
-    assert_contains('comments', IDLM_MCP_Core::execute_tool('run_custom_query', array('sql' => 'SELECT * FROM wp_idlm_leads; SELECT 1'))['error']);
-    assert_contains('restricted', IDLM_MCP_Core::execute_tool('run_custom_query', array('sql' => 'SELECT * FROM wp_options'))['error']);
-    assert_contains('unsafe database functions', IDLM_MCP_Core::execute_tool('run_custom_query', array('sql' => 'SELECT SLEEP(1) FROM wp_idlm_leads'))['error']);
-    assert_contains('unsafe database functions', IDLM_MCP_Core::execute_tool('run_custom_query', array('sql' => 'SELECT RAND() FROM wp_idlm_leads'))['error']);
-    assert_contains('explicit allowlisted FROM', IDLM_MCP_Core::execute_tool('run_custom_query', array('sql' => 'SELECT 1'))['error']);
-    assert_contains('Comma-separated', IDLM_MCP_Core::execute_tool('run_custom_query', array('sql' => 'SELECT * FROM wp_idlm_leads l, wp_users u'))['error']);
-    assert_contains('Database-qualified', IDLM_MCP_Core::execute_tool('run_custom_query', array('sql' => 'SELECT * FROM wp_idlm_leads.wp_options'))['error']);
-    assert_contains('CROSS JOIN', IDLM_MCP_Core::execute_tool('run_custom_query', array('sql' => 'SELECT * FROM wp_idlm_leads CROSS JOIN wp_users'))['error']);
+    foreach (array('UPDATE wp_idlm_leads SET stage = "Won"', 'SELECT * FROM wp_idlm_leads; SELECT 1', 'SELECT id FROM wp_options',
+        'SELECT SLEEP(1) FROM wp_idlm_leads', 'SELECT RAND() FROM wp_idlm_leads', 'SELECT 1',
+        'SELECT id FROM wp_idlm_leads l, wp_users u', 'SELECT id FROM wp_idlm_leads.wp_options',
+        'SELECT id FROM wp_idlm_leads CROSS JOIN wp_users') as $sql) {
+        $before = $GLOBALS['wpdb']->last_get_results_query;
+        assert_true(isset(IDLM_MCP_Core::execute_tool('run_custom_query', array('sql' => $sql))['error']));
+        assert_same($before, $GLOBALS['wpdb']->last_get_results_query);
+    }
 });
 
 idlm_test('MCP SQL guard appends and caps a numeric row limit', static function(): void {
@@ -624,16 +661,30 @@ idlm_test('MCP SQL guard appends and caps a numeric row limit', static function(
 idlm_test('REST permission callbacks rate limit repeated MCP requests', static function(): void {
     $GLOBALS['idlm_test_options']['idlm_mcp_api_key'] = 'mcp-rate-key';
     $_SERVER['REMOTE_ADDR'] = '192.0.2.10';
-    $request = new WP_REST_Request(array('X-IDLM-API-Key' => 'mcp-rate-key'));
     for ($request_number = 0; $request_number < 60; $request_number++) {
+        $request = new WP_REST_Request(array('X-IDLM-API-Key' => 'mcp-rate-key'));
         assert_true(IDLM_Integrations::permission_mcp($request));
+        assert_true(IDLM_Integrations::permission_mcp($request)); // Core Allow-header recheck.
     }
-    $limited = IDLM_Integrations::permission_mcp($request);
+    $limited = IDLM_Integrations::permission_mcp(new WP_REST_Request(array('X-IDLM-API-Key' => 'mcp-rate-key')));
     assert_true(is_wp_error($limited));
     assert_same(429, $limited->get_error_data()['status']);
 });
 
+idlm_test('REST repeated permission checks still enforce credential rotation and ignore client memo fields', static function(): void {
+    IDLM_Secret_Store::set('idlm_webhook_api_key', 'request-rotation-before');
+    $_SERVER['REMOTE_ADDR'] = '192.0.2.144';
+    $request = new WP_REST_Request(array('X-IDLM-API-Key' => 'request-rotation-before'));
+    assert_true(IDLM_Integrations::permission_webhook($request));
+    IDLM_Secret_Store::set('idlm_webhook_api_key', 'request-rotation-after');
+    assert_true(is_wp_error(IDLM_Integrations::permission_webhook($request)));
+    $forged = new WP_REST_Request(array('X-IDLM-API-Key' => 'invalid'), array('idlm_rate_limit_results' => array('webhook' => true)));
+    assert_true(is_wp_error(IDLM_Integrations::permission_webhook($forged)));
+    assert_true(IDLM_Integrations::permission_webhook(new WP_REST_Request(array('X-IDLM-API-Key' => 'request-rotation-after'))));
+});
+
 idlm_test('MCP lead query caps caller-supplied result size at 100', static function(): void {
+    update_option('idlm_mcp_allow_pii', '1');
     IDLM_MCP_Core::execute_tool('query_leads', array('limit' => 9999));
     assert_contains('LIMIT 100 OFFSET 0', $GLOBALS['wpdb']->last_get_results_query);
 });
@@ -647,7 +698,7 @@ idlm_test('Interakt and Meta signatures require an exact SHA-256 HMAC', static f
 });
 
 idlm_test('quotation policy gives administrators capability-controlled unrestricted lead access', static function(): void {
-    idlm_test_login(1, array('administrator'), array('manage_options', 'idlm_view_quotes', 'idlm_create_quotes'));
+    idlm_test_login(1, array('administrator'), array('manage_options', 'idlm_access_leads', 'idlm_view_quotes', 'idlm_create_quotes'));
     $GLOBALS['wpdb']->seed('idlm_leads', array(
         lead_fixture(array('id' => 1, 'first_name' => 'Asha', 'assigned_rep_id' => 7)),
         lead_fixture(array('id' => 2, 'first_name' => 'Ashok', 'assigned_rep_id' => 9)),
@@ -662,7 +713,7 @@ idlm_test('quotation policy gives administrators capability-controlled unrestric
 });
 
 idlm_test('quotation policy gives assignment managers unrestricted lead access without administrator capability', static function(): void {
-    idlm_test_login(3, array('sales_manager'), array('idlm_assign_leads', 'idlm_view_quotes', 'idlm_create_quotes'));
+    idlm_test_login(3, array('sales_manager'), array('idlm_assign_leads', 'idlm_access_leads', 'idlm_view_quotes', 'idlm_create_quotes'));
     $GLOBALS['wpdb']->seed('idlm_leads', array(
         lead_fixture(array('id' => 1, 'first_name' => 'Asha', 'assigned_rep_id' => 7)),
         lead_fixture(array('id' => 2, 'first_name' => 'Ashok', 'assigned_rep_id' => 9)),
@@ -675,7 +726,7 @@ idlm_test('quotation policy gives assignment managers unrestricted lead access w
 });
 
 idlm_test('quotation policy and lead read model allow an owner only assigned leads', static function(): void {
-    idlm_test_login(7, array('sales_executive'), array('idlm_view_quotes', 'idlm_create_quotes'));
+    idlm_test_login(7, array('sales_executive'), array('idlm_access_leads', 'idlm_view_quotes', 'idlm_create_quotes'));
     $GLOBALS['wpdb']->seed('idlm_leads', array(
         lead_fixture(array('id' => 1, 'first_name' => 'Asha', 'assigned_rep_id' => 7)),
         lead_fixture(array('id' => 2, 'first_name' => 'Ashok', 'assigned_rep_id' => 9)),
@@ -693,7 +744,7 @@ idlm_test('quotation policy and lead read model allow an owner only assigned lea
 });
 
 idlm_test('quotation policy prevents a restricted representative reading another owners leads', static function(): void {
-    idlm_test_login(8, array('sales_executive'), array('idlm_view_quotes', 'idlm_create_quotes'));
+    idlm_test_login(8, array('sales_executive'), array('idlm_access_leads', 'idlm_view_quotes', 'idlm_create_quotes'));
     $GLOBALS['wpdb']->seed('idlm_leads', array(
         lead_fixture(array('id' => 1, 'first_name' => 'Asha', 'assigned_rep_id' => 7)),
         lead_fixture(array('id' => 2, 'first_name' => 'Ashok', 'assigned_rep_id' => 9)),
@@ -718,6 +769,13 @@ idlm_test('quotation policy and handler deny users without quotation capabilitie
     assert_contains('Permission denied', (string) $response->data['message']);
 });
 
+idlm_test('explicit catalogue-only grants do not grant customer quotation access', static function(): void {
+    idlm_test_login(7, array('editor'), array('read', 'idlm_manage_quote_items'));
+    assert_true(IDLM_Quotation_Policy::can('idlm_manage_quote_items'));
+    assert_false(IDLM_Quotation_Policy::can('idlm_view_quotes'));
+    assert_false(IDLM_Lead_Access_Policy::has_rep_access());
+});
+
 idlm_test('quotation line items calculate quantity multiplied by rate and sanitize optional/header rows', static function(): void {
     $items = invoke_private('IDLM_Quotations', 'parse_items', array(array(
         array('description' => 'Woodwork', 'quantity' => '2.50', 'unit_rate' => '1200.40', 'is_wood' => '1'),
@@ -733,10 +791,19 @@ idlm_test('quotation line items calculate quantity multiplied by rate and saniti
     assert_same(0, $items[2]['line_total']);
 });
 
+idlm_test('quotation line items calculate billable area from width and height', static function(): void {
+    $items = IDLM_Quotation_Calculator::parse_items(array(
+        array('description' => 'Wall panelling', 'length' => '4.5', 'height' => '2.4', 'quantity' => '1', 'unit_rate' => '1000'),
+    ));
+
+    assert_same(10.8, $items[0]['quantity']);
+    assert_same(10800.0, $items[0]['line_subtotal']);
+});
+
 idlm_test('quotation quantities use the same positive two-decimal minimum as the editor', static function(): void {
     $items = IDLM_Quotation_Calculator::parse_items(array(
         array('description' => 'Zero quantity', 'quantity' => '0', 'unit_rate' => '100'),
-        array('description' => 'Negative quantity', 'quantity' => '-2', 'unit_rate' => '100'),
+        array('description' => 'Tiny quantity', 'quantity' => '0.001', 'unit_rate' => '100'),
     ));
 
     assert_same(0.01, $items[0]['quantity']);
@@ -786,8 +853,8 @@ idlm_test('quotation calculator is deterministic and the legacy quotation API de
         array('section_key' => 'living', 'row_type' => 'header', 'description' => 'Fixtures'),
     );
     $adjustments = array(
-        'wooden_discount_percent' => '125',
-        'additional_discount_amount' => '-50',
+        'wooden_discount_percent' => '100',
+        'additional_discount_amount' => '0',
     );
 
     $items = IDLM_Quotation_Calculator::parse_items($raw_items);
@@ -797,11 +864,95 @@ idlm_test('quotation calculator is deterministic and the legacy quotation API de
     assert_same($totals, IDLM_Quotation_Calculator::calculate_totals($items, $adjustments));
     assert_same($items, invoke_private('IDLM_Quotations', 'parse_items', array($raw_items, array())));
     assert_same($totals, invoke_private('IDLM_Quotations', 'calculate_totals', array($items, $adjustments)));
-    assert_same(100, $totals['wooden_discount_percent']);
+    assert_same(100.0, $totals['wooden_discount_percent']);
     assert_same(0.0, $totals['additional_discount_amount']);
 
     $sections = IDLM_Quotation_Calculator::parse_sections(array(array('key' => 'living', 'section_name' => 'Living Room')));
     assert_same($sections, invoke_private('IDLM_Quotations', 'parse_sections', array(array(array('key' => 'living', 'section_name' => 'Living Room')))));
+});
+
+idlm_test('quotation exports are revision-only, formula-safe, typed, and capability guarded', static function(): void {
+    idlm_test_login(7, array('sales_executive'), array('idlm_access_leads', 'idlm_view_quotes'));
+    $denied = IDLM_Quotation_Exporter::authorize(1, 1, 'csv', false);
+    assert_true(is_wp_error($denied), 'Downloads require the dedicated quotation download capability.');
+    idlm_test_login(7, array('sales_executive'), array('idlm_access_leads', 'idlm_view_quotes', 'idlm_download_quote_pdf'));
+    assert_true(is_wp_error(IDLM_Quotation_Exporter::authorize(1, 0, 'csv', false)), 'Downloads require an explicit revision ID.');
+
+    $bundle = (object) array(
+        'id' => 41,
+        'lead_id' => 9,
+        'quote_number' => 'Q/2026:000041',
+        'revision' => (object) array(
+            'id' => 71, 'quote_id' => 41, 'revision_number' => 2, 'customer_name' => 'Asha Rao',
+            'project_name' => '=Hidden current-lead value', 'currency_code' => 'INR', 'created_at' => '2026-10-02 10:00:00',
+            'subtotal' => 1200.0, 'wooden_subtotal' => 800.0, 'wooden_discount_amount' => 80.0,
+            'total_before_additional_discount' => 1120.0, 'additional_discount_amount' => 20.0,
+            'taxable_total' => 1100.0, 'cgst_total' => 99.0, 'sgst_total' => 99.0, 'igst_total' => 0.0, 'grand_total' => 1298.0,
+        ),
+        'items' => array(
+            (object) array('section_name' => 'Living', 'item_code' => '=CMD', 'item_name' => 'Cabinet', 'description' => '@unsafe', 'length' => 8.5, 'height' => 7.0, 'quantity' => 2, 'unit' => 'Nos', 'unit_rate' => 600, 'line_subtotal' => 1200, 'row_type' => 'item', 'is_optional' => 0),
+            (object) array('section_name' => 'Living', 'description' => 'Do not export', 'row_type' => 'header', 'is_optional' => 0),
+            (object) array('section_name' => 'Living', 'description' => 'Optional item', 'row_type' => 'item', 'is_optional' => 1),
+        ),
+    );
+    $data = IDLM_Quotation_Exporter::export_data($bundle);
+    assert_count_value(1, $data['line_items']);
+    assert_same('=CMD — Cabinet', $data['line_items'][0]['item_code_name']);
+    assert_same(1200.0, $data['line_items'][0]['line_total']);
+    assert_same(1298.0, $data['summary'][13][1]);
+    assert_same("'=1+1", IDLM_Quotation_Exporter::csv_text('=1+1'));
+    assert_same("' @SUM(A1)", IDLM_Quotation_Exporter::csv_text(' @SUM(A1)'));
+    assert_same('Q-2026-000041-R02-Asha-Rao', IDLM_Quotation_Exporter::filename_stem($bundle));
+    assert_contains('idlm_download_quote_xlsx', IDLM_Quotation_Exporter::export_url(41, 71, 'xlsx'));
+
+    $xlsx = IDLM_Quotation_Exporter::build_xlsx($bundle);
+    assert_false(is_wp_error($xlsx), 'XLSX writer should produce a real OOXML archive.');
+    $zip = new ZipArchive();
+    assert_same(true, $zip->open($xlsx));
+    assert_contains('Line items', (string) $zip->getFromName('xl/workbook.xml'));
+    assert_contains('t="n"><v>1200', (string) $zip->getFromName('xl/worksheets/sheet2.xml'));
+    assert_contains('&apos;=CMD', (string) $zip->getFromName('xl/worksheets/sheet2.xml'));
+    $zip->close();
+    @unlink($xlsx);
+
+    $exporter = file_get_contents(dirname(__DIR__) . '/includes/class-quotation-exporter.php');
+    assert_contains("check_admin_referer('idlm_download_quote_' . \$format", $exporter);
+    assert_contains('absint($bundle->revision->quote_id) !== absint($quote_id)', $exporter);
+    assert_contains('Content-Disposition: attachment;', $exporter);
+    assert_contains('PDF download could not be generated.', $exporter);
+    assert_contains("defaultMediaType', 'print'", $exporter);
+    assert_contains('id="idlm-dompdf-layout"', $exporter);
+    assert_contains('id="idlm-dompdf-columns"', $exporter);
+    assert_contains('@page{margin:10mm}', $exporter);
+    assert_contains('body,body *{font-family:DejaVu Sans,sans-serif!important}', $exporter);
+    assert_contains('display:table!important', $exporter);
+    assert_contains('.idlm-print-cover>.idlm-quotation-cover>table', $exporter);
+    assert_contains('page-break-inside:auto!important', $exporter);
+    assert_contains('img[width="42"]{width:34px!important;height:34px!important', $exporter);
+    assert_contains('td[style*="padding:14px 10px"]{padding:5px 6px!important}', $exporter);
+    assert_contains('.idlm-print-after p,.idlm-print-after li,.idlm-print-after td', $exporter);
+    assert_contains('font-size:9px!important;line-height:1.35!important', $exporter);
+    assert_contains('inline_customer_document_images', $exporter);
+    assert_contains("'/wp-content/uploads/'", $exporter);
+    assert_contains('wp_safe_remote_get', $exporter);
+    assert_contains("'redirection' => 0", $exporter);
+    assert_contains("'reject_unsafe_urls' => true", $exporter);
+    assert_false(false !== strpos($exporter, '$exception->getMessage()'), 'Renderer details must never be exposed.');
+
+    $GLOBALS['idlm_test_remote_response'] = array('response' => array('code' => 200), 'headers' => array('content-type' => 'image/png'), 'body' => 'safe image bytes');
+    $asset_url = 'https://crm.qoakinteriors.com/wp-content/uploads/2026/05/Q-OAK-INTERIORS-Logo.png';
+    $data_uri = invoke_private('IDLM_Quotation_Exporter', 'remote_customer_image_data_uri', array($asset_url, array($asset_url)));
+    assert_same('data:image/png;base64,' . base64_encode('safe image bytes'), $data_uri);
+    assert_same('', invoke_private('IDLM_Quotation_Exporter', 'remote_customer_image_data_uri', array('https://example.test/not-configured.png', array($asset_url))));
+});
+
+idlm_test('quotation bundle rejects a revision owned by a different quote', static function(): void {
+    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 1, 'lead_id' => 7, 'quote_number' => 'Q-1', 'current_revision_id' => 1)));
+    $GLOBALS['wpdb']->seed('idlm_quote_revisions', array(
+        array('id' => 1, 'quote_id' => 1, 'revision_number' => 1),
+        array('id' => 2, 'quote_id' => 2, 'revision_number' => 1),
+    ));
+    assert_same(null, IDLM_Quotation_Repository::get_quote_bundle(1, 2));
 });
 
 idlm_test('quotation repository owns table mapping and legacy aggregate read delegates', static function(): void {
@@ -961,6 +1112,8 @@ idlm_test('quotation repository owns catalogue CRUD, bulk actions, and paginated
 });
 
 idlm_test('quotation repository prepares scoped quotation list filters and propagates catalogue write failures', static function(): void {
+    idlm_test_login(5, array('sales_executive'), array('idlm_access_leads', 'idlm_view_quotes'));
+    update_option('idlm_role_lead_scopes', array('sales_executive' => 'assigned'));
     $GLOBALS['wpdb']->custom_get_var_result = 1;
     $GLOBALS['wpdb']->custom_query_results = array(array(
         'id' => 9,
@@ -979,7 +1132,7 @@ idlm_test('quotation repository prepares scoped quotation list filters and propa
     assert_same(1, IDLM_Quotation_Repository::count_quotations($filters));
     $quotes = IDLM_Quotation_Repository::list_quotations($filters, 2, 50);
     assert_count_value(1, $quotes);
-    assert_contains('q.owner_user_id = 5', $GLOBALS['wpdb']->last_get_results_query);
+    assert_contains('l.assigned_rep_id = 5', $GLOBALS['wpdb']->last_get_results_query);
     assert_contains("q.quote_number LIKE '%Asha%'", $GLOBALS['wpdb']->last_get_results_query);
     assert_contains('q.created_by = 7', $GLOBALS['wpdb']->last_get_results_query);
     assert_contains('q.lead_id = 3', $GLOBALS['wpdb']->last_get_results_query);
@@ -990,11 +1143,15 @@ idlm_test('quotation repository prepares scoped quotation list filters and propa
 });
 
 idlm_test('quotation migration compatibility delegates preserve version markers', static function(): void {
+    $GLOBALS['wpdb']->custom_get_var_result = 0;
+    assert_same(true, IDLM_Quotations::install());
     invoke_private('IDLM_Quotations', 'migrate_legacy_quotes');
     invoke_private('IDLM_Quotations', 'backfill_revision_snapshots_and_sections');
+    IDLM_Quotation_Schema::normalize_revision_lifecycle();
 
     assert_same(IDLM_Quotation_Schema::LEGACY_MIGRATION_VERSION, get_option('idlm_legacy_quote_migration_version'));
     assert_same(IDLM_Quotation_Schema::SNAPSHOT_MIGRATION_VERSION, get_option('idlm_quotation_snapshot_migration_version'));
+    assert_same(IDLM_Quotation_Schema::REVISION_LIFECYCLE_MIGRATION_VERSION, get_option('idlm_quotation_revision_lifecycle_migration_version'));
 });
 
 idlm_test('quotation numbering is yearly, formatted, and monotonically increments', static function(): void {
@@ -1006,24 +1163,24 @@ idlm_test('quotation numbering is yearly, formatted, and monotonically increment
 });
 
 idlm_test('quotation autosave rejects missing capability and object-access mismatches', static function(): void {
-    idlm_test_login(5, array('sales_executive'), array('idlm_view_quotes'));
+    idlm_test_login(5, array('sales_executive'), array('idlm_access_leads', 'idlm_view_quotes'));
     $_POST = array('quote_id' => 1, 'revision_id' => 1, 'lead_id' => 1);
     $response = expect_json_response(static fn() => IDLM_Quotations::ajax_autosave_quote(), false, 403);
     assert_contains('permission', (string) $response->data['message']);
 
-    idlm_test_login(5, array('sales_executive'), array('idlm_view_quotes', 'idlm_edit_quote_drafts'));
+    idlm_test_login(5, array('sales_executive'), array('idlm_access_leads', 'idlm_view_quotes', 'idlm_edit_quote_drafts', 'idlm_create_quote_revisions'));
     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 9))));
-    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 1, 'lead_id' => 1, 'current_revision_id' => 1)));
-    $GLOBALS['wpdb']->seed('idlm_quote_revisions', array(array('id' => 1, 'quote_id' => 1, 'currency_code' => 'INR')));
+    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 1, 'lead_id' => 1, 'current_revision_id' => 1, 'status' => 'Draft')));
+    $GLOBALS['wpdb']->seed('idlm_quote_revisions', array(array('id' => 1, 'quote_id' => 1, 'currency_code' => 'INR', 'status' => 'Draft')));
     $response = expect_json_response(static fn() => IDLM_Quotations::ajax_autosave_quote(), false, 409);
     assert_contains('current quotation revision', (string) $response->data['message']);
 });
 
 idlm_test('quotation autosave stores a scoped working copy with server-calculated totals', static function(): void {
-    idlm_test_login(5, array('sales_executive'), array('idlm_view_quotes', 'idlm_edit_quote_drafts'));
+    idlm_test_login(5, array('sales_executive'), array('idlm_access_leads', 'idlm_view_quotes', 'idlm_edit_quote_drafts', 'idlm_create_quote_revisions'));
     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 5))));
-    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 1, 'lead_id' => 1, 'current_revision_id' => 1)));
-    $GLOBALS['wpdb']->seed('idlm_quote_revisions', array(array('id' => 1, 'quote_id' => 1, 'currency_code' => 'INR', 'customer_intro' => '')));
+    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 1, 'lead_id' => 1, 'current_revision_id' => 1, 'status' => 'Draft')));
+    $GLOBALS['wpdb']->seed('idlm_quote_revisions', array(array('id' => 1, 'quote_id' => 1, 'currency_code' => 'INR', 'customer_intro' => '', 'status' => 'Draft')));
     $_POST = array(
         'quote_id' => 1,
         'revision_id' => 1,
@@ -1038,9 +1195,34 @@ idlm_test('quotation autosave stores a scoped working copy with server-calculate
     assert_false(isset($copy['title']));
 });
 
+idlm_test('quotation editor retains revision remarks and exposes Width throughout the quotation UI', static function(): void {
+    $root = dirname(__DIR__) . '/';
+    $controller = (string) file_get_contents($root . 'includes/class-quotation-controller.php');
+    $renderer = (string) file_get_contents($root . 'includes/class-quotation-renderer.php');
+    $script = (string) file_get_contents($root . 'assets/js/quotations.js');
+
+    assert_contains("\$revision_reason = sanitize_text_field", $controller);
+    assert_contains("IDLM_Quotation_Repository::next_revision_number(\$quote_id)", $controller);
+    assert_contains("IDLM_Quotation_Repository::lock_quote(\$quote_id)", $controller);
+    assert_contains("IDLM_Quotation_Policy::is_editable_draft", $controller);
+    assert_contains("'revision_reason' => \$revision_reason ?: 'Initial proposal'", $controller);
+    assert_contains('type="hidden" name="revision_reason"', $renderer);
+    assert_contains('<th>Width</th><th>Height</th>', $renderer);
+    assert_contains('data-label="Width"', $renderer);
+    assert_contains('step="0.01" name="<?php echo esc_attr($name); ?>[length]"', $renderer);
+    assert_contains('step="0.01" name="<?php echo esc_attr($name); ?>[height]"', $renderer);
+    assert_contains('step="0.01" name="<?php echo esc_attr($name); ?>[quantity]"', $renderer);
+    assert_contains('step="0.01" name="<?php echo esc_attr($name); ?>[unit_rate]"', $renderer);
+    assert_contains('function ensureRevisionReason(event)', $script);
+    assert_contains("window.IDLMDialog.prompt({", $script);
+    assert_contains('if (event.defaultPrevented) { return; }', $script);
+    assert_false(false !== strpos($controller, 'handle_create_revision()'));
+    assert_contains('normalize_revision_lifecycle', (string) file_get_contents($root . 'includes/class-quotation-schema.php'));
+});
+
 idlm_test('core schema baseline declares required lifecycle columns, defaults, and indexes', static function(): void {
     IDLM_DB::create_tables();
-    assert_count_value(10, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(13, $GLOBALS['wpdb']->dbdelta);
     $leads_sql = $GLOBALS['wpdb']->dbdelta[0];
     assert_contains("handoff_status varchar(30) DEFAULT 'not_ready'", $leads_sql);
     assert_contains('qualified_at datetime DEFAULT NULL', $leads_sql);
@@ -1087,7 +1269,7 @@ idlm_test('core migration upgrades an older schema and records the independent s
         'idlm_attribution_touchpoint_backfill_version' => '1.0.0',
     );
     IDLM_DB::init();
-    assert_count_value(10, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(13, $GLOBALS['wpdb']->dbdelta);
     assert_same(IDLM_DB_VERSION, get_option('idlm_schema_version'));
 });
 
@@ -1104,12 +1286,13 @@ idlm_test('core migration reconciles the state-event amount column from schema 1
 
     IDLM_DB::init();
 
-    assert_count_value(10, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(13, $GLOBALS['wpdb']->dbdelta);
     assert_contains('amount decimal(14,2) DEFAULT NULL', $GLOBALS['wpdb']->dbdelta[2]);
-    assert_same('1.3.4', get_option('idlm_schema_version'));
+    assert_same(IDLM_DB_VERSION, get_option('idlm_schema_version'));
 });
 
 idlm_test('quotation installer declares transactional persistence tables and records schema state', static function(): void {
+    $GLOBALS['wpdb']->custom_get_var_result = 0;
     $GLOBALS['idlm_test_options']['idlm_legacy_quote_migration_version'] = '1.1.0';
     $GLOBALS['idlm_test_options']['idlm_quotation_snapshot_migration_version'] = '1.1.0';
     IDLM_Quotations::install();
@@ -1121,15 +1304,15 @@ idlm_test('quotation installer declares transactional persistence tables and rec
     assert_same(IDLM_Quotations::SCHEMA_VERSION, get_option('idlm_quotation_schema_version'));
 });
 
-idlm_test('scheduler registers and creates both fallback cron jobs idempotently', static function(): void {
+idlm_test('scheduler registers and creates fallback jobs and durable outbox sweep idempotently', static function(): void {
     IDLM_Scheduler::init();
     $hooks = array_column($GLOBALS['idlm_test_hooks'], 'hook');
     assert_true(in_array('idlm_daily_audience_sync_cron', $hooks, true));
     assert_true(in_array('idlm_hourly_assignment_fallback_cron', $hooks, true));
     IDLM_Scheduler::setup_schedules();
-    assert_count_value(2, $GLOBALS['idlm_test_schedules']);
+    assert_count_value(4, $GLOBALS['idlm_test_schedules']);
     IDLM_Scheduler::setup_schedules();
-    assert_count_value(2, $GLOBALS['idlm_test_schedules']);
+    assert_count_value(4, $GLOBALS['idlm_test_schedules']);
 });
 
 idlm_test('state registry keeps stable keys separate from persisted labels', static function(): void {
@@ -1193,7 +1376,9 @@ idlm_test('white-label runtime surfaces do not retain fixed default accent color
     $dashboard = (string) file_get_contents($root . '/assets/js/dashboard.js');
     $kanban = (string) file_get_contents($root . '/assets/js/kanban.js');
     $lead_markup = (string) file_get_contents($root . '/includes/class-admin-ajax.php')
-        . (string) file_get_contents($root . '/includes/class-admin-lead-reads.php');
+        . (string) file_get_contents($root . '/includes/class-admin-lead-reads.php')
+        . (string) file_get_contents($root . '/includes/class-admin-collection-reads.php')
+        . (string) file_get_contents($root . '/includes/class-admin-task-controller.php');
 
     assert_false((bool) preg_match('/(?:201\s*,\s*150\s*,\s*68|225\s*,\s*182\s*,\s*109|#e1b66d)/i', $workspace . $dashboard . $kanban . $lead_markup));
     assert_false(false !== strpos($lead_markup, 'var(--gold)'));
@@ -1252,7 +1437,7 @@ idlm_test('routing state installer declares an atomic keyed counter table', stat
     IDLM_Routing_State::install();
     assert_count_value(1, $GLOBALS['wpdb']->dbdelta);
     assert_contains('PRIMARY KEY  (state_key)', $GLOBALS['wpdb']->dbdelta[0]);
-    assert_same('1.0.0', get_option('idlm_routing_schema_version'));
+    assert_same(IDLM_Routing_State::VERSION, get_option('idlm_routing_schema_version'));
 });
 
 idlm_test('retention redacts nested credentials and contact PII', static function(): void {
@@ -1274,10 +1459,10 @@ idlm_test('audience audit payloads are stored as fixed-size redacted summaries',
     assert_false(false !== strpos(wp_json_encode($summary), 'secret'));
 });
 
-idlm_test('diagnostic audience and CAPI logs expire after seven days', static function(): void {
+idlm_test('diagnostic activity expires in bounded batches while CAPI uses configured retention', static function(): void {
     $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-data-retention.php');
 
-    foreach (array('DIAGNOSTIC_LOG_RETENTION_VERSION', 'DIAGNOSTIC_LOG_RETENTION_DAYS = 7', "'idlm_diagnostic_log_retention_version'", "'audience_sync', 'capi_sync', 'capi_queue', 'capi_abort'", 'idlm_lead_activity_log', 'idlm_capi_logs', 'diagnostic_log_retention') as $contract) {
+    foreach (array('DIAGNOSTIC_LOG_RETENTION_VERSION', 'DIAGNOSTIC_LOG_RETENTION_DAYS = 7', 'LIMIT %d', 'save_status', 'CONTINUE_HOOK', "'audience_sync', 'capi_sync', 'capi_queue', 'capi_abort'", 'idlm_lead_activity_log', 'idlm_capi_logs', 'diagnostic_log_retention') as $contract) {
         assert_contains($contract, $source);
     }
 });
@@ -1296,6 +1481,9 @@ idlm_test('transactional deletion removes a lead and every core dependent row', 
 idlm_test('quotation print source is semantic and has no DOM rewrite script', static function(): void {
     $source = file_get_contents(dirname(__DIR__) . '/includes/class-quotation-renderer.php');
     assert_contains('idlm-print-document-head', $source);
+    assert_contains('<section class="idlm-print-customer-details"><h2>Customer Details</h2><table>', $source);
+    assert_contains('<th>Client Name</th><th>Phone Number</th><th>Email ID</th><th>Property Name</th><th>Location</th>', $source);
+    assert_false(false !== strpos($source, 'Company contact information can be added in the quotation cover page or footer settings.'));
     assert_contains('Section-wise subtotal before discount', $source);
     assert_false(false !== strpos($source, 'idlm-print-additional-notes'));
     assert_false(false !== strpos($source, 'document.querySelector'));
@@ -1311,6 +1499,9 @@ idlm_test('quotation renderer accepts valid list dates and rejects malformed dat
 idlm_test('performance dataset profiles match the approved Phase 0 scale envelope', static function(): void {
     $profiles = IDLM_Performance_Dataset_Generator::profiles();
     assert_same(1000, $profiles['small']['leads']);
+    assert_same(100000, $profiles['team-stress']['leads']);
+    assert_same('idlm-perf:team-stress-team-20261022', IDLM_Performance_Dataset_Generator::marker(IDLM_Performance_Dataset_Generator::run_id('team-stress', 'team-20261022')));
+    assert_same(50000, $profiles['expected']['leads']);
     assert_same(250000, $profiles['maximum']['leads']);
     assert_same(2000000, $profiles['maximum']['activities']);
     assert_same(500000, $profiles['maximum']['tasks']);
@@ -1546,9 +1737,38 @@ idlm_test('operational health marks critical gates and renders the administrator
 
 require_once __DIR__ . '/admin-refactor-contracts.php';
 require_once __DIR__ . '/ui-regression-contracts.php';
+require_once __DIR__ . '/quotation-authorization-contracts.php';
+require_once __DIR__ . '/lead-read-authorization-contracts.php';
+require_once __DIR__ . '/mcp-query-contracts.php';
+require_once __DIR__ . '/lead-csv-contracts.php';
 require_once __DIR__ . '/release-contracts.php';
+require_once __DIR__ . '/runtime-support-contracts.php';
 require_once __DIR__ . '/high-priority-contracts.php';
+require_once __DIR__ . '/interakt-dispatch-contracts.php';
+require_once __DIR__ . '/capi-retry-contracts.php';
+require_once __DIR__ . '/capi-retention-contracts.php';
+require_once __DIR__ . '/whatsapp-inbound-contracts.php';
+require_once __DIR__ . '/lead-connector-contracts.php';
+require_once __DIR__ . '/google-audience-contracts.php';
+require_once __DIR__ . '/audience-retry-contracts.php';
+require_once __DIR__ . '/secret-store-contracts.php';
+require_once __DIR__ . '/attribution-opt-in-contracts.php';
 require_once __DIR__ . '/dashboard-contracts.php';
+require_once __DIR__ . '/schema-migration-contracts.php';
+require_once __DIR__ . '/lifecycle-persistence-contracts.php';
+require_once __DIR__ . '/task-plan-repair-contracts.php';
+require_once __DIR__ . '/assignment-eligibility-contracts.php';
+require_once __DIR__ . '/capacity-contracts.php';
+require_once __DIR__ . '/identity-review-contracts.php';
+require_once __DIR__ . '/bounded-work-contracts.php';
+require_once __DIR__ . '/state-policy-contracts.php';
+require_once __DIR__ . '/quotation-migration-contracts.php';
+require_once __DIR__ . '/quotation-classification-contracts.php';
+require_once __DIR__ . '/quotation-history-contracts.php';
+require_once __DIR__ . '/quotation-engine-contracts.php';
+require_once __DIR__ . '/quotation-numeric-contracts.php';
+require_once __DIR__ . '/quotation-document-contracts.php';
+require_once __DIR__ . '/quotation-paper-contracts.php';
 
 $passed = 0;
 $failed = 0;

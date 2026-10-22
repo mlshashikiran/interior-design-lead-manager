@@ -33,10 +33,14 @@ class IDLM_Admin_Logs_Renderer {
                 WHERE " . implode(' AND ', $where) . '
                 ORDER BY c.id DESC LIMIT 50';
         if ($values) {
+            // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0044: render_capi(): manage_options and dedicated AJAX nonce guards; table suffix/status/date maps are fixed; search/date/id values prepared; bounded diagnostic rows reflect current retry state.
             $sql = $wpdb->prepare($sql, $values);
+            // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
         }
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter -- REL007-SQL-0045: render_capi(): manage_options and dedicated AJAX nonce guards; table suffix/status/date maps are fixed; search/date/id values prepared; bounded diagnostic rows reflect current retry state.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
         $logs = $wpdb->get_results($sql);
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter
 
         IDLM_View::display('admin/logs/capi.php', array(
             'logs'        => is_array($logs) ? $logs : array(),
@@ -67,10 +71,14 @@ class IDLM_Admin_Logs_Renderer {
                 WHERE " . implode(' AND ', $where) . '
                 ORDER BY id DESC LIMIT 50';
         if ($values) {
+            // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0046: render_audience(): manage_options and dedicated AJAX nonce guards; table suffix/status/date maps are fixed; search/date/id values prepared; bounded diagnostic rows reflect current retry state.
             $sql = $wpdb->prepare($sql, $values);
+            // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
         }
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter -- REL007-SQL-0047: render_audience(): manage_options and dedicated AJAX nonce guards; table suffix/status/date maps are fixed; search/date/id values prepared; bounded diagnostic rows reflect current retry state.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
         $logs = $wpdb->get_results($sql);
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter
 
         IDLM_View::display('admin/logs/audience.php', array(
             'logs'    => is_array($logs) ? $logs : array(),
@@ -110,9 +118,11 @@ class IDLM_Admin_Logs_Renderer {
             wp_send_json_error(array('message' => 'Invalid log type.'), 400);
         }
         $table = $wpdb->prefix . $table_suffix;
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0048: ajax_get_log_payload(): manage_options and dedicated AJAX nonce guards; table suffix/status/date maps are fixed; search/date/id values prepared; bounded diagnostic rows reflect current retry state.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $log = $wpdb->get_row($wpdb->prepare(
             "SELECT payload, response FROM {$table} WHERE id = %d",
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $log_id
         ));
         if (!$log) {
@@ -127,16 +137,24 @@ class IDLM_Admin_Logs_Renderer {
 
     /** Read and validate the shared log filters. */
     private static function request_filters() {
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0061: request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields.
         $status = isset($_GET['log_status']) ? sanitize_key(wp_unslash($_GET['log_status'])) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         if (!in_array($status, array('', 'success', 'failed'), true)) {
             $status = '';
         }
 
         return array(
+            // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0062: request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields.
             'search'    => isset($_GET['log_search']) ? sanitize_text_field(wp_unslash($_GET['log_search'])) : '',
+            // phpcs:enable WordPress.Security.NonceVerification.Recommended
             'status'    => $status,
+            // phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0063: request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields.
             'date_from' => self::valid_date(isset($_GET['log_date_from']) ? wp_unslash($_GET['log_date_from']) : ''),
+            // phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            // phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0064: request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields.
             'date_to'   => self::valid_date(isset($_GET['log_date_to']) ? wp_unslash($_GET['log_date_to']) : ''),
+            // phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         );
     }
 
@@ -159,7 +177,8 @@ class IDLM_Admin_Logs_Renderer {
 
     /** Accept only real ISO calendar dates from date inputs. */
     private static function valid_date($date) {
-        $date = sanitize_text_field((string) $date);
+        if (!is_string($date)) { return ''; }
+        $date = sanitize_text_field($date);
         if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $parts)) {
             return '';
         }

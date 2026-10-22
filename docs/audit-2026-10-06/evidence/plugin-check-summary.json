@@ -1,0 +1,42 @@
+{
+  "author": "Shashi",
+  "raw_format": "FILE header followed by one JSON array per file",
+  "diagnostic_count": 1558,
+  "by_type": {
+    "ERROR": 107,
+    "WARNING": 1451
+  },
+  "by_code": {
+    "hidden_files": 1,
+    "WordPress.Security.NonceVerification.Recommended": 54,
+    "WordPress.Security.ValidatedSanitizedInput.MissingUnslash": 16,
+    "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized": 41,
+    "WordPress.WP.AlternativeFunctions.file_system_operations_fclose": 8,
+    "WordPress.WP.AlternativeFunctions.file_system_operations_readfile": 1,
+    "WordPress.WP.AlternativeFunctions.unlink_unlink": 2,
+    "WordPress.Security.EscapeOutput.OutputNotEscaped": 2,
+    "WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet": 1,
+    "WordPress.DB.DirectDatabaseQuery.DirectQuery": 239,
+    "WordPress.DB.DirectDatabaseQuery.NoCaching": 209,
+    "PluginCheck.Security.DirectDB.UnescapedDBParameter": 126,
+    "WordPress.DB.PreparedSQL.InterpolatedNotPrepared": 322,
+    "WordPress.DB.PreparedSQLPlaceholders.LikeWildcardsInQuery": 2,
+    "WordPress.DB.PreparedSQL.NotPrepared": 62,
+    "WordPress.WP.AlternativeFunctions.file_system_operations_fopen": 1,
+    "WordPress.WP.AlternativeFunctions.file_system_operations_is_writable": 1,
+    "WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare": 11,
+    "WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber": 3,
+    "Squiz.PHP.DiscouragedFunctions.Discouraged": 4,
+    "PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors": 1,
+    "PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall": 2,
+    "WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting": 1,
+    "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound": 401,
+    "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 2,
+    "unexpected_markdown_file": 1,
+    "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound": 1,
+    "WordPress.Security.NonceVerification.Missing": 42,
+    "readme_parser_warnings_trimmed_section_changelog": 1
+  },
+  "file_count": 63,
+  "interpretation": "Static diagnostics require triage; counts are not confirmed vulnerability counts."
+}

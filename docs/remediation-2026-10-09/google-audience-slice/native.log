@@ -1,0 +1,6 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T07-N-INT007 disabled feed returns 404 before contact query
+PASS T08-N-INT007 manual scheduled sync skips disabled rules and retains pending queue
+PASS T07-N-INT007 explicit rules take precedence over legacy and current toggles
+
+4 passed, 0 failed

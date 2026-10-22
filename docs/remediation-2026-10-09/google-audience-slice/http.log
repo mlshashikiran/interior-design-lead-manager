@@ -1,0 +1,9 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T07-H-INT007-invalid-missing-query-and-rotated-credentials-deny
+PASS T08-H-INT007-enabled-header-basic-ID-aliases-preserve-filtered-CSV
+PASS T07-H-INT007-disable-reenable-and-removal-are-live-on-both-routes
+PASS T08-H-INT007-disabled-duplicate-cannot-shadow-first-enabled-filters
+PASS T07-H-INT007-legacy-only-when-absent-explicit-empty-malformed-and-disabled-deny
+PASS T07-H-INT007-malformed-missing-unknown-and-other-platform-list-deny
+PASS T07-H-INT007-existing-rate-limit-still-denies-before-CSV
+7 passed, 0 failed

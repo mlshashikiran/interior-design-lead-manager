@@ -1,0 +1,13 @@
+{
+  "author": "Shashi",
+  "owned_mysql_pid": 94586,
+  "test_database_inventory_before_shutdown": [],
+  "socket_removed": true,
+  "server_log_confirmed_shutdown": true,
+  "harness_managed_databases_and_content_removed": true,
+  "browser_tabs_closed": true,
+  "viewport_reset": true,
+  "configured_site_data_touched": false,
+  "production_deployed": false,
+  "owned_temporary_datadir_removed": true
+}

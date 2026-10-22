@@ -1,0 +1,6 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T01-T19-H-REL003 fresh sign-in workspace and checkbox default to no credit
+PASS T20-H-REL003 upgrade retains saved choices and partial branding stays off
+PASS T19-T20-H-REL003 authorized opt-in opt-out persists and controls both public views
+PASS T01-T20-H-REL003 denied actor and nonce cannot change public credit
+4 passed, 0 failed

@@ -1,0 +1,75 @@
+{
+    "author": "Shashi",
+    "profile": {
+        "leads_added": 5000,
+        "tasks": 20000,
+        "messages": 25000
+    },
+    "measurements": {
+        "task_page_ms": 141.2789821624756,
+        "whatsapp_count_ms": 22.242069244384766,
+        "php_allocated_delta_bytes": 0,
+        "task_cards": 50
+    },
+    "plans": [
+        [
+            {
+                "select_type": "PRIMARY",
+                "type": "ALL",
+                "possible_keys": null,
+                "key": null,
+                "rows": "10000",
+                "filtered": "100.00",
+                "Extra": "Using where; Using temporary; Using filesort"
+            },
+            {
+                "select_type": "PRIMARY",
+                "type": "eq_ref",
+                "possible_keys": "PRIMARY,lead_qualification_cycle,lead_id,status,lead_status_due",
+                "key": "PRIMARY",
+                "rows": "1",
+                "filtered": "50.00",
+                "Extra": "Using where"
+            },
+            {
+                "select_type": "PRIMARY",
+                "type": "eq_ref",
+                "possible_keys": "PRIMARY,stage",
+                "key": "PRIMARY",
+                "rows": "1",
+                "filtered": "99.98",
+                "Extra": "Using where"
+            },
+            {
+                "select_type": "DERIVED",
+                "type": "ref",
+                "possible_keys": "status",
+                "key": "status",
+                "rows": "10000",
+                "filtered": "100.00",
+                "Extra": "Using temporary"
+            }
+        ],
+        [
+            {
+                "select_type": "SIMPLE",
+                "type": "ALL",
+                "possible_keys": "PRIMARY",
+                "key": null,
+                "rows": "5123",
+                "filtered": "10.00",
+                "Extra": "Using where"
+            },
+            {
+                "select_type": "SIMPLE",
+                "type": "ref",
+                "possible_keys": "PRIMARY,lead_id,activity_lead_id,lead_activity_id",
+                "key": "lead_id",
+                "rows": "1",
+                "filtered": "25.00",
+                "Extra": "Using index condition; Using where"
+            }
+        ]
+    ],
+    "limits": "Single local sample; not p95\/p99, shared-traffic or expected\/maximum production qualification."
+}

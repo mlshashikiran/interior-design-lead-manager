@@ -1,0 +1,53 @@
+{
+    "environment": {
+        "database": "idlm_test_core_native_20261006",
+        "PHP": "8.4.14",
+        "WordPress": "7.1.2",
+        "external_services": "blocked",
+        "uploads": "isolated temp directory"
+    },
+    "results": [
+        {
+            "scenario": "CORE-N01 reassigned lead drawer denied former owner",
+            "status": "PASS",
+            "expected": false,
+            "actual": false
+        },
+        {
+            "scenario": "CORE-N02 former owner queue contains no reassigned lead PII",
+            "status": "FAIL",
+            "expected": 0,
+            "actual": 1
+        },
+        {
+            "scenario": "CORE-N03 failed event write rejects lifecycle update",
+            "status": "FAIL",
+            "expected": false,
+            "actual": true
+        },
+        {
+            "scenario": "CORE-N04 failed event write rolls stage back",
+            "status": "FAIL",
+            "expected": "New",
+            "actual": "Contacted"
+        },
+        {
+            "scenario": "CORE-N05 reset completes",
+            "status": "PASS",
+            "expected": false,
+            "actual": false
+        },
+        {
+            "scenario": "CORE-N06 reset clears identity-review PII",
+            "status": "FAIL",
+            "expected": 0,
+            "actual": 1
+        },
+        {
+            "scenario": "CORE-N07 unassigned fallback respects one-lead capacity",
+            "status": "FAIL",
+            "expected": 1,
+            "actual": 3
+        }
+    ]
+}

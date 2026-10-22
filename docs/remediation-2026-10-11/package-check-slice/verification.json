@@ -1,0 +1,107 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-11",
+  "finding": "REL-007",
+  "candidate": "1.102.77",
+  "status": "IN PROGRESS, not IMPLEMENTED or CLOSED",
+  "base_revision": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "runtime_semantics_changed": false,
+  "schema_changed": false,
+  "production_release_approved": false,
+  "environment": {
+    "wordpress": "6.6",
+    "php": "8.4.14",
+    "mysql": "8.4.0",
+    "wp_cli": "2.12.0",
+    "plugin_check": "2.1.0"
+  },
+  "artifact": {
+    "artifact": "interior-design-lead-manager-1.102.77.zip",
+    "manifest": "interior-design-lead-manager-1.102.77.manifest.json",
+    "checksum_file": "interior-design-lead-manager-1.102.77.sha256",
+    "sha256": "56155fadcdd22181633f70cc2653dca690948abd7ffcc64372f87c101722ba71",
+    "size_bytes": 5196888,
+    "file_count": 450,
+    "inspection_valid": true
+  },
+  "checks": [
+    {
+      "id": "T22-A-REL007-release-contracts",
+      "status": "PASS",
+      "actual": "14 passed, 0 failed",
+      "evidence": "release-contracts.txt"
+    },
+    {
+      "id": "T22-A-REL007-fast-contracts",
+      "status": "PASS with existing fixture warnings",
+      "actual": "363 passed, 0 failed",
+      "evidence": "fast-contracts.txt",
+      "limits": "Unrelated fixtures emitted six missing num_rooms and one missing phone warning; output not claimed warning-free."
+    },
+    {
+      "id": "T22-A-REL007-inventory",
+      "status": "PASS",
+      "actual": "450 files match source; five local files removed; remaining dependency/font bytes unchanged",
+      "evidence": "inventory-comparison.json"
+    },
+    {
+      "id": "T22-A-REL007-official-static",
+      "status": "FAIL diagnostics retained",
+      "actual": {
+        "WARNING": 2032,
+        "ERROR": 138
+      },
+      "runner_exit_code": 1,
+      "evidence": "final/plugin-check-summary.json"
+    },
+    {
+      "id": "T22-A-REL007-triage",
+      "status": "INCOMPLETE",
+      "actual": {
+        "REVIEW_REQUIRED": 1595,
+        "JUSTIFICATION_RECORDED": 574,
+        "RELEASE_CHANNEL_LIMITATION": 1
+      },
+      "evidence": "diagnostic-triage.json"
+    },
+    {
+      "id": "T22-A-REL007-promotion-negative",
+      "status": "PASS expected rejection",
+      "actual": "Dirty source and absent matching CI rejected",
+      "evidence": "promotion-rejection.stderr.txt"
+    },
+    {
+      "id": "REL007-PHP-lint",
+      "status": "PASS",
+      "actual": "7 changed PHP inputs",
+      "evidence": "php-lint.json"
+    },
+    {
+      "id": "T22-A-REL007-workflow",
+      "status": "PASS local parse/inspection; remote NOT RUN",
+      "evidence": "workflow-check.json"
+    }
+  ],
+  "backlog_counts": {
+    "IMPLEMENTED": 42,
+    "IN PROGRESS": 2
+  },
+  "cleanup": {
+    "remaining_disposable_databases": [],
+    "fixture_configuration_removed": true,
+    "owned_content_removed_by_finally": true,
+    "temporary_mysql_stopped_and_data_removed": true,
+    "configured_site_mutated": false,
+    "provider_or_mail_recipient_contacted": false,
+    "retained": "Temporary downloaded core/checker and baseline/final rehearsal archives; repository evidence"
+  },
+  "limits": [
+    "1595 diagnostics still require source review; no false-positive or safety acceptance claimed",
+    "Current static CI gate intentionally fails; no remote CI executed",
+    "No runtime Plugin Check or full vendor scan",
+    "No new CRM/native/HTTP/browser/upgrade qualification for this tooling/comment-only slice",
+    "Dirty/uncommitted candidate; no matching exact CI/final artifact/release approval"
+  ],
+  "next": "Continue REL-007 query constructors and request validation; REL-001 remains prerequisite-blocked",
+  "no_commit_push_tag_deployment": true
+}

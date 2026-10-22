@@ -1,0 +1,19 @@
+{
+  "baseline-fast.log": "c5615de27cacd81fd8964b5e91b5a54fdd6a166b7718a5b397f403508ef18f5d",
+  "baseline-hashes.json": "6c5abba7389dc6d0a459b0f9d7a8de4f3659a1e298f7eb3fd591091e33fd5c33",
+  "browser-php-diagnostics.log": "ef28769fb8dd6d450ead2db8fd3da047bad9f882015a78a02f8635ac9ee62e71",
+  "browser-verification.json": "54b85cbb8f43dbedddc1367d1baa89503a34157c4f40a910cbd5d96354f81f4f",
+  "changed-php-files.json": "1c2b361c7ff23c0840026b724f31ec72a047618ba3bc8d9886f9d5eca30290dc",
+  "cleanup.json": "7d899f26cb636150a15e28fa51a37f2c46d9427d67d622c65f3bbdfa1729814a",
+  "diff-check.log": "9783e98677846f3b2ab0556b2a173bf205249612fcbab028769b45cf911538ca",
+  "fast-final.log": "5852dce9fb74fb7e750710d0fe698d093665321355f914f27a5000ed8ba0ce39",
+  "graph-refresh.json": "ec54f695d461e2358f25725598712c2db4df07d06014164062af3099e64e6043",
+  "http-final-clean.log": "19b006e50c90c04643e1a0df450a0f97b08040e018b40822ad55d2ab56bd8d45",
+  "http-final.log": "8b5aa0b2b8320fc7cb38dd31ec8fc33047df0061fe90778af0affe0bdcff662a",
+  "http-focused.log": "c143334bdc1c2f98784e9863141f73e998a62474ef2465f5c1d5acdd89c4e7d8",
+  "mobile-default-off.jpg": "6cd4556f701c4b0110a12ededc22c76643535adc9c879bbaac250d35af516e4e",
+  "php-lint.log": "f177dee975532ad148a97b4db319c9409a548b495ba7c2eeddd6c73ee40e4977",
+  "source-hashes.json": "e50e4919c775844edd6ecef9e197fabc1b64731be88611a8cc39e312c5162f3d",
+  "verification.json": "d9b6823be82f78e8b2b8e8dd8c893a48000f8f222926f8d9dcc5c90eefd1aa03",
+  "warning-comparison.json": "7d5d57befc242af5af667ad3db73c51445380ceac80c3df78a5d8f714340f73e"
+}

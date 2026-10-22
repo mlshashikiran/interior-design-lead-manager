@@ -1,0 +1,21 @@
+PASS INT-S01: Direct forbidden table is rejected
+PASS INT-S02: Forbidden comma table following JOIN is rejected | {"error":"Query rejected: Unsupported trailing syntax or table expression."}
+PASS INT-S03: MCP denies WordPress authentication columns
+PASS INT-S04: Emergency-disabled engine rejects queries
+PHP Fatal error:  Uncaught Error: Call to undefined method IDLM_Audit_Restore_DB::suppress_errors() in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-private-files.php:49
+Stack trace:
+#0 /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-private-files.php(462): IDLM_Private_Files::ready()
+#1 /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-backup.php(155): IDLM_Private_Files::restore_safe(Array)
+#2 [internal function]: IDLM_Backup::restore_payload(Array)
+#3 /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/audit-integration-security.php(58): ReflectionMethod->invoke(NULL, Array)
+#4 {main}
+  thrown in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-private-files.php on line 49
+
+Fatal error: Uncaught Error: Call to undefined method IDLM_Audit_Restore_DB::suppress_errors() in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-private-files.php:49
+Stack trace:
+#0 /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-private-files.php(462): IDLM_Private_Files::ready()
+#1 /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-backup.php(155): IDLM_Private_Files::restore_safe(Array)
+#2 [internal function]: IDLM_Backup::restore_payload(Array)
+#3 /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/audit-integration-security.php(58): ReflectionMethod->invoke(NULL, Array)
+#4 {main}
+  thrown in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-private-files.php on line 49

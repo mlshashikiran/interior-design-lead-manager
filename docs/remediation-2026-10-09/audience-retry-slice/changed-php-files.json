@@ -1,0 +1,23 @@
+[
+  "includes/class-audiences.php",
+  "includes/class-admin-ajax.php",
+  "includes/class-db.php",
+  "includes/class-scheduler.php",
+  "includes/class-backup.php",
+  "includes/class-lead-deletion-service.php",
+  "interior-design-lead-manager.php",
+  "tests/bootstrap.php",
+  "tests/run.php",
+  "tests/release-contracts.php",
+  "tests/release/class-release-artifact.php",
+  "tests/integration/run.php",
+  "tests/integration/worker.php",
+  "tests/integration/quotation-http.php",
+  "tests/integration/http-router.php",
+  "templates/admin/leads.php",
+  "templates/admin/settings/sync-reminders.php",
+  "includes/class-audience-dispatch.php",
+  "tests/audience-retry-contracts.php",
+  "tests/integration/audience-retry-contracts.php",
+  "tests/integration/audience-retry-http-cases.php"
+]

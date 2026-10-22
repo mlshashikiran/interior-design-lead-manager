@@ -1,0 +1,8 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+FAIL T07-T08-H-INT009 nonce object access and admin-only dispatch deny before mutation: Access denial changed CRM rows
+PASS T08-H-INT009 provider rejection is retained and selected retry excludes unrelated contacts
+PASS T08-H-INT009 duplicate after queue and filter mismatch are excluded at dispatch
+PASS T08-T14-H-INT009 partial destinations retry only the failed destination
+PASS T08-T14-H-INT009 failed audit write leaves unknown outcome that cannot be reselected into resend
+FAIL T08-H-INT009 Google mapping and shared queue controls are explicit: Shared queue removal absent in /crm-workspace
+4 passed, 2 failed

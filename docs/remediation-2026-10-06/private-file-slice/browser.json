@@ -1,0 +1,44 @@
+{
+  "author": "Shashi",
+  "surface": "Codex in-app browser",
+  "fixture": "isolated idlm_test_40067_fbe53a6e, http://127.0.0.1:63272",
+  "checks": [
+    {
+      "id": "T13-B-settings-desktop",
+      "viewport": [
+        1280,
+        900
+      ],
+      "scrollWidth": 1280,
+      "status": "PASS",
+      "evidence": "Actual IDLM_Admin_Settings_Renderer Backup & restore tab shows private-file exclusions, full-database recovery and labeled file/confirmation controls; screenshot visually inspected."
+    },
+    {
+      "id": "T13-B-settings-mobile",
+      "viewport": [
+        390,
+        844
+      ],
+      "scrollWidth": 384,
+      "status": "PASS",
+      "evidence": "Copy wraps, controls remain inside viewport; no document horizontal overflow; existing tabs scroll horizontally; screenshot visually inspected."
+    },
+    {
+      "id": "T13-B-authorized-image",
+      "status": "PASS",
+      "evidence": "Authenticated administrator navigated protected attachment 11; browser image complete true, naturalWidth/naturalHeight 1x1."
+    },
+    {
+      "id": "T13-B-foreign-download",
+      "status": "PASS",
+      "evidence": "Signed in fixture_other; same attachment URL renders generic File unavailable only."
+    }
+  ],
+  "cleanup": "Viewport reset, temporary tab closed, held server stopped and fixture removed",
+  "limits": [
+    "No full drawer file-upload browser exercise",
+    "PDF viewer engines not run",
+    "Other browser engines not run"
+  ],
+  "screenshots": "Rendered in tool transcript and visually inspected; no persisted screenshot file"
+}

@@ -1,0 +1,7 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T03-N-CORE013-stage and supplied-quality validation matrix
+PASS T04-N-CORE013-custom stage and terminal reversal cleanup preserve events
+PASS T17-N-CORE013-historical repair has distinct idempotent quality rules
+PASS T04-N-CORE013-drawer options share registry and hide administrator override from pre-sales
+
+5 passed, 0 failed

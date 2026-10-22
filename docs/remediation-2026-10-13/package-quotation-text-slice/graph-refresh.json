@@ -1,0 +1,29 @@
+{
+  "builder": "Shashi",
+  "candidate": "1.102.80",
+  "mode": "scoped_structural_extraction_plus_explicit_document_headings",
+  "full_semantic_regeneration": false,
+  "source_files": [
+    "includes/class-quotation-calculator.php",
+    "includes/class-quotation-controller.php",
+    "interior-design-lead-manager.php",
+    "tests/quotation-numeric-contracts.php",
+    "tests/integration/quotation-http.php",
+    "tests/integration/quotation-text-http-cases.php",
+    "tests/release-contracts.php"
+  ],
+  "documentation_files": [
+    "docs/AUDIT-REMEDIATION-PACKAGE-QUOTATION-TEXT-SLICE.md",
+    "docs/AUDIT-REMEDIATION-PLAN.md",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md",
+    "docs/CHANGELOG-DEV.md",
+    "docs/DEVELOPMENT.md",
+    "tests/README.md"
+  ],
+  "removed_source_nodes": 58,
+  "extracted_nodes": 62,
+  "extracted_edges": 65,
+  "unrelated_graph_retained": true,
+  "graph_html_and_report_refreshed": false
+}

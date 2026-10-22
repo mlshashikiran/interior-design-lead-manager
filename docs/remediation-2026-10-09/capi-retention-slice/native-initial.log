@@ -1,0 +1,23 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+FAIL T08-T16-N-INT008 all platforms retain sent evidence after configured payload expiry and stage reversal
+  Call to undefined method IDLM_DB::get_lead()
+FAIL T16-N-INT008 configured 180-day policy preserves thirty-day success and failed logs
+  Call to undefined method IDLM_DB::get_lead()
+FAIL T16-T08-N-INT008 bounded legacy adoption preserves duplicate-family dedup without loading payloads
+  Call to undefined method IDLM_DB::get_lead()
+FAIL T16-N-INT008 legacy receipt failure retains log and retries transactionally
+  Call to undefined method IDLM_DB::get_lead()
+FAIL T16-N-INT008 legacy delete failure retains log and retries transactionally
+  Call to undefined method IDLM_DB::get_lead()
+FAIL T16-N-INT008 legacy commit failure retains log and retries transactionally
+  Call to undefined method IDLM_DB::get_lead()
+FAIL T08-N-INT008 claim and outcome failure withhold send or success and fence future attempts
+  Call to undefined method IDLM_DB::get_lead()
+FAIL T08-T14-C-INT008 independent ordinary-worker acceptance interruption cannot resend after log expiry
+  Call to undefined method IDLM_DB::get_lead()
+FAIL T08-T16-N-INT008 attribution refresh still sees pruned successes and receipts survive same-site restore
+  Call to undefined method IDLM_DB::get_lead()
+FAIL T16-N-INT008 explicit lead erasure and CRM reset erase receipts and faults roll back
+  Call to undefined method IDLM_DB::get_lead()
+
+1 passed, 10 failed

@@ -1,0 +1,27 @@
+{
+  "builder": "Shashi",
+  "candidate": "1.102.79",
+  "mode": "scoped_structural_extraction_plus_explicit_document_headings",
+  "full_semantic_regeneration": false,
+  "source_files": [
+    "includes/class-dashboard.php",
+    "includes/class-dashboard-read-model.php",
+    "interior-design-lead-manager.php",
+    "tests/integration/run.php",
+    "tests/integration/package-dashboard-contracts.php",
+    "tests/release-contracts.php"
+  ],
+  "documentation_files": [
+    "docs/AUDIT-REMEDIATION-PACKAGE-DASHBOARD-SLICE.md",
+    "docs/AUDIT-REMEDIATION-PLAN.md",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md",
+    "docs/CHANGELOG-DEV.md",
+    "tests/README.md"
+  ],
+  "removed_source_nodes": 39,
+  "extracted_nodes": 41,
+  "extracted_edges": 39,
+  "unrelated_graph_retained": true,
+  "graph_html_and_report_refreshed": false
+}

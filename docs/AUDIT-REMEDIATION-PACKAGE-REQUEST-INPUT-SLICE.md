@@ -1,0 +1,32 @@
+# REL-007 quotation request validation checkpoint
+
+Builder: Shashi. Date: 2026-10-18. Local candidate **1.102.81**. **IN PROGRESS, not IMPLEMENTED or CLOSED.** Schemas unchanged. Continues the [quotation text checkpoint](AUDIT-REMEDIATION-PACKAGE-QUOTATION-TEXT-SLICE.md).
+
+## Source changes and reproduced behavior
+
+The current review queue led to quotation settings/catalogue request inputs. Before repair, an array-valued catalogue wood flag reached a string cast, produced a PHP warning and saved an item. An array-valued payment milestone name was silently dropped while settings returned success. Actual HTTP regressions reproduced both defects and the warning (**two PASS / three FAIL**).
+
+Catalogue wood classification now requires an unslashed string `0` or `1`; malformed input redirects before repository work. Payment milestones reject non-string names before the settings option write. Catalogue rates, soft-close percentages, payment rows, currency and numbering separator are unslashed once at the request boundary. Existing decimal bounds, rounding, maximum 50 milestones, percentage sum, text sanitization and enum/default rules remain. Literal backslashes and apostrophes survive in milestone/catalogue text. The currency helper now takes unslashed domain values, including its existing stored-settings caller. Capability and nonce guards remain unchanged.
+
+A fresh static run also found the current Meta connector's numeric verification challenge printed without an escaping call. Its existing route/method/status/string/digit guards already restrict output; `esc_html()` now escapes the sink while retaining the response bytes. Fast assertions cover zero, leading zeros and a long digit string. This is a checker correction, not evidence of a reproduced injection bypass.
+
+The bounded graph lookup **“quotation controller calculator settings catalogue”** located controller/parser methods. Current facade, controller, calculator, repository and form sources established their actual contracts. These isolated input/output changes introduce no architectural edges; the existing local graph was not rebuilt, as permitted for small isolated edits. No semantic/HTML/report refresh is claimed.
+
+## Executed verification
+
+- **Six focused actual HTTP cases PASS** on WordPress **7.1.3**, PHP **8.4.14**, MySQL **8.4.0**: malformed-name and array-flag rejection with unchanged durable state; literal text and rounded settings; valid catalogue classifications/rates; invalid structured/backslash/exponent/over-range decimals; no affected-request PHP diagnostics.
+- **438 accumulated HTTP/stdio cases PASS** on WordPress **6.6**, PHP **8.4.14**, MySQL **8.4.0**. This run preceded the final one-line connector escaping change; final fast tests cover that output change. Existing authorization, migration, persistence, numeric and export cases remain included.
+- **382 final fast contracts PASS**, with the existing missing-`phone` fixture warning retained. **14 focused release contracts PASS**. Seven changed PHP files pass syntax checks; whitespace checks pass.
+- An intermediate new test used an incorrect catalogue table name; correcting the fixture to `quote_catalogue_items` resolved its failure. An initial fast release-metadata failure was resolved by aligning the production plan's release line. These failed runs are distinguished in [verification.json](remediation-2026-10-18/package-request-input-slice/verification.json).
+
+Only owned disposable databases/content were used, with provider HTTP/mail intercepted. The accumulated runner appended expected injected-fault diagnostics to an older evidence log; its exact baseline prefix was restored and hash-verified, with this run's appended bytes retained separately. [Preservation evidence](remediation-2026-10-18/package-request-input-slice/preservation.json) checks all pre-existing files outside this slice. No configured site, commit, push, tag, live provider send, email or deployment was changed.
+
+## Exact package and static gate
+
+The **453-file** local rehearsal ZIP is SHA256 `939801e027b993693d47a499ca29fce32a83e445fe583b227babdc60f096cec3`. Every archived byte matches source. Compared with the previous 450-file evidence, `class-lead-connector.php`, `class-facebook-connect.php` and the lead-connector settings template were already present at this task's start; other intervening connector edits also remain preserved. This slice does not newly qualify those features. The [inventory comparison](remediation-2026-10-18/package-request-input-slice/inventory-comparison.json) records the differences. Dirty Git and absent matching CI retain `local_rehearsal_only` and `production_release_approved=false`.
+
+Official Plugin Check **2.1.0**, pinned official ZIP SHA256 `6ff4bd2145f3befcf907df158cc466b1649dafed5686de8369907403c3013fc4`, runs all default static checks without exclusions in disposable WordPress **6.6**. Today's hash-verified reconstructed starting candidate produces **137 errors / 2,056 warnings**. Final candidate produces **136 errors / 2,050 warnings**: one output-escaping error and six missing-unslash warnings removed. Both wrappers return **1**. The old 1.102.80 report's 136 errors / 2,016 warnings describes earlier source, not today's starting tree.
+
+The complete [artifact-bound ledger](remediation-2026-10-18/package-request-input-slice/diagnostic-triage.json) contains **649 JUSTIFICATION_RECORDED / 1,536 REVIEW_REQUIRED / one RELEASE_CHANNEL_LIMITATION**. Seven new justifications trace the exact settings/catalogue inputs to their validators and guards. Earlier dispositions carry only when path, line, column, code and source line match. Review-required counts increased because intervening source changes and shifted locations invalidate older matches; no broad acceptance, checker suppression or cache removal was applied. All **2,186** final diagnostics remain visible. The unfiltered static gate is **FAIL**.
+
+Continue REL-007 using the [current review queue](remediation-2026-10-18/package-request-input-slice/diagnostic-review-queue.csv). Remaining SQL, request/nonce and distribution diagnostics require source-specific review and fixes. Full native/browser/PDF qualification, PHP 7.4/8.1 matrix, live provider acceptance, matching remote CI and installed-artifact behavior were not qualified here. REL-001 remains dependent on REL-007, M6/M7 and exact release qualification. Backlog: **42 IMPLEMENTED / two IN PROGRESS / zero CLOSED**.

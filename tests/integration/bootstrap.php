@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-if ('cli' !== PHP_SAPI) {
+if ('cli' !== PHP_SAPI && !('cli-server' === PHP_SAPI && defined('IDLM_DISPOSABLE_HTTP_FIXTURE'))) {
     fwrite(STDERR, "Integration tests must run from the command line.\n");
     exit(1);
 }
@@ -135,6 +135,22 @@ function idlm_integration_boot_wordpress(array $config, bool $install): int {
         }
     }
 
+    $mu_dir = $config['content_dir'] . DIRECTORY_SEPARATOR . 'mu-plugins';
+    if (!is_dir($mu_dir)) { mkdir($mu_dir, 0700, true); }
+    $guard = <<<'PHP'
+<?php
+if (!defined('ABSPATH')) { exit; }
+add_filter('pre_http_request', static function() {
+    file_put_contents(WP_CONTENT_DIR . '/outbound-attempts.log', "HTTP blocked\n", FILE_APPEND);
+    return new WP_Error('idlm_fixture_outbound_blocked', 'Disposable fixture blocks outbound HTTP.');
+}, PHP_INT_MAX);
+add_filter('pre_wp_mail', static function() {
+    file_put_contents(WP_CONTENT_DIR . '/outbound-attempts.log', "Mail intercepted\n", FILE_APPEND);
+    return true;
+}, PHP_INT_MAX);
+PHP;
+    file_put_contents($mu_dir . '/idlm-outbound-guard.php', $guard);
+
     define('DB_NAME', $config['db_name']);
     define('DB_USER', $config['db_user']);
     define('DB_PASSWORD', $config['db_password']);
@@ -149,10 +165,10 @@ function idlm_integration_boot_wordpress(array $config, bool $install): int {
     define('SECURE_AUTH_SALT', 'idlm-integration-secure-auth-salt');
     define('LOGGED_IN_SALT', 'idlm-integration-logged-in-salt');
     define('NONCE_SALT', 'idlm-integration-nonce-salt');
-    define('WP_HOME', 'http://idlm-integration.test');
-    define('WP_SITEURL', 'http://idlm-integration.test');
+    define('WP_HOME', $config['http_url'] ?? 'http://idlm-integration.test');
+    define('WP_SITEURL', $config['http_url'] ?? 'http://idlm-integration.test');
     define('WP_CONTENT_DIR', $config['content_dir']);
-    define('WP_CONTENT_URL', 'http://idlm-integration.test/wp-content');
+    define('WP_CONTENT_URL', ($config['http_url'] ?? 'http://idlm-integration.test') . '/wp-content');
     define('WP_PLUGIN_DIR', $config['content_dir'] . DIRECTORY_SEPARATOR . 'plugins');
     define('WP_PLUGIN_URL', 'http://idlm-integration.test/wp-content/plugins');
     define('WP_USE_THEMES', false);

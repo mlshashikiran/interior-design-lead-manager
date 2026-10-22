@@ -1,0 +1,38 @@
+ M .distignore
+ M .gitignore
+ M CHANGELOG.md
+ M assets/js/admin-app.js
+ M assets/js/quotations.js
+ M docs/CHANGELOG-DEV.md
+ M docs/DATA-MODEL.md
+ M docs/FEATURE-MAP.md
+ M docs/FLOWS.md
+ M docs/INTERFACES.md
+ M docs/PRODUCTION-SCALABILITY-PLAN.md
+ M docs/SECURITY.md
+ M includes/class-admin-ajax.php
+ M includes/class-admin-lead-reads.php
+ M includes/class-admin.php
+ M includes/class-quotation-calculator.php
+ M includes/class-quotation-controller.php
+ M includes/class-quotation-renderer.php
+ M includes/class-quotation-repository.php
+ M includes/class-quotation-schema.php
+ M includes/class-quotations.php
+ M interior-design-lead-manager.php
+ M readme.txt
+ M tests/admin-refactor-contracts.php
+ M tests/bootstrap.php
+ M tests/performance/class-dataset-generator.php
+ M tests/release-contracts.php
+ M tests/run.php
+?? docs/AUDIT-REMEDIATION-PLAN.md
+?? docs/AUDIT-REMEDIATION-TEST-MATRIX.md
+?? docs/audit-2026-10-06/
+?? docs/audit-remediation-backlog.csv
+?? includes/class-quotation-exporter.php
+?? tests/audit-contract-inventory.php
+?? tests/audit-evidence-report.py
+?? tests/audit-integration-security.php
+?? tests/audit-quotation-probes.php
+?? vendor/

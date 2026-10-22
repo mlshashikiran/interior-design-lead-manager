@@ -1,0 +1,11 @@
+{
+  "author": "Shashi",
+  "owned_datadir": "/private/tmp/idlm-mcp-slice-mysql/data/",
+  "disposable_databases_remaining": [],
+  "configured_site_database_used": false,
+  "shutdown": "confirmed",
+  "server_pid_file_absent": true,
+  "server_socket_absent": true,
+  "owned_datadir_removed": true,
+  "recorded_at": "2026-10-06T10:28:50.288423+00:00"
+}

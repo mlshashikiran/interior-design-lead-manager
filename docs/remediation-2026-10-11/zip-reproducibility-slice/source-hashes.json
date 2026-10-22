@@ -1,0 +1,16 @@
+{
+  "tests/release/class-release-artifact.php": "537f31a28eda48c798a15c7bf88007ba66d30be4633f70fe78691255976b6418",
+  "tests/release-contracts.php": "7c68b0e8a1b42872c19d70a4e3721d336e7ad01d702f60602077fbc2e3dfd27c",
+  "interior-design-lead-manager.php": "b8794b821a21d19343a900443a7d900cda7414e9c1d5d267904f6768c62bfc50",
+  "docs/AUDIT-REMEDIATION-ZIP-REPRODUCIBILITY-SLICE.md": "8ac00f01aa8bfe5d62769c10d80fe96381c22ca8a06ca62a7a9baa402d82850d",
+  "docs/AUDIT-REMEDIATION-PLAN.md": "31532db13100fd07392a1f6101edde923b231fe8a5221a72f3f18edf5633637b",
+  "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "53068565a1f2148629ef80ff0b6409a7396103a66c88fedb03d4d139f983c4f0",
+  "docs/PRODUCTION-SCALABILITY-PLAN.md": "cae4cb6fa43e77e76e51f429a8011f5a0266f18eb5bf2bcd034ce937381f951a",
+  "docs/PRODUCTION-RELEASE.md": "aadd0893ccb0568b54a209883dda84fbc349bedd9cd911867735086d4df66413",
+  "docs/CHANGELOG-DEV.md": "224f9f5fe74ff11b4ab7d9d0a9235602f6004198156aa8e965126dc685cde704",
+  "tests/README.md": "814f356debd28f4a80ab1cdb2916ad9321cc9274a7b5a6d12d10b048cb739b15",
+  "CHANGELOG.md": "70563c2bf513ba538d04110bb4271eca09bd65ca99c64c1d786741ab8da4145b",
+  "readme.txt": "ae3e5391a6a7ebdc482379c5cb7f4765868a556383c359c64cb15595068db38f",
+  ".github/workflows/tests.yml": "c0027851fcc8fd12525b5184dea9ace2d61540c47e42a40f41ddfc5def623b13",
+  "docs/audit-remediation-backlog.csv": "40d40fe9ab80aa087ee6d173b10e18af0bfb185ad76de500563279bc2ef7b8da"
+}

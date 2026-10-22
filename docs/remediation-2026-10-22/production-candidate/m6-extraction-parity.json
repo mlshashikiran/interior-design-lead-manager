@@ -1,0 +1,417 @@
+{
+  "builder": "Shashi",
+  "groups": [
+    {
+      "source": "includes/class-integrations.php",
+      "target": "includes/class-integration-auth.php",
+      "class": "IDLM_Integration_Auth",
+      "methods": [
+        {
+          "name": "maybe_migrate_api_credentials",
+          "original_visibility": "public",
+          "original_sha256": "8bc46a1aea13111d8c0dcd633f903f9643eafff05e68756f303b72da3d5ae0ac",
+          "lines": 39,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "rotate_api_credential",
+          "original_visibility": "public",
+          "original_sha256": "ebd0a0a1834e6968950e28c962887996a356f90b905cabed42c40161c1713230",
+          "lines": 21,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "generate_api_credential",
+          "original_visibility": "private",
+          "original_sha256": "35baeed48339b2ecb1502cb2031fdac361523e00ad1cc55165a7a931890ab93c",
+          "lines": 6,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "credential_matches",
+          "original_visibility": "private",
+          "original_sha256": "8faaaf0091227bd07bbc1c29b10a8634dac45300c04f60db6d35b3c94f22bbed",
+          "lines": 5,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "validate_scoped_api_key",
+          "original_visibility": "private",
+          "original_sha256": "8d45118856eb35bf0f731b9db040c4de981a061bc477573539c7205139ff14f8",
+          "lines": 6,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "check_rest_rate_limit",
+          "original_visibility": "private",
+          "original_sha256": "02029b31783b8e419523fcab9d59ba65217a49357aa4c9f7dfeb0c89a2732e4e",
+          "lines": 15,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "rest_permission_error",
+          "original_visibility": "private",
+          "original_sha256": "206f16f07150c8d9b158f6380eda7bfb35c5a85185101a1a44960949bc472ed4",
+          "lines": 3,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "permission_webhook",
+          "original_visibility": "public",
+          "original_sha256": "bcb47ec70469eb548fb06741bfc63c1aaab3dd1299223fba4b979fe0b42b729a",
+          "lines": 9,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "permission_google_feed",
+          "original_visibility": "public",
+          "original_sha256": "f447710bfdef5b32f974f12211913b537dd49de593963cc81a9526cc9b5c4ec8",
+          "lines": 9,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "permission_mcp",
+          "original_visibility": "public",
+          "original_sha256": "e3c099aae88b410a59343343cb6412b849498e40bb1e22e4ec98303641b20f38",
+          "lines": 16,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "validate_gadm_request",
+          "original_visibility": "private",
+          "original_sha256": "8a3647ecc79c4340ae7902284cb0eb4ded560bd224d835fba5e2b96b551e6539",
+          "lines": 57,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "validate_mcp_api_key",
+          "original_visibility": "private",
+          "original_sha256": "374efd44b8e99a73442bdd010121b9365fbfdbd3e9265cd0694a29b97ad88a14",
+          "lines": 24,
+          "visibility_normalized_body_identical": true
+        }
+      ],
+      "added_bridges": "",
+      "lines": 210
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "target": "includes/class-webhook-intake.php",
+      "class": "IDLM_Webhook_Intake",
+      "methods": [
+        {
+          "name": "handle_webhook_request",
+          "original_visibility": "public",
+          "original_sha256": "bfd7a734b25febf688c5dc8b03f6a49fbb2dd12f42502292d017d18e7f00878f",
+          "lines": 74,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "apply_field_mappings",
+          "original_visibility": "private",
+          "original_sha256": "3687f3b49fe16d02ccdee24a38e5285c65be53a15a4e11eddffc311eedf27b0e",
+          "lines": 93,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "classify_lead_source",
+          "original_visibility": "private",
+          "original_sha256": "bb48bcef7764abec3420b4c686ab980c01645e65c060426e007bcfc2959bb254",
+          "lines": 62,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "normalize_property_type",
+          "original_visibility": "private",
+          "original_sha256": "7233385ff2d91871d57445a3c97db8649228955c569a3000edbe0470ab84c423",
+          "lines": 21,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "normalize_num_rooms",
+          "original_visibility": "public",
+          "original_sha256": "e3a532aa85b1cb47b50d5299679227a6a2571c65c94ce4af6db32bb4125fd951",
+          "lines": 64,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "normalize_budget",
+          "original_visibility": "public",
+          "original_sha256": "ed056cc75ce580bf41f26897e4377422ee9d386a421e00bca07eb97d9ebaf916",
+          "lines": 38,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "flatten_array",
+          "original_visibility": "private",
+          "original_sha256": "f00d3fa99ffe4f04173fb38c13ecaec36583af8fdece5fb4c96ee1dfbdb59315",
+          "lines": 13,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "is_truthy_webhook_value",
+          "original_visibility": "private",
+          "original_sha256": "f282d163e3ec82167b43a0afcdf8f47e16b02f3872eb0a43af63f0169232ae49",
+          "lines": 11,
+          "visibility_normalized_body_identical": true
+        }
+      ],
+      "added_bridges": "    private static function validate_scoped_api_key(WP_REST_Request $request, $option_name) { return IDLM_Integration_Auth::validate_scoped_api_key($request, $option_name); }\n    private static function get_captured_attribution() { return IDLM_Integrations::get_captured_attribution(); }\n",
+      "lines": 376
+    },
+    {
+      "source": "includes/class-integrations.php",
+      "target": "includes/class-google-feed-controller.php",
+      "class": "IDLM_Google_Feed_Controller",
+      "methods": [
+        {
+          "name": "add_google_feed_auth_challenge",
+          "original_visibility": "public",
+          "original_sha256": "2c56a56034cdf43b6ab1a75ac56b947ea714f5e947f31c2c7fb1f750981636ef",
+          "lines": 11,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "send_gadm_401",
+          "original_visibility": "private",
+          "original_sha256": "68a330cb6855115a1918b25039bb4d808a254c975fe810b9116d77c8d2f059ae",
+          "lines": 15,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "clean_rest_headers_for_gadm",
+          "original_visibility": "private",
+          "original_sha256": "9627270b5900d1c4c0b39569534f424b1fc5053fbfb181056aabe08cc8621df9",
+          "lines": 7,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "handle_google_ads_conversions_feed",
+          "original_visibility": "public",
+          "original_sha256": "0799af503669c4c17c6cbe281de38c016cc97659e2ec1a6953ed5bd5cdef3991",
+          "lines": 28,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "handle_google_ads_audience_feed",
+          "original_visibility": "public",
+          "original_sha256": "c0ecd9559e49175fe3a7c158d82c72fe7aef8216ffa882357bf056d1b6b57d7d",
+          "lines": 46,
+          "visibility_normalized_body_identical": true
+        }
+      ],
+      "added_bridges": "    private static function validate_gadm_request(WP_REST_Request $request) { return IDLM_Integration_Auth::validate_gadm_request($request); }\n",
+      "lines": 107
+    },
+    {
+      "source": "includes/class-capi.php",
+      "target": "includes/class-capi-transport.php",
+      "class": "IDLM_CAPI_Transport",
+      "methods": [
+        {
+          "name": "uses_whatsapp_attribution",
+          "original_visibility": "private",
+          "original_sha256": "37a3139159171b7d07be037747f09ccb83e03ba719fe2b4d12fccef1ad58ff67",
+          "lines": 3,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "record_attempt",
+          "original_visibility": "private",
+          "original_sha256": "47a2c186353bf586ae3df266535ccbcfe8ab4df7d3133d5f25af3186abeaef60",
+          "lines": 18,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "record_provider_response",
+          "original_visibility": "private",
+          "original_sha256": "836524709083ef9165dba045a66d8f115b01fbd674b47c03e73e32c4b83708ab",
+          "lines": 10,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "fire_meta_capi_work",
+          "original_visibility": "private",
+          "original_sha256": "11f66c2131b0a3b03d490c4993b1cd61bed36d66c26a06f1ad204a7c63a4b72e",
+          "lines": 102,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "fire_google_capi_work",
+          "original_visibility": "private",
+          "original_sha256": "825c611e6a46336aed5268f1aafd939e7a475c0bfc0d1c4b6261e7408039b52a",
+          "lines": 58,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "fire_linkedin_capi_work",
+          "original_visibility": "private",
+          "original_sha256": "a39e2a132e3ba99860157143a2d1594ad691947dea7ef45818336cf0619457d6",
+          "lines": 63,
+          "visibility_normalized_body_identical": true
+        }
+      ],
+      "added_bridges": "",
+      "lines": 254
+    },
+    {
+      "source": "includes/class-capi.php",
+      "target": "includes/class-google-conversion-feed.php",
+      "class": "IDLM_Google_Conversion_Feed",
+      "methods": [
+        {
+          "name": "get_google_ads_conversion_events",
+          "original_visibility": "public",
+          "original_sha256": "012256a0e5df64677dcd6d3224e5f0bc76759380a7d8c3ad622a25095e16b1ce",
+          "lines": 156,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "generate_google_ads_conversions_csv_response",
+          "original_visibility": "public",
+          "original_sha256": "ae9033ca2df326767d3da4556ecce1c65577a65d4c27da4552efccfd2419054c",
+          "lines": 66,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "clear_csv_output_buffers",
+          "original_visibility": "private",
+          "original_sha256": "7cd48921614edf39fe4bf0590f6b47684d29dfcaa3ec9e20b119b7f2e84d88bc",
+          "lines": 5,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "format_google_ads_conversion_time",
+          "original_visibility": "private",
+          "original_sha256": "65e5a7fb3348cb019d0f6bced97177b1e192fb32b95ad354c40879277dcd90a7",
+          "lines": 20,
+          "visibility_normalized_body_identical": true
+        }
+      ],
+      "added_bridges": "    private static function is_google_conversion_eligible($lead) { return IDLM_CAPI::is_google_conversion_eligible($lead); }\n    private static function format_phone_e164($phone) { return IDLM_CAPI::format_phone_e164($phone); }\n",
+      "lines": 247
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "target": "includes/class-admin-task-controller.php",
+      "class": "IDLM_Admin_Task_Controller",
+      "methods": [
+        {
+          "name": "ajax_get_lead_tasks",
+          "original_visibility": "public",
+          "original_sha256": "8e4659ac041a1077ea0c730ba6134dd98d94171bccac466f56eab901b4d52e7b",
+          "lines": 45,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "ajax_add_lead_task",
+          "original_visibility": "public",
+          "original_sha256": "05220a48be06a928913850b48c656dcccc78db34ffd6a19c1f0f12800f524dda",
+          "lines": 75,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "ajax_toggle_task_status",
+          "original_visibility": "public",
+          "original_sha256": "6c4cf7e118e19921b3285c91615138503da3fac938da6bc86d3174b808b46b5b",
+          "lines": 56,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "ajax_delete_lead_task",
+          "original_visibility": "public",
+          "original_sha256": "62868ee0e3477b77d850e3ecdc2b41931711c8cd56c1e4bc4dda66ec95c6c425",
+          "lines": 41,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "manual_task_types",
+          "original_visibility": "private",
+          "original_sha256": "403642692d90668d69ba8cdd0260a92f8c28757687524ab8814ccb34fa760832",
+          "lines": 3,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "normalize_manual_task_due_date",
+          "original_visibility": "private",
+          "original_sha256": "082a174563ad9b1f8f356ea3941f5b4a18c0447954c7b169f1564072e60543b0",
+          "lines": 11,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "is_system_qualification_task",
+          "original_visibility": "private",
+          "original_sha256": "9c584c3e310afe9248a40509bae85db1056b02344730250eb5ea7af48e364397",
+          "lines": 3,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "ajax_get_rep_tasks",
+          "original_visibility": "public",
+          "original_sha256": "748787df35b02586f4842e2daa8e17af55eed8cfe7e6dc27f5840dc112988d63",
+          "lines": 104,
+          "visibility_normalized_body_identical": true
+        }
+      ],
+      "added_bridges": "",
+      "lines": 338
+    },
+    {
+      "source": "includes/class-admin-ajax.php",
+      "target": "includes/class-admin-collection-reads.php",
+      "class": "IDLM_Admin_Collection_Reads",
+      "methods": [
+        {
+          "name": "ajax_get_leads_table",
+          "original_visibility": "public",
+          "original_sha256": "290811844451c117b329f6b7e415fab608edee8f4d32aebf674867c2e8403004",
+          "lines": 660,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "ajax_get_kanban_leads",
+          "original_visibility": "public",
+          "original_sha256": "4a60b54c3ecd509d4aa1ffb1855841d4e5c30a03906bd7577ee576af8bcc1a39",
+          "lines": 273,
+          "visibility_normalized_body_identical": true
+        },
+        {
+          "name": "ajax_get_total_leads_count",
+          "original_visibility": "public",
+          "original_sha256": "ce7a1369c8ba74343848acd68446d380b79173dbc99decbb8189501434094ce5",
+          "lines": 15,
+          "visibility_normalized_body_identical": true
+        }
+      ],
+      "added_bridges": "",
+      "lines": 948
+    }
+  ],
+  "moved_methods": 46,
+  "moved_lines": 2480,
+  "policy_changes": false,
+  "schema_changes": false,
+  "captured_phase": "Immediately after extraction; before subsequent M7 task-day and Kanban paging fixes",
+  "subsequent_changes": [
+    {
+      "method": "ajax_get_rep_tasks",
+      "reason": "Use the site calendar day once."
+    },
+    {
+      "method": "ajax_get_kanban_leads",
+      "reason": "Measured unbounded responses replaced by bounded signed pages; preserve full-population summaries."
+    },
+    {
+      "method": "permission_webhook",
+      "reason": "Memoize the rate outcome per actual request; continue fresh credential validation."
+    },
+    {
+      "method": "permission_google_feed",
+      "reason": "Memoize the rate outcome per actual request; continue fresh credential validation."
+    },
+    {
+      "method": "permission_mcp",
+      "reason": "Memoize the rate outcome per actual request; continue fresh credential validation."
+    }
+  ]
+}

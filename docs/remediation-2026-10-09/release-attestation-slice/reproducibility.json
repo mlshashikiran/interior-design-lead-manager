@@ -1,0 +1,31 @@
+{
+  "same_names_and_file_bytes": true,
+  "same_zip_bytes": false,
+  "zip_a_sha256": "d8cd2cc715d235e7edc8b09b167a288c43289fbea2e2b5409cad384fb834d94a",
+  "zip_b_sha256": "909e66d66de8f38d880350e538efbf9010a09a0b5381bfb241f53358a1181ccc",
+  "root_metadata": {
+    "a": {
+      "date_time": [
+        2026,
+        10,
+        9,
+        15,
+        12,
+        54
+      ],
+      "external_attr": 1107230720
+    },
+    "b": {
+      "date_time": [
+        2026,
+        10,
+        9,
+        15,
+        13,
+        36
+      ],
+      "external_attr": 1107230720
+    }
+  },
+  "finding": "REL-006 remains OPEN"
+}

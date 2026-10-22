@@ -1,0 +1,22 @@
+{
+  "author": "Shashi",
+  "date": "2026-10-08",
+  "query": "UI-001 render_row recalculate",
+  "query_finding": "Original audit UI-001 node located; current behavior verified independently against renderer/JavaScript and actual browser.",
+  "mode": "scoped incremental structural extraction and explicit heading refresh",
+  "files": {
+    "tests/integration/quotation-http.php": "ad327a13fa110323f8b8062ae27318cbd73928fe142045537ef6e1ef4fac013f",
+    "tests/integration/quotation-quantity-http-cases.php": "8ffd9f87941963536419ea4b2832245fe48ec0fa33724f373b0752ef4ae663be",
+    "docs/AUDIT-REMEDIATION-QUOTATION-QUANTITY-SLICE.md": "9e91d3c531e73f5eb40aef647ed391e68a786ebfdeb32c2ba98c3ca93bb34092",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "a1156d58050e4505f163ffd7554ce69a7d4141a2dd0ccd44ff81618d32ec32a9",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "6e8e5fcb7be3200d754d4b8bb81161e4a8b7cc1a79f3cdd255981d7fbfcd0aba",
+    "docs/CHANGELOG-DEV.md": "c0e6bd25215d2d7b5d16245b31dab3a2a3a7fa545505ad847909935ca8f2aa57",
+    "tests/README.md": "08d50989fa279cdf13fcb11e4bf6052d102a92d8f0a6d681bba7fe966ac1f615"
+  },
+  "removed_stale_source_nodes": 190,
+  "source_nodes": 14,
+  "source_edges": 18,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "scope": "Unrelated graph content retained; no inferred semantic relationships or HTML/report regeneration."
+}

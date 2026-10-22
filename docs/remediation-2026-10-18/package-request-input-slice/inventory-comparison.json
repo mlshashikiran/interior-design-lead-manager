@@ -1,0 +1,37 @@
+{
+  "builder": "Shashi",
+  "file_count": 453,
+  "artifact_sha256": "939801e027b993693d47a499ca29fce32a83e445fe583b227babdc60f096cec3",
+  "all_archived_bytes_match_source": true,
+  "added_since_1_102_80": [
+    "includes/class-facebook-connect.php",
+    "includes/class-lead-connector.php",
+    "templates/admin/settings/lead-connector.php"
+  ],
+  "removed_since_1_102_80": [],
+  "changed_since_previous_evidence": [
+    "CHANGELOG.md",
+    "PRIVACY.md",
+    "assets/css/admin-style.css",
+    "assets/js/settings.js",
+    "includes/class-admin-assets.php",
+    "includes/class-admin-settings-controller.php",
+    "includes/class-admin-settings-renderer.php",
+    "includes/class-backup.php",
+    "includes/class-capi-delivery.php",
+    "includes/class-capi.php",
+    "includes/class-integrations.php",
+    "includes/class-interakt.php",
+    "includes/class-lead-deletion-service.php",
+    "includes/class-lead-lifecycle-service.php",
+    "includes/class-quotation-controller.php",
+    "includes/class-scheduler.php",
+    "includes/class-secret-store.php",
+    "includes/class-whatsapp-inbox.php",
+    "interior-design-lead-manager.php",
+    "readme.txt",
+    "templates/admin/settings/shell.php",
+    "templates/admin/settings/webhooks.php"
+  ],
+  "note": "Connector changes already existed at this task start. Baseline hashes and preservation.json distinguish them from this slice."
+}

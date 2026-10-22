@@ -1,0 +1,8 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+FAIL T11-H-REL007-malformed-payment-names-reject-without-settings-writes: Malformed milestone was accepted
+FAIL T11-H-REL007-array-wood-flag-rejects-before-catalogue-writes: Array wood flag was accepted
+PASS T11-H-REL007-settings-retain-literal-milestone-text-and-validated-values
+PASS T11-H-REL007-structured-and-literal-backslash-decimals-remain-invalid
+FAIL T11-H-REL007-request-inputs-without-PHP-diagnostics: PHP diagnostics: [17-Oct-2026 18:40:52 UTC] PHP Warning:  Array to string conversion in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-quotation-controller.php on line 538
+
+2 passed, 3 failed

@@ -1,0 +1,175 @@
+{
+  "finding": "INT-010",
+  "builder": "Shashi",
+  "date": "2026-10-09",
+  "candidate": "1.102.71",
+  "status": "IMPLEMENTED, not CLOSED",
+  "schemas_changed": false,
+  "backlog_counts": {
+    "IMPLEMENTED": 37,
+    "OPEN": 7
+  },
+  "environment": {
+    "php": "8.4.14",
+    "wordpress": "7.1.3",
+    "mysql": "8.4.0",
+    "scheduler": "WP-Cron plus intercepted AS adapters and compatible physical-table fixture",
+    "persistent_cache": false,
+    "database_scope": "Owned socket-only MySQL server; unique idlm_test_* databases",
+    "http_mail": "Intercepted; no real provider calls"
+  },
+  "checks": [
+    {
+      "name": "fast",
+      "command": "php tests/run.php",
+      "log": "fast-final.log",
+      "exit_code": 0,
+      "passed": 350,
+      "failed": 0,
+      "INT010_cases": [
+        "INT010 failed plaintext migration refuses credential use and preserves value",
+        "INT010 all platform values migrate and authenticated empty clear round-trips",
+        "INT010 ciphertext damage is refused and never replaced",
+        "INT010 raw URL encoded Basic and JSON provider echoes are scrubbed",
+        "INT010 blank settings credentials stay hidden from administrators",
+        "INT010 crypto absence environment ownership salt rotation and missing key fail safely"
+      ]
+    },
+    {
+      "name": "native_full",
+      "command": "php tests/integration/run.php",
+      "log": "native-complete-final.log",
+      "exit_code": 0,
+      "passed": 306,
+      "failed": 0,
+      "INT010_cases": [
+        "T20-N-INT010 all platform legacy values migrate without autoload or plaintext",
+        "T20-N-INT010 failed write retains plaintext and blocks use until retry",
+        "T20-N-INT010 damaged ciphertext does not overwrite credentials or advance scoped migration",
+        "T14-C-INT010 competing rotation wins plaintext compare and swap",
+        "T14-N-INT010 current primary credential overrides warmed cache then revocation",
+        "T08-N-INT010 Meta Google LinkedIn requests use current auth and scrub provider echoes",
+        "T08-T09-N-INT010 audience Interakt request echoes and backups contain no token",
+        "T20-N-INT010 settings blank retains replace clears and failed save is explicit",
+        "T14-T20-N-INT010 legacy WP Cron copied secrets disappear while opaque jobs remain",
+        "T14-T20-N-INT010 AS historical secret batches preserve current jobs statuses and checkpoint on failure",
+        "T08-N-INT010 thrown transport exceptions never expose credential or stack"
+      ]
+    },
+    {
+      "name": "native_focused",
+      "command": "IDLM_TEST_FILTER=INT010 php tests/integration/run.php",
+      "log": "native-final-focused.log",
+      "exit_code": 0,
+      "passed": 12,
+      "failed": 0,
+      "INT010_cases": [
+        "fresh schema installation creates required tables, columns, defaults, and indexes",
+        "T20-N-INT010 all platform legacy values migrate without autoload or plaintext",
+        "T20-N-INT010 failed write retains plaintext and blocks use until retry",
+        "T20-N-INT010 damaged ciphertext does not overwrite credentials or advance scoped migration",
+        "T14-C-INT010 competing rotation wins plaintext compare and swap",
+        "T14-N-INT010 current primary credential overrides warmed cache then revocation",
+        "T08-N-INT010 Meta Google LinkedIn requests use current auth and scrub provider echoes",
+        "T08-T09-N-INT010 audience Interakt request echoes and backups contain no token",
+        "T20-N-INT010 settings blank retains replace clears and failed save is explicit",
+        "T14-T20-N-INT010 legacy WP Cron copied secrets disappear while opaque jobs remain",
+        "T14-T20-N-INT010 AS historical secret batches preserve current jobs statuses and checkpoint on failure",
+        "T08-N-INT010 thrown transport exceptions never expose credential or stack"
+      ]
+    },
+    {
+      "name": "http_full",
+      "command": "php tests/integration/quotation-http.php",
+      "log": "http-complete-final.log",
+      "exit_code": 0,
+      "passed": 425,
+      "failed": 0,
+      "INT010_cases": [
+        "T07-T20-H-INT010 encrypted platform tokens absent from rendered settings",
+        "T07-H-INT010 settings credential mutation rejects actor and nonce",
+        "T20-H-INT010 blank retains rotation replaces clear revokes without echo",
+        "T20-H-INT010 contradictory replace clear and array values refuse persistence",
+        "T07-T08-H-INT010 blank connection tests use stored header token and return scrubbed errors"
+      ]
+    },
+    {
+      "name": "http_focused",
+      "command": "php tests/integration/quotation-http.php --secret-store-only",
+      "log": "http-final-focused.log",
+      "exit_code": 0,
+      "passed": 5,
+      "failed": 0,
+      "INT010_cases": [
+        "T07-T20-H-INT010 encrypted platform tokens absent from rendered settings",
+        "T07-H-INT010 settings credential mutation rejects actor and nonce",
+        "T20-H-INT010 blank retains rotation replaces clear revokes without echo",
+        "T20-H-INT010 contradictory replace clear and array values refuse persistence",
+        "T07-T08-H-INT010 blank connection tests use stored header token and return scrubbed errors"
+      ]
+    }
+  ],
+  "syntax": {
+    "php_files": 29,
+    "php_log": "php-lint.log",
+    "javascript_log": "js-syntax.log",
+    "whitespace_log": "diff-check.log",
+    "result": "PASS"
+  },
+  "optional_contracts": {
+    "action_scheduler": "action-scheduler.log",
+    "inbound_task": "inbound-task.log",
+    "result": "PASS"
+  },
+  "warnings": {
+    "comparison": "warning-comparison.json",
+    "inherited_display_warning_events": 7,
+    "same_normalized_display_multiset_as_INT009": true,
+    "capture_note": "Final fast log combines stderr and stdout, so PHP Warning and display Warning copies appear; comparison uses display Warning lines.",
+    "http_unexpected_diagnostics_gate": "PASS"
+  },
+  "baseline": {
+    "log": "baseline-fast.log",
+    "passed": 344,
+    "failed": 1,
+    "reproduction": "Failed plaintext migration returned usable plaintext",
+    "hashes": "baseline-hashes.json",
+    "scope": "First twenty hashes recorded before work; later inventory additions are not represented as a complete initial-tree snapshot."
+  },
+  "case_mapping": {
+    "T07": "Authenticated/nonce settings and connection tests; encrypted inbound webhook readers retain full regression coverage",
+    "T08": "All CAPI and Meta/LinkedIn audience auth; GA4 encoding; error redaction persisted in local logs; current rotation",
+    "T09": "Interakt Basic and signed webhook secret readers; inherited dispatch/inbound regressions",
+    "T14": "Independent mysqli rotation, warmed cache revocation, legacy queue scrubbing; backup exclusion and inherited recovery regressions",
+    "T20": "Seven migration/nonautoload values, write failure retry, ciphertext corruption, crypto/key/salt subprocesses, settings and transport failures"
+  },
+  "failure_provenance": [
+    "Fast wpdb double initially lacked option compare-and-swap; corrected before final pass.",
+    "Injected native wp_die needed AJAX handler as well as normal handler.",
+    "HTTP footer core deprecation corrected by printing actual scripts.",
+    "Existing CAPI HTTP interceptor initially overrode connection fixture; interceptor registration reordered before final full and focused pass.",
+    "Initial isolated mysqld initialization failed in sandbox; retry under approved escalation succeeded.",
+    "Warning comparison initially counted stderr duplicates; normalized display-warning multiset matches prior seven warnings."
+  ],
+  "artifacts": {
+    "source_hashes": "source-hashes.json",
+    "baseline_hashes": "baseline-hashes.json",
+    "php_inventory": "changed-php-files.json",
+    "graph_refresh": "graph-refresh.json",
+    "browser": "browser-observations.json",
+    "cleanup": "cleanup.log"
+  },
+  "limitations": [
+    "Live provider/account response and acceptance qualification remains open.",
+    "GA4 api_secret and inbound Meta verify token are provider-required query parameters; plugin cannot control external HTTP/database/proxy traces or historic exports.",
+    "Action Scheduler physical fixture and adapters do not qualify every installed schema/version.",
+    "Bootstrap cleanup is bounded progressive work, not immediate total historical erasure.",
+    "Persistent cache/topology and supported runtime matrix remain unqualified.",
+    "Key transition requires original material or deliberate replacement credentials; no automatic ciphertext re-encryption.",
+    "Settings save is per-field and may partially commit before later failure.",
+    "Automation mobile panel overflow observed; full responsive qualification does not pass.",
+    "No clean release artifact/CI, production deployment or historic credential rotation performed."
+  ],
+  "next": "REL-001 with M6/M7 and earlier release prerequisites outstanding",
+  "cleanup": "Zero owned test databases remain; owned server stopped; fixture processes exited."
+}

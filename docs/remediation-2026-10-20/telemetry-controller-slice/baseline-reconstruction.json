@@ -1,0 +1,27 @@
+{
+  "builder": "Shashi",
+  "purpose": "Reconstructed pre-slice static baseline from current package; retain all unrelated working-tree changes",
+  "archive_sha256": "521618dd069f424f94740ec9c8c67babbf5a1b09008200e0b93ec3410eb663b2",
+  "reconstruction": [
+    {
+      "file": "CHANGELOG.md",
+      "action": "remove current slice entry"
+    },
+    {
+      "file": "includes/class-admin-ajax.php",
+      "action": "restore exact pre-slice source"
+    },
+    {
+      "file": "includes/class-admin-telemetry-controller.php",
+      "action": "remove new owner"
+    },
+    {
+      "file": "interior-design-lead-manager.php",
+      "action": "remove new require and restore version"
+    },
+    {
+      "file": "readme.txt",
+      "action": "restore version"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Integration bootstrap failed: Set IDLM_TEST_DB_USER, IDLM_TEST_DB_PASSWORD, and IDLM_TEST_DB_HOST for a disposable MySQL server.

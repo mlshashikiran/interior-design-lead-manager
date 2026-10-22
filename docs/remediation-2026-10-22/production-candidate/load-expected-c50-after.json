@@ -1,0 +1,157 @@
+{
+  "schema": "idlm-team-load/v1",
+  "builder": "Shashi",
+  "profile": "expected",
+  "actors": 50,
+  "requests": 1200,
+  "concurrency": 50,
+  "read_only": true,
+  "contains_credentials_or_response_bodies": false,
+  "php_server": "8.5.12",
+  "wordpress": "7.1.3",
+  "artifact_sha256": "9e92ad6949cce4a015cbcd51fdbb6b87019f7f719d35e48499d5cd3bc588a959",
+  "executed": true,
+  "duration_seconds": 10.526,
+  "summary": {
+    "requests": 1200,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "latency_ms": {
+      "p50": 245.538,
+      "p95": 829.194,
+      "p99": 2728.067,
+      "max": 7227.529
+    },
+    "response_bytes_max": 139595
+  },
+  "actions": {
+    "idlm_get_leads_table": {
+      "requests": 220,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 280.369,
+        "p95": 747.942,
+        "p99": 944.078,
+        "max": 1408.896
+      },
+      "response_bytes_max": 139595
+    },
+    "idlm_get_rep_tasks": {
+      "requests": 220,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 343.704,
+        "p95": 1075.192,
+        "p99": 2732.601,
+        "max": 3569.396
+      },
+      "response_bytes_max": 40171
+    },
+    "idlm_get_lead_details": {
+      "requests": 190,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 194.861,
+        "p95": 336.801,
+        "p99": 389.534,
+        "max": 399.773
+      },
+      "response_bytes_max": 41345
+    },
+    "idlm_get_kanban_leads": {
+      "requests": 190,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 294.731,
+        "p95": 596.278,
+        "p99": 776.018,
+        "max": 792.553
+      },
+      "response_bytes_max": 50634
+    },
+    "idlm_get_lead_activity": {
+      "requests": 190,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 117.318,
+        "p95": 267.966,
+        "p99": 424.271,
+        "max": 430.615
+      },
+      "response_bytes_max": 5942
+    },
+    "idlm_get_dashboard_stats": {
+      "requests": 190,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 216.623,
+        "p95": 1549.267,
+        "p99": 7140.862,
+        "max": 7227.529
+      },
+      "response_bytes_max": 57491
+    }
+  },
+  "server": {
+    "samples": 1200,
+    "peak_memory_bytes": 50331648,
+    "queries_p95": 171,
+    "database_ms_p95": 337.396
+  },
+  "roles": {
+    "administrator": {
+      "requests": 24,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 610.537,
+        "p95": 5868.668,
+        "p99": 7140.862,
+        "max": 7140.862
+      },
+      "response_bytes_max": 139595
+    },
+    "idlm_pre_sales": {
+      "requests": 120,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 227.513,
+        "p95": 463.558,
+        "p99": 1020.434,
+        "max": 1136.203
+      },
+      "response_bytes_max": 83265
+    },
+    "sales_executive": {
+      "requests": 1032,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 242.607,
+        "p95": 615.434,
+        "p99": 1178.006,
+        "max": 1549.267
+      },
+      "response_bytes_max": 129073
+    },
+    "sales_manager": {
+      "requests": 24,
+      "errors": 0,
+      "error_rate_percent": 0.0,
+      "latency_ms": {
+        "p50": 792.553,
+        "p95": 6362.915,
+        "p99": 7227.529,
+        "max": 7227.529
+      },
+      "response_bytes_max": 139273
+    }
+  }
+}

@@ -1,0 +1,16 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T04-N-CORE006-every historical missing cycle converges once and preserves existing history
+PASS T17-N-CORE006-old four-day plans become six cycles without rewriting old rows
+PASS T04-N-CORE006-required adoption, missing insert, activity, intent and commit faults preserve partial plan
+PASS T04-N-CORE006-ambiguous duplicate and unknown legacy labels fail without changing history
+PASS T04-N-CORE006-evidence completion, reopening and overdue working-day progression use stable cycles
+PASS T03-N-CORE006-active reassignment transfers pending cycles and preserves completed owner history
+PASS T03-N-CORE006-automatic assignment repairs partial unassigned work in the checked aggregate
+PASS T04-N-CORE006-closed states and duplicates do not repair or reopen; explicit active reversal resumes slots
+PASS T04-C-CORE006-two synchronized repair workers create each missing slot and repair activity once
+PASS T04-C-CORE006-repair racing Lost closure leaves no pending qualification work
+PASS T17-N-CORE006-additive upgrade preserves old rows and verifies nullable cycle uniqueness
+PASS T14-N-CORE006-checkpointed sweep discovers empty plans and does not starve later pages
+PASS T16-N-CORE006-backup roundtrip retains cycles and complete prior manifests normalize safely
+
+14 passed, 0 failed

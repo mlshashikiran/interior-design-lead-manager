@@ -1,0 +1,13 @@
+{
+  "finding": "REL-004",
+  "readme_sections_present": {
+    "== External services ==": false,
+    "== Privacy and data lifecycle ==": false,
+    "== Support and security ==": false,
+    "== Updates and recovery ==": false
+  },
+  "public_privacy_doc_exists": false,
+  "public_support_doc_exists": false,
+  "owner_contacts": "No verified support/security contact or update endpoint in current repository",
+  "scope": "Read-only characterization; no site or provider calls"
+}

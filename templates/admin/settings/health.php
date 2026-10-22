@@ -3,20 +3,20 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
-$telemetry_level = isset($context['telemetry_level']) ? $context['telemetry_level'] : 'errors';
-$logs = isset($context['telemetry_logs']) ? $context['telemetry_logs'] : array();
-$php_version = isset($context['php_version']) ? $context['php_version'] : '';
-$wordpress_version = isset($context['wordpress_version']) ? $context['wordpress_version'] : '';
-$memory_limit = isset($context['memory_limit']) ? $context['memory_limit'] : '';
-$action_scheduler_version = isset($context['action_scheduler_version']) ? $context['action_scheduler_version'] : '';
-$db_prefix = isset($context['db_prefix']) ? $context['db_prefix'] : '';
-$operational_health = isset($context['operational_health']) && is_array($context['operational_health']) ? $context['operational_health'] : array();
-$horizontal_readiness = isset($context['horizontal_readiness']) && is_array($context['horizontal_readiness']) ? $context['horizontal_readiness'] : array();
-$diagnostic_url = isset($context['diagnostic_url']) ? $context['diagnostic_url'] : '';
+$idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
+$idlm_telemetry_level = isset($context['telemetry_level']) ? $context['telemetry_level'] : 'errors';
+$idlm_logs = isset($context['telemetry_logs']) ? $context['telemetry_logs'] : array();
+$idlm_php_version = isset($context['php_version']) ? $context['php_version'] : '';
+$idlm_wordpress_version = isset($context['wordpress_version']) ? $context['wordpress_version'] : '';
+$idlm_memory_limit = isset($context['memory_limit']) ? $context['memory_limit'] : '';
+$idlm_action_scheduler_version = isset($context['action_scheduler_version']) ? $context['action_scheduler_version'] : '';
+$idlm_db_prefix = isset($context['db_prefix']) ? $context['db_prefix'] : '';
+$idlm_operational_health = isset($context['operational_health']) && is_array($context['operational_health']) ? $context['operational_health'] : array();
+$idlm_horizontal_readiness = isset($context['horizontal_readiness']) && is_array($context['horizontal_readiness']) ? $context['horizontal_readiness'] : array();
+$idlm_diagnostic_url = isset($context['diagnostic_url']) ? $context['diagnostic_url'] : '';
 ?>
                 <!-- Tab: System Health -->
-                <section id="settings-health" class="idlm-settings-tab-content <?php echo $active_tab === 'health' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-health" <?php echo $active_tab === 'health' ? '' : 'hidden'; ?>>
+                <section id="settings-health" class="idlm-settings-tab-content <?php echo $idlm_active_tab === 'health' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-health" <?php echo $idlm_active_tab === 'health' ? '' : 'hidden'; ?>>
                     <div class="idlm-grid-full">
                         <!-- Telemetry Settings Card -->
                         <article class="idlm-card">
@@ -27,16 +27,16 @@ $diagnostic_url = isset($context['diagnostic_url']) ? $context['diagnostic_url']
                                 <div class="idlm-form-group">
                                     <label for="idlm-telemetry-level">Error telemetry log level</label>
                                     <select id="idlm-telemetry-level" name="telemetry_level" class="idlm-select">
-                                        <option value="off" <?php selected($telemetry_level, 'off'); ?>>Disabled (No Logs)</option>
-                                        <option value="errors" <?php selected($telemetry_level, 'errors'); ?>>(Recommended) Errors Only (Exceptions & JS Errors)</option>
-                                        <option value="warnings" <?php selected($telemetry_level, 'warnings'); ?>>Errors & PHP Warnings</option>
-                                        <option value="verbose" <?php selected($telemetry_level, 'verbose'); ?>>Verbose Debug (All Logs & Warnings)</option>
+                                        <option value="off" <?php selected($idlm_telemetry_level, 'off'); ?>>Disabled (No Logs)</option>
+                                        <option value="errors" <?php selected($idlm_telemetry_level, 'errors'); ?>>(Recommended) Errors Only (Exceptions & JS Errors)</option>
+                                        <option value="warnings" <?php selected($idlm_telemetry_level, 'warnings'); ?>>Errors & PHP Warnings</option>
+                                        <option value="verbose" <?php selected($idlm_telemetry_level, 'verbose'); ?>>Verbose Debug (All Logs & Warnings)</option>
                                     </select>
                                 </div>
                                 <div class="idlm-form-group">
                                     <span class="idlm-form-label">Diagnostic export</span>
                                     <div>
-                                        <a href="<?php echo esc_url($diagnostic_url); ?>" class="idlm-btn idlm-btn-secondary idlm-control-full idlm-link-plain">
+                                        <a href="<?php echo esc_url($idlm_diagnostic_url); ?>" class="idlm-btn idlm-btn-secondary idlm-control-full idlm-link-plain">
                                             Download Diagnostic Report (.txt)
                                         </a>
                                     </div>
@@ -52,21 +52,21 @@ $diagnostic_url = isset($context['diagnostic_url']) ? $context['diagnostic_url']
                             <div class="idlm-health-grid">
                                 <div class="idlm-health-item">
                                     <span>PHP Version</span>
-                                    <strong><?php echo esc_html($php_version); ?></strong>
+                                    <strong><?php echo esc_html($idlm_php_version); ?></strong>
                                 </div>
                                 <div class="idlm-health-item">
                                     <span>WordPress Version</span>
-                                    <strong><?php echo esc_html($wordpress_version); ?></strong>
+                                    <strong><?php echo esc_html($idlm_wordpress_version); ?></strong>
                                 </div>
                                 <div class="idlm-health-item">
                                     <span>Memory Limit</span>
-                                    <strong><?php echo esc_html($memory_limit); ?></strong>
+                                    <strong><?php echo esc_html($idlm_memory_limit); ?></strong>
                                 </div>
                                 <div class="idlm-health-item">
                                     <span>Action Scheduler</span>
                                     <strong>
-                                        <?php if (!empty($action_scheduler_version)): ?>
-                                            <span class="idlm-status-text is-success">Active (v<?php echo esc_html($action_scheduler_version); ?>)</span>
+                                        <?php if (!empty($idlm_action_scheduler_version)): ?>
+                                            <span class="idlm-status-text is-success">Active (v<?php echo esc_html($idlm_action_scheduler_version); ?>)</span>
                                         <?php else: ?>
                                             <span class="idlm-status-text is-danger">Missing (WP Cron Fallback)</span>
                                         <?php endif; ?>
@@ -75,7 +75,7 @@ $diagnostic_url = isset($context['diagnostic_url']) ? $context['diagnostic_url']
                                 <div class="idlm-health-item">
                                     <span>DB Table Prefix</span>
                                     <strong>
-                                        <?php echo esc_html($db_prefix); ?>
+                                        <?php echo esc_html($idlm_db_prefix); ?>
                                     </strong>
                                 </div>
                             </div>
@@ -85,25 +85,25 @@ $diagnostic_url = isset($context['diagnostic_url']) ? $context['diagnostic_url']
                         <article class="idlm-card idlm-operational-health">
                             <h3>Operational Health</h3>
                             <?php
-                            $health_status = isset($operational_health['status']) ? $operational_health['status'] : 'critical';
-                            $health_label = 'healthy' === $health_status ? 'Healthy' : ('warning' === $health_status ? 'Warning' : 'Critical');
-                            $health_class = 'healthy' === $health_status ? 'is-success' : ('warning' === $health_status ? 'is-warning' : 'is-danger');
+                            $idlm_health_status = isset($idlm_operational_health['status']) ? $idlm_operational_health['status'] : 'critical';
+                            $idlm_health_label = 'healthy' === $idlm_health_status ? 'Healthy' : ('warning' === $idlm_health_status ? 'Warning' : 'Critical');
+                            $idlm_health_class = 'healthy' === $idlm_health_status ? 'is-success' : ('warning' === $idlm_health_status ? 'is-warning' : 'is-danger');
                             ?>
                             <p class="idlm-card-desc">
                                 Current aggregate status:
-                                <strong class="idlm-status-text <?php echo esc_attr($health_class); ?>"><?php echo esc_html($health_label); ?></strong>.
+                                <strong class="idlm-status-text <?php echo esc_attr($idlm_health_class); ?>"><?php echo esc_html($idlm_health_label); ?></strong>.
                                 Warning thresholds begin at a 5-minute queue age or one recent fault; critical thresholds begin at 15 minutes or ten recent faults.
                             </p>
 
                             <div class="idlm-health-grid">
-                                <?php foreach (($operational_health['checks'] ?? array()) as $check): ?>
+                                <?php foreach (($idlm_operational_health['checks'] ?? array()) as $idlm_check): ?>
                                     <?php
-                                    $check_status = isset($check['status']) ? $check['status'] : 'critical';
-                                    $status_class = 'healthy' === $check_status ? 'is-success' : ('warning' === $check_status ? 'is-warning' : ('info' === $check_status ? 'is-muted' : 'is-danger'));
+                                    $idlm_check_status = isset($idlm_check['status']) ? $idlm_check['status'] : 'critical';
+                                    $idlm_status_class = 'healthy' === $idlm_check_status ? 'is-success' : ('warning' === $idlm_check_status ? 'is-warning' : ('info' === $idlm_check_status ? 'is-muted' : 'is-danger'));
                                     ?>
-                                    <div class="idlm-health-item idlm-operational-check" title="<?php echo esc_attr($check['guidance'] ?? ''); ?>">
-                                        <span><?php echo esc_html($check['label'] ?? 'Operational check'); ?></span>
-                                        <strong class="idlm-status-text <?php echo esc_attr($status_class); ?>"><?php echo esc_html($check['value'] ?? 'Unknown'); ?></strong>
+                                    <div class="idlm-health-item idlm-operational-check" title="<?php echo esc_attr($idlm_check['guidance'] ?? ''); ?>">
+                                        <span><?php echo esc_html($idlm_check['label'] ?? 'Operational check'); ?></span>
+                                        <strong class="idlm-status-text <?php echo esc_attr($idlm_status_class); ?>"><?php echo esc_html($idlm_check['value'] ?? 'Unknown'); ?></strong>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -113,12 +113,12 @@ $diagnostic_url = isset($context['diagnostic_url']) ? $context['diagnostic_url']
                         <!-- Horizontal Deployment Readiness Card -->
                         <article class="idlm-card idlm-horizontal-readiness">
                             <h3>Horizontal Deployment Readiness</h3>
-                            <?php if ('multi_node' === ($horizontal_readiness['mode'] ?? 'single_node')): ?>
+                            <?php if ('multi_node' === ($idlm_horizontal_readiness['mode'] ?? 'single_node')): ?>
                                 <p class="idlm-card-desc">
-                                    <?php if ('ready' === ($horizontal_readiness['status'] ?? 'blocked')): ?>
+                                    <?php if ('ready' === ($idlm_horizontal_readiness['status'] ?? 'blocked')): ?>
                                         All declared multi-node infrastructure gates are ready. Complete the two-node resilience suite before rollout.
                                     <?php else: ?>
-                                        Multi-node mode is blocked by <?php echo esc_html((string) absint($horizontal_readiness['blocking_count'] ?? 0)); ?> unresolved infrastructure gate(s).
+                                        Multi-node mode is blocked by <?php echo esc_html((string) absint($idlm_horizontal_readiness['blocking_count'] ?? 0)); ?> unresolved infrastructure gate(s).
                                     <?php endif; ?>
                                 </p>
                             <?php else: ?>
@@ -126,15 +126,15 @@ $diagnostic_url = isset($context['diagnostic_url']) ? $context['diagnostic_url']
                             <?php endif; ?>
 
                             <div class="idlm-health-grid">
-                                <?php foreach (($horizontal_readiness['checks'] ?? array()) as $check): ?>
+                                <?php foreach (($idlm_horizontal_readiness['checks'] ?? array()) as $idlm_check): ?>
                                     <?php
-                                    $check_status = isset($check['status']) ? $check['status'] : 'not_enabled';
-                                    $status_label = 'not_enabled' === $check_status ? 'Before multi-node' : ('ready' === $check_status ? 'Ready' : 'Blocked');
-                                    $status_class = 'blocked' === $check_status ? 'is-danger' : ('ready' === $check_status ? 'is-success' : 'is-muted');
+                                    $idlm_check_status = isset($idlm_check['status']) ? $idlm_check['status'] : 'not_enabled';
+                                    $idlm_status_label = 'not_enabled' === $idlm_check_status ? 'Before multi-node' : ('ready' === $idlm_check_status ? 'Ready' : 'Blocked');
+                                    $idlm_status_class = 'blocked' === $idlm_check_status ? 'is-danger' : ('ready' === $idlm_check_status ? 'is-success' : 'is-muted');
                                     ?>
-                                    <div class="idlm-health-item idlm-horizontal-check" title="<?php echo esc_attr($check['guidance'] ?? ''); ?>">
-                                        <span><?php echo esc_html($check['label'] ?? 'Infrastructure check'); ?></span>
-                                        <strong class="idlm-status-text <?php echo esc_attr($status_class); ?>"><?php echo esc_html($status_label); ?></strong>
+                                    <div class="idlm-health-item idlm-horizontal-check" title="<?php echo esc_attr($idlm_check['guidance'] ?? ''); ?>">
+                                        <span><?php echo esc_html($idlm_check['label'] ?? 'Infrastructure check'); ?></span>
+                                        <strong class="idlm-status-text <?php echo esc_attr($idlm_status_class); ?>"><?php echo esc_html($idlm_status_label); ?></strong>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -163,30 +163,30 @@ $diagnostic_url = isset($context['diagnostic_url']) ? $context['diagnostic_url']
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php if (empty($logs)): ?>
+                                    <?php if (empty($idlm_logs)): ?>
                                         <tr>
                                             <td colspan="6" class="idlm-table-empty">No telemetry logs recorded. Your plugin is healthy!</td>
                                         </tr>
                                     <?php else:
-                                        foreach ($logs as $log): 
+                                        foreach ($idlm_logs as $idlm_log):
                                             ?>
                                             <tr>
-                                                <td class="idlm-table-cell-nowrap idlm-status-text is-muted"><?php echo esc_html($log->created_at); ?></td>
-                                                <td class="idlm-table-cell-code"><?php echo esc_html($log->log_type); ?></td>
+                                                <td class="idlm-table-cell-nowrap idlm-status-text is-muted"><?php echo esc_html($idlm_log->created_at); ?></td>
+                                                <td class="idlm-table-cell-code"><?php echo esc_html($idlm_log->log_type); ?></td>
                                                 <td class="idlm-table-cell-nowrap">
-                                                    <span class="idlm-pill <?php echo ($log->severity === 'error') ? 'danger' : (($log->severity === 'warning') ? 'warn' : ''); ?>">
-                                                        <?php echo esc_html(strtoupper((string) $log->severity)); ?>
+                                                    <span class="idlm-pill <?php echo ($idlm_log->severity === 'error') ? 'danger' : (($idlm_log->severity === 'warning') ? 'warn' : ''); ?>">
+                                                        <?php echo esc_html(strtoupper((string) $idlm_log->severity)); ?>
                                                     </span>
                                                 </td>
-                                                <td class="idlm-table-cell-truncate" title="<?php echo esc_attr($log->message); ?>">
-                                                    <?php echo esc_html($log->message); ?>
+                                                <td class="idlm-table-cell-truncate" title="<?php echo esc_attr($idlm_log->message); ?>">
+                                                    <?php echo esc_html($idlm_log->message); ?>
                                                 </td>
-                                                <td class="idlm-table-cell-code" title="<?php echo esc_attr($log->file . ' (Line ' . $log->line . ')'); ?>">
-                                                    <?php echo esc_html($log->file ? basename($log->file) : '-'); ?><?php echo $log->line ? ' (Line ' . intval($log->line) . ')' : ''; ?>
+                                                <td class="idlm-table-cell-code" title="<?php echo esc_attr($idlm_log->file . ' (Line ' . $idlm_log->line . ')'); ?>">
+                                                    <?php echo esc_html($idlm_log->file ? basename($idlm_log->file) : '-'); ?><?php echo $idlm_log->line ? ' (Line ' . intval($idlm_log->line) . ')' : ''; ?>
                                                 </td>
                                                 <td class="idlm-table-action-cell">
-                                                    <?php if (!empty($log->stack_trace)): ?>
-                                                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-view-trace-btn idlm-btn-compact" data-trace="<?php echo esc_attr($log->stack_trace); ?>" data-message="<?php echo esc_attr($log->message); ?>">
+                                                    <?php if (!empty($idlm_log->stack_trace)): ?>
+                                                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-view-trace-btn idlm-btn-compact" data-trace="<?php echo esc_attr($idlm_log->stack_trace); ?>" data-message="<?php echo esc_attr($idlm_log->message); ?>">
                                                             View Trace
                                                         </button>
                                                     <?php else: ?>

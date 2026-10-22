@@ -42,7 +42,7 @@ final class IDLM_Admin_Assets {
 
         wp_register_script('idlm-dialog', $asset_url . 'js/dialog.js', array(), IDLM_VERSION, true);
         wp_register_script('idlm-admin-app', $asset_url . 'js/admin-app.js', array('jquery', 'idlm-dialog'), IDLM_VERSION, true);
-        wp_register_script('idlm-settings', $asset_url . 'js/settings.js', array('jquery', 'idlm-admin-app'), IDLM_VERSION, true);
+        wp_register_script('idlm-settings', $asset_url . 'js/settings.js', array('jquery', 'idlm-admin-app'), self::asset_version('js/settings.js'), true);
         wp_register_script('idlm-users-logs', $asset_url . 'js/users-logs.js', array('idlm-admin-app', 'idlm-dialog'), IDLM_VERSION, true);
         wp_register_script('idlm-dashboard-app', $asset_url . 'js/dashboard.js', array('jquery', 'idlm-chartjs'), self::asset_version('js/dashboard.js'), true);
         wp_register_script('idlm-kanban-app', $asset_url . 'js/kanban.js', array('jquery', 'idlm-admin-app'), IDLM_VERSION, true);

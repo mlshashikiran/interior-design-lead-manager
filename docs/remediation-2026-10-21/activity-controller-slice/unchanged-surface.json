@@ -1,0 +1,8 @@
+{
+  "builder": "Shashi",
+  "unchanged_sha256": {
+    "includes/class-admin-users-controller.php": "ffb39836008140dd81d789401e9a25a2206d32599755538ef63ccbb43d1d3eb7",
+    "assets/js/admin-app.js": "a8be890dffedc4f4fba7ceac317dd12b39f00f8953324a2f6e71e3ac58a416d1",
+    "assets/css/admin-style.css": "589c3cd1e1782ddee56c0da03afced4bd5b5aada1e2c5b4d3f46471b898ff382"
+  }
+}

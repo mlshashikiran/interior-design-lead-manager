@@ -1,5 +1,326 @@
 # Changelog
 
+## [1.102.88] - 2026-10-22
+
+### Changed
+
+- Separate integration authentication, webhook intake, Google feed transport/data, CAPI provider transport, task AJAX and lead collection reads behind existing facades. Preserve domain policy, persistence, retries and response contracts. Builder: Shashi.
+
+### Fixed
+
+- Make the administrator role-permission nonce boundary explicit and sanitize structured permission and request-method inputs. Builder: Shashi.
+- Count task attention within the site calendar day without applying the timezone offset twice. Builder: Shashi.
+- Count each REST request once when WordPress rechecks permission callbacks for response headers; continue validating credentials on every check. Builder: Shashi.
+- Reject unsupported network activation before schema writes and align support guidance with the PHP 8.5 qualification matrix. Builder: Shashi.
+- Redirect retired wp-admin CRM links before WordPress validates menu-page registration, retaining existing access checks and query allowlists. Builder: Shashi.
+- Let the complete CRM workspace use WordPress full-width alignment in block themes. Builder: Shashi.
+- Page pipeline cards in bounded batches with signed, user/filter-bound navigation and full filtered totals; scope task grouping before aggregation. Builder: Shashi.
+
+## [1.102.87] - 2026-10-21
+
+### Changed
+
+- Extract lead timeline and comment add/edit/delete handlers into a focused activity controller behind both existing AJAX facade layers. Preserve nonce, visibility, current-owner and comment-author checks, duplicate handling, response messages and timeline markup. Builder: Shashi.
+
+## [1.102.86] - 2026-10-20
+
+### Changed
+
+- Move client-error logging, administrator log clearing and diagnostic downloads into a telemetry controller behind the unchanged AJAX facade chain. Preserve guards, sanitization, stored rows, download headers and response messages. Builder: Shashi.
+
+## [1.102.85] - 2026-10-18
+
+### Changed
+
+- Isolate administrator platform connection diagnostics behind the existing AJAX facade chain. Retain nonce/capability checks, request fields, stored credential handling, provider transport and response messages. Builder: Shashi.
+
+## [1.102.84] - 2026-10-18
+
+### Changed
+
+- Move opt-in qualified-handoff email delivery into its own notification owner behind the existing integration callback. Preserve recipient selection, message bytes, hook registration and durable outbox retry behavior. Builder: Shashi.
+
+## [1.102.83] - 2026-10-18
+
+### Fixed
+
+- Prefix template-local variables; validate decimal quotation export identifiers and structured credential/date inputs; retain exact literal password bytes and once-only secret unslashing. Record bounded source-specific static exceptions for reviewed custom-table SQL. Ship privacy/support disclosures as text files and keep the directory readme concise, preserving full history. Builder: Shashi.
+
+## [1.102.82] - 2026-10-18
+
+### Fixed
+
+- Validate and unslash bootstrap action, URI and REST-route metadata before recovery and pending-migration request classification, preventing malformed query arrays from producing PHP diagnostics. Preserve existing CRM 503 and recovery-lock behavior. REL-007 static qualification remains in progress. Builder: Shashi.
+
+## [1.102.81] - 2026-10-18
+
+### Fixed
+
+- Reject malformed quotation catalogue wood flags and payment milestone names before writes; unslash settings/catalogue request values once before existing domain validation. Escape the validated numeric Meta connector challenge without changing response bytes. REL-007 static qualification remains in progress. Builder: Shashi.
+
+## [1.102.80] - 2026-10-13
+
+### Fixed
+
+- Remove WordPress request slashes once at quotation save/autosave boundaries, preserving literal backslashes and apostrophes in item and section text through revisions and exports. Calculator callers now supply unslashed values. REL-007 static qualification remains in progress. Builder: Shashi.
+
+## [1.102.79] - 2026-10-13
+
+### Fixed
+
+- Match the literal `automatic_` assignment-event prefix in dashboard reporting, preventing unrelated origins from counting as automatic assignments. Refresh the dashboard cache contract and add a native stored-event regression. REL-007 static qualification remains in progress. Builder: Shashi.
+
+## [1.102.78] - 2026-10-11
+
+### Fixed
+
+- Reject malformed or missing Meta verification query values before output, unslash only raw WordPress fallbacks and preserve plain-text challenges. Prefix MCP CLI globals while retaining JSON stdio and live policy checks. Static package qualification remains pending. Builder: Shashi.
+
+## [1.102.77] - 2026-10-11
+
+### Fixed
+
+- Exclude local graph/design artifacts from release ZIPs, independently reject their reintroduction and require bundled dependency license/resource inventory. Add a disposable, unfiltered official Plugin Check runner and document narrow binary/standalone-document/JSON output exceptions. Static submission qualification remains pending. Builder: Shashi.
+
+## [1.102.76] - 2026-10-11
+
+### Fixed
+
+- Make release ZIP entries reproducible by sorting the inventory and checking fixed root/file timestamps, UNIX modes and file compression. Pin CI packaging timezone to UTC and test rebuilds after source timestamp/permission/order changes. Runtime behavior and schemas are unchanged. Builder: Shashi.
+
+## [1.102.75] - 2026-10-09
+
+### Fixed
+
+- Align the selected WordPress 6.6 / PHP 7.4 minimums, publish database/crypto/PDF/ZIP/storage prerequisites, and refuse unavailable PDF prerequisites or XLSX temporary storage before binary output. Record resolved runtimes and prerequisite regressions in CI. Builder: Shashi.
+
+## [1.102.74] - 2026-10-09
+
+### Documentation
+
+- Publish current provider data transfers, attribution cookies, retention, erasure/backup/removal limits, owner-supplied support/security contact and manual update/recovery instructions. Require public privacy/support guides in distribution inventory. Builder: Shashi.
+
+## [1.102.73] - 2026-10-09
+
+### Fixed
+
+- Keep public plugin credit off for fresh or partial branding settings, preserve saved on/off preferences on upgrade and accept only the explicit checkbox value when saving opt-in. Clarify the shared administrator control and retain sign-in/workspace parity. Builder: Shashi.
+
+## [1.102.72] - 2026-10-09
+
+### Fixed
+
+- Include the exact Inter OFL 1.1 license, verified upstream/provider provenance and file hashes in distribution packages. Require font resources and notices in release inventory; preserve existing font/CSS bytes. Builder: Shashi.
+
+## [1.102.71] - 2026-10-09
+
+### Fixed
+
+- Encrypt remaining platform and webhook credentials with checked, restartable migration and environment overrides. Keep credential fields write-only with explicit clear controls; use current credentials for connection tests and dispatch. Builder: Shashi.
+- Move Meta authentication to Bearer headers, disable credential-bearing redirects and redact provider echoes before responses/logging. Retain Google’s required, encoded Measurement Protocol query secret with documented tracing limits. Builder: Shashi.
+
+## [1.102.70] - 2026-10-09
+### Fixed
+- Preserve manual audience work per lead/rule, apply current exclusions, and report confirmed, rejected or uncertain outcomes with bounded retries and pages. Selected retry no longer scans unrelated contacts. Builder: Shashi.
+- Commit audience claims before provider HTTP and acknowledge logs/outcomes atomically; serialize overlapping runs and fence recovery callbacks. Add manual queue removal and clear runtime state on restore, erasure and reset. Builder: Shashi.
+
+## [1.102.69] - 2026-10-09
+
+### Fixed
+
+- Preserve CAPI replay protection independently of configured diagnostic retention. Commit minimal delivery claims before sending and receipts with attempt logs afterwards; migrate surviving legacy successes before bounded pruning and fence uncertain attempts. Keep explicit erasure and same-site restore behavior consistent. Builder: Shashi.
+
+## [1.102.68] - 2026-10-09
+
+### Fixed
+
+- Stop Google audience CSV pulls when their rule is disabled or removed. Share enabled-rule resolution with scheduled/manual sync, skip disabled duplicate targets, preserve explicit saved-rule precedence and prevent feed cache storage. Builder: Shashi.
+
+## [1.102.67] - 2026-10-09
+
+### Fixed
+
+- Process every signed Meta WhatsApp batch message and deduplicate Meta/Interakt provider IDs with an atomic activity receipt. Match canonical full-phone identities and report partial or failed handling instead of acknowledging dropped replies. Builder: Shashi.
+
+## [1.102.66] - 2026-10-09
+
+### Fixed
+
+- Retry failed conversion logs using exact default/custom event mappings and shared current eligibility gates. Preserve new-log event identity, use current credentials, report the actual attempt, bound retries and retain uncertain delivery for reconciliation. Builder: Shashi.
+
+## [1.102.65] - 2026-10-09
+
+### Fixed
+
+- Queue ordinary Interakt automations as opaque jobs using Action Scheduler or WP-Cron. Recheck current settings, credentials, mapping, ownership and lead state; refuse legacy copied-key callbacks and retain interrupted sends for reconciliation. Builder: Shashi.
+
+## [1.102.64] - 2026-10-09
+
+### Fixed
+
+- Associate task labels with their controls, expose the open lead drawer to assistive technology, support Enter submission and recoverable title errors, and return focus after task save or drawer dismissal. Builder: Shashi.
+
+## [1.102.63] - 2026-10-08
+
+### Fixed
+
+- Honor the selected paper size across quotation setup, print and downloaded PDF. Normalize legacy paper names, use safe A4 defaults and remove the conflicting PDF A4 override. Specify CSV escaping explicitly for clean PHP 8.4 downloads. Builder: Shashi.
+
+## [1.102.62] - 2026-10-07
+
+### Fixed
+
+- Preserve revision currency across historical views, new revisions and exports. Capture contractual cover/closing/footer content and payment milestones per saved revision; print/PDF/CSV/XLSX read that snapshot. Mark missing historical terms without inventing them from current settings. Keep branding/paper layout current. Builder: Shashi.
+
+## [1.102.61] - 2026-10-07
+
+### Fixed
+
+- Reject invalid, nonfinite and excessive quotation numbers before writes. Normalize billable quantity before pricing, calculate in integer hundredths with matching browser rounding, bound rows/sections and ensure GST/round-off totals fit the lead projection. Preserve historical revisions. Builder: Shashi.
+
+## [1.102.60] - 2026-10-07
+
+### Fixed
+
+- Verify and pin InnoDB table metadata before quotation saves, working-copy mutations, catalogue imports and number reservations. Refuse unsupported/missing tables or failed checks with repair guidance, preserving data and numbering until an operator repairs the environment. Builder: Shashi.
+
+## [1.102.59] - 2026-10-07
+
+### Fixed
+
+- Preserve legacy quotation commercial states, revision pointers, finalization and event dates during upgrades. Verify historical relationships without rewriting state; enforce read-only finalized/commercial history across editing and working-copy endpoints. Retain complete 2.5.2 backups. Builder: Shashi.
+
+## [1.102.58] - 2026-10-07
+
+### Fixed
+
+- Preserve historical quotation item classifications on every upgrade/reinstall. Record conservative legacy provenance in additive quotation schema 2.5.2, retain submitted classifications and revision copies, and normalize complete prior backups without catalogue inference or monetary changes. Builder: Shashi.
+
+## [1.102.57] - 2026-10-07
+
+### Fixed
+
+- Verify quotation schema 2.5.1 physically before checked migration steps and final completion. Roll back failed backfills with their markers, retry pending work, and stop activation/CRM boot on migration errors. Retain complete 2.5.0 backup compatibility. Builder: Shashi.
+
+## [1.102.56] - 2026-10-07
+
+### Fixed
+
+- Share manual task and structured early-close vocabularies between forms and handlers. Document qualification coupling, permitted reversals, historical repair and print/PDF behavior against executable contracts. Builder: Shashi.
+
+## [1.102.55] - 2026-10-07
+
+### Fixed
+
+- Bound sensitive-data retention with transactional progress, retries, overlap protection and operational failure status. Page task cards after SQL qualification grouping, count/filter WhatsApp in SQL, and stage bounded CSV downloads before sending headers. CAPI logs now respect configured retention instead of the diagnostic seven-day cutoff. Builder: Shashi.
+
+## [1.102.54] - 2026-10-07
+
+### Fixed
+
+- Add authorized, audited identity-review decisions, external submission replay protection, complete review erasure on lead deletion/reset, and bounded checked retention. Preserve prior complete backups through additive core schema 1.3.9. Builder: Shashi.
+
+## [1.102.53] - 2026-10-07
+
+### Fixed
+
+- Enforce active-lead capacity inside checked ownership and reopening writes, using current settings/counts and a per-representative transactional lock. Refresh unassigned recovery capacity per lead, preserve zero-cap unlimited behavior and report per-lead bulk failures. Builder: Shashi.
+
+## [1.102.52] - 2026-10-07
+
+### Fixed
+
+- Reject new ownership for disabled, deleted, unenrolled or role-ineligible CRM users across manual, intake and fallback assignment. Recheck live target grants under the checked lifecycle transaction and keep historical owner filters intact. Builder: Shashi.
+
+## [1.102.51] - 2026-10-07
+
+### Fixed
+
+- Repair partial pre-sales task plans with stable cycle identities and checked, concurrent-safe missing-slot creation. Preserve task history, reconcile active plans from outreach evidence, and retry bounded scheduled repair. Builder: Shashi.
+
+## [1.102.50] - 2026-10-07
+
+### Fixed
+
+- Save required core lead state, immutable history, activities, tasks, attribution touchpoints and delivery intent atomically. Check commit and transaction ownership; lock transition reads and retain durable after-commit hook/cache recovery with bounded replay. Builder: Shashi.
+- Make automatic routing and manual/CSV intake check required work before success; preserve existing callback and payload contracts. Builder: Shashi.
+
+## [1.102.49] - 2026-10-06
+
+### Fixed
+
+- Verify physical core/routing schema and InnoDB engines before advancing independent migration markers. Serialize installers with a database-scoped session lock, stop activation/runtime on incomplete migrations, and check restartable backfills and durable marker writes. Builder: Shashi.
+
+## [1.102.48] - 2026-10-06
+
+### Fixed
+
+- Validate complete same-site CRM backups, schema, assigned users and object relationships before transactional recovery. Stage native constraints before deletion, preserve credentials and issued quotation counters, and export one consistent database snapshot. Builder: Shashi.
+- Fence active CRM work during restore/reset and reject obsolete queued generations; clear runtime jobs and quotation working copies after recovery. Preserve callbacks and download/form contracts. Builder: Shashi.
+
+## [1.102.47] - 2026-10-06
+
+### Fixed
+
+- Store confidential lead uploads in private WordPress database chunks and serve them through live authenticated lead access. Verify and migrate legacy main/variant files before removing public copies; revoke removed/deleted files with resumable cleanup. Preserve upload response contracts and explicit manager operations. Builder: Shashi.
+- Disclose private-file exclusions in JSON backups and block partial restores that could break private-file identities. Builder: Shashi.
+
+## [1.102.46] - 2026-10-06
+
+### Fixed
+
+- Protect lead CSV text cells against formula, control and Unicode prefixes using the shared quotation text sanitizer. Preserve numeric ID/quote-value columns, download filters and authorization; encode quotes/backslashes with an explicit CSV escape policy. Builder: Shashi.
+
+## [1.102.45] - 2026-10-06
+
+### Fixed
+
+- Compile MCP custom queries through a restricted SELECT grammar with explicit field grants, safe CRM representative projection and bounded rows, offsets and MySQL execution time. Reject unsupported table expressions and authentication data before execution. Builder: Shashi.
+- Require a separate explicit MCP PII grant for contact/profile tools and custom contact fields; preserve tool names, SQL argument and HTTP/stdio response envelopes. Builder: Shashi.
+
+## [1.102.44] - 2026-10-06
+
+### Fixed
+
+- Require effective CRM enrollment; remove legacy automatic editorial-role CRM grants and migrate global visibility to assigned-only once. Preserve explicit per-role scopes, dedicated CRM roles, direct grants and later revocations. Builder: Shashi.
+- Scope quotation lists/counts and pending/completed task queues to live lead access. Fence warmed reads on scope/capability/suspension edits while preserving explicit manager mutations and historical pre-sales visibility. Builder: Shashi.
+
+## [1.102.43] - 2026-10-06
+
+### Fixed
+
+- Bound quotation creation and repeated save keys to the authorized actor, lead, quote and source revision; reject persisted revision substitution on new quotations. Builder: Shashi.
+- Separated quotation mutation authority from read-all visibility for save, autosave, discard and editor controls. Recheck live ownership and capabilities after acquiring the lead write lock; retain explicit manager grants and owner workflows. Builder: Shashi.
+
+
+## [1.102.42] - 2026-10-02
+
+### Fixed
+
+- Made lead details open promptly by loading activity, WhatsApp history, and tasks only when their respective drawer tab is opened. WhatsApp history is bounded to the latest 100 messages and retains scoped access and read-state handling. Builder: Shashi.
+
+## [1.102.41] - 2026-10-02
+
+### Changed
+
+- Enabled Item Catalogue management for WordPress Editors as well as recognized CRM manager roles, without granting quotation-setup or broader manager capabilities. Builder: Shashi.
+
+## [1.102.40] - 2026-10-02
+
+### Added
+
+- Added secure exact-revision quotation downloads: in-memory Dompdf PDF, UTF-8-BOM streamed CSV, and typed OOXML XLSX. All exports require quote-view/download capabilities, nonce, revision ownership, and scoped lead access; tabular downloads exclude internal/autosave/history data and neutralize CSV formulas. Builder: Shashi.
+
+## [1.102.39] - 2026-10-02
+
+### Changed
+
+- Consolidated quotation saving into one locked Draft-to-revision lifecycle. Current Draft revisions create tracked R+1 records with a required change remark, author attribution, history, lead activity, and a superseded source revision; quotation approval/shared/rejected-style states are no longer active. Builder: Shashi.
+
+### Fixed
+
+- Repaired the revision-reason dialog handoff so its resumed submit is not blocked by autosave duplicate-submit protection, aligned editor/autosave/save capabilities, and serialized concurrent revision saves on the quotation row. Builder: Shashi.
+
 ## [1.102.38] - 2026-09-21
 
 ### Fixed

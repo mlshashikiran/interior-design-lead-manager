@@ -1,0 +1,11 @@
+{"scenario":"QUO-S01-other-owner-mutation-gate","status":"PASS","evidence":{"quotation_read_gate":true,"quotation_save_gate":false,"canonical_lead_mutation_gate":false}}
+{"scenario":"QUO-S02-reassignment-list-scope","status":"PASS","evidence":{"where":"1=1 AND l.assigned_rep_id = %d","params":[7],"current_lead_authorization":false}}
+{"scenario":"QUO-S03-persisted-currency","status":"FAIL","evidence":{"persisted_currency":"INR","configured_currency":"USD","rendered":"$118.00"}}
+{"scenario":"QUO-S04-area-minimum","status":"FAIL","evidence":{"section_key":"general","row_type":"item","catalogue_item_id":0,"is_wood":0,"category":"","room_area":"","item_code":"","item_name":"","description":"Synthetic tiny area","specification":"","length":0.01,"height":0.01,"quantity":0.01,"unit":"Nos","unit_rate":1000,"discount_type":"fixed","discount_value":0,"discount_amount":0,"line_subtotal":0,"line_total":0,"is_optional":0,"sort_order":0}}
+{"scenario":"QUO-S05-finite-decimal","status":"FAIL","evidence":{"input":"1e309","is_finite":false}}
+{"scenario":"QUO-S06-failed-migration-recovery","status":"FAIL","evidence":{"all_query_writes":false,"schema_marker":"2.5.0","snapshot_marker":"1.1.0","lifecycle_marker":"1.0.0"}}
+{"scenario":"QUO-S07-transactional-DDL","status":"FAIL","evidence":{"tables":10,"explicit_innodb_tables":0}}
+{"scenario":"QUO-S08-formula-3d","status":"PASS","evidence":{"input":"=1+1","output":"'=1+1"}}
+{"scenario":"QUO-S08-formula-09","status":"PASS","evidence":{"input":"\t=SUM(A1)","output":"'\t=SUM(A1)"}}
+{"scenario":"QUO-S08-formula-20","status":"PASS","evidence":{"input":" @SUM(A1)","output":"' @SUM(A1)"}}
+{"scenario":"QUO-S08-formula-2d","status":"PASS","evidence":{"input":"-2+3","output":"'-2+3"}}

@@ -3,6 +3,11 @@
 if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_Integrity_Command {
+    /** Migrate/check confidential files in bounded, resumable WordPress batches. */
+    public function files($args, $assoc_args) {
+        WP_CLI::log(wp_json_encode(IDLM_Private_Files::maintenance()));
+    }
+
     /** Audit application-enforced lead relationships; pass --repair to remove orphans. */
     public function audit($args, $assoc_args) {
         $repair = !empty($assoc_args['repair']);

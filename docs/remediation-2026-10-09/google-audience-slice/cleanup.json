@@ -1,0 +1,8 @@
+{
+  "builder": "Shashi",
+  "remaining_disposable_databases": 0,
+  "owned_socket_server_stopped": true,
+  "owned_mysql_data_removed": true,
+  "configured_site_untouched": true,
+  "native_http_fixture_cleanup": "Runner shutdown removed each owned database and temporary content tree."
+}

@@ -1,0 +1,5 @@
+ENV PHP=8.5.12 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS M7-H-board-pages-bound-cards-and-preserve-full-filtered-stage-counts
+PASS M7-H-board-cursors-reject-other-actor-tampering-and-filter-sort-changes
+PASS M7-H-board-filter-cannot-widen-representative-scope
+3 passed, 0 failed

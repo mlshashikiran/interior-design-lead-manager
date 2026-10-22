@@ -34,6 +34,10 @@ final class IDLM_Performance_Dataset_Generator {
                 'logs' => 200000,
                 'quotes' => 20000,
             ),
+            'team-stress' => array(
+                'leads' => 100000, 'activities' => 800000, 'tasks' => 200000,
+                'touchpoints' => 200000, 'logs' => 400000, 'quotes' => 40000,
+            ),
             'maximum' => array(
                 'leads' => 250000,
                 'activities' => 2000000,
@@ -225,7 +229,7 @@ final class IDLM_Performance_Dataset_Generator {
             'lead_id' => $lead_id,
             'quote_number' => sprintf('PERF-%s-%06d', $run_id, $ordinal),
             'title' => self::marker($run_id) . ' Proposal ' . $ordinal,
-            'status' => 0 === $ordinal % 4 ? 'Shared' : 'Draft',
+            'status' => 'Draft',
             'current_revision_id' => 0,
             'owner_user_id' => $user_id,
             'created_by' => $user_id,
@@ -244,7 +248,7 @@ final class IDLM_Performance_Dataset_Generator {
             'quote_id' => $quote_id,
             'revision_number' => 1,
             'revision_name' => sprintf('PERF-%s-%06d-R01', $run_id, $ordinal),
-            'status' => 0 === $ordinal % 4 ? 'Shared' : 'Draft',
+            'status' => 'Draft',
             'currency_code' => 'INR',
             'customer_name' => 'Synthetic Customer ' . $ordinal,
             'customer_phone' => '',
@@ -300,7 +304,7 @@ final class IDLM_Performance_Dataset_Generator {
     }
 
     private static function assert_run_id(string $run_id): void {
-        if (!preg_match('/^(small|expected|maximum)-[a-z0-9_-]{1,20}$/', $run_id)) {
+        if (!preg_match('/^(small|expected|team-stress|maximum)-[a-z0-9_-]{1,20}$/', $run_id)) {
             throw new InvalidArgumentException('Invalid performance dataset run ID.');
         }
     }

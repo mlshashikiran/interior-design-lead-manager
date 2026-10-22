@@ -1,0 +1,167 @@
+{
+  "author": "Shashi",
+  "recorded_at": "2026-10-06T06:30:02.584682+00:00",
+  "baseline_files": 619,
+  "changed_starting_files": {
+    ".github/workflows/tests.yml": {
+      "before": "277a561a7d436a087f40f64b30d1a95c6cb7ac16d89fa221c167cdd38f4439fc",
+      "after": "17d69e4d80801184cdddaec5a9d110131db83f0722558b214a8e91a3ca6d38ad"
+    },
+    "CHANGELOG.md": {
+      "before": "7011278c74866378451a989b336752ff2c78eec35a1f91abd25af44724de11e3",
+      "after": "2ceba7459dc8f82718df27e1fcdec136bd9e83f9186129b486556674d87b38f9"
+    },
+    "docs/ARCHITECTURE.md": {
+      "before": "f7a97f9509d8ba472333f94317dcc47c7b7b49224fd548642d4537bfeafdbc46",
+      "after": "b647cf9127c2dbeae1a77440a62c19dbb82f02c3f6e5efeb1b5471a1034c4a6f"
+    },
+    "docs/AUDIT-REMEDIATION-PLAN.md": {
+      "before": "14358fcf23835f1000ce5d103f5d04404c03bdf624ca8e35802d9a24b16cf3d1",
+      "after": "df8e43267a29e03012d750cbea1556328948ea8d0b20bba59cf4893a9823f8a8"
+    },
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": {
+      "before": "6d8ce33e04118fbe4f0ada0bc87b902b8111c2753b97f99915754d9540ed76fb",
+      "after": "b7cf6cef4f1b469edfad641ca0f209fc5f66534d9fb0458296ef4da37491ae60"
+    },
+    "docs/CHANGELOG-DEV.md": {
+      "before": "650abd74aa4e6360f6e2d9b2f8aca881bc89002c1445603f572e232ed7c76f9c",
+      "after": "5cc49e4f05365d5eec4f1ffc10181c9b6b26bf3701324e4c1a100c26415afc97"
+    },
+    "docs/FEATURE-MAP.md": {
+      "before": "87ca69818b73cd2b40f0adffe5c6273a9b270e50ebf5ea0c5894ee80d3bd4bc1",
+      "after": "769eaceee9b98f1161b19874189d81f1ab81af7516a9053e61ae5aed1c662fb5"
+    },
+    "docs/FLOWS.md": {
+      "before": "7283e281fab2a96c40e4c03f29d0a01eab976e5d1020bf13d79ac81a57392993",
+      "after": "ee4381481d91cf057354d58a2ddb05c1fd1135bde513a6edea1602f77dfdefe7"
+    },
+    "docs/INTERFACES.md": {
+      "before": "45ea6e3c8d2d9eab7512b66ad69caa0dbe3566307df350f6a48919647474e41c",
+      "after": "7662ba69103d8acb4d7d2a926d743fb361335e0bcfd396d167e0178095d69f27"
+    },
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": {
+      "before": "f716038f8317681cb2b2ceb161d1eb19d4be840829da9f0ae1f813e25c156689",
+      "after": "d5d46f28ab7af419e1a10c344d958ff879ac8e703e9cdd8e740d5f65277389c8"
+    },
+    "docs/SECURITY.md": {
+      "before": "88b3a51bd836199b0b878c4dd81bfd8661776350f0aa1771e54406d30f9f05f4",
+      "after": "90d48c6425c2e06af2f8856d58171f57e732b497a00d80b566a0bc6eed33fbcc"
+    },
+    "docs/audit-remediation-backlog.csv": {
+      "before": "8aa048b6f3a81986caed4fc913915ee4752bdb77ee9b9d611767fe175c7d0aa3",
+      "after": "c933f2c1c55f443941cd56caf177605c217c9861bb5a19608d6dc32750db602c"
+    },
+    "includes/class-admin-ajax.php": {
+      "before": "59745d1edac09bfd15fcedd1f9ca4bc038f417315b46d3ceee4e15bb1e07c8a3",
+      "after": "f2c3aa2c85fb45d3a12f2ffa33878448e4b688be56341ddb2ee18b53cd18ab4d"
+    },
+    "includes/class-admin-leads-renderer.php": {
+      "before": "5001eefabbef21eee1cef03ea0c4d620b7534bb73a372b5bad4cfcc000c89618",
+      "after": "2130956ba7f6df398d4366dddc5101f6a629c9821dac9c79f4eb1a189cdca753"
+    },
+    "includes/class-admin-settings-renderer.php": {
+      "before": "529939157fd8e6174774d42eca78ba8a7f15e767acd2cee63081eef0d34305fb",
+      "after": "d9a3c374ab78f7ef2c0068dc4fccf7b26c9a878c7b5aefb31508dbb8f61b482d"
+    },
+    "includes/class-admin-users-controller.php": {
+      "before": "67888d9127b0112460a44527daf8c2d558b37c3ca6a022f6b5b8068ba593f753",
+      "after": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a"
+    },
+    "includes/class-dashboard-read-model.php": {
+      "before": "7e529529e808bce4cbffc0e2942efbf7cf54a7ae2e3b1727f361c994816b8168",
+      "after": "10269614857525995d0e42b74284f4f6edf8eaddb79b3c33634cfd7b62c6dacd"
+    },
+    "includes/class-lead-access-policy.php": {
+      "before": "ddaabcea5f1812a3337e9849d461f2189a5b245daf7fb943e209467e21472ee6",
+      "after": "456cb20ce719d7ceb596ed61a977438fd33a17d41758f0f81a1b67ff3d810ff0"
+    },
+    "includes/class-quotation-controller.php": {
+      "before": "b368d05acf789911d1530aafcb54a4bf1034355b42566df56c99f64a22865d13",
+      "after": "573f5af9e5443e72df5d561f60791d5ee0b7551eb5e66f8ae100f9797bb73b70"
+    },
+    "includes/class-quotation-policy.php": {
+      "before": "4ac6a734eb7abd82aab5ee93aac1bc13a7eb34db7436e014cd678fa23dabdafc",
+      "after": "5d2001e4e97502abfe71f7f30dfb7834c2ac6340711fdaf17b0a421f9a506571"
+    },
+    "includes/class-quotation-renderer.php": {
+      "before": "164050218e5e15f6b47cd5ce080c5f3886bc8c9fe84c41cb727cc8f622e0df0e",
+      "after": "217250105f2458d14f2f3ea280a1e153e2f2ebea4f8d5754268294a8115f77ca"
+    },
+    "includes/class-quotation-repository.php": {
+      "before": "899c33459e19d4b55ba3de2d2b18c26f069f781cd644d74c24bd557ef7b2fa88",
+      "after": "eb06133083010e820efd886e9e8e456d7756f21707c075092525bea48c06ec78"
+    },
+    "includes/class-read-model-cache.php": {
+      "before": "5867826a38208f55bf2a43e8bff7ae56a87d6c905b00a0f89d09ae1c8c224a5f",
+      "after": "6a27bff82b2ee6ef0f4a2f31f20179eee6469b449cb414d9a3d7aec986522a3f"
+    },
+    "includes/class-settings.php": {
+      "before": "5415bc2909a191b0297b4362754ebfc36be9f143d9e454c0d6ac5d15ecbaffcf",
+      "after": "ba084b66d0f58bab64cd567efb4949b6f844ef9d4d0ef69e326de758220b3402"
+    },
+    "interior-design-lead-manager.php": {
+      "before": "06dbf6f443b84e4882f947706b1d61099c6de8c1959099122aca60cf6abcc5e3",
+      "after": "0a0c136209a0908e8391b6af5986e9aadf0fcfba724aba1939af541f2f454b2a"
+    },
+    "readme.txt": {
+      "before": "4f01e2a3017139d3100c45687ed0af3450f8809ae1232053427c9f42ee2f9462",
+      "after": "36612fd998e7920b5a98d755cfeea026bdc748f102b80ed9ab52ebcb68289679"
+    },
+    "tests/README.md": {
+      "before": "ab6ed0c8e844cb9a94a1de00784d88454d8cd63377b043695dd0fe950dbcb6a8",
+      "after": "1163fcff6b548b136614f72ceb20ead44618c37553e2f62feae58f76885557fa"
+    },
+    "tests/admin-refactor-contracts.php": {
+      "before": "5e1303210125204cbcbb87f3ea85064885c331ca1fdf8c3d9d834d71d1ddbfde",
+      "after": "b8a1ef634298fd9c9c9c06be4b41fc86126584d96d3ec89db6fb0e0856be1987"
+    },
+    "tests/audit-quotation-probes.php": {
+      "before": "5bb4f8ac2e9f2488f743f90a2be8e5b34d3b575334f5f07e39c5d885fd4e82ef",
+      "after": "0e6bd8a1a8c5aaf275cc6be17ea49fcab2ed348ec55e6173691e59b610c11b20"
+    },
+    "tests/bootstrap.php": {
+      "before": "2f64eed321cd8980eea5eb9ee1de792d93f25192f4b24ffeb350b6597d217bbb",
+      "after": "d7996e1ec8a1f06772e8f74fb879afdc5211099f8ed585a0006a2c1d97d8af13"
+    },
+    "tests/dashboard-contracts.php": {
+      "before": "65b56975f7daa7820f2f511c5cb296d8ce988cbe7b6935d81817c6484332f985",
+      "after": "75fcab2b654c65286849e4552d411482f66a9d19cf50ba007d7cde3a660ab9b0"
+    },
+    "tests/high-priority-contracts.php": {
+      "before": "82f3207228607f4c4b42589b0c5ec52b4b2122217663d516694d062a8446564f",
+      "after": "d9440cdf614448d97565b614d0494baf8d12005e4f6623d455bdca09c72968cf"
+    },
+    "tests/integration/http-router.php": {
+      "before": "5d5e5409d348b8a36015446a35cf2f8699768762b6efe964560525af9dcc975d",
+      "after": "3f4e3aef34c872bede5199338713ca468f846e868734c931612edde40f5513d7"
+    },
+    "tests/integration/quotation-http.php": {
+      "before": "85ea37a5443bea0e5e5f179ceebb1b3ac6c9f37ecb7185a69bb2faedc3907dd7",
+      "after": "14bb56ae057b5a07cc5eca7a39686ec7f624da390ffefe9b8f25178445c9ad4f"
+    },
+    "tests/integration/run.php": {
+      "before": "7ecb253dc0e77806b8d233861581c544dafb3fd7b3f418f2cffdf35fadcc17cd",
+      "after": "bf795b17515d9b207a85a063ff7495a68b437ba4d012c7f3179f983fb5232d02"
+    },
+    "tests/quotation-authorization-contracts.php": {
+      "before": "23a79b072e1f24ba374eff983fb47d1318f0a745dc1492f6fba28d08df81fd20",
+      "after": "a640691bdc7aa249b7270883bddf5789f638de7ef059649da5c8c9561fce808f"
+    },
+    "tests/release-contracts.php": {
+      "before": "5913bfc63350f6dbe1c2405067c4eccde7c644aa5e913ead0c4c4beea8f7e9e2",
+      "after": "5204b54871c9c2aa605582dcce44a8d9331248cbd17973f5c0bfaa0deba025d5"
+    },
+    "tests/run.php": {
+      "before": "50a32ce5146ef5597eeb4261a0b30bc6543e5297f7635b17fde1b6fe3e922ec1",
+      "after": "b5c5c0aaaacfab76b1ff0a4f437fba2fd3c3aa55bbd9cf1e2dacaff1106ddbf0"
+    }
+  },
+  "unchanged_starting_files": 581,
+  "missing_files": [],
+  "immutable_audit_and_first_slice_files": 97,
+  "immutable_status": "All SHA-256 hashes unchanged",
+  "source_snapshot": "/private/tmp/idlm-read-slice-baseline/source",
+  "binary_diff_backup": "/private/tmp/idlm-read-slice-baseline/dirty.patch",
+  "baseline_manifest_sha256": "fb988a168233bca8e4a2e3db00ad43dd683a1a2325d15ca4c43e66ce3b6c07c0",
+  "scope": "Only listed starting files plus new slice tests/report/evidence changed; graphify-out is ignored local navigation output."
+}

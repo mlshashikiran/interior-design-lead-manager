@@ -1,0 +1,6 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS M6-H-telemetry-denials-preserve-rows-jobs-and-outbound-state
+PASS M6-H-telemetry-client-error-keeps-sanitized-storage-and-empty-success
+PASS M6-H-telemetry-download-keeps-headers-counts-order-and-fifty-row-bound
+PASS M6-H-telemetry-admin-clear-keeps-success-and-empty-report
+4 passed, 0 failed

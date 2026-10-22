@@ -1,0 +1,1097 @@
+{
+  "author": "Shashi",
+  "recorded_at": "2026-10-06T05:49:25.939131+00:00",
+  "candidate_version": "1.102.43",
+  "source_revision": "dirty working tree on ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "artifact_sha256": null,
+  "artifact_status": "NOT RUN: exact artifact not built/installed",
+  "findings": {
+    "QUO-001": "IMPLEMENTED",
+    "QUO-003": "IMPLEMENTED"
+  },
+  "environment": {
+    "PHP": "8.4.14",
+    "WordPress": "7.1.2",
+    "MySQL": "8.4.0",
+    "engine": "InnoDB",
+    "jobs": "WP-Cron",
+    "persistent_object_cache": false,
+    "database": "owned disposable idlm_test_* only",
+    "outbound": "MU-plugin pre_http_request and pre_wp_mail interception; cron spawning disabled"
+  },
+  "checks": [
+    {
+      "command": "php tests/run.php",
+      "result": "177 PASS / 0 FAIL",
+      "evidence": "fast-final.log"
+    },
+    {
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD='' IDLM_TEST_DB_HOST='localhost:/private/tmp/idlm-slice-mysql/mysql.sock' php tests/integration/run.php",
+      "result": "17 PASS / 0 FAIL",
+      "evidence": "native-verified.log"
+    },
+    {
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD='' IDLM_TEST_DB_HOST='localhost:/private/tmp/idlm-slice-mysql/mysql.sock' php tests/integration/quotation-http.php",
+      "result": "68 PASS / 0 FAIL",
+      "evidence": "http-verified.log"
+    },
+    {
+      "command": "php -l each changed/untracked first-party PHP file",
+      "result": "26 PASS",
+      "evidence": "php-lint.log"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    },
+    {
+      "command": "Focused inbound and Action Scheduler fast contracts",
+      "result": "PASS",
+      "evidence": [
+        "inbound.log",
+        "interakt.log"
+      ]
+    },
+    {
+      "command": "Existing audit probes",
+      "result": "Unrelated integration 6 PASS / 7 FAIL; quotation QUO-S01 / forged QUO-S09 now PASS, six other open quotation failures retained",
+      "evidence": [
+        "audit-integration.log",
+        "audit-quotation-after.log",
+        "forged-after.log"
+      ]
+    }
+  ],
+  "http_cases": [
+    {
+      "id": "T10-H-authorized-create-owner-0",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-authorized-create-other-1",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-authorized-create-readall-2",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-authorized-create-manager-3",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-authorized-create-owner-4",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-autosave-owner",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-discard-owner",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-save-owner",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-autosave-other",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-discard-other",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-save-other",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-autosave-readall",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-discard-readall",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-save-readall",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-revision-new",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-owned-revision-new",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-quote",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-revision",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-autosave-substitute-lead",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-autosave-substitute-quote",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-autosave-substitute-revision",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-discard-substitute-quote",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-discard-substitute-revision",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-anonymous-save",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-missing-lead",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-missing-save-nonce",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-cross-user-autosave-nonce",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-key",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-owned-other-lead-key",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-different-actor-key",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-repeat-initial-request",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-new-lead-other",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-new-lead-readall",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-readall-owner-autosave-revision",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-owner-autosave-and-discard",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-owner-revision-and-repeat",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-request-key-source-substitution",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-stale-revision-no-write",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T12-H-exact-old-revision-export-owner",
+      "finding_ids": [
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-12"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T12-H-exact-old-revision-export-readall",
+      "finding_ids": [
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-12"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T12-H-exact-old-revision-export-manager",
+      "finding_ids": [
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-12"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T12-H-deny-foreign-revision",
+      "finding_ids": [
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-12"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T12-H-deny-non-owner",
+      "finding_ids": [
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-12"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-readall-read-without-editor",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-save",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-autosave",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-discard",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-export",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-reassigned-new-owner-autosave-and-save",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-manager-assigned-read-scope-save-autosave",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-manager-grant-revoked",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-revoked-session-save",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-revoked-session-autosave",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-revoked-session-export",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-disabled-user-save",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-disabled-user-autosave",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-disabled-user-discard",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-disabled-user-export",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-create-reassignment",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-create-revocation",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-create-role-revocation",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-autosave-reassignment",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-autosave-revocation",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-autosave-role-revocation",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-discard-reassignment",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-discard-revocation",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-discard-role-revocation",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-warning-free-affected-requests",
+      "finding_ids": [
+        "QUO-001",
+        "QUO-003"
+      ],
+      "gap_ids": [
+        "GAP-10"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "expected": "Authorized workflow succeeds or denied operation preserves table/working-copy/job/outbound state and reveals no synthetic PII",
+      "actual": "Runner assertions passed"
+    }
+  ],
+  "browser": {
+    "status": "PASS within sampled scope; direct browser denial completion not claimed",
+    "scenarios": [
+      "owner detail/editor",
+      "autosave and working-copy restore",
+      "revision dialog/form creates R02 and preserves R01",
+      "admin utility detail/editor parity",
+      "read-all foreign detail with no edit control"
+    ],
+    "screenshots": [
+      "owner-revision.png",
+      "readall-detail.png"
+    ],
+    "known_open_issue": "UI-001 browser quantity step mismatch; tested accepted 2.01",
+    "limitation": "Direct denial redirect first hit missing fixture destination; generated browser error-page policy then prevented tab continuation; equivalent HTTP denial passes"
+  },
+  "not_run": [
+    "CI PHP7.4/8.1/8.4 x WP6.6/latest matrix",
+    "advertised WordPress5.8 floor",
+    "exact-artifact install/qualification",
+    "PDF/XLSX parsing",
+    "full mobile/accessibility/layout qualification",
+    "native Action Scheduler HTTP mode",
+    "persistent-cache and multi-node revocation",
+    "non-InnoDB/engine remediation",
+    "full M0 unrelated families, expiry/fake-clock HTTP and aggregate failure injection"
+  ],
+  "preservation": {
+    "status": "PASS",
+    "baseline_files": 592,
+    "modified_only_scoped_files": [
+      ".github/workflows/tests.yml",
+      "CHANGELOG.md",
+      "docs/AUDIT-REMEDIATION-PLAN.md",
+      "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+      "docs/CHANGELOG-DEV.md",
+      "docs/PRODUCTION-SCALABILITY-PLAN.md",
+      "docs/SECURITY.md",
+      "docs/audit-remediation-backlog.csv",
+      "includes/class-quotation-controller.php",
+      "includes/class-quotation-policy.php",
+      "includes/class-quotation-renderer.php",
+      "includes/class-quotation-repository.php",
+      "interior-design-lead-manager.php",
+      "readme.txt",
+      "tests/README.md",
+      "tests/audit-quotation-probes.php",
+      "tests/integration/bootstrap.php",
+      "tests/release-contracts.php",
+      "tests/run.php"
+    ],
+    "missing_baseline_files": [],
+    "unchanged_baseline_files": 573,
+    "immutable_audit_hashes_preserved": true
+  },
+  "source_sha256": {
+    ".github/workflows/tests.yml": "277a561a7d436a087f40f64b30d1a95c6cb7ac16d89fa221c167cdd38f4439fc",
+    "CHANGELOG.md": "7011278c74866378451a989b336752ff2c78eec35a1f91abd25af44724de11e3",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "14358fcf23835f1000ce5d103f5d04404c03bdf624ca8e35802d9a24b16cf3d1",
+    "docs/AUDIT-REMEDIATION-QUOTATION-SLICE.md": "cf2088510ecc6ad9058bd92a2369427bea5e1cd133887bc778fcbf9152b84097",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "6d8ce33e04118fbe4f0ada0bc87b902b8111c2753b97f99915754d9540ed76fb",
+    "docs/CHANGELOG-DEV.md": "650abd74aa4e6360f6e2d9b2f8aca881bc89002c1445603f572e232ed7c76f9c",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "f716038f8317681cb2b2ceb161d1eb19d4be840829da9f0ae1f813e25c156689",
+    "docs/SECURITY.md": "88b3a51bd836199b0b878c4dd81bfd8661776350f0aa1771e54406d30f9f05f4",
+    "docs/audit-remediation-backlog.csv": "8aa048b6f3a81986caed4fc913915ee4752bdb77ee9b9d611767fe175c7d0aa3",
+    "includes/class-quotation-controller.php": "b368d05acf789911d1530aafcb54a4bf1034355b42566df56c99f64a22865d13",
+    "includes/class-quotation-policy.php": "4ac6a734eb7abd82aab5ee93aac1bc13a7eb34db7436e014cd678fa23dabdafc",
+    "includes/class-quotation-renderer.php": "164050218e5e15f6b47cd5ce080c5f3886bc8c9fe84c41cb727cc8f622e0df0e",
+    "includes/class-quotation-repository.php": "899c33459e19d4b55ba3de2d2b18c26f069f781cd644d74c24bd557ef7b2fa88",
+    "interior-design-lead-manager.php": "06dbf6f443b84e4882f947706b1d61099c6de8c1959099122aca60cf6abcc5e3",
+    "readme.txt": "4f01e2a3017139d3100c45687ed0af3450f8809ae1232053427c9f42ee2f9462",
+    "tests/README.md": "ab6ed0c8e844cb9a94a1de00784d88454d8cd63377b043695dd0fe950dbcb6a8",
+    "tests/audit-quotation-probes.php": "5bb4f8ac2e9f2488f743f90a2be8e5b34d3b575334f5f07e39c5d885fd4e82ef",
+    "tests/integration/bootstrap.php": "9c2e49ef1dab2ecfc0008846a7b114d8d7df6d776e073ce591c895850159c99c",
+    "tests/integration/http-router.php": "5d5e5409d348b8a36015446a35cf2f8699768762b6efe964560525af9dcc975d",
+    "tests/integration/quotation-http.php": "85ea37a5443bea0e5e5f179ceebb1b3ac6c9f37ecb7185a69bb2faedc3907dd7",
+    "tests/quotation-authorization-contracts.php": "23a79b072e1f24ba374eff983fb47d1318f0a745dc1492f6fba28d08df81fd20",
+    "tests/release-contracts.php": "5913bfc63350f6dbe1c2405067c4eccde7c644aa5e913ead0c4c4beea8f7e9e2",
+    "tests/run.php": "50a32ce5146ef5597eeb4261a0b30bc6543e5297f7635b17fde1b6fe3e922ec1"
+  },
+  "graph_evidence": "graph-refresh.json",
+  "scope_report": "../../AUDIT-REMEDIATION-QUOTATION-SLICE.md",
+  "fixture_cleanup_evidence": "fixture-cleanup.json"
+}

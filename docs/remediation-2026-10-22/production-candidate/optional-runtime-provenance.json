@@ -1,0 +1,14 @@
+[
+  {
+    "slug": "action-scheduler",
+    "version": "4.2.0",
+    "source": "https://downloads.wordpress.org/plugin/action-scheduler.4.2.0.zip",
+    "sha256": "a360712a5adb066a0d60db76cbe2768234731cbcc363ba7dc2d51bf4559e4551"
+  },
+  {
+    "slug": "docket-cache",
+    "version": "26.04.11",
+    "source": "https://downloads.wordpress.org/plugin/docket-cache.26.04.11.zip",
+    "sha256": "222c306cd2795861b32b0eef9db6686ce85a471078e9d68d56e8dc48a18ecd90"
+  }
+]

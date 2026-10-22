@@ -1,0 +1,4 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS CONNECTOR-N webhook submission time is stored on touchpoint not as a Won close
+
+2 passed, 0 failed

@@ -1,0 +1,26 @@
+{
+  "builder": "Shashi",
+  "starting_runtime_matches_prior_artifact_byte_for_byte": true,
+  "before": {
+    "artifact_sha256": "939801e027b993693d47a499ca29fce32a83e445fe583b227babdc60f096cec3",
+    "diagnostics": 2186,
+    "types": {
+      "WARNING": 2050,
+      "ERROR": 136
+    }
+  },
+  "after": {
+    "artifact_sha256": "91fdacc6a3cb5ca91a169cf81b26b6bb6753a5b6fc4aba5b377dcb49d525bedf",
+    "diagnostics": 2178,
+    "types": {
+      "WARNING": 2042,
+      "ERROR": 136
+    }
+  },
+  "code_deltas": {
+    "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized": -6,
+    "WordPress.Security.NonceVerification.Recommended": 4,
+    "WordPress.Security.ValidatedSanitizedInput.MissingUnslash": -6
+  },
+  "unfiltered_static_gate_pass": false
+}

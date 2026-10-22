@@ -1,0 +1,327 @@
+{
+  "author": "Shashi",
+  "recorded_at": "2026-10-06T10:42:29.080280+00:00",
+  "candidate_version": "1.102.46",
+  "source_revision": "dirty working tree on ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "artifact_sha256": null,
+  "artifact_status": "NOT RUN: exact release artifact not built/installed",
+  "findings": {
+    "CORE-003": "IMPLEMENTED"
+  },
+  "environment": {
+    "PHP": "8.4.14",
+    "WordPress": "7.1.2",
+    "MySQL": "8.4.0",
+    "engine": "InnoDB",
+    "scheduler": "WP-Cron",
+    "persistent_object_cache": false,
+    "database": "New idlm_test_* schemas on owned temporary MySQL datadir/socket; no networking",
+    "configured_site_database_used": false,
+    "wp_config_loaded": false,
+    "outbound": "MU-plugin pre_http_request/pre_wp_mail intercept before install; cron spawning disabled"
+  },
+  "baseline": {
+    "files": 660,
+    "candidate": "1.102.45 unchanged source baseline records: 238 fast / 24 native / 207 HTTP-and-stdio PASS",
+    "characterization": "217 PASS / 2 FAIL before source fix; real CSV text-cell and phone protection assertions failed, authorization/filter workflows passed",
+    "evidence": [
+      "baseline-fast-final.log",
+      "baseline-native-final.log",
+      "baseline-http-verified.log",
+      "http-before.log"
+    ]
+  },
+  "checks": [
+    {
+      "command": "php tests/run.php",
+      "result": "241 passed, 0 failed",
+      "evidence": "fast-final.log"
+    },
+    {
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD='' IDLM_TEST_DB_HOST='localhost:/private/tmp/idlm-csv-slice-mysql/mysql.sock' php tests/integration/run.php",
+      "result": "24 passed, 0 failed",
+      "evidence": "native-final.log"
+    },
+    {
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD='' IDLM_TEST_DB_HOST='localhost:/private/tmp/idlm-csv-slice-mysql/mysql.sock' php tests/integration/quotation-http.php",
+      "result": "219 passed, 0 failed",
+      "evidence": "http-final.log"
+    },
+    {
+      "command": "php -l every changed/new PHP file",
+      "result": "9 PASS",
+      "evidence": "php-lint.log"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS",
+      "evidence": "whitespace.log"
+    }
+  ],
+  "new_http_cases": [
+    {
+      "id": "T12-H-lead-CSV-formula-control-Unicode-quote-and-numeric-cells",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-filter-search-empty-and-repeat",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-deny-owner",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-deny-other",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-deny-readall",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-deny-manager",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-deny-anonymous",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-deny-missing-nonce",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-deny-invalid-nonce",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-deny-cross-user-nonce",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-live-export-capability-revocation",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    },
+    {
+      "id": "T12-H-lead-CSV-phone-preservation-and-reassignment",
+      "finding_ids": [
+        "CORE-003"
+      ],
+      "gap_ids": [
+        "GAP-11/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-final.log",
+      "fixture": "Isolated synthetic disposable WordPress/MySQL HTTP fixture; blocked outbound/mail",
+      "principal": "Cookie-authenticated admin/owner/non-owner/read-all/manager or anonymous as named",
+      "expected": "Independent parsed 40-column values or no attachment/PII/writes/jobs on denial; live grant, filters and numeric types preserved",
+      "actual": "Named actual HTTP assertions passed"
+    }
+  ],
+  "prior_http_stdio_cases_retained": 207,
+  "cell_oracle": {
+    "text_fields": 30,
+    "dangerous_payloads": 21,
+    "ordinary_payloads": 9,
+    "parsed_columns": 40,
+    "numeric_columns": [
+      "ID",
+      "Quote Value"
+    ],
+    "precision": "-42.50 and 123456.78 unchanged",
+    "text_phone": "'+91 98765 43210",
+    "expected_bytes": "Dangerous cell retains exact source bytes behind one leading apostrophe; ordinary Unicode/quotes/backslashes/separators/embedded newline/apostrophe retained",
+    "invalid_utf8": "Fast byte preservation/fallback checks; not inserted into native utf8mb4 database"
+  },
+  "denial_oracle": "No CSV attachment or lead content, unchanged all IDLM business rows, working copies, cron/jobs and outbound attempts. Existing AJAX capability wp_die responses may be HTTP 200; body/header semantics are checked as well as status.",
+  "warning_policy": "Owned router elevates warnings/deprecations on affected lead CSV action; no PHP diagnostic log content",
+  "compatibility": "Same action/facade/public sanitizer signature, 40 header columns/order, filters/filename/MIME, manage_options/nonce. Source rows unchanged. Quote typed numeric paths preserved; catalogue/provider paths deferred.",
+  "source_sha256": {
+    "CHANGELOG.md": "f1cbbb8852c309d5077c1d7ce8c33673ae8d15d61b8b138f00daad24aeb6bc2d",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "7033f97fb65a38878869e8b85c1cd38c1ba8e993835424eb44973741998505d2",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "ae370089cd8cf7c53a66dcafd49282faa61760ea465727ebe4dfa39b233744c7",
+    "docs/CHANGELOG-DEV.md": "06036813422839414771c034cb2d4387b084a53c904f410f408e194fda7a95c7",
+    "docs/FEATURE-MAP.md": "5e52231bb42b924a0b00585227e0a92de932e235f6da7d29c94f81b21575164f",
+    "docs/INTERFACES.md": "78efb243c1e9576a3a9d83341e0fbf90f4f147fc75aaa206fed6f6e2be06aa35",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "e29492c2a9be58c2ba4aee0129b53ba04ceccea7514781bd7fd9b70749d6d246",
+    "docs/PRODUCTION-SECURITY-CONFIG.md": "20339926ab9ee1cc5e2522b6da89b14c25f22d1390912fd48f8afa5a50c96c6f",
+    "docs/SECURITY.md": "02aaf3abbd9b3b9d64cc60ba9b0d2846a3128f8bd3a819ed51f8bd1218a107b5",
+    "docs/audit-remediation-backlog.csv": "7fc748fa1246cc7726acd8800965c94d9ccd2ce8f575551b1bdb19fb91f92fac",
+    "includes/class-admin-ajax.php": "2c53b970907f789c9f687ac48fcab50e32d6ac160147b2d6aee0fa57a1cfb9f7",
+    "includes/class-quotation-exporter.php": "6c558a6917bd863a8fe988017b53ba58d1ac468ea58ad15c928a41d647c78bd3",
+    "interior-design-lead-manager.php": "9b2ea3e88b7f764e658685e52ea0f23231b323a9fca31eb027c51e90e60f86b1",
+    "readme.txt": "98c69a5da43c481b39eb84f94cbb2f243266567e0a5f1687310e900a2a3b9e95",
+    "tests/README.md": "ca0455ced0224bf760a26ec4825413a01256f683d517b2687dbf866d6930387b",
+    "tests/integration/http-router.php": "f88d6b733d5b9713245be74c534d19176184a3a5449eee0ae20c5b8f895da9df",
+    "tests/integration/quotation-http.php": "5f18ffbab127396b0e605cbba704c384d4a0a3aaa0ea79e3ed952c335b707381",
+    "tests/release-contracts.php": "e55e6f82fa18d64c7feff785ab4c8097c976f3d57a6f1883e195ead2de1be676",
+    "tests/run.php": "a30c55462b6b2cf3bbbf17ad18d311f97843f76bf07ea0783335c4910a7994c4",
+    "docs/AUDIT-REMEDIATION-CSV-SLICE.md": "a2c2d1d735f62e644e7c16cb712d309bf4a743560192a019e02eda0aeccc2bb7",
+    "tests/lead-csv-contracts.php": "720a4afe04ac06e44f265be7f38909410dbbcc0ac53d64697f271293bc3b9cba",
+    "tests/integration/lead-csv-cases.php": "2d709dc9bd2f568bc232866ec5823c10157dd97fb123c56868a5785013d11e42"
+  },
+  "preservation": "preservation.json",
+  "cleanup": "cleanup.json",
+  "not_run": [
+    "CI/support matrix including PHP 7.4/8.1 and WP 5.8",
+    "Exact packaged artifact qualification",
+    "Spreadsheet application/locale/import/re-save behavior",
+    "Persistent-cache/multi-node behavior",
+    "Browser/layout checks (no UI changes)",
+    "Complete global M0/T11/T12/release qualification"
+  ],
+  "remaining_risks": [
+    "Spreadsheet re-save may remove text markers; application-dependent behavior unqualified",
+    "CORE-012 unbounded export reads remain",
+    "CORE-002 public attachment URLs remain"
+  ],
+  "next_slice": "CORE-002; user requires WordPress-contained files; production server type unconfirmed, static URL revocation/storage compatibility rehearsal required",
+  "graph_refresh": {
+    "evidence": "graph-refresh.json",
+    "post_query": "graph-query-after.log",
+    "scope": "Lead CSV remediation: 9 code files and 10 documents; outside-scope graph retained, immutable audit untouched",
+    "status": "PASS within bounded scope",
+    "structural_nodes": 108,
+    "structural_edges": 111,
+    "semantic_nodes": 24,
+    "semantic_edges": 30
+  },
+  "evidence_sha256": {
+    "baseline-fast-final.log": "d9bc9c40c0afad93c036aa1eed33cc7e4341a31a71555d772f95a8ee8c4a521a",
+    "baseline-http-verified.log": "936f8d4957af88548298e632847e0be674921d4129f29656385e23898b8169f6",
+    "baseline-native-final.log": "dc7e69938be5cb290e028e96df9ee432cf3cf8be1dd17746caa04e4cba654d2b",
+    "cleanup.json": "68d812eade5a0322d8091461bee0e9904c6828fa817a7c4bbed79cf9413e6ebd",
+    "fast-final.log": "e6fab15d555ee29f0a4816f9863f26ab952d5d4621cc23c3699621d15a21485d",
+    "graph-query-after.log": "f173e89823a6cd893473a477d7cbb27c2408d2821c7dfd0f04966c386dfc777c",
+    "graph-refresh.json": "3bbfb6e7a0b6c4b435d03cd9ceed38de84bbda8c79eee3d06062156b224fe9a7",
+    "graph-refresh.log": "5e4ebe7f9d0547c273c23ab2804a16693f309f75a44a9e4a7739ceee8635bfc3",
+    "http-before.log": "32cf80ac44b8b694612e2844b4f385647ae1aecc96a68de87474a37d5ba2d8bc",
+    "http-final.log": "f01536eb730b6a27bb0289710ff202fbf7f6367bbac771e606f1e4f6be5d0c91",
+    "native-final.log": "dc7e69938be5cb290e028e96df9ee432cf3cf8be1dd17746caa04e4cba654d2b",
+    "php-lint.log": "cb7a8c24b24e4c1d1c8f26cd97964de26dbe7c0c30e26ad2e656a9c03792d7a7",
+    "preservation.json": "9ab729962d9f3e681743db70e5446c708cdb5f3406751ae4274f149ab2b78cac",
+    "whitespace.log": "75ebccfc18cc5b1a8b32589edccfa2e9f53d9f4dcde857010b3235519655e37f"
+  }
+}

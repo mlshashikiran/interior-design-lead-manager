@@ -6,6 +6,106 @@
 (function($) {
     'use strict';
 
+    $(function() {
+        $('.idlm-capture-tabs').on('click', '[role="tab"]', function() {
+            var $tab = $(this), panelId = $tab.attr('aria-controls');
+            $('.idlm-capture-tabs [role="tab"]').removeClass('active').attr({'aria-selected': 'false', 'tabindex': '-1'});
+            $tab.addClass('active').attr({'aria-selected': 'true', 'tabindex': '0'});
+            $('#idlm-capture-meta, #idlm-capture-webhook').prop('hidden', true);
+            $('#' + panelId).prop('hidden', false);
+            $('#idlm-capture-tab-input').val(panelId === 'idlm-capture-webhook' ? 'webhook' : 'meta');
+        }).on('keydown', '[role="tab"]', function(event) {
+            var $tabs = $('.idlm-capture-tabs [role="tab"]'), index = $tabs.index(this);
+            if (event.key === 'ArrowRight' || event.key === 'ArrowDown') index = (index + 1) % $tabs.length;
+            else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') index = (index - 1 + $tabs.length) % $tabs.length;
+            else if (event.key === 'Home') index = 0;
+            else if (event.key === 'End') index = $tabs.length - 1;
+            else return;
+            event.preventDefault(); $tabs.eq(index).trigger('click').trigger('focus');
+        });
+    });
+
+    $(function() {
+        var $root = $('[data-idlm-facebook-connect]');
+        if (!$root.length) { return; }
+        var $status = $root.find('[data-idlm-facebook-status]');
+        var $pages = $root.find('[data-idlm-facebook-pages]');
+        var $forms = $root.find('[data-idlm-facebook-forms]');
+        var pageCursor = '', formCursor = '', formRequest = 0, activeRequests = 0;
+        function call(operation, data) {
+            activeRequests++;
+            $root.attr('aria-busy', 'true');
+            return $.ajax({url: idlm_vars.ajax_url, method: 'POST', data: $.extend({action: 'idlm_facebook_connect', nonce: idlm_vars.nonce, operation: operation}, data || {})})
+                .always(function() { activeRequests--; if (!activeRequests) { $root.removeAttr('aria-busy'); } });
+        }
+        function error(xhr) { $status.text(xhr && xhr.responseJSON && xhr.responseJSON.data ? xhr.responseJSON.data.message : 'Could not connect to Facebook. Please try again.'); }
+        function result(response) { if (!response || !response.success) { $status.text(response && response.data ? response.data.message : 'Facebook connection failed.'); return null; } return response.data; }
+        function loadPages(after) {
+            $status.text('Loading your Facebook Pages…');
+            $root.find('[data-idlm-facebook-more-pages]').prop('disabled', true);
+            call('pages', {after: after || ''}).done(function(response) {
+                var data = result(response); if (!data) { return; }
+                $root.find('[data-idlm-facebook-picker]').prop('hidden', false);
+                (data.pages || []).forEach(function(page) { if (!$pages.find('option').filter(function() { return this.value === page.id; }).length) { $('<option>').val(page.id).text(page.name).appendTo($pages); } });
+                pageCursor = data.after || '';
+                $root.find('[data-idlm-facebook-more-pages]').prop('hidden', !pageCursor);
+                $status.text($pages.find('option').length > 1 ? 'Choose a Page to see its lead forms.' : 'No Pages were returned. Connect again and grant access to the Pages you want to sync.');
+            }).fail(error).always(function() { $root.find('[data-idlm-facebook-more-pages]').prop('disabled', false); });
+        }
+        function loadForms(after) {
+            var page = $pages.val(), request = ++formRequest;
+            if (!page) { return; }
+            $status.text('Loading individual lead forms…');
+            $root.find('[data-idlm-facebook-more-forms]').prop('disabled', true);
+            call('forms', {page_id: page, after: after || ''}).done(function(response) {
+                if (request !== formRequest || page !== $pages.val()) { return; }
+                var data = result(response); if (!data) { return; }
+                $root.find('[data-idlm-facebook-form-fieldset]').prop('hidden', false);
+                (data.forms || []).forEach(function(form) {
+                    if ($forms.find('input').filter(function() { return this.value === form.id; }).length) { return; }
+                    var $label = $('<label>').addClass('idlm-form-group');
+                    $('<input>', {type: 'checkbox', value: form.id, 'data-idlm-facebook-form': ''}).appendTo($label);
+                    $label.append(document.createTextNode(' ' + form.name)).appendTo($forms);
+                });
+                formCursor = data.after || '';
+                $root.find('[data-idlm-facebook-more-forms]').prop('hidden', !formCursor);
+                $status.text($forms.find('input').length ? 'Select the forms you want to sync, then click Start syncing.' : 'This Page has no active lead forms available to this connection.');
+            }).fail(function(xhr) { if (request === formRequest) { error(xhr); } }).always(function() { $root.find('[data-idlm-facebook-more-forms]').prop('disabled', false); });
+        }
+        $root.on('click', '[data-idlm-facebook-start]', function() {
+            if ($root.attr('data-idlm-facebook-ready') !== '1') {
+                $status.text('Facebook sign-in is unavailable until the CRM provider configures the shared connection service and a public HTTPS address.');
+                $root.find('[data-idlm-facebook-setup]').trigger('focus');
+                return;
+            }
+            var $button = $(this); $button.prop('disabled', true); $status.text('Opening Facebook permissions…');
+            call('start', {return_url: window.location.href.split('#')[0]}).done(function(response) { var data = result(response); if (data && data.authorization_url) { window.location.assign(data.authorization_url); } }).fail(error).always(function() { $button.prop('disabled', false); });
+        });
+        $pages.on('change', function() { formRequest++; $forms.empty(); formCursor = ''; $root.find('[data-idlm-facebook-form-fieldset]').prop('hidden', true); $root.find('[data-idlm-facebook-save]').prop('disabled', true); loadForms(''); });
+        $root.on('change', '[data-idlm-facebook-form]', function() { $root.find('[data-idlm-facebook-save]').prop('disabled', $forms.find('input:checked').length < 1); });
+        $root.on('click', '[data-idlm-facebook-more-pages]', function() { loadPages(pageCursor); });
+        $root.on('click', '[data-idlm-facebook-more-forms]', function() { loadForms(formCursor); });
+        $root.on('click', '[data-idlm-facebook-save]', function() {
+            var forms = $forms.find('input:checked').map(function() { return this.value; }).get(), $button = $(this);
+            if (!forms.length || forms.length > 20) { $status.text('Choose between one and twenty forms.'); return; }
+            $button.prop('disabled', true); $pages.prop('disabled', true); $status.text('Connecting the selected forms…');
+            call('select', {page_id: $pages.val(), forms: forms}).done(function(response) {
+                if (result(response)) { var url = new URL(window.location.href); url.searchParams.delete('idlm_fb_return'); url.hash = 'tab-webhooks'; window.location.assign(url.toString()); }
+            }).fail(error).always(function() { $button.prop('disabled', false); $pages.prop('disabled', false); });
+        });
+        $root.on('click', '[data-idlm-facebook-disconnect]', function() {
+            var $button = $(this); $button.prop('disabled', true); $status.text('Disconnecting Facebook…');
+            call('disconnect').done(function(response) { if (result(response)) { window.location.reload(); } }).fail(error).always(function() { $button.prop('disabled', false); });
+        });
+        var current = new URL(window.location.href);
+        if (current.searchParams.get('idlm_fb_return') === '1') {
+            current.searchParams.delete('idlm_fb_return'); current.hash = 'tab-webhooks'; window.history.replaceState(null, '', current.toString());
+            var tab = document.getElementById('idlm-settings-tab-webhooks'); if (tab) { tab.click(); }
+            loadPages('');
+        }
+    });
+
+
     function tokenValues($editor) {
         var editor = $editor.get(0);
         if (!editor) {
@@ -203,7 +303,8 @@
 
         var fieldId = $field.attr('id');
         var labelText = fieldId ? $.trim($('label[for="' + fieldId + '"]').first().text()) : 'secret';
-        var configured = String($field.val() || '').length > 0;
+        var saved = $field.attr('data-idlm-secret-configured') === '1';
+        var configured = saved || String($field.val() || '').length > 0;
         var $control = $('<div>', {'class': 'idlm-secret-control'});
         var $actions = $('<div>', {'class': 'idlm-secret-control__actions'});
         var $reveal = $('<button>', {
@@ -223,7 +324,7 @@
         });
         var $state = $('<span>', {
             'class': 'idlm-secret-control__state ' + (configured ? 'is-configured' : 'is-empty'),
-            text: configured ? 'Configured' : 'Not configured'
+            text: saved ? 'Saved securely' : (configured ? 'Configured' : 'Not configured')
         });
         var $statusRow = $('<div>', {'class': 'idlm-secret-control__status-row'}).append($state);
         var $status = $('<span>', {'class': 'screen-reader-text', 'aria-live': 'polite'});
@@ -246,7 +347,7 @@
         $copy.on('click', function() {
             var value = String($field.val() || '');
             if (!value) {
-                $status.text(labelText + ' is not configured.');
+                $status.text(saved ? 'The saved value is hidden and cannot be copied. Paste a replacement to change it.' : labelText + ' is not configured.');
                 return;
             }
             var copied = function() {
@@ -266,8 +367,9 @@
         });
 
         $field.on('input', function() {
-            configured = String($field.val() || '').length > 0;
-            $state.toggleClass('is-configured', configured).toggleClass('is-empty', !configured).text(configured ? 'Configured' : 'Not configured');
+            var entered = String($field.val() || '').length > 0;
+            configured = saved || entered;
+            $state.toggleClass('is-configured', configured).toggleClass('is-empty', !configured).text(entered ? 'Ready to save' : (saved ? 'Saved securely' : 'Not configured'));
         });
     }
 
@@ -555,6 +657,13 @@
         }
 
         enhanceSettingsNotices($page);
+
+        $page.on('click', '[data-idlm-manual-next]', function() {
+            var $setup = $(this).closest('[data-idlm-manual-setup]');
+            var $next = $setup.find('[data-idlm-manual-step="' + $(this).attr('data-idlm-manual-next') + '"]');
+            $setup.find('[data-idlm-manual-step]').prop('open', false);
+            $next.prop('open', true).children('summary').attr('tabindex', '-1').trigger('focus');
+        });
 
         $page.find('input[type="password"]').each(function() {
             enhanceSecretField(this);

@@ -1,0 +1,35 @@
+{
+  "source": "In-app browser tool transcript; synthetic cookie-authenticated fixture",
+  "exported_screenshot_artifact": null,
+  "desktop": {
+    "viewport": [
+      1280,
+      900
+    ],
+    "conversion_tracking_fields_blank": 3,
+    "clear_controls": 3,
+    "horizontal_overflow": false
+  },
+  "mobile_conversion": {
+    "viewport": [
+      390,
+      844
+    ],
+    "fields_blank": 3,
+    "clear_controls": 3,
+    "horizontal_overflow": false
+  },
+  "mobile_automation": {
+    "viewport": [
+      390,
+      844
+    ],
+    "platform_fields_blank": 4,
+    "clear_controls": 4,
+    "horizontal_overflow": true,
+    "cause_observed": "Wide audience-rule table stretches Automation panel; affected fields extended beyond viewport",
+    "qualification": "Full Automation mobile qualification does not pass"
+  },
+  "settings_submitted_in_browser": false,
+  "viewport_restored": true
+}

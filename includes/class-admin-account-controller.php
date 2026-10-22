@@ -17,8 +17,12 @@ final class IDLM_Admin_Account_Controller {
         if ('' === $phone) {
             $phone = (string) get_user_meta($user->ID, 'billing_phone', true);
         }
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0078: render(): render requires a logged-in actor and GET enums only select static notices; handle_update verifies the account nonce and always targets get_current_user_id; password strings retain exact bytes after shape checks.
         $notice = isset($_GET['idlm_account_notice']) ? sanitize_key(wp_unslash($_GET['idlm_account_notice'])) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0079: render(): render requires a logged-in actor and GET enums only select static notices; handle_update verifies the account nonce and always targets get_current_user_id; password strings retain exact bytes after shape checks.
         $error = isset($_GET['idlm_account_error']) ? sanitize_key(wp_unslash($_GET['idlm_account_error'])) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         $account_url = add_query_arg('idlm_view', 'my-account', remove_query_arg(array('idlm_account_notice', 'idlm_account_error')));
         IDLM_View::display('my-account.php', array(
             'user' => $user,
@@ -45,8 +49,15 @@ final class IDLM_Admin_Account_Controller {
             wp_safe_redirect(add_query_arg('idlm_account_error', $existing_user_id ? 'email-exists' : 'update-failed', $return_url));
             exit;
         }
-        $password = isset($_POST['new_password']) ? (string) wp_unslash($_POST['new_password']) : '';
-        $password_confirm = isset($_POST['confirm_password']) ? (string) wp_unslash($_POST['confirm_password']) : '';
+        if ((isset($_POST['new_password']) && !is_string($_POST['new_password'])) || (isset($_POST['confirm_password']) && !is_string($_POST['confirm_password']))) {
+            wp_die('Invalid password value.', '', array('response' => 400));
+        }
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0080: handle_update(): render requires a logged-in actor and GET enums only select static notices; handle_update verifies the account nonce and always targets get_current_user_id; password strings retain exact bytes after shape checks.
+        $password = isset($_POST['new_password']) ? wp_unslash($_POST['new_password']) : '';
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0081: handle_update(): render requires a logged-in actor and GET enums only select static notices; handle_update verifies the account nonce and always targets get_current_user_id; password strings retain exact bytes after shape checks.
+        $password_confirm = isset($_POST['confirm_password']) ? wp_unslash($_POST['confirm_password']) : '';
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if ($password !== $password_confirm) {
             wp_safe_redirect(add_query_arg('idlm_account_error', 'password-mismatch', $return_url));
             exit;

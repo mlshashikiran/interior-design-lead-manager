@@ -1,0 +1,32 @@
+{
+    "schema": "idlm-release-artifact/v1",
+    "author_builder": "Shashi",
+    "created_at_utc": "2026-10-13T10:17:41+00:00",
+    "artifact": "interior-design-lead-manager-1.102.79.zip",
+    "sha256": "2b8ca1b6fac59837b0c3e4ecb4b0621436f094c3b6199c19b01880da37705179",
+    "size_bytes": 5197206,
+    "file_count": 450,
+    "top_level_directory": "interior-design-lead-manager",
+    "inspection": {
+        "valid": true,
+        "errors": [],
+        "single_plugin_directory": true,
+        "inventory_matches": true
+    },
+    "version": "1.102.79",
+    "revision": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+    "git_clean": false,
+    "ci": {
+        "provider": "local",
+        "attested": false,
+        "run_id": "",
+        "matrix_passed": false,
+        "revision_matches": false
+    },
+    "artifact_status": "local_rehearsal_only",
+    "production_release_approved": false,
+    "blockers": [
+        "working_tree_dirty",
+        "ci_attestation_missing"
+    ]
+}

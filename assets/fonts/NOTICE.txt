@@ -1,0 +1,32 @@
+Inter font distribution notice
+
+Copyright (c) 2016 The Inter Project Authors (https://github.com/rsms/inter)
+Licensed under the SIL Open Font License, Version 1.1. The complete,
+unmodified copyright and license text accompanies this notice in OFL.txt.
+
+Font version: 4.001 (embedded revision git-66647c0bb).
+Upstream revision: 66647c0bbbe41a850d79d9c76fb13add3378940f
+Upstream source: https://github.com/rsms/inter/tree/66647c0bbbe41a850d79d9c76fb13add3378940f
+License source: https://raw.githubusercontent.com/rsms/inter/66647c0bbbe41a850d79d9c76fb13add3378940f/LICENSE.txt
+
+The following five local files contain identical Inter Latin normal variable
+font bytes (weight axis 100-900), selected by existing CSS faces at 300-700:
+  inter-latin-300.woff2
+  inter-latin-400.woff2
+  inter-latin-500.woff2
+  inter-latin-600.woff2
+  inter-latin-700.woff2
+SHA-256 for each: c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4
+
+Exact matching Google Fonts distribution verified 2026-10-09:
+https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2
+Google Fonts CSS source:
+https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap
+
+The historic download method was not recorded. The present files match that
+provider distribution byte for byte; this plugin's remediation does not alter,
+subset or rebuild them. Fonts are served locally at runtime. The provenance
+record in inter-provenance.json binds each local file and the license by hash.
+
+Distribution notice prepared by Shashi. Font authorship remains with The Inter
+Project Authors; this notice does not imply their endorsement of the plugin.

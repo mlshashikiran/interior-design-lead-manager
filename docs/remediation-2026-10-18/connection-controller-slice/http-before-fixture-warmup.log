@@ -1,0 +1,6 @@
+ENV PHP=8.4.14 WP=6.6 DB=8.4.0 scheduler=WP-Cron cache=off
+FAIL M6-H-connection-nonce-and-administrator-denials-have-no-side-effects: Denied connection test wrote CRM/jobs or contacted a provider
+PASS M6-H-connection-local-validation-and-Google-credential-fallback-stay-read-only
+PASS M6-H-connection-provider-success-retains-stored-header-auth-and-messages
+PASS M6-H-connection-provider-errors-retain-shape-and-redact-credential-echoes
+3 passed, 1 failed

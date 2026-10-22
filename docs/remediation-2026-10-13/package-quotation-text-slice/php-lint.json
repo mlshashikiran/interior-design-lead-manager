@@ -1,0 +1,37 @@
+[
+  {
+    "file": "includes/class-quotation-calculator.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-quotation-calculator.php"
+  },
+  {
+    "file": "includes/class-quotation-controller.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-quotation-controller.php"
+  },
+  {
+    "file": "interior-design-lead-manager.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/interior-design-lead-manager.php"
+  },
+  {
+    "file": "tests/quotation-numeric-contracts.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/quotation-numeric-contracts.php"
+  },
+  {
+    "file": "tests/integration/quotation-http.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/integration/quotation-http.php"
+  },
+  {
+    "file": "tests/integration/quotation-text-http-cases.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/integration/quotation-text-http-cases.php"
+  },
+  {
+    "file": "tests/release-contracts.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/release-contracts.php"
+  }
+]

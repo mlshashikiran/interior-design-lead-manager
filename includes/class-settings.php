@@ -32,7 +32,7 @@ class IDLM_Settings {
             'login_heading' => 'One workspace for every customer conversation.',
             'support_email' => '',
             'footer_text' => '',
-            'show_plugin_attribution' => '1',
+            'show_plugin_attribution' => '0',
         );
     }
 
@@ -47,7 +47,8 @@ class IDLM_Settings {
             $normalized = self::normalize_hex($settings[$key]);
             $settings[$key] = $normalized ?: self::white_label_defaults()[$key];
         }
-        $settings['show_plugin_attribution'] = '1' === (string) $settings['show_plugin_attribution'] ? '1' : '0';
+        // Shashi: missing/default credit is off; preserve existing scalar choices.
+        $settings['show_plugin_attribution'] = is_scalar($settings['show_plugin_attribution']) && '1' === (string) $settings['show_plugin_attribution'] ? '1' : '0';
         return $settings;
     }
 
@@ -67,7 +68,7 @@ class IDLM_Settings {
             'login_heading' => sanitize_text_field(isset($raw['login_heading']) ? $raw['login_heading'] : $defaults['login_heading']),
             'support_email' => sanitize_email(isset($raw['support_email']) ? $raw['support_email'] : ''),
             'footer_text' => sanitize_textarea_field(isset($raw['footer_text']) ? $raw['footer_text'] : ''),
-            'show_plugin_attribution' => !empty($raw['show_plugin_attribution']) ? '1' : '0',
+            'show_plugin_attribution' => '1' === ($raw['show_plugin_attribution'] ?? '') ? '1' : '0',
         );
         $errors = array();
 
@@ -222,7 +223,7 @@ class IDLM_Settings {
 
     public static function routing_defaults() {
         return array(
-            'idlm_reps_see_all_leads' => '1',
+            'idlm_reps_see_all_leads' => '0',
             'idlm_assignment_mode' => 'manual',
             'idlm_active_assignment_reps' => array(),
             'idlm_active_pre_sales_reps' => null,

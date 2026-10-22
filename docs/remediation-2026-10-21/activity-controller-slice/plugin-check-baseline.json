@@ -1,0 +1,83 @@
+[
+    {
+        "file": "/privateincludes/class-admin-users-controller.php",
+        "line": 30,
+        "column": 25,
+        "type": "WARNING",
+        "code": "WordPress.Security.ValidatedSanitizedInput.MissingUnslash",
+        "message": "$_SERVER[&#039;REQUEST_METHOD&#039;] not unslashed before sanitization. Use wp_unslash() or similar",
+        "docs": ""
+    },
+    {
+        "file": "/privateincludes/class-admin-users-controller.php",
+        "line": 30,
+        "column": 25,
+        "type": "WARNING",
+        "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized",
+        "message": "Detected usage of a non-sanitized input variable: $_SERVER[&#039;REQUEST_METHOD&#039;]",
+        "docs": ""
+    },
+    {
+        "file": "/privateincludes/class-admin-users-controller.php",
+        "line": 31,
+        "column": 28,
+        "type": "WARNING",
+        "code": "WordPress.Security.NonceVerification.Missing",
+        "message": "Processing form data without nonce verification.",
+        "docs": ""
+    },
+    {
+        "file": "/privateincludes/class-admin-users-controller.php",
+        "line": 31,
+        "column": 68,
+        "type": "WARNING",
+        "code": "WordPress.Security.NonceVerification.Missing",
+        "message": "Processing form data without nonce verification.",
+        "docs": ""
+    },
+    {
+        "file": "/privateincludes/class-admin-users-controller.php",
+        "line": 31,
+        "column": 121,
+        "type": "WARNING",
+        "code": "WordPress.Security.NonceVerification.Missing",
+        "message": "Processing form data without nonce verification.",
+        "docs": ""
+    },
+    {
+        "file": "/privateincludes/class-admin-users-controller.php",
+        "line": 33,
+        "column": 28,
+        "type": "WARNING",
+        "code": "WordPress.Security.NonceVerification.Missing",
+        "message": "Processing form data without nonce verification.",
+        "docs": ""
+    },
+    {
+        "file": "/privateincludes/class-admin-users-controller.php",
+        "line": 33,
+        "column": 63,
+        "type": "WARNING",
+        "code": "WordPress.Security.NonceVerification.Missing",
+        "message": "Processing form data without nonce verification.",
+        "docs": ""
+    },
+    {
+        "file": "/privateincludes/class-admin-users-controller.php",
+        "line": 33,
+        "column": 99,
+        "type": "WARNING",
+        "code": "WordPress.Security.NonceVerification.Missing",
+        "message": "Processing form data without nonce verification.",
+        "docs": ""
+    },
+    {
+        "file": "/privateincludes/class-admin-users-controller.php",
+        "line": 33,
+        "column": 99,
+        "type": "WARNING",
+        "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized",
+        "message": "Detected usage of a non-sanitized input variable: $_POST[&#039;permissions&#039;]",
+        "docs": ""
+    }
+]

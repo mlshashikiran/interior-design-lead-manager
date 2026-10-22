@@ -1,0 +1,32 @@
+{
+  "author": "Shashi",
+  "date": "2026-10-08",
+  "query": "QUO-009 paper settings exporter render_print_document",
+  "mode": "scoped incremental structural extraction and explicit heading refresh",
+  "files": {
+    "includes/class-quotations.php": "9b25eea7259330d117c5c1191504223f3b2ed5d69f0b0a7cdfe25a0d5ab3d9d5",
+    "includes/class-quotation-controller.php": "c97bc9bdbdaa0f3c7ab54efd11c3a216725bfc6a1b3379be1eab3ba6d81152a3",
+    "includes/class-quotation-renderer.php": "8f8cb437a20aa1ee979e3e6f7e00be513ce01d0f40443ed3963d2c6d4257e28c",
+    "includes/class-quotation-exporter.php": "e4c23e9c47d9efefe321ffb005aa63df5086b46dbed9340c88dc291f7cb032c7",
+    "tests/run.php": "34f9831a8c457de425e8babd7ec38b283a5b8230e308e275bbd42825cdc98b4e",
+    "tests/quotation-paper-contracts.php": "023e7da3abb6d5c1a68aa738dbed07b93d67fea0f42963923181ace17bfbb618",
+    "tests/integration/quotation-http.php": "49a614b450f53098c8e07c4554891781772d8373b770fa163dd4a5a4db7fefce",
+    "tests/integration/quotation-paper-http-cases.php": "044801105b9623bbfedab54b0dc22cb2af98d3bdadb2f0127379f29a36280f3a",
+    "interior-design-lead-manager.php": "e823938022f4071a35003d0b610b68b47a719bab70bebdf650fa0f38cd64a3f9",
+    "tests/release-contracts.php": "aeed2bae85cfa8070710b26a12224149636700495036037f701671d87124a565",
+    "docs/AUDIT-REMEDIATION-QUOTATION-PAPER-SLICE.md": "65a01c71ffb78338af76e48a3282991d659ce9f832e4273ce54c433d58cfa8d1",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "95f1e697f3f5ed04d534cad12c8c5f6bd81469fa114570a7b84cd166da426c6b",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "639d913d355bdb34e51076f77ff7ed8a69a39df4ddae5156c10eee243767ef37",
+    "docs/DEVELOPMENT.md": "b6e3a0d22a669c2cb156c2732d748e799ba79ad25fdd8c207fcee89b090978d4",
+    "docs/CHANGELOG-DEV.md": "01ed13733bfff37b731cce04bddd6bfdc18acc2a9cc20c805dad15373797f5ab",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "927ed668bffdc8b6d79a897c1c1af56c0382e9bcc0bba4c79790b767ddb021ca",
+    "tests/README.md": "5d771be223fa6ecff0d74d2625149048b8082db6d214c100cdfd9e281a55c3a5",
+    "CHANGELOG.md": "ed50f995af96451d8d92dd52867d05a9d58d164a41f11d972747f11c206ee262"
+  },
+  "removed_stale_source_nodes": 156,
+  "source_nodes": 162,
+  "source_edges": 165,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "scope": "Unrelated graph content retained; no inferred semantic relationships or HTML/report regeneration."
+}

@@ -1,0 +1,15 @@
+{
+  "author": "Shashi",
+  "schemas_remaining_after_fixture_cleanup": [
+    "information_schema",
+    "mysql",
+    "performance_schema",
+    "sys"
+  ],
+  "owned_mysql_socket_exists": false,
+  "held_fixture_content_exists": false,
+  "configured_site_database_used": false,
+  "test_tab_closed": true,
+  "viewport_reset": true,
+  "owned_mysql_data_removed": true
+}

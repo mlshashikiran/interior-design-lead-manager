@@ -1,0 +1,14 @@
+PASS INT-S01: Direct forbidden table is rejected
+FAIL INT-S02: Forbidden comma table following JOIN is rejected | {"query":"SELECT o.option_value FROM wp_idlm_leads l JOIN wp_idlm_leads x ON x.id=l.id, wp_options o LIMIT 200"}
+FAIL INT-S03: MCP denies WordPress authentication columns | SELECT user_pass, user_activation_key FROM wp_users LIMIT 200
+PASS INT-S04: Emergency-disabled engine rejects queries
+FAIL INT-S05: Restore rejects missing table payload before destructive SQL | result=true; DELETE count=21
+PASS INT-S06: Restore insertion failure requests rollback
+FAIL INT-S07: Queued Interakt worker stops after integration is disabled | Mock HTTP requests=1
+PASS INT-S08: Queued Interakt worker stops for deleted lead
+PASS INT-S09: WhatsApp HMAC rejects wrong secret
+PASS INT-S10: Scoped secret is encrypted at rest
+FAIL INT-S11: Default Google event retry submits an actual delivery | Mock HTTP requests=0
+FAIL INT-S12: Valid Meta batch persists every message before acknowledgment | Activity count=1
+FAIL INT-S13: Meta replay does not append another copy of already handled message | Activity count after replay=2
+Audit invariants: 6 passed, 7 failed. Failures document reviewed defects; production behavior was not changed.

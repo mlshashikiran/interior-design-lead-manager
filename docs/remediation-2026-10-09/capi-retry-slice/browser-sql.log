@@ -1,0 +1,10 @@
+id	lead_id	platform	event_name	status
+1	9	google	CRM Qualified Lead	failed
+2	10	google	Closed Won Interior Project	failed
+3	9	google	CRM Qualified Lead	success
+4	10	google	Closed Won Interior Project	success
+5	11	google	CRM Qualified Lead	failed
+6	12	google	Browser_CRM_Qualified	failed
+7	13	google	BrowserAlreadyDelivered	failed
+8	13	google	BrowserAlreadyDelivered	success
+9	12	google	Browser_CRM_Qualified	success

@@ -1,0 +1,265 @@
+{
+  "builder": "Shashi",
+  "classification_is_not_checker_suppression": true,
+  "sites": [
+    {
+      "file": "includes/class-quotation-lead-read-model.php",
+      "line": 50,
+      "file_sha256": "88bf8f07d07ca01d41295234c8fd6cb95219af53c62b88e0e88e51c6a4c2f18c",
+      "source_line": "        return (bool) $wpdb->get_var($wpdb->prepare($sql, $params));",
+      "rationale": "lead_exists normalizes lead_id with absint, starts params with that ID, appends the current-user scope placeholders/values through Lead_Access_Policy::scope_sql(l,false,false), and prepares the entire stored SQL. Table/alias are fixed trusted WP-prefix identifiers. Fresh existence/permission authority is deliberately not cached."
+    },
+    {
+      "file": "includes/class-quotation-lead-read-model.php",
+      "line": 79,
+      "file_sha256": "88bf8f07d07ca01d41295234c8fd6cb95219af53c62b88e0e88e51c6a4c2f18c",
+      "source_line": "        return $wpdb->get_results($wpdb->prepare($sql, $params));",
+      "rationale": "search uses the fixed editor_fields projection and trusted WP leads/users tables; scope_sql appends current-user parameters first, then six esc_like term values and the absint limit match the six %s and one %d. The complete stored SQL is prepared. Lead visibility/search stays current rather than introducing a permission-stale cache."
+    },
+    {
+      "file": "includes/class-quotation-lead-read-model.php",
+      "line": 99,
+      "file_sha256": "88bf8f07d07ca01d41295234c8fd6cb95219af53c62b88e0e88e51c6a4c2f18c",
+      "source_line": "        return $wpdb->get_results($wpdb->prepare($sql, $params));",
+      "rationale": "list_for_editor uses only fixed editor_fields/table/order fragments; scope_sql supplies matching current-user values and the final absint limit matches %d. The entire SQL variable is prepared. No caller SQL fragment is accepted; current lead scope is read fresh."
+    },
+    {
+      "file": "includes/class-quotation-lead-read-model.php",
+      "line": 120,
+      "file_sha256": "88bf8f07d07ca01d41295234c8fd6cb95219af53c62b88e0e88e51c6a4c2f18c",
+      "source_line": "        return $wpdb->get_row($wpdb->prepare($sql, $params));",
+      "rationale": "get_selected_lead starts params with absint lead ID; scope_sql appends the matching current-user values; projection/join/canonical filter are fixed. The complete SQL variable is prepared. Selection must observe current object permission and assignment, without a stale cross-request cache."
+    },
+    {
+      "file": "includes/class-lead-access-policy.php",
+      "line": 171,
+      "file_sha256": "d465634e69ece75dae1b7604d8059c99dd14d9ab6115c2c054d53bcb9cef2b51",
+      "source_line": "            return (bool) $wpdb->get_var($wpdb->prepare(\"SELECT id FROM {$wpdb->prefix}idlm_leads WHERE id = %d\", absint($lead_id)));",
+      "rationale": "can_access requires live CRM access and a positive absint lead ID. Lines 171/174 prepare the fixed ID query. Line 182 appends scope_sql(l,params,true), whose only branches are fixed deny/empty/assigned/history fragments with one or three current-user %d values; alias is stripped to identifier characters. The entire query is prepared. Existence/assignment/current authority cannot use a permission-stale query cache."
+    },
+    {
+      "file": "includes/class-lead-access-policy.php",
+      "line": 174,
+      "file_sha256": "d465634e69ece75dae1b7604d8059c99dd14d9ab6115c2c054d53bcb9cef2b51",
+      "source_line": "            $assigned = $wpdb->get_var($wpdb->prepare(",
+      "rationale": "can_access requires live CRM access and a positive absint lead ID. Lines 171/174 prepare the fixed ID query. Line 182 appends scope_sql(l,params,true), whose only branches are fixed deny/empty/assigned/history fragments with one or three current-user %d values; alias is stripped to identifier characters. The entire query is prepared. Existence/assignment/current authority cannot use a permission-stale query cache."
+    },
+    {
+      "file": "includes/class-lead-access-policy.php",
+      "line": 182,
+      "file_sha256": "d465634e69ece75dae1b7604d8059c99dd14d9ab6115c2c054d53bcb9cef2b51",
+      "source_line": "        return (bool) $wpdb->get_var($wpdb->prepare(\"SELECT 1 FROM {$wpdb->prefix}idlm_leads l WHERE l.id = %d{$scope} LIMIT 1\", $params));",
+      "rationale": "can_access requires live CRM access and a positive absint lead ID. Lines 171/174 prepare the fixed ID query. Line 182 appends scope_sql(l,params,true), whose only branches are fixed deny/empty/assigned/history fragments with one or three current-user %d values; alias is stripped to identifier characters. The entire query is prepared. Existence/assignment/current authority cannot use a permission-stale query cache."
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "line": 22,
+      "file_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "source_line": "        $scope = $params ? $wpdb->prepare($scope, $params) : $scope;",
+      "rationale": "page first requires live rep access. scope_sql supplies current-user %d values and is prepared at line 22. view is restricted to completed/attention; due is exactly t.due_date or q.due_date, from is one of two fixed internal joins on trusted WP-prefix tables. where combines fixed conditions, prepared scope and the prepared end timestamp; totals add four prepared dates. Cursor is HMAC-bound to view/scope/day/generation and shape-validated, then its two dates/ID are prepared at line 61. Final query contains only those fixed/prepared fragments and LIMIT 51. Counts/cards are live scope-sensitive reads; no cross-request cache is introduced."
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "line": 45,
+      "file_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "source_line": "            $where = $wpdb->prepare(\"t.status = 'pending' AND l.stage <> 'Lost'{$scope} AND (t.task_type = 'Qualification' OR ({$due} > '0000-00-00 00:00:00' AND {$due} < %s))\", $end);",
+      "rationale": "page first requires live rep access. scope_sql supplies current-user %d values and is prepared at line 22. view is restricted to completed/attention; due is exactly t.due_date or q.due_date, from is one of two fixed internal joins on trusted WP-prefix tables. where combines fixed conditions, prepared scope and the prepared end timestamp; totals add four prepared dates. Cursor is HMAC-bound to view/scope/day/generation and shape-validated, then its two dates/ID are prepared at line 61. Final query contains only those fixed/prepared fragments and LIMIT 51. Counts/cards are live scope-sensitive reads; no cross-request cache is introduced."
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "line": 49,
+      "file_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "source_line": "            $totals = $wpdb->get_row($wpdb->prepare(\"SELECT",
+      "rationale": "page first requires live rep access. scope_sql supplies current-user %d values and is prepared at line 22. view is restricted to completed/attention; due is exactly t.due_date or q.due_date, from is one of two fixed internal joins on trusted WP-prefix tables. where combines fixed conditions, prepared scope and the prepared end timestamp; totals add four prepared dates. Cursor is HMAC-bound to view/scope/day/generation and shape-validated, then its two dates/ID are prepared at line 61. Final query contains only those fixed/prepared fragments and LIMIT 51. Counts/cards are live scope-sensitive reads; no cross-request cache is introduced."
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "line": 51,
+      "file_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "source_line": "                SUM(COALESCE(t.task_type, '') <> 'Qualification' AND {$due} < %s) overdue,",
+      "rationale": "page first requires live rep access. scope_sql supplies current-user %d values and is prepared at line 22. view is restricted to completed/attention; due is exactly t.due_date or q.due_date, from is one of two fixed internal joins on trusted WP-prefix tables. where combines fixed conditions, prepared scope and the prepared end timestamp; totals add four prepared dates. Cursor is HMAC-bound to view/scope/day/generation and shape-validated, then its two dates/ID are prepared at line 61. Final query contains only those fixed/prepared fragments and LIMIT 51. Counts/cards are live scope-sensitive reads; no cross-request cache is introduced."
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "line": 52,
+      "file_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "source_line": "                SUM(COALESCE(t.task_type, '') <> 'Qualification' AND {$due} >= %s AND {$due} < %s) due_today,",
+      "rationale": "page first requires live rep access. scope_sql supplies current-user %d values and is prepared at line 22. view is restricted to completed/attention; due is exactly t.due_date or q.due_date, from is one of two fixed internal joins on trusted WP-prefix tables. where combines fixed conditions, prepared scope and the prepared end timestamp; totals add four prepared dates. Cursor is HMAC-bound to view/scope/day/generation and shape-validated, then its two dates/ID are prepared at line 61. Final query contains only those fixed/prepared fragments and LIMIT 51. Counts/cards are live scope-sensitive reads; no cross-request cache is introduced."
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "line": 53,
+      "file_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "source_line": "                SUM(COALESCE(t.task_type, '') <> 'Qualification' AND {$due} >= %s) upcoming",
+      "rationale": "page first requires live rep access. scope_sql supplies current-user %d values and is prepared at line 22. view is restricted to completed/attention; due is exactly t.due_date or q.due_date, from is one of two fixed internal joins on trusted WP-prefix tables. where combines fixed conditions, prepared scope and the prepared end timestamp; totals add four prepared dates. Cursor is HMAC-bound to view/scope/day/generation and shape-validated, then its two dates/ID are prepared at line 61. Final query contains only those fixed/prepared fragments and LIMIT 51. Counts/cards are live scope-sensitive reads; no cross-request cache is introduced."
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "line": 54,
+      "file_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "source_line": "                {$from} WHERE {$where}\", $today . ' 00:00:00', $today . ' 00:00:00', $tomorrow, $tomorrow), ARRAY_A);",
+      "rationale": "page first requires live rep access. scope_sql supplies current-user %d values and is prepared at line 22. view is restricted to completed/attention; due is exactly t.due_date or q.due_date, from is one of two fixed internal joins on trusted WP-prefix tables. where combines fixed conditions, prepared scope and the prepared end timestamp; totals add four prepared dates. Cursor is HMAC-bound to view/scope/day/generation and shape-validated, then its two dates/ID are prepared at line 61. Final query contains only those fixed/prepared fragments and LIMIT 51. Counts/cards are live scope-sensitive reads; no cross-request cache is introduced."
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "line": 61,
+      "file_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "source_line": "            $where .= $wpdb->prepare(\" AND ({$sort} > %s OR ({$sort} = %s AND t.id < %d))\", $position['due'], $position['due'], $position['id']);",
+      "rationale": "page first requires live rep access. scope_sql supplies current-user %d values and is prepared at line 22. view is restricted to completed/attention; due is exactly t.due_date or q.due_date, from is one of two fixed internal joins on trusted WP-prefix tables. where combines fixed conditions, prepared scope and the prepared end timestamp; totals add four prepared dates. Cursor is HMAC-bound to view/scope/day/generation and shape-validated, then its two dates/ID are prepared at line 61. Final query contains only those fixed/prepared fragments and LIMIT 51. Counts/cards are live scope-sensitive reads; no cross-request cache is introduced."
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "line": 63,
+      "file_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "source_line": "        $rows = $wpdb->get_results(\"SELECT t.*, {$due} due_date, l.first_name, l.last_name, l.phone, l.email, l.source, l.stage {$from} WHERE {$where} ORDER BY {$sort} ASC, t.id DESC LIMIT 51\");",
+      "rationale": "page first requires live rep access. scope_sql supplies current-user %d values and is prepared at line 22. view is restricted to completed/attention; due is exactly t.due_date or q.due_date, from is one of two fixed internal joins on trusted WP-prefix tables. where combines fixed conditions, prepared scope and the prepared end timestamp; totals add four prepared dates. Cursor is HMAC-bound to view/scope/day/generation and shape-validated, then its two dates/ID are prepared at line 61. Final query contains only those fixed/prepared fragments and LIMIT 51. Counts/cards are live scope-sensitive reads; no cross-request cache is introduced."
+    },
+    {
+      "file": "includes/class-task-queue-service.php",
+      "line": 86,
+      "file_sha256": "3a71ff754e54c74bb2fc4fc375f91f3bf3fec90b5109a09bca91663518345748",
+      "source_line": "        $task = $wpdb->get_row($wpdb->prepare(\"SELECT * FROM {$tasks} WHERE id = %d\", $task_id));",
+      "rationale": "ajax_reschedule is delegated only after the registered Admin_Ajax::ajax_get_rep_tasks checks idlm_admin_nonce; it requires live rep access. tasks table is trusted WP prefix, task_id is absint(wp_unslash(...)) and passed to %d. Pending/non-Qualification and current lead permission checks precede update. No caller SQL identifier is accepted; task authority is a live read."
+    },
+    {
+      "file": "includes/class-admin-lead-notifications.php",
+      "line": 90,
+      "file_sha256": "961bf9763db99ab3fafb740ef68286d92085e54ea5dbe08fd0d014d7c0ae180f",
+      "source_line": "        $scope = $params ? $wpdb->prepare($scope, $params) : $scope;",
+      "rationale": "whatsapp reads require current rep access; scope_sql current-user placeholders are prepared at lines 90/101. whatsapp_exists_sql accepts only l or the trusted WP-prefix lead table, reply_sql is private with literal a/wa aliases, and at most 1000 user-meta read IDs are absint then individually prepared as CASE %d/%d values. Keyset after/limit are absint and prepared. No raw request fragment reaches either query. Unread/lead scope is deliberately read fresh rather than cached across permission changes."
+    },
+    {
+      "file": "includes/class-admin-lead-notifications.php",
+      "line": 92,
+      "file_sha256": "961bf9763db99ab3fafb740ef68286d92085e54ea5dbe08fd0d014d7c0ae180f",
+      "source_line": "        $rows = $wpdb->get_col($wpdb->prepare(\"SELECT l.id FROM {$wpdb->prefix}idlm_leads l WHERE l.is_duplicate = 0 AND l.id > %d{$scope} AND {$exists} ORDER BY l.id LIMIT %d\", absint($after), min(100, max(1, absint($limit)))));",
+      "rationale": "whatsapp reads require current rep access; scope_sql current-user placeholders are prepared at lines 90/101. whatsapp_exists_sql accepts only l or the trusted WP-prefix lead table, reply_sql is private with literal a/wa aliases, and at most 1000 user-meta read IDs are absint then individually prepared as CASE %d/%d values. Keyset after/limit are absint and prepared. No raw request fragment reaches either query. Unread/lead scope is deliberately read fresh rather than cached across permission changes."
+    },
+    {
+      "file": "includes/class-admin-lead-notifications.php",
+      "line": 101,
+      "file_sha256": "961bf9763db99ab3fafb740ef68286d92085e54ea5dbe08fd0d014d7c0ae180f",
+      "source_line": "        $scope = $params ? $wpdb->prepare($scope, $params) : $scope;",
+      "rationale": "whatsapp reads require current rep access; scope_sql current-user placeholders are prepared at lines 90/101. whatsapp_exists_sql accepts only l or the trusted WP-prefix lead table, reply_sql is private with literal a/wa aliases, and at most 1000 user-meta read IDs are absint then individually prepared as CASE %d/%d values. Keyset after/limit are absint and prepared. No raw request fragment reaches either query. Unread/lead scope is deliberately read fresh rather than cached across permission changes."
+    },
+    {
+      "file": "includes/class-admin-lead-notifications.php",
+      "line": 108,
+      "file_sha256": "961bf9763db99ab3fafb740ef68286d92085e54ea5dbe08fd0d014d7c0ae180f",
+      "source_line": "        return (int) $wpdb->get_var(\"SELECT COUNT(*) FROM {$wpdb->prefix}idlm_leads l INNER JOIN {$wpdb->prefix}idlm_lead_activity_log a ON a.lead_id = l.id WHERE l.is_duplicate = 0{$scope} AND {$reply} AND a.id > {$read}\");",
+      "rationale": "whatsapp reads require current rep access; scope_sql current-user placeholders are prepared at lines 90/101. whatsapp_exists_sql accepts only l or the trusted WP-prefix lead table, reply_sql is private with literal a/wa aliases, and at most 1000 user-meta read IDs are absint then individually prepared as CASE %d/%d values. Keyset after/limit are absint and prepared. No raw request fragment reaches either query. Unread/lead scope is deliberately read fresh rather than cached across permission changes."
+    },
+    {
+      "file": "includes/class-admin-lead-notifications.php",
+      "line": 244,
+      "file_sha256": "961bf9763db99ab3fafb740ef68286d92085e54ea5dbe08fd0d014d7c0ae180f",
+      "source_line": "                SELECT 1 FROM {$table_activity} a",
+      "rationale": "get_no_recent_assigned_rep_action_sql restricts lead prefix to literal l. or trusted WP-prefix leads; activity table is fixed WP prefix. Each REP_ACTION_ACTIVITY_TYPES constant is prepared with %s before composing the IN list. since is supplied to the final %s prepare. Dynamic text consists only of fixed identifiers and prepared constant values, not caller SQL."
+    },
+    {
+      "file": "includes/class-admin-lead-notifications.php",
+      "line": 245,
+      "file_sha256": "961bf9763db99ab3fafb740ef68286d92085e54ea5dbe08fd0d014d7c0ae180f",
+      "source_line": "                WHERE a.lead_id = {$lead_prefix}id",
+      "rationale": "get_no_recent_assigned_rep_action_sql restricts lead prefix to literal l. or trusted WP-prefix leads; activity table is fixed WP prefix. Each REP_ACTION_ACTIVITY_TYPES constant is prepared with %s before composing the IN list. since is supplied to the final %s prepare. Dynamic text consists only of fixed identifiers and prepared constant values, not caller SQL."
+    },
+    {
+      "file": "includes/class-admin-lead-notifications.php",
+      "line": 246,
+      "file_sha256": "961bf9763db99ab3fafb740ef68286d92085e54ea5dbe08fd0d014d7c0ae180f",
+      "source_line": "                  AND a.user_id = {$lead_prefix}assigned_rep_id",
+      "rationale": "get_no_recent_assigned_rep_action_sql restricts lead prefix to literal l. or trusted WP-prefix leads; activity table is fixed WP prefix. Each REP_ACTION_ACTIVITY_TYPES constant is prepared with %s before composing the IN list. since is supplied to the final %s prepare. Dynamic text consists only of fixed identifiers and prepared constant values, not caller SQL."
+    },
+    {
+      "file": "includes/class-admin-lead-notifications.php",
+      "line": 248,
+      "file_sha256": "961bf9763db99ab3fafb740ef68286d92085e54ea5dbe08fd0d014d7c0ae180f",
+      "source_line": "                  AND a.created_at > COALESCE({$lead_prefix}assigned_at, {$lead_prefix}created_at)",
+      "rationale": "get_no_recent_assigned_rep_action_sql restricts lead prefix to literal l. or trusted WP-prefix leads; activity table is fixed WP prefix. Each REP_ACTION_ACTIVITY_TYPES constant is prepared with %s before composing the IN list. since is supplied to the final %s prepare. Dynamic text consists only of fixed identifiers and prepared constant values, not caller SQL."
+    },
+    {
+      "file": "includes/class-admin-lead-notifications.php",
+      "line": 249,
+      "file_sha256": "961bf9763db99ab3fafb740ef68286d92085e54ea5dbe08fd0d014d7c0ae180f",
+      "source_line": "                  AND a.activity_type IN ({$activity_types})",
+      "rationale": "get_no_recent_assigned_rep_action_sql restricts lead prefix to literal l. or trusted WP-prefix leads; activity table is fixed WP prefix. Each REP_ACTION_ACTIVITY_TYPES constant is prepared with %s before composing the IN list. since is supplied to the final %s prepare. Dynamic text consists only of fixed identifiers and prepared constant values, not caller SQL."
+    },
+    {
+      "file": "includes/class-private-files.php",
+      "line": 100,
+      "file_sha256": "946564b2272f382c45e7cb9a721bd9fafd8de8e16b6582fb105a669490fba1c7",
+      "source_line": "        $lead = $wpdb->get_row($wpdb->prepare(\"SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d\" . ($lock ? ' FOR UPDATE' : ''), absint($lead_id)));",
+      "rationale": "allowed requires live rep access and positive absint lead_id. SQL uses trusted WP-prefix lead table and prepared %d; lock chooses only literal FOR UPDATE or empty. Lock callers own a transaction and authority refresh follows the row read. Permission/ownership reads must not be cached across assignment or role changes."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 19,
+      "file_sha256": "46f56e36e05835e1576d22a1c7eed45395d4e828991697b67229c235cc977993",
+      "source_line": "        return 1 === (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 0)', $name));",
+      "rationale": "Recovery guard uses fixed GET_LOCK/RELEASE_LOCK/IS_USED_LOCK SQL with prepared lock-name %s, fixed CONNECTION_ID(), and a prepared option-name lookup on trusted wpdb options. advance_generation bounds the current epoch and prepares both constant option name and next-epoch string before query(sql), then rereads it. These connection/session-lock and generation observations are live concurrency authority and cannot be replaced by cached results. No caller SQL identifier is accepted."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 23,
+      "file_sha256": "46f56e36e05835e1576d22a1c7eed45395d4e828991697b67229c235cc977993",
+      "source_line": "        $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $name));",
+      "rationale": "Recovery guard uses fixed GET_LOCK/RELEASE_LOCK/IS_USED_LOCK SQL with prepared lock-name %s, fixed CONNECTION_ID(), and a prepared option-name lookup on trusted wpdb options. advance_generation bounds the current epoch and prepares both constant option name and next-epoch string before query(sql), then rereads it. These connection/session-lock and generation observations are live concurrency authority and cannot be replaced by cached results. No caller SQL identifier is accepted."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 27,
+      "file_sha256": "46f56e36e05835e1576d22a1c7eed45395d4e828991697b67229c235cc977993",
+      "source_line": "        return $wpdb->get_var($wpdb->prepare('SELECT IS_USED_LOCK(%s)', $name));",
+      "rationale": "Recovery guard uses fixed GET_LOCK/RELEASE_LOCK/IS_USED_LOCK SQL with prepared lock-name %s, fixed CONNECTION_ID(), and a prepared option-name lookup on trusted wpdb options. advance_generation bounds the current epoch and prepares both constant option name and next-epoch string before query(sql), then rereads it. These connection/session-lock and generation observations are live concurrency authority and cannot be replaced by cached results. No caller SQL identifier is accepted."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 34,
+      "file_sha256": "46f56e36e05835e1576d22a1c7eed45395d4e828991697b67229c235cc977993",
+      "source_line": "        $value = $wpdb->get_var($wpdb->prepare(\"SELECT option_value FROM {$wpdb->options} WHERE option_name = %s\", self::GENERATION));",
+      "rationale": "Recovery guard uses fixed GET_LOCK/RELEASE_LOCK/IS_USED_LOCK SQL with prepared lock-name %s, fixed CONNECTION_ID(), and a prepared option-name lookup on trusted wpdb options. advance_generation bounds the current epoch and prepares both constant option name and next-epoch string before query(sql), then rereads it. These connection/session-lock and generation observations are live concurrency authority and cannot be replaced by cached results. No caller SQL identifier is accepted."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 41,
+      "file_sha256": "46f56e36e05835e1576d22a1c7eed45395d4e828991697b67229c235cc977993",
+      "source_line": "        return $wpdb->last_error || ($owner && (int) $owner !== (int) $wpdb->get_var('SELECT CONNECTION_ID()'));",
+      "rationale": "Recovery guard uses fixed GET_LOCK/RELEASE_LOCK/IS_USED_LOCK SQL with prepared lock-name %s, fixed CONNECTION_ID(), and a prepared option-name lookup on trusted wpdb options. advance_generation bounds the current epoch and prepares both constant option name and next-epoch string before query(sql), then rereads it. These connection/session-lock and generation observations are live concurrency authority and cannot be replaced by cached results. No caller SQL identifier is accepted."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 49,
+      "file_sha256": "46f56e36e05835e1576d22a1c7eed45395d4e828991697b67229c235cc977993",
+      "source_line": "            if (self::restoring() || (int) self::$epoch !== $epoch || (int) self::owner(self::$slot) !== (int) $wpdb->get_var('SELECT CONNECTION_ID()')) { return false; }",
+      "rationale": "Recovery guard uses fixed GET_LOCK/RELEASE_LOCK/IS_USED_LOCK SQL with prepared lock-name %s, fixed CONNECTION_ID(), and a prepared option-name lookup on trusted wpdb options. advance_generation bounds the current epoch and prepares both constant option name and next-epoch string before query(sql), then rereads it. These connection/session-lock and generation observations are live concurrency authority and cannot be replaced by cached results. No caller SQL identifier is accepted."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 62,
+      "file_sha256": "46f56e36e05835e1576d22a1c7eed45395d4e828991697b67229c235cc977993",
+      "source_line": "                if ((int) self::owner($coordinator) !== (int) $wpdb->get_var('SELECT CONNECTION_ID()')) { self::release($slot); return false; } // Requires multiple named locks.",
+      "rationale": "Recovery guard uses fixed GET_LOCK/RELEASE_LOCK/IS_USED_LOCK SQL with prepared lock-name %s, fixed CONNECTION_ID(), and a prepared option-name lookup on trusted wpdb options. advance_generation bounds the current epoch and prepares both constant option name and next-epoch string before query(sql), then rereads it. These connection/session-lock and generation observations are live concurrency authority and cannot be replaced by cached results. No caller SQL identifier is accepted."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 70,
+      "file_sha256": "46f56e36e05835e1576d22a1c7eed45395d4e828991697b67229c235cc977993",
+      "source_line": "        return self::$depth > 0 && self::$epoch === self::generation() && !self::restoring() && (int) self::owner(self::$slot) === (int) $wpdb->get_var('SELECT CONNECTION_ID()');",
+      "rationale": "Recovery guard uses fixed GET_LOCK/RELEASE_LOCK/IS_USED_LOCK SQL with prepared lock-name %s, fixed CONNECTION_ID(), and a prepared option-name lookup on trusted wpdb options. advance_generation bounds the current epoch and prepares both constant option name and next-epoch string before query(sql), then rereads it. These connection/session-lock and generation observations are live concurrency authority and cannot be replaced by cached results. No caller SQL identifier is accepted."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 110,
+      "file_sha256": "46f56e36e05835e1576d22a1c7eed45395d4e828991697b67229c235cc977993",
+      "source_line": "            if ((int) self::owner($coordinator) !== (int) $wpdb->get_var('SELECT CONNECTION_ID()')) { return false; }",
+      "rationale": "Recovery guard uses fixed GET_LOCK/RELEASE_LOCK/IS_USED_LOCK SQL with prepared lock-name %s, fixed CONNECTION_ID(), and a prepared option-name lookup on trusted wpdb options. advance_generation bounds the current epoch and prepares both constant option name and next-epoch string before query(sql), then rereads it. These connection/session-lock and generation observations are live concurrency authority and cannot be replaced by cached results. No caller SQL identifier is accepted."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 123,
+      "file_sha256": "46f56e36e05835e1576d22a1c7eed45395d4e828991697b67229c235cc977993",
+      "source_line": "        return false !== $wpdb->query($sql) && $epoch + 1 === self::generation();",
+      "rationale": "Recovery guard uses fixed GET_LOCK/RELEASE_LOCK/IS_USED_LOCK SQL with prepared lock-name %s, fixed CONNECTION_ID(), and a prepared option-name lookup on trusted wpdb options. advance_generation bounds the current epoch and prepares both constant option name and next-epoch string before query(sql), then rereads it. These connection/session-lock and generation observations are live concurrency authority and cannot be replaced by cached results. No caller SQL identifier is accepted."
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "includes/class-admin-lead-reads.php": "4a8d1ec6fc24351997c6487bbfe3102d08ee587fb2a30e1c776f45a58ef8325a",
+  "assets/css/admin-style.css": "fc4428715521c459f723e80cc2156fb8e0052f364fb89954590a6db0263f761e",
+  "tests/integration/http-router.php": "0eca797a08937491a17a5d095017bf7c297d0d2131629cf7b1caad8373c2681d"
+}

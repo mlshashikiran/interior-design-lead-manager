@@ -30,6 +30,7 @@ final class IDLM_Operational_Health {
             'scheduler_backend' => 'none',
             'recurring_jobs_scheduled' => false,
             'retention_scheduled' => false,
+            'retention_failed' => false,
             'secrets_ready' => false,
             'secret_missing_count' => 0,
             'uploads_ready' => false,
@@ -72,8 +73,8 @@ final class IDLM_Operational_Health {
             self::check(
                 'retention',
                 'Sensitive-data retention job',
-                !empty($context['retention_scheduled']) ? 'healthy' : 'critical',
-                !empty($context['retention_scheduled']) ? 'Scheduled' : 'Not scheduled',
+                !empty($context['retention_scheduled']) && empty($context['retention_failed']) ? 'healthy' : 'critical',
+                !empty($context['retention_failed']) ? 'Last batch failed; retry scheduled' : (!empty($context['retention_scheduled']) ? 'Scheduled' : 'Not scheduled'),
                 'Restore the daily retention hook and verify the next bounded prune run.'
             ),
             self::check(
@@ -236,10 +237,11 @@ final class IDLM_Operational_Health {
             'core_schema_current' => defined('IDLM_DB_VERSION')
                 && IDLM_DB_VERSION === get_option('idlm_schema_version', ''),
             'quotation_schema_current' => class_exists('IDLM_Quotation_Schema')
-                && IDLM_Quotation_Schema::VERSION === get_option('idlm_quotation_schema_version', ''),
+                && IDLM_Quotation_Schema::is_current(),
             'scheduler_backend' => $action_scheduler ? 'action_scheduler' : 'wp_cron',
             'recurring_jobs_scheduled' => $daily_scheduled && $hourly_scheduled,
             'retention_scheduled' => (bool) wp_next_scheduled(IDLM_Data_Retention::HOOK),
+            'retention_failed' => !empty(((array) get_option(IDLM_Data_Retention::STATUS_OPTION, array()))['last_error']),
             'uploads_ready' => $upload_state,
             'cache_backend' => function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache()
                 ? 'persistent'
@@ -255,19 +257,19 @@ final class IDLM_Operational_Health {
             array('enabled' => true, 'values' => array(self::secret_present('idlm_webhook_api_key'))),
             array('enabled' => IDLM_Production_Security::is_mcp_enabled(), 'values' => array(self::secret_present('idlm_mcp_api_key'))),
             array('enabled' => '1' === (string) get_option('idlm_meta_capi_enabled', '0'), 'values' => array(
-                get_option('idlm_meta_pixel_id', ''), get_option('idlm_meta_access_token', ''),
+                get_option('idlm_meta_pixel_id', ''), IDLM_Secret_Store::get('idlm_meta_access_token', '', true),
             )),
             array('enabled' => '1' === (string) get_option('idlm_google_capi_enabled', '0'), 'values' => array(
-                get_option('idlm_google_measurement_id', ''), get_option('idlm_google_api_secret', ''),
+                get_option('idlm_google_measurement_id', ''), IDLM_Secret_Store::get('idlm_google_api_secret', '', true),
             )),
             array('enabled' => '1' === (string) get_option('idlm_linkedin_capi_enabled', '0'), 'values' => array(
-                get_option('idlm_linkedin_conversion_id', ''), get_option('idlm_linkedin_access_token', ''),
+                get_option('idlm_linkedin_conversion_id', ''), IDLM_Secret_Store::get('idlm_linkedin_access_token', '', true),
             )),
             array('enabled' => '1' === (string) get_option('idlm_interakt_enabled', '0'), 'values' => array(
-                get_option('idlm_interakt_api_key', ''), get_option('idlm_interakt_webhook_secret', ''),
+                IDLM_Secret_Store::get('idlm_interakt_api_key', '', true), IDLM_Secret_Store::get('idlm_interakt_webhook_secret', '', true),
             )),
             array('enabled' => '1' === (string) get_option('idlm_meta_webhook_enabled', '0'), 'values' => array(
-                get_option('idlm_meta_webhook_verify_token', ''), get_option('idlm_meta_webhook_app_secret', ''),
+                IDLM_Secret_Store::get('idlm_meta_webhook_verify_token', '', true), IDLM_Secret_Store::get('idlm_meta_webhook_app_secret', '', true),
             )),
         );
 
@@ -313,7 +315,9 @@ final class IDLM_Operational_Health {
         return empty($uploads['error'])
             && !empty($uploads['basedir'])
             && is_dir($uploads['basedir'])
+            // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_is_writable -- REL007-BOUNDARY-0040: upload_storage_ready(): read-only storage readiness check of the WordPress uploads directory; is_writable tests an existing local directory without initiating a credential-prompting filesystem transport.
             && is_writable($uploads['basedir']);
+            // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_is_writable
     }
 
     private static function queue_context($action_scheduler) {
@@ -335,6 +339,7 @@ final class IDLM_Operational_Health {
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $rows = $wpdb->get_results(
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0085: queue_context(): fixed operational table/condition call sites; current queue/health counts use bound cutoff values; metadata and live queue state require primary reads.
             "SELECT status, COUNT(*) AS action_count, MIN(scheduled_date_gmt) AS oldest_at
              FROM {$table}
              WHERE hook LIKE 'idlm\\_%'
@@ -343,6 +348,7 @@ final class IDLM_Operational_Health {
                     OR (status = 'failed' AND last_attempt_gmt >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL 1 DAY))
                )
              GROUP BY status"
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         );
         if (!is_array($rows)) {
             return $default;
@@ -376,7 +382,9 @@ final class IDLM_Operational_Health {
         }
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         return absint($wpdb->get_var($wpdb->prepare(
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0086: recent_count(): fixed operational table/condition call sites; current queue/health counts use bound cutoff values; metadata and live queue state require primary reads.
             "SELECT COUNT(*) FROM {$table} WHERE {$condition} AND created_at >= %s",
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $since
         )));
     }

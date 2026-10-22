@@ -1,0 +1,39 @@
+{
+  "builder": "Shashi",
+  "methods": [
+    {
+      "method": "ajax_get_lead_activity",
+      "lines": 111,
+      "sha256": "01b6e7966f480986e5e82e4af79ab5ca0052383e11061f16926acaffe850be6c",
+      "bytes_identical": true
+    },
+    {
+      "method": "ajax_save_activity_comment",
+      "lines": 45,
+      "sha256": "f604aeecebb16c6369634a35613490674ba0c5a4f017de20086dd43e63d55341",
+      "bytes_identical": true
+    },
+    {
+      "method": "ajax_edit_activity_comment",
+      "lines": 39,
+      "sha256": "c05a4764c2dcc092387fd643b17109cff1006fe803f7e38babd29bd5768118e2",
+      "bytes_identical": true
+    },
+    {
+      "method": "ajax_delete_activity_comment",
+      "lines": 37,
+      "sha256": "658516473f06b5c96dc67627dfffb6879b740cea705bda5e0e80730103a4f16f",
+      "bytes_identical": true
+    }
+  ],
+  "lines": 232,
+  "bytes_identical": true,
+  "inherited_helpers": [
+    "current_user_has_rep_access",
+    "current_user_can_view_lead",
+    "current_user_can_access_lead",
+    "format_datetime",
+    "render_activity_details"
+  ],
+  "inheritance_pattern": "Existing IDLM_Admin_Lead_Reads pattern; inherited helper resolution remains IDLM_Admin"
+}

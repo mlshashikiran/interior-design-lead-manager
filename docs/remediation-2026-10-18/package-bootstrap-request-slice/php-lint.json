@@ -1,0 +1,32 @@
+[
+  {
+    "file": "includes/class-recovery-guard.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in includes/class-recovery-guard.php\n"
+  },
+  {
+    "file": "interior-design-lead-manager.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in interior-design-lead-manager.php\n"
+  },
+  {
+    "file": "tests/release-contracts.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/release-contracts.php\n"
+  },
+  {
+    "file": "tests/integration/quotation-http.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/integration/quotation-http.php\n"
+  },
+  {
+    "file": "tests/integration/http-router.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/integration/http-router.php\n"
+  },
+  {
+    "file": "tests/integration/bootstrap-request-http-cases.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/integration/bootstrap-request-http-cases.php\n"
+  }
+]

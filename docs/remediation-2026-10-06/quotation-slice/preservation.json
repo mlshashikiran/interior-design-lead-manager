@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "baseline_files": 592,
+  "modified_only_scoped_files": [
+    ".github/workflows/tests.yml",
+    "CHANGELOG.md",
+    "docs/AUDIT-REMEDIATION-PLAN.md",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+    "docs/CHANGELOG-DEV.md",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md",
+    "docs/SECURITY.md",
+    "docs/audit-remediation-backlog.csv",
+    "includes/class-quotation-controller.php",
+    "includes/class-quotation-policy.php",
+    "includes/class-quotation-renderer.php",
+    "includes/class-quotation-repository.php",
+    "interior-design-lead-manager.php",
+    "readme.txt",
+    "tests/README.md",
+    "tests/audit-quotation-probes.php",
+    "tests/integration/bootstrap.php",
+    "tests/release-contracts.php",
+    "tests/run.php"
+  ],
+  "missing_baseline_files": [],
+  "unchanged_baseline_files": 573,
+  "immutable_audit_hashes_preserved": true
+}

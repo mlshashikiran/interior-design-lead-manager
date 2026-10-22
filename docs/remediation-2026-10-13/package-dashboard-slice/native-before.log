@@ -1,0 +1,5 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+FAIL REL007 dashboard assignment origins require the literal automatic underscore prefix
+  Expected 2, got 4.
+
+1 passed, 1 failed

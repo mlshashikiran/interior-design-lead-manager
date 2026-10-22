@@ -1,0 +1,5 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T10-T18-H-UI001-manual-quantities-working-copy-save-and-repeat-retain-values
+PASS T10-T18-H-UI001-tiny-dimension-derived-quantity-prices-the-normalized-value
+PASS T18-T19-H-UI001-rendered-admin-shortcode-new-and-edit-use-hundredth-step
+3 passed, 0 failed

@@ -1218,7 +1218,7 @@ jQuery(document).ready(function($) {
     $('#idlm-manual-sync-trigger').click(function(e) {
         e.preventDefault();
         var $btn = $(this);
-        $btn.text('Syncing Custom Audiences...').prop('disabled', true);
+        $btn.text('Processing Selected Audience Work...').prop('disabled', true);
 
         $.ajax({
             url: idlm_vars.ajax_url,
@@ -1231,13 +1231,13 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     showToast(response.data.message, 'success');
                 } else {
-                    showToast('Sync failed.', 'error');
+                    showToast(response.data && response.data.message ? response.data.message : 'Sync failed.', 'error');
                 }
-                $btn.text('Run Custom Audience Sync Job Now').prop('disabled', false);
+                $btn.text('Process Selected Audience Queue').prop('disabled', false);
             },
             error: function() {
                 showToast('Server sync failed.', 'error');
-                $btn.text('Run Custom Audience Sync Job Now').prop('disabled', false);
+                $btn.text('Process Selected Audience Queue').prop('disabled', false);
             }
         });
     });
@@ -1249,8 +1249,8 @@ jQuery(document).ready(function($) {
         var pixelId = $('input[name="meta_pixel_id"]').val();
         var accessToken = $('input[name="meta_access_token"]').val();
 
-        if (!pixelId || !accessToken) {
-            showToast('Please enter both Meta Pixel ID and Meta Access Token to test.', 'error');
+        if (!pixelId) {
+            showToast('Please enter the Meta Pixel ID to test.', 'error');
             return;
         }
 
@@ -1312,10 +1312,6 @@ jQuery(document).ready(function($) {
             accessToken = $('input[name="linkedin_access_token"]').val();
         }
 
-        if (platform !== 'google' && !accessToken) {
-            showToast('Please enter an access token for ' + platform + ' under platform settings first.', 'error');
-            return;
-        }
 
         $btn.text('Testing...').prop('disabled', true);
 
@@ -2661,7 +2657,7 @@ jQuery(document).ready(function($) {
                     window.idlmHasUnsavedChanges = false;
                     window.idlmChangedFields = {};
                     window.IDLMDialog.close('#idlm-unsaved-changes-modal', {reason: 'save', restoreFocus: false});
-                    jQuery('#idlm-lead-drawer').removeClass('active');
+                    jQuery('#idlm-lead-drawer').removeClass('active').attr('aria-hidden', 'true');
                     updateBodyScrollLock();
                     showToast(response.data.message, 'success');
                     loadLeadsTable(currentPage);
@@ -2680,7 +2676,7 @@ jQuery(document).ready(function($) {
         window.idlmHasUnsavedChanges = false;
         window.idlmChangedFields = {};
         window.IDLMDialog.close('#idlm-unsaved-changes-modal', {reason: 'discard', restoreFocus: false});
-        jQuery('#idlm-lead-drawer').removeClass('active');
+        jQuery('#idlm-lead-drawer').removeClass('active').attr('aria-hidden', 'true');
         updateBodyScrollLock();
     });
 
@@ -2742,6 +2738,21 @@ function closeLeadModal() {
     updateBodyScrollLock();
 }
 
+// This preference is shared across lead drawers in the current browser tab only.
+var idlmPresalesAccordionOpen = false;
+try { idlmPresalesAccordionOpen = window.sessionStorage.getItem('idlm_presales_accordion_open') === '1'; } catch (error) { /* Storage may be unavailable. */ }
+
+function restorePresalesAccordion() {
+    var accordion = document.querySelector('#idlm-drawer-content-wrapper-inner .idlm-presales-accordion');
+    if (!accordion) return;
+    accordion.open = idlmPresalesAccordionOpen;
+    accordion.addEventListener('toggle', function() {
+        if (!accordion.isConnected) return;
+        idlmPresalesAccordionOpen = accordion.open;
+        try { window.sessionStorage.setItem('idlm_presales_accordion_open', accordion.open ? '1' : '0'); } catch (error) { /* Keep the in-memory preference. */ }
+    });
+}
+
 function openLeadDrawer(leadId, startTab) {
     window.idlmHasUnsavedChanges = false;
     window.idlmChangedFields = {};
@@ -2760,7 +2771,10 @@ function openLeadDrawer(leadId, startTab) {
         }
     }
 
-    $('#idlm-lead-drawer').addClass('active');
+    if (!$('#idlm-lead-drawer').hasClass('active')) {
+        window.idlmLeadDrawerReturnFocus = document.activeElement;
+    }
+    $('#idlm-lead-drawer').addClass('active').attr('aria-hidden', 'false').trigger('focus');
     updateBodyScrollLock();
     updateLeadDrawerNavigation(leadId);
     
@@ -2778,6 +2792,7 @@ function openLeadDrawer(leadId, startTab) {
         success: function(response) {
             if (response.success) {
                 $('#idlm-drawer-content-wrapper-inner').html(response.data.html);
+                restorePresalesAccordion();
                 if (response.data.whatsapp_marked_read) {
                     $('.idlm-whatsapp-row-badge[data-lead-id="' + leadId + '"]').remove();
                 }
@@ -2798,10 +2813,7 @@ function openLeadDrawer(leadId, startTab) {
                     
                 }
 
-                // Load once on drawer open so the Tasks tab can surface overdue work immediately.
-                loadLeadTasks(leadId);
-                
-                // Timeline comments are already loaded inline in PHP detail view
+                loadLeadDrawerTabData(activeTab || 'drawer-tab-info', leadId);
             } else {
                 $('#idlm-drawer-content-wrapper-inner').html('<div class="idlm-drawer-load-state idlm-drawer-load-state--error" role="alert">' + response.data.message + '</div>');
             }
@@ -2873,8 +2885,11 @@ function closeLeadDrawer() {
             window.IDLMDialog.open('#idlm-unsaved-changes-modal', {trigger: document.activeElement});
         }
     } else {
-        jQuery('#idlm-lead-drawer').removeClass('active');
+        jQuery('#idlm-lead-drawer').removeClass('active').attr('aria-hidden', 'true');
         updateBodyScrollLock();
+        if (window.idlmLeadDrawerReturnFocus && document.contains(window.idlmLeadDrawerReturnFocus)) {
+            window.idlmLeadDrawerReturnFocus.focus();
+        }
     }
 }
 
@@ -2885,36 +2900,52 @@ function switchDrawerTab(evt, tabId) {
     $('#' + tabId).addClass('active');
     $(evt.currentTarget).addClass('active');
 
+    var leadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
+    if (leadId) loadLeadDrawerTabData(tabId, leadId);
+}
+
+function loadLeadDrawerTabData(tabId, leadId) {
     if (tabId === 'drawer-tab-activity') {
-        var leadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
-        if (leadId) {
-            loadLeadActivityLog(leadId);
-        }
+        loadLeadActivityLog(leadId);
+    } else if (tabId === 'drawer-tab-whatsapp') {
+        loadLeadWhatsApp(leadId);
+    } else if (tabId === 'drawer-tab-tasks') {
+        loadLeadTasks(leadId);
     }
-    if (tabId === 'drawer-tab-whatsapp') {
-        var whatsappLeadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
-        if (whatsappLeadId) {
-            $.post(idlm_vars.ajax_url, {
-                action: 'idlm_mark_whatsapp_messages_read',
-                nonce: idlm_vars.nonce,
-                lead_id: whatsappLeadId
-            }).done(function(response) {
-                if (!response.success) return;
-                $('.idlm-drawer-whatsapp-count').text('0').prop('hidden', true);
-                $('.idlm-drawer-whatsapp-message').removeClass('is-unread');
-                $('.idlm-whatsapp-row-badge[data-lead-id="' + whatsappLeadId + '"]').remove();
-                if (response.data.hasOwnProperty('unread_whatsapp_count') && typeof window.idlmUpdateUnreadWhatsAppPill === 'function') {
-                    window.idlmUpdateUnreadWhatsAppPill(response.data.unread_whatsapp_count);
-                }
-            });
+}
+
+function loadLeadWhatsApp(leadId) {
+    var $ = jQuery;
+    var $panel = $('#drawer-tab-whatsapp');
+    if (!$panel.length || $panel.data('loaded') || $panel.data('loading')) return;
+
+    $panel.data('loading', true).html('<div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> Loading WhatsApp history...</div>');
+    $.post(idlm_vars.ajax_url, {
+        action: 'idlm_get_lead_whatsapp',
+        nonce: idlm_vars.nonce,
+        lead_id: leadId
+    }).done(function(response) {
+        if (!response.success) {
+            $panel.html('<div class="idlm-drawer-load-state idlm-drawer-load-state--error" role="alert">' + (response.data.message || 'Unable to load WhatsApp history.') + '</div>');
+            return;
         }
-    }
-    if (tabId === 'drawer-tab-tasks') {
-        var leadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
-        if (leadId) {
-            loadLeadTasks(leadId);
-        }
-    }
+        $panel.data('loaded', true).html(response.data.html);
+        var unreadCount = response.data.unread_whatsapp_count || 0;
+        $('.idlm-drawer-whatsapp-count').text(unreadCount).attr('aria-label', unreadCount + ' unread WhatsApp messages').prop('hidden', unreadCount === 0);
+        $.post(idlm_vars.ajax_url, { action: 'idlm_mark_whatsapp_messages_read', nonce: idlm_vars.nonce, lead_id: leadId }).done(function(markResponse) {
+            if (!markResponse.success) return;
+            $('.idlm-drawer-whatsapp-count').text('0').prop('hidden', true);
+            $('.idlm-drawer-whatsapp-message').removeClass('is-unread');
+            $('.idlm-whatsapp-row-badge[data-lead-id="' + leadId + '"]').remove();
+            if (markResponse.data.hasOwnProperty('unread_whatsapp_count') && typeof window.idlmUpdateUnreadWhatsAppPill === 'function') {
+                window.idlmUpdateUnreadWhatsAppPill(markResponse.data.unread_whatsapp_count);
+            }
+        });
+    }).fail(function() {
+        $panel.html('<div class="idlm-drawer-load-state idlm-drawer-load-state--error" role="alert">Server connection error.</div>');
+    }).always(function() {
+        $panel.removeData('loading');
+    });
 }
 
 function loadLeadActivityLog(leadId, forceRefresh) {
@@ -3387,6 +3418,11 @@ jQuery(document).ready(function($) {
         $(this).find('.idlm-routing-fallback-confirm').prop('hidden', true);
     });
 
+    $(document).on('input', '#idlm-new-task-title', function() {
+        $(this).removeAttr('aria-invalid');
+        $('#idlm-new-task-title-error').prop('hidden', true);
+    });
+
     // Load active tasks count on page load
     updateFloatingTasksCount();
 
@@ -3480,11 +3516,14 @@ function addLeadTask(leadId) {
 
     if (!title) {
         $('#idlm-new-task-title').attr('aria-invalid', 'true').trigger('focus');
-        window.IDLMDialog.notify('Please enter a task title.', 'error');
+        $('#idlm-new-task-title-error').prop('hidden', false);
         return;
     }
 
     var $btn = $('#idlm-btn-add-task');
+    if ($btn.prop('disabled')) return;
+    $('#idlm-new-task-title').removeAttr('aria-invalid');
+    $('#idlm-new-task-title-error').prop('hidden', true);
     var originalText = $btn.text();
     $btn.prop('disabled', true).text('Adding...');
 
@@ -3503,7 +3542,7 @@ function addLeadTask(leadId) {
         success: function(response) {
             $btn.prop('disabled', false).text(originalText);
             if (response.success) {
-                $('#idlm-new-task-title').val('');
+                $('#idlm-new-task-title').val('').removeAttr('aria-invalid').trigger('focus');
                 $('#idlm-new-task-due').val('');
                 $('#idlm-new-task-priority').val('Medium');
                 $('#idlm-new-task-type').val('General');
@@ -3633,7 +3672,16 @@ function filterGlobalTasks(status) {
     loadGlobalTasks();
 }
 
-function loadGlobalTasks() {
+var globalTaskPageCursors = [''];
+var globalTaskPageIndex = 0;
+var globalTaskRequest = 0;
+function changeGlobalTaskPage(direction) {
+    globalTaskPageIndex = Math.max(0, globalTaskPageIndex + direction);
+    loadGlobalTasks(true);
+}
+function loadGlobalTasks(keepPage) {
+    if (!keepPage) { globalTaskPageCursors = ['']; globalTaskPageIndex = 0; }
+    var taskRequest = ++globalTaskRequest;
     var $ = jQuery;
     var $body = $('#idlm-global-tasks-sidebar-body');
     if (!$body.length) return;
@@ -3646,16 +3694,26 @@ function loadGlobalTasks() {
         data: {
             action: 'idlm_get_rep_tasks',
             view: globalTasksFilterStatus,
+            cursor: globalTaskPageCursors[globalTaskPageIndex] || '',
             nonce: idlm_vars.nonce
         },
         success: function(response) {
+            if (taskRequest !== globalTaskRequest) return;
             if (response.success) {
                 renderGlobalTasksList(response.data.tasks || [], response.data.attention || {}, $body);
+                $body.scrollTop(0);
+                if (keepPage) { $body.find('h3').first().attr('tabindex', '-1').trigger('focus'); }
+                var next = response.data.next_cursor || '';
+                globalTaskPageCursors[globalTaskPageIndex + 1] = next;
+                if (globalTaskPageIndex || next) {
+                    $body.append('<nav aria-label="Task pages" class="idlm-queue-pagination"><button type="button" class="idlm-queue-action" onclick="changeGlobalTaskPage(-1)" ' + (globalTaskPageIndex ? '' : 'disabled') + '>Previous</button><span> Page ' + (globalTaskPageIndex + 1) + ' </span><button type="button" class="idlm-queue-action" onclick="changeGlobalTaskPage(1)" ' + (next ? '' : 'disabled') + '>Next</button></nav>');
+                }
             } else {
                 $body.html('<div style="text-align:center; color:var(--idlm-danger); padding:20px;">' + (response.data.message || 'Failed to load tasks.') + '</div>');
             }
         },
         error: function() {
+            if (taskRequest !== globalTaskRequest) return;
             $body.html('<div style="text-align:center; color:var(--idlm-danger); padding:20px;">Server error loading tasks.</div>');
         }
     });
@@ -3767,6 +3825,7 @@ function updateFloatingTasksCount() {
         data: {
             action: 'idlm_get_rep_tasks',
             view: 'attention',
+            counts_only: 1,
             nonce: idlm_vars.nonce
         },
         success: function(response) {

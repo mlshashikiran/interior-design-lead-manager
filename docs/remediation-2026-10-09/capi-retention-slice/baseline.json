@@ -1,0 +1,30 @@
+{
+  "builder": "Shashi",
+  "version": "1.102.68",
+  "source_hashes": {
+    "includes/class-capi.php": "8ab50f79bfa76a0f78b3c92d29e0727d752bec4a4b25359d80b4aa5d2b152a9b",
+    "includes/class-data-retention.php": "b9f323f1665b55235a8c8321360481e3e3bec413fed306d34473596e297d51b9",
+    "includes/class-backup.php": "9a54960ae2799c850038705910aa9caf31255d5244640c7ade9f715f12a36643",
+    "includes/class-lead-deletion-service.php": "e952cce37a74f5cbca1aea9266b998c438da631d1f1c136cff524c1cbfee7dbf",
+    "interior-design-lead-manager.php": "4f4c5c8c218f4a138e12df7dd5591888a1f39c25b0b7a50f1a3b5c8397cf6eab",
+    "tests/bootstrap.php": "772eeb47bd780c4e70d22d23fdb1e4ae8294accc34084934e8062e7249795a7f",
+    "tests/run.php": "1130b43c38976143e13884bfdbdda466e3b12706e989ee4d08806372ea9055a8",
+    "tests/release-contracts.php": "a9c8590eb37b24aa3f72dbc477ea613e3cb4aae39c63aacb9cc8fdd45999cdb2",
+    "tests/integration/run.php": "4b37891ef8e47e6965743ec6e08e795fab11114c454e0a6bb65cdd70d2e103e1",
+    "tests/integration/worker.php": "2a46948ca806998e0c3c426f54138e234df6b049d112f1e5152c80731f890ee7",
+    "tests/integration/http-router.php": "87a87cba049f2ab1aa5f9a50a61080e8e35384351dae0ac7f1981179f5095ea3",
+    "tests/integration/quotation-http.php": "5a74458ab652da7262c603d6c14692b12c4c0016a866fdaf9be4ead753385674",
+    "CHANGELOG.md": "f292ab02b38ca2763b925ddfcec954acb3cd0fc81e7bd97ab49879866d517f74",
+    "readme.txt": "e7d504292d3f6fe33e0eb25973da8a228102efbe54ebe61e5da981cf50adb145",
+    "docs/CHANGELOG-DEV.md": "a501ac021d49a51d0e92a427055621621559b397522528c14c273c20ac219ae3",
+    "docs/DATA-MODEL.md": "e6717ba639d67f0c0a22258cd624607b993bf598bdf3f8dc39b62ddee8a84139",
+    "docs/FEATURE-MAP.md": "bdb4a9be495cff1f904fb78589383f7e0be5e609b992ef7c6fd51cf1cff53f24",
+    "docs/FLOWS.md": "1a76d3745d23994f0c432464dca224df2e6a1f84d8596ef84111110e5fd3fdb9",
+    "docs/SECURITY.md": "7e25f9b1004bc0f56ce51b03dd8dfd0d4a9a743d6114f8329cba02a4e135f1f0",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "977063795e86243e0662d0da31a42e463ba6cce2e77225e7aae97d6554ff92f2",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "b2ce75f5eb574ec64ae8d327727c9a95c5f954d730ac62650081f17236755c13",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "2e95d42440e91ba03904ff8a7df0326c11bc2f043becc33377513a5a69eab6d0",
+    "docs/audit-remediation-backlog.csv": "ecc7566df6609b928d0a16c9a2280cf4668de759ca2abd91b7b9f426124a20bf",
+    "tests/README.md": "002b7315ee2b1cb7c41cf7cfecf7bc43e613743bdb5c69e51f32669e70aa06ec"
+  }
+}

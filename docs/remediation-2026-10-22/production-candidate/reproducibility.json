@@ -1,0 +1,8 @@
+{
+  "builder": "Shashi",
+  "version": "1.102.88",
+  "independent_builds_byte_identical": true,
+  "sha256": "e23945882160c472a7ce2c8575735084293a0a72ff6306f9cd6b0e586da4bb71",
+  "bytes": 5250169,
+  "metadata": "Both local builds use the same PHP/libzip environment and fixed ZIP entry metadata; clean-revision/CI promotion remains a separate gate."
+}

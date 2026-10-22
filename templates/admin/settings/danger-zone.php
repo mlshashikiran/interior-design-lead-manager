@@ -3,12 +3,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
-$can_manage_options = !empty($context['can_manage_options']);
+$idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
+$idlm_can_manage_options = !empty($context['can_manage_options']);
 ?>
-            <?php if ($can_manage_options): ?>
+            <?php if ($idlm_can_manage_options): ?>
                 <!-- Tab 8: Danger Zone -->
-                <div id="settings-danger-zone" class="idlm-settings-tab-content <?php echo $active_tab === 'danger-zone' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-danger-zone" <?php echo $active_tab === 'danger-zone' ? '' : 'hidden'; ?>>
+                <div id="settings-danger-zone" class="idlm-settings-tab-content <?php echo $idlm_active_tab === 'danger-zone' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-danger-zone" <?php echo $idlm_active_tab === 'danger-zone' ? '' : 'hidden'; ?>>
                     <!-- Danger Zone: Reset CRM Data -->
                     <article class="idlm-card idlm-card-danger">
                         <h3>Danger Zone: Reset CRM Leads &amp; Analytics</h3>

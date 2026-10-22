@@ -1,0 +1,12 @@
+No syntax errors detected in includes/class-quotation-schema.php
+No syntax errors detected in includes/class-quotation-calculator.php
+No syntax errors detected in includes/class-backup-validator.php
+No syntax errors detected in includes/class-backup.php
+No syntax errors detected in interior-design-lead-manager.php
+No syntax errors detected in tests/quotation-classification-contracts.php
+No syntax errors detected in tests/integration/quotation-classification-contracts.php
+No syntax errors detected in tests/run.php
+No syntax errors detected in tests/integration/run.php
+No syntax errors detected in tests/integration/quotation-classification-http-cases.php
+No syntax errors detected in tests/integration/quotation-http.php
+No syntax errors detected in tests/release-contracts.php

@@ -6,6 +6,8 @@ if (!defined('ABSPATH')) {
 class IDLM_Admin {
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'register_admin_menus'));
+        // Core checks page registration before admin_init; redirect retired URLs first.
+        add_action('admin_menu', array(__CLASS__, 'redirect_legacy_admin_page'), 0);
         add_action('admin_init', array(__CLASS__, 'redirect_legacy_admin_page'));
         add_action('wp_enqueue_scripts', array(__CLASS__, 'enqueue_frontend_assets'));
         add_action('admin_post_idlm_update_my_account', array(__CLASS__, 'handle_update_my_account'));
@@ -13,6 +15,7 @@ class IDLM_Admin {
         add_action('admin_post_idlm_create_user', array(__CLASS__, 'handle_create_user'));
         add_action('admin_post_idlm_update_user', array(__CLASS__, 'handle_update_user'));
         add_action('admin_post_idlm_update_role_scopes', array(__CLASS__, 'handle_update_role_scopes'));
+        add_action('admin_post_idlm_update_role_permissions', array(__CLASS__, 'handle_update_role_permissions'));
 
         // Shortcodes for frontend lead manager & dashboard
         add_shortcode('idlm_leads_list', array(__CLASS__, 'render_leads_list_shortcode'));
@@ -22,6 +25,7 @@ class IDLM_Admin {
 
         // AJAX endpoints
         add_action('wp_ajax_idlm_get_lead_details', array(__CLASS__, 'ajax_get_lead_details'));
+        add_action('wp_ajax_idlm_get_lead_whatsapp', array(__CLASS__, 'ajax_get_lead_whatsapp'));
         add_action('wp_ajax_idlm_mark_whatsapp_messages_read', array(__CLASS__, 'ajax_mark_whatsapp_messages_read'));
         add_action('wp_ajax_idlm_get_lead_activity', array(__CLASS__, 'ajax_get_lead_activity'));
         add_action('wp_ajax_idlm_get_capi_log_payload', array(__CLASS__, 'ajax_get_capi_log_payload'));
@@ -165,8 +169,8 @@ class IDLM_Admin {
     /**
      * Return lead IDs with WhatsApp replies not yet viewed by the current representative.
      */
-    public static function get_unread_whatsapp_lead_ids() {
-        return IDLM_Admin_Lead_Notifications::get_unread_whatsapp_lead_ids();
+    public static function get_unread_whatsapp_lead_ids($after = 0, $limit = 100) {
+        return IDLM_Admin_Lead_Notifications::get_unread_whatsapp_lead_ids($after, $limit);
     }
 
     /**
@@ -181,8 +185,8 @@ class IDLM_Admin {
     /**
      * Return lead IDs that have received at least one WhatsApp reply.
      */
-    public static function get_whatsapp_received_lead_ids() {
-        return IDLM_Admin_Lead_Notifications::get_whatsapp_received_lead_ids();
+    public static function get_whatsapp_received_lead_ids($after = 0, $limit = 100) {
+        return IDLM_Admin_Lead_Notifications::get_whatsapp_received_lead_ids($after, $limit);
     }
 
     /**
@@ -284,6 +288,7 @@ class IDLM_Admin {
     public static function handle_create_user() { return IDLM_Admin_Users_Controller::handle_create(); }
     public static function handle_update_user() { return IDLM_Admin_Users_Controller::handle_update(); }
     public static function handle_update_role_scopes() { return IDLM_Admin_Users_Controller::handle_update_role_scopes(); }
+    public static function handle_update_role_permissions() { return IDLM_Admin_Users_Controller::handle_update_role_permissions(); }
 
     /** Register the deliberately small wp-admin utility page. */
     public static function register_admin_menus() {
@@ -335,7 +340,9 @@ class IDLM_Admin {
         foreach (array('workspace', 'quote_id', 'lead_id', 'revision_id', 'quote_search', 'catalogue_search', 'status', 'created_by', 'date_from', 'date_to', 's', 'role', 'access', 'paged', 'idlm_notice', 'idlm_error') as $key) {
             // phpcs:ignore WordPress.Security.NonceVerification.Recommended
             if (isset($_GET[$key]) && is_scalar($_GET[$key])) {
+                // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0055: redirect_legacy_admin_page(): legacy-page redirect validates current page capability and forwards only a fixed sanitized query-key allowlist to the local workspace; this is read-only navigation, not a mutation.
                 $query_args[$key] = sanitize_text_field(wp_unslash($_GET[$key]));
+                // phpcs:enable WordPress.Security.NonceVerification.Recommended
             }
         }
         $target = add_query_arg($query_args, $workspace_url);
@@ -420,6 +427,7 @@ class IDLM_Admin {
         return IDLM_Admin_Settings_Renderer::render();
     }
     public static function ajax_get_lead_details() { return IDLM_Admin_Ajax::ajax_get_lead_details(); }
+    public static function ajax_get_lead_whatsapp() { return IDLM_Admin_Lead_Reads::ajax_get_lead_whatsapp(); }
     public static function ajax_mark_whatsapp_messages_read() { return IDLM_Admin_Lead_Reads::ajax_mark_whatsapp_messages_read(); }
     public static function ajax_get_lead_activity() { return IDLM_Admin_Ajax::ajax_get_lead_activity(); }
     public static function ajax_get_capi_log_payload() { return IDLM_Admin_Logs_Renderer::ajax_get_capi_log_payload(); }

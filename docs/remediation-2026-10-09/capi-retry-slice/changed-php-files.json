@@ -1,0 +1,17 @@
+[
+  "includes/class-capi.php",
+  "includes/class-db.php",
+  "includes/class-admin-ajax.php",
+  "includes/class-backup.php",
+  "includes/class-lead-deletion-service.php",
+  "interior-design-lead-manager.php",
+  "tests/capi-retry-contracts.php",
+  "tests/run.php",
+  "tests/release-contracts.php",
+  "tests/integration/capi-retry-contracts.php",
+  "tests/integration/capi-retry-http-cases.php",
+  "tests/integration/quotation-http.php",
+  "tests/integration/http-router.php",
+  "tests/integration/run.php",
+  "tests/integration/worker.php"
+]

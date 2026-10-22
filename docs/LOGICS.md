@@ -1,14 +1,16 @@
-# Verified Runtime Logic Map
+# Historical Runtime Logic Map
 
 Author: Shashi  
 Verified: 2026-09-09  
 Scope: static source-and-documentation audit only; no plugin PHP, JavaScript, schema, settings, or runtime data was changed.
 
+> Historical static audit: line references, enumerations and issue descriptions below reflect 2026-09-09, not current verification. For candidate 1.102.56 use [STATE-POLICY.md](STATE-POLICY.md), [FLOWS.md](FLOWS.md) and the remediation backlog. The current print endpoint returns HTML; a separate Dompdf download generates PDF in memory. Current downstream stage-only moves do not imply Qualified quality.
+
 ## Method and confidence
 
 Graphify was queried with: **“Map the end-to-end plugin flow: entry points, lifecycle state transitions, persistence, hooks, integrations, permissions, failures, and redundant logic.”** It identified `IDLM_Admin`, `IDLM_Integrations`, `IDLM_Quotations`, `IDLM_Quotation_Repository`, `IDLM_Admin_Ajax`, and `IDLM_DB` as the core hubs. The graph report records 1,326 nodes and 1,494 edges; every runtime relationship below was then checked against the listed source location and the linked project contract. Graphify is an index, not evidence.
 
-`docs/FLOWS.md` is the human lifecycle overview. This file is its source-verified companion and the change-impact index.
+`docs/FLOWS.md` is the human lifecycle overview. This file preserves the earlier source audit and its change-impact index.
 
 ## Bootstrap and entry points
 

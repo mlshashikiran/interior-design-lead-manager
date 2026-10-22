@@ -1,0 +1,14 @@
+{
+  "builder": "Shashi",
+  "owned_test_databases_dropped": true,
+  "remaining_databases": [
+    "information_schema",
+    "mysql",
+    "performance_schema",
+    "sys"
+  ],
+  "owned_content_removed_by_test_shutdown": true,
+  "dedicated_socket_only_server_stopped": true,
+  "owned_mysql_data_removed": true,
+  "configured_site_untouched": true
+}

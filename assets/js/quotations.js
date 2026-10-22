@@ -1,5 +1,25 @@
 (function () {
     'use strict';
+    // QUO008 integer decimal helpers. Keep rounding identical to the PHP calculator.
+    function decimalUnits(value, minimum, maximum) {
+        var text = String(value == null ? '' : value).trim() || '0';
+        var match = /^\+?(?:([0-9]+)(?:\.([0-9]*))?|\.([0-9]+))$/.exec(text);
+        if (text.length > 128 || !match) { return null; }
+        var whole = (match[1] || '0').replace(/^0+/, '') || '0';
+        var fraction = ((match[2] || match[3] || '') + '000');
+        if (whole.length > String(Math.floor(maximum / 100)).length) { return null; }
+        var units = Number(whole) * 100 + Number(fraction.slice(0, 2)) + (Number(fraction[2]) >= 5 ? 1 : 0);
+        return units > maximum ? null : Math.max(minimum, units);
+    }
+    function decimalProduct(left, right, maximum) {
+        if (right && left > Math.floor(maximum * 100 / right)) { return null; }
+        var units = Math.floor((left * right + 50) / 100);
+        return units > maximum ? null : units;
+    }
+    function decimalPercentage(amount, percent) {
+        return Math.floor(amount / 10000) * percent + Math.floor(((amount % 10000) * percent + 5000) / 10000);
+    }
+    // End QUO008 integer decimal helpers.
     function bindQuotationRows(scope) {
         scope.querySelectorAll('.idlm-quote-row[data-href]').forEach(function (row) {
             if (row.dataset.idlmRowBound) { return; }
@@ -27,7 +47,7 @@
     }
     function quotationRow(row) {
         var customer = [row.first_name, row.last_name].filter(Boolean).join(' ') || '—';
-        return '<tr class="idlm-quote-row" data-href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '"><td><strong>' + escapeHtml(row.quote_number) + '</strong><br><small>' + escapeHtml(row.title) + '</small></td><td><strong>' + escapeHtml(customer) + '</strong><br><small>' + escapeHtml([row.phone, row.project_name].filter(Boolean).join(' · ')) + '</small></td><td>' + escapeHtml(row.revision_name || '—') + '</td><td>' + escapeHtml(formatMoney(row.grand_total)) + '</td><td>' + escapeHtml(row.creator_name || 'Unknown') + '<br><small>' + escapeHtml(row.created_at) + '</small></td><td>' + escapeHtml(row.updated_at) + '</td><td><a class="idlm-btn idlm-btn-secondary" href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '">Open</a></td></tr>';
+        return '<tr class="idlm-quote-row" data-href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '"><td><strong>' + escapeHtml(row.quote_number) + '</strong><br><small>' + escapeHtml(row.title) + '</small></td><td><strong>' + escapeHtml(customer) + '</strong><br><small>' + escapeHtml([row.phone, row.project_name].filter(Boolean).join(' · ')) + '</small></td><td>' + escapeHtml(row.revision_name || '—') + '</td><td>' + escapeHtml(formatMoney(row.grand_total, row.currency_code)) + '</td><td>' + escapeHtml(row.creator_name || 'Unknown') + '<br><small>' + escapeHtml(row.created_at) + '</small></td><td>' + escapeHtml(row.updated_at) + '</td><td><a class="idlm-btn idlm-btn-secondary" href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '">Open</a></td></tr>';
     }
     function catalogueRow(row) {
         var editUrl = liveListUrl({workspace: 'catalogue', edit_item: row.id, catalogue_search: document.querySelector('[name="catalogue_search"]').value}).href;
@@ -218,6 +238,32 @@
     var autosaveHasWorkingCopy = !!(autosaveStatus && '1' === autosaveStatus.dataset.hasWorkingCopy);
     var formDirty = false;
     var autosaveCancelModal = form.querySelector('[data-autosave-cancel-modal]');
+    var revisionReasonPromptOpen = false;
+    function ensureRevisionReason(event) {
+        if (Number(form.elements.quote_id.value) <= 0) { return true; }
+        var revisionReason = form.elements.revision_reason;
+        if (revisionReason && revisionReason.value.trim()) { return true; }
+        event.preventDefault();
+        if (revisionReasonPromptOpen) { return false; }
+        revisionReasonPromptOpen = true;
+        window.IDLMDialog.prompt({
+            title: 'Save new revision',
+            message: 'Add a revision remark. The previous quotation version will be preserved.',
+            label: 'Revision remark',
+            placeholder: 'Explain what changed and why',
+            confirmLabel: 'Save revision',
+            required: true,
+            requiredMessage: 'Enter a revision remark to save this revision.',
+            trigger: event.submitter || document.activeElement
+        }).then(function(remark) {
+            revisionReasonPromptOpen = false;
+            if (!remark || !revisionReason) { return; }
+            revisionReason.value = remark;
+            form.requestSubmit();
+        });
+        return false;
+    }
+    form.addEventListener('submit', ensureRevisionReason);
     function setAutosaveStatus(message, state) {
         if (!autosaveStatus) { return; }
         autosaveStatus.textContent = message;
@@ -236,6 +282,7 @@
         autosaveDirty = false;
         autosaveSaving = true;
         renumberAll(); calculate();
+        if (form.dataset.idlmNumericInvalid === '1') { autosaveSaving = false; setAutosaveStatus('Correct invalid numeric values before autosaving.', 'error'); return; }
         setAutosaveStatus('Saving…', 'saving');
         var autosaveData = new FormData(form);
         autosaveData.set('action', 'idlm_autosave_quote');
@@ -275,8 +322,8 @@
             }
         });
         form.addEventListener('submit', function (event) {
-            if (!ensureRevisionReason(event)) { return; }
             window.clearTimeout(autosaveTimer);
+            if (event.defaultPrevented) { return; }
             if (finalSubmitStarted) {
                 event.preventDefault();
                 return;
@@ -424,10 +471,18 @@
     }
 
     function calculate() {
-        function round2(value) { return Math.round((value + Number.EPSILON) * 100) / 100; }
+        var limits = idlmQuoteData.numericLimits, invalid = false;
+        function reject(input, message) { invalid = true; if (input) { input.setCustomValidity(message); } }
+        function units(input, minimum, maximum) {
+            if (!input) { return 0; }
+            input.setCustomValidity('');
+            var value = decimalUnits(input.value, minimum, maximum);
+            if (value === null || input.validity.badInput) { reject(input, 'Enter a nonnegative decimal within the supported range; exponent notation is not accepted.'); return 0; }
+            return value;
+        }
         var currencyInput = form.elements.currency_code;
         var currentCurrency = currencyCode(currencyInput ? currencyInput.value : idlmQuoteData.currencyCode);
-        function money(value) { return formatMoney(value, currentCurrency); }
+        function money(value) { return formatMoney(value / 100, currentCurrency); }
         function updateCurrencySymbols() {
             var symbol = money(0).replace(/[\d,.\s]/g, '') || currentCurrency + ' ';
             form.querySelectorAll('.idlm-currency-input > span').forEach(function (element) { element.textContent = symbol; });
@@ -439,7 +494,15 @@
             section.querySelectorAll('.idlm-quote-item-row').forEach(function (row) {
                 if (field(row, 'row_type') && 'header' === field(row, 'row_type').value) { return; }
                 var quantityField = field(row, 'quantity');
-                var qty = Math.max(0.01, num(quantityField)), rate = Math.max(0, num(field(row, 'unit_rate'))), base = qty * rate;
+                var width = units(field(row, 'length'), 0, limits.maxMeasure), height = units(field(row, 'height'), 0, limits.maxMeasure);
+                var qty = units(quantityField, 1, limits.maxMeasure);
+                if (width > 0 && height > 0) {
+                    qty = decimalProduct(width, height, limits.maxMeasure);
+                    if (qty === null) { reject(field(row, 'length'), 'Billable area exceeds the supported quantity range.'); qty = 1; }
+                    qty = Math.max(1, qty); quantityField.value = (qty / 100).toFixed(2);
+                }
+                var rateField = field(row, 'unit_rate'), rate = units(rateField, 0, limits.maxAmount), base = decimalProduct(qty, rate, limits.maxAmount);
+                if (base === null) { reject(rateField, 'Line subtotal exceeds the supported amount range.'); base = 0; }
                 var net = base;
                 var optionalField = field(row, 'is_optional'), optional = 'checkbox' === optionalField.type ? optionalField.checked : '1' === optionalField.value, total = net;
                 row.querySelector('.idlm-line-total').textContent = optional ? 'Optional' : money(total); row.classList.toggle('is-optional', optional);
@@ -455,21 +518,27 @@
             taxable += woodGroups[group].base;
         });
         var woodenSubtotal = woodGroups.Wood.base;
-        var woodenDiscountPercent = Math.min(100, Math.max(0, num(form.elements.wooden_discount_percent)));
-        var woodenDiscount = round2(woodenSubtotal * woodenDiscountPercent / 100);
-        var afterWoodenDiscount = round2(Math.max(0, woodenSubtotal - woodenDiscount));
-        var otherSubtotal = round2(subtotal - woodenSubtotal);
+        var woodenDiscountPercent = units(form.elements.wooden_discount_percent, 0, 10000);
+        var woodenDiscount = decimalPercentage(woodenSubtotal, woodenDiscountPercent);
+        var afterWoodenDiscount = Math.max(0, woodenSubtotal - woodenDiscount);
+        var otherSubtotal = subtotal - woodenSubtotal;
         var totalsPanel = form.querySelector('#idlm-live-totals');
-        var softClosePercent = Math.min(100, Math.max(0, Number(totalsPanel.dataset.softClosePercent || 0)));
+        var softClosePercent = decimalUnits(totalsPanel.dataset.softClosePercent || '0', 0, 10000);
+        var softCloseInvalid = softClosePercent === null;
+        if (softCloseInvalid) { softClosePercent = 0; }
         var softCloseEnabled = form.elements.soft_close_enabled.checked;
-        var softClose = softCloseEnabled ? round2(afterWoodenDiscount * softClosePercent / 100) : 0;
-        var total = round2(afterWoodenDiscount + otherSubtotal + softClose);
-        var additionalDiscount = Math.min(total, Math.max(0, num(form.elements.additional_discount_amount)));
-        var afterAdditionalDiscount = round2(Math.max(0, total - additionalDiscount));
-        var gst = round2(afterAdditionalDiscount * 18 / 100);
-        var preRoundTotal = round2(afterAdditionalDiscount + gst);
-        var grand = Math.round(preRoundTotal);
-        var roundOff = round2(grand - preRoundTotal);
+        var softClose = softCloseEnabled ? decimalPercentage(afterWoodenDiscount, softClosePercent) : 0;
+        var total = afterWoodenDiscount + otherSubtotal + softClose;
+        var additionalDiscount = Math.min(total, units(form.elements.additional_discount_amount, 0, limits.maxAmount));
+        var afterAdditionalDiscount = Math.max(0, total - additionalDiscount);
+        var gst = decimalPercentage(afterAdditionalDiscount, 1800);
+        var preRoundTotal = afterAdditionalDiscount + gst;
+        var grand = Math.floor((preRoundTotal + 50) / 100) * 100;
+        var roundOff = grand - preRoundTotal;
+        if (softCloseInvalid) { reject(form.elements.additional_discount_amount, 'Ask the administrator to correct the soft close percentage.'); }
+        if (subtotal > limits.maxAmount || total > limits.maxAmount || preRoundTotal > limits.maxAmount || grand > limits.maxAmount) { reject(form.elements.additional_discount_amount, 'Quotation total including GST and round off exceeds 9,999,999,999.99.'); }
+        if (form.querySelectorAll('.idlm-quote-item-row').length > limits.maxRows || sections.querySelectorAll('.idlm-quote-section').length > limits.maxSections) { reject(form.elements.additional_discount_amount, 'A quotation supports at most 200 rows and 50 sections.'); }
+        form.dataset.idlmNumericInvalid = invalid ? '1' : '0';
         var hasAdditionalDiscount = additionalDiscount > 0;
         form.querySelector('[data-total="subtotal"]').textContent = money(subtotal);
         form.querySelector('[data-total="wooden-subtotal"]').textContent = money(woodenSubtotal);
@@ -675,7 +744,13 @@
     });
 
     form.addEventListener('change', function (event) {
-        if (event.target.classList.contains('idlm-measurement-input') && event.target.value !== '') { event.target.value = Math.max(0, num(event.target)).toFixed(2); }
+        if (event.target.matches('.idlm-calc[type="number"]') && event.target.value !== '') {
+            var isMeasure = event.target.classList.contains('idlm-measurement-input');
+            var maximum = isMeasure ? idlmQuoteData.numericLimits.maxMeasure : idlmQuoteData.numericLimits.maxAmount;
+            var minimum = event.target.classList.contains('idlm-item-quantity') ? 1 : 0;
+            var value = decimalUnits(event.target.value, minimum, maximum);
+            if (value !== null) { event.target.value = (value / 100).toFixed(2); }
+        }
         calculate();
     }); renumberAll(); calculate();
 })();

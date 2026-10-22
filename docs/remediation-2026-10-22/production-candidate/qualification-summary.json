@@ -1,0 +1,86 @@
+{
+  "builder": "Shashi",
+  "version": "1.102.88",
+  "artifact_sha256": "e23945882160c472a7ce2c8575735084293a0a72ff6306f9cd6b0e586da4bb71",
+  "file_count": 464,
+  "runtime": {
+    "wordpress": "7.1.3",
+    "php": "8.5.12",
+    "mysql": "8.4.0",
+    "cpu_logical": 10,
+    "memory_gib": 16,
+    "fpm_workers": 16,
+    "topology": "single-server/single-site"
+  },
+  "M6": "COMPLETE",
+  "M7": "selected-topology local qualification executed; real host/provider/long-soak acceptance remains",
+  "M8": "pending authentic remote CI and promotion",
+  "production_release_approved": false,
+  "ci_attested": false,
+  "tests": {
+    "fast_pass": 388,
+    "native_pass": 337,
+    "http_pass": 468,
+    "plugin_check_diagnostics": 0,
+    "php_syntax_pass_including_vendor": 477
+  },
+  "source_archive_installed_bytes_match": true,
+  "expected_paced": {
+    "requests": 1800,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "latency_ms": {
+      "p50": 27.581,
+      "p95": 86.481,
+      "p99": 485.958,
+      "max": 2135.294
+    },
+    "response_bytes_max": 132044
+  },
+  "expected_paced_server": {
+    "samples": 1800,
+    "peak_memory_bytes": 23068672,
+    "queries_p95": 172,
+    "database_ms_p95": 74.862
+  },
+  "dashboard_explicitly_warm": {
+    "requests": 450,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "latency_ms": {
+      "p50": 71.449,
+      "p95": 105.398,
+      "p99": 192.585,
+      "max": 196.764
+    },
+    "response_bytes_max": 57543
+  },
+  "quotation_list": {
+    "requests": 450,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "latency_ms": {
+      "p50": 31.24,
+      "p95": 83.015,
+      "p99": 156.767,
+      "max": 246.172
+    },
+    "response_bytes_max": 40818
+  },
+  "intake": {
+    "new_canonical": 90,
+    "matched_replays": 10,
+    "touchpoints": 100,
+    "errors": 0,
+    "p95_ms": 57.722
+  },
+  "stress_100k": "NOT QUALIFIED; four task 503s and latency targets exceeded",
+  "limits": [
+    "Synthetic fixtures, blocked providers/mail",
+    "Reference-host capacity only; no smaller-host guarantee",
+    "Three-minute paced run is not a long-duration soak",
+    "Clean exact-revision CI/promotion and production acceptance are still required"
+  ],
+  "real_wp_admin_cases": 11,
+  "real_wp_admin_errors": 0
+}

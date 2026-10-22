@@ -1,0 +1,15 @@
+{
+  "builder": "Shashi",
+  "candidate": "1.102.74",
+  "mode": "Independent ZIP reader; archive entries compared with current source bytes",
+  "sha256": "23e16e84bec6fbe83ed66a8b7227615d27d97327253b221680f6363980b6e085",
+  "matching_files": 455,
+  "public_disclosures": {
+    "readme.txt": "9c6bff99ce48ff34f171ced6348a4222ceb5ff641c39d03fef8f31465b3cf897",
+    "PRIVACY.md": "168528298eb4b197c2a70ef9247c2f33c526e363c257be449b1da86b4882760e",
+    "SUPPORT.md": "36f75606a73f892d31fbc97060986b0f8ca130d50eaf6de711cf682cef6a5942"
+  },
+  "unexpected_internal_docs_tests": 0,
+  "artifact_status": "local_rehearsal_only",
+  "WordPress_installation_booted": false
+}

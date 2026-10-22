@@ -1,0 +1,38 @@
+{
+  "builder": "Shashi",
+  "updated_at": "2026-10-18T05:46:37.277626+00:00",
+  "method": "Scoped Graphify AST plus source-verified delegate edge and literal document headings; outside-scope relationships retained. No full semantic/HTML rebuild.",
+  "code_files": [
+    "includes/class-handoff-notifications.php",
+    "includes/class-integrations.php",
+    "interior-design-lead-manager.php",
+    "tests/bootstrap.php",
+    "tests/integration/run.php",
+    "tests/integration/handoff-notification-contracts.php",
+    "tests/release-contracts.php"
+  ],
+  "document_files": [
+    "docs/AUDIT-REMEDIATION-PLAN.md",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md",
+    "docs/CHANGELOG-DEV.md",
+    "docs/ARCHITECTURE.md",
+    "docs/FEATURE-MAP.md",
+    "docs/PROJECT-MAP.md",
+    "docs/DEVELOPMENT.md",
+    "tests/README.md",
+    "docs/AUDIT-REMEDIATION-HANDOFF-NOTIFICATIONS-SLICE.md"
+  ],
+  "extracted_nodes": 248,
+  "extracted_edges": 282,
+  "document_headings": 349,
+  "source_sha256": {
+    "includes/class-handoff-notifications.php": "23bca3f2a83c924b661cb0d1718071d7c8457c15871f12b722313aa65d9206f2",
+    "includes/class-integrations.php": "6143488b28c273c56cbb36984fa23ac1b3104e3845f720dcf3f80d7920b1c523",
+    "interior-design-lead-manager.php": "ac9bf2e7e4cf0334091f1d7d6fc98b1f7fb55b53fe26bfced8f75d8fc5a638a6",
+    "tests/bootstrap.php": "a446f2f06a8b32561106173038408dfa6fc1672a345c0a38664654c893aea668",
+    "tests/integration/run.php": "b611a49a12a56bbda617c4dbdfb8af0f81eade8da8bfe4831a90b1ceda886da9",
+    "tests/integration/handoff-notification-contracts.php": "a30e8b274689dbb592e6201e1eb6e5564c22126a5c0e8b3bb492fd9933c0515e",
+    "tests/release-contracts.php": "d62146420ff9013d517f56e5172b2673c8e9d3935259450ddc5d7c6439ab6dab"
+  }
+}

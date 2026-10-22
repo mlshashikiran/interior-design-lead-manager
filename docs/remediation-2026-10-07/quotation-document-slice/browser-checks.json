@@ -1,0 +1,18 @@
+{
+  "author": "Shashi",
+  "quote": 121,
+  "oldRevision": 139,
+  "newRevision": 149,
+  "saved": "R02 retained INR; R01 preserved",
+  "mobile": {
+    "documentWidth": 384,
+    "localizedUSD": true,
+    "terms": "Document terms for the new revision\n\nSaving captures the current document terms and payment milestones shown below. Earlier revisions keep their saved terms. The currency is INR; no currency conversion is performed.\n\nReview document terms\n\nCover content Changed live contractual cover\n\nClosing content Changed live contractual closing[idlm_payment_structure]\n\nFooter terms Changed live contractual footer\n\nChanged live deposit — 50%\nChanged live completion — 50%",
+    "totals": "Subtotal\n₹100.00\nWooden Subtotal\n₹0.00\nWooden Discount\n%\n₹0.00\nSubtotal after wooden discount\n₹0.00\nOther Subtotal\n₹100.00\nSoft Close Addition\nEnable (0.00%)\n₹0.00\nTotal\n₹100.00\nGST (18%)\n₹18.00\nRound Off\n₹0.00\nGrand Total\n₹118.00",
+    "width": 390
+  },
+  "originalPrint": {
+    "text": "Print / Save PDF\nOriginal contractual cover\nIDLM Integration Tests\nQuotation #:\nQ-2026-000121\nRevision:\nR01\nCreated / Modified By:\nfixture_owner / fixture_owner\nCreated / Updated Date:\n07-10-2026 11:03 AM / 07-10-2026 11:03 AM\nCustomer Details\nCLIENT NAME\tPHONE NUMBER\tEMAIL ID\tPROPERTY NAME\tLOCATION\nSynthetic commercial history\t—\t—\t—\t—\nQuotation Summary\nSection-wise subtotal before discount\nSl No\tSection\tSubtotal before discount\n1\tGeneral\t₹100.00\nCategory-wise subtotal\nCategory\tSubtotal\nUncategorised\t₹100.00\nSubtotal\n₹100.00\nWooden Subtotal\n₹0.00\nWooden Discount (0.00%)\n₹0.00\nTotal\n₹100.00\nGST (18%)\n₹18.00\nGrand Total\n₹118.00\nSection & Item Breakdown\nGeneral\nS.No\tItem\tDescription\tWidth\tHeight\tArea / Qty\tUnit\tRate\tSubtotal\n1\tUncategorised\tSYNTHETIC-ITEM-ORIGINAL\t0.00\t0.00\t1.00\tNos\t₹100.00\t₹100.00\nGeneral Subtotal\t₹100.00\n\nOriginal contractual closing\n\nPayment Structure\nMilestone\tPercentage\tAmount\nOriginal deposit\t50.00%\t₹59.00\nOriginal completion\t50.00%\t₹59.00\nTotal\t100.00%\t₹118.00\nOriginal contractual footer"
+  },
+  "pdfVisual": "Four A4 pages inspected: original cover, INR summary/items, two INR59 milestones and original footer; no clipping seen"
+}

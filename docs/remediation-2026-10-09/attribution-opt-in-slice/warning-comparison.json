@@ -1,0 +1,9 @@
+{
+  "baseline_displayed": 7,
+  "final_displayed": 7,
+  "identical_normalized_multiset": true,
+  "warnings": {
+    "Warning: Undefined property: stdClass::$num_rooms in includes/class-capi.php": 6,
+    "Warning: Undefined property: stdClass::$phone in includes/class-lead-lifecycle-service.php": 1
+  }
+}

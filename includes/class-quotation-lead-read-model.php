@@ -47,7 +47,9 @@ final class IDLM_Quotation_Lead_Read_Model {
         $params = array($lead_id);
         $scope = self::scope_sql('l', $params);
         $sql = "SELECT l.id FROM {$wpdb->prefix}idlm_leads l WHERE l.id = %d{$scope}";
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0179: lead_exists(): fixed lead/user joins and projections; scope_sql uses existing live quote/lead policy, search/IDs/limits prepared; customer existence/scope must be current.
         return (bool) $wpdb->get_var($wpdb->prepare($sql, $params));
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
     }
 
     /**
@@ -76,7 +78,9 @@ final class IDLM_Quotation_Lead_Read_Model {
                     OR l.email LIKE %s OR l.project_name LIKE %s OR l.property_location LIKE %s)
             ORDER BY l.first_name, l.last_name
             LIMIT %d";
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0180: search(): fixed lead/user joins and projections; scope_sql uses existing live quote/lead policy, search/IDs/limits prepared; customer existence/scope must be current.
         return $wpdb->get_results($wpdb->prepare($sql, $params));
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
     }
 
     /**
@@ -96,7 +100,9 @@ final class IDLM_Quotation_Lead_Read_Model {
             WHERE l.is_duplicate = 0{$scope}
             ORDER BY l.first_name, l.last_name
             LIMIT %d";
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0181: list_for_editor(): fixed lead/user joins and projections; scope_sql uses existing live quote/lead policy, search/IDs/limits prepared; customer existence/scope must be current.
         return $wpdb->get_results($wpdb->prepare($sql, $params));
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
     }
 
     /**
@@ -117,6 +123,8 @@ final class IDLM_Quotation_Lead_Read_Model {
             FROM {$wpdb->prefix}idlm_leads l
             LEFT JOIN {$wpdb->users} u ON u.ID = l.assigned_rep_id
             WHERE l.id = %d AND l.is_duplicate = 0{$scope}";
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0182: get_selected_lead(): fixed lead/user joins and projections; scope_sql uses existing live quote/lead policy, search/IDs/limits prepared; customer existence/scope must be current.
         return $wpdb->get_row($wpdb->prepare($sql, $params));
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
     }
 }

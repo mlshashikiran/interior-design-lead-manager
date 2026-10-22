@@ -1,0 +1,7 @@
+{
+  "includes/class-interakt.php": "45f469ba572af07e437e2371c01584134e736b189b6b4a12566a47e8d21ad15c",
+  "includes/class-lead-lifecycle-service.php": "5a1c2efdbaf663b7af99ff356c6841c24028fd8918c22a0e641de1613a2358aa",
+  "includes/class-backup.php": "baf9bfd7f0536448efa8e11954ed5b7e0ca9c1c1b18b0473d8d8070fee6c2389",
+  "interior-design-lead-manager.php": "6f49fba4b1d22123d16455ffa762421acae0b8771671c65374ffcf3603ee99b6",
+  "tests/bootstrap.php": "2ab1b4a528489438a1fbf90625c3ac920fdb6cdc3f8ab5c0dc37521c200b91a4"
+}

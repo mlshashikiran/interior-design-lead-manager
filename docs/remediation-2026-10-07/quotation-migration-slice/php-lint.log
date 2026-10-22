@@ -1,0 +1,15 @@
+No syntax errors detected in includes/class-quotation-schema.php
+No syntax errors detected in includes/class-quotations.php
+No syntax errors detected in includes/class-operational-health.php
+No syntax errors detected in includes/class-backup-validator.php
+No syntax errors detected in includes/class-backup.php
+No syntax errors detected in interior-design-lead-manager.php
+No syntax errors detected in tests/run.php
+No syntax errors detected in tests/release-contracts.php
+No syntax errors detected in tests/quotation-migration-contracts.php
+No syntax errors detected in tests/integration/run.php
+No syntax errors detected in tests/integration/worker.php
+No syntax errors detected in tests/integration/http-router.php
+No syntax errors detected in tests/integration/quotation-http.php
+No syntax errors detected in tests/integration/quotation-migration-contracts.php
+No syntax errors detected in tests/integration/quotation-migration-http-cases.php

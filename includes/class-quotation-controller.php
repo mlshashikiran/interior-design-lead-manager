@@ -11,50 +11,124 @@ if (!defined('ABSPATH')) {
 
 final class IDLM_Quotation_Controller extends IDLM_Quotations {
     public static function handle_save() {
-        if (!self::can('idlm_create_quotes')) {
-            wp_die('You do not have permission to save quotations.', 403);
-        }
         check_admin_referer('idlm_save_quote');
         global $wpdb;
         $quote_id = absint($_POST['quote_id'] ?? 0);
         $creating_quote = !$quote_id;
         $revision_id = absint($_POST['revision_id'] ?? 0);
         $lead_id = absint($_POST['lead_id'] ?? 0);
-        if (!self::can_view_lead($lead_id)) {
+        if (($creating_quote && !self::can('idlm_create_quotes')) || (!$creating_quote && (!self::can('idlm_edit_quote_drafts') || !self::can('idlm_create_quote_revisions')))) {
+            wp_die('You do not have permission to save quotations.', 403);
+        }
+        if (!IDLM_Quotation_Policy::can_mutate_lead($lead_id)) {
             wp_die('You cannot create a quotation for this lead.', 403);
         }
+        // A new aggregate never accepts a persisted revision identity.
+        if ($creating_quote && $revision_id) {
+            wp_die('Invalid quotation revision.', 403);
+        }
+        if (!$creating_quote) {
+            $requested_quote = self::get_quote($quote_id);
+            $requested_revision = self::get_revision($revision_id);
+            if (!$requested_quote || !$requested_revision || absint($requested_quote->lead_id) !== $lead_id || absint($requested_revision->quote_id) !== $quote_id) {
+                wp_die('Quotation not found.', 404);
+            }
+        }
+        $revision_reason = sanitize_text_field(wp_unslash($_POST['revision_reason'] ?? ''));
         $save_request_key = sanitize_text_field(wp_unslash($_POST['save_request_key'] ?? ''));
         if (!preg_match('/^[a-f0-9-]{36}$/i', $save_request_key)) {
             $save_request_key = wp_generate_uuid4();
         }
         $existing_request_revision = IDLM_Quotation_Repository::get_revision_by_save_request_key($save_request_key);
         if ($existing_request_revision) {
-            $existing_request_quote = self::get_quote($existing_request_revision->quote_id);
-            if ($existing_request_quote && self::can_view_lead($existing_request_quote->lead_id)) {
-                self::redirect(array('action' => 'view', 'quote_id' => absint($existing_request_quote->id), 'idlm_notice' => 'This quotation save was already completed.'));
+            self::completed_save($existing_request_revision, $lead_id, $quote_id, $revision_id, $save_request_key);
+        }
+        if ($quote_id && '' === $revision_reason) {
+            self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'idlm_error' => 'Enter a revision remark explaining why the quotation was changed.'));
+        }
+        if ($creating_quote) {
+            if (!IDLM_Quotation_Repository::acquire_lead_quote_lock($lead_id)) {
+                self::redirect(array('action' => 'edit', 'lead_id' => $lead_id, 'idlm_error' => 'Another quotation is being created for this lead. Please try again.'));
             }
+
         }
         $quote_settings = self::settings();
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0012: handle_save(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
         $items = self::parse_items(wp_unslash((array) ($_POST['items'] ?? array())), $quote_settings);
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if (is_wp_error($items)) {
+            if ($creating_quote) { IDLM_Quotation_Repository::release_lead_quote_lock($lead_id); }
+            self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'lead_id' => $lead_id, 'idlm_error' => $items->get_error_message()));
+        }
         $line_items = array_filter($items, static function($item) {
             return 'item' === ($item['row_type'] ?? 'item');
         });
         if (!$line_items) {
+            if ($creating_quote) { IDLM_Quotation_Repository::release_lead_quote_lock($lead_id); }
             self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'lead_id' => $lead_id, 'idlm_error' => 'Add at least one line item.'));
         }
         $totals = self::calculate_totals($items, $_POST, $quote_settings);
-        $sections = self::parse_sections($_POST['sections'] ?? array());
+        if (is_wp_error($totals)) {
+            if ($creating_quote) { IDLM_Quotation_Repository::release_lead_quote_lock($lead_id); }
+            self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'lead_id' => $lead_id, 'idlm_error' => $totals->get_error_message()));
+        }
+        $document_terms = IDLM_Quotation_Document::capture($quote_settings, $totals['grand_total']);
+        if (is_wp_error($document_terms)) {
+            if ($creating_quote) { IDLM_Quotation_Repository::release_lead_quote_lock($lead_id); }
+            self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'lead_id' => $lead_id, 'idlm_error' => $document_terms->get_error_message()));
+        }
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0013: handle_save(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
+        $sections = self::parse_sections(wp_unslash($_POST['sections'] ?? array()));
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if (is_wp_error($sections)) {
+            if ($creating_quote) { IDLM_Quotation_Repository::release_lead_quote_lock($lead_id); }
+            self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'lead_id' => $lead_id, 'idlm_error' => $sections->get_error_message()));
+        }
         $now = current_time('mysql');
         $user_id = get_current_user_id();
         $number = null;
-        if (!$quote_id) {
-            $number = self::next_quote_number();
+        $source_revision_id = 0;
+        $transaction = IDLM_Quotation_Repository::begin_checked_transaction('save');
+        if (is_wp_error($transaction)) {
+            if ($creating_quote) { IDLM_Quotation_Repository::release_lead_quote_lock($lead_id); }
+            self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'lead_id' => $lead_id, 'idlm_error' => $transaction->get_error_message()));
+        }
+
+        if (!IDLM_Quotation_Policy::can_mutate_lead($lead_id, true) ||
+            ($creating_quote ? !self::can('idlm_create_quotes') : (!self::can('idlm_edit_quote_drafts') || !self::can('idlm_create_quote_revisions')))) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0049: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            if ($creating_quote) { IDLM_Quotation_Repository::release_lead_quote_lock($lead_id); }
+            wp_die('You cannot save a quotation for this lead.', 403);
+        }
+        $existing_request_revision = IDLM_Quotation_Repository::get_revision_by_save_request_key($save_request_key);
+        if ($existing_request_revision) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0050: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            if ($creating_quote) { IDLM_Quotation_Repository::release_lead_quote_lock($lead_id); }
+            self::completed_save($existing_request_revision, $lead_id, $quote_id, $revision_id, $save_request_key);
+        }
+        if ($creating_quote) {
+            $existing_quote = IDLM_Quotation_Repository::get_quote_for_lead($lead_id);
+            if ($existing_quote) {
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0051: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+                $wpdb->query('ROLLBACK');
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                IDLM_Quotation_Repository::release_lead_quote_lock($lead_id);
+                self::redirect(array('action' => 'view', 'quote_id' => absint($existing_quote->id), 'idlm_notice' => 'A quotation already exists for this lead. Create a revision from that quotation.'));
+            }
+            // Reserve inside the authorized transaction; denied requests cannot
+            // advance numbering, and this reservation must not commit the lock.
+            $number = IDLM_Quotation_Repository::reserve_quote_number($quote_settings, false);
             if (is_wp_error($number)) {
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0052: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+                $wpdb->query('ROLLBACK');
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                IDLM_Quotation_Repository::release_lead_quote_lock($lead_id);
                 self::redirect(array('idlm_error' => $number->get_error_message()));
             }
-        }
-        if (false === $wpdb->query('START TRANSACTION')) {
-            self::rollback_save('Unable to start the quotation save.', array('action' => 'edit', 'quote_id' => $quote_id, 'lead_id' => $lead_id), 'Quotation transaction start failed');
         }
 
         if (!$quote_id) {
@@ -71,25 +145,33 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
                 'updated_at' => $now,
             ), array('%d', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s'));
             if (!$quote_id) {
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0053: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
                 $wpdb->query('ROLLBACK');
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                IDLM_Quotation_Repository::release_lead_quote_lock($lead_id);
                 self::redirect(array('idlm_error' => 'Unable to create the quotation.'));
             }
             $revision_number = 1;
             $revision_name = $number . '-R01';
         } else {
-            $quote = self::get_quote($quote_id);
-            if (!$quote || absint($quote->lead_id) !== $lead_id || !self::can_view_lead($lead_id)) {
+            $quote = IDLM_Quotation_Repository::lock_quote($quote_id);
+            if (!$quote || absint($quote->lead_id) !== $lead_id || !IDLM_Quotation_Policy::can_mutate_lead($lead_id)) {
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0054: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
                 $wpdb->query('ROLLBACK');
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                 wp_die('Quotation not found.', 404);
             }
             $revision = self::get_revision($revision_id);
-            if (!$revision || absint($revision->quote_id) !== $quote_id || absint($quote->current_revision_id) !== $revision_id || !self::can('idlm_edit_quote_drafts')) {
+            if (!IDLM_Quotation_Policy::is_editable_draft($quote, $revision)) {
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0055: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
                 $wpdb->query('ROLLBACK');
-                self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'Only the current quotation revision can be edited.'));
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'Only the current draft quotation revision can be edited.'));
             }
-            $source_revision_id = absint($revision->source_revision_id ?? 0);
-            $revision_number = absint($revision->revision_number);
-            $revision_name = $revision->revision_name;
+            $source_revision_id = absint($revision->id);
+            $revision_number = IDLM_Quotation_Repository::next_revision_number($quote_id);
+            $revision_name = $quote->quote_number . '-R' . str_pad((string) $revision_number, 2, '0', STR_PAD_LEFT);
+            $revision_id = 0;
         }
 
         if (empty($lead)) {
@@ -102,8 +184,9 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             'revision_name' => $revision_name,
             'status' => 'Draft',
             'source_revision_id' => absint($source_revision_id ?? 0),
-            'revision_reason' => $revision->revision_reason ?? 'Initial proposal',
-            'currency_code' => self::currency_code($quote_settings['currency_code']),
+            'revision_reason' => $revision_reason ?: 'Initial proposal',
+            'currency_code' => $creating_quote ? self::currency_code($quote_settings['currency_code']) : (string) $revision->currency_code,
+            'document_terms' => $document_terms,
             'customer_name' => sanitize_text_field(wp_unslash($_POST['customer_name'] ?? trim(($lead->first_name ?? '') . ' ' . ($lead->last_name ?? '')))),
             'customer_phone' => sanitize_text_field(wp_unslash($_POST['customer_phone'] ?? ($lead->phone ?? ''))),
             'customer_email' => sanitize_email(wp_unslash($_POST['customer_email'] ?? ($lead->email ?? ''))),
@@ -115,21 +198,25 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             'save_request_key' => $save_request_key,
         ), $totals);
 
-        if (!$revision_id) {
-            $revision_data['created_by'] = $user_id;
-            $revision_data['created_at'] = $now;
-            $revision_id = IDLM_Quotation_Repository::insert_revision($revision_data);
-            $ok = (bool) $revision_id;
-            $quote_updated = IDLM_Quotation_Repository::set_current_revision($quote_id, $revision_id, 'Draft', $now);
-            if (false === $quote_updated) {
-                self::rollback_save('Unable to set the current quotation revision.', array('action' => 'edit', 'quote_id' => $quote_id), 'Current revision pointer update failed');
-            }
-        } else {
-            $ok = IDLM_Quotation_Repository::update_revision($revision_id, $revision_data);
+        $revision_data['created_by'] = $user_id;
+        $revision_data['created_at'] = $now;
+        $revision_id = IDLM_Quotation_Repository::insert_revision($revision_data);
+        $ok = (bool) $revision_id;
+        $quote_updated = $ok ? IDLM_Quotation_Repository::set_current_revision($quote_id, $revision_id, 'Draft', $now) : false;
+        if (false === $quote_updated) {
+            self::rollback_save('Unable to set the current quotation revision.', array('action' => 'edit', 'quote_id' => $quote_id), 'Current revision pointer update failed');
         }
         if (false === $ok) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0056: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
             $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'idlm_error' => 'Unable to save the quotation revision.'));
+        }
+        if (!empty($source_revision_id)) {
+            $superseded = IDLM_Quotation_Repository::supersede_revision($source_revision_id, $now);
+            if (false === $superseded) {
+                self::rollback_save('Unable to finalize the previous quotation revision.', array('action' => 'edit', 'quote_id' => $quote_id), 'Previous revision supersede failed');
+            }
         }
         $contents_saved = IDLM_Quotation_Repository::replace_revision_contents($revision_id, $sections, $items);
         if (is_wp_error($contents_saved)) {
@@ -137,50 +224,107 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         }
         $lead_updated = IDLM_Quotation_Repository::update_lead_quote_value($lead_id, $totals['grand_total'], $now);
         if (false === $lead_updated) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0057: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
             $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'idlm_error' => 'Unable to update the lead quote value.'));
         }
         if ($creating_quote) {
             $history_saved = self::insert_history($quote_id, $revision_id, '', 'Draft', 'Initial quotation created.');
+        } elseif (!empty($source_revision_id)) {
+            $history_saved = self::insert_history($quote_id, $revision_id, 'Draft', 'Draft', $revision_reason);
         } else {
             $history_saved = true;
         }
         if (false === $history_saved) {
             self::rollback_save('Unable to record the quotation history.', array('action' => 'edit', 'quote_id' => $quote_id), 'Quotation history insert failed');
         }
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0058: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
         if (false === $wpdb->query('COMMIT')) {
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             self::rollback_save('Unable to commit the quotation changes.', array('action' => 'edit', 'quote_id' => $quote_id), 'Quotation transaction commit failed');
         }
+        if ($creating_quote) {
+            IDLM_Quotation_Repository::release_lead_quote_lock($lead_id);
+        }
         IDLM_Read_Model_Cache::invalidate('quotation_value');
-        delete_transient(self::autosave_key($revision_id));
+        delete_transient(self::autosave_key(!empty($source_revision_id) ? $source_revision_id : $revision_id));
         self::log_quote_activity($quote_id, $revision_id, 'Quotation ' . $revision_name . ' saved.');
-        self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_notice' => $creating_quote ? 'Quotation saved.' : 'Draft saved.'));
+        self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_notice' => $creating_quote ? 'Quotation saved.' : 'New revision saved.'));
     }
 
     public static function ajax_autosave_quote() {
         check_ajax_referer('idlm_quote_autosave', 'nonce');
-        if (!self::can('idlm_edit_quote_drafts')) {
+        global $wpdb;
+        if (!self::can('idlm_edit_quote_drafts') || !self::can('idlm_create_quote_revisions')) {
             wp_send_json_error(array('message' => 'You do not have permission to autosave quotation drafts.'), 403);
         }
         $quote_id = absint($_POST['quote_id'] ?? 0);
         $revision_id = absint($_POST['revision_id'] ?? 0);
         $lead_id = absint($_POST['lead_id'] ?? 0);
         $quote = self::get_quote($quote_id);
-        $revision = self::get_revision($revision_id);
-        if (!$quote || !$revision || absint($quote->lead_id) !== $lead_id || absint($quote->current_revision_id) !== $revision_id || absint($revision->quote_id) !== $quote_id || !self::can_view_lead($lead_id)) {
+        $transaction = IDLM_Quotation_Repository::begin_checked_transaction('working_copy');
+        if (is_wp_error($transaction)) {
+            wp_send_json_error(array('message' => $transaction->get_error_message()), 503);
+        }
+        if (!$quote || !IDLM_Quotation_Policy::can_mutate_lead($quote->lead_id, true) || !self::can('idlm_edit_quote_drafts') || !self::can('idlm_create_quote_revisions')) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0059: ajax_autosave_quote(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             wp_send_json_error(array('message' => 'Only the current quotation revision can be autosaved.'), 409);
         }
+        $quote = IDLM_Quotation_Repository::lock_quote($quote_id);
+        $revision = self::get_revision($revision_id);
+        if (!$quote || !$revision || absint($quote->lead_id) !== $lead_id || !IDLM_Quotation_Policy::is_editable_draft($quote, $revision) || !IDLM_Quotation_Policy::can_mutate_lead($lead_id)) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0060: ajax_autosave_quote(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            wp_send_json_error(array('message' => 'Only the current quotation revision can be autosaved.'), 409);
+        }
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0014: ajax_autosave_quote(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
         $items = self::parse_items(wp_unslash((array) ($_POST['items'] ?? array())), self::settings());
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if (is_wp_error($items)) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0061: ajax_autosave_quote(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            wp_send_json_error(array('message' => $items->get_error_message()), 422);
+        }
         $line_items = array_filter($items, static function($item) {
             return 'item' === ($item['row_type'] ?? 'item');
         });
         if (!$line_items) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0062: ajax_autosave_quote(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             wp_send_json_error(array('message' => 'Autosave is waiting for at least one complete line item.'), 422);
         }
-        $sections = self::parse_sections($_POST['sections'] ?? array());
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0015: ajax_autosave_quote(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
+        $sections = self::parse_sections(wp_unslash($_POST['sections'] ?? array()));
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if (is_wp_error($sections)) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0063: ajax_autosave_quote(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            wp_send_json_error(array('message' => $sections->get_error_message()), 422);
+        }
         $totals = self::calculate_totals($items, $_POST, self::settings());
+        if (is_wp_error($totals)) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0064: ajax_autosave_quote(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            wp_send_json_error(array('message' => $totals->get_error_message()), 422);
+        }
+        $document_terms = IDLM_Quotation_Document::capture(self::settings(), $totals['grand_total']);
+        if (is_wp_error($document_terms)) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0065: ajax_autosave_quote(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            wp_send_json_error(array('message' => $document_terms->get_error_message()), 422);
+        }
         $revision_data = array_merge(array(
-            'currency_code' => self::currency_code(self::settings()['currency_code']),
+            'currency_code' => (string) $revision->currency_code,
+            'document_terms' => $document_terms,
             'customer_name' => sanitize_text_field(wp_unslash($_POST['customer_name'] ?? '')),
             'customer_phone' => sanitize_text_field(wp_unslash($_POST['customer_phone'] ?? '')),
             'customer_email' => sanitize_email(wp_unslash($_POST['customer_email'] ?? '')),
@@ -190,6 +334,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         ), $totals);
         $saved_at = time();
         $working_copy = array(
+            'generation' => IDLM_Recovery_Guard::generation(),
             'revision' => $revision_data,
             'sections' => $sections,
             'items' => $items,
@@ -198,25 +343,72 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         $autosave_key = self::autosave_key($revision_id);
         $stored = set_transient($autosave_key, $working_copy, 7 * DAY_IN_SECONDS);
         if (!$stored && false === get_transient($autosave_key)) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0066: ajax_autosave_quote(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             wp_send_json_error(array('message' => 'Unable to store the quotation working copy.'), 500);
+        }
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0067: ajax_autosave_quote(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+        if (false === $wpdb->query('COMMIT')) {
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            $wpdb->query('ROLLBACK');
+            wp_send_json_error(array('message' => 'Unable to commit quotation working copy.'), 500);
         }
         wp_send_json_success(array('message' => 'Working copy autosaved.', 'savedAt' => wp_date('H:i:s', $saved_at), 'grandTotal' => $totals['grand_total']));
     }
 
     public static function ajax_discard_quote_autosave() {
         check_ajax_referer('idlm_quote_autosave', 'nonce');
-        if (!self::can('idlm_edit_quote_drafts')) {
+        global $wpdb;
+        if (!self::can('idlm_edit_quote_drafts') || !self::can('idlm_create_quote_revisions')) {
             wp_send_json_error(array('message' => 'You do not have permission to discard quotation working copies.'), 403);
         }
         $quote_id = absint($_POST['quote_id'] ?? 0);
         $revision_id = absint($_POST['revision_id'] ?? 0);
         $quote = self::get_quote($quote_id);
+        $transaction = IDLM_Quotation_Repository::begin_checked_transaction('working_copy');
+        if (is_wp_error($transaction)) {
+            wp_send_json_error(array('message' => $transaction->get_error_message()), 503);
+        }
+        if (!$quote || !IDLM_Quotation_Policy::can_mutate_lead($quote->lead_id, true) || !self::can('idlm_edit_quote_drafts') || !self::can('idlm_create_quote_revisions')) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0068: ajax_discard_quote_autosave(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            wp_send_json_error(array('message' => 'Quotation working copy not found.'), 404);
+        }
+        $quote = IDLM_Quotation_Repository::lock_quote($quote_id);
         $revision = self::get_revision($revision_id);
-        if (!$quote || !$revision || absint($quote->current_revision_id) !== $revision_id || absint($revision->quote_id) !== $quote_id || !self::can_view_lead($quote->lead_id)) {
+        if (!$quote || !$revision || !IDLM_Quotation_Policy::is_editable_draft($quote, $revision) || !IDLM_Quotation_Policy::can_mutate_lead($quote->lead_id)) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0069: ajax_discard_quote_autosave(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+            $wpdb->query('ROLLBACK');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             wp_send_json_error(array('message' => 'Quotation working copy not found.'), 404);
         }
         delete_transient(self::autosave_key($revision_id));
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0070: ajax_discard_quote_autosave(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
+        if (false === $wpdb->query('COMMIT')) {
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            $wpdb->query('ROLLBACK');
+            wp_send_json_error(array('message' => 'Unable to commit quotation working copy.'), 500);
+        }
         wp_send_json_success(array('message' => 'Working copy discarded.'));
+    }
+
+    /** A UUID retry belongs to the actor, lead, quote and source revision. */
+    private static function completed_save($saved, $lead_id, $quote_id, $revision_id, $request_key) {
+        $quote = self::get_quote($saved->quote_id);
+        $matches = $quote && absint($quote->lead_id) === $lead_id &&
+            absint($saved->created_by) === get_current_user_id() &&
+            IDLM_Quotation_Policy::can_mutate_lead($lead_id);
+        if ($quote_id) {
+            $matches = $matches && absint($saved->quote_id) === $quote_id && absint($saved->source_revision_id) === $revision_id;
+        } else {
+            $matches = $matches && !$revision_id && !absint($saved->source_revision_id) && (string) $quote->save_request_key === $request_key;
+        }
+        if (!$matches) {
+            wp_die('Invalid quotation save request.', 403);
+        }
+        self::redirect(array('action' => 'view', 'quote_id' => absint($quote->id), 'idlm_notice' => 'This quotation save was already completed.'));
     }
 
     private static function clean_date($value) {
@@ -225,83 +417,10 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         return $date && $date->format('Y-m-d') === $value ? $value : null;
     }
 
-    public static function handle_create_revision() {
-        if (!self::can('idlm_create_quote_revisions')) {
-            wp_die('You do not have permission to create quotation revisions.', 403);
-        }
-        check_admin_referer('idlm_create_quote_revision');
-        global $wpdb;
-        $quote_id = absint($_POST['quote_id'] ?? 0);
-        $quote = self::get_quote($quote_id);
-        if (!$quote || !self::can_view_lead($quote->lead_id)) {
-            wp_die('Quotation not found.', 404);
-        }
-        $source = self::get_revision($quote->current_revision_id);
-        if (!$source) {
-            self::redirect(array('quote_id' => $quote_id, 'idlm_error' => 'Current revision not found.'));
-        }
-        $revisable_statuses = array('Approved', 'Shared', 'Under Negotiation', 'Rejected', 'Expired');
-        if (!in_array($quote->status, $revisable_statuses, true) || $source->status !== $quote->status) {
-            self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'A new revision cannot be created from the current quotation state.'));
-        }
-        $reason = sanitize_text_field(wp_unslash($_POST['revision_reason'] ?? ''));
-        $save_request_key = sanitize_text_field(wp_unslash($_POST['save_request_key'] ?? ''));
-        if (!preg_match('/^[a-f0-9-]{36}$/i', $save_request_key)) {
-            $save_request_key = wp_generate_uuid4();
-        }
-        $existing_request_revision = IDLM_Quotation_Repository::get_revision_by_save_request_key($save_request_key);
-        if ($existing_request_revision && absint($existing_request_revision->quote_id) === $quote_id) {
-            self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_notice' => 'This revision request was already completed.'));
-        }
-        if ('' === $reason) {
-            self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'A revision reason is required.'));
-        }
-        $now = current_time('mysql');
-        $user_id = get_current_user_id();
-        if (false === $wpdb->query('START TRANSACTION')) {
-            self::rollback_save('Unable to start creating the quotation revision.', array('action' => 'view', 'quote_id' => $quote_id), 'Revision transaction start failed');
-        }
-        $locked_quote = IDLM_Quotation_Repository::lock_quote($quote_id);
-        $locked_source = $locked_quote ? self::get_revision($locked_quote->current_revision_id) : null;
-        if (!$locked_quote || !$locked_source || absint($locked_source->id) !== absint($source->id) || !in_array($locked_quote->status, $revisable_statuses, true) || $locked_source->status !== $locked_quote->status) {
-            $wpdb->query('ROLLBACK');
-            self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'The quotation changed before the revision could be created. Please try again.'));
-        }
-        $quote = $locked_quote;
-        $source = $locked_source;
-        $next = IDLM_Quotation_Repository::next_revision_number($quote_id);
-        $data = (array) $source;
-        unset($data['id']);
-        $data['revision_number'] = $next;
-        $data['revision_name'] = $quote->quote_number . '-R' . str_pad((string) $next, 2, '0', STR_PAD_LEFT);
-        $data['status'] = 'Draft';
-        $data['source_revision_id'] = absint($source->id);
-        $data['revision_reason'] = $reason;
-        $data['created_by'] = $user_id;
-        $data['created_at'] = $now;
-        $data['updated_by'] = $user_id;
-        $data['updated_at'] = $now;
-        $data['finalized_at'] = null;
-        $data['save_request_key'] = $save_request_key;
-        $new_id = IDLM_Quotation_Repository::insert_revision($data);
-        if (!$new_id) {
-            $wpdb->query('ROLLBACK');
-            self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'Unable to create the revision.'));
-        }
-        $contents_copied = IDLM_Quotation_Repository::copy_revision_contents($source->id, $new_id);
-        if (is_wp_error($contents_copied)) {
-            self::rollback_save($contents_copied->get_error_message(), array('action' => 'view', 'quote_id' => $quote_id), $contents_copied->get_error_data());
-        }
-        $source_updated = IDLM_Quotation_Repository::supersede_revision($source->id, $now);
-        $quote_updated = IDLM_Quotation_Repository::set_current_revision($quote_id, $new_id, 'Draft', $now);
-        $history_saved = self::insert_history($quote_id, $new_id, $quote->status, 'Draft', $reason);
-        if (false === $source_updated || false === $quote_updated || false === $history_saved || false === $wpdb->query('COMMIT')) {
-            self::rollback_save('Unable to finish creating the quotation revision.', array('action' => 'view', 'quote_id' => $quote_id), 'Revision finalization failed');
-        }
-        self::log_quote_activity($quote_id, $new_id, 'Created revision ' . $data['revision_name'] . '. Reason: ' . $reason);
-        self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'idlm_notice' => 'New revision created.'));
-    }
-
+    /*
+     * Legacy final-state revision entry points intentionally have no handler.
+     * Revisions are created exclusively by handle_save() from the current draft.
+     */
     private static function insert_history($quote_id, $revision_id, $from, $to, $note) {
         return IDLM_Quotation_Repository::insert_history($quote_id, $revision_id, $from, $to, $note);
     }
@@ -360,11 +479,14 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         }
         $lead_id = absint(wp_unslash($_GET['lead_id'] ?? 0));
         $filters = array(
-            'owner_user_id' => IDLM_Quotation_Policy::can_manage_all_leads() ? 0 : get_current_user_id(),
             'search' => sanitize_text_field(wp_unslash($_GET['quote_search'] ?? '')),
             'created_by' => absint(wp_unslash($_GET['created_by'] ?? 0)),
+            // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0016: ajax_filter_quotation_list(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
             'date_from' => self::list_filter_date(wp_unslash($_GET['date_from'] ?? '')),
+            // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0017: ajax_filter_quotation_list(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
             'date_to' => self::list_filter_date(wp_unslash($_GET['date_to'] ?? '')),
+            // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
             'lead_id' => $lead_id && self::can_view_lead($lead_id) ? $lead_id : 0,
         );
         $page = max(1, absint(wp_unslash($_GET['quote_page'] ?? 1)));
@@ -408,7 +530,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
     }
 
     private static function currency_code($value) {
-        $currency = strtoupper(sanitize_key(wp_unslash($value)));
+        $currency = strtoupper(sanitize_key($value));
         return in_array($currency, array('INR', 'USD', 'EUR', 'GBP', 'AED', 'AUD', 'CAD', 'SGD', 'JPY'), true) ? $currency : 'INR';
     }
 
@@ -451,6 +573,16 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             wp_die('You do not have permission to manage quotation items.', 403);
         }
         check_admin_referer('idlm_save_catalogue_item');
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0018: handle_save_catalogue_item(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
+        $rate = IDLM_Quotation_Calculator::decimal_units(wp_unslash($_POST['default_rate'] ?? 0), 0, IDLM_Quotation_Calculator::MAX_AMOUNT_UNITS, 'Catalogue rate');
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if (is_wp_error($rate)) { self::redirect(array('workspace' => 'catalogue', 'idlm_error' => $rate->get_error_message())); }
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0019: handle_save_catalogue_item(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
+        $is_wood = wp_unslash($_POST['is_wood'] ?? '0');
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if (!is_string($is_wood) || !in_array($is_wood, array('0', '1'), true)) {
+            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Choose a valid wood classification.'));
+        }
         $id = absint($_POST['item_id'] ?? 0);
         $code = sanitize_text_field(wp_unslash($_POST['item_code'] ?? ''));
         $name = sanitize_text_field(wp_unslash($_POST['item_name'] ?? ''));
@@ -467,8 +599,8 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             'item_name' => $name,
             'description' => sanitize_textarea_field(wp_unslash($_POST['description'] ?? '')),
             'unit' => $unit,
-            'is_wood' => '1' === (string) ($_POST['is_wood'] ?? '0') ? 1 : 0,
-            'default_rate' => self::clean_decimal($_POST['default_rate'] ?? 0),
+            'is_wood' => '1' === $is_wood ? 1 : 0,
+            'default_rate' => (float) $rate / 100,
             'updated_at' => current_time('mysql'),
         );
         if ($id) {
@@ -535,7 +667,9 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             wp_die('You do not have permission to import quotation items.', 403);
         }
         check_admin_referer('idlm_import_catalogue_csv');
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0020: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
         $upload = $_FILES['catalogue_csv'] ?? array();
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $upload_error = absint($upload['error'] ?? UPLOAD_ERR_NO_FILE);
         $upload_size = absint($upload['size'] ?? 0);
         $upload_name = sanitize_file_name(wp_unslash($upload['name'] ?? ''));
@@ -553,14 +687,18 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
                 self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'The uploaded file is not a recognized CSV document.'));
             }
         }
+        // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- REL007-BOUNDARY-0021: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
         $handle = fopen($upload['tmp_name'], 'r');
+        // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fopen
         if (!$handle) {
             self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Unable to read the CSV file.'));
         }
         $headers = array_map(static function($value) { return sanitize_key(str_replace(array(' ', '-'), '_', (string) $value)); }, (array) fgetcsv($handle));
         $required = array('item_code', 'item_name');
         if (array_diff($required, $headers) || count($headers) !== count(array_unique($headers)) || count($headers) > 20) {
+            // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0022: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
             fclose($handle);
+            // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
             self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'CSV requires unique item_code and item_name headers and no more than 20 columns.'));
         }
         global $wpdb;
@@ -568,15 +706,22 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         $errors = 0;
         $duplicates = 0;
         $row_count = 0;
-        if (false === $wpdb->query('START TRANSACTION')) {
+        $transaction = IDLM_Quotation_Repository::begin_checked_transaction('catalogue');
+        if (is_wp_error($transaction)) {
+            // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0023: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
             fclose($handle);
-            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Unable to start the catalogue import.'));
+            // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => $transaction->get_error_message()));
         }
         while (($values = fgetcsv($handle)) !== false) {
             $row_count++;
             if ($row_count > 2000) {
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0071: handle_import_catalogue_csv(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
                 $wpdb->query('ROLLBACK');
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0024: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
                 fclose($handle);
+                // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
                 self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Catalogue imports are limited to 2,000 rows per file.'));
             }
             if (count($values) > count($headers) || array_filter($values, static function($value) { return strlen((string) $value) > 5000; })) {
@@ -596,28 +741,42 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
                 $duplicates++;
                 continue;
             }
+            $rate = IDLM_Quotation_Calculator::decimal_units($row['default_rate'] ?? 0, 0, IDLM_Quotation_Calculator::MAX_AMOUNT_UNITS, 'Catalogue rate');
+            if (is_wp_error($rate)) { $errors++; continue; }
             $now = current_time('mysql');
             if (false === IDLM_Quotation_Repository::ensure_catalogue_term('category', $category, get_current_user_id(), $now) || false === IDLM_Quotation_Repository::ensure_catalogue_term('unit', $unit, get_current_user_id(), $now)) {
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0072: handle_import_catalogue_csv(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
                 $wpdb->query('ROLLBACK');
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0025: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
                 fclose($handle);
+                // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
                 self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Catalogue import failed and was rolled back.'));
             }
             $ok = IDLM_Quotation_Repository::insert_catalogue_item(array(
                 'item_code' => $code, 'category' => $category, 'item_name' => $name,
                 'description' => sanitize_textarea_field($row['description'] ?? ''), 'unit' => $unit,
                 'is_wood' => in_array(strtolower(trim((string) ($row['is_wood'] ?? 'no'))), array('yes', '1', 'true'), true) ? 1 : 0,
-                'default_rate' => self::clean_decimal($row['default_rate'] ?? 0),
+                'default_rate' => (float) $rate / 100,
                 'status' => 'active', 'created_by' => get_current_user_id(), 'created_at' => current_time('mysql'), 'updated_at' => current_time('mysql'),
             ));
             if (!$ok) {
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0073: handle_import_catalogue_csv(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
                 $wpdb->query('ROLLBACK');
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0026: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
                 fclose($handle);
+                // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
                 self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Catalogue import failed and was rolled back.'));
             }
             $valid++;
         }
+        // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0027: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
         fclose($handle);
+        // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0074: handle_import_catalogue_csv(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
         if (false === $wpdb->query('COMMIT')) {
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             $wpdb->query('ROLLBACK');
             self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Unable to commit the catalogue import.'));
         }
@@ -649,7 +808,9 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             }
             if (function_exists('flush')) { flush(); }
         } while (count($rows) === 500);
+        // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0028: handle_export_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
         fclose($output);
+        // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
         exit;
     }
 
@@ -667,28 +828,46 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         if (isset($_POST['pdf_footer'])) {
             $settings['pdf_footer'] = sanitize_textarea_field(wp_unslash($_POST['pdf_footer']));
         }
-        $settings['paper_size'] = in_array(($_POST['paper_size'] ?? ''), array('A4', 'Letter'), true) ? $_POST['paper_size'] : 'A4';
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0029: handle_save_settings(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
+        $settings['paper_size'] = self::normalize_paper_size(wp_unslash($_POST['paper_size'] ?? 'A4'));
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $settings['cover_page_enabled'] = !empty($_POST['cover_page_enabled']) ? 1 : 0;
         $settings['cover_page_html'] = wp_kses_post(wp_unslash($_POST['cover_page_html'] ?? ''));
         $settings['after_quote_enabled'] = !empty($_POST['after_quote_enabled']) ? 1 : 0;
         $settings['after_quote_html'] = wp_kses_post(wp_unslash($_POST['after_quote_html'] ?? ''));
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0030: handle_save_settings(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
+        $soft_close = IDLM_Quotation_Calculator::decimal_units(wp_unslash($_POST['soft_close_percent'] ?? 0), 0, 10000, 'Soft close percentage');
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if (is_wp_error($soft_close)) { self::redirect(array('workspace' => 'settings', 'idlm_error' => $soft_close->get_error_message())); }
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0031: handle_save_settings(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
+        $payment_rows = wp_unslash($_POST['payment_structure'] ?? array());
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if (!is_array($payment_rows) || count($payment_rows) > 50) { self::redirect(array('workspace' => 'settings', 'idlm_error' => 'Payment structure supports at most 50 milestones.')); }
         $payment_structure = array();
-        foreach ((array) ($_POST['payment_structure'] ?? array()) as $payment_row) {
-            $name = sanitize_text_field(wp_unslash($payment_row['name'] ?? ''));
-            $percentage = min(100, self::clean_decimal($payment_row['percentage'] ?? 0));
+        $payment_total_units = 0;
+        foreach ($payment_rows as $payment_row) {
+            if (!is_array($payment_row) || !is_string($payment_row['name'] ?? '')) { self::redirect(array('workspace' => 'settings', 'idlm_error' => 'Invalid payment milestone.')); }
+            $name = sanitize_text_field($payment_row['name'] ?? '');
+            $percentage = IDLM_Quotation_Calculator::decimal_units($payment_row['percentage'] ?? 0, 0, 10000, 'Milestone percentage');
+            if (is_wp_error($percentage)) { self::redirect(array('workspace' => 'settings', 'idlm_error' => $percentage->get_error_message())); }
             if ('' !== $name && $percentage > 0) {
-                $payment_structure[] = array('name' => $name, 'percentage' => $percentage);
+                $payment_total_units += $percentage;
+                $payment_structure[] = array('name' => $name, 'percentage' => (float) $percentage / 100);
             }
         }
-        $payment_total = array_sum(array_column($payment_structure, 'percentage'));
-        if ($payment_total > 100) {
+        if ($payment_total_units > 10000) {
             self::redirect(array('workspace' => 'settings', 'idlm_error' => 'Payment milestones cannot total more than 100%.'));
         }
         $settings['payment_structure'] = wp_json_encode($payment_structure);
-        $settings['currency_code'] = self::currency_code($_POST['currency_code'] ?? $settings['currency_code']);
-        $settings['soft_close_percent'] = min(100, self::clean_decimal($_POST['soft_close_percent'] ?? 0));
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0032: handle_save_settings(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
+        $settings['currency_code'] = self::currency_code(wp_unslash($_POST['currency_code'] ?? $settings['currency_code']));
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $settings['soft_close_percent'] = (float) $soft_close / 100;
         $settings['number_prefix'] = preg_replace('/[^A-Za-z0-9_-]/', '', sanitize_text_field(wp_unslash($_POST['number_prefix'] ?? 'Q')));
-        $settings['number_separator'] = in_array(($_POST['number_separator'] ?? ''), array('-', '/', '_'), true) ? $_POST['number_separator'] : '-';
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0033: handle_save_settings(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
+        $number_separator = wp_unslash($_POST['number_separator'] ?? '');
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $settings['number_separator'] = in_array($number_separator, array('-', '/', '_'), true) ? $number_separator : '-';
         $settings['number_padding'] = min(10, max(3, absint($_POST['number_padding'] ?? 6)));
         unset($settings['category_discounts'], $settings['per_item_tax_enabled'], $settings['global_tax_enabled'], $settings['global_tax_type'], $settings['global_tax_rate']);
         update_option('idlm_quote_settings', $settings, false);

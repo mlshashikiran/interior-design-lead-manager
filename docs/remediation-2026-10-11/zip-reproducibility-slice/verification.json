@@ -1,0 +1,125 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-11",
+  "finding": "REL-006",
+  "candidate": "1.102.76",
+  "status": "IMPLEMENTED, not CLOSED",
+  "base_revision": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "runtime_behavior_changed": false,
+  "schemas_changed": false,
+  "environment": {
+    "php": "8.4.14",
+    "libzip": "1.11.4",
+    "zlib": "8.4.14"
+  },
+  "build_timezone": "UTC",
+  "checks": [
+    {
+      "scenario": "T22-F-REL006-pre-fix",
+      "status": "FAIL reproduced",
+      "command": "php /private/tmp/idlm-rel006/run-release-contracts.php (pre-fix source)",
+      "actual": "12 pass / 1 intentional new regression fail",
+      "evidence": "pre-fix-contracts.txt"
+    },
+    {
+      "scenario": "T22-A-REL006-pre-fix-full",
+      "status": "FAIL reproduced",
+      "command": "Two guarded --allow-dirty build-release.php invocations separated by three seconds",
+      "actual": "Identical paths/contents; root timestamp and ZIP hash differ",
+      "evidence": "pre-fix-reproducibility.json"
+    },
+    {
+      "scenario": "T22-A-REL006-post-fix-contracts",
+      "status": "PASS",
+      "command": "TZ=UTC php /private/tmp/idlm-rel006/run-release-contracts.php",
+      "actual": "13 pass / 0 fail",
+      "evidence": "final-contracts.txt"
+    },
+    {
+      "scenario": "T22-A-REL006-full-builds",
+      "status": "PASS",
+      "command": "TZ=UTC php tests/release/build-release.php --build --confirm=build-idlm-release-artifact --allow-dirty --output-dir=/private/tmp/idlm-rel006/final-{a,b}; copied source/order-perturbed third build",
+      "actual": "Three 455-file archives with identical bytes/hash; independent full metadata/source inspection",
+      "evidence": "reproducibility.json"
+    },
+    {
+      "scenario": "T22-A-REL006-promotion-negative",
+      "status": "PASS expected rejection",
+      "command": "TZ=UTC php tests/release/verify-candidate.php --artifact-dir=/private/tmp/idlm-rel006/final-a --expected-revision=ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+      "actual": "Dirty Git and absent CI rejected",
+      "evidence": "promotion-rejection.json"
+    },
+    {
+      "scenario": "REL006-PHP-lint",
+      "status": "PASS",
+      "actual": "3 changed PHP files",
+      "evidence": "php-lint.json"
+    },
+    {
+      "scenario": "T22-A-REL006-workflow",
+      "status": "PASS",
+      "actual": "YAML parses; release UTC and matrix dependency preserved",
+      "evidence": "workflow-check.json"
+    }
+  ],
+  "backlog_counts": {
+    "IMPLEMENTED": 42,
+    "IN PROGRESS": 1,
+    "OPEN": 1
+  },
+  "reproducibility": {
+    "status": "PASS",
+    "identical_zip_bytes": true,
+    "same_toolchain_and_TZ_UTC": true,
+    "source_metadata_and_order_perturbed_for_third_build": true,
+    "root_timestamp": [
+      2000,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    "archives": [
+      {
+        "archive": "/private/tmp/idlm-rel006/final-a/interior-design-lead-manager-1.102.76.zip",
+        "sha256": "f3429a7756121404d9f37e8dd5b707b14f76d06e03f3f04ce324d978d4b137ba",
+        "size_bytes": 5221193,
+        "file_count": 455,
+        "all_times_modes_compression_and_bytes_verified": true
+      },
+      {
+        "archive": "/private/tmp/idlm-rel006/final-b/interior-design-lead-manager-1.102.76.zip",
+        "sha256": "f3429a7756121404d9f37e8dd5b707b14f76d06e03f3f04ce324d978d4b137ba",
+        "size_bytes": 5221193,
+        "file_count": 455,
+        "all_times_modes_compression_and_bytes_verified": true
+      },
+      {
+        "archive": "/private/tmp/idlm-rel006/final-c/interior-design-lead-manager-1.102.76.zip",
+        "sha256": "f3429a7756121404d9f37e8dd5b707b14f76d06e03f3f04ce324d978d4b137ba",
+        "size_bytes": 5221193,
+        "file_count": 455,
+        "all_times_modes_compression_and_bytes_verified": true
+      }
+    ],
+    "installed_execution_claimed": false,
+    "production_release_approved": false
+  },
+  "limits": [
+    "Exact clean candidate and matching remote CI/final artifact remain pending",
+    "Same packaging toolchain and TZ=UTC required; cross-libzip/zlib/toolchain byte equality NOT RUN",
+    "Manifest timestamps/attestation intentionally variable; ZIP is the reproducibility target",
+    "No native/HTTP/browser suite needed or run for this isolated tooling slice",
+    "REL-007 Plugin Check and distribution triage remain OPEN"
+  ],
+  "cleanup": {
+    "synthetic_regression_fixtures_removed": true,
+    "source_copy_removed": true,
+    "owned_site_db_server_or_provider_mutations": false,
+    "retained": "Local rehearsal archives, scoped baseline copies and evidence"
+  },
+  "next": "REL-007",
+  "production_release_approved": false,
+  "no_commit_push_tag_deployment": true
+}

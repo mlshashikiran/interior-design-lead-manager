@@ -8,88 +8,21 @@ class IDLM_CAPI {
         // Hook lead conversion stage changes
         add_action('idlm_lead_stage_converted', array(__CLASS__, 'queue_capi_event'), 10, 3);
         // Hook for Action Scheduler execution
-        add_action('idlm_async_capi_upload_event', array(__CLASS__, 'process_capi_event'), 10, 2);
+        add_action('idlm_async_capi_upload_event', array(__CLASS__, 'process_capi_event'), 10, 3);
         // Hook for handling duplicate lead attribution merges
         add_action('idlm_lead_attribution_merged', array(__CLASS__, 'handle_attribution_merged'), 10, 2);
     }
 
-    /**
-     * Re-fire CAPI events with updated attribution data when a duplicate lead merges its click IDs/UTMs.
-     */
+    /** Preserve the hook callback without replaying an already reported conversion. */
     public static function handle_attribution_merged($lead_id, $merged_fields) {
-        global $wpdb;
-        $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id));
-        if (!$lead) {
-            return;
-        }
-
-        // We only need to re-fire CAPI if critical attribution fields were added (e.g. fb_lead_id, fbclid, gclid, etc.)
-        $critical_fields = array('fb_lead_id', 'fbclid', 'gclid', 'gbraid', 'wbraid', 'li_fat_id');
-        $has_critical_update = false;
-        foreach ($critical_fields as $field) {
-            if (array_key_exists($field, $merged_fields)) {
-                $has_critical_update = true;
-                break;
-            }
-        }
-
-        if (!$has_critical_update) {
-            return;
-        }
-
-        // Query successful CAPI events sent for this lead
-        $table_capi = $wpdb->prefix . 'idlm_capi_logs';
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $sent_events = $wpdb->get_results($wpdb->prepare(
-            "SELECT platform, event_name FROM {$table_capi} WHERE lead_id = %d AND status = 'success'",
-            $lead_id
-        ));
-
-        if (empty($sent_events)) {
-            return;
-        }
-
-        foreach ($sent_events as $sent) {
-            $platform = $sent->platform;
-            $event_name = $sent->event_name;
-
-            if ($platform === 'meta') {
-                $mappings = get_option('idlm_meta_event_mappings', array(
-                    'New' => 'Lead',
-                    'Qualified' => 'Contact',
-                    'Quote Shared' => 'Subscribe',
-                    'Won' => 'Purchase'
-                ));
-                $stage = array_search($event_name, $mappings);
-                if ($stage !== false) {
-                    self::fire_meta_capi($lead, $stage, true); // $force = true
-                }
-            } elseif ($platform === 'google') {
-                $mappings = get_option('idlm_google_event_mappings', array(
-                    'Qualified' => 'CRM Qualified Lead',
-                    'Won' => 'Closed Won Interior Project'
-                ));
-                $stage = array_search($event_name, $mappings);
-                if ($stage !== false) {
-                    self::fire_google_capi($lead, $stage, true); // $force = true
-                }
-            } elseif ($platform === 'linkedin') {
-                $mappings = get_option('idlm_linkedin_event_mappings', array(
-                    'Qualified' => 'CRM Qualified Lead',
-                    'Won' => 'Closed Won'
-                ));
-                $stage = array_search($event_name, $mappings);
-                if ($stage !== false) {
-                    self::fire_linkedin_capi($lead, $stage, true); // $force = true
-                }
-            }
-        }
+        // New attribution is used by future events and explicitly rejected retries.
+        // A second provider request is not a reliable update to an accepted event.
     }
 
     /**
      * Check if a successful CAPI event has already been sent for this lead, platform, and event name.
      */
-    private static function is_event_already_sent($lead_id, $platform, $event_name) {
+    private static function is_event_already_sent($lead_id, $platform, $event_name, $uncertainty_only = false) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
         $table_capi = $wpdb->prefix . 'idlm_capi_logs';
@@ -97,10 +30,13 @@ class IDLM_CAPI {
         // Resolve canonical lead ID
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $lead_info = $wpdb->get_row($wpdb->prepare(
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0445: is_event_already_sent(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
             "SELECT id, is_duplicate, duplicate_of_id FROM {$table_leads} WHERE id = %d",
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $lead_id
         ));
         
+        if ($wpdb->last_error) { throw new RuntimeException('CAPI history read failed.'); }
         if (!$lead_info) {
             return false;
         }
@@ -110,24 +46,35 @@ class IDLM_CAPI {
         // Fetch all related lead IDs (canonical + duplicates)
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $lead_ids = $wpdb->get_col($wpdb->prepare(
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0446: is_event_already_sent(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
             "SELECT id FROM {$table_leads} WHERE id = %d OR duplicate_of_id = %d",
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $canonical_id,
             $canonical_id
         ));
         
+        if ($wpdb->last_error) { throw new RuntimeException('CAPI history read failed.'); }
         if (empty($lead_ids)) {
             $lead_ids = array($lead_id);
         }
         
         $placeholders = implode(',', array_fill(0, count($lead_ids), '%d'));
         
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- REL007-SQL-0447: is_event_already_sent(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $exists = $wpdb->get_var($wpdb->prepare(
             "SELECT id FROM {$table_capi} WHERE lead_id IN ($placeholders) AND platform = %s AND event_name = %s AND status = 'success' LIMIT 1",
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
             array_merge($lead_ids, array($platform, $event_name))
         ));
         
-        return !empty($exists);
+        if ($wpdb->last_error) { throw new RuntimeException('CAPI history read failed.'); }
+        // Minimal receipts survive log pruning and also cover related duplicate IDs.
+        foreach ($lead_ids as $id) {
+            $receipt = IDLM_CAPI_Delivery::read((int) $id, $platform, $event_name);
+            if ($receipt && ((!$uncertainty_only && $receipt['sent']) || in_array($receipt['status'], array('processing', 'uncertain'), true))) { return true; }
+        }
+        return !$uncertainty_only && !empty($exists);
     }
 
     /**
@@ -223,7 +170,8 @@ class IDLM_CAPI {
         if ($delay === 0) {
             // Fire immediately and synchronously for lead capture ('New' stage) to ensure CAPI is sent instantly
             IDLM_DB::log_activity($lead_id, 'capi_sync', "Executing Conversions API synchronously for stage: {$stage}.", 0);
-            self::process_capi_event($lead_id, $stage);
+            $processed = self::process_capi_event($lead_id, $stage);
+            if (false === $processed && IDLM_Lead_Outbox::dispatching()) { throw new RuntimeException('CAPI dispatch is busy.'); }
             return;
         }
 
@@ -235,6 +183,9 @@ class IDLM_CAPI {
         $all_stages = array_unique(array_merge(array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'), $all_stages));
 
         foreach ($all_stages as $stg) {
+            $current_args = array('lead_id'=>$lead_id, 'stage'=>$stg, 'generation'=>IDLM_Recovery_Guard::generation());
+            if (function_exists('as_unschedule_all_actions')) { as_unschedule_all_actions('idlm_async_capi_upload_event', $current_args); }
+            wp_clear_scheduled_hook('idlm_async_capi_upload_event', $current_args);
             if (function_exists('as_unschedule_all_actions')) {
                 as_unschedule_all_actions('idlm_async_capi_upload_event', array(
                     'lead_id' => $lead_id,
@@ -248,17 +199,21 @@ class IDLM_CAPI {
         }
 
         if (function_exists('as_schedule_single_action')) {
-            as_schedule_single_action($schedule_time, 'idlm_async_capi_upload_event', array(
+            $queued = as_schedule_single_action($schedule_time, 'idlm_async_capi_upload_event', array(
                 'lead_id' => $lead_id,
-                'stage' => $stage
+                'stage' => $stage,
+                'generation' => IDLM_Recovery_Guard::generation()
             ));
+            if (!$queued && IDLM_Lead_Outbox::dispatching()) { throw new RuntimeException('CAPI scheduling was not accepted.'); }
             IDLM_DB::log_activity($lead_id, 'capi_queue', "Queued Conversions API background sync via Action Scheduler for stage: {$stage}{$delay_msg}.", 0);
         } else {
             // Fallback to WP Cron if Action Scheduler is disabled or not booted yet
-            wp_schedule_single_event($schedule_time, 'idlm_async_capi_upload_event', array(
+            $queued = wp_schedule_single_event($schedule_time, 'idlm_async_capi_upload_event', array(
                 'lead_id' => $lead_id,
-                'stage' => $stage
+                'stage' => $stage,
+                'generation' => IDLM_Recovery_Guard::generation()
             ));
+            if (!$queued && IDLM_Lead_Outbox::dispatching()) { throw new RuntimeException('CAPI scheduling was not accepted.'); }
             IDLM_DB::log_activity($lead_id, 'capi_queue', "Queued Conversions API background sync via WP Cron for stage: {$stage}{$delay_msg}.", 0);
         }
     }
@@ -266,39 +221,21 @@ class IDLM_CAPI {
     /**
      * Background worker handling CAPI processing
      */
-    public static function process_capi_event($lead_id, $stage) {
+    public static function process_capi_event($lead_id, $stage, $generation = null) {
+        $queued = doing_action('idlm_async_capi_upload_event');
+        return IDLM_Recovery_Guard::run(static function() use ($lead_id, $stage) { return self::process_capi_event_work($lead_id, $stage); }, $generation, $queued, $queued ? 'idlm_async_capi_upload_event' : '', array($lead_id, $stage, $generation));
+    }
+
+    private static function process_capi_event_work($lead_id, $stage) {
         global $wpdb;
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0448: process_capi_event_work(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
         $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         if (!$lead) {
             return;
         }
 
-        // A representative may identify a duplicate after an event was queued.
-        // Suppress every future conversion for the excluded record at send time.
-        if (!empty($lead->is_duplicate)) {
-            IDLM_DB::log_activity($lead_id, 'capi_abort', 'Conversions API upload aborted: Lead is marked as a duplicate contact.', 0);
-            return;
-        }
-
-        // Verify that the lead's current state in the database still matches the event criteria.
-        // This acts as a safety gate if the representative changed their mind within the 5-minute queue window.
-        if ($stage === 'Qualified') {
-            $is_current_qualified = ($lead->lead_quality === 'Qualified' || in_array($lead->stage, array('Qualified', 'Quote Shared', 'Won')));
-            if (!$is_current_qualified) {
-                IDLM_DB::log_activity($lead_id, 'capi_abort', "Conversions API upload aborted: Lead is no longer marked as Qualified.", 0);
-                return;
-            }
-        } elseif ($stage === 'Quote Shared') {
-            if ($lead->stage !== 'Quote Shared' && $lead->stage !== 'Won') {
-                IDLM_DB::log_activity($lead_id, 'capi_abort', "Conversions API upload aborted: Lead stage is no longer Quote Shared.", 0);
-                return;
-            }
-        } elseif ($stage === 'Won') {
-            if ($lead->stage !== 'Won') {
-                IDLM_DB::log_activity($lead_id, 'capi_abort', "Conversions API upload aborted: Lead stage is no longer Won.", 0);
-                return;
-            }
-        }
+        if (!self::lead_matches_event($lead, $stage)) { return; }
 
         // Fire for each enabled platform
         self::fire_meta_capi($lead, $stage);
@@ -306,638 +243,239 @@ class IDLM_CAPI {
         self::fire_linkedin_capi($lead, $stage);
     }
 
+    /** Worker and retry share this predicate; New remains the initial contact event. */
+    private static function lead_matches_event($lead, $stage) {
+        if (!$lead || !empty($lead->is_duplicate) || !in_array($stage, array_merge(array_values(IDLM_State_Registry::stages()), (array)self::runtime_option('idlm_custom_stages',array())), true)) { return false; }
+        if ('Qualified' === $stage) { return 'Qualified' === $lead->lead_quality || in_array($lead->stage, array('Qualified','Quote Shared','Won'), true); }
+        if ('Quote Shared' === $stage) { return in_array($lead->stage, array('Quote Shared','Won'), true); }
+        if ('New' === $stage) { return true; }
+        return $stage === $lead->stage;
+    }
+
+    private static function runtime_option($name, $default = false) {
+        if (IDLM_Secret_Store::is_platform_secret($name)) { return IDLM_Secret_Store::get($name, '', true); }
+        global $wpdb;
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0449: runtime_option(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
+        $value = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $name));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        if ($wpdb->last_error) { throw new RuntimeException('CAPI settings read failed.'); }
+        return null === $value ? $default : maybe_unserialize($value);
+    }
+
+    private static function event_mappings($platform) {
+        $defaults = array('meta'=>array('New'=>'Lead','Qualified'=>'Contact','Quote Shared'=>'Subscribe','Won'=>'Purchase'), 'google'=>array('Qualified'=>'CRM Qualified Lead','Won'=>'Closed Won Interior Project'), 'linkedin'=>array('Qualified'=>'CRM Qualified Lead','Won'=>'Closed Won'));
+        if (!isset($defaults[$platform])) { return array(); }
+        $mappings = self::runtime_option('idlm_'.$platform.'_event_mappings', $defaults[$platform]);
+        if (!is_array($mappings)) { return array(); }
+        if ('meta' === $platform && !array_key_exists('New', $mappings)) { $mappings['New']='Lead'; }
+        return array_map(static function($value) { return is_string($value) ? trim($value) : ''; }, $mappings);
+    }
+
+    private static function no_attempt($message) {
+        return array('success'=>false, 'message'=>$message, 'attempted'=>false, 'log_id'=>0, 'attempt_id'=>'', 'retryable'=>true, 'outcome'=>'skipped');
+    }
+
+    /** A stored Meta lead ID takes precedence over a later/earlier WhatsApp referral. */
+    private static function uses_whatsapp_attribution($lead, $attribution) {
+        return IDLM_CAPI_Transport::uses_whatsapp_attribution($lead, $attribution);
+    }
+
+    /** One locked dispatch boundary for ordinary, forced attribution and manual attempts. */
+    private static function dispatch_platform($platform, $lead_id, $stage, $force = false, $expected = null) {
+        global $wpdb;
+        $suppressed=$wpdb->suppress_errors(true);
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0450: dispatch_platform(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
+        $ready=1 === (int) $wpdb->get_var('SELECT @@autocommit') && false !== $wpdb->query('SET TRANSACTION READ WRITE');
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        $wpdb->suppress_errors($suppressed);
+        if (!$ready) { return self::no_attempt('Delivery requires an independent committed database context.'); }
+        $attempt_started=false;
+        $lock=IDLM_Recovery_Guard::name('ca_'.substr(hash('sha256', $platform.'|'.$lead_id),0,20));
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0451: dispatch_platform(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
+        if (1 !== (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 0)', $lock))) { return self::no_attempt('Another delivery is in progress. Retry later.'); }
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        try {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0452: dispatch_platform(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
+            $lead=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            if ($wpdb->last_error) { throw new RuntimeException('CAPI lead read failed.'); }
+            if (!self::lead_matches_event($lead,$stage)) { return self::no_attempt('The current lead is excluded or no longer meets this event condition.'); }
+            if ('1' !== self::runtime_option('idlm_'.$platform.'_capi_enabled','0')) { return self::no_attempt('This integration is disabled.'); }
+            $mappings=self::event_mappings($platform);
+            if ('meta' === $platform) {
+                // A lead ID already selects the Instant Form path; independent
+                // webhook conversions must not depend on connector-only metadata.
+                $attribution=empty($lead->fb_lead_id) ? IDLM_Lead_Connector::attribution($lead_id) : null;
+                if (is_wp_error($attribution)) { return self::no_attempt('Lead attribution is unreadable. Review connector credentials.'); }
+                if (self::uses_whatsapp_attribution($lead, $attribution)) {
+                    $config=IDLM_Lead_Connector::config();
+                    if (self::runtime_option('idlm_whatsapp_capi_enabled','0') !== '1' || empty($attribution['ctwa_clid']) || !IDLM_Lead_Connector::id($attribution['page_id'] ?? null)) { return self::no_attempt('WhatsApp conversion reporting needs explicit enablement, a click ID and Page ID.'); }
+                    $mappings=$config['whatsapp_events'] ?? array('Won'=>'Purchase');
+                }
+            }
+            $event=$mappings[$stage] ?? '';
+            if ('' === $event) { return self::no_attempt('This stage has no configured event.'); }
+            if ('google' === $platform && !self::is_google_conversion_eligible($lead)) { return self::no_attempt('The current lead is not eligible for Google attribution.'); }
+            if ('linkedin' === $platform && empty($lead->li_fat_id)) { return self::no_attempt('The current lead has no LinkedIn attribution ID.'); }
+            $keys=array('meta'=>array('idlm_meta_pixel_id','idlm_meta_access_token'), 'google'=>array('idlm_google_measurement_id','idlm_google_api_secret'), 'linkedin'=>array('idlm_linkedin_conversion_id','idlm_linkedin_access_token'));
+            $destination=(string) self::runtime_option($keys[$platform][0],'');$credential=(string) self::runtime_option($keys[$platform][1],'');
+            if ($expected && ($expected['event'] !== $event || (!empty($expected['destination']) && $expected['destination'] !== $destination))) { return self::no_attempt('Event mapping or destination changed. Review the original event before retrying.'); }
+            $delivery=array('version'=>1,'platform'=>$platform,'lead_id'=>(int)$lead_id,'stage'=>$stage,'event'=>$event,'destination'=>$destination,'credential'=>$credential,'attempt_id'=>$expected['_attempt_id'] ?? bin2hex(random_bytes(16)),'event_id'=>$expected['event_id'] ?? ('idlm_lead_'.$lead_id.'_'.$event),'occurred_at'=>$expected['occurred_at'] ?? time(),'value'=>$expected['value'] ?? (float)($lead->deal_value ?? 0),'currency'=>$expected['currency'] ?? self::runtime_option('idlm_currency_code','INR'),'retry_root'=>$expected['retry_root'] ?? 0);
+            if ('' === $destination || '' === $credential) { return self::record_attempt($lead_id,$platform,$delivery,array(),'Missing integration destination or credentials.','failed',false,true); }
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0453: dispatch_platform(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
+            if (!IDLM_Recovery_Guard::lease_valid() || (int)$wpdb->get_var($wpdb->prepare('SELECT IS_USED_LOCK(%s)', $lock)) !== (int)$wpdb->get_var('SELECT CONNECTION_ID()')) { return self::no_attempt('Delivery session is no longer valid.'); }
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            // The legacy force argument must not bypass accepted delivery evidence.
+            $claim = IDLM_CAPI_Delivery::claim($delivery, false, static function() use ($lead_id, $platform, $event) { return self::is_event_already_sent($lead_id, $platform, $event); }, $lock);
+            if (is_wp_error($claim)) { return self::no_attempt('Delivery claim could not be committed. No request was sent.'); }
+            if (!$claim['allowed']) { return self::no_attempt($claim['message']); }
+            $delivery['_durable_claim'] = true;
+            $method='fire_'.$platform.'_capi_work';
+            $attempt_started=true;
+            return self::$method($lead,$stage,$delivery);
+        } catch (Throwable $error) { return $attempt_started ? array_replace(self::no_attempt('Delivery outcome is uncertain; reconciliation is required.'),array('attempted'=>true,'outcome'=>'uncertain','retryable'=>false)) : self::no_attempt('Current delivery state could not be verified. Retry later.'); }
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0454: dispatch_platform(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
+        finally { $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock)); }
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+    }
+
+    /** Metadata is appended only to the local redacted log, never to provider JSON. */
+    private static function record_attempt($lead_id,$platform,$delivery,$payload,$response,$status,$attempted,$retryable,$outcome = null) {
+        return IDLM_CAPI_Transport::record_attempt($lead_id, $platform, $delivery, $payload, $response, $status, $attempted, $retryable, $outcome);
+    }
+
+    /** An HTTP failure is not necessarily proof that the provider did not ingest the event. */
+    private static function record_provider_response($lead_id, $platform, $delivery, $payload, $body, $code, $status) {
+        return IDLM_CAPI_Transport::record_provider_response($lead_id, $platform, $delivery, $payload, $body, $code, $status);
+    }
+
+    private static function log_payload($value) {
+        if (!is_string($value)) { return is_array($value) ? $value : array(); }
+        $json=json_decode($value,true);
+        if (is_array($json)) { return $json; }
+        $decoded=@unserialize($value,array('allowed_classes'=>false));
+        return is_array($decoded) ? $decoded : array();
+    }
+
+    private static function retry_identity($log) {
+        $payload=self::log_payload($log->payload);$identity=$payload['_idlm_delivery'] ?? null;
+        if ($identity !== null) {
+            if (!is_array($identity) || ($identity['version'] ?? 0)!==1 || ($identity['platform'] ?? '')!==$log->platform || (int)($identity['lead_id'] ?? 0)!==(int)$log->lead_id || ($identity['event'] ?? '')!==$log->event_name || !is_string($identity['stage'] ?? null) || !is_string($identity['destination'] ?? null) || (!is_int($identity['occurred_at'] ?? null) || $identity['occurred_at'] < 1) || !is_string($identity['event_id'] ?? null) || (!is_numeric($identity['value'] ?? null) || !is_finite((float)$identity['value']) || $identity['value'] < 0) || !is_string($identity['currency'] ?? null)) { return false; }
+            if ('uncertain' === ($identity['outcome'] ?? '') || false === ($identity['retryable'] ?? true)) { return false; }
+            return $identity;
+        }
+        // Legacy recovery is exact and unambiguous; never guess New or use substring aliases.
+        $mappings=self::event_mappings($log->platform);$matches=array_keys($mappings,$log->event_name,true);
+        $stage=$payload['data'][0]['custom_data']['stage'] ?? ($payload['events'][0]['params']['stage'] ?? null);
+        if ($stage !== null) {
+            if (!is_string($stage) || ($mappings[$stage] ?? '')!==$log->event_name) { return false; }
+        } elseif (count($matches)===1) { $stage=$matches[0]; }
+        else { return false; }
+        if (!in_array($stage,array_merge(array_values(IDLM_State_Registry::stages()), (array)self::runtime_option('idlm_custom_stages',array())),true)) { return false; }
+        $commercial=$payload['data'][0]['custom_data'] ?? ($payload['events'][0]['params'] ?? array());
+        return array('stage'=>$stage,'event'=>$log->event_name,'destination'=>isset($payload['conversion']) ? str_replace('urn:lla:llaPartnerConversion:','',$payload['conversion']) : '', 'event_id'=>$payload['data'][0]['event_id'] ?? ('idlm_lead_'.$log->lead_id.'_'.$log->event_name),'occurred_at'=>$payload['data'][0]['event_time'] ?? (isset($payload['conversionHappenedAt']) ? (int)($payload['conversionHappenedAt']/1000) : time()),'value'=>(float)($commercial['value'] ?? ($payload['conversionValue']['amount'] ?? 0)), 'currency'=>$commercial['currency'] ?? ($payload['conversionValue']['currencyCode'] ?? self::runtime_option('idlm_currency_code','INR')),'retry_root'=>0);
+    }
+
     /**
      * Meta Conversion API (CAPI) Upload
      */
     public static function fire_meta_capi($lead, $stage, $force = false) {
-        $enabled = get_option('idlm_meta_capi_enabled', '0');
-        if (!$enabled) {
-            return;
-        }
+        return IDLM_Recovery_Guard::run(static function() use ($lead, $stage, $force) { return self::dispatch_platform('meta', $lead->id, $stage, $force); });
+    }
 
-        $pixel_id = get_option('idlm_meta_pixel_id');
-        $access_token = get_option('idlm_meta_access_token');
-        if (empty($pixel_id) || empty($access_token)) {
-            IDLM_DB::log_capi_event($lead->id, 'meta', $stage, array(), 'Missing Pixel ID or Access Token in settings', 'failed');
-            return;
-        }
-
-        // Map internal stages to Meta Event Names
-        $event_mappings = get_option('idlm_meta_event_mappings');
-        if ($event_mappings === false) {
-            $event_mappings = array(
-                'New' => 'Lead',
-                'Qualified' => 'Contact',
-                'Quote Shared' => 'Subscribe',
-                'Won' => 'Purchase'
-            );
-        }
-
-        if (array_key_exists($stage, $event_mappings)) {
-            $event_name = trim($event_mappings[$stage]);
-        } else {
-            // Key is missing entirely (legacy database)
-            if ($stage === 'New') {
-                $event_name = 'Lead';
-            } else {
-                return;
-            }
-        }
-
-        if (empty($event_name)) {
-            return;
-        }
-
-        if (!$force && self::is_event_already_sent($lead->id, 'meta', $event_name)) {
-            return;
-        }
-
-        $hashed_email = !empty($lead->email) ? hash('sha256', strtolower(trim($lead->email))) : '';
-        $hashed_phone = !empty($lead->phone) ? hash('sha256', preg_replace('/[^0-9]/', '', $lead->phone)) : '';
-
-        // Capture IP and User Agent if lead came from web form, fallback to server params
-        $client_ip = !empty($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '127.0.0.1';
-        $client_ua = !empty($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : 'WordPressServer';
-
-        $user_data = array();
-        
-        // Hashed email and phone must be arrays of hashed strings according to Meta specification (implemented by Shashi)
-        if (!empty($hashed_email)) {
-            $user_data['em'] = array($hashed_email);
-        }
-        if (!empty($hashed_phone)) {
-            $user_data['ph'] = array($hashed_phone);
-        }
-
-        $user_data['client_ip_address'] = $client_ip;
-        $user_data['client_user_agent'] = $client_ua;
-
-        if (!empty($lead->first_name)) {
-            $user_data['fn'] = hash('sha256', strtolower(trim($lead->first_name)));
-        }
-        if (!empty($lead->last_name)) {
-            $user_data['ln'] = hash('sha256', strtolower(trim($lead->last_name)));
-        }
-
-        // Add fbclid if captured
-        if (!empty($lead->fbclid)) {
-            $creation_time = !empty($lead->created_at) ? strtotime($lead->created_at) : time();
-            $user_data['fbc'] = 'fb.1.' . $creation_time . '.' . $lead->fbclid;
-        }
-
-        // Add Meta Lead ID as numeric float/integer type to retain precision (implemented by Shashi)
-        if (!empty($lead->fb_lead_id)) {
-            $user_data['lead_id'] = is_numeric($lead->fb_lead_id) ? 0 + $lead->fb_lead_id : $lead->fb_lead_id;
-        }
-
-        $custom_data = array(
-            'event_source' => 'crm',
-            'lead_event_source' => 'Interior Design Lead Manager',
-            'lead_id' => $lead->id,
-            'stage' => $stage,
-            'property_type' => $lead->property_type,
-            'num_rooms' => $lead->num_rooms,
-            'source' => $lead->source
-        );
-
-        if (!empty($lead->deal_value) && floatval($lead->deal_value) > 0) {
-            $custom_data['value'] = floatval($lead->deal_value);
-            $custom_data['currency'] = get_option('idlm_currency_code', 'INR');
-        }
-
-        $payload = array(
-            'data' => array(
-                array(
-                    'event_name' => $event_name,
-                    'event_time' => time(),
-                    'event_source_url' => home_url('/'),
-                    'action_source' => 'system_generated',
-                    'event_id' => 'idlm_lead_' . $lead->id . '_' . $event_name,
-                    'user_data' => array_filter($user_data),
-                    'custom_data' => $custom_data
-                )
-            )
-        );
-
-        // Updated API version to v25.0 to align with Meta latest API version standard (implemented by Shashi)
-        $endpoint = "https://graph.facebook.com/v25.0/{$pixel_id}/events?access_token={$access_token}";
-        
-        $response = wp_remote_post($endpoint, array(
-            'headers' => array('Content-Type' => 'application/json'),
-            'body'    => json_encode($payload),
-            'timeout' => 15
-        ));
-
-        if (is_wp_error($response)) {
-            $err_msg = $response->get_error_message();
-            IDLM_DB::log_capi_event($lead->id, 'meta', $event_name, $payload, $err_msg, 'failed');
-        } else {
-            $body = wp_remote_retrieve_body($response);
-            $code = wp_remote_retrieve_response_code($response);
-            $status = 'failed';
-            if ($code == 200 && !empty($body)) {
-                $decoded = json_decode($body, true);
-                if (is_array($decoded) && isset($decoded['events_received']) && intval($decoded['events_received']) > 0 && !isset($decoded['error'])) {
-                    $status = 'success';
-                }
-            }
-            IDLM_DB::log_capi_event($lead->id, 'meta', $event_name, $payload, $body, $status);
-        }
+    private static function fire_meta_capi_work($lead, $stage, $delivery) {
+        return IDLM_CAPI_Transport::fire_meta_capi_work($lead, $stage, $delivery);
     }
 
     /**
      * Google Ads Offline Conversion (via GA4 Measurement Protocol)
      */
     public static function fire_google_capi($lead, $stage, $force = false) {
-        $enabled = get_option('idlm_google_capi_enabled', '0');
-        if (!$enabled) {
-            return;
-        }
+        return IDLM_Recovery_Guard::run(static function() use ($lead, $stage, $force) { return self::dispatch_platform('google', $lead->id, $stage, $force); });
+    }
 
-        if (!self::is_google_conversion_eligible($lead)) {
-            return;
-        }
-
-        $measurement_id = get_option('idlm_google_measurement_id');
-        $api_secret = get_option('idlm_google_api_secret');
-        if (empty($measurement_id) || empty($api_secret)) {
-            IDLM_DB::log_capi_event($lead->id, 'google', $stage, array(), 'Missing GA4 Measurement ID or API Secret in settings', 'failed');
-            return;
-        }
-
-        // Map stages
-        $event_mappings = get_option('idlm_google_event_mappings');
-        if ($event_mappings === false) {
-            $event_mappings = array(
-                'Qualified' => 'CRM Qualified Lead',
-                'Won' => 'Closed Won Interior Project'
-            );
-        }
-
-        if (array_key_exists($stage, $event_mappings)) {
-            $event_name = trim($event_mappings[$stage]);
-        } else {
-            return;
-        }
-
-        if (empty($event_name)) {
-            return;
-        }
-
-        if (!$force && self::is_event_already_sent($lead->id, 'google', $event_name)) {
-            return;
-        }
-
-        // Generate client id or use existing
-        $client_id = !empty($lead->gclid) ? $lead->gclid : (!empty($lead->gbraid) ? $lead->gbraid : (!empty($lead->wbraid) ? $lead->wbraid : 'idlm.' . $lead->id));
-
-        $event_params = array(
-            'engagement_time_msec' => 100,
-            'lead_id' => $lead->id,
-            'source' => $lead->source,
-            'gclid' => $lead->gclid,
-            'gbraid' => isset($lead->gbraid) ? $lead->gbraid : '',
-            'wbraid' => isset($lead->wbraid) ? $lead->wbraid : '',
-            'stage' => $stage,
-            'property_type' => $lead->property_type,
-            'num_rooms' => $lead->num_rooms
-        );
-
-        if (!empty($lead->deal_value) && floatval($lead->deal_value) > 0) {
-            $event_params['value'] = floatval($lead->deal_value);
-            $event_params['currency'] = get_option('idlm_currency_code', 'INR');
-        }
-
-        $payload = array(
-            'client_id' => $client_id,
-            'events' => array(
-                array(
-                    'name' => $event_name,
-                    'params' => $event_params
-                )
-            )
-        );
-
-        $endpoint = "https://www.google-analytics.com/mp/collect?measurement_id={$measurement_id}&api_secret={$api_secret}";
-
-        $response = wp_remote_post($endpoint, array(
-            'headers' => array('Content-Type' => 'application/json'),
-            'body'    => json_encode($payload),
-            'timeout' => 15
-        ));
-
-        if (is_wp_error($response)) {
-            $err_msg = $response->get_error_message();
-            IDLM_DB::log_capi_event($lead->id, 'google', $event_name, $payload, $err_msg, 'failed');
-        } else {
-            $body = wp_remote_retrieve_body($response);
-            $code = wp_remote_retrieve_response_code($response);
-            // GA4 Measurement Protocol returns 204 No Content on success
-            $status = ($code == 204 || $code == 200) ? 'success' : 'failed';
-            
-            $log_resp = !empty($body) ? $body : "Success Response (Code {$code})";
-            IDLM_DB::log_capi_event($lead->id, 'google', $event_name, $payload, $log_resp, $status);
-        }
+    private static function fire_google_capi_work($lead, $stage, $delivery) {
+        return IDLM_CAPI_Transport::fire_google_capi_work($lead, $stage, $delivery);
     }
 
     /**
      * LinkedIn Conversion API Upload
      */
     public static function fire_linkedin_capi($lead, $stage, $force = false) {
-        $enabled = get_option('idlm_linkedin_capi_enabled', '0');
-        if (!$enabled) {
-            return;
-        }
-
-        // Guard: LinkedIn CAPI requires the LI FAT ID (li_fat_id) to attribute conversions correctly
-        if (empty($lead->li_fat_id)) {
-            return;
-        }
-
-        $conversion_id = get_option('idlm_linkedin_conversion_id');
-        $access_token = get_option('idlm_linkedin_access_token');
-        if (empty($conversion_id) || empty($access_token)) {
-            IDLM_DB::log_capi_event($lead->id, 'linkedin', $stage, array(), 'Missing LinkedIn Conversion ID or Access Token in settings', 'failed');
-            return;
-        }
-
-        // Map stages
-        $event_mappings = get_option('idlm_linkedin_event_mappings');
-        if ($event_mappings === false) {
-            $event_mappings = array(
-                'Qualified' => 'CRM Qualified Lead',
-                'Won' => 'Closed Won'
-            );
-        }
-
-        if (array_key_exists($stage, $event_mappings)) {
-            $event_name = trim($event_mappings[$stage]);
-        } else {
-            return;
-        }
-
-        if (empty($event_name)) {
-            return;
-        }
-
-        if (!$force && self::is_event_already_sent($lead->id, 'linkedin', $event_name)) {
-            return;
-        }
-
-        $hashed_email = !empty($lead->email) ? hash('sha256', strtolower(trim($lead->email))) : '';
-
-        $user_ids = array();
-        if (!empty($lead->li_fat_id)) {
-            $user_ids[] = array(
-                'idType' => 'LI_FAT_ID',
-                'idValue' => $lead->li_fat_id
-            );
-        }
-
-        $payload = array(
-            'conversion' => "urn:lla:llaPartnerConversion:{$conversion_id}",
-            'conversionHappenedAt' => time() * 1000, // Miliseconds
-            'user' => array(
-                'userIds' => $user_ids,
-                'emailHashes' => array_filter(array($hashed_email))
-            )
-        );
-
-        if (!empty($lead->deal_value) && floatval($lead->deal_value) > 0) {
-            $payload['conversionValue'] = array(
-                'amount' => number_format(floatval($lead->deal_value), 2, '.', ''),
-                'currencyCode' => get_option('idlm_currency_code', 'INR')
-            );
-        }
-
-        $endpoint = "https://api.linkedin.com/v2/conversionEvents";
-
-        $response = wp_remote_post($endpoint, array(
-            'headers' => array(
-                'Authorization' => 'Bearer ' . $access_token,
-                'Content-Type'  => 'application/json',
-                'X-Restli-Protocol-Version' => '2.0.0'
-            ),
-            'body'    => json_encode($payload),
-            'timeout' => 15
-        ));
-
-        if (is_wp_error($response)) {
-            $err_msg = $response->get_error_message();
-            IDLM_DB::log_capi_event($lead->id, 'linkedin', $event_name, $payload, $err_msg, 'failed');
-        } else {
-            $body = wp_remote_retrieve_body($response);
-            $code = wp_remote_retrieve_response_code($response);
-            $status = 'failed';
-            if (($code == 201 || $code == 200) && !empty($body)) {
-                $decoded = json_decode($body, true);
-                if (is_array($decoded) && !isset($decoded['error']) && !isset($decoded['serviceErrorCode'])) {
-                    $status = 'success';
-                }
-            }
-            IDLM_DB::log_capi_event($lead->id, 'linkedin', $event_name, $payload, $body, $status);
-        }
+        return IDLM_Recovery_Guard::run(static function() use ($lead, $stage, $force) { return self::dispatch_platform('linkedin', $lead->id, $stage, $force); });
     }
 
-    /**
-     * Retry CAPI log manually
-     */
+    private static function fire_linkedin_capi_work($lead, $stage, $delivery) {
+        return IDLM_CAPI_Transport::fire_linkedin_capi_work($lead, $stage, $delivery);
+    }
+
+    /** Retry only a failed event, with a durable per-root attempt receipt. */
     public static function retry_capi_log($log_id) {
+        $result=IDLM_Recovery_Guard::run(static function() use ($log_id) { return self::retry_capi_log_work(absint($log_id)); });
+        return is_array($result) ? $result : self::no_attempt('Recovery is busy. Retry later.');
+    }
+
+    private static function retry_capi_log_work($log_id) {
         global $wpdb;
-        $table_capi = $wpdb->prefix . 'idlm_capi_logs';
-        
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $log = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_capi} WHERE id = %d", $log_id));
-        if (!$log) {
-            return array('success' => false, 'message' => 'Log not found');
-        }
+        try {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0455: retry_capi_log_work(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
+            $log=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_capi_logs WHERE id = %d",$log_id));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            if ($wpdb->last_error || !$log || 'failed' !== $log->status || !in_array($log->platform,array('meta','google','linkedin'),true)) { return self::no_attempt('Select an existing failed conversion log.'); }
+            $identity=self::retry_identity($log);
+            if (!$identity) { return self::no_attempt('The original event is ambiguous, non-retryable or uncertain; review it before retrying.'); }
+            $root=absint($identity['retry_root'] ?? 0) ?: $log_id;$generation=IDLM_Recovery_Guard::generation();
+            if (null === $generation) { return self::no_attempt('Recovery state could not be verified.'); }
+            $key='idlm_capi_retry_'.hash('sha256',$generation.'|'.$root);
+            $lock=IDLM_Recovery_Guard::name('cr_'.substr(hash('sha256',$key),0,20));
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0456: retry_capi_log_work(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
+            if (1 !== (int)$wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 0)',$lock))) { return self::no_attempt('This retry is already in progress.'); }
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            try {
+                $receipt=self::runtime_option($key,array('status'=>'ready','attempts'=>0,'root_log_id'=>$root,'generation'=>$generation));
+                if (!is_array($receipt) || !isset($receipt['status'],$receipt['attempts']) || !is_int($receipt['attempts'])) { return self::no_attempt('Retry receipt is invalid; reconciliation is required.'); }
+                if ('processing' === $receipt['status']) { $receipt['status']='uncertain';self::save_retry_receipt($key,$receipt); }
+                if (in_array($receipt['status'],array('sent','uncertain','blocked'),true) || $receipt['attempts']>=3) { return self::no_attempt('This event was already retried or needs reconciliation; no new request was sent.'); }
+                $identity['_attempt_id']=bin2hex(random_bytes(16));$identity['retry_root']=$root;
+                $receipt['status']='processing';$receipt['attempts']++;$receipt['attempt_id']=$identity['_attempt_id'];$receipt['attempted_at']=time();
+                if (!self::save_retry_receipt($key,$receipt)) { return self::no_attempt('Retry claim could not be persisted. No request was sent.'); }
+                $result=self::dispatch_platform($log->platform,(int)$log->lead_id,$identity['stage'],false,$identity);
+                if (!is_array($result) || !IDLM_Recovery_Guard::lease_valid()) { return self::no_attempt('Retry outcome is uncertain; reconciliation is required.'); }
+                if (!$result['attempted']) { $receipt['attempts']--; }
+                $receipt['status']=$result['success'] ? 'sent' : ($result['outcome']==='uncertain' ? 'uncertain' : ($result['attempted'] && !$result['retryable'] ? 'blocked' : 'failed'));
+                $receipt['result_log_id']=$result['log_id'];
+                if (!self::save_retry_receipt($key,$receipt)) { $result['success']=false;$result['message']='Retry acknowledgement failed; reconciliation is required.'; }
+                return $result;
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0457: retry_capi_log_work(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
+            } finally { $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)',$lock)); }
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        } catch (Throwable $error) { return self::no_attempt('Retry state could not be verified. No success was recorded.'); }
+    }
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $log->lead_id));
-        if (!$lead) {
-            return array('success' => false, 'message' => "Lead ID {$log->lead_id} not found");
-        }
-
-        // Determine the stage from event_name/payload or reverse map
-        $stage = 'New';
-        if ($log->platform === 'meta') {
-            if ($log->event_name === 'Contact') $stage = 'Qualified';
-            elseif ($log->event_name === 'Subscribe') $stage = 'Quote Shared';
-            elseif ($log->event_name === 'Purchase') $stage = 'Won';
-        } elseif ($log->platform === 'google') {
-            if ($log->event_name === 'qualified_lead') $stage = 'Qualified';
-            elseif ($log->event_name === 'quote_shared') $stage = 'Quote Shared';
-            elseif ($log->event_name === 'won_conversion') $stage = 'Won';
-        } elseif ($log->platform === 'linkedin') {
-            if (strpos($log->event_name, 'Qualified') !== false) $stage = 'Qualified';
-            elseif (strpos($log->event_name, 'Quote Shared') !== false) $stage = 'Quote Shared';
-            elseif (strpos($log->event_name, 'Won') !== false) $stage = 'Won';
-        }
-
-        // Fire CAPI event with force = true
-        if ($log->platform === 'meta') {
-            self::fire_meta_capi($lead, $stage, true);
-        } elseif ($log->platform === 'google') {
-            self::fire_google_capi($lead, $stage, true);
-        } elseif ($log->platform === 'linkedin') {
-            self::fire_linkedin_capi($lead, $stage, true);
-        }
-
-        // Fetch latest created log entry
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $new_log = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$table_capi} WHERE lead_id = %d AND platform = %s AND event_name = %s ORDER BY id DESC LIMIT 1",
-            $lead->id,
-            $log->platform,
-            $log->event_name
-        ));
-
-        if ($new_log && $new_log->status === 'success') {
-            return array('success' => true, 'message' => 'Resent successfully.');
-        } else {
-            $err = ($new_log) ? $new_log->response : 'Unknown API error';
-            // Suppress serialized or JSON details slightly for readable message
-            $err_decoded = json_decode($err, true);
-            if (is_array($err_decoded) && isset($err_decoded['error']['message'])) {
-                $err = $err_decoded['error']['message'];
-            }
-            return array('success' => false, 'message' => $err);
-        }
+    private static function save_retry_receipt($key,$receipt) {
+        update_option($key,$receipt,false);
+        return self::runtime_option($key) === $receipt;
     }
 
     /**
      * Get Google Ads Conversion events for leads with click IDs that transitioned to qualified/closed stages
      */
     public static function get_google_ads_conversion_events() {
-        global $wpdb;
-        $table_leads = $wpdb->prefix . 'idlm_leads';
-        $table_activity = $wpdb->prefix . 'idlm_lead_activity_log';
-
-        // Get Google Event Mappings and retrieve all stages with non-empty mapped names
-        $event_mappings = get_option('idlm_google_event_mappings', array(
-            'Qualified' => 'CRM Qualified Lead',
-            'Won' => 'Closed Won Interior Project'
-        ));
-
-        $mapped_stages = array();
-        foreach ($event_mappings as $stg => $conv_name) {
-            if (!empty(trim($conv_name))) {
-                $mapped_stages[] = $stg;
-            }
-        }
-
-        // If no stages are mapped, return early
-        if (empty($mapped_stages)) {
-            return array();
-        }
-
-        // 1. Fetch stage changes from activity logs for leads matching candidate filters
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $stage_logs = $wpdb->get_results(
-            "SELECT a.lead_id, a.created_at, a.details, a.activity_type, l.gclid, l.gbraid, l.wbraid, l.deal_value, l.email, l.phone, l.source, l.utm_source, l.utm_medium, l.fbclid, l.fb_lead_id, l.lead_quality, l.stage
-              FROM {$table_activity} a
-              JOIN {$table_leads} l ON a.lead_id = l.id
-              WHERE a.activity_type IN ('stage_change', 'lead_quality')
-                AND l.is_duplicate = 0
-                AND (
-                    l.gclid != '' OR l.gbraid != '' OR l.wbraid != '' 
-                    OR l.source LIKE '%google%' 
-                    OR l.source LIKE '%paid%search%' 
-                    OR l.utm_source LIKE '%google%' 
-                    OR l.utm_medium = 'cpc'
-                )
-              ORDER BY a.created_at ASC"
-        );
-
-        $conversion_events = array();
-
-        foreach ($stage_logs as $log) {
-            if (!self::is_google_conversion_eligible($log)) {
-                continue;
-            }
-            $stage = '';
-            if ($log->activity_type === 'stage_change') {
-                if (preg_match("/changed from '.*' to '(.*)'/i", $log->details, $matches)) {
-                    $matched_stage = $matches[1];
-                    foreach ($mapped_stages as $ms) {
-                        if (strtolower($ms) === strtolower($matched_stage)) {
-                            $stage = $ms;
-                            break;
-                        }
-                    }
-                }
-            } elseif ($log->activity_type === 'lead_quality') {
-                if (preg_match("/changed from '.*' to 'Qualified'/i", $log->details)) {
-                    foreach ($mapped_stages as $ms) {
-                        if (strtolower($ms) === 'qualified') {
-                            $stage = $ms;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if ($stage) {
-                $conversion_events[$log->lead_id . '_' . $stage] = array(
-                    'lead_id' => $log->lead_id,
-                    'gclid' => $log->gclid,
-                    'gbraid' => $log->gbraid,
-                    'wbraid' => $log->wbraid,
-                    'stage' => $stage,
-                    'time' => $log->created_at,
-                    'value' => (strtolower($stage) === 'won' || strpos(strtolower($stage), 'won') !== false) ? floatval($log->deal_value) : 0,
-                    'email' => $log->email,
-                    'phone' => $log->phone
-                );
-            }
-        }
-
-        // 2. Scan leads table for current stage if not already captured in logs
-        // This handles cases where leads were imported or logs were cleared
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $current_leads = $wpdb->get_results(
-            "SELECT id, stage, lead_quality, updated_at, created_at, conversion_time, qualified_at, gclid, gbraid, wbraid, deal_value, email, phone, source, utm_source, utm_medium, fbclid, fb_lead_id 
-              FROM {$table_leads} 
-              WHERE is_duplicate = 0 
-                AND (
-                    gclid != '' OR gbraid != '' OR wbraid != '' 
-                    OR source LIKE '%google%' 
-                    OR source LIKE '%paid%search%' 
-                    OR utm_source LIKE '%google%' 
-                    OR utm_medium = 'cpc'
-                )"
-        );
-
-        foreach ($current_leads as $lead) {
-            if (!self::is_google_conversion_eligible($lead)) {
-                continue;
-            }
-            $stages_to_check = array();
-            
-            // Check if lead_quality is Qualified, and if 'Qualified' is mapped
-            if (strtolower($lead->lead_quality) === 'qualified') {
-                foreach ($mapped_stages as $ms) {
-                    if (strtolower($ms) === 'qualified') {
-                        $stages_to_check[] = $ms;
-                        break;
-                    }
-                }
-            }
-            
-            // Check if current stage is mapped
-            if (!empty($lead->stage)) {
-                foreach ($mapped_stages as $ms) {
-                    if (strtolower($ms) === strtolower($lead->stage)) {
-                        $stages_to_check[] = $ms;
-                        break;
-                    }
-                }
-            }
-
-            // Remove duplicates
-            $stages_to_check = array_unique($stages_to_check);
-
-            foreach ($stages_to_check as $stg) {
-                $key = $lead->id . '_' . $stg;
-                if (!isset($conversion_events[$key])) {
-                    $time = strtolower($stg) === 'won'
-                        ? ((!empty($lead->conversion_time) && $lead->conversion_time !== '0000-00-00 00:00:00') ? $lead->conversion_time : $lead->updated_at)
-                        : (($stg === $lead->stage) ? $lead->updated_at : (!empty($lead->qualified_at) ? $lead->qualified_at : $lead->created_at));
-                    $conversion_events[$key] = array(
-                        'lead_id' => $lead->id,
-                        'gclid' => $lead->gclid,
-                        'gbraid' => $lead->gbraid,
-                        'wbraid' => $lead->wbraid,
-                        'stage' => $stg,
-                        'time' => $time,
-                        'value' => (strtolower($stg) === 'won' || strpos(strtolower($stg), 'won') !== false) ? floatval($lead->deal_value) : 0,
-                        'email' => $lead->email,
-                        'phone' => $lead->phone
-                    );
-                }
-            }
-        }
-
-        return $conversion_events;
+        return IDLM_Google_Conversion_Feed::get_google_ads_conversion_events();
     }
 
     /**
      * Generate Google Ads Offline Conversion CSV response
      */
     public static function generate_google_ads_conversions_csv_response($terminate = true) {
-        $currency = get_option('idlm_currency_code', 'INR');
-
-        if ($terminate) {
-            self::clear_csv_output_buffers();
-        }
-
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=google-ads-offline-conversions-' . gmdate('Y-m-d') . '.csv');
-
-        $output = fopen('php://output', 'w'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
-        if ($output) {
-            fputcsv($output, array('Conversion action', 'GCLID', 'Email Address', 'Phone number', 'Conversion date and time', 'Conversion value', 'Conversion currency', 'GBRAID', 'WBRAID'), ',', '"', '\\');
-
-            $event_mappings = get_option('idlm_google_event_mappings', array(
-                'Qualified' => 'CRM Qualified Lead',
-                'Won' => 'Closed Won Interior Project'
-            ));
-
-            $events = self::get_google_ads_conversion_events();
-            foreach ($events as $event) {
-                $stage_key = $event['stage'];
-                $conversion_name = '';
-
-                // Match exactly or case-insensitively
-                if (isset($event_mappings[$stage_key])) {
-                    $conversion_name = trim($event_mappings[$stage_key]);
-                } else {
-                    foreach ($event_mappings as $k => $v) {
-                        if (strtolower($k) === strtolower($stage_key)) {
-                            $conversion_name = trim($v);
-                            break;
-                        }
-                    }
-                }
-
-                if (empty($conversion_name)) {
-                    continue;
-                }
-
-                $email = !empty($event['email']) ? strtolower(trim($event['email'])) : '';
-                $phone = !empty($event['phone']) ? self::format_phone_e164($event['phone']) : '';
-                $time_str = self::format_google_ads_conversion_time($event['time']);
-
-                if (empty($time_str)) {
-                    continue;
-                }
-
-                fputcsv($output, array(
-                    $conversion_name,
-                    $event['gclid'],
-                    $email,
-                    $phone,
-                    $time_str,
-                    $event['value'] > 0 ? number_format($event['value'], 2, '.', '') : '',
-                    $currency,
-                    $event['gbraid'],
-                    $event['wbraid']
-                ), ',', '"', '\\');
-            }
-            fclose($output); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-        }
-        if ($terminate && !defined('IDLM_TESTING')) {
-            exit;
-        }
+        return IDLM_Google_Conversion_Feed::generate_google_ads_conversions_csv_response($terminate);
     }
 
     /**
      * Remove buffered notices or whitespace before a direct CSV download.
      */
     private static function clear_csv_output_buffers() {
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
+        return IDLM_Google_Conversion_Feed::clear_csv_output_buffers();
     }
 
     /**
@@ -946,24 +484,7 @@ class IDLM_CAPI {
      * Google requires a numeric UTC offset in yyyy-mm-dd HH:mm:ss+|-HH:mm form.
      */
     private static function format_google_ads_conversion_time($value) {
-        $value = is_string($value) ? trim($value) : '';
-        if (empty($value) || '0000-00-00 00:00:00' === $value) {
-            return '';
-        }
-
-        try {
-            $timezone = function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC');
-            $datetime = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value, $timezone);
-            $errors = DateTimeImmutable::getLastErrors();
-
-            if (!$datetime || (is_array($errors) && (!empty($errors['warning_count']) || !empty($errors['error_count'])))) {
-                return '';
-            }
-
-            return $datetime->format('Y-m-d H:i:sP');
-        } catch (Exception $exception) {
-            return '';
-        }
+        return IDLM_Google_Conversion_Feed::format_google_ads_conversion_time($value);
     }
 
     /**

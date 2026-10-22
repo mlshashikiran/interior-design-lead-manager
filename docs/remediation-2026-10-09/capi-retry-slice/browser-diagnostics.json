@@ -1,0 +1,8 @@
+{
+  "builder": "Shashi",
+  "provider_call_count": 3,
+  "expected_HTTP_case_calls": 2,
+  "new_browser_calls": 1,
+  "php_errors": "",
+  "mobile_replay_new_calls": 0
+}

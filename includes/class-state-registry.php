@@ -1,5 +1,5 @@
 <?php
-/** Stable workflow keys and their persisted labels. @author Shashi */
+/** Built-in vocabularies and contextual subsets; transition rules live in IDLM_DB/lifecycle. @author Shashi */
 if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_State_Registry {
@@ -42,16 +42,50 @@ final class IDLM_State_Registry {
     }
 
     public static function task_types() {
-        return array('qualification' => self::TASK_QUALIFICATION, 'sales_follow_up' => 'Sales Follow-up', 'general' => 'General');
+        return array_merge(array('qualification' => self::TASK_QUALIFICATION, 'sales_follow_up' => 'Sales Follow-up'), self::manual_task_types());
+    }
+
+    /** Lifecycle-owned task types are deliberately absent from the manual form. */
+    public static function manual_task_types() {
+        return array('general' => 'General', 'call' => 'Call', 'email' => 'Email',
+            'site_visit' => 'Site Visit', 'design_mockup' => 'Design Mockup', 'quote_revision' => 'Quote Revision');
+    }
+
+    /** Only this stage implicitly makes a qualification decision. */
+    public static function quality_coupled_stages() {
+        return array(self::STAGE_QUALIFIED);
+    }
+
+    /** Entry checks when an update supplies Qualified quality; these stages do not imply it. */
+    public static function qualification_validation_stages() {
+        return array(self::STAGE_QUALIFIED, self::STAGE_VISITED, self::STAGE_QUOTE_SHARED, self::STAGE_NEGOTIATION, self::STAGE_WON);
+    }
+
+    /** Form groups also identify reasons requiring connected-call or reply evidence. */
+    public static function early_close_reason_groups() {
+        return array(
+            'objective' => array('spam_test' => 'Spam or test submission', 'duplicate' => 'Duplicate lead', 'invalid_contact' => 'Invalid or nonexistent contact'),
+            'confirmed' => array('unrelated_enquiry' => 'Vendor, job seeker, or unrelated enquiry', 'do_not_contact' => 'Requested no further contact',
+                'budget_below_minimum' => 'Budget below ₹4L', 'outside_service_area' => 'Outside supported service area',
+                'unsupported_project_type' => 'Unsupported project type', 'timeline_mismatch' => 'Project timeline mismatch',
+                'not_interested' => 'Customer confirmed not interested'),
+            'administrator' => array('administrator_exception' => 'Administrator exception'),
+        );
+    }
+
+    public static function early_close_reasons() {
+        return array_merge(...array_values(self::early_close_reason_groups()));
     }
 
     public static function disqualification_reasons() {
         return array(
+            'spam_test' => 'Spam or Test', 'administrator_exception' => 'Administrator Exception',
             'duplicate' => 'Duplicate', 'invalid_contact' => 'Invalid Contact',
             'unrelated_enquiry' => 'Unrelated Enquiry', 'do_not_contact' => 'Do Not Contact',
             'budget_below_minimum' => 'Budget Below Minimum', 'outside_service_area' => 'Outside Service Area',
             'unsupported_project_type' => 'Unsupported Project Type', 'timeline_mismatch' => 'Timeline Mismatch',
             'not_interested' => 'Not Interested', 'unable_to_contact' => 'Unable to Contact',
+            'legacy_unqualified' => 'Legacy Unqualified',
         );
     }
 

@@ -1,0 +1,297 @@
+- banner:
+  - heading "Leads Database" [level=1]
+  - generic: Search leads
+  - searchbox "Search leads"
+  - button "Filters":
+    - generic: 
+    - generic: Filters
+  - text:  
+  - button "+ Add Lead"
+- region "Lead summary":
+  - button "New Leads 5 filtered":
+    - generic: New Leads
+    - generic: "5"
+    - generic: filtered
+  - button "Not Called 0 active only":
+    - generic: Not Called
+    - generic: "0"
+    - generic: active only
+  - button "Follow-up 0 active only":
+    - generic: Follow-up
+    - generic: "0"
+    - generic: active only
+  - button "Qualified Leads 0 active":
+    - generic: Qualified Leads
+    - generic: "0"
+    - generic: active
+  - button "Pending Quality 5 to evaluate":
+    - generic: Pending Quality
+    - generic: "5"
+    - generic: to evaluate
+- generic: Sort leads
+- combobox "Sort leads":
+  - option "Default order" [selected]
+  - 'option "Name: A to Z"'
+  - 'option "Name: Z to A"'
+  - 'option "Budget: high to low"'
+  - option "Lead quality"
+  - option "Recently assigned"
+  - option "Recently created"
+  - option "Stage"
+  - option "Assigned representative"
+- table "Leads matching the current filters. On narrow screens, use each lead's Show details button to reveal secondary columns.":
+  - caption: Leads matching the current filters. On narrow screens, use each lead's Show details button to reveal secondary columns.
+  - rowgroup:
+    - row "Select all leads on this page Name Budget Stage Assigned Rep Lead Quality Tasks":
+      - columnheader "Select all leads on this page":
+        - checkbox "Select all leads on this page"
+      - columnheader "Name":
+        - button "Name":
+          - text: Name
+          - generic: ↕
+      - text: ↕
+      - columnheader "Budget":
+        - button "Budget":
+          - text: Budget
+          - generic: ↕
+      - columnheader "Stage":
+        - button "Stage":
+          - text: Stage
+          - generic: ↕
+      - columnheader "Assigned Rep":
+        - button "Assigned Rep":
+          - text: Assigned Rep
+          - generic: ↕
+      - columnheader "Lead Quality":
+        - button "Lead Quality":
+          - text: Lead Quality
+          - generic: ↕
+      - columnheader "Tasks":
+        - button "Tasks":
+          - text: Tasks
+          - generic: ↕
+      - text: ↕ ↕
+  - rowgroup:
+    - row "Select lead PII-SYNTHETIC-7 PII-SYNTHETIC-7 — open lead details synthetic7@example.test | +15550000007 Show details Stage New Lead quality Pending Qualification":
+      - cell "Select lead PII-SYNTHETIC-7":
+        - checkbox "Select lead PII-SYNTHETIC-7"
+      - cell "PII-SYNTHETIC-7 — open lead details synthetic7@example.test | +15550000007 Show details":
+        - button "PII-SYNTHETIC-7 — open lead details":
+          - strong: PII-SYNTHETIC-7
+          - generic: — open lead details
+        - generic: synthetic7@example.test | +15550000007
+        - button "Show details":
+          - generic: 
+          - generic: Show details
+      - text: Channel Studio Budget
+      - cell "Stage New":
+        - text: Stage
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - text: Assigned representative
+      - cell "Lead quality Pending Qualification":
+        - text: Lead quality
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - text: Tasks Assigned at Created at
+    - row "Select lead PII-SYNTHETIC-6 PII-SYNTHETIC-6 — open lead details synthetic6@example.test | +15550000006 Show details Stage New Lead quality Pending Qualification":
+      - cell "Select lead PII-SYNTHETIC-6":
+        - checkbox "Select lead PII-SYNTHETIC-6"
+      - cell "PII-SYNTHETIC-6 — open lead details synthetic6@example.test | +15550000006 Show details":
+        - button "PII-SYNTHETIC-6 — open lead details":
+          - strong: PII-SYNTHETIC-6
+          - generic: — open lead details
+        - generic: synthetic6@example.test | +15550000006
+        - button "Show details":
+          - generic: 
+          - generic: Show details
+      - text: Channel Studio Budget
+      - cell "Stage New":
+        - text: Stage
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - text: Assigned representative
+      - cell "Lead quality Pending Qualification":
+        - text: Lead quality
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - text: Tasks Assigned at Created at
+    - row "Select lead PII-SYNTHETIC-5 PII-SYNTHETIC-5 — open lead details synthetic5@example.test | +15550000005 Show details Stage New Lead quality Pending Qualification":
+      - cell "Select lead PII-SYNTHETIC-5":
+        - checkbox "Select lead PII-SYNTHETIC-5"
+      - cell "PII-SYNTHETIC-5 — open lead details synthetic5@example.test | +15550000005 Show details":
+        - button "PII-SYNTHETIC-5 — open lead details":
+          - strong: PII-SYNTHETIC-5
+          - generic: — open lead details
+        - generic: synthetic5@example.test | +15550000005
+        - button "Show details":
+          - generic: 
+          - generic: Show details
+      - text: Channel Studio Budget
+      - cell "Stage New":
+        - text: Stage
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - text: Assigned representative
+      - cell "Lead quality Pending Qualification":
+        - text: Lead quality
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - text: Tasks Assigned at Created at
+    - row "Select lead PII-SYNTHETIC-4 PII-SYNTHETIC-4 — open lead details synthetic4@example.test | +15550000004 Show details Stage New Lead quality Pending Qualification":
+      - cell "Select lead PII-SYNTHETIC-4":
+        - checkbox "Select lead PII-SYNTHETIC-4"
+      - cell "PII-SYNTHETIC-4 — open lead details synthetic4@example.test | +15550000004 Show details":
+        - button "PII-SYNTHETIC-4 — open lead details":
+          - strong: PII-SYNTHETIC-4
+          - generic: — open lead details
+        - generic: synthetic4@example.test | +15550000004
+        - button "Show details":
+          - generic: 
+          - generic: Show details
+      - text: Channel Studio Budget
+      - cell "Stage New":
+        - text: Stage
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - text: Assigned representative
+      - cell "Lead quality Pending Qualification":
+        - text: Lead quality
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - text: Tasks  Assigned at Created at
+    - row "Select lead PII-SYNTHETIC-0 PII-SYNTHETIC-0 — open lead details synthetic0@example.test | +15550000000 Show details Stage New Lead quality Pending Qualification":
+      - cell "Select lead PII-SYNTHETIC-0":
+        - checkbox "Select lead PII-SYNTHETIC-0"
+      - cell "PII-SYNTHETIC-0 — open lead details synthetic0@example.test | +15550000000 Show details":
+        - button "PII-SYNTHETIC-0 — open lead details":
+          - strong: PII-SYNTHETIC-0
+          - generic: — open lead details
+        - generic: synthetic0@example.test | +15550000000
+        - button "Show details":
+          - generic: 
+          - generic: Show details
+      - text: Channel Studio Budget
+      - cell "Stage New":
+        - text: Stage
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - text: Assigned representative
+      - cell "Lead quality Pending Qualification":
+        - text: Lead quality
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - text: Tasks Assigned at Created at
+- text: Leads per page
+- combobox "Leads per page":
+  - option "25" [selected]
+  - option "50"
+  - option "100"
+- button "Previous" [disabled]
+- generic: Page 1 of 1
+- button "Next" [disabled]
+- dialog "PII-SYNTHETIC-4":
+  - button "Open previous lead":
+    - generic: 
+  - banner:
+    - generic: P
+    - heading "PII-SYNTHETIC-4" [level=2]
+    - button "Close": ×
+  - navigation "Lead sections":
+    - button "Details"
+    - button "Activity Log & Comments"
+    - button "WhatsApp"
+    - button "Tasks"
+  - heading "Create New Task" [level=3]
+  - generic: Task Title / Description *
+  - textbox "Task Title / Description *" [active]:
+    - /placeholder: e.g. Call client for site visit confirmation
+  - generic: Due Date & Time
+  - textbox "Due Date & Time"
+  - generic: Priority
+  - combobox "Priority":
+    - option "Low"
+    - option "Medium" [selected]
+    - option "High"
+  - generic: Task Type
+  - combobox "Task Type":
+    - option "General" [selected]
+    - option "Call"
+    - option "Email"
+    - option "Site Visit"
+    - option "Design Mockup"
+    - option "Quote Revision"
+  - button "Add Task"
+  - heading "Task List" [level=3]
+  - generic: 2 tasks
+  - list:
+    - checkbox
+    - paragraph: UI003 desktop keyboard recovery
+    - generic: Site Visit
+    - generic: 
+    - text: Oct 12, 2026 10:30 AM
+    - button "×"
+    - checkbox
+    - paragraph: UI003 mobile Enter recovery
+    - generic: Call
+    - generic: 
+    - text: Oct 13, 2026 09:15 AM
+    - button "×"
+  - contentinfo:
+    - link "Create Quote":
+      - /url: http://127.0.0.1:61155/wp-admin/admin.php?page=idlm_quotations&lead_id=5&action=new
+    - button "Save Lead Details"
+  - button "Open next lead":
+    - generic: 
+  - generic: 4 of 5
+- text:     
+- heading "Today’s work" [level=2]
+- button "Needs attention"
+- button "Completed"
+- button "Close active tasks": ×
+- status: Loading tasks...
+- button "Today’s work":
+  - generic: 
+  - generic: Today’s work
+- text: 
+- status: Task added successfully!

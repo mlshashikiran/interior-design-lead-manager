@@ -1,0 +1,8 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T11-H-REL007-malformed-payment-names-reject-without-settings-writes
+PASS T11-H-REL007-array-wood-flag-rejects-before-catalogue-writes
+PASS T11-H-REL007-settings-retain-literal-milestone-text-and-validated-values
+PASS T11-H-REL007-valid-catalogue-classification-text-and-rate-persist
+PASS T11-H-REL007-structured-and-literal-backslash-decimals-remain-invalid
+PASS T11-H-REL007-request-inputs-without-PHP-diagnostics
+6 passed, 0 failed

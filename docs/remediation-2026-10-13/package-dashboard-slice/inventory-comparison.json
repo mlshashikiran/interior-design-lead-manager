@@ -1,0 +1,15 @@
+{
+  "builder": "Shashi",
+  "file_count": 450,
+  "artifact_sha256": "2b8ca1b6fac59837b0c3e4ecb4b0621436f094c3b6199c19b01880da37705179",
+  "all_archived_bytes_match_source": true,
+  "inventory_matches_1_102_78": true,
+  "changed_runtime_inventory_files": [
+    "CHANGELOG.md",
+    "includes/class-dashboard-read-model.php",
+    "includes/class-dashboard.php",
+    "interior-design-lead-manager.php",
+    "readme.txt"
+  ],
+  "all_other_runtime_dependency_font_bytes_retained": true
+}

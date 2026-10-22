@@ -28,10 +28,12 @@ final class IDLM_Interakt_Batch {
     public static function enqueue($lead_id, $event, $request_id, $delay = 0) {
         global $wpdb;
         if (!self::allowed_event($event)) { return false; }
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0539: enqueue(): fixed prefixed leads/options tables with bound IDs/keys; opaque queued work rechecks current lead, eligibility and recovery generation.
         $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         if (!$lead || empty($lead->phone) || !empty($lead->is_duplicate)) { return false; }
         $key = 'idlm_interakt_batch_' . hash('sha256', $request_id . '|' . $lead_id . '|' . $event);
-        $job = array('lead_id' => (int) $lead_id, 'event' => $event, 'status' => 'queued', 'attempts' => 0);
+        $job = array('lead_id' => (int) $lead_id, 'event' => $event, 'status' => 'queued', 'attempts' => 0, 'generation' => IDLM_Recovery_Guard::generation());
         // Unique option insertion makes repeated/concurrent HTTP submissions idempotent.
         if (!add_option($key, $job, '', false)) { return 'existing'; }
         if (!self::schedule($key, $delay)) {
@@ -44,16 +46,27 @@ final class IDLM_Interakt_Batch {
 
     public static function process($key) {
         if (!is_string($key) || !preg_match('/^idlm_interakt_batch_[a-f0-9]{64}$/D', $key)) { return; }
+        wp_cache_delete($key, 'options'); $job = get_option($key, array());
+        if (!$job) { return; }
+        return IDLM_Recovery_Guard::run(static function() use ($key) { return self::process_work($key); }, $job['generation'] ?? null, true, self::HOOK, array($key));
+    }
+
+    private static function process_work($key) {
+        if (!is_string($key) || !preg_match('/^idlm_interakt_batch_[a-f0-9]{64}$/D', $key)) { return; }
         global $wpdb;
         $lock = 'idlm_ib_' . substr(hash('sha256', $key), 0, 40);
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0540: process_work(): fixed prefixed leads/options tables with bound IDs/keys; opaque queued work rechecks current lead, eligibility and recovery generation.
         if (1 !== (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 0)', $lock))) { return; }
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         try {
             // Read after the lock: another worker may already have completed this job.
             wp_cache_delete($key, 'options');
             $job = get_option($key, array());
             if (!$job || in_array($job['status'], array('sent', 'failed', 'cancelled'), true)) { return; }
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0541: process_work(): fixed prefixed leads/options tables with bound IDs/keys; opaque queued work rechecks current lead, eligibility and recovery generation.
             $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $job['lead_id']));
-            $api_key = get_option('idlm_interakt_api_key', '');
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            $api_key = IDLM_Secret_Store::get('idlm_interakt_api_key', '', true);
             if (!$lead || empty($lead->phone) || !empty($lead->is_duplicate) || '1' !== get_option('idlm_interakt_enabled', '0') || !$api_key || !self::allowed_event($job['event'])) {
                 $job['status'] = 'cancelled';
                 update_option($key, $job, false);
@@ -69,7 +82,9 @@ final class IDLM_Interakt_Batch {
             $job['attempts']++;
             $job['status'] = 'processing';
             update_option($key, $job, false);
-            if (IDLM_Interakt::send_track_event_to_interakt($payload, $api_key, $lead->id)) {
+            $sent = IDLM_Interakt::send_track_event_to_interakt($payload, $api_key, $lead->id);
+            if (!IDLM_Recovery_Guard::lease_valid()) { return; }
+            if ($sent) {
                 $job['status'] = 'sent';
             } elseif ($job['attempts'] < 3) {
                 $job['status'] = 'retrying';
@@ -79,7 +94,9 @@ final class IDLM_Interakt_Batch {
             }
             update_option($key, $job, false);
         } finally {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0542: process_work(): fixed prefixed leads/options tables with bound IDs/keys; opaque queued work rechecks current lead, eligibility and recovery generation.
             $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         }
     }
 }

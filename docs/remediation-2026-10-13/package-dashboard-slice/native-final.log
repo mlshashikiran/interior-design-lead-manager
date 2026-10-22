@@ -1,0 +1,5 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS dashboard analytics and investigations share role scope and real SQL counts
+PASS REL007 dashboard assignment origins require the literal automatic underscore prefix
+
+3 passed, 0 failed

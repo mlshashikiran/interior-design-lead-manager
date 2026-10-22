@@ -1,0 +1,27 @@
+{
+  "builder": "Shashi",
+  "baseline_file_count": 1823,
+  "existing_files_changed": [
+    "CHANGELOG.md",
+    "docs/AUDIT-REMEDIATION-PLAN.md",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+    "docs/CHANGELOG-DEV.md",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md",
+    "docs/SECURITY.md",
+    "docs/audit-remediation-backlog.csv",
+    "includes/class-recovery-guard.php",
+    "interior-design-lead-manager.php",
+    "readme.txt",
+    "tests/README.md",
+    "tests/integration/http-router.php",
+    "tests/integration/quotation-http.php",
+    "tests/release-contracts.php"
+  ],
+  "unexpected_changed_or_removed_files": [],
+  "all_preexisting_files_outside_slice_unchanged": true,
+  "historical_fault_log_restored_to_baseline_sha256": "1812b5dd2b0d1bba3c0a724b8d7a1f680d2690206b482986040d6e9e436a184b",
+  "notes": [
+    "Pre-existing tracked dirty changes and untracked source retained; no reset, checkout, stash, commit or deletion of user files.",
+    "The full HTTP runner appended expected injected-fault messages to an older evidence file. This task saved its original bytes before running tests, restored those bytes exactly and retained only the append in the new evidence directory."
+  ]
+}

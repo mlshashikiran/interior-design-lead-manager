@@ -580,3 +580,7 @@
         line-height: 20px;
     }
 }
+
+/* Keep both page controls visible when the range label wraps on narrow screens. */
+.idlm-wrap .idlm-kanban-pagination { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; margin:12px 0; }
+.idlm-kanban-pagination [role="status"] { min-width:0; text-align:center; overflow-wrap:anywhere; }

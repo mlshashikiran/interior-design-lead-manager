@@ -1,0 +1,37 @@
+[
+  {
+    "file": "includes/class-quotation-controller.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in includes/class-quotation-controller.php\n"
+  },
+  {
+    "file": "includes/class-lead-connector.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in includes/class-lead-connector.php\n"
+  },
+  {
+    "file": "interior-design-lead-manager.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in interior-design-lead-manager.php\n"
+  },
+  {
+    "file": "tests/lead-connector-contracts.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/lead-connector-contracts.php\n"
+  },
+  {
+    "file": "tests/release-contracts.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/release-contracts.php\n"
+  },
+  {
+    "file": "tests/integration/quotation-http.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/integration/quotation-http.php\n"
+  },
+  {
+    "file": "tests/integration/quotation-request-input-http-cases.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/integration/quotation-request-input-http-cases.php\n"
+  }
+]

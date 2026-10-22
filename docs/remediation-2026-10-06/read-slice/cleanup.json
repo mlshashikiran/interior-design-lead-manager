@@ -1,0 +1,8 @@
+{
+  "author": "Shashi",
+  "owned_datadir": "/private/tmp/idlm-read-slice-mysql/data/",
+  "disposable_databases_remaining": [],
+  "configured_site_database_used": false,
+  "shutdown": "confirmed process stopped",
+  "owned_temporary_datadir_removed": true
+}

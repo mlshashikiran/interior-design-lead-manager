@@ -1,0 +1,462 @@
+- banner:
+  - heading "Leads Database" [level=1]
+  - generic: Search leads
+  - searchbox "Search leads"
+  - button "Filters":
+    - generic: 
+    - generic: Filters
+  - text:  
+  - button "Import CSV"
+  - button "Export CSV"
+  - button "Open lead routing settings":
+  - button "+ Add Lead"
+- region "Lead summary":
+  - button "New Leads 8 filtered":
+    - generic: New Leads
+    - generic: "8"
+    - generic: filtered
+  - button "Not Called 0 active only":
+    - generic: Not Called
+    - generic: "0"
+    - generic: active only
+  - button "Follow-up 0 active only":
+    - generic: Follow-up
+    - generic: "0"
+    - generic: active only
+  - button "Unassigned 0 needs owner":
+    - generic: Unassigned
+    - generic: "0"
+    - generic: needs owner
+  - button "Qualified Handoffs 0 awaiting assignment":
+    - generic: Qualified Handoffs
+    - generic: "0"
+    - generic: awaiting assignment
+  - generic "Yesterday qualification delivery reconciliation":
+    - generic: Yesterday Delivery
+    - generic: "0"
+    - text: /
+    - generic: "0"
+    - generic: handoffs / qualified
+  - button "Qualified Leads 0 active":
+    - generic: Qualified Leads
+    - generic: "0"
+    - generic: active
+  - button "Pending Quality 8 to evaluate":
+    - generic: Pending Quality
+    - generic: "8"
+    - generic: to evaluate
+- table "Leads matching the current filters. On narrow screens, use each lead's Show details button to reveal secondary columns.":
+  - caption: Leads matching the current filters. On narrow screens, use each lead's Show details button to reveal secondary columns.
+  - rowgroup:
+    - row "Select all leads on this page Name Channel Studio Budget Stage Assigned Rep Lead Quality Tasks Assigned At Created At":
+      - columnheader "Select all leads on this page":
+        - checkbox "Select all leads on this page"
+      - columnheader "Name":
+        - button "Name":
+          - text: Name
+          - generic: ↕
+      - columnheader "Channel":
+        - button "Channel":
+          - text: Channel
+          - generic: ↕
+      - columnheader "Studio"
+      - columnheader "Budget":
+        - button "Budget":
+          - text: Budget
+          - generic: ↕
+      - columnheader "Stage":
+        - button "Stage":
+          - text: Stage
+          - generic: ↕
+      - columnheader "Assigned Rep":
+        - button "Assigned Rep":
+          - text: Assigned Rep
+          - generic: ↕
+      - columnheader "Lead Quality":
+        - button "Lead Quality":
+          - text: Lead Quality
+          - generic: ↕
+      - columnheader "Tasks":
+        - button "Tasks":
+          - text: Tasks
+          - generic: ↕
+      - columnheader "Assigned At":
+        - button "Assigned At":
+          - text: Assigned At
+          - generic: ↕
+      - columnheader "Created At":
+        - button "Created At":
+          - text: Created At
+          - generic: ↕
+  - rowgroup:
+    - row "Select lead PII-SYNTHETIC-7 PII-SYNTHETIC-7 — open lead details synthetic7@example.test | +15550000007 — N/A New fixture_owner Pending Qualification None — Oct 8, 2026 6:32 PM":
+      - cell "Select lead PII-SYNTHETIC-7":
+        - checkbox "Select lead PII-SYNTHETIC-7"
+      - cell "PII-SYNTHETIC-7 — open lead details synthetic7@example.test | +15550000007":
+        - button "PII-SYNTHETIC-7 — open lead details":
+          - strong: PII-SYNTHETIC-7
+          - generic: — open lead details
+        - generic: synthetic7@example.test | +15550000007
+        - text: 
+      - cell
+      - cell "—"
+      - cell "N/A":
+        - strong: N/A
+      - cell "New":
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - cell "fixture_owner":
+        - combobox:
+          - option "Unassigned"
+          - option "fixture_owner" [selected]
+      - cell "Pending Qualification":
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - cell "None"
+      - cell "—"
+      - cell "Oct 8, 2026 6:32 PM":
+        - generic: Oct 8, 2026
+        - generic: 6:32 PM
+    - row "Select lead PII-SYNTHETIC-6 PII-SYNTHETIC-6 — open lead details synthetic6@example.test | +15550000006 — N/A New fixture_owner Pending Qualification None — Oct 8, 2026 6:32 PM":
+      - cell "Select lead PII-SYNTHETIC-6":
+        - checkbox "Select lead PII-SYNTHETIC-6"
+      - cell "PII-SYNTHETIC-6 — open lead details synthetic6@example.test | +15550000006":
+        - button "PII-SYNTHETIC-6 — open lead details":
+          - strong: PII-SYNTHETIC-6
+          - generic: — open lead details
+        - generic: synthetic6@example.test | +15550000006
+        - text: 
+      - cell
+      - cell "—"
+      - cell "N/A":
+        - strong: N/A
+      - cell "New":
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - cell "fixture_owner":
+        - combobox:
+          - option "Unassigned"
+          - option "fixture_owner" [selected]
+      - cell "Pending Qualification":
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - cell "None"
+      - cell "—"
+      - cell "Oct 8, 2026 6:32 PM":
+        - generic: Oct 8, 2026
+        - generic: 6:32 PM
+    - row "Select lead PII-SYNTHETIC-5 PII-SYNTHETIC-5 — open lead details synthetic5@example.test | +15550000005 — N/A New fixture_owner Pending Qualification None — Oct 8, 2026 6:32 PM":
+      - cell "Select lead PII-SYNTHETIC-5":
+        - checkbox "Select lead PII-SYNTHETIC-5"
+      - cell "PII-SYNTHETIC-5 — open lead details synthetic5@example.test | +15550000005":
+        - button "PII-SYNTHETIC-5 — open lead details":
+          - strong: PII-SYNTHETIC-5
+          - generic: — open lead details
+        - generic: synthetic5@example.test | +15550000005
+        - text: 
+      - cell
+      - cell "—"
+      - cell "N/A":
+        - strong: N/A
+      - cell "New":
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - cell "fixture_owner":
+        - combobox:
+          - option "Unassigned"
+          - option "fixture_owner" [selected]
+      - cell "Pending Qualification":
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - cell "None"
+      - cell "—"
+      - cell "Oct 8, 2026 6:32 PM":
+        - generic: Oct 8, 2026
+        - generic: 6:32 PM
+    - row "Select lead PII-SYNTHETIC-4 PII-SYNTHETIC-4 — open lead details synthetic4@example.test | +15550000004 — N/A New fixture_owner Pending Qualification None — Oct 8, 2026 6:32 PM":
+      - cell "Select lead PII-SYNTHETIC-4":
+        - checkbox "Select lead PII-SYNTHETIC-4"
+      - cell "PII-SYNTHETIC-4 — open lead details synthetic4@example.test | +15550000004":
+        - button "PII-SYNTHETIC-4 — open lead details":
+          - strong: PII-SYNTHETIC-4
+          - generic: — open lead details
+        - generic: synthetic4@example.test | +15550000004
+        - text: 
+      - cell
+      - cell "—"
+      - cell "N/A":
+        - strong: N/A
+      - cell "New":
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - cell "fixture_owner":
+        - combobox:
+          - option "Unassigned"
+          - option "fixture_owner" [selected]
+      - cell "Pending Qualification":
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - cell "None"
+      - cell "—"
+      - cell "Oct 8, 2026 6:32 PM":
+        - generic: Oct 8, 2026
+        - generic: 6:32 PM
+    - row "Select lead PII-SYNTHETIC-3 PII-SYNTHETIC-3 — open lead details synthetic3@example.test | +15550000003 — N/A New fixture_other Pending Qualification None — Oct 8, 2026 6:32 PM":
+      - cell "Select lead PII-SYNTHETIC-3":
+        - checkbox "Select lead PII-SYNTHETIC-3"
+      - cell "PII-SYNTHETIC-3 — open lead details synthetic3@example.test | +15550000003":
+        - button "PII-SYNTHETIC-3 — open lead details":
+          - strong: PII-SYNTHETIC-3
+          - generic: — open lead details
+        - generic: synthetic3@example.test | +15550000003
+        - text: 
+      - cell
+      - cell "—"
+      - cell "N/A":
+        - strong: N/A
+      - cell "New":
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - cell "fixture_other":
+        - combobox:
+          - option "Unassigned"
+          - option "fixture_other" [selected]
+      - cell "Pending Qualification":
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - cell "None"
+      - cell "—"
+      - cell "Oct 8, 2026 6:32 PM":
+        - generic: Oct 8, 2026
+        - generic: 6:32 PM
+    - row "Select lead PII-SYNTHETIC-2 PII-SYNTHETIC-2 — open lead details synthetic2@example.test | +15550000002 — N/A New fixture_readall Pending Qualification None — Oct 8, 2026 6:32 PM":
+      - cell "Select lead PII-SYNTHETIC-2":
+        - checkbox "Select lead PII-SYNTHETIC-2"
+      - cell "PII-SYNTHETIC-2 — open lead details synthetic2@example.test | +15550000002":
+        - button "PII-SYNTHETIC-2 — open lead details":
+          - strong: PII-SYNTHETIC-2
+          - generic: — open lead details
+        - generic: synthetic2@example.test | +15550000002
+        - text: 
+      - cell
+      - cell "—"
+      - cell "N/A":
+        - strong: N/A
+      - cell "New":
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - cell "fixture_readall":
+        - combobox:
+          - option "Unassigned"
+          - option "fixture_readall" [selected]
+      - cell "Pending Qualification":
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - cell "None"
+      - cell "—"
+      - cell "Oct 8, 2026 6:32 PM":
+        - generic: Oct 8, 2026
+        - generic: 6:32 PM
+    - row "Select lead PII-SYNTHETIC-1 PII-SYNTHETIC-1 — open lead details synthetic1@example.test | +15550000001 — N/A New fixture_other Pending Qualification None — Oct 8, 2026 6:32 PM":
+      - cell "Select lead PII-SYNTHETIC-1":
+        - checkbox "Select lead PII-SYNTHETIC-1"
+      - cell "PII-SYNTHETIC-1 — open lead details synthetic1@example.test | +15550000001":
+        - button "PII-SYNTHETIC-1 — open lead details":
+          - strong: PII-SYNTHETIC-1
+          - generic: — open lead details
+        - generic: synthetic1@example.test | +15550000001
+        - text: 
+      - cell
+      - cell "—"
+      - cell "N/A":
+        - strong: N/A
+      - cell "New":
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - cell "fixture_other":
+        - combobox:
+          - option "Unassigned"
+          - option "fixture_other" [selected]
+      - cell "Pending Qualification":
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - cell "None"
+      - cell "—"
+      - cell "Oct 8, 2026 6:32 PM":
+        - generic: Oct 8, 2026
+        - generic: 6:32 PM
+    - row "Select lead PII-SYNTHETIC-0 PII-SYNTHETIC-0 — open lead details synthetic0@example.test | +15550000000 — N/A New fixture_owner Pending Qualification None — Oct 8, 2026 6:32 PM":
+      - cell "Select lead PII-SYNTHETIC-0":
+        - checkbox "Select lead PII-SYNTHETIC-0"
+      - cell "PII-SYNTHETIC-0 — open lead details synthetic0@example.test | +15550000000":
+        - button "PII-SYNTHETIC-0 — open lead details":
+          - strong: PII-SYNTHETIC-0
+          - generic: — open lead details
+        - generic: synthetic0@example.test | +15550000000
+        - text: 
+      - cell
+      - cell "—"
+      - cell "N/A":
+        - strong: N/A
+      - cell "New":
+        - combobox:
+          - option "New" [selected]
+          - option "Contacted"
+          - option "Qualified"
+          - option "Quote Shared"
+          - option "Negotiation"
+          - option "Won"
+          - option "Lost"
+      - cell "fixture_owner":
+        - combobox:
+          - option "Unassigned"
+          - option "fixture_owner" [selected]
+      - cell "Pending Qualification":
+        - combobox:
+          - option "Pending Qualification" [selected]
+          - option "✅ Qualified"
+          - option "❌ Unqualified"
+      - cell "None"
+      - cell "—"
+      - cell "Oct 8, 2026 6:32 PM":
+        - generic: Oct 8, 2026
+        - generic: 6:32 PM
+- text: Leads per page
+- combobox "Leads per page":
+  - option "25" [selected]
+  - option "50"
+  - option "100"
+- button "Previous" [disabled]
+- generic: Page 1 of 1
+- button "Next" [disabled]
+- text:  
+- dialog "PII-SYNTHETIC-4":
+  - button "Open previous lead":
+    - generic: 
+  - banner:
+    - generic: P
+    - heading "PII-SYNTHETIC-4" [level=2]
+    - group "Lead status summary":
+      - generic: Call status
+      - generic: Not Called
+      - generic: Stage
+      - combobox "Change lead stage":
+        - option "New" [selected]
+        - option "Contacted"
+        - option "Qualified"
+        - option "Quote Shared"
+        - option "Negotiation"
+        - option "Won"
+        - option "Lost"
+      - generic: Assigned rep
+      - generic: fixture_owner
+      - generic: Lead quality
+      - generic: Pending Qualification
+      - generic "Additional lead context":
+        - generic: "Created:"
+        - generic: Oct 08, 2026 06:32 PM
+    - button "Close": ×
+  - navigation "Lead sections":
+    - button "Details"
+    - button "Activity Log & Comments"
+    - button "WhatsApp"
+    - button "Tasks" [active]
+  - heading "Create New Task" [level=3]
+  - generic: Task Title / Description *
+  - textbox "Task Title / Description *":
+    - /placeholder: e.g. Call client for site visit confirmation
+  - generic: Due Date & Time
+  - textbox "Due Date & Time"
+  - generic: Priority
+  - combobox "Priority":
+    - option "Low"
+    - option "Medium" [selected]
+    - option "High"
+  - generic: Task Type
+  - combobox "Task Type":
+    - option "General" [selected]
+    - option "Call"
+    - option "Email"
+    - option "Site Visit"
+    - option "Design Mockup"
+    - option "Quote Revision"
+  - button "Add Task"
+  - heading "Task List" [level=3]
+  - generic: 0 tasks
+  - generic: 
+  - paragraph: No active tasks for this lead.
+  - contentinfo:
+    - button "Delete Lead"
+    - link "Create Quote":
+      - /url: http://127.0.0.1:61155/wp-admin/admin.php?page=idlm_quotations&lead_id=5&action=new
+    - button "Save Lead Details"
+  - button "Open next lead":
+    - generic: 
+  - generic: 4 of 8
+- text:     
+- heading "Today’s work" [level=2]
+- button "Needs attention"
+- button "Completed"
+- button "Clean up"
+- button "Close active tasks": ×
+- status: Loading tasks...
+- button "Today’s work":
+  - generic: 
+  - generic: Today’s work
+- text:  

@@ -1,0 +1,15 @@
+{
+  "builder": "Shashi",
+  "artifact_sha256": "5fb3f6242692460d3a7ef2c530354c2823409710b751fde1fa0652cdad721ad3",
+  "file_count": 450,
+  "all_archived_bytes_match_source": true,
+  "inventory_matches_1_102_77": true,
+  "changed_runtime_inventory_files": [
+    "CHANGELOG.md",
+    "includes/class-interakt.php",
+    "interior-design-lead-manager.php",
+    "mcp-server.php",
+    "readme.txt"
+  ],
+  "all_other_dependency_font_and_runtime_bytes_retained": true
+}

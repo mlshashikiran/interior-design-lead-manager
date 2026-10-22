@@ -1,0 +1,27 @@
+{
+  "builder": "Shashi",
+  "baseline_file_count": 1788,
+  "existing_files_changed": [
+    "CHANGELOG.md",
+    "docs/AUDIT-REMEDIATION-PLAN.md",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+    "docs/CHANGELOG-DEV.md",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md",
+    "docs/audit-remediation-backlog.csv",
+    "includes/class-lead-connector.php",
+    "includes/class-quotation-controller.php",
+    "interior-design-lead-manager.php",
+    "readme.txt",
+    "tests/README.md",
+    "tests/integration/quotation-http.php",
+    "tests/lead-connector-contracts.php",
+    "tests/release-contracts.php"
+  ],
+  "unexpected_changed_or_removed_files": [],
+  "all_preexisting_files_outside_slice_unchanged": true,
+  "historical_fault_log_restored_to_baseline_sha256": "1812b5dd2b0d1bba3c0a724b8d7a1f680d2690206b482986040d6e9e436a184b",
+  "notes": [
+    "All tracked dirty changes and untracked files present at task start retained. No reset, checkout, stash, commit or deletion of user files.",
+    "The full HTTP runner appended to an older fault evidence log. Its original prefix was restored only after matching the starting SHA256; this run append is retained in expected-http-fault-diagnostics.log."
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "datadir": "/private/tmp/idlm-schema-slice-mysql/native-data/",
+  "networking_disabled": "1",
+  "remaining_disposable_databases": 0,
+  "owned_server_stopped": true,
+  "owned_mysql_directory_removed": true,
+  "configured_site_database_used": false
+}

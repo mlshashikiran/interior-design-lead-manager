@@ -1,0 +1,11 @@
+{
+  "author": "Shashi",
+  "status": "PASS",
+  "disposable_schemas_remaining": 0,
+  "owned_mysql_pid": 47038,
+  "owned_mysql_shutdown": "verified process scope; SIGTERM; shutdown complete",
+  "task_owned_database_directory_removed": true,
+  "configured_site_database_used": false,
+  "database_cleanup_check": "PASS zero disposable test databases remain; MySQL 8.4.0",
+  "http_fixture_cleanup": "Runner terminates its own server, drops its uniquely created schema and removes temporary copied core/content on shutdown"
+}

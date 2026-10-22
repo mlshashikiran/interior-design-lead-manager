@@ -1,0 +1,42 @@
+[
+  {
+    "file": "includes/class-admin-connection-controller.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in includes/class-admin-connection-controller.php"
+  },
+  {
+    "file": "includes/class-admin-ajax.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in includes/class-admin-ajax.php"
+  },
+  {
+    "file": "interior-design-lead-manager.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in interior-design-lead-manager.php"
+  },
+  {
+    "file": "tests/bootstrap.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/bootstrap.php"
+  },
+  {
+    "file": "tests/release-contracts.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/release-contracts.php"
+  },
+  {
+    "file": "tests/integration/http-router.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/integration/http-router.php"
+  },
+  {
+    "file": "tests/integration/quotation-http.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/integration/quotation-http.php"
+  },
+  {
+    "file": "tests/integration/connection-controller-http-cases.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/integration/connection-controller-http-cases.php"
+  }
+]

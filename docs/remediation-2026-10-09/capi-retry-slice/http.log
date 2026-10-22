@@ -1,0 +1,9 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T08-H-INT005-anonymous-no-retry
+PASS T08-H-INT005-nonadministrator-no-retry
+PASS T08-H-INT005-bad-and-cross-user-nonce-no-retry
+PASS T08-H-INT005-bounded-scalar-selection-no-retry
+PASS T08-H-INT005-default-Google-events-report-exact-new-attempts
+PASS T08-H-INT005-disabled-and-prior-success-report-no-send
+6 passed, 0 failed
+BROWSER URL=http://127.0.0.1:53593 STOP=/var/folders/7z/fv8kbkrn4pxdw8wj17g20t7h0000gn/T/idlm_test_55131_20783e42-content/stop

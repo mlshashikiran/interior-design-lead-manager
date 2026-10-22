@@ -6,14 +6,15 @@ if (!defined('ABSPATH')) {
 class IDLM_Interakt {
     public static function init() {
         IDLM_Interakt_Batch::init();
+        IDLM_Interakt_Dispatch::init();
         // Hook when a lead call status changes to No Answer (Legacy/Wrapper)
-        add_action('idlm_lead_call_status_no_answer', array(__CLASS__, 'trigger_no_answer_automation'), 10, 2);
+        add_action('idlm_lead_call_status_no_answer', array(__CLASS__, 'trigger_no_answer_automation'), 10, 3);
 
         // Generalized hook for mapped Interakt triggers
-        add_action('idlm_trigger_interakt_event', array(__CLASS__, 'trigger_generic_event'), 10, 3);
+        add_action('idlm_trigger_interakt_event', array(__CLASS__, 'trigger_generic_event'), 10, 4);
         
         // Hook for Action Scheduler execution
-        add_action('idlm_async_interakt_track_event', array(__CLASS__, 'process_async_track_event'), 10, 3);
+        add_action('idlm_async_interakt_track_event', array(__CLASS__, 'process_async_track_event'), 10, 4);
 
         // Hook for incoming WhatsApp Webhook listener
         add_action('rest_api_init', array(__CLASS__, 'register_webhook_route'));
@@ -37,102 +38,28 @@ class IDLM_Interakt {
     /**
      * Legacy wrapper for "No Answer" status triggers
      */
-    public static function trigger_no_answer_automation($lead_id, $old_lead) {
-        $event_name = get_option('idlm_interakt_event_name', 'lead_no_answer');
-        self::trigger_generic_event($lead_id, $event_name, $old_lead);
+    public static function trigger_no_answer_automation($lead_id, $old_lead, $rule = null) {
+        $event_name = is_array($rule) && isset($rule['event']) ? $rule['event'] : get_option('idlm_interakt_event_name', 'lead_no_answer');
+        if (is_array($rule)) { unset($rule['event']); }
+        return self::trigger_generic_event($lead_id, $event_name, $old_lead, $rule);
     }
 
     /**
      * Trigger WhatsApp automation on Interakt for a lead with a dynamic event name
      */
-    public static function trigger_generic_event($lead_id, $event_name, $old_lead = null) {
-        $enabled = get_option('idlm_interakt_enabled', '0');
-        $api_key = get_option('idlm_interakt_api_key', '');
-
-        if ($enabled !== '1') {
-            IDLM_Telemetry::log('interakt_debug', 'info', "Skipped Interakt event trigger for Lead ID: {$lead_id} because the integration is disabled in settings.", __FILE__, __LINE__);
-            return;
+    public static function trigger_generic_event($lead_id, $event_name, $old_lead = null, $rule = null) {
+        $key = IDLM_Interakt_Dispatch::enqueue($lead_id, $event_name, $old_lead, $rule);
+        if (false === $key && IDLM_Lead_Outbox::dispatching()) {
+            // Ineligible intent is terminal; failed durable handoff remains retryable.
+            throw new RuntimeException('Interakt handoff was not accepted.');
         }
-
-        if (empty($api_key)) {
-            IDLM_Telemetry::log('interakt_debug', 'warning', "Skipped Interakt event trigger for Lead ID: {$lead_id} because the API key is not configured.", __FILE__, __LINE__);
-            return;
-        }
-
-        if (empty($event_name)) {
-            IDLM_Telemetry::log('interakt_debug', 'warning', "Skipped Interakt event trigger for Lead ID: {$lead_id} because the event name is empty.", __FILE__, __LINE__);
-            return;
-        }
-
-        global $wpdb;
-        $table_leads = $wpdb->prefix . 'idlm_leads';
-        
-        // Fetch current details of the lead to get latest properties
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_leads} WHERE id = %d", $lead_id));
-        if (!$lead) {
-            IDLM_Telemetry::log('interakt_debug', 'warning', "Skipped Interakt event trigger because Lead ID: {$lead_id} was not found in the database.", __FILE__, __LINE__);
-            return;
-        }
-
-        if (empty($lead->phone)) {
-            IDLM_Telemetry::log('interakt_debug', 'warning', "Skipped Interakt event trigger for Lead ID: {$lead_id} because the phone number field is empty.", __FILE__, __LINE__);
-            return;
-        }
-
-        // Format phone number into countryCode and phoneNumber
-        $phone_parsed = self::format_phone_for_interakt($lead->phone);
-        if (empty($phone_parsed['phoneNumber'])) {
-            IDLM_Telemetry::log('interakt_debug', 'warning', "Skipped Interakt event trigger for Lead ID: {$lead_id} because the phone number '{$lead->phone}' could not be parsed.", __FILE__, __LINE__);
-            return;
-        }
-
-        IDLM_Telemetry::log('interakt_debug', 'info', "Preparing to dispatch Interakt event '{$event_name}' for Lead ID: {$lead_id}.", __FILE__, __LINE__);
-
-        // Prepare Interakt payload matching official Event Track API specs
-        $payload = array(
-            'userId'      => (string) $lead->id,
-            'countryCode' => $phone_parsed['countryCode'],
-            'phoneNumber' => $phone_parsed['phoneNumber'],
-            'event'       => trim($event_name),
-            'traits'      => array(
-                'name'             => self::sanitize_trait_value($lead->first_name . ' ' . $lead->last_name),
-                'email'            => self::sanitize_trait_value($lead->email),
-                'project_location' => self::sanitize_trait_value($lead->property_location),
-                'budget'           => self::sanitize_trait_value($lead->budget),
-                'property_type'    => self::sanitize_trait_value($lead->property_type),
-                'lead_id'          => intval($lead->id),
-                'source'           => self::sanitize_trait_value($lead->source),
-                'triggered_at'     => current_time('mysql')
-            ),
-            'createdAt'   => gmdate('c')
-        );
-
-        // Queue in Action Scheduler for background processing to avoid slowing down user requests
-        if (function_exists('as_enqueue_async_action')) {
-            as_enqueue_async_action('idlm_async_interakt_track_event', array(
-                'payload' => $payload,
-                'api_key' => $api_key,
-                'lead_id' => $lead_id
-            ), 'idlm-interakt');
-            IDLM_DB::log_activity($lead_id, 'interakt_queued', "Queued Interakt WhatsApp automation event '{$event_name}' via Action Scheduler.", 0);
-            IDLM_Telemetry::log('interakt_debug', 'info', "Queued event '{$event_name}' for Lead ID: {$lead_id} in Action Scheduler.", __FILE__, __LINE__);
-        } else {
-            IDLM_Telemetry::log('interakt_debug', 'info', "Action Scheduler not active. Falling back to synchronous dispatch for event '{$event_name}', Lead ID: {$lead_id}.", __FILE__, __LINE__);
-            // Fallback to synchronous HTTP POST
-            self::send_track_event_to_interakt($payload, $api_key, $lead_id);
-        }
+        return $key;
     }
 
-    /**
-     * Action Scheduler callback for async delivery
-     */
-    public static function process_async_track_event($payload, $api_key, $lead_id = 0) {
-        global $wpdb;
-        if (!$lead_id || !$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id))) {
-            return;
-        }
-        self::send_track_event_to_interakt($payload, $api_key, $lead_id);
+    /** Legacy payload/key callbacks are deliberately refused; new callbacks carry one opaque ID. */
+    public static function process_async_track_event($payload, $api_key = null, $lead_id = 0, $generation = null) {
+        if (!is_string($payload) || null !== $api_key) { return false; }
+        return IDLM_Interakt_Dispatch::process($payload);
     }
 
     /**
@@ -188,17 +115,23 @@ class IDLM_Interakt {
      * Send HTTP POST to Interakt APIs
      */
     public static function send_track_event_to_interakt($payload, $api_key, $lead_id = 0) {
+        return IDLM_Recovery_Guard::run(static function() use ($payload, $api_key, $lead_id) { return self::send_track_event_to_interakt_work($payload, $api_key, $lead_id); }, null, false, '', array());
+    }
+
+    private static function send_track_event_to_interakt_work($payload, $api_key, $lead_id = 0) {
         $endpoint = 'https://api.interakt.ai/v1/public/track/events/';
         
-        $response = wp_remote_post($endpoint, array(
+        if (!IDLM_Recovery_Guard::lease_valid()) { return false; }
+        $response = IDLM_Secret_Store::request($endpoint, array(
             'headers' => array(
                 'Authorization' => 'Basic ' . base64_encode($api_key . ':'),
                 'Content-Type'  => 'application/json'
             ),
             'body'    => json_encode($payload),
             'timeout' => 15
-        ));
+        ), array($api_key));
 
+        if (!IDLM_Recovery_Guard::lease_valid()) { return false; }
         if (is_wp_error($response)) {
             $err_msg = $response->get_error_message();
             if ($lead_id) {
@@ -260,10 +193,11 @@ class IDLM_Interakt {
      * Handle incoming Interakt Webhook requests
      */
     public static function handle_webhook_request(WP_REST_Request $request) {
-        $enabled = get_option('idlm_interakt_enabled', '0');
-        $secret = get_option('idlm_interakt_webhook_secret', '');
+        $enabled = IDLM_WhatsApp_Inbox::setting('idlm_interakt_enabled', '0');
+        $secret = IDLM_WhatsApp_Inbox::setting('idlm_interakt_webhook_secret', '');
 
-        if ($enabled !== '1' || empty($secret)) {
+        if (is_wp_error($enabled) || is_wp_error($secret)) { return new WP_REST_Response(array('message'=>'Webhook settings unavailable'),503); }
+        if ($enabled !== '1' || !is_string($secret) || '' === $secret) {
             return new WP_REST_Response(array('message' => 'Webhooks disabled or not configured'), 403);
         }
 
@@ -274,26 +208,20 @@ class IDLM_Interakt {
             return new WP_REST_Response(array('message' => 'Invalid signature'), 401);
         }
 
+        if (strlen($payload) > IDLM_WhatsApp_Inbox::MAX_BYTES) { return new WP_REST_Response(array('message'=>'Payload too large.'),413); }
         $data = json_decode($payload, true);
-        if (!$data || !isset($data['type'])) {
-            return new WP_REST_Response(array('message' => 'Invalid payload format'), 400);
+        if (!is_array($data) || !is_string($data['type'] ?? null)) { return new WP_REST_Response(array('message'=>'Invalid payload format'),400); }
+        if ('message_received' !== $data['type']) { return IDLM_WhatsApp_Inbox::response(array()); }
+        $customer=$data['data']['customer'] ?? array();$message=$data['data']['message'] ?? array();
+        if (!is_array($customer) || !is_array($message) || !is_string($message['message'] ?? '') || !is_string($message['message_content_type'] ?? '')) { return new WP_REST_Response(array('message'=>'Invalid message format'),400); }
+        $reply=self::format_incoming_message($message['message'] ?? '',$message['message_content_type'] ?? '');
+        if (IDLM_Lead_Connector::option('idlm_interakt_lead_capture','0') === '1') {
+            $event=IDLM_Lead_Connector::interakt_payload($customer,$message,$reply);
+            if (!$event) { return new WP_REST_Response(array('message'=>'Invalid incoming contact or referral'),400); }
+            $saved=IDLM_Lead_Connector::enqueue('interakt',$event['id'],$event);
+            return new WP_REST_Response(array('success'=>$saved === true,'message'=>$saved === true ? 'Incoming message retained for CRM processing.' : 'Intake could not be retained; retry required.'),$saved === true ? 200 : 503);
         }
-
-        if ($data['type'] === 'message_received') {
-            $customer = isset($data['data']['customer']) ? $data['data']['customer'] : array();
-            $message = isset($data['data']['message']) ? $data['data']['message'] : array();
-
-            $phone = isset($customer['channel_phone_number']) ? $customer['channel_phone_number'] : '';
-            $text = isset($message['message']) ? $message['message'] : '';
-            $media_type = isset($message['message_content_type']) ? $message['message_content_type'] : '';
-            $reply = self::format_incoming_message($text, $media_type);
-
-            if (!empty($phone) && !empty($reply)) {
-                self::log_customer_reply_to_lead($phone, $reply);
-            }
-        }
-
-        return new WP_REST_Response(array('success' => true), 200);
+        return IDLM_WhatsApp_Inbox::response(array(IDLM_WhatsApp_Inbox::message('interakt',$message['id'] ?? null,$customer['channel_phone_number'] ?? null,$reply)));
     }
 
     /**
@@ -335,31 +263,11 @@ class IDLM_Interakt {
     }
 
     /**
-     * Match incoming customer phone suffix to CRM Lead database and record comment activity
+     * Match incoming customer full phone to CRM Lead database and record comment activity
      */
-    public static function log_customer_reply_to_lead($phone, $text) {
-        $cleaned_search = preg_replace('/[^0-9]/', '', $phone);
-        if (strlen($cleaned_search) > 10) {
-            $cleaned_search = substr($cleaned_search, -10);
-        }
-
-        if (empty($cleaned_search)) {
-            return;
-        }
-
-        global $wpdb;
-        $table_leads = $wpdb->prefix . 'idlm_leads';
-
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $lead_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM {$table_leads} WHERE phone LIKE %s ORDER BY id DESC LIMIT 1",
-            '%' . $wpdb->esc_like($cleaned_search)
-        ));
-
-        if ($lead_id) {
-            $msg = "[WhatsApp Reply]: " . sanitize_textarea_field($text);
-            IDLM_DB::log_activity($lead_id, 'whatsapp_reply', $msg, 0);
-        }
+    public static function log_customer_reply_to_lead($phone, $text, $message_id = '') {
+        $message=IDLM_WhatsApp_Inbox::message('interakt',$message_id,$phone,$text);
+        return $message ? IDLM_WhatsApp_Inbox::record($message) : new WP_Error('idlm_whatsapp_identity','A valid provider message ID is required.');
     }
 
     /**
@@ -367,30 +275,36 @@ class IDLM_Interakt {
      */
     public static function handle_meta_webhook_verification(WP_REST_Request $request) {
         $enabled = get_option('idlm_meta_webhook_enabled', '0');
-        $verify_token = get_option('idlm_meta_webhook_verify_token', '');
+        $verify_token = IDLM_Secret_Store::get('idlm_meta_webhook_verify_token', '', true);
 
         if ($enabled !== '1' || empty($verify_token)) {
             return new WP_REST_Response('Verification disabled or Verify Token empty', 403);
         }
 
-        $mode = $request->get_param('hub_mode');
-        $token = $request->get_param('hub_verify_token');
-        $challenge = $request->get_param('hub_challenge');
+        $params = array();
+        foreach (array('hub_mode', 'hub_verify_token', 'hub_challenge') as $key) {
+            // REST parameters are already unslashed. Only the raw WP fallback
+            // needs wp_unslash; reject non-string shapes before sanitization.
+            $value = $request->get_param($key);
+            if ($value === null || $value === '') {
+                // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0070: handle_meta_webhook_verification(): provider verification validates required string mode/token/challenge and protected token before escaped plain-text output; this public provider GET protocol is authenticated by the verify token, not a WordPress session nonce.
+                if (isset($_GET[$key]) && !is_string($_GET[$key])) {
+                // phpcs:enable WordPress.Security.NonceVerification.Recommended
+                    return new WP_REST_Response('Forbidden', 403);
+                }
+                // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0071: handle_meta_webhook_verification(): provider verification validates required string mode/token/challenge and protected token before escaped plain-text output; this public provider GET protocol is authenticated by the verify token, not a WordPress session nonce.
+                $value = isset($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : '';
+                // phpcs:enable WordPress.Security.NonceVerification.Recommended
+            }
+            if (!is_string($value) || $value === '') {
+                return new WP_REST_Response('Forbidden', 403);
+            }
+            $params[$key] = $value;
+        }
 
-        // Check fallback query variables directly
-        if (empty($mode)) {
-            $mode = isset($_GET['hub_mode']) ? sanitize_text_field($_GET['hub_mode']) : '';
-        }
-        if (empty($token)) {
-            $token = isset($_GET['hub_verify_token']) ? sanitize_text_field($_GET['hub_verify_token']) : '';
-        }
-        if (empty($challenge)) {
-            $challenge = isset($_GET['hub_challenge']) ? sanitize_text_field($_GET['hub_challenge']) : '';
-        }
-
-        if ($mode === 'subscribe' && $token === $verify_token) {
+        if ($params['hub_mode'] === 'subscribe' && $params['hub_verify_token'] === $verify_token) {
             header('Content-Type: text/plain');
-            echo esc_html($challenge);
+            echo esc_html($params['hub_challenge']);
             exit;
         }
 
@@ -401,10 +315,11 @@ class IDLM_Interakt {
      * Handle incoming Meta Webhook event requests (POST)
      */
     public static function handle_meta_webhook_request(WP_REST_Request $request) {
-        $enabled = get_option('idlm_meta_webhook_enabled', '0');
-        $app_secret = get_option('idlm_meta_webhook_app_secret', '');
+        $enabled = IDLM_WhatsApp_Inbox::setting('idlm_meta_webhook_enabled', '0');
+        $app_secret = IDLM_WhatsApp_Inbox::setting('idlm_meta_webhook_app_secret', '');
 
-        if ($enabled !== '1' || empty($app_secret)) {
+        if (is_wp_error($enabled) || is_wp_error($app_secret)) { return new WP_REST_Response(array('message'=>'Webhook settings unavailable'),503); }
+        if ($enabled !== '1' || !is_string($app_secret) || '' === $app_secret) {
             return new WP_REST_Response(array('message' => 'Webhooks disabled or not configured'), 403);
         }
 
@@ -415,35 +330,35 @@ class IDLM_Interakt {
             return new WP_REST_Response(array('message' => 'Invalid signature'), 401);
         }
 
-        $data = json_decode($payload, true);
-        if (!$data || !isset($data['object']) || $data['object'] !== 'whatsapp_business_account') {
-            return new WP_REST_Response(array('message' => 'Invalid payload format'), 400);
-        }
-
-        if (isset($data['entry'][0]['changes'][0]['value']['messages'][0])) {
-            $msg_obj = $data['entry'][0]['changes'][0]['value']['messages'][0];
-            $phone = isset($msg_obj['from']) ? $msg_obj['from'] : '';
-            $text = '';
-
-            if (isset($msg_obj['text']['body'])) {
-                $text = $msg_obj['text']['body'];
-            } elseif (isset($msg_obj['type'])) {
-                $type = $msg_obj['type'];
-                if ($type === 'button' && isset($msg_obj['button']['text'])) {
-                    $text = $msg_obj['button']['text'];
-                } elseif ($type === 'interactive' && isset($msg_obj['interactive']['button_reply']['title'])) {
-                    $text = $msg_obj['interactive']['button_reply']['title'];
-                } else {
-                    $text = '[' . ucfirst($type) . ' message received]';
+        if (strlen($payload) > IDLM_WhatsApp_Inbox::MAX_BYTES) { return new WP_REST_Response(array('message'=>'Payload too large.'),413); }
+        $data=json_decode($payload,true);
+        if (!is_array($data) || ($data['object'] ?? '')!=='whatsapp_business_account' || !is_array($data['entry'] ?? null)) { return new WP_REST_Response(array('message'=>'Invalid payload format'),400); }
+        $messages=array();
+        foreach ($data['entry'] as $entry) {
+            if (!is_array($entry) || !is_array($entry['changes'] ?? null)) { return new WP_REST_Response(array('message'=>'Invalid entry format'),400); }
+            foreach ($entry['changes'] as $change) {
+                if (!is_array($change) || !is_array($change['value'] ?? null)) { return new WP_REST_Response(array('message'=>'Invalid change format'),400); }
+                $value=$change['value'];
+                if (!array_key_exists('messages',$value)) { continue; } // Delivery statuses are not inbound replies.
+                if (!is_array($value['messages'])) { return new WP_REST_Response(array('message'=>'Invalid messages format'),400); }
+                foreach ($value['messages'] as $message) {
+                    $messages[]=self::meta_incoming_message($message);
+                    if (count($messages)>IDLM_WhatsApp_Inbox::MAX_MESSAGES) { return new WP_REST_Response(array('message'=>'Message batch too large.'),413); }
                 }
             }
-
-            if (!empty($phone) && !empty($text)) {
-                self::log_meta_customer_reply_to_lead($phone, $text);
-            }
         }
+        return IDLM_WhatsApp_Inbox::response($messages);
+    }
 
-        return new WP_REST_Response(array('success' => true), 200);
+    private static function meta_incoming_message($message) {
+        if (!is_array($message)) { return false; }
+        $type=$message['type'] ?? (isset($message['text']) ? 'text' : 'unknown');
+        if (!is_string($type) || !preg_match('/^[a-z_]{1,40}$/D',$type)) { return false; }
+        $text=$message['text']['body'] ?? ($message['button']['text'] ?? ($message['interactive']['button_reply']['title'] ?? ($message['interactive']['list_reply']['title'] ?? null)));
+        if (null !== $text && !is_string($text)) { return false; }
+        if (null === $text && 'text' === $type) { return false; }
+        if (null === $text) { $text='['.ucfirst($type).' message received]'; }
+        return IDLM_WhatsApp_Inbox::message('meta',$message['id'] ?? null,$message['from'] ?? null,$text);
     }
 
     /**
@@ -459,30 +374,10 @@ class IDLM_Interakt {
     }
 
     /**
-     * Match incoming Meta customer phone to lead and record direct comment activity
+     * Match incoming Meta customer full phone to lead and record direct comment activity
      */
-    public static function log_meta_customer_reply_to_lead($phone, $text) {
-        $cleaned_search = preg_replace('/[^0-9]/', '', $phone);
-        if (strlen($cleaned_search) > 10) {
-            $cleaned_search = substr($cleaned_search, -10);
-        }
-
-        if (empty($cleaned_search)) {
-            return;
-        }
-
-        global $wpdb;
-        $table_leads = $wpdb->prefix . 'idlm_leads';
-
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $lead_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT id FROM {$table_leads} WHERE phone LIKE %s ORDER BY id DESC LIMIT 1",
-            '%' . $wpdb->esc_like($cleaned_search)
-        ));
-
-        if ($lead_id) {
-            $msg = "[Direct WA Reply]: " . sanitize_textarea_field($text);
-            IDLM_DB::log_activity($lead_id, 'whatsapp_reply', $msg, 0);
-        }
+    public static function log_meta_customer_reply_to_lead($phone, $text, $message_id = '') {
+        $message=IDLM_WhatsApp_Inbox::message('meta',$message_id,$phone,$text);
+        return $message ? IDLM_WhatsApp_Inbox::record($message) : new WP_Error('idlm_whatsapp_identity','A valid provider message ID is required.');
     }
 }

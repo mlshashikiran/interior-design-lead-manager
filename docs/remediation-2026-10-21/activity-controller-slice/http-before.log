@@ -1,0 +1,10 @@
+ENV PHP=8.4.14 WP=6.6 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS M6-H-activity-nonce-capability-and-anonymous-denials-have-no-effects
+PASS M6-H-activity-readall-remains-read-only-and-current-owner-controls-mutations
+PASS M6-H-activity-validation-and-protected-records-preserve-error-shapes
+PASS M6-H-activity-save-preserves-literal-text-author-and-fifteen-second-deduplication
+PASS M6-H-activity-edit-keeps-author-admin-and-provenance-rules
+PASS M6-H-activity-delete-keeps-author-admin-and-current-lead-authority
+PASS M6-H-activity-write-failures-retain-json-and-unchanged-state
+PASS M6-H-activity-timeline-keeps-hundred-row-five-comment-html-contract
+8 passed, 0 failed

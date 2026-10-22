@@ -1,0 +1,42 @@
+[
+  {
+    "file": "interior-design-lead-manager.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/interior-design-lead-manager.php\n"
+  },
+  {
+    "file": "includes/class-quotation-exporter.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-quotation-exporter.php\n"
+  },
+  {
+    "file": "includes/class-secret-store.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-secret-store.php\n"
+  },
+  {
+    "file": "tests/release-contracts.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/release-contracts.php\n"
+  },
+  {
+    "file": "tests/run.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/run.php\n"
+  },
+  {
+    "file": "tests/runtime-support-contracts.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/runtime-support-contracts.php\n"
+  },
+  {
+    "file": "tests/runtime-prerequisite-probe.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/runtime-prerequisite-probe.php\n"
+  },
+  {
+    "file": "tests/runtime-prerequisites.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/runtime-prerequisites.php\n"
+  }
+]

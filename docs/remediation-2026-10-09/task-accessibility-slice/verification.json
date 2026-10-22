@@ -1,0 +1,114 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-09",
+  "finding": "UI-003",
+  "status": "IMPLEMENTED, not CLOSED",
+  "candidate": "1.102.64",
+  "schemas": {
+    "core": "1.3.9",
+    "routing": "1.0.1",
+    "quotation": "2.5.4",
+    "lifecycle_receipt": "1.1.0"
+  },
+  "environment": {
+    "PHP": "8.4.14",
+    "WordPress": "7.1.3",
+    "MySQL": "8.4.0",
+    "scheduler": "WP-Cron",
+    "persistent_cache": false
+  },
+  "checks": [
+    {
+      "command": "php tests/run.php",
+      "result": "312 passed, 0 failed",
+      "log": "fast-final.log",
+      "stderr": "pre-existing synthetic missing-phone warning"
+    },
+    {
+      "command": "php tests/integration/quotation-http.php --task-ui-only",
+      "environment": "owned socket /private/tmp/idlm-ui003.sock; IDLM_TEST_TASK_UI_EVIDENCE_DIR set",
+      "result": "1 passed, 0 failed; final candidate fixture cleanup exit 0",
+      "log": "http-candidate.log"
+    },
+    {
+      "command": "actual CUA in-app browser and independent SQL assertions",
+      "result": "13 observations; desktop administrator and mobile representative; exact 2 saved tasks",
+      "evidence": [
+        "browser-checks.json",
+        "browser-persistence.json"
+      ]
+    },
+    {
+      "command": "php -l for 5 changed PHP files; node --check assets/js/admin-app.js; git diff --check",
+      "result": "PASS"
+    }
+  ],
+  "initial_failure": "http.log retains failed broad aggregate snapshot; final regression asserts all plugin domain rows unchanged. Non-domain cause not conclusively identified.",
+  "visual_review": [
+    "desktop-error.jpg",
+    "mobile-error.jpg",
+    "mobile-saved.jpg"
+  ],
+  "browser_tool_notes": "Role/name checks exposed open drawer aria-hidden=true, corrected in source. Native date field has multiple tab segments. Unsupported focus locator was replaced using observed active control ID.",
+  "cleanup": {
+    "owned_databases_dropped": true,
+    "databases_remaining": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "owned_http_servers_and_content_removed": true,
+    "owned_mysql_stopped_and_temporary_data_removed": true,
+    "tab_closed": true,
+    "viewport_reset": true,
+    "configured_site_database_used": false,
+    "provider_http_mail_intercepted": true
+  },
+  "qualification_limits": [
+    "Exact release artifact/CI and broader runtime/browser/OS date-picker matrix",
+    "Spoken screen-reader output, complete drawer focus trap and nested unsaved-change dialog flows",
+    "Network failure recovery and whole T04/T19/M0 groups",
+    "Full native/HTTP suite not rerun for isolated UI change"
+  ],
+  "hashes": {
+    "includes/class-admin-lead-reads.php": "ffa819682f29115f409987ecad4301417da41f14c28ef116d0f971d553bd153a",
+    "assets/js/admin-app.js": "179ead9df02e6d7ebb629b274745dd9c6dd3b0b6b3bdc47aeb623d687bc41baa",
+    "interior-design-lead-manager.php": "7c5a30a71342ae4603d3ffe69df2223f65135dbbbe8754122cbbc4fad06a0ac5",
+    "tests/release-contracts.php": "fe38b3abae540044656af41a05c3fad5deccc9869617203eba1a48ff963fd7e7",
+    "tests/integration/quotation-http.php": "7fc46b084abeb1b38670b0c91f209830927e9a13fe518c8e23718e0d43210b0c",
+    "tests/integration/task-accessibility-http-cases.php": "3d32303f84371b01459a17eb32940ee72832206684b9193071a78d885e4523fe",
+    "docs/AUDIT-REMEDIATION-TASK-ACCESSIBILITY-SLICE.md": "138383ae6e697ddc3b6c0641a7975c84a3447c85f8d050b4fd51c20f69ab44a3",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "ab6b69c5ff77b4b57c86a5fb999a28afc1c828ea630b468ce4ed2574dbfc0a5f",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "c61f6d62c81fa68b5b700cc106c880855f035b28d6f40523a715a167faf08d39",
+    "docs/CHANGELOG-DEV.md": "5f02a92a710942eafe8fc416dfb94f7095b7871295291781208b21590b078b4d",
+    "tests/README.md": "a302d3180a1053d4d3e192b4ea1415775685b7616a68cec373cc1b2ac5a4f570",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "adc3a04239413365620aaee6696f9d79c0ed061de2dbaf297ab77d9dada6a055",
+    "CHANGELOG.md": "8ee165ce689ad03b3513ccdbd9e3bff434659e533f9c459088d5bbe5e34b122e",
+    "docs/audit-remediation-backlog.csv": "4b8820a0a0b3d81b5875e6e35fe33f061b7dd7d98be10e5b28292ecdf0571bec",
+    "readme.txt": "0d9ccf51d1ec92fda5a21415b82ab492a1d51f1e647f9c7baf3eb31bb410af56"
+  },
+  "evidence_hashes": {
+    "baseline.json": "231d1bbeba28332deb419f4df8e273b1b1115ce5cec037c18f7c60cd93678f28",
+    "browser-checks.json": "7c40a8280fd34c81752f4d9928388925bb3db8bcf13e775222bfd745893362c0",
+    "browser-console.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "browser-fixture.json": "130d058974f8101a2ce9863a0b391334ff0e4a975fbc2038dc8be295063a6ef2",
+    "browser-persistence.json": "cf778f6d0f842c08b1c564a723f920b7e52dfbb14532c48e9f969806f43b7fe7",
+    "desktop-accessible-names.txt": "47aa6bc92efd4d44d231f44ee8755d24a0ce231fcb542f45665f4850bb811659",
+    "desktop-error.jpg": "e983b158fa926a598f92b410f6024cdffa0e833506879e4434cf850fe4425df3",
+    "fast-final.log": "7f511d4c702d68a68b45fa72f80e484bbc8ee361291d28ee80d140fc10e41981",
+    "fast-final.stderr.log": "6b37d2c156c40ea07149f3209d56336258ba77f293a91643f47904b1a2760ceb",
+    "fast.log": "7f511d4c702d68a68b45fa72f80e484bbc8ee361291d28ee80d140fc10e41981",
+    "fast.stderr.log": "6b37d2c156c40ea07149f3209d56336258ba77f293a91643f47904b1a2760ceb",
+    "graph-refresh.json": "1e65b5f2d450ca89b6b195db1b1f8c4b5583fb02792f6252c8da34c27bd5b917",
+    "http-candidate.log": "cd6de44c34c14b46e5b1abc21efac27033e4860c077b498e7a252c78eea6e0b6",
+    "http-candidate.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "http-final.log": "1fdacf92a24433f5f01eb592eb9dd2c7daaa34332fbd2f9d709ce55012ca4516",
+    "http-final.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "http.log": "d375d4f2011c121ab64965a48734692c95df942bd49ee842dff8e024a084fb29",
+    "http.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "mobile-accessible-names.txt": "dfab7e399f67b3bf2a98926dd4da90cf04903957d1b00bf48c6d754e865c9822",
+    "mobile-error.jpg": "600f8dcb2a0d229abf5673c70574d79c42a8c921eb4e3bacc71b1ebaac379bf9",
+    "mobile-saved.jpg": "18bd657a194dc48dbe8344cfccea0ae78248e29d1139d0928c66051c13dbbbb7"
+  }
+}

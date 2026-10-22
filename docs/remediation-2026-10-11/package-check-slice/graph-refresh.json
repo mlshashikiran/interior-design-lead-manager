@@ -1,0 +1,28 @@
+{
+  "builder": "Shashi",
+  "mode": "scoped_structural_extraction_plus_explicit_document_headings",
+  "full_semantic_regeneration": false,
+  "source_files": [
+    "tests/release/check-package.php",
+    "tests/release/class-release-artifact.php",
+    "tests/release-contracts.php",
+    "includes/class-mcp-query-policy.php",
+    "includes/class-quotation-exporter.php",
+    "includes/class-quotation-renderer.php",
+    "interior-design-lead-manager.php"
+  ],
+  "documentation_files": [
+    "docs/AUDIT-REMEDIATION-PACKAGE-CHECK-SLICE.md",
+    "docs/AUDIT-REMEDIATION-PLAN.md",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md",
+    "docs/PRODUCTION-RELEASE.md",
+    "docs/CHANGELOG-DEV.md",
+    "docs/PROJECT-MAP.md",
+    "tests/README.md"
+  ],
+  "replaced_php_nodes": 102,
+  "extracted_php_nodes": 103,
+  "extracted_php_edges": 153,
+  "unrelated_graph_retained": true
+}

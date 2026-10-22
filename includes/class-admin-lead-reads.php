@@ -39,6 +39,64 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             'unread_whatsapp_count' => self::get_unread_whatsapp_count(),
         ));
     }
+
+    /** Return WhatsApp history only when its drawer tab is opened. */
+    public static function ajax_get_lead_whatsapp() {
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        if (!self::current_user_has_rep_access()) {
+            wp_send_json_error(array('message' => 'Permission denied.'));
+        }
+        $lead_id = isset($_POST['lead_id']) ? absint(wp_unslash($_POST['lead_id'])) : 0;
+        if (!$lead_id) {
+            wp_send_json_error(array('message' => 'Invalid Lead ID'));
+        }
+        if (!self::current_user_can_view_lead($lead_id)) {
+            wp_send_json_error(array('message' => 'You can access only leads assigned to you.'));
+        }
+
+        global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $phone = $wpdb->get_var($wpdb->prepare("SELECT phone FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id));
+        $whatsapp_reply_pattern = $wpdb->esc_like('[WhatsApp Reply]:') . '%';
+        $direct_reply_pattern = $wpdb->esc_like('[Direct WA Reply]:') . '%';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $messages = $wpdb->get_results($wpdb->prepare(
+            "SELECT a.id, a.details, a.created_at FROM {$wpdb->prefix}idlm_lead_activity_log a
+             WHERE a.lead_id = %d AND (a.activity_type = 'whatsapp_reply' OR (a.activity_type = 'comment' AND (a.details LIKE %s OR a.details LIKE %s)))
+             ORDER BY a.id DESC LIMIT 100",
+            $lead_id, $whatsapp_reply_pattern, $direct_reply_pattern
+        ));
+        $read_ids = self::get_whatsapp_read_activity_ids();
+        $last_read_id = isset($read_ids[$lead_id]) ? absint($read_ids[$lead_id]) : 0;
+        $unread_count = 0;
+        foreach ($messages as $message) {
+            if (absint($message->id) > $last_read_id) {
+                $unread_count++;
+            }
+        }
+        $inbox_url = IDLM_Interakt::inbox_url($phone);
+        $can_open_interakt = '1' === get_option('idlm_interakt_enabled', '0') && !empty($messages) && $inbox_url;
+        ob_start();
+        ?>
+        <section class="idlm-drawer-panel idlm-drawer-whatsapp-panel">
+            <div class="idlm-drawer-panel-head">
+                <h3 class="idlm-drawer-panel-title">WhatsApp messages</h3>
+                <?php if ($can_open_interakt): ?><a class="idlm-btn idlm-btn-secondary idlm-drawer-open-interakt" href="<?php echo esc_url($inbox_url); ?>" target="_blank" rel="noopener noreferrer" title="Open Interakt's WhatsApp Inbox">Open in Interakt <span class="dashicons dashicons-external" aria-hidden="true"></span></a><?php endif; ?>
+            </div>
+            <div class="idlm-drawer-whatsapp-list">
+                <?php if (empty($messages)): ?>
+                    <p class="idlm-drawer-whatsapp-empty">No WhatsApp messages have been received from this lead.</p>
+                <?php else: foreach ($messages as $message): ?>
+                    <article class="idlm-drawer-whatsapp-message<?php echo absint($message->id) > $last_read_id ? ' is-unread' : ''; ?>">
+                        <div class="idlm-drawer-whatsapp-message-meta"><strong>Customer</strong><time datetime="<?php echo esc_attr($message->created_at); ?>"><?php echo esc_html(self::format_datetime($message->created_at)); ?></time></div>
+                        <div class="idlm-drawer-whatsapp-message-body"><?php echo wp_kses_post(self::render_activity_details(preg_replace('/^\[(?:WhatsApp Reply|Direct WA Reply)\]:\s*/', '', $message->details))); ?></div>
+                    </article>
+                <?php endforeach; endif; ?>
+            </div>
+        </section>
+        <?php
+        wp_send_json_success(array('html' => ob_get_clean(), 'unread_whatsapp_count' => $unread_count));
+    }
     public static function ajax_get_lead_details() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
         if (!self::current_user_has_rep_access()) {
@@ -114,51 +172,23 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             ));
         }
 
-        // Fetch activity logs inline to speed up perceived load time
+        // The sidebar is visible with the default Details tab, so load its
+        // bounded preview here without restoring the full activity-log query.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        $logs = $wpdb->get_results($wpdb->prepare(
+        $recent_comments = $wpdb->get_results($wpdb->prepare(
             "SELECT a.*, u.display_name
              FROM {$wpdb->prefix}idlm_lead_activity_log a
              LEFT JOIN {$wpdb->users} u ON a.user_id = u.ID
-             WHERE a.lead_id = %d ORDER BY a.id DESC LIMIT 100",
+             WHERE a.lead_id = %d
+               AND a.activity_type IN ('comment', 'lost_remark', 'whatsapp_reply')
+             ORDER BY a.id DESC
+             LIMIT 5",
             $lead_id
         ));
 
-        $whatsapp_reply_pattern = $wpdb->esc_like('[WhatsApp Reply]:') . '%';
-        $direct_reply_pattern = $wpdb->esc_like('[Direct WA Reply]:') . '%';
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        $whatsapp_messages = $wpdb->get_results($wpdb->prepare(
-            "SELECT a.*
-             FROM {$wpdb->prefix}idlm_lead_activity_log a
-             WHERE a.lead_id = %d
-               AND (a.activity_type = 'whatsapp_reply' OR (a.activity_type = 'comment' AND (a.details LIKE %s OR a.details LIKE %s)))
-             ORDER BY a.id DESC",
-            $lead_id,
-            $whatsapp_reply_pattern,
-            $direct_reply_pattern
-        ));
-
-        // Include comments and protected Lost remarks in the Details tab sidebar.
-        $comments = array();
-        if (!empty($logs)) {
-            foreach ($logs as $log) {
-                if (in_array($log->activity_type, array('comment', 'lost_remark', 'whatsapp_reply', 'qualification_handoff_remark'), true)) {
-                    $comments[] = $log;
-                }
-            }
-        }
-        $recent_comments = array_slice($comments, 0, 5);
-
-        $whatsapp_read_ids = self::get_whatsapp_read_activity_ids();
-        $last_read_whatsapp_id = isset($whatsapp_read_ids[$lead_id]) ? absint($whatsapp_read_ids[$lead_id]) : 0;
-        $unread_whatsapp_count = 0;
-        foreach ($whatsapp_messages as $whatsapp_message) {
-            if (absint($whatsapp_message->id) > $last_read_whatsapp_id) {
-                $unread_whatsapp_count++;
-            }
-        }
-        $interakt_inbox_url = IDLM_Interakt::inbox_url($lead->phone); $can_open_interakt = '1' === get_option('idlm_interakt_enabled', '0') && !empty($whatsapp_messages) && $interakt_inbox_url;
-        $show_presales_compliance = self::current_user_is_pre_sales();
+        // Administrators can cover intake when the pre-sales owner is unavailable.
+        $is_administrator = current_user_can('manage_options');
+        $show_presales_compliance = self::current_user_is_pre_sales() || $is_administrator;
         $followup = $show_presales_compliance ? IDLM_DB::get_followup_compliance($lead_id) : null;
         $qualification_fields = array(
             'project_name' => 'Project name', 'property_location' => 'Location', 'budget' => 'Budget',
@@ -247,7 +277,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         <nav class="idlm-drawer-tabs" aria-label="Lead sections">
             <button class="idlm-drawer-tab active" type="button" onclick="switchDrawerTab(event, 'drawer-tab-info')">Details</button>
             <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-activity')">Activity Log & Comments</button>
-            <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-whatsapp')">WhatsApp <span class="idlm-drawer-tab-notification idlm-drawer-whatsapp-count" aria-label="<?php echo esc_attr($unread_whatsapp_count); ?> unread WhatsApp messages"<?php echo $unread_whatsapp_count ? '' : ' hidden'; ?>><?php echo esc_html($unread_whatsapp_count); ?></span></button>
+            <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-whatsapp')">WhatsApp <span class="idlm-drawer-tab-notification idlm-drawer-whatsapp-count" aria-label="Unread WhatsApp messages" hidden>0</span></button>
             <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-tasks')">Tasks <span class="idlm-drawer-tab-notification" id="idlm-drawer-overdue-task-count" aria-label="No overdue tasks" hidden>0</span></button>
         </nav>
 
@@ -255,10 +285,10 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             <div id="drawer-tab-info" class="idlm-drawer-tab-content active">
                 <?php if ($show_presales_compliance): ?>
                 <section class="idlm-drawer-panel idlm-presales-compliance" data-lead-id="<?php echo esc_attr($lead->id); ?>" data-has-floor-plan="<?php echo empty($lead->floor_plan_received) ? '0' : '1'; ?>">
-                    <div class="idlm-drawer-panel-head">
+                    <?php if ($is_administrator): ?><details class="idlm-presales-accordion"><summary class="idlm-drawer-panel-head idlm-presales-summary"><?php else: ?><div class="idlm-drawer-panel-head"><?php endif; ?>
                         <h3 class="idlm-drawer-panel-title">PRE-SALES 6-CYCLE FOLLOW-UP</h3>
                         <span><?php echo esc_html($followup['message']); ?></span>
-                    </div>
+                        <?php if ($is_administrator): ?><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span></summary><?php else: ?></div><?php endif; ?>
                     <div class="idlm-presales-day-grid">
                         <?php foreach ($followup['days'] as $index => $day): ?>
                             <div class="idlm-presales-day <?php echo $day['complete'] ? 'is-complete' : ''; ?>">
@@ -287,27 +317,23 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                         <strong>Early close for confirmed junk or mismatch</strong>
                         <select class="idlm-input idlm-early-close-reason" aria-label="Early close reason">
                             <option value="">Select a reason…</option>
-                            <optgroup label="Objective junk">
-                                <option value="spam_test">Spam or test submission</option>
-                                <option value="duplicate">Duplicate lead</option>
-                                <option value="invalid_contact">Invalid or nonexistent contact</option>
-                            </optgroup>
-                            <optgroup label="Confirmed response">
-                                <option value="unrelated_enquiry">Vendor, job seeker, or unrelated enquiry</option>
-                                <option value="do_not_contact">Requested no further contact</option>
-                                <option value="budget_below_minimum">Budget below ₹4L</option>
-                                <option value="outside_service_area">Outside supported service area</option>
-                                <option value="unsupported_project_type">Unsupported project type</option>
-                                <option value="timeline_mismatch">Project timeline mismatch</option>
-                                <option value="not_interested">Customer confirmed not interested</option>
-                            </optgroup>
+                            <?php foreach (array('objective' => 'Objective junk', 'confirmed' => 'Confirmed response') as $group => $group_label): ?>
+                                <optgroup label="<?php echo esc_attr($group_label); ?>">
+                                    <?php foreach (IDLM_State_Registry::early_close_reason_groups()[$group] as $reason => $label): ?>
+                                        <option value="<?php echo esc_attr($reason); ?>"><?php echo esc_html($label); ?></option>
+                                    <?php endforeach; ?>
+                                </optgroup>
+                            <?php endforeach; ?>
                             <?php if (current_user_can('manage_options')): ?>
-                                <option value="administrator_exception">Other - administrator exception</option>
+                                <?php foreach (IDLM_State_Registry::early_close_reason_groups()['administrator'] as $reason => $label): ?>
+                                    <option value="<?php echo esc_attr($reason); ?>">Other - <?php echo esc_html(lcfirst($label)); ?></option>
+                                <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
                         <textarea class="idlm-input idlm-early-close-note" rows="2" maxlength="1000" placeholder="Document the evidence and specific reason (required)"></textarea>
                         <button type="button" class="idlm-btn idlm-btn-danger idlm-log-presales-touch" data-kind="early_close">Close lead early</button>
                     </div>
+                    <?php if ($is_administrator): ?></details><?php endif; ?>
                 </section>
                 <?php endif; ?>
                 <form id="idlm-edit-lead-form">
@@ -593,30 +619,30 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
 
                                 <div>
                                     <h4 class="idlm-drawer-activity-title">Recent Comments</h4>
-                                    <div class="idlm-timeline-container-details loaded" id="idlm-timeline-container-details-inner">
+                                    <div class="idlm-timeline-container-details" id="idlm-timeline-container-details-inner">
                                         <div class="idlm-timeline" style="margin-top:0;">
                                             <?php if (empty($recent_comments)): ?>
                                                 <div style="text-align: center; color: #64748b; padding: 20px 0;">No comments found for this lead.</div>
                                             <?php else: ?>
-                                                <?php foreach ($recent_comments as $log):
-                                                    $author = $log->display_name ? $log->display_name : 'System Pipeline';
+                                                <?php foreach ($recent_comments as $comment):
+                                                    $author = $comment->display_name ? $comment->display_name : 'System Pipeline';
                                                 ?>
                                                     <div class="idlm-timeline-item">
                                                         <div class="idlm-timeline-meta" style="display: flex; justify-content: space-between; align-items: center;">
                                                             <div>
                                                                 <strong><?php echo esc_html($author); ?></strong>
-                                                                <span><?php echo esc_html(self::format_datetime($log->created_at)); ?></span>
+                                                                <span><?php echo esc_html(self::format_datetime($comment->created_at)); ?></span>
                                                             </div>
-                                                            <?php if ($log->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $log->user_id)): ?>
+                                                            <?php if ($comment->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $comment->user_id)): ?>
                                                                 <div class="idlm-timeline-actions" style="font-size: 11px;">
-                                                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
-                                                                    <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
+                                                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($comment->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
+                                                                    <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($comment->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
                                                                 </div>
                                                             <?php endif; ?>
                                                         </div>
                                                         <div class="idlm-timeline-details">
                                                             <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Safely escaped and constructed by render_activity_details().
-                                                            echo self::render_activity_details($log->details); ?>
+                                                            echo self::render_activity_details($comment->details); ?>
                                                         </div>
                                                     </div>
                                                 <?php endforeach; ?>
@@ -652,35 +678,8 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                             <h3 class="idlm-drawer-panel-title">Activity History</h3>
                         </div>
                         <div class="idlm-drawer-activity-body">
-                            <div class="idlm-timeline-container loaded" id="idlm-timeline-container-inner">
-                                <div class="idlm-timeline" style="margin-top:0;">
-                                    <?php if (empty($logs)): ?>
-                                        <div style="text-align: center; color: #64748b; padding: 20px 0;">No activity logs found for this lead.</div>
-                                    <?php else: ?>
-                                        <?php foreach ($logs as $log):
-                                            $author = $log->display_name ? $log->display_name : 'System Pipeline';
-                                        ?>
-                                            <div class="idlm-timeline-item">
-                                                <div class="idlm-timeline-meta" style="display: flex; justify-content: space-between; align-items: center;">
-                                                    <div>
-                                                        <strong><?php echo esc_html($author); ?></strong>
-                                                        <span><?php echo esc_html(self::format_datetime($log->created_at)); ?></span>
-                                                    </div>
-                                                    <?php if ($log->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $log->user_id)): ?>
-                                                        <div class="idlm-timeline-actions" style="font-size: 11px;">
-                                                            <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
-                                                            <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="idlm-timeline-details">
-                                                    <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Safely escaped and constructed by render_activity_details().
-                                                    echo self::render_activity_details($log->details); ?>
-                                                </div>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </div>
+                            <div class="idlm-timeline-container" id="idlm-timeline-container-inner">
+                                <div style="text-align: center; color: #64748b; padding: 20px 0;">Activity loads when this tab is opened.</div>
                             </div>
                         </div>
                     </section>
@@ -688,51 +687,30 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             </div>
 
             <div id="drawer-tab-whatsapp" class="idlm-drawer-tab-content">
-                <section class="idlm-drawer-panel idlm-drawer-whatsapp-panel">
-                    <div class="idlm-drawer-panel-head">
-                        <h3 class="idlm-drawer-panel-title">WhatsApp messages</h3>
-                        <?php if ($can_open_interakt): ?>
-                            <a class="idlm-btn idlm-btn-secondary idlm-drawer-open-interakt" href="<?php echo esc_url($interakt_inbox_url); ?>" target="_blank" rel="noopener noreferrer" title="Open Interakt's WhatsApp Inbox">Open in Interakt <span class="dashicons dashicons-external" aria-hidden="true"></span></a>
-                        <?php endif; ?>
-                    </div>
-                    <div class="idlm-drawer-whatsapp-list">
-                        <?php if (empty($whatsapp_messages)): ?>
-                            <p class="idlm-drawer-whatsapp-empty">No WhatsApp messages have been received from this lead.</p>
-                        <?php else: ?>
-                            <?php foreach ($whatsapp_messages as $whatsapp_message): ?>
-                                <article class="idlm-drawer-whatsapp-message<?php echo absint($whatsapp_message->id) > $last_read_whatsapp_id ? ' is-unread' : ''; ?>">
-                                    <div class="idlm-drawer-whatsapp-message-meta">
-                                        <strong>Customer</strong>
-                                        <time datetime="<?php echo esc_attr($whatsapp_message->created_at); ?>"><?php echo esc_html(self::format_datetime($whatsapp_message->created_at)); ?></time>
-                                    </div>
-                                    <div class="idlm-drawer-whatsapp-message-body"><?php echo wp_kses_post(self::render_activity_details(preg_replace('/^\[(?:WhatsApp Reply|Direct WA Reply)\]:\s*/', '', $whatsapp_message->details))); ?></div>
-                                </article>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                </section>
+                <div class="idlm-drawer-load-state" role="status">Open this tab to load WhatsApp history.</div>
             </div>
 
             <div id="drawer-tab-tasks" class="idlm-drawer-tab-content">
-                <div class="idlm-drawer-tasks-wrapper" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px;">
+                <div class="idlm-drawer-tasks-wrapper">
                     <!-- Left Column: Add Task Form -->
                     <section class="idlm-drawer-panel">
                         <div class="idlm-drawer-panel-head">
                             <h3 class="idlm-drawer-panel-title">Create New Task</h3>
                         </div>
                         <div class="idlm-drawer-panel-body" style="padding: 15px;">
-                            <form id="idlm-add-task-form">
+                            <form id="idlm-add-task-form" onsubmit="event.preventDefault(); addLeadTask(<?php echo esc_attr($lead->id); ?>)">
                                 <div class="idlm-form-group" style="margin-bottom: 12px;">
-                                    <label style="font-weight: 500; font-size: 11px; color: var(--idlm-text-muted); display: block; margin-bottom: 6px;">Task Title / Description *</label>
-                                    <input type="text" id="idlm-new-task-title" class="idlm-input" style="width: 100%; font-size: 12px; font-family: Monaco, monospace; box-sizing: border-box;" placeholder="e.g. Call client for site visit confirmation" required>
+                                    <label for="idlm-new-task-title" style="font-weight: 500; font-size: 11px; color: var(--idlm-text-muted); display: block; margin-bottom: 6px;">Task Title / Description *</label>
+                                    <input type="text" id="idlm-new-task-title" aria-describedby="idlm-new-task-title-error" class="idlm-input" style="width: 100%; font-size: 12px; font-family: Monaco, monospace; box-sizing: border-box;" placeholder="e.g. Call client for site visit confirmation" required>
+                                    <p id="idlm-new-task-title-error" class="idlm-dialog__error" role="alert" hidden>Please enter a task title.</p>
                                 </div>
                                 <div class="idlm-form-group" style="margin-bottom: 12px;">
-                                    <label style="font-weight: 500; font-size: 11px; color: var(--idlm-text-muted); display: block; margin-bottom: 6px;">Due Date & Time</label>
+                                    <label for="idlm-new-task-due" style="font-weight: 500; font-size: 11px; color: var(--idlm-text-muted); display: block; margin-bottom: 6px;">Due Date & Time</label>
                                     <input type="datetime-local" id="idlm-new-task-due" class="idlm-input" style="width: 100%; font-size: 12px; font-family: Monaco, monospace; box-sizing: border-box;">
                                 </div>
-                                <div class="idlm-drawer-form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; display: grid;">
+                                <div class="idlm-drawer-form-grid idlm-drawer-task-fields">
                                     <div class="idlm-drawer-field">
-                                        <label style="font-weight: 500; font-size: 11px; color: var(--idlm-text-muted); display: block; margin-bottom: 6px;">Priority</label>
+                                        <label for="idlm-new-task-priority" style="font-weight: 500; font-size: 11px; color: var(--idlm-text-muted); display: block; margin-bottom: 6px;">Priority</label>
                                         <select id="idlm-new-task-priority" class="idlm-drawer-control" style="font-size: 12px; height: 32px; width: 100%; font-family: Monaco, monospace;">
                                             <option value="Low">Low</option>
                                             <option value="Medium" selected>Medium</option>
@@ -740,18 +718,15 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                         </select>
                                     </div>
                                     <div class="idlm-drawer-field">
-                                        <label style="font-weight: 500; font-size: 11px; color: var(--idlm-text-muted); display: block; margin-bottom: 6px;">Task Type</label>
+                                        <label for="idlm-new-task-type" style="font-weight: 500; font-size: 11px; color: var(--idlm-text-muted); display: block; margin-bottom: 6px;">Task Type</label>
                                         <select id="idlm-new-task-type" class="idlm-drawer-control" style="font-size: 12px; height: 32px; width: 100%; font-family: Monaco, monospace;">
-                                            <option value="General" selected>General</option>
-                                            <option value="Call">Call</option>
-                                            <option value="Email">Email</option>
-                                            <option value="Site Visit">Site Visit</option>
-                                            <option value="Design Mockup">Design Mockup</option>
-                                            <option value="Quote Revision">Quote Revision</option>
+                                            <?php foreach (IDLM_State_Registry::manual_task_types() as $label): ?>
+                                                <option value="<?php echo esc_attr($label); ?>" <?php selected('General', $label); ?>><?php echo esc_html($label); ?></option>
+                                            <?php endforeach; ?>
                                         </select>
                                     </div>
                                 </div>
-                                <button type="button" class="idlm-btn idlm-btn-primary" id="idlm-btn-add-task" onclick="addLeadTask(<?php echo esc_attr($lead->id); ?>)" style="width: 100%; font-size: 12px; padding: 8px; font-weight: 600;">Add Task</button>
+                                <button type="submit" class="idlm-btn idlm-btn-primary" id="idlm-btn-add-task" style="width: 100%; font-size: 12px; padding: 8px; font-weight: 600;">Add Task</button>
                             </form>
                         </div>
                     </section>

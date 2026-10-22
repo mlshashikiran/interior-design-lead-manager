@@ -21,11 +21,41 @@ final class IDLM_Release_Artifact {
             'interior-design-lead-manager.php',
             'readme.txt',
             'CHANGELOG.md',
+            'PRIVACY.txt',
+            'SUPPORT.txt',
+            'assets/css/fonts.css',
+            'assets/fonts/OFL.txt',
+            'assets/fonts/NOTICE.txt',
+            'assets/fonts/inter-provenance.json',
+            'assets/fonts/inter-latin-300.woff2',
+            'assets/fonts/inter-latin-400.woff2',
+            'assets/fonts/inter-latin-500.woff2',
+            'assets/fonts/inter-latin-600.woff2',
+            'assets/fonts/inter-latin-700.woff2',
             'assets/css/admin-style.css',
             'assets/js/admin-app.js',
+            'vendor/dompdf/vendor/autoload.php',
+            'vendor/dompdf/vendor/composer/installed.json',
+            'vendor/dompdf/LICENSE.LGPL',
+            'vendor/dompdf/AUTHORS.md',
+            'vendor/dompdf/vendor/dompdf/dompdf/LICENSE.LGPL',
+            'vendor/dompdf/vendor/dompdf/dompdf/AUTHORS.md',
+            'vendor/dompdf/vendor/dompdf/dompdf/lib/res/sRGB2014.icc',
+            'vendor/dompdf/vendor/dompdf/dompdf/lib/res/sRGB2014.icc.LICENSE',
+            'vendor/dompdf/vendor/composer/LICENSE',
+            'vendor/dompdf/vendor/dompdf/php-font-lib/LICENSE',
+            'vendor/dompdf/vendor/dompdf/php-svg-lib/LICENSE',
+            'vendor/dompdf/vendor/masterminds/html5/LICENSE.txt',
+            'vendor/dompdf/vendor/sabberworm/php-css-parser/LICENSE',
             'includes/class-admin.php',
             'includes/class-db.php',
+            'includes/class-private-files.php',
+            'includes/class-backup-validator.php',
+            'includes/class-recovery-guard.php',
+            'includes/class-capi-delivery.php',
+            'includes/class-audience-dispatch.php',
             'includes/class-integrations.php',
+            'includes/class-mcp-query-policy.php',
             'includes/class-quotations.php',
             'templates/workspace.php',
         );
@@ -265,12 +295,28 @@ final class IDLM_Release_Artifact {
         if (true !== $zip->open($zip_path, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
             throw new RuntimeException('Unable to create the release ZIP.');
         }
-        $zip->addEmptyDir(self::PLUGIN_SLUG);
+        if (!$zip->addEmptyDir(self::PLUGIN_SLUG)) {
+            $zip->close();
+            throw new RuntimeException('Unable to add the release root directory.');
+        }
+        sort($files, SORT_STRING);
         foreach ($files as $relative_path) {
             $archive_path = self::PLUGIN_SLUG . '/' . $relative_path;
             if (!$zip->addFile(rtrim($root, '/\\') . '/' . $relative_path, $archive_path)) {
                 $zip->close();
                 throw new RuntimeException('Unable to add a release file: ' . $relative_path);
+            }
+        }
+        // Normalize every entry, including the empty root. File contents and
+        // paths are the build inputs; filesystem times/modes are not.
+        for ($index = 0; $index < $zip->numFiles; $index++) {
+            $name = (string) $zip->getNameIndex($index);
+            $directory = '/' === substr($name, -1);
+            if (!$zip->setMtimeName($name, 946684800)
+                || !$zip->setExternalAttributesName($name, ZipArchive::OPSYS_UNIX, ($directory ? 0040755 : 0100644) << 16)
+                || (!$directory && !$zip->setCompressionName($name, ZipArchive::CM_DEFLATE, 9))) {
+                $zip->close();
+                throw new RuntimeException('Unable to normalize release ZIP metadata: ' . $name);
             }
         }
         if (!$zip->close()) {
@@ -383,6 +429,11 @@ final class IDLM_Release_Artifact {
         }
         $basename = basename($relative_path);
         $lower_basename = strtolower($basename);
+        if (strpos(strtolower($relative_path), 'services/facebook-connect/') === 0) { return 'forbidden_development_artifact'; }
+        if (in_array($lower_basename, array('.graphifyignore', 'design.md', 'quote-builder-redesign.html'), true)
+            || strpos($lower_basename, '.graphify_') === 0 || in_array('graphify-out', $segments, true)) {
+            return 'forbidden_development_artifact';
+        }
         if ('.env' === $lower_basename || 0 === strpos($lower_basename, '.env.') || in_array($basename, array('AGENTS.md'), true)) {
             return 'forbidden_private_file';
         }

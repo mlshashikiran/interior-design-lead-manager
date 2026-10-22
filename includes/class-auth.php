@@ -27,7 +27,9 @@ final class IDLM_Auth {
         check_admin_referer('idlm_login');
         $return_url = self::return_url();
         $email = isset($_POST['idlm_email']) ? sanitize_email(wp_unslash($_POST['idlm_email'])) : '';
-        $password = isset($_POST['idlm_password']) ? (string) wp_unslash($_POST['idlm_password']) : '';
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0049: handle_login(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook.
+        $password = isset($_POST['idlm_password']) && is_string($_POST['idlm_password']) ? wp_unslash($_POST['idlm_password']) : '';
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $user = $email && is_email($email) ? get_user_by('email', $email) : false;
         $credentials = array(
             'user_login' => $user ? $user->user_login : $email,
@@ -75,8 +77,12 @@ final class IDLM_Auth {
         $return_url = self::return_url();
         $key = isset($_POST['idlm_reset_key']) ? sanitize_text_field(wp_unslash($_POST['idlm_reset_key'])) : '';
         $login = isset($_POST['idlm_reset_login']) ? sanitize_user(wp_unslash($_POST['idlm_reset_login'])) : '';
-        $password = isset($_POST['idlm_new_password']) ? (string) wp_unslash($_POST['idlm_new_password']) : '';
-        $confirmation = isset($_POST['idlm_confirm_password']) ? (string) wp_unslash($_POST['idlm_confirm_password']) : '';
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0050: handle_password_reset(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook.
+        $password = isset($_POST['idlm_new_password']) && is_string($_POST['idlm_new_password']) ? wp_unslash($_POST['idlm_new_password']) : '';
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0051: handle_password_reset(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook.
+        $confirmation = isset($_POST['idlm_confirm_password']) && is_string($_POST['idlm_confirm_password']) ? wp_unslash($_POST['idlm_confirm_password']) : '';
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $reset_url = add_query_arg(array('idlm_auth' => 'reset', 'key' => $key, 'login' => $login), $return_url);
         $user = check_password_reset_key($key, $login);
         if (is_wp_error($user)) {
@@ -92,7 +98,9 @@ final class IDLM_Auth {
             exit;
         }
         $errors = new WP_Error();
+        // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- REL007-BOUNDARY-0052: handle_password_reset(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook.
         do_action('validate_password_reset', $errors, $user);
+        // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
         if ($errors->has_errors()) {
             wp_safe_redirect(add_query_arg('idlm_auth_error', 'password-invalid', $reset_url));
             exit;
@@ -153,12 +161,16 @@ final class IDLM_Auth {
 
     private static function return_url() {
         $fallback = home_url('/');
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- REL007-BOUNDARY-0053: return_url(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook.
         $url = isset($_POST['idlm_return_url']) ? esc_url_raw(wp_unslash($_POST['idlm_return_url'])) : $fallback;
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
         return wp_validate_redirect($url, $fallback);
     }
 
     private static function is_password_screen() {
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0054: is_password_screen(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook.
         $action = isset($_REQUEST['action']) ? sanitize_key(wp_unslash($_REQUEST['action'])) : 'login';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         return in_array($action, array('lostpassword', 'retrievepassword', 'resetpass', 'rp'), true);
     }
 }

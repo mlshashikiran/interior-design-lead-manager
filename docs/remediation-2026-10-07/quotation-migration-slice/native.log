@@ -1,0 +1,26 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T17-N-QUO004-physical manifest verifies ten InnoDB tables and independent keys
+PASS T17-N-QUO004-denied-column-DDL-preserves-pending-version-and-retry-repairs
+PASS T17-N-QUO004-denied-index-DDL-preserves-pending-version-and-retry-repairs
+PASS T17-N-QUO004-MyISAM-refused-without-conversion-or-data-loss
+PASS T17-N-QUO004-snapshot-snapshot_read-rolls-back-and-retries-without-duplicate-sections
+PASS T17-N-QUO004-snapshot-snapshot_update-rolls-back-and-retries-without-duplicate-sections
+PASS T17-N-QUO004-snapshot-section_lookup-rolls-back-and-retries-without-duplicate-sections
+PASS T17-N-QUO004-snapshot-section_insert-rolls-back-and-retries-without-duplicate-sections
+PASS T17-N-QUO004-snapshot-item_bind-rolls-back-and-retries-without-duplicate-sections
+PASS T17-N-QUO004-snapshot-marker-rolls-back-and-retries-without-duplicate-sections
+PASS T17-N-QUO004-snapshot-COMMIT-rolls-back-and-retries-without-duplicate-sections
+PASS T17-N-QUO004-current-but-falsely-completed-snapshot-marker-is-rechecked
+PASS T17-N-QUO004-second-lifecycle-write-failure-preserves-complete-original-state
+PASS T17-N-QUO004-legacy-read-failure-preserves-numbering-and-retry-creates-one-aggregate
+PASS T17-N-QUO004-legacy-quotes-failure-preserves-numbering-and-retry-creates-one-aggregate
+PASS T17-N-QUO004-legacy-revisions-failure-preserves-numbering-and-retry-creates-one-aggregate
+PASS T17-N-QUO004-legacy-pointer-failure-preserves-numbering-and-retry-creates-one-aggregate
+PASS T17-N-QUO004-legacy-history-failure-preserves-numbering-and-retry-creates-one-aggregate
+PASS T20-N-QUO004-foreign-transaction-and-competing-installer-refused-before-DDL
+PASS T17-N-QUO004-denied-table-creation-remains-pending-until-physical-retry
+PASS T17-N-QUO004-final-schema-marker-write-failure-retains-completed-substeps-and-retries
+PASS T17-C-QUO004-process-death-before-backfill-commit-rolls-back-data-and-marker
+PASS T17-C-QUO004-two-installers-converge-on-one-legacy-aggregate-and-completion
+
+24 passed, 0 failed

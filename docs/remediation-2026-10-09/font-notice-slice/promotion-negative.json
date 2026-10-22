@@ -1,0 +1,16 @@
+{
+  "command": [
+    "php",
+    "tests/release/verify-candidate.php",
+    "--artifact-dir=/Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/docs/remediation-2026-10-09/font-notice-slice/rehearsal",
+    "--expected-revision=ff148ba62ec710a622d9b1af7e8f511b7e0b7385"
+  ],
+  "expected_exit": 1,
+  "actual_exit": 1,
+  "result": {
+    "schema": "idlm-staging-rehearsal/v1",
+    "status": "error",
+    "message": "Release candidate verification failed: git_not_clean, candidate_not_ci_attested, candidate_has_blockers, ci_evidence_invalid, ci_run_invalid",
+    "production_release_approved": false
+  }
+}

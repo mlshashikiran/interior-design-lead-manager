@@ -1,0 +1,138 @@
+[
+  {
+    "context": "admin initial tiny area",
+    "data": {
+      "invalid": "0",
+      "quantity": "0.01",
+      "totals": "Subtotal\n₹1.00\nWooden Subtotal\n₹0.00\nWooden Discount\n%\n₹0.00\nSubtotal after wooden discount\n₹0.00\nOther Subtotal\n₹1.00\nSoft Close Addition\nEnable (0.00%)\n₹0.00\nTotal\n₹1.00\nGST (18%)\n₹0.18\nRound Off\n-₹0.18\nGrand Total\n₹1.00"
+    }
+  },
+  {
+    "context": "admin quantity1.05",
+    "data": {
+      "fields": [
+        {
+          "label": "Width",
+          "message": "",
+          "valid": true,
+          "value": "0"
+        },
+        {
+          "label": "Height",
+          "message": "",
+          "valid": true,
+          "value": "0"
+        },
+        {
+          "label": "Quantity",
+          "message": "",
+          "valid": true,
+          "value": "1.05"
+        },
+        {
+          "label": "Unit rate",
+          "message": "",
+          "valid": true,
+          "value": "1"
+        },
+        {
+          "label": "Wooden discount percentage",
+          "message": "",
+          "valid": true,
+          "value": "0.00"
+        },
+        {
+          "label": "Additional discount amount",
+          "message": "",
+          "valid": true,
+          "value": "0.00"
+        }
+      ],
+      "totals": "Subtotal\n₹1.05\nWooden Subtotal\n₹0.00\nWooden Discount\n%\n₹0.00\nSubtotal after wooden discount\n₹0.00\nOther Subtotal\n₹1.05\nSoft Close Addition\nEnable (0.00%)\n₹0.00\nTotal\n₹1.05\nGST (18%)\n₹0.19\nRound Off\n-₹0.24\nGrand Total\n₹1.00"
+    }
+  },
+  {
+    "context": "admin exponent rejected",
+    "data": {
+      "invalid": "1",
+      "message": "Enter a nonnegative decimal within the supported range; exponent notation is not accepted.",
+      "value": "1e2"
+    }
+  },
+  {
+    "context": "admin overflow rejected",
+    "data": {
+      "invalid": "1",
+      "message": "Enter a nonnegative decimal within the supported range; exponent notation is not accepted."
+    }
+  },
+  {
+    "context": "admin half-cent",
+    "data": {
+      "invalid": "0",
+      "totals": "Subtotal\n₹0.02\nWooden Subtotal\n₹0.00\nWooden Discount\n%\n₹0.00\nSubtotal after wooden discount\n₹0.00\nOther Subtotal\n₹0.02\nSoft Close Addition\nEnable (0.00%)\n₹0.00\nTotal\n₹0.02\nGST (18%)\n₹0.00\nRound Off\n-₹0.02\nGrand Total\n₹0.00"
+    }
+  },
+  {
+    "context": "saved admin revision",
+    "snapshot": "- paragraph: New revision saved.\n- banner:\n  - heading \"Q-2026-000117 · Interior Design Proposal\" [level=1]\n  - link \"Preview / Print\":\n    - /url: http://127.0.0.1:53761/wp-admin/admin-post.php?action=idlm_print_quote&quote_id=117&revision_id=139&_wpnonce=f81d28c79d\n  - link \"Download PDF\":\n    - /url: http://127.0.0.1:53761/wp-admin/admin-post.php?action=idlm_download_quote_pdf&quote_id=117&revision_id=139&_wpnonce=a426332e51\n  - link \"Download CSV\":\n    - /url: http://127.0.0.1:53761/wp-admin/admin-post.php?action=idlm_download_quote_csv&quote_id=117&revision_id=139&_wpnonce=a8167743e6\n  - link \"Download XLSX\":\n    - /url: http://127.0.0.1:53761/wp-admin/admin-post.php?action=idlm_download_quote_xlsx&quote_id=117&revision_id=139&_wpnonce=bcbaec95b1\n  - link \"Edit Quotation\":\n    - /url: http://127.0.0.1:53761/wp-admin/admin.php?page=idlm_quotations&action=edit&quote_id=117\n- navigation:\n  - link \"Quotations\":\n    - /url: http://127.0.0.1:53761/wp-admin/admin.php?page=idlm_quotations&workspace=quotes\n- generic: Customer snapshot\n- strong: Synthetic commercial history\n- generic: Grand total\n- strong: ₹0.00\n- heading \"Sections and line items\" [level=2]\n- paragraph: Section-wise quotation breakdown for this revision.\n- article:\n  - strong: General\n  - table:\n    - rowgroup:\n      - row \"S.No Item Description Width Height Area / Qty Unit Rate Subtotal\":\n        - columnheader \"S.No\"\n        - columnheader \"Item\"\n        - columnheader \"Description\"\n        - columnheader \"Width\"\n        - columnheader \"Height\"\n        - columnheader \"Area / Qty\"\n        - columnheader \"Unit\"\n        - columnheader \"Rate\"\n        - columnheader \"Subtotal\"\n    - rowgroup:\n      - row \"1 Uncategorised Synthetic tiny area 0.00 0.00 0.15 Nos ₹0.10 ₹0.02\":\n        - cell \"1\"\n        - cell \"Uncategorised\":\n          - generic: Uncategorised\n        - cell \"Synthetic tiny area\": Synthetic tiny area\n        - cell \"0.00\"\n        - cell \"0.00\"\n        - cell \"0.15\"\n        - cell \"Nos\"\n        - cell \"₹0.10\"\n        - cell \"₹0.02\"\n    - rowgroup:\n      - row \"General Subtotal ₹0.02\":\n        - columnheader \"General Subtotal\"\n        - columnheader \"₹0.02\"\n- heading \"Internal Notes\" [level=2]\n- generic: PRIVATE-SYNTHETIC-NOTES\n- heading \"Revision previews\" [level=2]\n- list:\n  - strong:\n    - link \"Q-2026-000117-R03\":\n      - /url: http://127.0.0.1:53761/wp-admin/admin.php?page=idlm_quotations&action=view&quote_id=117&revision_id=139\n  - generic: ₹0.00\n  - generic: fixture_owner · 2026-10-07 09:57:18\n  - generic: Synthetic numeric browser half-cent verification\n  - strong:\n    - link \"Q-2026-000117-R02\":\n      - /url: http://127.0.0.1:53761/wp-admin/admin.php?page=idlm_quotations&action=view&quote_id=117&revision_id=132\n  - generic: ₹1.00\n  - generic: fixture_owner · 2026-10-07 09:51:41\n  - strong:\n    - link \"Q-2026-000117-R01\":\n      - /url: http://127.0.0.1:53761/wp-admin/admin.php?page=idlm_quotations&action=view&quote_id=117&revision_id=131\n  - generic: ₹118.00\n  - generic: fixture_owner · 2026-10-07 09:51:41"
+  },
+  {
+    "context": "mobile shortcode 390x844",
+    "data": {
+      "documentWidth": 384,
+      "fields": [
+        {
+          "label": "Width",
+          "step": "0.01",
+          "valid": true,
+          "value": "0.00"
+        },
+        {
+          "label": "Height",
+          "step": "0.01",
+          "valid": true,
+          "value": "0.00"
+        },
+        {
+          "label": "Quantity",
+          "step": "0.01",
+          "valid": true,
+          "value": "0.15"
+        },
+        {
+          "label": "Unit rate",
+          "step": "0.01",
+          "valid": true,
+          "value": "0.10"
+        },
+        {
+          "label": "Wooden discount percentage",
+          "step": "0.01",
+          "valid": true,
+          "value": "0.00"
+        },
+        {
+          "label": "Additional discount amount",
+          "step": "0.01",
+          "valid": true,
+          "value": "0.00"
+        }
+      ],
+      "invalid": "0",
+      "totals": "Subtotal\n₹0.02\nWooden Subtotal\n₹0.00\nWooden Discount\n%\n₹0.00\nSubtotal after wooden discount\n₹0.00\nOther Subtotal\n₹0.02\nSoft Close Addition\nEnable (0.00%)\n₹0.00\nTotal\n₹0.02\nGST (18%)\n₹0.00\nRound Off\n-₹0.02\nGrand Total\n₹0.00",
+      "viewport": 390
+    }
+  },
+  {
+    "context": "mobile negative rejected",
+    "data": {
+      "invalid": "1",
+      "message": "Enter a nonnegative decimal within the supported range; exponent notation is not accepted."
+    }
+  },
+  {
+    "context": "corrected fixture console",
+    "logs": []
+  }
+]
