@@ -3,7 +3,7 @@
 if (!defined('ABSPATH') || strpos(DB_NAME,'idlm_test_')!==0) { exit(1); }
 IDLM_Interakt::init();
 function idlm_interakt_native_fixture(): array {
-    update_option('idlm_interakt_enabled','1'); update_option('idlm_interakt_api_key','synthetic-original');
+    update_option('idlm_interakt_enabled','1');update_option('idlm_whatsapp_notifications_enabled','1'); update_option('idlm_interakt_api_key','synthetic-original');
     update_option('idlm_interakt_mappings',array(array('type'=>'call_status','value'=>'No Answer','event'=>'lead_no_answer')));
     $lead=idlm_lifecycle_fixture(array('phone'=>'9999900011','call_status'=>'No Answer'));
     $key=IDLM_Interakt::trigger_generic_event($lead,'lead_no_answer');
@@ -53,7 +53,7 @@ idlm_integration_test('T09-N-INT004-disabled deleted duplicate reversed owner an
 });
 idlm_integration_test('T09-N-INT004-reenable revokes old jobs and legacy payload callbacks never send',static function():void {
     [$lead,$key]=idlm_interakt_native_fixture();$epoch=IDLM_Interakt_Dispatch::inspect($key)['epoch'];
-    update_option('idlm_interakt_enabled','0');update_option('idlm_interakt_enabled','1');
+    update_option('idlm_interakt_enabled','0');update_option('idlm_interakt_enabled','1');update_option('idlm_whatsapp_notifications_enabled','1');
     idlm_integration_assert_true($epoch!==get_option(IDLM_Interakt_Dispatch::EPOCH));
     $calls=idlm_interakt_native_capture(static function()use($key,$lead){IDLM_Interakt::process_async_track_event($key);IDLM_Interakt::process_async_track_event(array('event'=>'lead_no_answer'),'revoked-key',$lead,0);});
     idlm_integration_assert_same(0,count($calls));idlm_integration_assert_same('cancelled',IDLM_Interakt_Dispatch::inspect($key)['status']);
@@ -70,7 +70,7 @@ idlm_integration_test('T09-N-INT004-required claim and result writes fail withou
 });
 idlm_integration_test('T09-N-INT004-schedule failure and repeated outbox handoff retain one durable identity',static function():void {
     global $wpdb;
-    update_option('idlm_interakt_enabled','1');update_option('idlm_interakt_api_key','synthetic-original');update_option('idlm_interakt_mappings',array(array('type'=>'call_status','value'=>'No Answer','event'=>'lead_no_answer')));
+    update_option('idlm_interakt_enabled','1');update_option('idlm_whatsapp_notifications_enabled','1');update_option('idlm_interakt_api_key','synthetic-original');update_option('idlm_interakt_mappings',array(array('type'=>'call_status','value'=>'No Answer','event'=>'lead_no_answer')));
     $lead=idlm_lifecycle_fixture(array('phone'=>'9999900011'));$deny=static fn($pre,$event)=>$event->hook===IDLM_Interakt_Dispatch::HOOK?false:$pre;
     add_filter('pre_schedule_event',$deny,10,2);
     try{idlm_integration_assert_same(true,IDLM_DB::update_lead($lead,array('call_status'=>'No Answer')));}finally{remove_filter('pre_schedule_event',$deny,10);}
@@ -102,7 +102,7 @@ idlm_integration_test('T09-T16-T17-N-INT004-runtime claims excluded from backups
 idlm_integration_test('T09-N-INT004-failed enable epoch and malformed job fail closed',static function():void {
     [$lead,$key]=idlm_interakt_native_fixture();update_option('idlm_interakt_enabled','0');
     $deny=static fn($new,$old)=>$old;add_filter('pre_update_option_'.IDLM_Interakt_Dispatch::EPOCH,$deny,10,2);
-    try{update_option('idlm_interakt_enabled','1');}finally{remove_filter('pre_update_option_'.IDLM_Interakt_Dispatch::EPOCH,$deny,10);}
+    try{update_option('idlm_interakt_enabled','1');update_option('idlm_whatsapp_notifications_enabled','1');}finally{remove_filter('pre_update_option_'.IDLM_Interakt_Dispatch::EPOCH,$deny,10);}
     idlm_integration_assert_same('0',get_option('idlm_interakt_enabled'));
     update_option($key,array('status'=>'queued'));
     $calls=idlm_interakt_native_capture(static function()use($key){idlm_integration_assert_same(false,IDLM_Interakt::process_async_track_event($key));});idlm_integration_assert_same(0,count($calls));

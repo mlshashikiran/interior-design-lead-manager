@@ -27,13 +27,15 @@ final class IDLM_Interakt_Batch {
 
     public static function enqueue($lead_id, $event, $request_id, $delay = 0) {
         global $wpdb;
-        if (!self::allowed_event($event)) { return false; }
+        if (!IDLM_Settings::notification_enabled('idlm_whatsapp_notifications_enabled') || !self::allowed_event($event)) { return false; }
+        $epoch = IDLM_WhatsApp_Inbox::setting(IDLM_Interakt_Dispatch::EPOCH, '');
+        if (!is_string($epoch)) { return false; }
         // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0539: enqueue(): fixed prefixed leads/options tables with bound IDs/keys; opaque queued work rechecks current lead, eligibility and recovery generation.
         $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         if (!$lead || empty($lead->phone) || !empty($lead->is_duplicate)) { return false; }
         $key = 'idlm_interakt_batch_' . hash('sha256', $request_id . '|' . $lead_id . '|' . $event);
-        $job = array('lead_id' => (int) $lead_id, 'event' => $event, 'status' => 'queued', 'attempts' => 0, 'generation' => IDLM_Recovery_Guard::generation());
+        $job = array('lead_id' => (int) $lead_id, 'event' => $event, 'status' => 'queued', 'attempts' => 0, 'generation' => IDLM_Recovery_Guard::generation(), 'notification_epoch' => $epoch);
         // Unique option insertion makes repeated/concurrent HTTP submissions idempotent.
         if (!add_option($key, $job, '', false)) { return 'existing'; }
         if (!self::schedule($key, $delay)) {
@@ -67,7 +69,7 @@ final class IDLM_Interakt_Batch {
             $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $job['lead_id']));
             // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             $api_key = IDLM_Secret_Store::get('idlm_interakt_api_key', '', true);
-            if (!$lead || empty($lead->phone) || !empty($lead->is_duplicate) || '1' !== get_option('idlm_interakt_enabled', '0') || !$api_key || !self::allowed_event($job['event'])) {
+            if (!$lead || empty($lead->phone) || !empty($lead->is_duplicate) || !IDLM_Settings::notification_enabled('idlm_whatsapp_notifications_enabled') || ($job['notification_epoch'] ?? null) !== IDLM_WhatsApp_Inbox::setting(IDLM_Interakt_Dispatch::EPOCH, '') || '1' !== get_option('idlm_interakt_enabled', '0') || !$api_key || !self::allowed_event($job['event'])) {
                 $job['status'] = 'cancelled';
                 update_option($key, $job, false);
                 return;

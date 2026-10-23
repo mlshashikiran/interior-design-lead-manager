@@ -184,7 +184,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                                 </label>
                                 <h3 class="idlm-heading-flush">WhatsApp Automation (Interakt) Integration</h3>
                             </div>
-                            <p class="idlm-card-desc">Configure WhatsApp campaign event triggers via the Interakt Event Track API when specific lead call statuses, stages, or quality fields are changed.</p>
+                            <p class="idlm-card-desc">Configure Interakt credentials, incoming replies and campaign event mappings. Outgoing WhatsApp automations also require General → Notifications → Enable outgoing WhatsApp automations.</p>
                             
                             <div class="idlm-form-group" data-idlm-ui="mb-5">
                                 <label for="idlm-interakt-api-key" class="idlm-settings-label">Interakt write API key</label>

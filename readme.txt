@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.102.88
+Stable tag: 1.102.89
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,9 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 
 == Changelog ==
 
+= 1.102.89 =
+* Centralize notification controls and require separate opt-in for outgoing WhatsApp automation. Preserve incoming replies and hosting fallbacks. Builder: Shashi.
+
 = 1.102.88 =
 * Complete focused M6 ownership boundaries and validate administrator role-permission inputs at the authenticated handler. Builder: Shashi.
 
@@ -120,4 +123,6 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 
 Full release history is distributed in CHANGELOG.md. The previous complete readme is retained in the engineering evidence and docs/legacy/README-FULL.txt.
 
-Single-server qualification candidate 1.102.88: current local WordPress 7.1.3 / PHP 8.5.12 runs exercise the selected 25–50-user / 50k-lead workload on the documented reference host. These results do not approve deployment or replace exact-revision CI. Network activation is rejected before schema writes; single-site activation remains the supported topology. See the supplied release notes for measured limits and operational acceptance.
+Reference workload qualification (1.102.88): current local WordPress 7.1.3 / PHP 8.5.12 runs exercise the selected 25–50-user / 50k-lead workload on the documented reference host. These results do not approve deployment or replace exact-revision CI. Network activation is rejected before schema writes; single-site activation remains the supported topology. See the supplied release notes for measured limits and operational acceptance.
+
+Notification controls: General → Notifications lets an administrator enable handoff emails, routing alert emails and outgoing WhatsApp automations independently. Defaults are off. Outgoing WhatsApp now requires explicit opt-in, including upgrades with Interakt already configured; incoming replies remain independent. Live email/WhatsApp delivery testing is optional. WordPress cron and database transients remain supported; OPcache, dedicated workers and persistent object caching are optional hosting optimizations.

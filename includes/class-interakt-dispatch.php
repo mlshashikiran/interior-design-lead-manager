@@ -9,6 +9,7 @@ final class IDLM_Interakt_Dispatch {
 
     public static function init() {
         add_filter('pre_update_option_idlm_interakt_enabled', array(__CLASS__, 'enable_epoch'), 10, 2);
+        add_filter('pre_update_option_idlm_whatsapp_notifications_enabled', array(__CLASS__, 'enable_epoch'), 10, 2);
     }
 
     /** Re-enabling invalidates earlier work; refuse enable if the epoch cannot be persisted. */
@@ -80,7 +81,7 @@ final class IDLM_Interakt_Dispatch {
 
     private static function eligible($job, $lead) {
         if (!$lead || !empty($lead->is_duplicate) || empty($lead->phone) || (int) ($lead->assigned_rep_id ?? 0) !== $job['owner']) { return false; }
-        if ('1' !== self::option('idlm_interakt_enabled', '0') || !self::option('idlm_interakt_api_key', '') || self::option(self::EPOCH, '') !== $job['epoch']) { return false; }
+        if (!IDLM_Settings::notification_enabled('idlm_whatsapp_notifications_enabled') || '1' !== self::option('idlm_interakt_enabled', '0') || !self::option('idlm_interakt_api_key', '') || self::option(self::EPOCH, '') !== $job['epoch']) { return false; }
         $rule = $job['rule'];
         return in_array($rule, self::rules($job['event']), true) && (string) ($lead->{$rule['field']} ?? '') === $rule['value'];
     }

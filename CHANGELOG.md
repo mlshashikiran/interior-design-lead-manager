@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.102.89] - 2026-10-23
+
+### Changed
+
+- Put notification controls in General settings. Require explicit opt-in for outgoing WhatsApp automations independently of incoming replies; check committed consent before queued or direct delivery, and cancel stale WhatsApp intent after re-enabling. Preserve existing email preferences and default all missing choices off. Builder: Shashi.
+- Clarify portable WordPress hosting support: WP-Cron and database transient fallbacks remain supported; dedicated workers, OPcache and persistent cache are optional capacity optimizations. Live email/WhatsApp delivery testing is optional at the owner’s request. Builder: Shashi.
+
 ## [1.102.88] - 2026-10-22
 
 ### Changed

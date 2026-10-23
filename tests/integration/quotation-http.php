@@ -118,7 +118,17 @@ try {
         $sessions[$actor] = json_decode(idlm_http_request('/session', array(), $actor, false)['body'], true);
         idlm_http_check(!empty($sessions[$actor]['save']), 'Cookie-authenticated session missing');
     }
-    echo 'ENV PHP=' . PHP_VERSION . ' WP=' . $wp_version . ' DB=' . $wpdb->db_version() . " scheduler=WP-Cron cache=off\n";
+    echo 'ENV PHP=' . PHP_VERSION . ' WP=' . $wp_version . ' DB=' . $wpdb->db_version() . ' memory_limit=' . ini_get('memory_limit') . ' scheduler=' . (function_exists('as_schedule_single_action') ? 'ActionScheduler' : 'WP-Cron') . ' cache=' . (wp_using_ext_object_cache() ? 'on' : 'off') . ' opcache_cli=' . ini_get('opcache.enable_cli') . "\n";
+    if (in_array('--notifications-only', $argv, true)) {
+        idlm_http_check(idlm_http_request('/login',array('user_login'=>'idlm_admin','user_password'=>'idlm-integration-password'),'admin')['status']===302,'Administrator login failed');
+        require __DIR__ . '/notification-control-http-cases.php';
+        echo "$passed passed, $failed failed\n";
+        if (in_array('--hold',$argv,true)) {
+            echo 'BROWSER URL='.$config['http_url'].' STOP='.$config['content_dir']."/stop\n";
+            $deadline=microtime(true)+900;while(!is_file($config['content_dir'].'/stop') && microtime(true)<$deadline){usleep(100000);}
+        }
+        idlm_http_cleanup();exit($failed?1:0);
+    }
     if (in_array('--attribution-only', $argv, true)) {
         idlm_http_check(idlm_http_request('/login',array('user_login'=>'idlm_admin','user_password'=>'idlm-integration-password'),'admin')['status']===302,'Administrator login failed');
         $sessions['admin']=json_decode(idlm_http_request('/session',array(),'admin',false)['body'],true);
@@ -416,6 +426,7 @@ try {
     require __DIR__ . '/activity-controller-http-cases.php';
     require __DIR__ . '/role-permissions-http-cases.php';
     require __DIR__ . '/attribution-opt-in-http-cases.php';
+    require __DIR__ . '/notification-control-http-cases.php';
     { $errors=is_file($config['content_dir'].'/php-errors.log') ? file_get_contents($config['content_dir'].'/php-errors.log') : ''; idlm_http_case('T10-H-warning-free-affected-requests',static function() use($errors): void { idlm_http_check(trim($errors)==='', 'PHP diagnostics: ' . $errors); }); }
     echo "$passed passed, $failed failed\n";
     if (in_array('--hold', $argv,true)) { if (getenv('IDLM_TEST_DOCUMENT_EVIDENCE_DIR') && function_exists('idlm_document_http_settings')) { update_option('idlm_quote_settings', idlm_document_http_settings('Changed live', 'USD'), false); } echo 'BROWSER URL='.$config['http_url'].' LEAD='.$leads[4].' QUOTE='.$quotes[4].' STOP='.$config['content_dir']."/stop\n"; $deadline=microtime(true)+900; while (!is_file($config['content_dir'].'/stop') && microtime(true)<$deadline) { usleep(100000); } }

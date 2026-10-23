@@ -865,6 +865,7 @@ try {
     require_once __DIR__ . '/audience-retry-contracts.php';
     require_once __DIR__ . '/secret-store-contracts.php';
 
+    require_once __DIR__ . '/notification-control-contracts.php';
     require_once __DIR__ . '/runtime-topology-contracts.php';
 
     $passed = 0;

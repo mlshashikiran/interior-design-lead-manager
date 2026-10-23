@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_Handoff_Notifications {
     public static function send($lead_id, $old_owner_id, $new_owner_id, $activity_message) {
-        if ('1' !== IDLM_Settings::get('idlm_handoff_notifications_enabled', '0')) {
+        if (!IDLM_Settings::notification_enabled('idlm_handoff_notifications_enabled')) {
             return;
         }
 
@@ -31,6 +31,7 @@ final class IDLM_Handoff_Notifications {
         if ($lead && !empty($lead->preferred_studio)) {
             $body .= "\nPreferred Studio: " . $lead->preferred_studio;
         }
+        if (!IDLM_Settings::notification_enabled('idlm_handoff_notifications_enabled')) { return; }
         $sent = wp_mail(array_values(array_unique($recipients)), $subject, $body);
         if (!$sent && IDLM_Lead_Outbox::dispatching()) { throw new RuntimeException('Handoff notification was not accepted.'); }
     }

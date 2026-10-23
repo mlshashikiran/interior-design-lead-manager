@@ -46,7 +46,7 @@ idlm_integration_test('T08-N-INT010 Meta Google LinkedIn requests use current au
     }
 });
 idlm_integration_test('T08-T09-N-INT010 audience Interakt request echoes and backups contain no token',static function():void {
-    global $wpdb;$secret='synthetic-audience-010';IDLM_Secret_Store::set('idlm_meta_access_token',$secret);$lead=idlm_aud_lead();$rule=idlm_aud_rule();
+    global $wpdb;update_option('idlm_whatsapp_notifications_enabled','1');$secret='synthetic-audience-010';IDLM_Secret_Store::set('idlm_meta_access_token',$secret);$lead=idlm_aud_lead();$rule=idlm_aud_rule();
     $calls=array();$f=static function($pre,$args,$url)use(&$calls,$secret){$calls[]=array($url,$args);return array('response'=>array('code'=>400),'body'=>'{"error":{"message":"Echo '.$secret.'"}}','headers'=>array());};add_filter('pre_http_request',$f,PHP_INT_MAX,3);
     try{$r=IDLM_Recovery_Guard::run(static function()use($wpdb,$lead,$rule){return IDLM_Audiences::send_page(array($wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id=%d",$lead))),$rule);});$sent=IDLM_Interakt::send_track_event_to_interakt(array('synthetic'=>true),$secret,$lead);}finally{remove_filter('pre_http_request',$f,PHP_INT_MAX);}
     idlm_integration_assert_same(2,count($calls));idlm_integration_assert_true(strpos($calls[0][0],'access_token')===false);idlm_integration_assert_same('Bearer '.$secret,$calls[0][1]['headers']['Authorization']);idlm_integration_assert_true(strpos(wp_json_encode($r),$secret)===false);

@@ -192,10 +192,7 @@ $idlm_role_labels = wp_roles()->get_names();
                                 <p class="description">Off by default to avoid an immediate bulk handoff.</p>
                             </div>
                             <div class="idlm-form-group">
-                                <label><input type="checkbox" name="handoff_notifications_enabled" value="1" <?php checked($idlm_handoff_notifications_enabled, '1'); ?>> Email previous and new owners after handoff</label>
-                            </div>
-                            <div class="idlm-form-group">
-                                <label><input type="checkbox" name="routing_exception_notifications_enabled" value="1" <?php checked($idlm_routing_exception_notifications_enabled, '1'); ?>> Email the administrator about routing exceptions</label>
+                                <p class="description">Manage handoff and routing email notifications in General → Notifications.</p>
                             </div>
                             <div class="idlm-form-group">
                                 <span class="idlm-form-label">Working hours</span>

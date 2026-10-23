@@ -1024,7 +1024,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         if (!IDLM_Interakt_Batch::allowed_event($event)) {
             wp_send_json_error('Save a valid Interakt event mapping before syncing.');
         }
-        if ('1' !== get_option('idlm_interakt_enabled', '0') || !IDLM_Secret_Store::get('idlm_interakt_api_key', '', true)) {
+        if (!IDLM_Settings::notification_enabled('idlm_whatsapp_notifications_enabled') || '1' !== get_option('idlm_interakt_enabled', '0') || !IDLM_Secret_Store::get('idlm_interakt_api_key', '', true)) {
             wp_send_json_error('Interakt automation is disabled or API key is missing.');
         }
         $queued = 0;

@@ -208,3 +208,7 @@ Builder: Shashi. `IDLM_Admin_Activity_Controller` owns `ajax_get_lead_activity()
 ## Completed M6 boundaries — 1.102.88
 
 Shashi: task transport lives in `IDLM_Admin_Task_Controller`; integration credentials/permissions in `IDLM_Integration_Auth`; feed transport in `IDLM_Google_Feed_Controller`; CAPI provider requests in `IDLM_CAPI_Transport`; conversion CSV data in `IDLM_Google_Conversion_Feed`. Public callbacks retain original signatures. Kanban now returns up to 100 cards plus signed next-page metadata and full filtered stage summaries. [Exit and production evidence](M6-M7-RELEASE-CANDIDATE.md).
+
+## Notification controls — 1.102.89
+
+Builder: Shashi. General settings expose independent existing handoff/routing email preferences and default-off outgoing WhatsApp consent. `IDLM_Settings::notification_enabled()` reads committed allowlisted consent for workers and direct delivery. `IDLM_Interakt_Dispatch` rotates its epoch on outgoing opt-in; ordinary and batch delivery refuse stale epochs, while incoming Interakt webhook authentication remains controlled separately. [Behavior, tests and portable hosting contract](NOTIFICATIONS-AND-HOSTING.md).

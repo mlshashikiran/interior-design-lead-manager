@@ -71,7 +71,7 @@ idlm_test('Interakt backfill queues id-only jobs and deduplicates HTTP submissio
     $GLOBALS['idlm_test_http_code'] = 200;
     $GLOBALS['idlm_test_queue_failure'] = false;
     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 7))));
-    update_option('idlm_interakt_enabled', '1');
+    update_option('idlm_interakt_enabled', '1');update_option('idlm_whatsapp_notifications_enabled','1');
     update_option('idlm_interakt_api_key', 'test-secret');
     update_option('idlm_interakt_mappings', array(array('event' => 'qualified')));
     assert_same('queued', IDLM_Interakt_Batch::enqueue(1, 'qualified', 'request_123'));
@@ -91,7 +91,7 @@ idlm_test('Interakt backfill retries are bounded and removed leads never send', 
     $GLOBALS['idlm_test_http_code'] = 500;
     $GLOBALS['idlm_test_queue_failure'] = false;
     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture()));
-    update_option('idlm_interakt_enabled', '1');
+    update_option('idlm_interakt_enabled', '1');update_option('idlm_whatsapp_notifications_enabled','1');
     update_option('idlm_interakt_api_key', 'test-secret');
     update_option('idlm_interakt_mappings', array(array('event' => 'qualified')));
     IDLM_Interakt_Batch::enqueue(1, 'qualified', 'retry_123');

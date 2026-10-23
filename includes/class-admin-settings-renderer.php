@@ -332,6 +332,7 @@ class IDLM_Admin_Settings_Renderer {
             'reminder_rules' => $reminder_rules,
             'lead_connector' => IDLM_Lead_Connector::settings_context(),
             'interakt_enabled' => $interakt_enabled,
+            'whatsapp_notifications_enabled' => get_option('idlm_whatsapp_notifications_enabled', '0'),
             'meta_webhook_enabled' => $meta_webhook_enabled,
             'audience_rules' => $audience_rules,
             'reps' => $reps,

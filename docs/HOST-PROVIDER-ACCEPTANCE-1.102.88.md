@@ -1,5 +1,7 @@
 # Host and provider acceptance repairs — 1.102.88
 
+**Scope update:** [1.102.89 notification/hosting contract](NOTIFICATIONS-AND-HOSTING.md) supersedes the release prerequisites below. Host-specific tuning is operational advice; live email/WhatsApp testing is optional at Shashi’s request. This document retains the earlier checkpoint.
+
 Author / Builder: Shashi. Date: 2026-10-23.
 
 **Production acceptance remains open. No deployment was performed.** Authenticated host observations and business data are retained only in the ignored local `build/host-provider-acceptance-1.102.88/` handoff. They are excluded from the public commit and release package. This document records reproducible code repairs, synthetic tests and general operator gates.

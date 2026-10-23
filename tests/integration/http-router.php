@@ -15,8 +15,8 @@ if (preg_match('~^/(wp-includes|wp-admin)/(?:[^.][^/]*/)*[^/]+\.(js|css|png|svg|
     header('Content-Type: ' . (substr($path, -3) === '.js' ? 'application/javascript' : (substr($path, -4) === '.css' ? 'text/css' : 'application/octet-stream')));
     readfile($config['wp_root'] . ltrim($path, '/')); exit;
 }
-if (preg_match('~^/candidate-assets/(css|js)/[a-zA-Z0-9_.-]+\.(css|js)$~', $path)) {
-    header('Content-Type: ' . (substr($path, -3) === '.js' ? 'application/javascript' : 'text/css'));
+if (preg_match('~^/candidate-assets/(css|js|fonts)/[a-zA-Z0-9_.-]+\.(css|js|woff2?)$~', $path)) {
+    header('Content-Type: ' . (substr($path, -3) === '.js' ? 'application/javascript' : (substr($path, -4) === '.css' ? 'text/css' : 'font/woff2')));
     readfile($config['plugin_root'] . 'assets/' . substr($path, strlen('/candidate-assets/'))); exit;
 }
 // Actual static uploads for the owned fixture only; demonstrates legacy bypass.
@@ -205,7 +205,8 @@ if ('/settings-workspace' === $path) {
     wp_enqueue_script('idlm-settings');
     // Run protected settings handling before the fixture emits any shell bytes.
     ob_start(); IDLM_Admin_Settings_Renderer::render(); $settings_markup = ob_get_clean();
-    echo '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/candidate-assets/css/admin-style.css"></head><body>';
+    echo '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">';
+    wp_head(); echo '</head><body>';
     echo $settings_markup; wp_print_footer_scripts(); echo '</body></html>'; exit;
 }
 if ('/leads-workspace' === $path || '/leads-admin-workspace' === $path) {

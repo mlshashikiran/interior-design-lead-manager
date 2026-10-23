@@ -282,7 +282,10 @@ final class IDLM_Operational_Health {
                 get_option('idlm_linkedin_conversion_id', ''), IDLM_Secret_Store::get('idlm_linkedin_access_token', '', true),
             )),
             array('enabled' => '1' === (string) get_option('idlm_interakt_enabled', '0'), 'values' => array(
-                IDLM_Secret_Store::get('idlm_interakt_api_key', '', true), IDLM_Secret_Store::get('idlm_interakt_webhook_secret', '', true),
+                IDLM_Secret_Store::get('idlm_interakt_webhook_secret', '', true),
+            )),
+            array('enabled' => '1' === (string) get_option('idlm_interakt_enabled', '0') && IDLM_Settings::notification_enabled('idlm_whatsapp_notifications_enabled'), 'values' => array(
+                IDLM_Secret_Store::get('idlm_interakt_api_key', '', true),
             )),
             array('enabled' => '1' === (string) get_option('idlm_meta_webhook_enabled', '0'), 'values' => array(
                 IDLM_Secret_Store::get('idlm_meta_webhook_verify_token', '', true), IDLM_Secret_Store::get('idlm_meta_webhook_app_secret', '', true),

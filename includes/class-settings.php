@@ -10,6 +10,15 @@ class IDLM_Settings {
     const ROUTING_OPTION = 'idlm_routing_settings';
     const WHITE_LABEL_OPTION = 'idlm_white_label_settings';
 
+    /** Check committed notification consent immediately before enqueue/delivery. */
+    public static function notification_enabled($option_name) {
+        if (!in_array($option_name, array('idlm_handoff_notifications_enabled', 'idlm_routing_exception_notifications_enabled', 'idlm_whatsapp_notifications_enabled'), true)) { return false; }
+        global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Prepared allowlisted consent option; a worker must see a committed disable rather than an earlier cached snapshot.
+        $value = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $option_name));
+        return !$wpdb->last_error && '1' === (string) $value;
+    }
+
     public static function init() {
         if (self::VERSION !== get_option(self::VERSION_OPTION, '')) {
             self::sync_routing_from_legacy();

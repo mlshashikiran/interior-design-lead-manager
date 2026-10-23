@@ -1745,6 +1745,7 @@ require_once __DIR__ . '/release-contracts.php';
 require_once __DIR__ . '/runtime-support-contracts.php';
 require_once __DIR__ . '/high-priority-contracts.php';
 require_once __DIR__ . '/interakt-dispatch-contracts.php';
+require_once __DIR__ . '/notification-control-contracts.php';
 require_once __DIR__ . '/capi-retry-contracts.php';
 require_once __DIR__ . '/capi-retention-contracts.php';
 require_once __DIR__ . '/whatsapp-inbound-contracts.php';

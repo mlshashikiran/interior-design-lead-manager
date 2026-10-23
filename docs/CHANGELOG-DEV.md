@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.102.89 — notification control and portable hosting (2026-10-23)
+
+Builder: Shashi. [Notification and hosting contract](NOTIFICATIONS-AND-HOSTING.md). Centralize existing email preferences and a new default-off WhatsApp opt-in under General settings. Recheck committed consent for delivery, cancel old WhatsApp queue epochs on re-enable, and keep authenticated incoming replies independent. Preserve WP-Cron/transient fallbacks and checked resource limits. The owner waived live email/WhatsApp delivery tests; host-specific resource tuning and panel access are not plugin-build prerequisites. Tests use intercepted transports, real settings authorization, independent sessions and a fallback runtime initialized with 128 MiB. No live configuration change or deployment.
+
 ## 1.102.88 — actual host/provider acceptance repairs (2026-10-23)
 
 Builder: Shashi. [Acceptance repairs, synthetic verification and general operator gates](HOST-PROVIDER-ACCEPTANCE-1.102.88.md). Reproduce and fix real Action Scheduler retention continuation, deduplicate pending jobs under a session fence, retain WP-Cron fallback and flag stalled health. Correct GA4 numeric CRM client identity and space-separated wire names while preserving click attribution, Google Ads labels and receipt identity. Accept encoded Interakt dashboard keys once, retaining legacy form. Add PHP 8.3 host coverage and a pinned real-AS native CI acceptance step. Runtime bytes change; the previous CI/installed-load evidence is historical and does not attest the repaired artifact. No live changes or deployment.

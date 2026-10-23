@@ -1,0 +1,56 @@
+{
+  "author_builder": "Shashi",
+  "version": "1.102.89",
+  "scope": "Local precommit verification; exact final revision CI remains required.",
+  "fast": {
+    "passed": 395,
+    "failed": 0
+  },
+  "native": {
+    "passed": 341,
+    "failed": 0
+  },
+  "http": {
+    "passed": 471,
+    "failed": 0
+  },
+  "focused_native": {
+    "passed": 5,
+    "failed": 0,
+    "includes_fresh_schema": true
+  },
+  "focused_http": {
+    "passed": 3,
+    "failed": 0
+  },
+  "runtime": {
+    "wordpress": "7.1.3",
+    "php": "8.5.12",
+    "mysql": "8.4.0",
+    "initial_memory_limit": "128M",
+    "scheduler": "WP-Cron",
+    "persistent_cache": false,
+    "opcache_cli": false
+  },
+  "browser": {
+    "desktop": [
+      1440,
+      1000
+    ],
+    "mobile": [
+      390,
+      844
+    ],
+    "opt_in_saved": true,
+    "opt_out_saved": true,
+    "notification_controls": 3,
+    "minimum_touch_row_height_px": 52,
+    "horizontal_overflow": false,
+    "page_errors": [],
+    "fixture_head_and_font_loading_corrected_before_final_check": true
+  },
+  "live_email_whatsapp_testing": "optional; owner waived as release prerequisite",
+  "hosting_specific_tuning": "optional capacity/reliability advice, not plugin-build prerequisite",
+  "no_live_provider_or_mail_delivery": true,
+  "deployment_performed": false
+}

@@ -119,6 +119,7 @@ class IDLM_Interakt {
     }
 
     private static function send_track_event_to_interakt_work($payload, $api_key, $lead_id = 0) {
+        if (!IDLM_Settings::notification_enabled('idlm_whatsapp_notifications_enabled')) { return false; }
         $endpoint = 'https://api.interakt.ai/v1/public/track/events/';
         // Dashboard Secret Keys already encode username:password. Retain the
         // historical raw-username form for existing installations.

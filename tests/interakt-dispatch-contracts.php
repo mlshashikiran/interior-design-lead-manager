@@ -3,7 +3,7 @@
 function idlm_dispatch_fast_fixture() {
     $GLOBALS['idlm_test_http_calls']=array(); $GLOBALS['idlm_test_http_code']=200; $GLOBALS['idlm_test_queue_failure']=false;
     $GLOBALS['wpdb']->seed('idlm_leads',array(lead_fixture(array('call_status'=>'No Answer','phone'=>'9999900011'))));
-    update_option('idlm_interakt_enabled','1'); update_option('idlm_interakt_api_key','synthetic-original');
+    update_option('idlm_interakt_enabled','1');update_option('idlm_whatsapp_notifications_enabled','1'); update_option('idlm_interakt_api_key','synthetic-original');
     return IDLM_Interakt::trigger_generic_event(1,'lead_no_answer');
 }
 idlm_test('Interakt sends the documented encoded dashboard key once and retains legacy raw-key compatibility',static function():void {

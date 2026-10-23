@@ -21,6 +21,21 @@ $idlm_value_labels = isset($context['value_labels']) ? $context['value_labels'] 
                     <!-- Tab 1: General Settings -->
                     <section id="settings-general" class="idlm-settings-tab-content <?php echo $idlm_active_tab === 'general' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-general" <?php echo $idlm_active_tab === 'general' ? '' : 'hidden'; ?>>
                         <div class="idlm-grid-charts">
+                            <article class="idlm-card" id="idlm-notification-settings">
+                                <h3>Notifications</h3>
+                                <p class="idlm-card-desc">Choose which notifications this plugin can send. All are off by default. Save settings to apply changes.</p>
+                                <div class="idlm-form-group">
+                                    <label class="idlm-checkbox-row"><input type="checkbox" name="handoff_notifications_enabled" value="1" <?php checked($context['handoff_notifications_enabled'] ?? '0', '1'); ?>> Email previous and new owners after handoff</label>
+                                </div>
+                                <div class="idlm-form-group">
+                                    <label class="idlm-checkbox-row"><input type="checkbox" name="routing_exception_notifications_enabled" value="1" <?php checked($context['routing_exception_notifications_enabled'] ?? '0', '1'); ?>> Email the administrator about routing exceptions</label>
+                                </div>
+                                <div class="idlm-form-group">
+                                    <label class="idlm-checkbox-row"><input type="checkbox" name="whatsapp_notifications_enabled" value="1" <?php checked($context['whatsapp_notifications_enabled'] ?? '0', '1'); ?>> Enable outgoing WhatsApp automations</label>
+                                    <p class="description">Requires the Interakt integration and event mappings in Automation. Turning this off stops new sends and queued work; incoming replies can still be captured. Enabling it does not send missed events automatically.</p>
+                                </div>
+                                <p class="description">Notifications already being delivered cannot be recalled. CRM records, assignments and on-screen reminders work with these switches off.</p>
+                            </article>
                             <article class="idlm-card idlm-settings-general-metrics">
                                 <h3>Firm Metrics & Targets</h3>
                                 <div class="idlm-form-grid three" data-idlm-ui="grid-three">

@@ -178,6 +178,7 @@ class IDLM_Admin_Settings_Controller {
         update_option('idlm_handoff_task_policy', in_array($handoff_task_policy, array('transfer', 'retain', 'complete_qualification'), true) ? $handoff_task_policy : 'transfer');
         update_option('idlm_handoff_notifications_enabled', isset($_POST['handoff_notifications_enabled']) ? '1' : '0');
         update_option('idlm_routing_exception_notifications_enabled', isset($_POST['routing_exception_notifications_enabled']) ? '1' : '0');
+        update_option('idlm_whatsapp_notifications_enabled', isset($_POST['whatsapp_notifications_enabled']) && is_string($_POST['whatsapp_notifications_enabled']) && '1' === sanitize_text_field(wp_unslash($_POST['whatsapp_notifications_enabled'])) ? '1' : '0');
         update_option('idlm_max_active_leads_per_rep', isset($_POST['max_active_leads_per_rep']) ? min(10000, max(0, absint(wp_unslash($_POST['max_active_leads_per_rep'])))) : 30);
         update_option('idlm_working_hours_start', isset($_POST['working_hours_start']) ? sanitize_text_field(wp_unslash($_POST['working_hours_start'])) : '09:00');
         update_option('idlm_working_hours_end', isset($_POST['working_hours_end']) ? sanitize_text_field(wp_unslash($_POST['working_hours_end'])) : '18:00');
