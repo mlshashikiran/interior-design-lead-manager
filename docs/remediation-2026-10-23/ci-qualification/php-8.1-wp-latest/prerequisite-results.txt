@@ -1,0 +1,6 @@
+PASS REL005 minimum metadata aligns and CI targets declared floor with resolved runtime evidence
+PASS REL005 missing PDF modules or renderer reject before vendor loading and binary output
+PASS REL005 missing ZIP or temporary storage returns checked XLSX failure
+PASS REL005 available ZIP produces a parsed workbook and removes temporary output
+PASS REL005 unavailable crypto preserves stored credentials and denies replacement or use
+5 passed, 0 failed

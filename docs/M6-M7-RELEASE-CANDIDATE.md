@@ -2,7 +2,7 @@
 
 Author / Builder: Shashi. Date: 2026-10-22.
 
-**M6 is COMPLETE.** All seven items in the [finite exit inventory](M6-EXIT-INVENTORY.md) have focused owners and verified compatibility delegates. M7 has advanced to measured single-server qualification. M8 / REL-001 remain open until the complete reviewed source has matching authentic remote CI and final candidate promotion evidence. A local rehearsal ZIP is not approved for deployment.
+**M6 is COMPLETE.** All seven items in the [finite exit inventory](M6-EXIT-INVENTORY.md) have focused owners and verified compatibility delegates. M7 has advanced to measured single-server qualification. M8 / REL-001 remain open until the complete reviewed source has matching authentic remote CI and final candidate promotion evidence. A local rehearsal ZIP is not approved for deployment. **2026-10-23 update:** [authentic CI and candidate promotion now pass](CI-QUALIFIED-BUILD-1.102.88.md); REL-001 is IMPLEMENTED, with actual-site acceptance and deployment pending. The sections below retain their local qualification checkpoint and archive identity.
 
 ## Ownership and compatibility
 
@@ -76,6 +76,6 @@ The release inventory contains **464 files**. Frozen ZIP SHA-256: `e23945882160c
 1. Push the reviewed release branch to the **public** GitHub repository only with Shashi's explicit approval, then complete the supported matrix and download/verify its exact artifact and provenance. Never synthesize CI environment flags locally.
 2. Run the candidate verifier against that revision and CI artifact; bind the installed-runtime evidence to its runtime byte inventory. REL-001 and audit closure remain open until these gates are satisfied.
 3. Confirm the real server matches the qualified resource/runtime envelope, HTTPS/private-file protection, debug display off, protected secrets/backups, one-minute scheduler, retention policy, health monitoring and rollback owner. Rehearse the real site's upgrade/backup restore before rollout. The synthetic snapshot does not establish the site's RPO/RTO.
-4. Live provider credentials/delivery, real email/WhatsApp, long-duration soak and the production observation window remain deployment acceptance. No real customer/provider traffic, public release, tag, push or production deployment has occurred in this task.
+4. Live provider credentials/delivery, real email/WhatsApp, long-duration soak and the production observation window remain deployment acceptance. No real customer/provider traffic, public release, tag or production deployment has occurred. The reviewed branch was subsequently pushed with explicit authorization; its CI outcome is recorded in the update above.
 
 Use the existing controlled-release/runbook documents. Deployment requires separate authorization and the saved production connection's domain must be confirmed before any mutation.

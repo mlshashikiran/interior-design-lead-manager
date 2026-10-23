@@ -1,7 +1,7 @@
 # Controlled Production Release
 
 Author / Builder: Shashi  
-Status: Release tooling implemented; current audit candidate blocked and unapproved
+Status: CI candidate and promotion verified; actual-site acceptance and deployment unapproved
 Release checkpoint: 1.102.88
 Started: 2026-08-31
 
@@ -103,7 +103,7 @@ Builder: Shashi. [REL-007 static completion, candidate 1.102.83](AUDIT-REMEDIATI
 
 ## Current candidate — 1.102.88
 
-Shashi: M6 is complete; selected-topology local qualification and exact installed-runtime evidence are in [the candidate report](M6-M7-RELEASE-CANDIDATE.md). Historical checkpoints below retain original outcomes. Source reconciliation and authentic CI for the reviewed revision are still required. This is a public GitHub repository: pushing requires explicit permission under workspace AGENTS.md. No manifest flag can substitute for the remote matrix. Production deployment and real credential/provider acceptance remain separately controlled.
+Shashi: M6 is complete; selected-topology local qualification and exact installed-runtime evidence are in [the candidate report](M6-M7-RELEASE-CANDIDATE.md). Historical checkpoints below retain original outcomes. Shashi explicitly authorized the public branch push on 2026-10-23. Source reconciliation and authentic CI/promotion now pass; see [the exact CI checkpoint](CI-QUALIFIED-BUILD-1.102.88.md). No manifest flag substitutes for that remote matrix. Production deployment and real credential/provider acceptance remain separately controlled.
 
 ## CI build-host prerequisite — 2026-10-23
 

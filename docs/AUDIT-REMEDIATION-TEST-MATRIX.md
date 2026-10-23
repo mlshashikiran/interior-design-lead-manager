@@ -1,8 +1,8 @@
 # Remediation regression and qualification matrix
 
 Author: **Shashi**. Prepared: **2026-10-06**.
-Status: **Focused remediation children executed locally; whole groups and exact release qualification remain incomplete.**
-Latest children: [M6 activity controller, candidate 1.102.87](AUDIT-REMEDIATION-ACTIVITY-CONTROLLER-SLICE.md). Extract four byte-identical timeline/comment handlers (232 lines) behind both stable facades. 387 fast / eight pre-extraction and eight post-extraction focused HTTP (WP 6.6) / 461 full HTTP-stdio (WP 7.1.3) cases and eight PHP lints PASS. The 457-file ZIP matches source. Default Plugin Check retains the same nine existing Users & Access warnings; no new diagnostics. M6/M7 and REL-001 remain IN PROGRESS; backlog stays 43 IMPLEMENTED / one IN PROGRESS / zero CLOSED.
+Status: **Exact CI artifact verified for the selected envelope; live provider and actual-site acceptance remain pending.**
+Latest children: [CI-qualified production build 1.102.88](CI-QUALIFIED-BUILD-1.102.88.md). M6 COMPLETE; selected single-server M7 qualification and exact M8 build/promotion evidence verified. Eight remote matrix cells and the official package gate PASS. REL-001 IMPLEMENTED; 44 IMPLEMENTED / zero IN PROGRESS / zero CLOSED. Actual-host acceptance and deployment remain pending.
 Implementation sequence: [remediation plan](AUDIT-REMEDIATION-PLAN.md). Baseline: [audit scenarios](audit-2026-10-06/SCENARIOS.md) and [original machine matrix](audit-2026-10-06/scenario-matrix.csv).
 
 ## Coverage model
@@ -286,3 +286,7 @@ Shashi: [M6 activity controller, candidate 1.102.87](AUDIT-REMEDIATION-ACTIVITY-
 ## M6 exit and selected production envelope — 2026-10-22
 
 Shashi: [M6 completion and M7 qualification, candidate 1.102.88](M6-M7-RELEASE-CANDIDATE.md). Seven owners / 46 stable delegates complete the finite M6 exit. Latest-runtime checks: 388 fast, 337 native and 468 HTTP cases PASS; installed-archive native/HTTP reruns also PASS. Official Plugin Check reports zero diagnostics. Measured large-data fixes bound Kanban pages and scope task grouping. The selected single-server 50k-lead / 25–50-user envelope and 100k stress boundary have aggregate evidence. M8 clean exact-revision CI/promotion and production acceptance remain pending; REL-001 stays IN PROGRESS (43 IMPLEMENTED / one IN PROGRESS / zero CLOSED).
+
+## CI-qualified build checkpoint — 2026-10-23
+
+Shashi: [CI-qualified production build 1.102.88](CI-QUALIFIED-BUILD-1.102.88.md). M6 COMPLETE; selected single-server M7 qualification and exact M8 build/promotion evidence verified. Eight remote matrix cells and the official package gate PASS. REL-001 IMPLEMENTED; 44 IMPLEMENTED / zero IN PROGRESS / zero CLOSED. Actual-host acceptance and deployment remain pending. Historical checkpoints retain their original results.

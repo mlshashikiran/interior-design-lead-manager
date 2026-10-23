@@ -5,7 +5,7 @@ Status: Approved staged plan; Phases 0 through 9 are in progress
 Prepared: 2026-08-30  
 Planning release: 1.98.2  
 Current implementation release: 1.102.88
-Latest audit checkpoint: [M6 completion and M7 qualification, candidate 1.102.88](M6-M7-RELEASE-CANDIDATE.md). Seven owners / 46 stable delegates complete the finite M6 exit. Latest-runtime checks: 388 fast, 337 native and 468 HTTP cases PASS; installed-archive native/HTTP reruns also PASS. Official Plugin Check reports zero diagnostics. Measured large-data fixes bound Kanban pages and scope task grouping. The selected single-server 50k-lead / 25–50-user envelope and 100k stress boundary have aggregate evidence. M8 clean exact-revision CI/promotion and production acceptance remain pending; REL-001 stays IN PROGRESS (43 IMPLEMENTED / one IN PROGRESS / zero CLOSED).
+Latest audit checkpoint: [CI-qualified production build 1.102.88](CI-QUALIFIED-BUILD-1.102.88.md). M6 COMPLETE; selected single-server M7 qualification and exact M8 build/promotion evidence verified. Eight remote matrix cells and the official package gate PASS. REL-001 IMPLEMENTED; 44 IMPLEMENTED / zero IN PROGRESS / zero CLOSED. Actual-host acceptance and deployment remain pending.
 Baseline implementation: 1.98.1
 
 ## Objective
@@ -490,3 +490,7 @@ Shashi: [M6 telemetry controller, candidate 1.102.86](AUDIT-REMEDIATION-TELEMETR
 ## M6 activity controller — 2026-10-21
 
 Shashi: [M6 activity controller, candidate 1.102.87](AUDIT-REMEDIATION-ACTIVITY-CONTROLLER-SLICE.md). Extract four byte-identical timeline/comment handlers (232 lines) behind both stable facades. 387 fast / eight pre-extraction and eight post-extraction focused HTTP (WP 6.6) / 461 full HTTP-stdio (WP 7.1.3) cases and eight PHP lints PASS. The 457-file ZIP matches source. Default Plugin Check retains the same nine existing Users & Access warnings; no new diagnostics. M6/M7 and REL-001 remain IN PROGRESS; backlog stays 43 IMPLEMENTED / one IN PROGRESS / zero CLOSED. Continue bounded M6 review of the remaining coupled responsibilities.
+
+## CI-qualified build checkpoint — 2026-10-23
+
+Shashi: [CI-qualified production build 1.102.88](CI-QUALIFIED-BUILD-1.102.88.md). M6 COMPLETE; selected single-server M7 qualification and exact M8 build/promotion evidence verified. Eight remote matrix cells and the official package gate PASS. REL-001 IMPLEMENTED; 44 IMPLEMENTED / zero IN PROGRESS / zero CLOSED. Actual-host acceptance and deployment remain pending. Historical checkpoints retain their original results.

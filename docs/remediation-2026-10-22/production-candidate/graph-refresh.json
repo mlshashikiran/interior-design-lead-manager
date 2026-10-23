@@ -1,6 +1,6 @@
 {
   "builder": "Shashi",
-  "updated_at": "2026-10-23T05:40:16.649256+00:00",
+  "updated_at": "2026-10-23T05:52:54.927428+00:00",
   "method": "Scoped Graphify AST refresh of first-party runtime, affected client/test files; source-verified 46 facade delegates; literal document headings. Existing out-of-scope relationships retained/remapped to matching source labels. No full semantic or HTML rebuild.",
   "code_files": [
     "includes/class-admin-account-controller.php",
@@ -126,6 +126,8 @@
     "docs/PERFORMANCE-BASELINE.md",
     "docs/M6-EXIT-INVENTORY.md",
     "docs/M6-M7-RELEASE-CANDIDATE.md",
+    "docs/CI-QUALIFIED-BUILD-1.102.88.md",
+    "docs/audit-remediation-backlog.csv",
     "tests/README.md"
   ],
   "extracted_nodes": 1559,
