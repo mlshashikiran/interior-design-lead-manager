@@ -1,6 +1,6 @@
 {
   "builder": "Shashi",
-  "updated_at": "2026-10-23T05:52:54.927428+00:00",
+  "updated_at": "2026-10-23T05:58:43.084279+00:00",
   "method": "Scoped Graphify AST refresh of first-party runtime, affected client/test files; source-verified 46 facade delegates; literal document headings. Existing out-of-scope relationships retained/remapped to matching source labels. No full semantic or HTML rebuild.",
   "code_files": [
     "includes/class-admin-account-controller.php",

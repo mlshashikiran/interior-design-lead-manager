@@ -129,6 +129,18 @@ function idlm_integration_worker(array $arguments): array {
             usleep(20000);
         } while (microtime(true) < $deadline);
         if ('0' !== (string) $active) { throw new RuntimeException('Interrupted database session did not close within five seconds.'); }
+        // PROCESSLIST removal does not establish named-lock readiness. Acquire
+        // and release the actual fences before executing recovery assertions.
+        foreach (array(IDLM_Schema_Migration::lock_name(), IDLM_Recovery_Guard::name('retention')) as $lock_name) {
+            $acquired = $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 5)', $lock_name));
+            if ($wpdb->last_error || '1' !== (string) $acquired) {
+                throw new RuntimeException('Interrupted worker named-lock cleanup did not complete within five seconds.');
+            }
+            $released = $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
+            if ($wpdb->last_error || '1' !== (string) $released) {
+                throw new RuntimeException('Unable to release the test cleanup synchronization fence.');
+            }
+        }
     }
     return array('status' => $status, 'stdout' => trim((string) $stdout), 'stderr' => trim((string) $stderr));
 }
