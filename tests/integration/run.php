@@ -94,12 +94,17 @@ function idlm_integration_request(string $method, string $route, array $headers 
 }
 
 function idlm_integration_worker(array $arguments): array {
+    global $config, $wpdb;
     $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/worker.php');
     foreach ($arguments as $argument) {
         $command .= ' ' . escapeshellarg((string) $argument);
     }
     $pipes = array();
-    $process = proc_open($command, array(1 => array('pipe', 'w'), 2 => array('pipe', 'w')), $pipes);
+    $session_file = tempnam($config['content_dir'], 'worker-session-');
+    if (false === $session_file) { throw new RuntimeException('Unable to reserve worker session evidence.'); }
+    $environment = getenv();
+    $environment['IDLM_TEST_WORKER_SESSION_PATH'] = $session_file;
+    $process = proc_open($command, array(1 => array('pipe', 'w'), 2 => array('pipe', 'w')), $pipes, null, $environment);
     if (!is_resource($process)) {
         throw new RuntimeException('Unable to start integration worker.');
     }
@@ -108,6 +113,23 @@ function idlm_integration_worker(array $arguments): array {
     fclose($pipes[1]);
     fclose($pipes[2]);
     $status = proc_close($process);
+    $session = json_decode((string) file_get_contents($session_file), true);
+    unlink($session_file);
+    if (77 === $status) {
+        // OS process exit precedes server-side disconnect cleanup over TCP.
+        // Wait for that exact session, without retrying the operation under test.
+        if (!is_array($session) || empty($session['connection_id'])) {
+            throw new RuntimeException('Interrupted worker omitted database-session evidence.');
+        }
+        $deadline = microtime(true) + 5;
+        do {
+            $active = $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE ID = %d', $session['connection_id']));
+            if ($wpdb->last_error || null === $active) { throw new RuntimeException('Unable to observe interrupted database session cleanup.'); }
+            if ('0' === (string) $active) { break; }
+            usleep(20000);
+        } while (microtime(true) < $deadline);
+        if ('0' !== (string) $active) { throw new RuntimeException('Interrupted database session did not close within five seconds.'); }
+    }
     return array('status' => $status, 'stdout' => trim((string) $stdout), 'stderr' => trim((string) $stderr));
 }
 

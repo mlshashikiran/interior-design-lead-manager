@@ -41,14 +41,7 @@ idlm_integration_test('T16-C-CORE012-process-death-before-commit-replays-no-skip
     $worker = idlm_integration_worker(array('retention-interrupt'));
     idlm_integration_assert_same(77, $worker['status'], $worker['stderr']);
     idlm_integration_assert_same(3, (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_lead_touchpoints"));
-    // Process exit can precede MySQL's asynchronous connection/lock cleanup.
-    // Only the documented busy result is retryable; errors still fail immediately.
-    $deadline = microtime(true) + 5;
-    do {
-        $result = IDLM_Data_Retention::prune();
-        if (false !== $result) { break; }
-        usleep(20000);
-    } while (microtime(true) < $deadline);
+    $result = IDLM_Data_Retention::prune();
     idlm_integration_assert_true(is_array($result), 'Dead worker session did not release retention/recovery locks within five seconds.');
     idlm_integration_assert_same(3, $result['processed']);
     idlm_integration_assert_same(1, $result['stage']);

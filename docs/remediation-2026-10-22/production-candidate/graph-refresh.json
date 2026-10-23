@@ -1,6 +1,6 @@
 {
   "builder": "Shashi",
-  "updated_at": "2026-10-23T05:32:26.668073+00:00",
+  "updated_at": "2026-10-23T05:37:44.644836+00:00",
   "method": "Scoped Graphify AST refresh of first-party runtime, affected client/test files; source-verified 46 facade delegates; literal document headings. Existing out-of-scope relationships retained/remapped to matching source labels. No full semantic or HTML rebuild.",
   "code_files": [
     "includes/class-admin-account-controller.php",
@@ -104,6 +104,7 @@
     "tests/release-contracts.php",
     "tests/release/class-release-artifact.php",
     "tests/integration/bootstrap.php",
+    "tests/integration/worker.php",
     "tests/integration/backup-contracts.php",
     "tests/integration/backup-http-cases.php",
     "tests/integration/secret-store-contracts.php",
@@ -125,7 +126,7 @@
     "docs/M6-M7-RELEASE-CANDIDATE.md",
     "tests/README.md"
   ],
-  "extracted_nodes": 1550,
+  "extracted_nodes": 1551,
   "extracted_edges": 1603,
   "verified_delegate_edges": 46,
   "source_sha256": {
@@ -219,7 +220,7 @@
     "tests/integration/runtime-topology-contracts.php": "e28f0c2481b3e5115057827d5ee68e9379461ab66d5881d0dfdb71d16f26e9f2",
     "tests/integration/kanban-pagination-http-cases.php": "67299d2d4b31e9ca980760e4b5de45de8921e6fa69f612c24b88e8267a6142c7",
     "tests/integration/role-permissions-http-cases.php": "ff3e76130cfa1ae1d3a10251d5af1ea1518aa72d7900938e84c85af4ca1b5efa",
-    "tests/integration/bounded-work-contracts.php": "fa7d0fe6e20be3c4ea5e88a104b8c1f9d6be92ca8f7a21a5b76eba53e5afdb68",
+    "tests/integration/bounded-work-contracts.php": "25b145d04a7129ede80eb8a88db69ad6ba758e7640e2b4fcf69272d6fdfb97cf",
     "tests/admin-refactor-contracts.php": "8d0093df1174ec340a0063b62035d7fdfa2736b305dc87ba6905eb40f86b52b1",
     "tests/performance/class-dataset-generator.php": "728674c083ee5b33926f66e77a57d5f8c04a1ff27efb5846e3f822c56596855f",
     "tests/performance/qualify-team-load.py": "67bfb20c11a0a77c30eb9f5ee3c5ef9f8ea6c05b12e602dc6ad2ae45030d6582",
@@ -230,6 +231,7 @@
     "tests/release-contracts.php": "c64b251d00107f20200fd2f0483474329167acbff5035e899e81f60242aee905",
     "tests/release/class-release-artifact.php": "f93c9feb7edaf499a7ac09e3e9147a8f70060c3d3e6d78b37df098e491fc7ea2",
     "tests/integration/bootstrap.php": "78335efa56dff1a7a4164c5e33a4917af38b8bb9386fbdb0e6ab55733012c4a9",
+    "tests/integration/worker.php": "79cbfc0112613f1f7974ca6a3efa3ae8bf2ad12618cfc01a403bbf257bc71128",
     "tests/integration/backup-contracts.php": "b6fffcf89f7055e860cf3fe3ea2b34d8a2d46012a3391d32a98293bc98963108",
     "tests/integration/backup-http-cases.php": "3c9c2103d3870c11c773d081dbbe6fcb992c5e6ab2b6fdd45008204a2954df90",
     "tests/integration/secret-store-contracts.php": "f569857822f2e9c305a7c85f5469375caae38e24892676651c4a73799ceb67dd",

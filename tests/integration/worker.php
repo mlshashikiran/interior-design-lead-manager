@@ -14,6 +14,19 @@ try {
     idlm_integration_boot_wordpress($config, false);
     idlm_integration_load_plugin($config);
 
+    $session_path = getenv('IDLM_TEST_WORKER_SESSION_PATH');
+    if ($session_path) {
+        if (dirname($session_path) !== $config['content_dir'] || strpos(basename($session_path), 'worker-session-') !== 0
+            || is_link($session_path) || !is_file($session_path)) {
+            throw new RuntimeException('Refusing an unowned worker-session evidence path.');
+        }
+        global $wpdb;
+        $connection_id = (int) $wpdb->get_var('SELECT CONNECTION_ID()');
+        if ($connection_id < 1 || false === file_put_contents($session_path, json_encode(array('connection_id' => $connection_id)))) {
+            throw new RuntimeException('Unable to retain disposable worker session identity.');
+        }
+    }
+
     $mode = $argv[1] ?? '';
     if (in_array($mode,array('audience-crash','audience-race'),true)) {
         if ($mode==='audience-race') {
