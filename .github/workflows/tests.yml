@@ -7,6 +7,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      IDLM_TEST_RUNTIME_EVIDENCE_DIR: /tmp/idlm-runtime-evidence
     strategy:
       fail-fast: false
       matrix:
@@ -31,6 +33,10 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: mysqli, openssl, zip, dom, mbstring, iconv, gd
           coverage: none
+      - name: Install PDF inspection test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes poppler-utils
       - name: Run runtime prerequisite regressions
         shell: bash
         run: |
@@ -56,6 +62,7 @@ jobs:
           mkdir -p /tmp/idlm-runtime-evidence
           php -r 'require "/tmp/wordpress/wp-includes/version.php"; $db = new mysqli("127.0.0.1", "root", "root", "", 3306); $packages = json_decode(file_get_contents("vendor/dompdf/vendor/composer/installed.json"), true); $dependencies = []; foreach ($packages["packages"] as $package) { $dependencies[$package["name"]] = $package["version"]; } echo json_encode(["revision" => getenv("GITHUB_SHA"), "php" => PHP_VERSION, "wordpress" => $wp_version, "wordpress_minimum_php" => $required_php_version, "mysql" => $db->server_info, "extensions" => get_loaded_extensions(), "dependencies" => $dependencies], JSON_PRETTY_PRINT), PHP_EOL;' > /tmp/idlm-runtime-evidence/runtime-environment.json
           sha256sum /tmp/wordpress.tar.gz > /tmp/idlm-runtime-evidence/wordpress-download.sha256
+          pdfinfo -v > /tmp/idlm-runtime-evidence/poppler-version.txt 2>&1
       - name: Run native WordPress/MySQL suite
         env:
           IDLM_TEST_WP_ROOT: /tmp/wordpress

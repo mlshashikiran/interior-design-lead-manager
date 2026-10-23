@@ -36,7 +36,23 @@ idlm_integration_test('T16-C-CORE012-independent-session-lock-refuses-overlap-an
     idlm_integration_assert_same(3,IDLM_Data_Retention::prune()['processed']);
 });
 idlm_integration_test('T16-C-CORE012-process-death-before-commit-replays-no-skip',static function():void {
-    global $wpdb;idlm_bound_reset();idlm_bound_expired(3);$r=idlm_integration_worker(array('retention-interrupt'));idlm_integration_assert_same(77,$r['status'],$r['stderr']);idlm_integration_assert_same(3,(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_lead_touchpoints"));idlm_integration_assert_same(3,IDLM_Data_Retention::prune()['processed']);
+    global $wpdb;
+    idlm_bound_reset(); idlm_bound_expired(3);
+    $worker = idlm_integration_worker(array('retention-interrupt'));
+    idlm_integration_assert_same(77, $worker['status'], $worker['stderr']);
+    idlm_integration_assert_same(3, (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_lead_touchpoints"));
+    // Process exit can precede MySQL's asynchronous connection/lock cleanup.
+    // Only the documented busy result is retryable; errors still fail immediately.
+    $deadline = microtime(true) + 5;
+    do {
+        $result = IDLM_Data_Retention::prune();
+        if (false !== $result) { break; }
+        usleep(20000);
+    } while (microtime(true) < $deadline);
+    idlm_integration_assert_true(is_array($result), 'Dead worker session did not release retention/recovery locks within five seconds.');
+    idlm_integration_assert_same(3, $result['processed']);
+    idlm_integration_assert_same(1, $result['stage']);
+    idlm_integration_assert_same(0, (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_lead_touchpoints"));
 });
 idlm_integration_test('T16-N-CORE012-compaction-does-not-load-large-payload-and-is-bounded-checked',static function():void {
     global $wpdb;idlm_bound_reset();$wpdb->query("INSERT INTO {$wpdb->prefix}idlm_audience_sync_logs (platform,audience_id,lead_count,payload,response,status,created_at) VALUES ('google','test',1,REPEAT('x',2097152),'{}','success',NOW())");

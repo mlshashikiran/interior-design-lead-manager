@@ -195,6 +195,29 @@ PHP;
     $table_prefix = $config['table_prefix'];
     require $config['wp_root'] . 'wp-settings.php';
 
+    // Preserve one verified upstream 6.6/PHP 8.5 deprecation separately from
+    // plugin diagnostics. Never silence another file, line, message or core hash.
+    global $wp_version;
+    $core_file = ABSPATH . 'wp-includes/class-wp-theme-json.php';
+    if ('6.6' === $wp_version && PHP_VERSION_ID >= 80500 && PHP_VERSION_ID < 80600
+        && hash_file('sha256', $core_file) === '743dac6c9bac3b829d0eccf981b08b3c6ea109f7a837103d72d0ba50c12ccd12') {
+        $previous_handler = null;
+        $previous_handler = set_error_handler(static function($severity, $message, $file, $line) use ($core_file, $config, &$previous_handler) {
+            if (E_DEPRECATED === $severity && $file === $core_file && 2792 === $line
+                && 'Using null as an array offset is deprecated, use an empty string instead' === $message) {
+                $directory = getenv('IDLM_TEST_RUNTIME_EVIDENCE_DIR') ?: $config['content_dir'];
+                $record = array('wordpress' => '6.6', 'php' => PHP_VERSION, 'type' => 'upstream_core_deprecation',
+                    'file' => 'wp-includes/class-wp-theme-json.php', 'line' => $line, 'message' => $message,
+                    'source_sha256' => '743dac6c9bac3b829d0eccf981b08b3c6ea109f7a837103d72d0ba50c12ccd12');
+                if (false === file_put_contents($directory . '/known-core-diagnostics.jsonl', json_encode($record) . "\n", FILE_APPEND | LOCK_EX)) {
+                    return false;
+                }
+                return true;
+            }
+            return $previous_handler ? $previous_handler($severity, $message, $file, $line) : false;
+        });
+    }
+
     if (!$install) {
         return 0;
     }
