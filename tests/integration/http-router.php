@@ -42,6 +42,7 @@ if (is_file($config['content_dir'] . '/fail-quotation-backfill')) {
     add_filter('query', static function ($sql) { return strpos($sql, 'idlm_quotation_lifecycle_integrity') !== false ? 'SELECT idlm_synthetic_migration_failure FROM idlm_absent_table' : $sql; });
 }
 idlm_boot_plugin();
+idlm_integration_capture_known_core_diagnostics($config);
 if ('/bootstrap-worker-hold' === $path && is_file($config['content_dir'] . '/bootstrap-worker-hold')) {
     $hold = $config['content_dir'] . '/bootstrap-worker-hold';
     file_put_contents($hold . '.ready', 'ready');

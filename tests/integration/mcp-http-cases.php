@@ -164,11 +164,17 @@ idlm_http_case('T15-H-aggregate-audit-does-not-record-SQL-PII-or-credentials',st
 });
 idlm_http_case('T15-H-actual-HTTP-rate-limit',static function():void{
     $key=IDLM_Secret_Store::get('idlm_mcp_api_key');
-    idlm_mcp_http(array(),$key,'GET'); $limited=false;
-    for($i=0;$i<61;$i++){
-        $response=idlm_mcp_http(array(),$key,'GET','','',false);
-        if($response['status']===429){$limited=true;break;}
-        idlm_http_check($response['status']===200,'Unexpected response before rate limit');
+    for ($attempt = 0; $attempt < 3; $attempt++) {
+        $window = (int) floor(time() / 60);
+        idlm_mcp_http(array(), $key, 'GET');
+        for ($i = 0; $i < 61; $i++) {
+            $response = idlm_mcp_http(array(), $key, 'GET', '', '', false);
+            if ($response['status'] === 429) { return; }
+            idlm_http_check($response['status'] === 200, 'Unexpected response before rate limit');
+        }
+        // A fixed-window limiter legitimately resets on the minute boundary.
+        // Repeat the complete HTTP budget only if that boundary was crossed.
+        idlm_http_check($window !== (int) floor(time() / 60), 'Real REST dispatch did not enforce existing rate limit');
     }
-    idlm_http_check($limited,'Real REST dispatch did not enforce existing rate limit');
+    idlm_http_check(false, 'Unable to complete the HTTP rate budget within one minute window');
 });

@@ -195,6 +195,29 @@ PHP;
     $table_prefix = $config['table_prefix'];
     require $config['wp_root'] . 'wp-settings.php';
 
+
+    if (!$install) {
+        return 0;
+    }
+
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    $installed = wp_install(
+        'IDLM Integration Tests',
+        'idlm_admin',
+        'idlm-admin@example.test',
+        true,
+        '',
+        'idlm-integration-password'
+    );
+    wp_installing(false);
+    if (empty($installed['user_id'])) {
+        throw new RuntimeException('WordPress installation did not return an administrator user ID.');
+    }
+    return (int) $installed['user_id'];
+}
+
+/** Reinstall after plugin telemetry registers its own error handler. */
+function idlm_integration_capture_known_core_diagnostics(array $config): void {
     // Preserve one verified upstream 6.6/PHP 8.5 deprecation separately from
     // plugin diagnostics. Never silence another file, line, message or core hash.
     global $wp_version;
@@ -218,24 +241,6 @@ PHP;
         });
     }
 
-    if (!$install) {
-        return 0;
-    }
-
-    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-    $installed = wp_install(
-        'IDLM Integration Tests',
-        'idlm_admin',
-        'idlm-admin@example.test',
-        true,
-        '',
-        'idlm-integration-password'
-    );
-    wp_installing(false);
-    if (empty($installed['user_id'])) {
-        throw new RuntimeException('WordPress installation did not return an administrator user ID.');
-    }
-    return (int) $installed['user_id'];
 }
 
 function idlm_integration_load_plugin(array $config): void {
