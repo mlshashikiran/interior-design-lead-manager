@@ -2,7 +2,7 @@
 
 ## 1.102.90 — quotation editor document panel removal (2026-10-24)
 
-Builder: Shashi. Remove the document-content review panel from the shared quotation renderer, covering create/edit in both admin and shortcode workspaces. Keep Quotation Setup defaults, currency fields, save/autosave capture and historical document snapshots unchanged. Record the editor omission in AGENTS.md so later builds preserve it.
+Builder: Shashi. Remove the document-content review panel from the shared quotation renderer, covering create/edit in both admin and shortcode workspaces. Keep Quotation Setup defaults, currency fields, save/autosave capture and historical document snapshots unchanged. Record the editor omission in AGENTS.md so later builds preserve it. CI run 40015627959 exposed a test-only clock mismatch after UTC and Asia/Kolkata crossed different dates: the 20,000-task sample used MySQL NOW() while due-today counts use the site clock. Set the synthetic task due date with current_time('mysql'); retain the full count, memory and query-plan assertions. Runtime bytes are unchanged by this fixture repair.
 
 ## 1.102.89 — notification control and portable hosting (2026-10-23)
 
