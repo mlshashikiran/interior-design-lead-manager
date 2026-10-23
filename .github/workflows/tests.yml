@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.4', '8.1', '8.4', '8.5']
+        php: ['7.4', '8.1', '8.3', '8.4', '8.5']
         wordpress: ['6.6', 'latest']
     services:
       mysql:
@@ -79,6 +79,21 @@ jobs:
           IDLM_TEST_DB_HOST: 127.0.0.1:3306
         run: php tests/integration/quotation-http.php | tee /tmp/idlm-runtime-evidence/http-results.txt
         shell: bash
+      - name: Run real Action Scheduler retention acceptance
+        if: matrix.wordpress == 'latest'
+        env:
+          IDLM_TEST_WP_ROOT: /tmp/wordpress
+          IDLM_TEST_DB_USER: root
+          IDLM_TEST_DB_PASSWORD: root
+          IDLM_TEST_DB_HOST: 127.0.0.1:3306
+          IDLM_TEST_ACTION_SCHEDULER: /tmp/idlm-action-scheduler/action-scheduler/action-scheduler.php
+        shell: bash
+        run: |
+          mkdir -p /tmp/idlm-action-scheduler
+          curl --fail --location https://downloads.wordpress.org/plugin/action-scheduler.4.2.0.zip --output /tmp/idlm-action-scheduler/scheduler.zip
+          echo 'a360712a5adb066a0d60db76cbe2768234731cbcc363ba7dc2d51bf4559e4551  /tmp/idlm-action-scheduler/scheduler.zip' | sha256sum --check
+          unzip -q /tmp/idlm-action-scheduler/scheduler.zip -d /tmp/idlm-action-scheduler
+          php tests/integration/retention-action-scheduler.php | tee /tmp/idlm-runtime-evidence/action-scheduler-retention-results.txt
       - name: Upload resolved runtime qualification evidence
         if: always()
         uses: actions/upload-artifact@v4

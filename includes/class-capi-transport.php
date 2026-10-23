@@ -4,6 +4,12 @@ if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_CAPI_Transport {
 
+    /** GA4 wire name; retain the original Google Ads label and receipt identity. */
+    public static function google_event_name($label) {
+        $name = str_replace(' ', '_', $label);
+        return preg_match('/^[A-Za-z][A-Za-z0-9_]{0,39}$/D', $name) ? $name : '';
+    }
+
     public static function uses_whatsapp_attribution($lead, $attribution) {
         return empty($lead->fb_lead_id) && ($attribution['channel'] ?? '') === 'whatsapp';
     }
@@ -142,12 +148,14 @@ final class IDLM_CAPI_Transport {
     }
 
     public static function fire_google_capi_work($lead, $stage, $delivery) {
-        $event_name = $delivery['event'];
+        $event_name = self::google_event_name($delivery['event']);
         $measurement_id = $delivery['destination'];
         $api_secret = $delivery['credential'];
 
-        // Generate client id or use existing
-        $client_id = !empty($lead->gclid) ? $lead->gclid : (!empty($lead->gbraid) ? $lead->gbraid : (!empty($lead->wbraid) ? $lead->wbraid : 'idlm.' . $lead->id));
+        // GA4 requires a numeric pair, not a click ID or an "idlm." prefix.
+        // This stable CRM identity does not claim browser-session association;
+        // authentic click IDs remain attribution parameters below.
+        $client_id = sprintf('%u', crc32(home_url())) . '.' . (int) $lead->id;
 
         $event_params = array(
             'engagement_time_msec' => 100,

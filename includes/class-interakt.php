@@ -120,11 +120,15 @@ class IDLM_Interakt {
 
     private static function send_track_event_to_interakt_work($payload, $api_key, $lead_id = 0) {
         $endpoint = 'https://api.interakt.ai/v1/public/track/events/';
+        // Dashboard Secret Keys already encode username:password. Retain the
+        // historical raw-username form for existing installations.
+        $decoded = base64_decode($api_key, true);
+        $basic_key = is_string($decoded) && false !== strpos($decoded, ':') ? $api_key : base64_encode($api_key . ':');
         
         if (!IDLM_Recovery_Guard::lease_valid()) { return false; }
         $response = IDLM_Secret_Store::request($endpoint, array(
             'headers' => array(
-                'Authorization' => 'Basic ' . base64_encode($api_key . ':'),
+                'Authorization' => 'Basic ' . $basic_key,
                 'Content-Type'  => 'application/json'
             ),
             'body'    => json_encode($payload),

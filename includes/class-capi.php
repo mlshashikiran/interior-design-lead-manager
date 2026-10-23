@@ -315,6 +315,7 @@ class IDLM_CAPI {
             }
             $event=$mappings[$stage] ?? '';
             if ('' === $event) { return self::no_attempt('This stage has no configured event.'); }
+            if ('google' === $platform && '' === IDLM_CAPI_Transport::google_event_name($event)) { return self::no_attempt('Use a Google event label of at most 40 letters, digits, underscores or spaces, beginning with a letter. GA4 sends spaces as underscores.'); }
             if ('google' === $platform && !self::is_google_conversion_eligible($lead)) { return self::no_attempt('The current lead is not eligible for Google attribution.'); }
             if ('linkedin' === $platform && empty($lead->li_fat_id)) { return self::no_attempt('The current lead has no LinkedIn attribution ID.'); }
             $keys=array('meta'=>array('idlm_meta_pixel_id','idlm_meta_access_token'), 'google'=>array('idlm_google_measurement_id','idlm_google_api_secret'), 'linkedin'=>array('idlm_linkedin_conversion_id','idlm_linkedin_access_token'));

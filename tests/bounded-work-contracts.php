@@ -14,3 +14,8 @@ idlm_test('WhatsApp EXISTS predicates correlate to the outer lead and sanitize s
 idlm_test('retention health reports a failed batch even when the daily hook remains scheduled',static function():void {
     $report=IDLM_Operational_Health::report(array('retention_scheduled'=>true,'retention_failed'=>true));$retention=array_values(array_filter($report['checks'],static function($check){return $check['key']==='retention';}));assert_same('critical',$retention[0]['status']);
 });
+idlm_test('retention health reports a missing continuation even when the daily hook remains scheduled',static function():void {
+    $report=IDLM_Operational_Health::report(array('retention_scheduled'=>true,'retention_continuation_missing'=>true));
+    $retention=array_values(array_filter($report['checks'],static function($check){return $check['key']==='retention';}));
+    assert_same('critical',$retention[0]['status']);assert_same('Continuation stalled',$retention[0]['value']);
+});

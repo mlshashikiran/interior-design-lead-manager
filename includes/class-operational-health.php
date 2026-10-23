@@ -31,6 +31,7 @@ final class IDLM_Operational_Health {
             'recurring_jobs_scheduled' => false,
             'retention_scheduled' => false,
             'retention_failed' => false,
+            'retention_continuation_missing' => false,
             'secrets_ready' => false,
             'secret_missing_count' => 0,
             'uploads_ready' => false,
@@ -73,9 +74,9 @@ final class IDLM_Operational_Health {
             self::check(
                 'retention',
                 'Sensitive-data retention job',
-                !empty($context['retention_scheduled']) && empty($context['retention_failed']) ? 'healthy' : 'critical',
-                !empty($context['retention_failed']) ? 'Last batch failed; retry scheduled' : (!empty($context['retention_scheduled']) ? 'Scheduled' : 'Not scheduled'),
-                'Restore the daily retention hook and verify the next bounded prune run.'
+                !empty($context['retention_scheduled']) && empty($context['retention_failed']) && empty($context['retention_continuation_missing']) ? 'healthy' : 'critical',
+                !empty($context['retention_continuation_missing']) ? 'Continuation stalled' : (!empty($context['retention_failed']) ? 'Last batch failed' : (!empty($context['retention_scheduled']) ? 'Scheduled' : 'Not scheduled')),
+                'Restore the daily retention hook and any missing continuation, then verify bounded batches reach completion.'
             ),
             self::check(
                 'secrets',
@@ -231,6 +232,7 @@ final class IDLM_Operational_Health {
         $secret_state = self::secret_context();
         $upload_state = self::upload_storage_ready();
         $since = wp_date('Y-m-d H:i:s', time() - DAY_IN_SECONDS);
+        $retention = (array) get_option(IDLM_Data_Retention::STATUS_OPTION, array());
 
         return array_merge(array(
             'database_ready' => $database_ready,
@@ -241,7 +243,8 @@ final class IDLM_Operational_Health {
             'scheduler_backend' => $action_scheduler ? 'action_scheduler' : 'wp_cron',
             'recurring_jobs_scheduled' => $daily_scheduled && $hourly_scheduled,
             'retention_scheduled' => (bool) wp_next_scheduled(IDLM_Data_Retention::HOOK),
-            'retention_failed' => !empty(((array) get_option(IDLM_Data_Retention::STATUS_OPTION, array()))['last_error']),
+            'retention_failed' => !empty($retention['last_error']),
+            'retention_continuation_missing' => self::retention_continuation_missing($retention),
             'uploads_ready' => $upload_state,
             'cache_backend' => function_exists('wp_using_ext_object_cache') && wp_using_ext_object_cache()
                 ? 'persistent'
@@ -250,6 +253,19 @@ final class IDLM_Operational_Health {
             'integration_failures_24h' => self::recent_count('idlm_capi_logs', "status = 'failed'", $since)
                 + self::recent_count('idlm_audience_sync_logs', "status = 'failed'", $since),
         ), $secret_state, $queue);
+    }
+
+    private static function retention_continuation_missing($state) {
+        if (!$state || !empty($state['complete'])) { return false; }
+        $updated = !empty($state['updated_at']) && is_string($state['updated_at']) ? strtotime($state['updated_at'] . ' UTC') : false;
+        if ($updated && time() - $updated < self::QUEUE_WARNING_SECONDS) { return false; }
+        if (wp_next_scheduled(IDLM_Data_Retention::CONTINUE_HOOK)) { return false; }
+        try {
+            if (function_exists('as_has_scheduled_action') && as_has_scheduled_action(IDLM_Data_Retention::CONTINUE_HOOK, array(), 'idlm-retention')) { return false; }
+        } catch (Throwable $error) {
+            // A missing/unreadable queue cannot establish a runnable successor.
+        }
+        return true;
     }
 
     private static function secret_context() {

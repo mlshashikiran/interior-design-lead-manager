@@ -6,6 +6,16 @@ function idlm_dispatch_fast_fixture() {
     update_option('idlm_interakt_enabled','1'); update_option('idlm_interakt_api_key','synthetic-original');
     return IDLM_Interakt::trigger_generic_event(1,'lead_no_answer');
 }
+idlm_test('Interakt sends the documented encoded dashboard key once and retains legacy raw-key compatibility',static function():void {
+    $encoded=base64_encode('synthetic-user:synthetic-password');
+    foreach(array($encoded=>'Basic '.$encoded,'synthetic-legacy'=>'Basic '.base64_encode('synthetic-legacy:'))as$key=>$expected){
+        idlm_test_reset_environment();$job=idlm_dispatch_fast_fixture();update_option('idlm_interakt_api_key',$key);
+        IDLM_Interakt::process_async_track_event($job);
+        assert_same(1,count($GLOBALS['idlm_test_http_calls']));
+        assert_same($expected,$GLOBALS['idlm_test_http_calls'][0][1]['headers']['Authorization']);
+        assert_false(strpos(json_encode(get_option($job)),$key)!==false);
+    }
+});
 idlm_test('INT004 opaque ordinary jobs use WP-Cron and fresh credentials and traits',static function():void {
     $key=idlm_dispatch_fast_fixture(); assert_true(is_string($key));
     assert_same(array($key),$GLOBALS['idlm_test_schedules'][0]['args']); assert_same(0,count($GLOBALS['idlm_test_http_calls']));

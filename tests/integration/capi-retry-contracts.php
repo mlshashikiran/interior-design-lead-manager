@@ -28,6 +28,7 @@ idlm_integration_test('T08-N-INT005-current Google defaults and custom platform 
         $log=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_capi_logs WHERE id=%d",$result['log_id']));$payload=maybe_unserialize($log->payload);$meta=$payload['_idlm_delivery'];
         idlm_integration_assert_same($result['attempt_id'],$meta['attempt_id']);idlm_integration_assert_same($stage,$meta['stage']);idlm_integration_assert_same('success',$log->status);idlm_integration_assert_same($id,$meta['retry_root']);
         idlm_integration_assert_true(strpos(wp_json_encode($meta),'synthetic-google')===false);idlm_integration_assert_true(!isset(json_decode($calls[0]['args']['body'],true)['_idlm_delivery']));
+        if ('google' === $platform) { $sent=json_decode($calls[0]['args']['body'],true);idlm_integration_assert_same(1,preg_match('/^[0-9]+\.[0-9]+$/D',$sent['client_id']));idlm_integration_assert_same('synthetic-click',$sent['events'][0]['params']['gclid']); }
     }
 });
 idlm_integration_test('T08-N-INT005-worker forced attribution and retry share current exclusion gates',static function():void {

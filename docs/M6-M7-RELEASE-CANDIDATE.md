@@ -2,6 +2,8 @@
 
 Author / Builder: Shashi. Date: 2026-10-22.
 
+**2026-10-23 host acceptance follow-up:** [real host/provider checks and runtime repairs](HOST-PROVIDER-ACCEPTANCE-1.102.88.md) supersede the earlier artifact for further release review. Retention scheduling/health, GA4 wire format and Interakt authentication change. The reference measurements below retain their original artifact identity; no new capacity/restore/soak result is inferred.
+
 **M6 is COMPLETE.** All seven items in the [finite exit inventory](M6-EXIT-INVENTORY.md) have focused owners and verified compatibility delegates. M7 has advanced to measured single-server qualification. M8 / REL-001 remain open until the complete reviewed source has matching authentic remote CI and final candidate promotion evidence. A local rehearsal ZIP is not approved for deployment. **2026-10-23 update:** [authentic CI and candidate promotion now pass](CI-QUALIFIED-BUILD-1.102.88.md); REL-001 is IMPLEMENTED, with actual-site acceptance and deployment pending. The sections below retain their local qualification checkpoint and archive identity.
 
 ## Ownership and compatibility

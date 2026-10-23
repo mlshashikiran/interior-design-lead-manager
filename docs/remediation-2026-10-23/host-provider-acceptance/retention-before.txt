@@ -1,0 +1,1 @@
+FAIL Incomplete batch must have exactly one pending continuation, even after an in-progress callback.

@@ -31,11 +31,27 @@ final class IDLM_Data_Retention {
     }
 
     private static function schedule() {
-        if (function_exists('as_schedule_single_action')) {
-            if (!function_exists('as_has_scheduled_action') || !as_has_scheduled_action(self::CONTINUE_HOOK, array(), 'idlm-retention')) {
-                as_schedule_single_action(time() + MINUTE_IN_SECONDS, self::CONTINUE_HOOK, array(), 'idlm-retention', true);
+        global $wpdb;
+        if (function_exists('as_schedule_single_action') && function_exists('as_get_scheduled_actions')) {
+            $lock = IDLM_Recovery_Guard::name('retention_schedule');
+            // Serialize the pending-only check and enqueue across worker sessions.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- A prepared database-scoped advisory lock must reflect the current connection.
+            if (1 === (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 2)', $lock))) {
+                try {
+                    $pending = as_get_scheduled_actions(array('hook'=>self::CONTINUE_HOOK, 'args'=>array(), 'group'=>'idlm-retention', 'status'=>'pending', 'per_page'=>1), 'ids');
+                    // AS uniqueness includes the currently running callback. Only
+                    // a pending successor satisfies continuation; the lock above
+                    // supplies uniqueness without suppressing the next batch.
+                    if ($pending || as_schedule_single_action(time() + MINUTE_IN_SECONDS, self::CONTINUE_HOOK, array(), 'idlm-retention', false)) { return; }
+                } catch (Throwable $error) {
+                    // An unavailable AS store must not lose unfinished work.
+                } finally {
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Release only this connection's prepared advisory lock.
+                    $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
+                }
             }
-        } elseif (!wp_next_scheduled(self::CONTINUE_HOOK)) {
+        }
+        if (!wp_next_scheduled(self::CONTINUE_HOOK)) {
             wp_schedule_single_event(time() + MINUTE_IN_SECONDS, self::CONTINUE_HOOK);
         }
     }

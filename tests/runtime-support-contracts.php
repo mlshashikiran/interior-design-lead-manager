@@ -20,7 +20,7 @@ idlm_test('REL005 minimum metadata aligns and CI targets declared floor with res
         assert_contains($key . ': ' . $value, $readme);
     }
     $ci = file_get_contents($root . '/.github/workflows/tests.yml');
-    assert_contains("php: ['7.4', '8.1', '8.4', '8.5']", $ci); assert_contains("wordpress: ['6.6', 'latest']", $ci);
+    assert_contains("php: ['7.4', '8.1', '8.3', '8.4', '8.5']", $ci); assert_contains("wordpress: ['6.6', 'latest']", $ci);
     assert_contains('php tests/runtime-prerequisites.php', $ci); assert_contains('runtime-environment.json', $ci);
     foreach (array('OpenSSL','InnoDB','DOM','mbstring','iconv','GD','ZipArchive','temporary','WP-Cron') as $prerequisite) { assert_contains($prerequisite, $readme); }
 });

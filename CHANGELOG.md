@@ -8,6 +8,8 @@
 
 ### Fixed
 
+- Continue retention batches while an Action Scheduler callback is running; fence pending-job creation, retain WP-Cron fallback and flag stalled continuations. Builder: Shashi.
+- Send numeric GA4 CRM client identities and valid event wire names while preserving click attribution, Google Ads labels and replay receipts. Accept encoded Interakt dashboard Secret Keys without double encoding, retaining the legacy raw-key form. Builder: Shashi.
 - Make the administrator role-permission nonce boundary explicit and sanitize structured permission and request-method inputs. Builder: Shashi.
 - Count task attention within the site calendar day without applying the timezone offset twice. Builder: Shashi.
 - Count each REST request once when WordPress rechecks permission callbacks for response headers; continue validating credentials on every check. Builder: Shashi.

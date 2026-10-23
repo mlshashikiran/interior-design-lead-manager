@@ -2,6 +2,8 @@
 
 Author / Builder: Shashi. Verified: 2026-10-23.
 
+**Superseded runtime checkpoint:** [host/provider acceptance](HOST-PROVIDER-ACCEPTANCE-1.102.88.md) found defects requiring runtime repairs. The runs/ZIP below attest the earlier bytes only. The repaired candidate requires a new matching CI artifact; use its manifest and `build/production-host-acceptance-1.102.88/verification-report.json`. Actual-site acceptance remains open.
+
 M6 is complete. The selected single-server M7 qualification and M8 build/promotion gates now have authentic CI evidence. REL-001 is IMPLEMENTED; the audit backlog is 44 IMPLEMENTED / zero IN PROGRESS / zero CLOSED. Site-specific production acceptance and deployment remain pending.
 
 The first successful complete run is [GitHub Actions 39907049097](https://github.com/mlshashikiran/interior-design-lead-manager/actions/runs/39907049097), source `d2eee4c404b1b662a21b89c88bb3429e44e1f513`. All eight PHP 7.4/8.1/8.4/8.5 × WordPress 6.6/latest jobs and the release artifact job passed. Each cell records **5 prerequisite / 388 fast / 337 native / 468 actual HTTP-stdio PASS**. Resolved PHP versions are 7.4.33, 8.1.34, 8.4.27 and 8.5.12; latest WordPress resolved to 7.1.3, with MySQL 8.0.46 in CI. The reference load/recovery host additionally qualified MySQL 8.4.0.

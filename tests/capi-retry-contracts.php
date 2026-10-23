@@ -12,7 +12,7 @@ idlm_test('INT005 current Google defaults retry the original stage and report a 
     foreach(array('Qualified'=>'CRM Qualified Lead','Won'=>'Closed Won Interior Project') as $stage=>$event){
         idlm_test_reset_environment();$id=idlm_capi_fast_fixture('google',$stage,$event);$result=IDLM_CAPI::retry_capi_log($id);
         assert_true($result['success']);assert_true($result['log_id']>$id);assert_true($result['attempt_id']!=='');assert_same(1,count($GLOBALS['idlm_test_http_calls']));
-        $payload=json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'],true);assert_same($stage,$payload['events'][0]['params']['stage']);assert_same($event,$payload['events'][0]['name']);assert_false(isset($payload['_idlm_delivery']));
+        $payload=json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'],true);assert_same($stage,$payload['events'][0]['params']['stage']);assert_same($stage==='Won'?'Closed_Won_Interior_Project':'CRM_Qualified_Lead',$payload['events'][0]['name']);assert_false(isset($payload['_idlm_delivery']));
     }
 });
 idlm_test('INT005 unknown ambiguous success and changed mappings cannot be guessed into a retry',static function():void {
