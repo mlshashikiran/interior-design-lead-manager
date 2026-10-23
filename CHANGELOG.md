@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.102.90] - 2026-10-24
+
+### Changed
+
+- Remove the document-content review section from the shared quotation editor in both admin and workspace views. Keep document defaults in Quotation Setup and preserve revision snapshots. Builder: Shashi.
+
 ## [1.102.89] - 2026-10-23
 
 ### Changed

@@ -8,7 +8,7 @@ The [October 6 quotation review](audit-2026-10-06/QUOTATION-REVIEW.md) identifie
 
 A new quotation uses the current currency. Every subsequent revision and working copy retains the quotation's original revision currency, regardless of posted currency or changed settings. No exchange conversion occurs. List, dynamic list, detail, historical preview, editor calculation and print/PDF/CSV/XLSX use saved currency. Catalogue prices continue to use the current catalogue currency.
 
-**Each new revision captures current contractual settings**, with a visible editor preview explaining what will be saved. Earlier revisions retain their own snapshots. Save is authoritative: if settings change after the editor loads, capture uses settings current at save time. It does not implicitly adopt a different currency. A working copy captures current terms, and its final save captures them again.
+**Each new revision captures current contractual settings**. Since 1.102.90, the editor omits the document-content review panel at Shashi’s request; manage the defaults in Quotation Setup. Earlier revisions retain their own snapshots. Save is authoritative: if settings change after the editor loads, capture uses settings current at save time. It does not implicitly adopt a different currency. A working copy captures current terms, and its final save captures them again.
 
 | Snapshot | Contents |
 | --- | --- |

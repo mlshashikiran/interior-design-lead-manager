@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.102.90 — quotation editor document panel removal (2026-10-24)
+
+Builder: Shashi. Remove the document-content review panel from the shared quotation renderer, covering create/edit in both admin and shortcode workspaces. Keep Quotation Setup defaults, currency fields, save/autosave capture and historical document snapshots unchanged. Record the editor omission in AGENTS.md so later builds preserve it.
+
 ## 1.102.89 — notification control and portable hosting (2026-10-23)
 
 Builder: Shashi. [Notification and hosting contract](NOTIFICATIONS-AND-HOSTING.md). Centralize existing email preferences and a new default-off WhatsApp opt-in under General settings. Recheck committed consent for delivery, cancel old WhatsApp queue epochs on re-enable, and keep authenticated incoming replies independent. Preserve WP-Cron/transient fallbacks and checked resource limits. The owner waived live email/WhatsApp delivery tests; host-specific resource tuning and panel access are not plugin-build prerequisites. Tests use intercepted transports, real settings authorization, independent sessions and a fallback runtime initialized with 128 MiB. No live configuration change or deployment.

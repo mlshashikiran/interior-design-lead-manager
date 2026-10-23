@@ -125,7 +125,7 @@ Use checked calculator array-or-WP_Error results at every request boundary. Norm
 
 ## Quotation document contract (1.102.62)
 
-Shashi: `IDLM_Quotation_Document::capture()` validates and sanitizes current contractual settings and allocates payment cents; `read()` validates saved versioned JSON and distinguishes unknown from invalid. Save/autosave retain source revision currency, never posted/global currency. Save captures current terms for the new revision; editor previews this policy. Render/export never use live contractual settings for older rows. Branding and paper remain live. Register new classes in production and test bootstraps. [Tests, upgrade/backup policy and remaining PDF qualification](AUDIT-REMEDIATION-QUOTATION-DOCUMENT-SLICE.md).
+Shashi: `IDLM_Quotation_Document::capture()` validates and sanitizes current contractual settings and allocates payment cents; `read()` validates saved versioned JSON and distinguishes unknown from invalid. Save/autosave retain source revision currency, never posted/global currency. Save captures current terms for the new revision. The quotation editor omits the document-content review panel; manage document defaults in Quotation Setup. Render/export never use live contractual settings for older rows. Branding and paper remain live. Register new classes in production and test bootstraps. [Tests, upgrade/backup policy and remaining PDF qualification](AUDIT-REMEDIATION-QUOTATION-DOCUMENT-SLICE.md).
 
 
 ## Quotation paper contract (1.102.63)
