@@ -47,13 +47,13 @@ idlm_integration_test('old restore retains numbering highwater and discards runt
     unset($p['schema'],$p['user_identities']);$p['options'][]=array('option_name'=>'idlm_interakt_api_key','option_value'=>'foreign-key','autoload'=>'yes');idlm_integration_assert_same(true,idlm_native_backup_call('restore_payload',$p));idlm_integration_assert_same('synthetic-protected-key',get_option('idlm_interakt_api_key'));
 });
 idlm_integration_test('active native connection fences restore/reset and stale epochs never execute or retry',static function():void{
-    global $wpdb;$p=idlm_native_backup_fixture();$socket=substr(DB_HOST,strpos(DB_HOST,':')+1);$other=new mysqli('localhost',DB_USER,DB_PASSWORD,DB_NAME,0,$socket);$name=IDLM_Recovery_Guard::name('worker_1');$other->query("SELECT GET_LOCK('$name',0)");$before=idlm_native_backup_digest();
+    global $wpdb;$p=idlm_native_backup_fixture();$other=idlm_integration_other_connection();$name=IDLM_Recovery_Guard::name('worker_1');$other->query("SELECT GET_LOCK('$name',0)");$before=idlm_native_backup_digest();
     try{idlm_integration_assert_true(is_wp_error(idlm_native_backup_call('restore_payload',$p)));idlm_integration_assert_true(is_wp_error(IDLM_Lead_Deletion_Service::reset_all()));idlm_integration_assert_same($before,idlm_native_backup_digest());}finally{$other->close();}
     $epoch=IDLM_Recovery_Guard::generation();idlm_integration_assert_same(true,idlm_native_backup_call('restore_payload',$p));$called=0;$before=idlm_native_backup_digest();idlm_integration_assert_same(false,IDLM_Recovery_Guard::run(static function()use(&$called){$called++;},$epoch,true,'idlm_async_capi_upload_event',array(1,'New',$epoch)));idlm_integration_assert_same(0,$called);idlm_integration_assert_same($before,idlm_native_backup_digest());
     foreach(array(array(),true,-1,'bad') as $bad){idlm_integration_assert_same(false,IDLM_Recovery_Guard::enter_worker($bad,true));}idlm_integration_assert_true(IDLM_Recovery_Guard::enter_worker(IDLM_Recovery_Guard::generation(),true));IDLM_Recovery_Guard::exit_worker();
 });
 idlm_integration_test('snapshot stays consistent while independent connection commits coupled lead and settings writes',static function():void{
-    global $wpdb;$p=idlm_native_backup_fixture();$lead=$p['tables']['idlm_leads'][0]['id'];$socket=substr(DB_HOST,strpos(DB_HOST,':')+1);$other=new mysqli('localhost',DB_USER,DB_PASSWORD,DB_NAME,0,$socket);$changed=false;
+    global $wpdb;$p=idlm_native_backup_fixture();$lead=$p['tables']['idlm_leads'][0]['id'];$other=idlm_integration_other_connection();$changed=false;
     $barrier=static function($sql)use($other,$lead,&$changed,$wpdb){if(!$changed && $sql==='SELECT * FROM `'.$wpdb->prefix.'idlm_quotes`'){$changed=true;$other->begin_transaction();$other->query("UPDATE {$wpdb->prefix}idlm_leads SET first_name='NEW SNAPSHOT' WHERE id=".(int)$lead);$other->query("UPDATE {$wpdb->options} SET option_value='concurrent' WHERE option_name='idlm_synthetic_recovery_setting'");$other->commit();}return $sql;};add_filter('query',$barrier);
     try{$snapshot=idlm_native_backup_call('snapshot');}finally{remove_filter('query',$barrier);$other->close();}idlm_integration_assert_true($changed);idlm_integration_assert_same($p['tables'],$snapshot['tables']);idlm_integration_assert_same($p['options'],$snapshot['options']);idlm_integration_assert_same('NEW SNAPSHOT',$wpdb->get_var("SELECT first_name FROM {$wpdb->prefix}idlm_leads WHERE id=".(int)$lead));
 });
@@ -70,8 +70,7 @@ idlm_integration_test('lost session lease fails closed before a provider callbac
 });
 idlm_integration_test('recovery worker waits for brief coordinator contention but rejects active restore',static function():void{
     global $wpdb;
-    list($host, $port, $socket) = $wpdb->parse_db_host(DB_HOST);
-    $other = new mysqli($host, DB_USER, DB_PASSWORD, DB_NAME, $port ?: 0, $socket ?: null);
+    $other = idlm_integration_other_connection();
     $coordinator = IDLM_Recovery_Guard::name('coordinator');
     $restore = IDLM_Recovery_Guard::name('restore');
     try {

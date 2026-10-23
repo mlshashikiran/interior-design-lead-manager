@@ -300,6 +300,15 @@ idlm_test('T22-A-REL006 repeated ZIP builds ignore source times permissions and 
             assert_true(touch($directory . '/source/' . $file, 1609459200));
             assert_true(chmod($directory . '/source/' . $file, 0600));
         }
+        if (!method_exists('ZipArchive', 'setMtimeName')) {
+            try { IDLM_Release_Artifact::build($directory . '/source', $directory . '/first', $files, $metadata); }
+            catch (RuntimeException $error) {
+                assert_contains('Release packaging requires ZipArchive::setMtimeName', $error->getMessage());
+                assert_false(is_dir($directory . '/first'), 'Unsupported builder wrote output before refusing.');
+                return;
+            }
+            throw new RuntimeException('Unsupported ZIP metadata API was accepted.');
+        }
         $first = IDLM_Release_Artifact::build($directory . '/source', $directory . '/first', $files, $metadata);
         // ZIP DOS timestamps resolve to two seconds; cross that boundary to
         // reproduce the audit's current-time root entry without a fake clock.

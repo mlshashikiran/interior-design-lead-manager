@@ -101,8 +101,12 @@ idlm_integration_test('T17-N-real restricted DDL account cannot falsely complete
     global $wpdb;
     $admin_db = $wpdb;
     $user = 'idlm_test_ddl_' . getmypid();
-    $wpdb->query("CREATE USER '{$user}'@'localhost' IDENTIFIED BY 'synthetic-test-password'");
-    $wpdb->query('GRANT SELECT, INSERT, UPDATE, DELETE ON `' . DB_NAME . "`.* TO '{$user}'@'localhost'");
+    // Docker TCP clients are seen by MySQL at the bridge address, not localhost.
+    $client_host = (string) $wpdb->get_var("SELECT SUBSTRING_INDEX(USER(), '@', -1)");
+    idlm_integration_assert_true('' !== $client_host);
+    $account = $wpdb->prepare('%s@%s', $user, $client_host);
+    idlm_integration_assert_true(false !== $wpdb->query("CREATE USER {$account} IDENTIFIED BY 'synthetic-test-password'"));
+    idlm_integration_assert_true(false !== $wpdb->query('GRANT SELECT, INSERT, UPDATE, DELETE ON `' . DB_NAME . "`.* TO {$account}"));
     $wpdb->query("ALTER TABLE {$wpdb->prefix}idlm_leads DROP COLUMN assigned_at");
     $wpdb->query("DROP TABLE {$wpdb->prefix}idlm_routing_state");
     update_option('idlm_schema_version', '1.3.5', false);
@@ -115,9 +119,13 @@ idlm_integration_test('T17-N-real restricted DDL account cannot falsely complete
         idlm_integration_assert_same('1.3.5', IDLM_Schema_Migration::version('idlm_schema_version'));
         idlm_integration_assert_same('', IDLM_Schema_Migration::version('idlm_routing_schema_version'));
         $wpdb->close();
-    } finally { $wpdb = $admin_db; $wpdb->query("DROP USER '{$user}'@'localhost'"); }
-    idlm_schema_expect_ok(IDLM_DB::init());
-    idlm_schema_expect_ok(IDLM_Routing_State::install());
+    } finally {
+        $wpdb = $admin_db;
+        $wpdb->query("DROP USER {$account}");
+        // Restore the fault fixture even if an assertion fails, preventing cascades.
+        idlm_schema_expect_ok(IDLM_DB::init());
+        idlm_schema_expect_ok(IDLM_Routing_State::install());
+    }
 });
 
 idlm_integration_test('T17-N-marker write failure is detected from durable options and retry converges', static function (): void {

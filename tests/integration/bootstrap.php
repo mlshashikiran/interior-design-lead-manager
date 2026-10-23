@@ -78,6 +78,17 @@ final class IDLM_Integration_Database {
     }
 }
 
+/** Open an independent session using the same socket/TCP endpoint as WordPress. */
+function idlm_integration_other_connection(): mysqli {
+    global $wpdb;
+    list($host, $port, $socket) = $wpdb->parse_db_host(DB_HOST);
+    $connection = new mysqli($host, DB_USER, DB_PASSWORD, DB_NAME, $port ?: 0, $socket ?: null);
+    if ($connection->connect_errno) {
+        throw new RuntimeException('Unable to connect an independent disposable database session: ' . $connection->connect_error);
+    }
+    return $connection;
+}
+
 function idlm_integration_config(bool $require_database_name = false): array {
     $wp_root = getenv('IDLM_TEST_WP_ROOT');
     if (false === $wp_root || '' === trim($wp_root)) {

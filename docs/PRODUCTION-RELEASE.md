@@ -104,3 +104,7 @@ Builder: Shashi. [REL-007 static completion, candidate 1.102.83](AUDIT-REMEDIATI
 ## Current candidate — 1.102.88
 
 Shashi: M6 is complete; selected-topology local qualification and exact installed-runtime evidence are in [the candidate report](M6-M7-RELEASE-CANDIDATE.md). Historical checkpoints below retain original outcomes. Source reconciliation and authentic CI for the reviewed revision are still required. This is a public GitHub repository: pushing requires explicit permission under workspace AGENTS.md. No manifest flag can substitute for the remote matrix. Production deployment and real credential/provider acceptance remain separately controlled.
+
+## CI build-host prerequisite — 2026-10-23
+
+Builder: Shashi. Deterministic release packaging requires `ZipArchive::setMtimeName` (PHP 8.0+ with libzip 1.0+); the CI release job uses PHP 8.1. The builder refuses an unavailable metadata API before creating output. PHP 7.4 remains a supported plugin runtime and runs the rejection contract; newer matrix cells run the complete separated-build reproducibility contract.

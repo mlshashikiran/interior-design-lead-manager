@@ -22,6 +22,7 @@ idlm_test('QUO006 unknown or corrupt historical terms never resolve against curr
 idlm_test('QUO006 money honors explicit historical currencies while uncaptured catalogue prices use current currency',static function():void {
     update_option('idlm_quote_settings',array('currency_code'=>'USD'));
     $money=new ReflectionMethod(IDLM_Quotation_Renderer::class,'money');
+    if (PHP_VERSION_ID < 80100) { $money->setAccessible(true); }
     assert_same('₹118.00',$money->invoke(null,118,'INR'));assert_same('$118.00',$money->invoke(null,118,'USD'));assert_same('$118.00',$money->invoke(null,118));assert_same('EUR118.00',str_replace('€','EUR',$money->invoke(null,118,'EUR')));
 });
 idlm_test('QUO006 complete older quotation backup inventories gain unknown terms without invented content',static function():void {

@@ -12,6 +12,7 @@ idlm_test('QUO009 normalizes supported paper aliases and rejects malformed value
 idlm_test('QUO009 fresh and malformed options share warning-free print and PDF defaults without option writes', static function(): void {
     $settings = new ReflectionMethod(IDLM_Quotations::class, 'settings');
     $paper = new ReflectionMethod(IDLM_Quotation_Exporter::class, 'paper_size');
+    if (PHP_VERSION_ID < 80100) { $settings->setAccessible(true); $paper->setAccessible(true); }
     set_error_handler(static function($severity, $message): void { throw new RuntimeException($message); });
     try {
         foreach (array(false, array(), array('paper_size'=>null), array('paper_size'=>array('Letter')), array('paper_size'=>'letter')) as $option) {

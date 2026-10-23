@@ -284,6 +284,9 @@ final class IDLM_Release_Artifact {
         if (!class_exists('ZipArchive')) {
             throw new RuntimeException('The PHP zip extension is required to build a release artifact.');
         }
+        if (!method_exists('ZipArchive', 'setMtimeName')) {
+            throw new RuntimeException('Release packaging requires ZipArchive::setMtimeName (PHP 8.0+ and libzip 1.0+); plugin runtime support is unchanged.');
+        }
         if (!is_dir($output_dir) && !mkdir($output_dir, 0755, true) && !is_dir($output_dir)) {
             throw new RuntimeException('Unable to create the release output directory.');
         }

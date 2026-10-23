@@ -1,7 +1,7 @@
 <?php
 /** INT-010 native credential migration and request privacy. Builder: Shashi. */
 if (!defined('ABSPATH') || strpos(DB_NAME,'idlm_test_')!==0) { exit(1); }
-function idlm_secret_other() { return new mysqli('localhost',DB_USER,DB_PASSWORD,DB_NAME,0,substr(DB_HOST,strpos(DB_HOST,':')+1)); }
+function idlm_secret_other() { return idlm_integration_other_connection(); }
 function idlm_secret_fail($needle, callable $callback) {
     global $wpdb;$filter=static function($sql)use($needle){return strpos($sql,$needle)!==false ? 'UPDATE idlm_int010_missing_table SET x=1' : $sql;};
     $old=$wpdb->suppress_errors(true);add_filter('query',$filter);

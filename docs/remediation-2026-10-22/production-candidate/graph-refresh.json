@@ -1,6 +1,6 @@
 {
   "builder": "Shashi",
-  "updated_at": "2026-10-22T18:51:28.411930+00:00",
+  "updated_at": "2026-10-23T05:23:46.946697+00:00",
   "method": "Scoped Graphify AST refresh of first-party runtime, affected client/test files; source-verified 46 facade delegates; literal document headings. Existing out-of-scope relationships retained/remapped to matching source labels. No full semantic or HTML rebuild.",
   "code_files": [
     "includes/class-admin-account-controller.php",
@@ -98,7 +98,16 @@
     "tests/performance/class-dataset-generator.php",
     "tests/performance/qualify-team-load.py",
     "tests/performance/qualify-intake.py",
-    "tests/performance/qualify-legacy-admin.py"
+    "tests/performance/qualify-legacy-admin.py",
+    "tests/quotation-document-contracts.php",
+    "tests/quotation-paper-contracts.php",
+    "tests/release-contracts.php",
+    "tests/release/class-release-artifact.php",
+    "tests/integration/bootstrap.php",
+    "tests/integration/backup-contracts.php",
+    "tests/integration/backup-http-cases.php",
+    "tests/integration/secret-store-contracts.php",
+    "tests/integration/schema-migration-contracts.php"
   ],
   "document_files": [
     "docs/ARCHITECTURE.md",
@@ -116,8 +125,8 @@
     "docs/M6-M7-RELEASE-CANDIDATE.md",
     "tests/README.md"
   ],
-  "extracted_nodes": 1498,
-  "extracted_edges": 1555,
+  "extracted_nodes": 1550,
+  "extracted_edges": 1603,
   "verified_delegate_edges": 46,
   "source_sha256": {
     "includes/class-admin-account-controller.php": "adcb343e2647b5d3c7f7f0655f5d14531243cd29db14a9144d2313c447d1a499",
@@ -215,7 +224,16 @@
     "tests/performance/class-dataset-generator.php": "728674c083ee5b33926f66e77a57d5f8c04a1ff27efb5846e3f822c56596855f",
     "tests/performance/qualify-team-load.py": "67bfb20c11a0a77c30eb9f5ee3c5ef9f8ea6c05b12e602dc6ad2ae45030d6582",
     "tests/performance/qualify-intake.py": "89dadc21620d393568a26a5c9bb8fe21a195b598bf1f8073ff039d0d47c43c6a",
-    "tests/performance/qualify-legacy-admin.py": "fa298baf7ecf9b4565365579ff48bae115d4d6797574c4930772d4d094337223"
+    "tests/performance/qualify-legacy-admin.py": "fa298baf7ecf9b4565365579ff48bae115d4d6797574c4930772d4d094337223",
+    "tests/quotation-document-contracts.php": "4c9546776aa76c69d0dadcc9527db4c31efc7b0ea3fa252919011294b4aa9f21",
+    "tests/quotation-paper-contracts.php": "10530250ffdf8506f152ae3bf3ece1226e1ced0d76de5addd25bacd997a07f1e",
+    "tests/release-contracts.php": "c64b251d00107f20200fd2f0483474329167acbff5035e899e81f60242aee905",
+    "tests/release/class-release-artifact.php": "f93c9feb7edaf499a7ac09e3e9147a8f70060c3d3e6d78b37df098e491fc7ea2",
+    "tests/integration/bootstrap.php": "a79fd8e5b26cd3b82545d8d1994c7ca5acdc57aec6ca0fa840b275ecc2f8216a",
+    "tests/integration/backup-contracts.php": "b6fffcf89f7055e860cf3fe3ea2b34d8a2d46012a3391d32a98293bc98963108",
+    "tests/integration/backup-http-cases.php": "3c9c2103d3870c11c773d081dbbe6fcb992c5e6ab2b6fdd45008204a2954df90",
+    "tests/integration/secret-store-contracts.php": "f569857822f2e9c305a7c85f5469375caae38e24892676651c4a73799ceb67dd",
+    "tests/integration/schema-migration-contracts.php": "cd0e6bf2bc1aef2e6a273d1c0fe41999dc82b0eb4ed58a935ae0e945f04df213"
   },
   "semantic_tokens": "Not measured; no token-reduction claim"
 }
