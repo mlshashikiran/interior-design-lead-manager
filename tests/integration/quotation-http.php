@@ -144,6 +144,11 @@ try {
     if (in_array('--kanban-page-only', $argv, true)) {
         require __DIR__ . '/kanban-pagination-http-cases.php';
         echo "{$passed} passed, {$failed} failed\n";
+        if (in_array('--hold', $argv, true)) {
+            echo 'BROWSER URL=' . $config['http_url'] . ' SOURCE=' . $board_source . ' STOP=' . $config['content_dir'] . "/stop\n";
+            $deadline = microtime(true) + 900;
+            while (!is_file($config['content_dir'] . '/stop') && microtime(true) < $deadline) { usleep(100000); }
+        }
         exit($failed ? 1 : 0);
     }
     if (in_array('--role-permissions-only', $argv, true)) {

@@ -4,7 +4,7 @@ Author / Builder: Shashi
 Status: Approved staged plan; Phases 0 through 9 are in progress  
 Prepared: 2026-08-30  
 Planning release: 1.98.2  
-Current implementation release: 1.102.90
+Current implementation release: 1.102.91
 Latest audit checkpoint: [Portable hosting and notification controls 1.102.89](NOTIFICATIONS-AND-HOSTING.md); exact new-revision build evidence is in the current CI artifact. Historical checkpoint: [CI-qualified production build 1.102.88](CI-QUALIFIED-BUILD-1.102.88.md). M6 COMPLETE; selected single-server M7 qualification and exact M8 build/promotion evidence verified. Eight remote matrix cells and the official package gate PASS. REL-001 IMPLEMENTED; 44 IMPLEMENTED / zero IN PROGRESS / zero CLOSED. Actual-host acceptance and deployment remain pending.
 Baseline implementation: 1.98.1
 

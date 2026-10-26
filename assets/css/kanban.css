@@ -77,11 +77,12 @@
 .idlm-kanban-board {
     display: flex;
     gap: 16px;
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
     padding-bottom: 20px;
     align-items: flex-start;
-    height: 100dvh;
-    min-height: 100dvh;
+    height: max(360px, 70dvh);
+    min-height: 360px;
     width: 100%;
 }
 
@@ -195,7 +196,8 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    min-height: 150px;
+    min-height: 0;
+    overscroll-behavior-y: contain;
     box-sizing: border-box;
 }
 
@@ -536,10 +538,10 @@
 
     .idlm-kanban-board {
         display: block;
-        height: auto;
-        min-height: 0;
+        height: max(360px, 65dvh);
+        min-height: 360px;
         padding-bottom: 0;
-        overflow: visible;
+        overflow: hidden;
     }
 
     .idlm-kanban-column {
@@ -553,7 +555,7 @@
     }
 
     .idlm-kanban-column-body {
-        overflow: visible;
+        overflow-y: auto;
     }
 
     .idlm-kanban-card-drag-handle {
@@ -581,6 +583,7 @@
     }
 }
 
-/* Keep both page controls visible when the range label wraps on narrow screens. */
-.idlm-wrap .idlm-kanban-pagination { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; margin:12px 0; }
-.idlm-kanban-pagination [role="status"] { min-width:0; text-align:center; overflow-wrap:anywhere; }
+.idlm-kanban-column-loader { flex: 0 0 auto; padding: 8px; text-align: center; color: var(--idlm-text-muted); font-size: 12px; }
+.idlm-kanban-column-loader p { margin: 0 0 8px; }
+.idlm-kanban-column-loader .idlm-btn { width: 100%; }
+.idlm-kanban-column-body:focus-visible { outline: 2px solid var(--idlm-action); outline-offset: -2px; }

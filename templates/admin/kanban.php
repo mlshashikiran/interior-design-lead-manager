@@ -187,12 +187,6 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                 <?php endforeach; ?>
             </div>
 
-            <div class="idlm-kanban-pagination" aria-label="Pipeline pages">
-                <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-kanban-prev-page" disabled>Previous page</button>
-                <span id="idlm-kanban-page-status" role="status" aria-live="polite">Loading leads…</span>
-                <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-kanban-next-page" disabled>Next page</button>
-            </div>
-
             <!-- Kanban Board -->
             <div class="idlm-kanban-board" id="idlm-kanban-board" data-currency-symbol="<?php echo esc_attr($idlm_currency_symbol); ?>" role="region" aria-label="Sales pipeline board" tabindex="0">
                 <?php foreach ($idlm_stages as $idlm_stage): ?>
@@ -213,7 +207,7 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                                 <span class="idlm-kanban-column-pipeline-value"<?php echo 'none' === $idlm_total_source ? ' style="display: none;"' : ''; ?>><?php echo esc_html($idlm_total_label); ?>: <?php echo esc_html($idlm_currency_symbol); ?>0</span>
                             </div>
                         </div>
-                        <div class="idlm-kanban-column-body">
+                        <div class="idlm-kanban-column-body" tabindex="0" role="region" aria-label="<?php echo esc_attr($idlm_stage . ' leads'); ?>" aria-busy="true">
                             <!-- Cards populated dynamically via JS -->
                         </div>
                     </section>

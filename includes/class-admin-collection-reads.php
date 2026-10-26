@@ -812,13 +812,35 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
         $where = array_merge($where, $date_conditions);
         $where_clause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
 
-        // Bind every page to the live actor, filters and sort. Never allocate the complete board.
+        $stages = get_option('idlm_custom_stages', array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'));
+        $stages = array_values(array_diff($stages, array('New', 'Contacted')));
+        if (isset($_POST['per_column']) && !is_string($_POST['per_column'])) {
+            wp_send_json_error(array('message' => 'Invalid pipeline loading mode.'), 400);
+        }
+        $column_mode = isset($_POST['per_column']) && '1' === sanitize_text_field(wp_unslash($_POST['per_column']));
+        if (isset($_POST['column_stage']) && !is_string($_POST['column_stage'])) {
+            wp_send_json_error(array('message' => 'Invalid pipeline column.'), 400);
+        }
+        $column_stage = isset($_POST['column_stage']) ? sanitize_text_field(wp_unslash($_POST['column_stage'])) : '';
+        if ('' !== $column_stage && (!$column_mode || !in_array($column_stage, $stages, true))) {
+            wp_send_json_error(array('message' => 'Invalid pipeline column.'), 400);
+        }
+        $board_limit = $column_mode ? 20 : 100;
+
+        // Bind every batch to the live actor, filters, sort and requested column.
         $board_scope = array('where' => $where, 'sort' => $post_sort);
+        if ($column_mode) {
+            $board_scope['column_stage'] = $column_stage;
+            $board_scope['limit'] = $board_limit;
+        }
         $board_offset = 0;
         if (isset($_POST['cursor']) && !is_string($_POST['cursor'])) {
             wp_send_json_error(array('message' => 'Invalid board page.'), 400);
         }
         if (!empty($_POST['cursor'])) {
+            if ($column_mode && '' === $column_stage) {
+                wp_send_json_error(array('message' => 'Choose a pipeline column before loading more leads.'), 400);
+            }
             // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Signed opaque token is validated by Cursor_Pagination before any SQL use.
             $position = IDLM_Cursor_Pagination::decode(wp_unslash($_POST['cursor']), 'kanban_board', $board_scope);
             if (is_wp_error($position) || !isset($position['offset']) || !is_int($position['offset']) || $position['offset'] < 0) {
@@ -840,27 +862,48 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
             // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
             $stale_cutoff
         );
-        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0217: ajax_get_kanban_leads(): authenticated nonce/capability/object handlers; fixed date/sort/trigger maps; filter fragments prepared at construction, dynamic IN lists use integers/placeholders; export/task cursors are bounded and scoped.
-        $leads = $wpdb->get_results($wpdb->prepare(
-            "SELECT l.id, l.first_name, l.last_name, l.email, l.phone, l.budget, l.quote_value, l.deal_value, l.quote_file, l.property_location, l.source, l.stage, l.call_status, l.assigned_rep_id, l.is_duplicate,
+        $stage_pages = array();
+        $leads = array();
+        $board_more = false;
+        $query_stages = $column_mode ? ('' !== $column_stage ? array($column_stage) : $stages) : array('');
+        foreach ($query_stages as $query_stage) {
+            $card_where = $where_clause;
+            if ($column_mode) {
+                $card_where .= $wpdb->prepare(' AND l.stage = %s', $query_stage);
+            }
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0217: Authenticated, scoped filters and allowlisted sort; column equality is prepared above; limit/offset are bounded server values or signed positions.
+            $batch = $wpdb->get_results($wpdb->prepare(
+                "SELECT l.id, l.first_name, l.last_name, l.email, l.phone, l.budget, l.quote_value, l.deal_value, l.quote_file, l.property_location, l.source, l.stage, l.call_status, l.assigned_rep_id, l.is_duplicate,
                     u.display_name as rep_name,
                     {$needs_update_sql} as needs_update,
                     (SELECT COUNT(t.id) FROM {$wpdb->prefix}idlm_tasks t WHERE t.lead_id = l.id AND t.status = 'pending') as pending_tasks_count,
                     (SELECT COUNT(t.id) FROM {$wpdb->prefix}idlm_tasks t WHERE t.lead_id = l.id AND t.status = 'pending' AND t.due_date IS NOT NULL AND t.due_date < %s) as overdue_tasks_count
              FROM {$table_leads} l
              LEFT JOIN {$wpdb->users} u ON l.assigned_rep_id = u.ID
-             {$where_clause} ORDER BY {$order_by} LIMIT 101 OFFSET %d",
-        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $now_mysql,
-            $board_offset
-        ));
-        if ($wpdb->last_error) { wp_send_json_error(array('message' => 'Unable to load the board. Retry shortly.'), 503); }
-        $board_more = count($leads) > 100;
-        $leads = array_slice($leads, 0, 100);
+             {$card_where} ORDER BY {$order_by} LIMIT %d OFFSET %d",
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                $now_mysql,
+                $board_limit + 1,
+                $board_offset
+            ));
+            if ($wpdb->last_error) { wp_send_json_error(array('message' => 'Unable to load the board. Retry shortly.'), 503); }
+            $has_more = count($batch) > $board_limit;
+            $batch = array_slice($batch, 0, $board_limit);
+            $leads = array_merge($leads, $batch);
+            $board_more = $board_more || $has_more;
+            if ($column_mode) {
+                $column_scope = $board_scope;
+                $column_scope['column_stage'] = $query_stage;
+                $stage_pages[$query_stage] = array(
+                    'offset' => $board_offset,
+                    'size' => count($batch),
+                    'has_more' => $has_more,
+                    'next_cursor' => $has_more ? IDLM_Cursor_Pagination::encode('kanban_board', array('offset' => $board_offset + $board_limit), $column_scope) : '',
+                );
+            }
+        }
 
         // Group leads by stage
-        $stages = get_option('idlm_custom_stages', array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'));
-        $stages = array_values(array_diff($stages, array('New', 'Contacted')));
         $grouped_leads = array();
         foreach ($stages as $stage) {
             $grouped_leads[$stage] = array();
@@ -950,7 +993,8 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
 
         wp_send_json_success(array(
             'leads' => $grouped_leads,
-            'page' => array('offset' => $board_offset, 'size' => count($leads), 'has_more' => $board_more, 'next_cursor' => $board_more ? IDLM_Cursor_Pagination::encode('kanban_board', array('offset' => $board_offset + 100), $board_scope) : ''),
+            'page' => array('offset' => $board_offset, 'size' => count($leads), 'has_more' => $board_more, 'next_cursor' => !$column_mode && $board_more ? IDLM_Cursor_Pagination::encode('kanban_board', array('offset' => $board_offset + $board_limit), $board_scope) : ''),
+            'stage_pages' => $stage_pages,
             'stage_summaries' => $stage_summaries,
             'stats' => array(
                 'total_filtered' => $summary ? intval($summary->total_filtered) : 0,

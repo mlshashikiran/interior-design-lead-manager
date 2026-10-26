@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.102.91] - 2026-10-26
+
+### Changed
+
+- Replace pipeline page controls with independent column scrolling. Load twenty leads per column initially and append twenty more near the bottom, retaining full filtered counts and values, stage-bound signed continuations, accessible load/retry controls and loaded depth after stage updates. Builder: Shashi.
+
 ## [1.102.90] - 2026-10-24
 
 ### Changed

@@ -42,4 +42,64 @@ idlm_http_case('M7-H-board-filter-cannot-widen-representative-scope', static fun
     $data = idlm_board_data(array('source' => $board_source), 'other'); $ids = array(); foreach ($data['leads'] as $rows) { $ids = array_merge($ids, array_map('intval', array_column($rows, 'id'))); }
     idlm_http_check($ids === array($board_other), 'Other representative scope leaked');
 });
-$wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}idlm_leads WHERE source = %s", $board_source));
+idlm_http_case('M7-H-board-columns-start-with-twenty-each-and-load-independently', static function() use ($board_source, $board_ids): void {
+    $fields = array('source' => $board_source, 'per_column' => '1');
+    $initial = idlm_board_data($fields);
+    idlm_http_check(count($initial['leads']['Won']) === 20 && count($initial['leads']['Quote Shared']) === 20, 'Initial cards are not bounded per column');
+    idlm_http_check($initial['stats']['total_filtered'] === 205 && $initial['stage_summaries']['Won']['count'] === 103, 'Initial column totals are truncated');
+    $seen = array();
+    foreach (array('Won' => array(20,20,20,20,20,3), 'Quote Shared' => array(20,20,20,20,20,2)) as $stage => $expected_sizes) {
+        $data = $initial; $sizes = array();
+        do {
+            $rows = $data['leads'][$stage];
+            $sizes[] = count($rows);
+            $seen = array_merge($seen, array_map('intval', array_column($rows, 'id')));
+            foreach ($rows as $row) { idlm_http_check($row['stage'] === $stage, 'Continuation mixed columns'); }
+            $page = $data['stage_pages'][$stage];
+            if (!$page['has_more']) { break; }
+            $data = idlm_board_data($fields + array('column_stage' => $stage, 'cursor' => $page['next_cursor']));
+            foreach ($data['leads'] as $other_stage => $other_rows) { if ($other_stage !== $stage) { idlm_http_check(!$other_rows, 'Continuation loaded another column'); } }
+            idlm_http_check($data['stats']['total_filtered'] === 205 && $data['stage_summaries']['Won']['count'] === 103, 'Continuation changed full totals');
+        } while (true);
+        idlm_http_check($sizes === $expected_sizes, 'Column batches skip or overrun twenty cards');
+    }
+    sort($seen); sort($board_ids);
+    idlm_http_check($seen === $board_ids, 'Independent columns skip, duplicate or leak leads');
+});
+idlm_http_case('M7-H-board-column-cursors-bind-column-actor-filters-and-sort', static function() use ($board_source): void {
+    $fields = array('source' => $board_source, 'per_column' => '1');
+    $initial = idlm_board_data($fields);
+    $cursor = $initial['stage_pages']['Won']['next_cursor'];
+    $valid = $fields + array('column_stage' => 'Won', 'cursor' => $cursor);
+    foreach (array(
+        array(array_replace($valid, array('column_stage' => 'Quote Shared')), 'owner'),
+        array($valid, 'other'),
+        array(array_replace($valid, array('source' => 'changed')), 'owner'),
+        array($valid + array('sort' => 'oldest'), 'owner'),
+        array(array_replace($valid, array('cursor' => $cursor . 'x')), 'owner'),
+        array(array_replace($valid, array('column_stage' => array('Won'))), 'owner'),
+        array(array_replace($valid, array('per_column' => array('1'))), 'owner'),
+        array(array_replace($valid, array('column_stage' => 'New')), 'owner'),
+        array(array_replace($valid, array('column_stage' => '')), 'owner'),
+    ) as $case) {
+        $response = idlm_board_page($case[0], $case[1]);
+        idlm_http_check($response['status'] === 400 && strpos($response['body'], 'Synthetic board') === false, 'Invalid column cursor returned cards');
+    }
+    $data = idlm_board_data($fields + array('column_stage' => 'Lost'));
+    idlm_http_check(!$data['leads']['Lost'] && !$data['stage_pages']['Lost']['has_more'], 'Empty column has a continuation');
+});
+idlm_http_case('M7-H-board-column-sort-and-live-revocation-apply-to-every-batch', static function() use ($board_source, $board_ids, $users): void {
+    $fields = array('source' => $board_source, 'per_column' => '1', 'column_stage' => 'Won', 'sort' => 'oldest');
+    $data = idlm_board_data($fields);
+    $expected = array_values(array_filter($board_ids, static function($id) use ($board_ids) { return array_search($id, $board_ids, true) % 2 === 0; }));
+    idlm_http_check(array_map('intval', array_column($data['leads']['Won'], 'id')) === array_slice($expected, 0, 20), 'Column sort was not applied');
+    $data = idlm_board_data($fields + array('cursor' => $data['stage_pages']['Won']['next_cursor']));
+    idlm_http_check(array_map('intval', array_column($data['leads']['Won'], 'id')) === array_slice($expected, 20, 20), 'Column continuation lost sort');
+    update_user_meta($users['owner'], 'idlm_crm_access_disabled', '1');
+    $response = idlm_board_page($fields + array('cursor' => $data['stage_pages']['Won']['next_cursor']));
+    delete_user_meta($users['owner'], 'idlm_crm_access_disabled');
+    idlm_http_check(empty(json_decode($response['body'], true)['success']) && strpos($response['body'], 'Synthetic board') === false, 'Column continuation ignored access revocation');
+});
+if (!in_array('--hold', $argv, true) || !in_array('--kanban-page-only', $argv, true)) {
+    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->prefix}idlm_leads WHERE source = %s", $board_source));
+}

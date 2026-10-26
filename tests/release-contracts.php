@@ -53,7 +53,7 @@ idlm_test('T22-A-REL007 independent archive policy refuses local design and grap
 idlm_test('Phase 9 release metadata authorities remain aligned', static function(): void {
     $evidence = IDLM_Release_Artifact::version_evidence(dirname(__DIR__));
     assert_true($evidence['aligned']);
-    assert_same('1.102.90', $evidence['version']);
+    assert_same('1.102.91', $evidence['version']);
     assert_count_value(5, $evidence['sources']);
     assert_count_value(1, array_unique(array_values($evidence['sources'])));
 });
