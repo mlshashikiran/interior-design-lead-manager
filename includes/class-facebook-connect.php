@@ -1,11 +1,14 @@
 <?php
-/** Customer-site client for the publisher's Facebook connection service. Builder: Shashi. */
+/** Direct Facebook connection facade and legacy hosted transport. Builder: Shashi. */
 if (!defined('ABSPATH')) { exit; }
+
+require_once __DIR__ . '/class-facebook-direct.php';
 
 final class IDLM_Facebook_Connect {
     const PENDING = 'idlm_facebook_pending_';
-    public static function init() { add_action('wp_ajax_idlm_facebook_connect',array(__CLASS__,'ajax')); }
-    public static function ready() {
+    public static function init() { IDLM_Facebook_Direct::init(); add_action('wp_ajax_idlm_facebook_connect',array(__CLASS__,'ajax')); }
+    public static function ready() { return IDLM_Facebook_Direct::ready(); }
+    private static function service_ready() {
         return defined('IDLM_FACEBOOK_SERVICE_URL') && is_string(IDLM_FACEBOOK_SERVICE_URL) && self::valid_service_url(IDLM_FACEBOOK_SERVICE_URL)
             && defined('IDLM_FACEBOOK_SITE_ID') && is_string(IDLM_FACEBOOK_SITE_ID) && preg_match('/^[a-f0-9]{32}$/D',IDLM_FACEBOOK_SITE_ID)
             && defined('IDLM_FACEBOOK_SITE_KEY') && is_string(IDLM_FACEBOOK_SITE_KEY) && preg_match('/^[a-f0-9]{64}$/D',IDLM_FACEBOOK_SITE_KEY);
@@ -16,7 +19,7 @@ final class IDLM_Facebook_Connect {
     }
     public static function hosted() { return (IDLM_Lead_Connector::config()['mode'] ?? '') === 'hosted'; }
     public static function request($action,$data=array()) {
-        if (!self::ready()) { return new WP_Error('idlm_facebook_setup','Facebook connection service is not configured for this CRM. Contact the site administrator.'); }
+        if (!self::service_ready()) { return new WP_Error('idlm_facebook_setup','Facebook connection service is not configured for this CRM. Contact the site administrator.'); }
         $body=wp_json_encode(array('action'=>$action,'data'=>(object)$data));$nonce=bin2hex(random_bytes(16));$stamp=(string)time();
         $signature=hash_hmac('sha256',$stamp."\n".$nonce."\n".$body,IDLM_FACEBOOK_SITE_KEY);
         // Safe HTTP rejects internal destinations, redirects and credentials in URLs.
@@ -31,15 +34,10 @@ final class IDLM_Facebook_Connect {
         if ($code!==200 || isset($result['error'])) { return new WP_Error('idlm_facebook_response',is_string($result['error'] ?? null) ? sanitize_text_field($result['error']) : 'Facebook connection failed.'); }
         return $result;
     }
-    private static function pending_key() { return self::PENDING.get_current_user_id(); }
-    private static function pending() {
-        $value=json_decode(IDLM_Secret_Store::get(self::pending_key(),'',true),true);
-        if (!is_array($value) || ($value['expires'] ?? 0)<time() || ($value['generation'] ?? null)!==IDLM_Recovery_Guard::generation() || !hash_equals($value['session_hash'] ?? '',hash('sha256',wp_get_session_token()))) { return new WP_Error('idlm_facebook_session','Connection session expired. Connect Facebook again.'); }
-        return array('session'=>$value['session'],'claim'=>$value['claim']);
-    }
     public static function context() {
         $config=IDLM_Lead_Connector::config();
-        return array('ready'=>(bool)self::ready(),'connected'=>($config['mode'] ?? '')==='hosted' && !empty($config['connection']),'page_name'=>$config['page_name'] ?? '','form_names'=>$config['form_names'] ?? array());
+        $connected=in_array($config['mode'] ?? '', array('hosted','direct'), true) && !empty($config['connection']);
+        return array('ready'=>(bool)self::ready(),'connected'=>$connected,'authorized'=>$connected || IDLM_Facebook_Direct::authorized(),'page_name'=>$config['page_name'] ?? '','form_names'=>$config['form_names'] ?? array());
     }
     public static function valid_authorization_url($url) {
         if (!is_string($url)) { return false; }$p=wp_parse_url($url);parse_str($p['query'] ?? '',$query);
@@ -49,56 +47,19 @@ final class IDLM_Facebook_Connect {
     /** All operations bind to the current WordPress administrator and session. */
     public static function operation($op,$input) {
         if (!current_user_can('manage_options')) { return new WP_Error('idlm_facebook_forbidden','Administrator access required.'); }
+        if ($op !== 'disconnect' || !self::hosted()) { return IDLM_Facebook_Direct::operation($op, $input); }
         if (!in_array($op,array('start','pages','forms','select','disconnect'),true)) { return new WP_Error('idlm_facebook_operation','Invalid connection operation.'); }
-        if ($op==='start') {
-            $requested=$input['return_url'] ?? '';
-            if (!is_string($requested)) { return new WP_Error('idlm_facebook_return','Invalid return URL.'); }
-            $fallback=admin_url('admin.php?page=idlm_settings');$return=wp_validate_redirect($requested,$fallback);$parts=wp_parse_url($return);$home=wp_parse_url(home_url('/'));
-            if (($parts['scheme'] ?? '')!=='https' || ($parts['host'] ?? '')!==($home['host'] ?? '') || ($parts['port'] ?? 443)!==($home['port'] ?? 443) || isset($parts['user']) || isset($parts['pass'])) { return new WP_Error('idlm_facebook_https','Facebook connection requires this CRM to use a public HTTPS URL.'); }
-            $return=explode('#',$return,2)[0];$return=add_query_arg(array('idlm_fb_return'=>'1'),$return);
-            $generation=IDLM_Recovery_Guard::generation();if ($generation===null) { return new WP_Error('idlm_facebook_recovery','CRM recovery state is unavailable.'); }
-            $pending=array('session'=>bin2hex(random_bytes(16)),'claim'=>bin2hex(random_bytes(32)),'generation'=>$generation,'session_hash'=>hash('sha256',wp_get_session_token()),'expires'=>time()+900);
-            if (!IDLM_Secret_Store::set(self::pending_key(),wp_json_encode($pending))) { return new WP_Error('idlm_facebook_store','Connection session could not be saved.'); }
-            $result=self::request('begin',array('session'=>$pending['session'],'claim'=>$pending['claim'],'return_url'=>$return));
-            if (is_wp_error($result)) { return $result; }
-            if (!self::valid_authorization_url($result['authorization_url'] ?? null)) { return new WP_Error('idlm_facebook_redirect','Facebook authorization URL could not be verified.'); }
-            return array('authorization_url'=>$result['authorization_url']);
-        }
         if ($op==='disconnect') {
             // Stop local imports immediately, even if the service is unavailable.
             $config=IDLM_Lead_Connector::config();$config['enabled']='0';update_option('idlm_meta_lead_connector',$config,false);
             if (IDLM_Lead_Connector::config()!==$config) { return new WP_Error('idlm_facebook_store','Could not stop local sync. Please retry.'); }
-            $result=self::request('disconnect');if (is_wp_error($result)) { return $result; }
-            unset($config['connection']);update_option('idlm_meta_lead_connector',$config,false);
+            $result=self::request('disconnect'); // Local migration must remain possible if the old service is unavailable.
+            unset($config['connection']);$config['mode']='manual';update_option('idlm_meta_lead_connector',$config,false);
             if (IDLM_Lead_Connector::config()!==$config) { return new WP_Error('idlm_facebook_store','Sync is stopped, but the disconnected state could not be saved. Retry Disconnect.'); }
-            delete_option(self::pending_key());return array('disconnected'=>true);
+            delete_option(self::PENDING.get_current_user_id());delete_option(IDLM_Facebook_Direct::PENDING.'epoch');
+            return array('disconnected'=>true,'service_disconnected'=>!is_wp_error($result));
         }
-        $pending=self::pending();if (is_wp_error($pending)) { return $pending; }
-        $data=$pending;
-        if (in_array($op,array('pages','forms'),true)) {
-            $after=$input['after'] ?? '';if (!is_string($after)||strlen($after)>2048) { return new WP_Error('idlm_facebook_cursor','Invalid page cursor.'); }$data['after']=$after;
-        }
-        if (in_array($op,array('forms','select'),true)) {
-            $page=IDLM_Lead_Connector::id($input['page_id'] ?? null);if (!$page) { return new WP_Error('idlm_facebook_page','Choose a Facebook Page.'); }$data['page_id']=$page;
-        }
-        if ($op==='select') {
-            $forms=$input['forms'] ?? null;
-            if (!is_array($forms) || count($forms)<1 || count($forms)>20 || array_filter($forms,static function($form){return IDLM_Lead_Connector::id($form)==='';})) { return new WP_Error('idlm_facebook_forms','Select between one and twenty forms.'); }$data['forms']=array_values(array_unique($forms));
-        }
-        $result=self::request($op,$data);if (is_wp_error($result)) { return $result; }
-        if ($op==='select') {
-            if (($result['connected'] ?? false)!==true || !IDLM_Lead_Connector::id($result['page_id'] ?? null) || !is_string($result['connection'] ?? null) || !preg_match('/^[a-f0-9]{32}$/D',$result['connection']) || ($result['page_id'] ?? '')!==$data['page_id'] || ($result['forms'] ?? null)!==$data['forms']) { return new WP_Error('idlm_facebook_selection','Service did not confirm the selected forms.'); }
-            $config=IDLM_Lead_Connector::config();
-            $config=array_merge($config,array('enabled'=>'1','mode'=>'hosted','connection'=>$result['connection'],'page_id'=>$result['page_id'],'app_id'=>$result['app_id'],'forms'=>$result['forms'],'page_name'=>sanitize_text_field($result['page_name'] ?? ''),'form_names'=>array_map('sanitize_text_field',$result['form_names'] ?? array()),'started_at'=>(int)$result['started_at']));
-            if (empty($config['whatsapp_page_id'])) { $config['whatsapp_page_id']=$config['page_id']; }
-            update_option('idlm_meta_lead_connector',$config,false);
-            if (IDLM_Lead_Connector::config()!==$config) { return new WP_Error('idlm_facebook_store','Facebook is connected but CRM settings could not be saved. Retry Start syncing.'); }
-            delete_option(self::pending_key());return array('connected'=>true,'page_name'=>$config['page_name'],'form_names'=>array_values($config['form_names']));
-        }
-        // Never return tokens, claims or opaque authorization state to the browser.
-        $key=$op==='pages' ? 'pages' : 'forms';$rows=array();
-        foreach ($result[$key] ?? array() as $row) { if (IDLM_Lead_Connector::id($row['id'] ?? null) && is_string($row['name'] ?? null)) { $rows[]=array('id'=>$row['id'],'name'=>sanitize_text_field($row['name'])); } }
-        return array($key=>$rows,'after'=>is_string($result['after'] ?? null) ? $result['after'] : '');
+        return new WP_Error('idlm_facebook_operation','Invalid connection operation.');
     }
     public static function ajax() {
         if (!current_user_can('manage_options')) { wp_send_json_error(array('message'=>'Administrator access required.'),403); }

@@ -1443,6 +1443,7 @@ require_once dirname(__DIR__) . '/includes/class-quotation-policy.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-repository.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-schema.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-calculator.php';
+require_once dirname(__DIR__) . '/includes/class-quotation-catalogue-import.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-document.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-exporter.php';
 require_once dirname(__DIR__) . '/includes/class-quotations.php';

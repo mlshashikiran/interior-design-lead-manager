@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quote Builder Redesign – Reference Spec</title>
+<!--
+=====================================================================
+HANDOFF NOTES FOR THE CODING AGENT
+This single file is a working, interactive reference for the redesigned
+Quotations module (List, View, Editor). It is a UI/UX target, not
+production code. Re-implement it inside the existing WordPress plugin
+(view=quotations) keeping the plugin's data layer and AJAX endpoints.
+
+Design tokens are in :root (CSS variables) – map them to the plugin's
+existing tokens where they exist (sidebar navy, brown accent #8a5a14).
+
+CHANGE LIST (each is marked in the UI with a numbered "spec" badge and
+detailed in the Spec tab):
+ EDITOR   E1 compact one-row line items + "Details" expander
+          E2 wide, formatted rate/qty inputs (₹ + thousands separators)
+          E3 icon buttons have tooltips/aria-labels; drag handle; delete = undo toast
+          E4 catalogue-derived fields shown as read-only chips
+          E5 sticky Totals column beside line items; running total in footer
+          E6 footer no longer hides content (bottom padding)
+          E7 autosave status text (Saving… / Saved 2 min ago / unsaved warning)
+          E8 revision-note field + clearer Save Revision
+ VIEW     V1 richer summary tiles (customer, phone, project, status, revision, totals)
+          V2 grouped actions: Preview · Download ▾ · Edit
+          V3 revision timeline with delta, Compare, Restore
+          V4 "—" for non-applicable dimensions; remove stray empty strip
+ LIST     L1 status column + status chips        L2 fix "Unknown" creator
+          L3 live filters, date presets, Reset    L4 short/relative dates
+          L5 sortable columns, clickable rows, kebab menu
+          L6 show "R02" not full revision id; unify quote number format
+ GLOBAL   G1 contrast: min 12px labels, AA colours  G2 visible focus rings
+          G3 responsive: table → cards <760px        G4 dashboard error state w/ retry
+=====================================================================
+-->
+<style>
+:root{
+  --bg:#f3f5f8; --surface:#fff; --surface-2:#f8fafc; --line:#e3e8ef; --line-2:#cfd7e2;
+  --ink:#111827; --ink-2:#475569; --ink-3:#64748b;           /* ink-3 = AA on white */
+  --nav:#111827; --nav-ink:#cbd5e1; --nav-active:#2a2318;
+  --accent:#8a5a14; --accent-ink:#fff; --accent-soft:#fbf3e4;
+  --ok:#0f7b4a; --ok-bg:#e3f6ec; --warn:#92580a; --warn-bg:#fdf0d5;
+  --info:#1d4ed8; --info-bg:#e6eeff; --bad:#b42318; --bad-bg:#fde8e6; --mute-bg:#eef1f5;
+  --r:10px; --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.08);
+  --font:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0e131b;--surface:#161c27;--surface-2:#1b2230;--line:#263043;--line-2:#34415a;
+  --ink:#eef2f8;--ink-2:#b6c1d4;--ink-3:#93a1b8;--accent:#d9a24a;--accent-ink:#1a1204;--accent-soft:#2a2112;
+  --ok-bg:#0f2f22;--warn-bg:#33260c;--info-bg:#14264d;--bad-bg:#3a1713;--mute-bg:#1f2735;--ok:#4cd08f;--warn:#f0b865;--info:#8fb2ff;--bad:#ff8a7d}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}   /* G2 */
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+/* sidebar */
+.side{background:var(--nav);color:var(--nav-ink);padding:16px 12px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{display:flex;gap:10px;align-items:center;padding:4px 8px 16px;color:#fff;font-weight:600}
+.brand i{width:32px;height:32px;border-radius:50%;background:#d9a24a;display:grid;place-items:center;color:#111;font-style:normal;font-weight:700}
+.nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:8px;color:inherit;text-decoration:none;font-weight:500;margin-bottom:2px}
+.nav a.on{background:var(--nav-active);color:#fff;box-shadow:inset 3px 0 0 #d9a24a}
+.nav a:hover:not(.on){background:#1b2433}
+.side .me{margin-top:auto;padding:10px 12px}
+/* main */
+main{min-width:0}
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;padding:14px 28px;min-height:64px}
+.top h1{font-size:18px;margin:0;font-weight:650;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crumb{color:var(--ink-3);font-size:12.5px}
+.wrap{padding:20px 28px 120px;max-width:1280px}                       /* E6 bottom padding */
+.tabs{display:inline-flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:16px}
+.tabs button{border:0;background:none;padding:8px 14px;border-radius:8px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--surface)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.card h2{font-size:15px;margin:0}
+.pad{padding:18px 20px}
+.muted{color:var(--ink-3)} .sm{font-size:12.5px}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+/* buttons */
+.btn{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line-2);background:var(--surface);border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--surface-2)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.ghost{border-color:transparent;background:none}
+.btn.danger{color:var(--bad)}
+.btn.sm{padding:5px 10px;font-size:12.5px}
+.icon{width:32px;height:32px;padding:0;justify-content:center;border-radius:8px;border:1px solid transparent;background:none;cursor:pointer;color:var(--ink-2);position:relative}
+.icon:hover{background:var(--mute-bg);color:var(--ink)}
+.icon.del:hover{background:var(--bad-bg);color:var(--bad)}
+/* tooltip (E3) */
+[data-tip]{position:relative}
+[data-tip]:hover::after,[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
+  background:var(--ink);color:var(--surface);font-size:12px;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:50;pointer-events:none}
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--mute-bg);color:var(--ink-2)}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.draft{background:var(--mute-bg)} .chip.sent{background:var(--info-bg);color:var(--info)}
+.chip.accepted{background:var(--ok-bg);color:var(--ok)} .chip.expired{background:var(--warn-bg);color:var(--warn)}
+.chip.rejected{background:var(--bad-bg);color:var(--bad)}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+/* spec badge */
+.spec{display:inline-grid;place-items:center;min-width:22px;height:18px;padding:0 5px;border-radius:9px;background:#7c3aed;color:#fff;font-size:10.5px;font-weight:700;vertical-align:middle;margin-left:6px;cursor:help}
+body.nospec .spec{display:none}
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 16px;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;font-weight:600;color:var(--ink-2)}
+input[type=text],input[type=number],input[type=date],input[type=search],select,textarea,.inp{
+  border:1px solid var(--line-2);background:var(--surface);border-radius:8px;padding:9px 11px;min-width:0;width:100%}
+input::placeholder,textarea::placeholder{color:var(--ink-3)}
+.search{flex:1;min-width:220px}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:8px 12px;font-weight:600;font-size:12.5px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border:0}
+.seg button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
+/* table */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);font-weight:700;text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
+.tbl th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
+.tbl th button:hover{color:var(--ink)}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tbody tr{cursor:pointer}
+.tbl tbody tr:hover{background:var(--surface-2)}
+.tbl .r{text-align:right}
+.qn{font-weight:650}
+.kebab{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);min-width:190px;padding:6px;z-index:40;display:none}
+.menu.open{display:block}
+.menu button{display:flex;width:100%;gap:8px;text-align:left;border:0;background:none;padding:8px 10px;border-radius:6px;cursor:pointer}
+.menu button:hover{background:var(--mute-bg)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:6px 0}
+/* view */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.tile{padding:14px 16px;border-left:3px solid var(--accent)}
+.tile .k{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+.tile .v{font-size:16px;font-weight:650;margin-top:4px}
+.tile.big .v{font-size:22px}
+.view-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+.sec-h{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface-2);border-bottom:1px solid var(--line);font-weight:650}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.kv:last-child{border:0}
+.kv.total{font-size:17px;font-weight:700;border-top:2px solid var(--ink);border-bottom:0;margin-top:6px;padding-top:12px}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{position:relative;padding:0 0 18px 24px;border-left:2px solid var(--line);margin-left:6px}
+.tl li::before{content:"";position:absolute;left:-7px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--accent)}
+.tl li.cur::before{background:var(--accent)}
+.delta{font-weight:650}.delta.up{color:var(--ok)}.delta.dn{color:var(--bad)}
+.dd{position:relative;display:inline-block}
+/* editor */
+.edit-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+.cust-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.cust-grid .full{grid-column:1/-1}
+.li-head,.li{display:grid;grid-template-columns:28px minmax(180px,1fr) 78px 78px 90px 76px 128px 110px 96px;gap:8px;align-items:center;padding:8px 12px}
+.li-head{font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.li{border-bottom:1px solid var(--line);position:relative}
+.li:hover{background:color-mix(in srgb,var(--accent-soft) 40%,transparent)}
+.li .drag{cursor:grab;color:var(--ink-3);text-align:center;user-select:none}
+.li .nm{font-weight:650;padding:7px 9px}
+.li input{padding:7px 9px}
+.li .na{background:var(--surface-2);color:var(--ink-3);text-align:center}      /* V4/E2: n/a state */
+.li .tot{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.li .acts{display:flex;justify-content:flex-end}
+.rate{display:flex;align-items:center;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);padding:0 0 0 9px}
+.rate span{color:var(--ink-3)}
+.rate input{border:0;background:none;text-align:right;padding:7px 9px 7px 4px;min-width:0}
+.rate:focus-within,.inp:focus-within{outline:2px solid var(--accent)}
+.rate input:focus-visible{outline:0}
+.details{grid-column:2/-1;display:none;padding:2px 0 8px}
+.li.open .details{display:grid;grid-template-columns:1fr 150px 190px;gap:8px}
+.details textarea{min-height:68px;resize:vertical}
+.ro{display:flex;flex-direction:column;gap:4px}
+.ro .tag{padding:8px 10px;border-radius:8px;background:var(--mute-bg);border-style:dashed}
+.exp{transform:rotate(0);transition:transform .15s}
+.li.open .exp{transform:rotate(90deg)}
+.sec-title{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--accent-soft);border-bottom:1px solid var(--line)}
+.sec-title input{font-weight:650;background:var(--surface)}
+.sec-foot{display:flex;justify-content:flex-end;gap:16px;padding:12px 16px;background:var(--surface-2);font-weight:700}
+.addbar{display:flex;gap:8px;flex-wrap:wrap;padding:14px 0}
+.sticky{position:sticky;top:78px}                                                   /* E5 */
+.totals .kv label{display:flex;gap:8px;align-items:center}
+.disc{display:flex;gap:8px;margin-top:8px}
+.footer{position:fixed;left:232px;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:16px;padding:12px 28px;box-shadow:0 -6px 20px rgba(0,0,0,.06)}
+.footer .grow{flex:1;display:flex;gap:18px;align-items:center;min-width:0}
+.save-state{display:flex;gap:8px;align-items:center;font-weight:600;color:var(--ink-2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.dot.saving{background:var(--warn);animation:p 1s infinite}.dot.dirty{background:var(--bad)}
+@keyframes p{50%{opacity:.3}}
+.run{margin-left:auto;text-align:right;line-height:1.2}
+.run b{font-size:18px}
+/* toast */
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 14px;border-radius:10px;display:none;gap:14px;align-items:center;z-index:99;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.toast.show{display:flex}
+.toast button{background:none;border:0;color:#fbbf24;font-weight:700;cursor:pointer}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:0;max-width:520px;width:92%}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.err{border:1px solid var(--bad);background:var(--bad-bg);color:var(--bad);padding:12px 16px;border-radius:10px;display:flex;gap:12px;align-items:center}
+.hint{font-size:12.5px;color:var(--ink-3);margin-top:4px}
+.panel{display:none}.panel.on{display:block}
+/* spec tab */
+.specgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+.specgrid .card{padding:16px 18px}
+.specgrid h3{margin:0 0 8px;font-size:14px}
+.specgrid ul{margin:0;padding-left:18px;color:var(--ink-2)}
+.specgrid li{margin:5px 0}
+code{background:var(--mute-bg);padding:1px 6px;border-radius:5px;font-size:12.5px}
+.cards{display:none}
+/* responsive (G3) */
+@media (max-width:1100px){.edit-grid,.view-grid{grid-template-columns:1fr}.sticky{position:static}}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}.side{display:none}.footer{left:0}
+  .wrap,.top,.footer{padding-left:16px;padding-right:16px}
+  .li-head{display:none}
+  .li{grid-template-columns:24px 1fr 1fr;grid-auto-flow:row}
+  .li>*:nth-child(n+3){grid-column:auto}
+  .li.open .details{grid-template-columns:1fr}
+  .li .tot,.li .acts{grid-column:span 1}
+}
+@media (max-width:760px){
+  .tbl{display:none}.cards{display:grid;gap:10px}
+  .qcard{padding:14px;display:grid;gap:6px}
+  .cust-grid{grid-template-columns:1fr}
+}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" aria-label="Primary">
+    <div class="brand"><i>Q</i> Q Oak Interiors</div>
+    <nav class="nav">
+      <a href="#">📊 Dashboard</a><a href="#">👥 Leads</a><a href="#">▦ Pipeline</a>
+      <a href="#" class="on" aria-current="page">🧾 Quotations</a><a href="#">🛡 CAPI Audit</a>
+      <a href="#">🔄 Audience Sync</a><a href="#">⚙ Settings</a><a href="#">👤 Users &amp; Access</a>
+    </nav>
+    <div class="me">My Account ⌃</div>
+  </aside>
+
+  <main>
+    <header class="top">
+      <div style="flex:1;min-width:0">
+        <div class="crumb" id="crumb">Quotations</div>
+        <h1 id="title">Quotations</h1>
+      </div>
+      <label class="sm muted" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="specToggle" checked> Show spec badges</label>
+      <div id="topActions"></div>
+    </header>
+
+    <div class="wrap">
+      <div class="tabs" role="tablist" aria-label="Screens">
+        <button role="tab" aria-selected="true" data-p="list">1 · List</button>
+        <button role="tab" aria-selected="false" data-p="view">2 · View</button>
+        <button role="tab" aria-selected="false" data-p="edit">3 · Editor</button>
+        <button role="tab" aria-selected="false" data-p="spec">Spec &amp; acceptance</button>
+      </div>
+
+      <!-- ================= LIST ================= -->
+      <section class="panel on" id="p-list">
+        <div class="card filters" role="search">
+          <div class="field search"><label for="q">Search</label>
+            <input id="q" type="search" placeholder="Quote no., customer, phone or project"></div>
+          <div class="field"><label for="status">Status</label>
+            <select id="status"><option value="">All statuses</option><option>Draft</option><option>Sent</option><option>Accepted</option><option>Expired</option></select></div>
+          <div class="field"><label for="creator">Created by</label>
+            <select id="creator"><option value="">Everyone</option><option>Shashikiran ML</option><option>test_sales_rep</option></select></div>
+          <div class="field"><label>Date range <span class="spec" title="L3: live filters + date presets">L3</span></label>
+            <div class="seg" id="range">
+              <button aria-pressed="false" data-d="7">7 days</button><button aria-pressed="false" data-d="30">30 days</button>
+              <button aria-pressed="true" data-d="0">All time</button>
+            </div></div>
+          <button class="btn ghost" id="reset" style="align-self:flex-end">Reset</button>
+          <span class="sm muted" id="count" style="align-self:flex-end;margin-left:auto" aria-live="polite"></span>
+        </div>
+
+        <div class="card" style="overflow:auto">
+          <table class="tbl" id="tbl">
+            <thead><tr>
+              <th><button data-s="no">Quotation <span class="spec" title="L5 sortable">L5</span></button></th>
+              <th><button data-s="cust">Customer / Project</button></th>
+              <th>Rev <span class="spec" title="L6 show R02 only">L6</span></th>
+              <th>Status <span class="spec" title="L1 status column">L1</span></th>
+              <th class="r"><button data-s="val">Value ↕</button></th>
+              <th><button data-s="by">Created by</button></th>
+              <th><button data-s="upd">Updated ↓</button> <span class="spec" title="L4 relative dates">L4</span></th>
+              <th class="r"><span class="sr">Actions</span></th>
+            </tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+          <div class="cards pad" id="cards"></div>
+          <div id="empty" class="pad muted" hidden>No quotations match these filters. <button class="btn sm" id="reset2">Clear filters</button></div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW ================= -->
+      <section class="panel" id="p-view">
+        <div class="tiles">
+          <div class="card tile"><div class="k">Customer <span class="spec">V1</span></div><div class="v">B S Shashidhara</div><div class="sm muted">+91 98457 70207 · South Bangalore</div></div>
+          <div class="card tile"><div class="k">Project</div><div class="v">Interior Design Proposal</div><div class="sm muted">JP Nagar studio</div></div>
+          <div class="card tile"><div class="k">Status / Revision</div><div class="v"><span class="chip draft">Draft</span> &nbsp;R02</div><div class="sm muted">Valid until 5 Nov 2026</div></div>
+          <div class="card tile big"><div class="k">Grand total</div><div class="v num" style="text-align:left">₹38,822.00</div><div class="sm muted">Subtotal ₹32,900 + GST ₹5,922</div></div>
+        </div>
+        <div class="view-grid">
+          <div class="card" style="overflow:auto">
+            <div class="sec-h"><span>General</span><span class="muted sm">2 items</span></div>
+            <table class="tbl">
+              <thead><tr><th>#</th><th>Item</th><th>Description</th><th class="r">W</th><th class="r">H</th><th class="r">Qty / Area</th><th>Unit</th><th class="r">Rate</th><th class="r">Subtotal</th></tr></thead>
+              <tbody>
+                <tr style="cursor:default"><td>1</td><td><b>Kitchen Base Cabinet</b><div class="sm muted">Kitchen · #1</div></td>
+                  <td style="max-width:300px" class="sm">Fabrication of base cabinets using BWP-grade plywood with laminate finish (SF / HGL / Texture), complete with shutters, shelves, edge banding and required hardware provisions.</td>
+                  <td class="num">1.00</td><td class="num">10.00</td><td class="num">10.00</td><td>Sq Ft</td><td class="num">₹1,790.00</td><td class="num"><b>₹17,900.00</b></td></tr>
+                <tr style="cursor:default"><td>2</td><td><b>Shoe Rack Mechanism</b><div class="sm muted">Accessories / Internal Storage · #116</div></td>
+                  <td style="max-width:300px" class="sm">Supply and installation of shoe rack from Hafele / Hettich or approved equivalent, complete with required fixing components.</td>
+                  <td class="num muted" title="Not applicable">— <span class="spec">V4</span></td><td class="num muted">—</td><td class="num">1.00</td><td>PCS</td><td class="num">₹15,000.00</td><td class="num"><b>₹15,000.00</b></td></tr>
+              </tbody>
+            </table>
+            <div class="sec-foot"><span class="muted">General subtotal</span><span class="num">₹32,900.00</span></div>
+          </div>
+          <aside style="display:grid;gap:16px">
+            <div class="card pad">
+              <h2 style="margin-bottom:6px">Totals</h2>
+              <div class="kv"><span>Subtotal</span><span class="num">₹32,900.00</span></div>
+              <div class="kv"><span>GST (18%)</span><span class="num">₹5,922.00</span></div>
+              <div class="kv"><span>Round off</span><span class="num">₹0.00</span></div>
+              <div class="kv total"><span>Grand total</span><span class="num">₹38,822.00</span></div>
+            </div>
+            <div class="card pad">
+              <h2 style="margin-bottom:12px">Revisions <span class="spec">V3</span></h2>
+              <ol class="tl">
+                <li class="cur"><b>R02</b> <span class="chip draft">Current</span><div class="num" style="text-align:left">₹38,822.00 <span class="delta up">▲ ₹17,700</span></div>
+                  <div class="sm muted">Shashikiran ML · 6 Oct, 6:50 pm</div><div class="sm">“change”</div>
+                  <div style="margin-top:6px;display:flex;gap:6px"><button class="btn sm" data-tip="Compare with R01">Compare</button></div></li>
+                <li><b>R01</b><div class="num" style="text-align:left">₹21,122.00</div>
+                  <div class="sm muted">Shashikiran ML · 6 Oct, 6:50 pm</div><div class="sm">“Initial proposal”</div>
+                  <div style="margin-top:6px;display:flex;gap:6px"><button class="btn sm">Preview</button><button class="btn sm" data-tip="Creates R03 from R01">Restore</button></div></li>
+              </ol>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ================= EDITOR ================= -->
+      <section class="panel" id="p-edit">
+        <div class="edit-grid">
+          <div>
+            <div class="card pad" style="margin-bottom:16px">
+              <h2 style="margin-bottom:12px">Customer</h2>
+              <div class="cust-grid">
+                <div class="field full"><label for="c1">Search lead</label><input id="c1" type="search" value="B S Shashidhara"></div>
+                <div class="field"><label for="c2">Customer name</label><input id="c2" type="text" value="B S Shashidhara"></div>
+                <div class="field"><label for="c3">Phone</label><input id="c3" type="text" value="+91 98457 70207"></div>
+                <div class="field"><label for="c4">Email</label><input id="c4" type="text" value="belvethagrovet@gmail.com"></div>
+                <div class="field"><label for="c5">Property name</label><input id="c5" type="text" placeholder="e.g. Prestige Lakeside, Tower B"></div>
+                <div class="field full"><label for="c6">Location</label><input id="c6" type="text" value="South Bangalore"></div>
+              </div>
+              <div class="hint" style="margin-top:12px">Quote <b>Q-OAK-2026-000081 · R02</b> · JP Nagar · Sales rep test_sales_rep · Last modified 6 Oct, 6:50 pm</div>
+            </div>
+
+            <div class="card" id="sections"></div>
+
+            <div class="addbar">
+              <button class="btn" id="addLine">+ Add line</button>
+              <button class="btn" id="addHeader">+ Add header</button>
+              <button class="btn" id="addSection">+ Add section</button>
+              <button class="btn">Bulk items</button>
+              <span class="hint" style="align-self:center">Tip: width × height fills area automatically. Clear them to enter qty only.</span>
+            </div>
+
+            <div class="card pad">
+              <h2>Internal notes</h2>
+              <div class="hint" style="margin-bottom:8px">Visible only inside the CRM. Never included in print or PDF.</div>
+              <textarea rows="4" placeholder="Add an internal note for this quotation…"></textarea>
+            </div>
+          </div>
+
+          <aside class="sticky" style="display:grid;gap:16px">
+            <div class="card pad totals" aria-live="polite">
+              <h2 style="margin-bottom:6px">Totals <span class="spec">E5</span></h2>
+              <div class="kv"><span>Subtotal</span><span class="num" id="t-sub">—</span></div>
+              <div class="kv"><span class="muted">Wood</span><span class="num muted" id="t-wood">—</span></div>
+              <div class="kv"><span class="muted">Others</span><span class="num muted" id="t-oth">—</span></div>
+              <div class="kv"><label><input type="checkbox" id="soft"> Soft close addition (5%)</label><span class="num" id="t-soft">₹0.00</span></div>
+              <div class="kv"><span>Discount</span><span class="num" id="t-disc">₹0.00</span></div>
+              <div class="disc"><input id="discIn" type="number" min="0" placeholder="Additional discount ₹" aria-label="Additional discount in rupees"></div>
+              <div class="kv"><span>GST (18%)</span><span class="num" id="t-gst">—</span></div>
+              <div class="kv"><span>Round off</span><span class="num" id="t-rnd">₹0.00</span></div>
+              <div class="kv total"><span>Grand total</span><span class="num" id="t-grand">—</span></div>
+            </div>
+            <div class="card pad">
+              <h2 style="margin-bottom:8px">By section</h2>
+              <div id="secSummary"></div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="footer" id="editFooter" hidden>
+          <div class="grow">
+            <div class="save-state" aria-live="polite"><span class="dot" id="dot"></span><span id="saveTxt">All changes saved</span> <span class="spec">E7</span></div>
+            <div class="field" style="flex:1;max-width:360px"><label class="sr" for="revNote">Revision note</label>
+              <input id="revNote" type="text" placeholder="Revision note (e.g. “Client added shoe rack”)"> </div><span class="spec">E8</span>
+          </div>
+          <div class="run"><div class="sm muted">Grand total</div><b id="f-grand">—</b></div>
+          <button class="btn" id="cancelEdit">Cancel</button>
+          <button class="btn pri" id="saveRev">Save as R03</button>
+        </div>
+      </section>
+
+      <!-- ================= SPEC ================= -->
+      <section class="panel" id="p-spec">
+        <div class="specgrid">
+          <div class="card"><h3>Editor</h3><ul>
+            <li><b>E1</b> One row per line: handle · item name · W · H · Area/Qty · Unit · Rate · Total · actions. Row height ≈ 52px. Description, item code and category live in a "Details" expander (chevron at row end).</li>
+            <li><b>E2</b> Rate input is ≥128px, right-aligned, shows <code>₹</code> prefix, thousands separators on blur, raw number on focus. Width/Height/Area use 2 decimals. When W/H are 0/empty, they show disabled "n/a" and Area/Qty is the editable driver.</li>
+            <li><b>E3</b> Every icon button has <code>aria-label</code> + visible tooltip. Reordering via drag handle (keep ↑↓ in the row menu for keyboard users). Delete removes immediately and shows an <b>Undo</b> toast for 6s – no confirm dialog.</li>
+            <li><b>E4</b> Catalogue-derived code/category render as read-only dashed chips with label "From catalogue".</li>
+            <li><b>E5</b> Totals card is sticky (top:78px) in a right column ≥1100px; stacks below on narrow screens. Section-wise and Wood/Others summaries collapse to compact lists – no 300px empty cards.</li>
+            <li><b>E6</b> Page has ≥120px bottom padding; footer never covers the last row.</li>
+            <li><b>E7</b> Autosave status: “Saving…” (amber pulse) → “Saved just now / 2 min ago” (green) → “Unsaved changes” (red) on error. Leaving with unsaved changes prompts.</li>
+            <li><b>E8</b> Footer: revision note field + primary button labelled with the revision it creates (“Save as R03”). Running grand total always visible in the footer.</li>
+          </ul></div>
+          <div class="card"><h3>View</h3><ul>
+            <li><b>V1</b> Tiles: customer (+phone, location), project/studio, status + revision + validity, grand total with subtotal+GST breakdown.</li>
+            <li><b>V2</b> Header actions: <code>Preview / Print</code> · <code>Download ▾</code> (PDF, CSV, XLSX) · primary <code>Edit quotation</code>.</li>
+            <li><b>V3</b> Revisions as a timeline: label, status of current, amount, Δ vs previous (▲ green / ▼ red), author, short date, note, actions Compare / Preview / Restore.</li>
+            <li><b>V4</b> Non-applicable dimensions render “—” not “0.00”. Remove the stray empty strip under the section card. Add a right-hand totals card so GST and grand total sit beside the lines.</li>
+          </ul></div>
+          <div class="card"><h3>List</h3><ul>
+            <li><b>L1</b> New Status column using chips: Draft, Sent, Accepted, Expired, Rejected. Requires a <code>status</code> field on the quotation (default Draft).</li>
+            <li><b>L2</b> “Unknown” creator: backfill from revision author, otherwise hide the value (show “—”).</li>
+            <li><b>L3</b> Filters apply live (debounce 250ms on search). Date presets: 7 days / 30 days / All time, plus custom range. “Reset” and result count (aria-live).</li>
+            <li><b>L4</b> Dates: relative within 7 days (“2 h ago”), else “6 Oct 2026”. Full timestamp in <code>title</code>.</li>
+            <li><b>L5</b> Sortable column headers (aria-sort). Whole row clickable (keep real link for middle-click). Kebab menu: Open, Duplicate, Download PDF, Archive.</li>
+            <li><b>L6</b> Revision column shows “R02”. Use one quote-number format (<code>Q-OAK-2026-000081</code>); migrate or alias legacy <code>Q-2026-…</code>.</li>
+          </ul></div>
+          <div class="card"><h3>Global</h3><ul>
+            <li><b>G1</b> Minimum text size 12px; secondary text ≥ 4.5:1 contrast; placeholders visually distinct from disabled/read-only.</li>
+            <li><b>G2</b> Visible <code>:focus-visible</code> ring on every control.</li>
+            <li><b>G3</b> &lt;760px: list becomes cards; editor lines stack; totals follow lines; footer stays sticky.</li>
+            <li><b>G4</b> Dashboard error: keep message but add inline retry, don't block layout; move “Today's work” pill so it doesn't overlap content.</li>
+            <li>Dark mode supported via <code>prefers-color-scheme</code>.</li>
+          </ul></div>
+          <div class="card"><h3>Acceptance checks</h3><ul>
+            <li>Two line items fit on screen without scrolling at 1440×800 together with customer card collapsed.</li>
+            <li>Rate 1,23,456.50 displays fully (no clipping) at 1280px width.</li>
+            <li>Changing any W/H/Qty/Rate updates row total, section subtotal, totals card and footer total in the same tick.</li>
+            <li>Deleting a line is undoable for 6 seconds; totals revert.</li>
+            <li>Tab order: name → W → H → Qty → Unit → Rate → row actions; Enter in Rate adds focus to next row’s name.</li>
+            <li>Cancel with unsaved changes asks to discard; with none, exits silently.</li>
+            <li>No horizontal page scroll at 360px.</li>
+          </ul></div>
+          <div class="card"><h3>Calculation rules (as in current app)</h3><ul>
+            <li>Area = W × H when both &gt; 0, else Qty entered manually.</li>
+            <li>Line total = Area/Qty × Rate. Section subtotal = Σ line totals.</li>
+            <li>Soft-close addition = 5% of Wooden subtotal when enabled.</li>
+            <li>GST 18% on (Total − Discount). Round off to nearest ₹1; Grand total = after GST + round off.</li>
+            <li>Wood vs Others split is by item category (wood-type categories vs accessories).</li>
+          </ul></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status"><span id="toastTxt"></span><button id="undo">Undo</button></div>
+<dialog id="discard"><div class="pad"><h2>Discard unsaved changes?</h2><p class="muted">Your edits to R02 haven’t been saved as a new revision.</p>
+  <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" id="keep">Keep editing</button><button class="btn pri danger" id="yes" style="color:#fff;background:var(--bad);border-color:var(--bad)">Discard</button></div></div></dialog>
+
+<script>
+/* ---------- sample data ---------- */
+const NOW = new Date('2026-10-07T10:00:00');
+const QUOTES = [
+ {no:'Q-OAK-2026-000081',proj:'Interior Design Proposal',cust:'B S Shashidhara',ph:'+91 98457 70207',rev:'R02',st:'Draft',val:38822,by:'Shashikiran ML',upd:'2026-10-06T18:50:34'},
+ {no:'Q-OAK-2026-000079',proj:'Interior Design Proposal',cust:'AAMIR',ph:'+91 76767 97003',rev:'R06',st:'Sent',val:945280,by:'—',upd:'2026-10-02T08:03:42'},
+ {no:'Q-OAK-2026-000080',proj:'Interior Design Proposal',cust:'A Ramachandra',ph:'+91 94944 89276',rev:'R01',st:'Draft',val:96748.2,by:'—',upd:'2026-09-06T14:25:33'},
+ {no:'Q-OAK-2026-000078',proj:'Interior Design Proposal',cust:'Habizur Rahman',ph:'+91 69003 03377',rev:'R03',st:'Accepted',val:247530.96,by:'—',upd:'2026-09-02T16:51:38'},
+ {no:'Q-OAK-2026-000077',proj:'Interior Design Proposal',cust:'Abcd',ph:'75106 13788',rev:'R03',st:'Expired',val:174364.18,by:'—',upd:'2026-09-01T17:01:57'},
+ {no:'Q-OAK-2026-000076',proj:'Interior Design Proposal',cust:'Adarsh Nanda',ph:'+91 94396 64969',rev:'R01',st:'Sent',val:95049,by:'—',upd:'2026-09-01T16:11:55'},
+ {no:'Q-OAK-2026-000059',proj:'Green Edge Signature, Varthur',cust:'Prasenjit Patra',ph:'74111 08366',rev:'R01',st:'Accepted',val:978200,by:'—',upd:'2026-08-30T19:31:42'},
+ {no:'Q-OAK-2026-000075',proj:'Ssvr property',cust:'Arockia M',ph:'+91 70101 60251',rev:'R01',st:'Sent',val:830360,by:'—',upd:'2026-08-30T19:16:06'},
+];
+const inr = n => '₹' + Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const rel = iso => { const d=new Date(iso), h=(NOW-d)/36e5;
+  if(h<1) return 'Just now'; if(h<24) return Math.floor(h)+' h ago'; if(h<24*7) return Math.floor(h/24)+' d ago';
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); };
+const $ = (s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+
+/* ---------- tabs ---------- */
+const TITLES={list:['Quotations','Quotations'],view:['Quotations / Q-OAK-2026-000081','Interior Design Proposal · R02'],edit:['Quotations / Q-OAK-2026-000081','Edit R02'],spec:['Reference','Spec & acceptance']};
+const ACTIONS={
+ list:'<button class="btn pri">+ Create quotation</button>',
+ view:'<button class="btn">Preview / Print</button> <span class="dd"><button class="btn" id="ddBtn" aria-haspopup="menu">Download ▾</button><div class="menu" id="ddMenu" role="menu"><button>PDF</button><button>CSV</button><button>XLSX</button></div></span> <button class="btn pri" data-go="edit">Edit quotation</button> <span class="spec">V2</span>',
+ edit:'', spec:''};
+function go(p){
+  $$('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.p===p));
+  $$('.panel').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));
+  $('#crumb').textContent=TITLES[p][0]; $('#title').textContent=TITLES[p][1];
+  $('#topActions').innerHTML=ACTIONS[p]; $('#editFooter').hidden = p!=='edit';
+  $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+  const dd=$('#ddBtn'); if(dd) dd.onclick=e=>{e.stopPropagation();$('#ddMenu').classList.toggle('open')};
+  window.scrollTo(0,0);
+}
+$$('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.p));
+document.addEventListener('click',()=>$$('.menu.open').forEach(m=>m.classList.remove('open')));
+$('#specToggle').onchange=e=>document.body.classList.toggle('nospec',!e.target.checked);
+
+/* ---------- LIST ---------- */
+let sort={k:'upd',dir:-1}, range=0;
+function renderList(){
+  const q=$('#q').value.toLowerCase(), st=$('#status').value, by=$('#creator').value;
+  let rows=QUOTES.filter(r=>(!q||(r.no+r.cust+r.ph+r.proj).toLowerCase().includes(q))&&(!st||r.st===st)&&(!by||r.by===by)
+    &&(!range||(NOW-new Date(r.upd))/864e5<=range));
+  const key={no:r=>r.no,cust:r=>r.cust,val:r=>r.val,by:r=>r.by,upd:r=>r.upd}[sort.k];
+  rows.sort((a,b)=>(key(a)>key(b)?1:-1)*sort.dir);
+  $('#count').textContent=rows.length+' of '+QUOTES.length+' quotations';
+  $('#empty').hidden=rows.length>0;
+  $('#tbody').innerHTML=rows.map((r,i)=>`
+   <tr tabindex="0" data-open="${r.no}">
+    <td><div class="qn">${r.no}</div><div class="sm muted">${r.proj}</div></td>
+    <td><div>${r.cust}</div><div class="sm muted">${r.ph}</div></td>
+    <td><span class="tag">${r.rev}</span></td>
+    <td><span class="chip ${r.st.toLowerCase()}">${r.st}</span></td>
+    <td class="num"><b>${inr(r.val)}</b></td>
+    <td class="${r.by==='—'?'muted':''}">${r.by}</td>
+    <td title="${r.upd.replace('T',' ')}">${rel(r.upd)}</td>
+    <td class="r kebab"><button class="icon" aria-label="More actions for ${r.no}" data-tip="More" data-k="${i}">⋯</button>
+      <div class="menu" id="m${i}" role="menu"><button>Open</button><button>Duplicate</button><button>Download PDF</button><hr><button class="danger" style="color:var(--bad)">Archive</button></div></td>
+   </tr>`).join('');
+  $('#cards').innerHTML=rows.map(r=>`<div class="card qcard" data-open="${r.no}"><div style="display:flex;justify-content:space-between"><b>${r.no}</b><span class="chip ${r.st.toLowerCase()}">${r.st}</span></div>
+    <div>${r.cust}</div><div class="sm muted">${r.proj}</div><div style="display:flex;justify-content:space-between"><b>${inr(r.val)}</b><span class="sm muted">${r.rev} · ${rel(r.upd)}</span></div></div>`).join('');
+  $$('[data-open]').forEach(el=>el.onclick=e=>{ if(e.target.closest('.kebab'))return; go('view') });
+  $$('#tbody .icon').forEach(b=>b.onclick=e=>{e.stopPropagation();$$('.menu.open').forEach(m=>m.classList.remove('open'));$('#m'+b.dataset.k).classList.add('open')});
+  $$('#tbody tr').forEach(tr=>tr.onkeydown=e=>{if(e.key==='Enter')go('view')});
+  $$('#tbl th button[data-s]').forEach(b=>{const th=b.closest('th');th.setAttribute('aria-sort',sort.k===b.dataset.s?(sort.dir>0?'ascending':'descending'):'none')});
+}
+['q','status','creator'].forEach(id=>$('#'+id).addEventListener('input',()=>{clearTimeout(window._t);window._t=setTimeout(renderList,id==='q'?250:0)}));
+$$('#range button').forEach(b=>b.onclick=()=>{range=+b.dataset.d;$$('#range button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderList()});
+$$('#tbl th button[data-s]').forEach(b=>b.onclick=()=>{sort=sort.k===b.dataset.s?{k:sort.k,dir:-sort.dir}:{k:b.dataset.s,dir:1};renderList()});
+function resetF(){$('#q').value='';$('#status').value='';$('#creator').value='';range=0;$$('#range button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.d==='0'));renderList()}
+$('#reset').onclick=resetF; $('#reset2').onclick=resetF;
+
+/* ---------- EDITOR ---------- */
+let SECTIONS=[{name:'General',items:[
+ {name:'Kitchen Base Cabinet',desc:'Fabrication of base cabinets using BWP-grade plywood with laminate finish (SF / HGL / Texture), complete with shutters, shelves, edge banding and required hardware provisions.',code:'1',cat:'Kitchen',w:1,h:10,qty:10,unit:'Sq Ft',rate:1790,wood:true},
+ {name:'Shoe Rack Mechanism',desc:'Supply and installation of shoe rack from Hafele / Hettich or approved equivalent, complete with required fixing components.',code:'116',cat:'Accessories / Internal Storage',w:0,h:0,qty:1,unit:'PCS',rate:15000,wood:false}]}];
+let dirty=false, lastDeleted=null, saveTimer;
+const area=i=>(i.w>0&&i.h>0)?+(i.w*i.h).toFixed(2):i.qty;
+const lineTot=i=>area(i)*i.rate;
+const fmtRate=n=>Number(n).toLocaleString('en-IN',{maximumFractionDigits:2});
+
+function renderEditor(){
+  $('#sections').innerHTML=SECTIONS.map((s,si)=>`
+   <div class="sec" data-si="${si}">
+    <div class="sec-title">
+      <span class="drag" aria-hidden="true" style="cursor:grab">⠿</span>
+      <input type="text" value="${s.name}" aria-label="Section name" data-sn="${si}">
+      <button class="icon" data-tip="Move section up" aria-label="Move section up">↑</button>
+      <button class="icon" data-tip="Move section down" aria-label="Move section down">↓</button>
+      <button class="btn sm danger ghost" data-rs="${si}">Remove section</button>
+    </div>
+    <div class="li-head" role="row"><span></span><span>Item <span class="spec">E1</span></span><span>Width</span><span>Height</span><span>Area / Qty</span><span>Unit</span><span style="text-align:right">Rate <span class="spec">E2</span></span><span style="text-align:right">Total</span><span></span></div>
+    ${s.items.map((it,ii)=>{const dim=it.w>0&&it.h>0;return `
+    <div class="li" data-si="${si}" data-ii="${ii}">
+      <span class="drag" data-tip="Drag to reorder" aria-label="Drag to reorder">⠿</span>
+      <input class="nm" type="text" value="${it.name.replace(/"/g,'&quot;')}" aria-label="Item name" data-f="name">
+      <input type="number" step="0.01" min="0" value="${dim?it.w.toFixed(2):''}" placeholder="n/a" class="${dim?'':'na'}" aria-label="Width" data-f="w">
+      <input type="number" step="0.01" min="0" value="${dim?it.h.toFixed(2):''}" placeholder="n/a" class="${dim?'':'na'}" aria-label="Height" data-f="h">
+      <input type="number" step="0.01" min="0" value="${area(it).toFixed(2)}" ${dim?'readonly':''} aria-label="Area or quantity" data-f="qty" ${dim?'class="na"':''}>
+      <input type="text" value="${it.unit}" aria-label="Unit" data-f="unit">
+      <div class="rate"><span>₹</span><input type="text" inputmode="decimal" value="${fmtRate(it.rate)}" aria-label="Rate in rupees" data-f="rate"></div>
+      <div class="tot">${inr(lineTot(it))}</div>
+      <div class="acts">
+        <button class="icon" data-tip="Details" aria-label="Show details" data-x><span class="exp">▸</span></button>
+        <button class="icon" data-tip="Duplicate" aria-label="Duplicate line" data-dup>⧉</button>
+        <button class="icon del" data-tip="Delete (undo available)" aria-label="Delete line" data-del>✕</button>
+      </div>
+      <div class="details">
+        <div class="field"><label>Description</label><textarea data-f="desc">${it.desc}</textarea></div>
+        <div class="ro"><label class="sm" style="font-weight:600;color:var(--ink-2)">Item code <span class="spec">E4</span></label><span class="tag">#${it.code} · from catalogue</span></div>
+        <div class="ro"><label class="sm" style="font-weight:600;color:var(--ink-2)">Category</label><span class="tag">${it.cat}</span></div>
+      </div>
+    </div>`}).join('')}
+    <div class="sec-foot"><span class="muted">${s.name} subtotal</span><span class="num">${inr(s.items.reduce((a,i)=>a+lineTot(i),0))}</span></div>
+   </div>`).join('');
+  bindEditor(); totals();
+}
+function bindEditor(){
+  $$('.li').forEach(row=>{
+    const si=+row.dataset.si, ii=+row.dataset.ii, it=SECTIONS[si].items[ii];
+    row.querySelectorAll('[data-f]').forEach(inp=>{
+      inp.addEventListener('input',()=>{
+        const f=inp.dataset.f; let v=inp.value;
+        if(['w','h','qty'].includes(f)) it[f]=parseFloat(v)||0;
+        else if(f==='rate') it.rate=parseFloat(v.replace(/,/g,''))||0;
+        else it[f]=v;
+        markDirty(); if(f!=='name'&&f!=='desc'&&f!=='unit') refreshRow(row,it);
+      });
+      if(inp.dataset.f==='rate'){
+        inp.addEventListener('focus',()=>inp.value=it.rate||'');
+        inp.addEventListener('blur',()=>inp.value=fmtRate(it.rate));
+        inp.addEventListener('keydown',e=>{if(e.key==='Enter'){const n=row.nextElementSibling;n&&n.classList.contains('li')&&n.querySelector('.nm').focus()}});
+      }
+    });
+    row.querySelector('[data-x]').onclick=()=>row.classList.toggle('open');
+    row.querySelector('[data-dup]').onclick=()=>{SECTIONS[si].items.splice(ii+1,0,{...it,name:it.name+' (copy)'});markDirty();renderEditor()};
+    row.querySelector('[data-del]').onclick=()=>{lastDeleted={si,ii,it};SECTIONS[si].items.splice(ii,1);markDirty();renderEditor();toast('Line deleted')};
+  });
+  $$('[data-sn]').forEach(i=>i.oninput=()=>{SECTIONS[+i.dataset.sn].name=i.value;markDirty()});
+  $$('[data-rs]').forEach(b=>b.onclick=()=>{SECTIONS.splice(+b.dataset.rs,1);markDirty();renderEditor()});
+}
+function refreshRow(row,it){          // update derived values in place so typing never loses focus
+  const dim=it.w>0&&it.h>0, q=row.querySelector('[data-f=qty]');
+  if(document.activeElement!==q) q.value=area(it).toFixed(2);
+  q.readOnly=dim; q.classList.toggle('na',dim);
+  row.querySelector('.tot').textContent=inr(lineTot(it));
+  const sec=row.closest('.sec'); const s=SECTIONS[+row.dataset.si];
+  sec.querySelector('.sec-foot .num').textContent=inr(s.items.reduce((a,i)=>a+lineTot(i),0)); totals();
+}
+function totals(){
+  const all=SECTIONS.flatMap(s=>s.items);
+  const sub=all.reduce((a,i)=>a+lineTot(i),0), wood=all.filter(i=>i.wood).reduce((a,i)=>a+lineTot(i),0);
+  const soft=$('#soft').checked?wood*.05:0, disc=+$('#discIn').value||0;
+  const base=sub+soft-disc, gst=base*.18, raw=base+gst, grand=Math.round(raw), rnd=grand-raw;
+  $('#t-sub').textContent=inr(sub);$('#t-wood').textContent=inr(wood);$('#t-oth').textContent=inr(sub-wood);
+  $('#t-soft').textContent=inr(soft);$('#t-disc').textContent='−'+inr(disc);$('#t-gst').textContent=inr(gst);
+  $('#t-rnd').textContent=inr(rnd);$('#t-grand').textContent=inr(grand);$('#f-grand').textContent=inr(grand);
+  $('#secSummary').innerHTML=SECTIONS.map(s=>`<div class="kv"><span>${s.name}</span><span class="num">${inr(s.items.reduce((a,i)=>a+lineTot(i),0))}</span></div>`).join('')||'<span class="muted">No sections</span>';
+}
+$('#soft').onchange=()=>{markDirty();totals()}; $('#discIn').oninput=()=>{markDirty();totals()};
+$('#addLine').onclick=()=>{(SECTIONS[SECTIONS.length-1]||(SECTIONS.push({name:'New section',items:[]}),SECTIONS[0])).items.push({name:'New item',desc:'',code:'—',cat:'Custom',w:0,h:0,qty:1,unit:'PCS',rate:0});markDirty();renderEditor();const r=$$('.li');r[r.length-1].querySelector('.nm').select()};
+$('#addHeader').onclick=()=>toast('Header row added (demo)');
+$('#addSection').onclick=()=>{SECTIONS.push({name:'New section',items:[]});markDirty();renderEditor()};
+
+/* autosave state (E7) */
+function markDirty(){
+  dirty=true; $('#dot').className='dot dirty'; $('#saveTxt').textContent='Unsaved changes';
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{ $('#dot').className='dot saving'; $('#saveTxt').textContent='Saving…';
+    setTimeout(()=>{ $('#dot').className='dot'; $('#saveTxt').textContent='Saved just now'; dirty=false },700)},1200);
+}
+/* toast + undo (E3) */
+let tt; function toast(msg){ $('#toastTxt').textContent=msg; $('#undo').style.display=msg==='Line deleted'?'':'none'; $('#toast').classList.add('show'); clearTimeout(tt); tt=setTimeout(()=>$('#toast').classList.remove('show'),6000) }
+$('#undo').onclick=()=>{ if(!lastDeleted)return; SECTIONS[lastDeleted.si].items.splice(lastDeleted.ii,0,lastDeleted.it); lastDeleted=null; $('#toast').classList.remove('show'); renderEditor() };
+/* cancel guard */
+$('#cancelEdit').onclick=()=>{ dirty?$('#discard').showModal():go('view') };
+$('#keep').onclick=()=>$('#discard').close(); $('#yes').onclick=()=>{$('#discard').close();dirty=false;go('view')};
+$('#saveRev').onclick=()=>{ toast('Saved as R03 (demo)'); dirty=false; $('#dot').className='dot'; $('#saveTxt').textContent='Saved just now' };
+
+renderList(); renderEditor(); go('list');
+</script>
+</body>
+</html>

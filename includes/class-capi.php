@@ -280,6 +280,27 @@ class IDLM_CAPI {
         return IDLM_CAPI_Transport::uses_whatsapp_attribution($lead, $attribution);
     }
 
+    /** Latest saved quotation revision is authoritative for a fresh Meta Purchase. */
+    private static function purchase_amount($lead) {
+        global $wpdb;
+        $fallback=array('value'=>(float)($lead->deal_value ?? 0),'currency'=>self::runtime_option('idlm_currency_code','INR'));
+        $quote=IDLM_Quotation_Repository::get_quote_for_lead($lead->id);
+        if ($wpdb->last_error) { throw new RuntimeException('Purchase quotation read failed.'); }
+        if (!$quote) { return $fallback; }
+        $revision_id=absint($quote->current_revision_id ?? 0);
+        $revision=$revision_id ? IDLM_Quotation_Repository::get_revision($revision_id) : null;
+        if ($wpdb->last_error || !$revision || (int)$revision->quote_id!==(int)$quote->id) {
+            throw new RuntimeException('Purchase quotation revision is unavailable.');
+        }
+        $value=$revision->grand_total ?? null;
+        if (!is_numeric($value) || !is_finite((float)$value) || (float)$value<0) { throw new RuntimeException('Purchase quotation total is invalid.'); }
+        // A zero-total draft is not a final priced quotation; retain the entered close value.
+        if ((float)$value===0.0) { return $fallback; }
+        $currency=$revision->currency_code ?? '';
+        if (!is_string($currency) || !preg_match('/^[A-Z]{3}$/D',$currency)) { throw new RuntimeException('Purchase quotation currency is unavailable.'); }
+        return array('value'=>(float)$value,'currency'=>$currency);
+    }
+
     /** One locked dispatch boundary for ordinary, forced attribution and manual attempts. */
     private static function dispatch_platform($platform, $lead_id, $stage, $force = false, $expected = null) {
         global $wpdb;
@@ -322,6 +343,9 @@ class IDLM_CAPI {
             $destination=(string) self::runtime_option($keys[$platform][0],'');$credential=(string) self::runtime_option($keys[$platform][1],'');
             if ($expected && ($expected['event'] !== $event || (!empty($expected['destination']) && $expected['destination'] !== $destination))) { return self::no_attempt('Event mapping or destination changed. Review the original event before retrying.'); }
             $delivery=array('version'=>1,'platform'=>$platform,'lead_id'=>(int)$lead_id,'stage'=>$stage,'event'=>$event,'destination'=>$destination,'credential'=>$credential,'attempt_id'=>$expected['_attempt_id'] ?? bin2hex(random_bytes(16)),'event_id'=>$expected['event_id'] ?? ('idlm_lead_'.$lead_id.'_'.$event),'occurred_at'=>$expected['occurred_at'] ?? time(),'value'=>$expected['value'] ?? (float)($lead->deal_value ?? 0),'currency'=>$expected['currency'] ?? self::runtime_option('idlm_currency_code','INR'),'retry_root'=>$expected['retry_root'] ?? 0);
+            if ($platform==='meta' && $event==='Purchase' && $expected===null) {
+                $amount=self::purchase_amount($lead);$delivery['value']=$amount['value'];$delivery['currency']=$amount['currency'];
+            }
             if ('' === $destination || '' === $credential) { return self::record_attempt($lead_id,$platform,$delivery,array(),'Missing integration destination or credentials.','failed',false,true); }
             // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0453: dispatch_platform(): prefixed lead/log tables, fixed success/event predicates; values bound; IN placeholders match lead IDs plus platform/event parameters; receipts/history/current eligibility must not be cached.
             if (!IDLM_Recovery_Guard::lease_valid() || (int)$wpdb->get_var($wpdb->prepare('SELECT IS_USED_LOCK(%s)', $lock)) !== (int)$wpdb->get_var('SELECT CONNECTION_ID()')) { return self::no_attempt('Delivery session is no longer valid.'); }

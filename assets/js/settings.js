@@ -31,6 +31,11 @@
         var $status = $root.find('[data-idlm-facebook-status]');
         var $pages = $root.find('[data-idlm-facebook-pages]');
         var $forms = $root.find('[data-idlm-facebook-forms]');
+        var $syncStatus = $root.find('[data-idlm-facebook-sync-status]');
+        function syncMessage(message, failed) {
+            $status.text(message); $syncStatus.attr('role', failed ? 'alert' : 'status').text(message);
+            if (failed) $syncStatus.trigger('focus');
+        }
         var pageCursor = '', formCursor = '', formRequest = 0, activeRequests = 0;
         function call(operation, data) {
             activeRequests++;
@@ -45,7 +50,10 @@
             $root.find('[data-idlm-facebook-more-pages]').prop('disabled', true);
             call('pages', {after: after || ''}).done(function(response) {
                 var data = result(response); if (!data) { return; }
+                $root.find('[data-idlm-facebook-connect-button]').text('Connected').prop('disabled', true);
+                $root.find('[data-idlm-facebook-reconnect], [data-idlm-facebook-disconnect]').prop('hidden', false);
                 $root.find('[data-idlm-facebook-picker]').prop('hidden', false);
+                $(document).trigger('idlm-facebook-picker-ready');
                 (data.pages || []).forEach(function(page) { if (!$pages.find('option').filter(function() { return this.value === page.id; }).length) { $('<option>').val(page.id).text(page.name).appendTo($pages); } });
                 pageCursor = data.after || '';
                 $root.find('[data-idlm-facebook-more-pages]').prop('hidden', !pageCursor);
@@ -73,25 +81,54 @@
             }).fail(function(xhr) { if (request === formRequest) { error(xhr); } }).always(function() { $root.find('[data-idlm-facebook-more-forms]').prop('disabled', false); });
         }
         $root.on('click', '[data-idlm-facebook-start]', function() {
+            var unsaved = false;
+            $root.closest('[data-idlm-manual-setup]').find('input[name^="idlm_connector_"], input[name^="idlm_meta_lead_"]').each(function() {
+                if (this.type === 'checkbox' ? this.checked !== this.defaultChecked : this.value !== this.defaultValue) unsaved = true;
+            });
+            if (unsaved) {
+                $status.text('Save your setup details in step 2 before signing in to Facebook.');
+                return;
+            }
             if ($root.attr('data-idlm-facebook-ready') !== '1') {
-                $status.text('Facebook sign-in is unavailable until the CRM provider configures the shared connection service and a public HTTPS address.');
+                $status.text('Complete step 1 and save your details in step 2. Facebook sign-in also requires a public HTTPS CRM address.');
                 $root.find('[data-idlm-facebook-setup]').trigger('focus');
                 return;
             }
             var $button = $(this); $button.prop('disabled', true); $status.text('Opening Facebook permissions…');
             call('start', {return_url: window.location.href.split('#')[0]}).done(function(response) { var data = result(response); if (data && data.authorization_url) { window.location.assign(data.authorization_url); } }).fail(error).always(function() { $button.prop('disabled', false); });
         });
-        $pages.on('change', function() { formRequest++; $forms.empty(); formCursor = ''; $root.find('[data-idlm-facebook-form-fieldset]').prop('hidden', true); $root.find('[data-idlm-facebook-save]').prop('disabled', true); loadForms(''); });
-        $root.on('change', '[data-idlm-facebook-form]', function() { $root.find('[data-idlm-facebook-save]').prop('disabled', $forms.find('input:checked').length < 1); });
+        $pages.on('change', function() { $syncStatus.text(''); $root.attr('data-idlm-facebook-selection-dirty', '1'); formRequest++; $forms.empty(); formCursor = ''; $root.find('[data-idlm-facebook-form-fieldset]').prop('hidden', true); $root.find('[data-idlm-facebook-save]').prop('disabled', true); loadForms(''); });
+        $root.on('change', '[data-idlm-facebook-form]', function() { $syncStatus.text(''); $root.attr('data-idlm-facebook-selection-dirty', '1'); $root.find('[data-idlm-facebook-save]').prop('disabled', $forms.find('input:checked').length < 1); });
         $root.on('click', '[data-idlm-facebook-more-pages]', function() { loadPages(pageCursor); });
         $root.on('click', '[data-idlm-facebook-more-forms]', function() { loadForms(formCursor); });
         $root.on('click', '[data-idlm-facebook-save]', function() {
-            var forms = $forms.find('input:checked').map(function() { return this.value; }).get(), $button = $(this);
-            if (!forms.length || forms.length > 20) { $status.text('Choose between one and twenty forms.'); return; }
-            $button.prop('disabled', true); $pages.prop('disabled', true); $status.text('Connecting the selected forms…');
-            call('select', {page_id: $pages.val(), forms: forms}).done(function(response) {
-                if (result(response)) { var url = new URL(window.location.href); url.searchParams.delete('idlm_fb_return'); url.hash = 'tab-webhooks'; window.location.assign(url.toString()); }
-            }).fail(error).always(function() { $button.prop('disabled', false); $pages.prop('disabled', false); });
+            var forms = $forms.find('input:checked').map(function() { return this.value; }).get();
+            var page = $pages.val(), $button = $(this), confirmed = false;
+            if (!forms.length || forms.length > 20) { syncMessage('Choose between one and twenty forms.', true); return; }
+            var $review = $root.closest('[data-idlm-manual-setup]').find('[data-idlm-manual-next="4"], [data-idlm-wizard-go="4"]');
+            $button.prop('disabled', true).text('Starting sync…'); $pages.prop('disabled', true);
+            $forms.find('input').prop('disabled', true); $review.prop('disabled', true);
+            syncMessage('Saving the selected forms and starting sync…', false);
+            call('select', {page_id: page, forms: forms}).done(function(response) {
+                var data = result(response);
+                if (!data || data.connected !== true) {
+                    syncMessage(response && response.data && response.data.message ? response.data.message : 'Facebook did not confirm the selected forms. Sync was not confirmed. Try again.', true);
+                    return;
+                }
+                confirmed = true; $root.attr('data-idlm-facebook-selection-dirty', '0');
+                $button.text('Sync enabled'); syncMessage('Forms saved. Opening review and field mapping…', false);
+                $(document).trigger('idlm-facebook-source-saved');
+                var url = new URL(window.location.href); url.searchParams.delete('idlm_fb_return'); url.hash = 'tab-webhooks';
+                // Assigning the same fragment URL does not fetch the saved server state.
+                window.history.replaceState(null, '', url.toString());
+                window.location.reload();
+            }).fail(function(xhr) {
+                syncMessage(xhr && xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message ? xhr.responseJSON.data.message : 'Could not save the selected forms. Check your connection and try again.', true);
+            }).always(function() {
+                if (confirmed) return;
+                $button.prop('disabled', false).text('Start syncing selected forms'); $pages.prop('disabled', false);
+                $forms.find('input').prop('disabled', false); $review.prop('disabled', false);
+            });
         });
         $root.on('click', '[data-idlm-facebook-disconnect]', function() {
             var $button = $(this); $button.prop('disabled', true); $status.text('Disconnecting Facebook…');
@@ -105,6 +142,63 @@
         }
     });
 
+
+    $(function() {
+        $('[data-idlm-form-mapping]').each(function() {
+            var $card = $(this), $load = $card.find('[data-idlm-form-fields-load]');
+            var $fields = $card.find('[data-idlm-form-fields]'), $save = $card.find('[data-idlm-form-mapping-save]');
+            var $status = $card.find('[data-idlm-form-mapping-status]');
+            function call(operation, extra) {
+                return $.ajax({url: idlm_vars.ajax_url, method: 'POST', data: $.extend({action: 'idlm_meta_form_mapping', nonce: idlm_vars.nonce, operation: operation, form_id: $card.attr('data-idlm-form-id')}, extra || {})});
+            }
+            function error(xhr) {
+                $status.text(xhr && xhr.responseJSON && xhr.responseJSON.data ? xhr.responseJSON.data.message : 'Could not load or save this form mapping. Try again.');
+            }
+            $load.on('click', function() {
+                $load.prop('disabled', true); $status.text('Loading questions from this Meta form…');
+                call('load').done(function(response) {
+                    if (!response || !response.success) { $status.text(response && response.data ? response.data.message : 'Could not load form fields.'); return; }
+                    var data = response.data;
+                    $fields.empty().prop('hidden', false); $card.find('[data-idlm-form-name]').text(data.name);
+                    $('<div>', {'class': 'idlm-meta-field-head'}).append($('<span>').text('Meta form field'), $('<span>').text('CRM destination')).appendTo($fields);
+                    (data.fields || []).forEach(function(field, index) {
+                        var $row = $('<div>', {'class': 'idlm-meta-field-row'});
+                        var id = 'idlm-form-map-' + $card.attr('data-idlm-form-id') + '-' + index;
+                        var $label = $('<label>', {'for': id}).text(field.label || field.key);
+                        $('<small>').text('Meta field: ' + field.key).appendTo($label);
+                        var $select = $('<select>', {id: id, 'class': 'idlm-input', 'data-idlm-meta-source': field.key});
+                        $('<option>', {value: '', text: 'Do not map to a CRM field'}).appendTo($select);
+                        Object.keys(data.targets || {}).forEach(function(target) {
+                            $('<option>', {value: target, text: data.targets[target]}).appendTo($select);
+                        });
+                        var target = Object.keys(data.mappings || {}).filter(function(key) { return data.mappings[key] === field.key; })[0] || '';
+                        $select.val(target); $row.append($label, $select).appendTo($fields);
+                    });
+                    $load.prop('hidden', true); $save.prop('hidden', false);
+                    $status.text(data.unavailable_count ? 'Some questions have no supported Meta field key and are not shown. Review the fields below before saving.' : 'Choose CRM destinations, then save the mapping for this form.');
+                }).fail(error).always(function() { $load.prop('disabled', false); });
+            });
+            $fields.on('change', 'select', function() { $status.text('Unsaved mapping changes. Click Save mapping for this form.'); });
+            $(document).on('idlm-meta-mapping-autoload', function() {
+                if ($card.is($('[data-idlm-form-mapping]').first()) && !$load.prop('hidden') && !$load.prop('disabled')) $load.trigger('click');
+            });
+            $save.on('click', function() {
+                var rows = [], used = {}, duplicate = false;
+                $fields.find('select[data-idlm-meta-source]').each(function() {
+                    var target = $(this).val() || '';
+                    if (target && used[target]) duplicate = true;
+                    if (target) used[target] = true;
+                    rows.push({source: $(this).attr('data-idlm-meta-source'), target: target});
+                });
+                if (duplicate) { $status.text('Choose each CRM destination only once.'); return; }
+                if (!used.phone && !used.email) { $status.text('Map at least one phone or email field so the CRM can identify the lead.'); return; }
+                $save.prop('disabled', true); $fields.find('select').prop('disabled', true); $status.text('Saving this form’s mapping…');
+                call('save', {mappings: JSON.stringify(rows)}).done(function(response) {
+                    $status.text(response && response.success ? response.data.message : (response && response.data ? response.data.message : 'Mapping could not be saved.'));
+                }).fail(error).always(function() { $save.prop('disabled', false); $fields.find('select').prop('disabled', false); });
+            });
+        });
+    });
 
     function tokenValues($editor) {
         var editor = $editor.get(0);
@@ -295,8 +389,53 @@
         return valid;
     }
 
+    function enhanceConnectorSecret(field) {
+        var $field = $(field), $group = $field.closest('[data-idlm-connector-secret]');
+        var saved = $field.attr('data-idlm-secret-configured') === '1';
+        var $summary = $group.find('[data-idlm-secret-summary]');
+        var $editor = $group.find('[data-idlm-secret-editor]');
+        var $status = $group.find('[data-idlm-secret-status]');
+        var $clear = $group.find('[data-idlm-secret-clear]');
+        var $show = $('<button>', {type: 'button', 'class': 'idlm-btn idlm-btn-secondary', text: 'Show new value', 'aria-pressed': 'false'});
+        if (!$field.prop('disabled')) $field.after($show);
+        $group.on('click', '[data-idlm-secret-replace]', function() {
+            $clear.prop('checked', false).trigger('change');
+            $summary.prop('hidden', true); $editor.prop('hidden', false); $field.trigger('focus');
+        });
+        $group.on('click', '[data-idlm-secret-cancel]', function() {
+            $field.val('').attr('type', 'password').trigger('input');
+            $show.text('Show new value').attr('aria-pressed', 'false');
+            $editor.prop('hidden', true); $summary.prop('hidden', false);
+            $group.find('[data-idlm-secret-replace]').trigger('focus');
+        });
+        $show.on('click', function() {
+            var reveal = $field.attr('type') === 'password';
+            $field.attr('type', reveal ? 'text' : 'password');
+            $show.text(reveal ? 'Hide new value' : 'Show new value').attr('aria-pressed', String(reveal));
+        });
+        function state() {
+            var entered = String($field.val() || '').length > 0;
+            $group.find('[data-idlm-secret-summary-text]').text($clear.prop('checked') ? 'Removal pending' : (saved ? 'Saved securely' : 'Not configured'));
+            $status.text($clear.prop('checked') ? 'Will be removed when you save settings.' : (entered ? (saved ? 'Replacement entered. Save details to replace the saved value.' : 'Value entered. Save details to store it securely.') : ''));
+            $group.find('[data-idlm-secret-edit-status]').text(saved ? 'The existing value stays saved until you save a replacement.' : 'Not configured. Enter a value, then save details.');
+        }
+        $field.on('input', function() {
+            if ($field.val()) $clear.prop('checked', false);
+            state();
+        });
+        $clear.on('change', function() {
+            if ($clear.prop('checked')) {
+                $field.val('').attr('type', 'password').trigger('input');
+                $editor.prop('hidden', true); $summary.prop('hidden', false);
+            }
+            state();
+        });
+        state();
+    }
+
     function enhanceSecretField(field) {
         var $field = $(field);
+        if ($field.closest('[data-idlm-connector-secret]').length) { enhanceConnectorSecret(field); return; }
         if ($field.parent().hasClass('idlm-secret-control')) {
             return;
         }
@@ -658,11 +797,78 @@
 
         enhanceSettingsNotices($page);
 
-        $page.on('click', '[data-idlm-manual-next]', function() {
-            var $setup = $(this).closest('[data-idlm-manual-setup]');
-            var $next = $setup.find('[data-idlm-manual-step="' + $(this).attr('data-idlm-manual-next') + '"]');
-            $setup.find('[data-idlm-manual-step]').prop('open', false);
-            $next.prop('open', true).children('summary').attr('tabindex', '-1').trigger('focus');
+        $page.find('[data-idlm-manual-setup]').each(function() {
+            var $wizard = $(this), $panels = $wizard.children('[data-idlm-manual-step]');
+            var current = Number($wizard.attr('data-idlm-wizard-initial')) || 1, autoLoadMapping = false;
+            var storageKey = 'idlm_meta_setup_step:' + window.location.pathname;
+            try {
+                var savedStep = JSON.parse(window.sessionStorage.getItem(storageKey) || 'null');
+                window.sessionStorage.removeItem(storageKey);
+                var requested = savedStep ? Number($wizard.attr('data-idlm-wizard-error') === '1' ? savedStep.step : (savedStep.next || savedStep.step)) : 0;
+                if (requested >= 1 && requested <= 4) current = requested;
+                autoLoadMapping = !!(savedStep && savedStep.autoLoadMapping && $wizard.attr('data-idlm-wizard-error') !== '1');
+            } catch (ignored) { /* Navigation still works when session storage is unavailable. */ }
+            function show(step, focus) {
+                if (step < 1 || step > 4) return;
+                current = step;
+                $panels.prop('hidden', true).prop('open', false);
+                var $panel = $panels.filter('[data-idlm-manual-step="' + step + '"]');
+                $panel.prop('hidden', false).prop('open', true);
+                $wizard.find('[data-idlm-wizard-go]').removeAttr('aria-current').removeClass('is-current')
+                    .filter('[data-idlm-wizard-go="' + step + '"]').attr('aria-current', 'step').addClass('is-current');
+                $wizard.find('[data-idlm-wizard-status]').text('Step ' + step + ' of 4');
+                if (focus) $panel.children('summary').attr('tabindex', '-1').trigger('focus');
+            }
+            function credentialPresent(name) {
+                var $input = $wizard.find('[name="' + name + '"]');
+                return !$wizard.find('[name="' + name + '_clear"]').prop('checked') &&
+                    ($.trim($input.val() || '') !== '' || $input.attr('data-idlm-secret-configured') === '1');
+            }
+            function validateDetails() {
+                var required = [
+                    ['idlm_connector_app_id', 'Meta app ID'],
+                    ['idlm_connector_login_config_id', 'Facebook Login configuration ID']
+                ];
+                for (var i = 0; i < required.length; i++) {
+                    var $input = $wizard.find('[name="' + required[i][0] + '"]');
+                    if (!/^[1-9][0-9]{0,31}$/.test($.trim($input.val() || ''))) {
+                        show(1, true); $wizard.find('[data-idlm-wizard-status]').text('Enter a valid ' + required[i][1] + ' to continue.'); $input.trigger('focus'); return false;
+                    }
+                }
+                if (!credentialPresent('idlm_meta_lead_app_secret')) {
+                    show(1, true); $wizard.find('[data-idlm-wizard-status]').text('Enter your Meta app secret to continue.'); return false;
+                }
+                return true;
+            }
+            $wizard.addClass('is-enhanced');
+            $wizard.on('click', '[data-idlm-manual-next], [data-idlm-wizard-go]', function() {
+                var step = Number($(this).attr('data-idlm-manual-next') || $(this).attr('data-idlm-wizard-go'));
+                if (current === 1 && step === 2 && !validateDetails()) return;
+                var $connection = $wizard.find('[data-idlm-facebook-connect]');
+                if (step === 4 && $connection.attr('data-idlm-facebook-selection-dirty') === '1' && $connection.find('[data-idlm-facebook-form]:checked').length) {
+                    show(3, false);
+                    $connection.find('[data-idlm-facebook-sync-status]').attr('role', 'alert').text('Click Start syncing selected forms to save this selection before reviewing it.').trigger('focus');
+                    return;
+                }
+                show(step, true);
+            });
+            $panels.children('summary').on('click', function(event) { event.preventDefault(); });
+            $wizard.on('click', '[data-idlm-wizard-save-next]', function(event) {
+                if (!validateDetails()) { event.preventDefault(); return; }
+                if (!credentialPresent('idlm_meta_lead_verify_token')) {
+                    event.preventDefault(); show(2, true); $wizard.find('[data-idlm-wizard-status]').text('Enter a webhook verification token to continue.'); return;
+                }
+                $wizard.data('save-next', Number($(this).attr('data-idlm-wizard-save-next')));
+            });
+            $form.on('idlm-settings-will-save', function() {
+                try { window.sessionStorage.setItem(storageKey, JSON.stringify({step: current, next: $wizard.data('save-next') || current})); } catch (ignored) {}
+            });
+            $(document).on('idlm-facebook-picker-ready', function() { show(3, false); });
+            $(document).on('idlm-facebook-source-saved', function() {
+                try { window.sessionStorage.setItem(storageKey, JSON.stringify({step: 4, next: 4, autoLoadMapping: true})); } catch (ignored) {}
+            });
+            show(current, false);
+            if (current === 4 && autoLoadMapping) $(document).trigger('idlm-meta-mapping-autoload');
         });
 
         $page.find('input[type="password"]').each(function() {
@@ -827,6 +1033,7 @@
                 setSaveState($form, 'dirty', 'Fix the highlighted settings before saving.');
                 return;
             }
+            $form.triggerHandler('idlm-settings-will-save');
             setSaveState($form, 'saving', 'Saving settings…');
         });
 

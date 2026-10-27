@@ -104,7 +104,7 @@ idlm_test('FACEBOOK unprovisioned settings explain setup instead of silently dis
 idlm_test('CONNECTOR manual credentials persist securely across saves and render truthful saved state',static function():void {
     idlm_test_reset_environment();idlm_test_login(1,array('administrator'),array('manage_options'));
     $_SERVER['REQUEST_METHOD']='POST';
-    $_POST=array('idlm_save_settings'=>'1','idlm_connector_settings'=>'1','idlm_connector_page_id'=>'111','idlm_connector_app_id'=>'444','idlm_connector_form_ids'=>'222','idlm_meta_lead_access_token'=>'synthetic-token','idlm_meta_lead_app_secret'=>'synthetic-secret','white_label'=>IDLM_Settings::white_label_defaults());
+    $_POST=array('idlm_save_settings'=>'1','idlm_connector_settings'=>'1','idlm_connector_page_id'=>'111','idlm_connector_app_id'=>'444','idlm_connector_login_config_id'=>'445','idlm_connector_form_ids'=>'222','idlm_meta_lead_access_token'=>'synthetic-token','idlm_meta_lead_app_secret'=>'synthetic-secret','white_label'=>IDLM_Settings::white_label_defaults());
     try {
         assert_same(true,IDLM_Admin_Settings_Controller::process_request());
         foreach(array('access_token'=>'synthetic-token','app_secret'=>'synthetic-secret') as $key=>$value){assert_same($value,IDLM_Secret_Store::get('idlm_meta_lead_'.$key,'',true));assert_true(strpos(IDLM_Secret_Store::stored('idlm_meta_lead_'.$key),'idlm:v1:')===0);}
@@ -112,9 +112,9 @@ idlm_test('CONNECTOR manual credentials persist securely across saves and render
         assert_same(true,IDLM_Admin_Settings_Controller::process_request());
         $context=IDLM_Lead_Connector::settings_context();assert_true($context['credentials']['access_token']);assert_true($context['credentials']['app_secret']);
         $html=IDLM_View::render('admin/settings/lead-connector.php',array('lead_connector'=>$context));
-        assert_contains('data-idlm-secret-configured="1"',$html);assert_contains('Saved securely. Leave blank to retain it.',$html);
+        assert_contains('data-idlm-secret-configured="1"',$html);assert_contains('Your saved value is hidden for security. No need to enter it again.',$html);assert_contains('data-idlm-secret-replace',$html);assert_contains('data-idlm-secret-summary ',$html);
         foreach(array(1,2,3,4)as$step){assert_contains('data-idlm-manual-step="'.$step.'"',$html);}
-        assert_contains('data-idlm-manual-step="3" open',$html);
+        assert_contains('data-idlm-manual-step="2" open',$html);assert_contains('Save details and continue',$html);assert_contains('data-idlm-wizard-go="4"',$html);
         assert_false(strpos($html,'synthetic-token')!==false);assert_false(strpos($html,'synthetic-secret')!==false);
         $_POST['idlm_meta_lead_access_token_clear']='1';assert_same(true,IDLM_Admin_Settings_Controller::process_request());
         assert_same('',IDLM_Secret_Store::get('idlm_meta_lead_access_token','',true));assert_same('synthetic-secret',IDLM_Secret_Store::get('idlm_meta_lead_app_secret','',true));
@@ -128,4 +128,17 @@ idlm_test('CONNECTOR manual webhook can be verified before enabling lead intake'
     $params['hub_verify_token']='wrong';assert_false(IDLM_Lead_Connector::permission_verify(new WP_REST_Request(array(),$params)));
     assert_false(IDLM_Lead_Connector::permission_post(new WP_REST_Request()));
     update_option('idlm_meta_lead_connector',array('mode'=>'hosted','enabled'=>'0','page_id'=>'111'));$params['hub_verify_token']='synthetic-verify';assert_false(IDLM_Lead_Connector::permission_verify(new WP_REST_Request(array(),$params)));
+});
+
+idlm_test('CONNECTOR wizard distinguishes saved, absent and server-managed credentials without echoing secrets',static function():void {
+    idlm_test_reset_environment();
+    $empty=IDLM_View::render('admin/settings/connector-secret.php',array('key'=>'app_secret','label'=>'Meta app secret','saved'=>false,'managed'=>false));
+    assert_contains('Not configured. Enter a value, then save details.',$empty);
+    assert_contains('data-idlm-secret-summary hidden',$empty);
+    assert_false(strpos($empty,'data-idlm-secret-replace')!==false);
+    $managed=IDLM_View::render('admin/settings/connector-secret.php',array('key'=>'app_secret','label'=>'Meta app secret','saved'=>true,'managed'=>true));
+    assert_contains('Managed in server configuration.',$managed);
+    assert_contains('data-idlm-secret-editor hidden',$managed);
+    assert_false(strpos($managed,'data-idlm-secret-replace')!==false);
+    assert_false(strpos($managed,'data-idlm-secret-clear')!==false);
 });

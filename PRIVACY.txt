@@ -1,6 +1,6 @@
 # Privacy and data lifecycle
 
-Author / Builder: Shashi. Updated: 2026-10-09. Applies to candidate 1.102.74.
+Author / Builder: Shashi. Updated: 2026-10-27. Applies to test build 1.102.96.
 
 This document describes the plugin's current behavior. The organization running the WordPress site controls its customer data, integrations, access and retention choices. Adapt the site's privacy notice to its actual use before collecting data or connecting a provider. Configuration does not record customer consent or establish permission to advertise or message someone.
 
@@ -22,11 +22,13 @@ There is **no built-in consent gate for this script**. Turning off conversion or
 
 ## External services
 
+Direct Facebook sign-in uses the site’s own Meta app. Its encrypted server-side settings hold the app secret, Page token and short-lived consent state. Meta receives the app identifier, login callback and authorization requests; the CRM receives authorized Page/form names and identifiers and selected Instant Form submissions. Retrieved lead answers and available advertising context are retained in encrypted acquisition snapshots on this site. Consent state expires after 15 minutes; only setup navigation state (the step number and a one-use field-loading flag) is remembered in browser session storage. The form-mapping editor reads selected form names and question keys/labels/types without retrieving respondent answers. Per-form destination mappings are stored as site settings. Choosing not to map an answer does not remove it from the encrypted submission snapshot. Saved values are not returned to credential inputs. Disconnect stops local import but retains saved credentials and the Meta Page subscription; revoke provider access separately when required. Existing hosted connections continue to contact their configured publisher service until disconnected or replaced.
+
 Administrators choose provider credentials, destinations, enabled events and audience rules in Settings. Eligible lead changes and scheduled/manual work can then send data. Connection tests contact the selected provider using credentials/destination IDs. Disabling a rule stops newly eligible work in covered paths, but cannot recall an in-flight request or remove an existing provider copy. Hashes remain matchable identifiers, not anonymous data.
 
 | Service and purpose | Data transferred and when |
 | --- | --- |
-| Meta conversion reporting | Enabled mapped lead events POST to `graph.facebook.com`. Available email, phone and names are SHA-256 hashed. Event identity/time, CRM lead ID, stage, source, property/room details, click/Meta lead identifiers and configured value/currency are also sent. IP address and user agent come from the request context at send time; queued execution may use server context rather than the original visitor. |
+| Meta conversion reporting | Enabled mapped lead events POST to `graph.facebook.com`. Available email, phone and names are SHA-256 hashed. Event identity/time, CRM lead ID, stage, source, property/room details, Meta lead ID or WhatsApp click identifiers and value/currency are sent. A fresh Purchase uses the latest saved quotation total and quotation currency, falling back to the entered Won deal value and CRM currency when no positive saved quotation exists. Retries retain their original value/currency. CRM events omit visitor IP, user agent and a browser event URL because authentic visitor context is unavailable to the worker. |
 | Meta custom/value audiences | Enabled matching audience rules POST hashed email, phone and first/last name to `graph.facebook.com`; value audiences also send deal value or the configured implementation fallback. |
 | Google conversion reporting | Enabled mapped events POST to `www.google-analytics.com/mp/collect` using GA4 Measurement Protocol. Client/click identifiers, CRM lead ID, event/time context, stage, source, property/room details and configured value/currency are sent. This adapter is not a direct Google Ads offline-conversion upload API. The Measurement Protocol URL includes the measurement ID and API secret required by that transport; protect server/proxy tracing. |
 | Google audience pull | After the administrator configures a Google Ads Data Manager HTTPS pull source, a credentialed request to this site's enabled feed receives CSV with **plaintext normalized email and phone**, country `IN`, an empty postcode, and hashed first/last names for matching leads. Credentials are required; disabled/unmatched rules are refused. Previously obtained CSV cannot be recalled. |

@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.102.91
+Stable tag: 1.102.97
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,24 @@ Action Scheduler is optional; WP-Cron is the fallback. Scheduled work requires w
 Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Project Authors. The complete SIL Open Font License 1.1 is bundled in assets/fonts/OFL.txt; assets/fonts/NOTICE.txt and assets/fonts/inter-provenance.json identify the exact upstream revision, matching Google Fonts distribution and file hashes. Font bytes and existing CSS mappings are preserved.
 
 == Changelog ==
+
+= 1.102.97 =
+* Preview catalogue CSV rows and errors in the import popup; accept grouped rates, report valid/invalid/duplicate counts and preserve active/inactive status. Builder: Shashi.
+
+= 1.102.96 =
+* Reload into Review after confirmed Facebook form selection so saved forms and mappings appear immediately. Add inline sync feedback, prevent unsaved review, and load the first selected form’s mapping automatically. Builder: Shashi.
+
+= 1.102.95 =
+* Use the latest saved quotation grand total and its currency for Meta Purchase events, falling back to the entered Won deal value for external or zero-priced quotes. Preserve the original commercial amount on retries. Builder: Shashi.
+
+= 1.102.94 =
+* Map each selected Meta Instant Form’s question fields to CRM destinations independently. Read form questions without respondent data, validate contact destinations, preserve defaults and encrypted submission snapshots, and explain sync/recovery/manual-token controls. Builder: Shashi.
+
+= 1.102.93 =
+* Show Connected immediately after Facebook consent, keep Reconnect separate, and explain that Start syncing captures leads from activation onward without importing earlier history. Builder: Shashi.
+
+= 1.102.92 =
+* Connect Instant Forms directly with your own Meta app and guided Facebook sign-in. Add a four-step setup wizard and clear saved-credential replacement controls. Preserve existing hosted connections during migration. Builder: Shashi.
 
 = 1.102.91 =
 * Load pipeline leads independently in each scrollable column, twenty at a time, with full stage totals and retry controls. Builder: Shashi.

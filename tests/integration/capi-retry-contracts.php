@@ -96,3 +96,37 @@ idlm_integration_test('T08-N-INT005-active transactions and malformed identities
     global $wpdb;[$lead,$id]=idlm_capi_native_fixture();$wpdb->query('START TRANSACTION');try{[$result,$calls]=idlm_capi_native_capture(static fn()=>IDLM_CAPI::retry_capi_log($id));idlm_integration_assert_same(false,$result['success']);idlm_integration_assert_same(0,count($calls));}finally{$wpdb->query('ROLLBACK');}
     $wpdb->update($wpdb->prefix.'idlm_capi_logs',array('payload'=>serialize(array('_idlm_delivery'=>array('version'=>1)))),array('id'=>$id));[$result,$calls]=idlm_capi_native_capture(static fn()=>IDLM_CAPI::retry_capi_log($id));idlm_integration_assert_same(false,$result['success']);idlm_integration_assert_same(0,count($calls));
 });
+
+function idlm_capi_quote_native_revision($lead,$value,$currency='INR'):array {
+    global $wpdb;$now=current_time('mysql');
+    idlm_integration_assert_same(1,$wpdb->insert($wpdb->prefix.'idlm_quotes',array('quote_number'=>'CAPI-'.wp_generate_uuid4(),'lead_id'=>$lead,'status'=>'Draft','created_at'=>$now,'updated_at'=>$now)));
+    $quote=(int)$wpdb->insert_id;
+    idlm_integration_assert_same(1,$wpdb->insert($wpdb->prefix.'idlm_quote_revisions',array('quote_id'=>$quote,'revision_number'=>1,'revision_name'=>wp_generate_uuid4(),'status'=>'Superseded','grand_total'=>100000,'currency_code'=>'USD','created_at'=>$now,'updated_at'=>$now)));
+    idlm_integration_assert_same(1,$wpdb->insert($wpdb->prefix.'idlm_quote_revisions',array('quote_id'=>$quote,'revision_number'=>2,'revision_name'=>wp_generate_uuid4(),'status'=>'Draft','grand_total'=>$value,'currency_code'=>$currency,'created_at'=>$now,'updated_at'=>$now)));
+    $revision=(int)$wpdb->insert_id;$wpdb->update($wpdb->prefix.'idlm_quotes',array('current_revision_id'=>$revision),array('id'=>$quote));
+    return array($quote,$revision);
+}
+idlm_integration_test('CAPIQUOTE-N latest saved quotation wins over stale projection and manual deal with original quote currency',static function():void {
+    global $wpdb;[$lead]=idlm_capi_native_fixture('meta','Won');idlm_capi_quote_native_revision($lead,315500.75,'INR');
+    $wpdb->update($wpdb->prefix.'idlm_leads',array('quote_value'=>100000),array('id'=>$lead));update_option('idlm_currency_code','USD');
+    try {
+        [$r,$calls]=idlm_capi_native_capture(static fn()=>IDLM_CAPI::fire_meta_capi((object)array('id'=>$lead),'Won'));
+        idlm_integration_assert_same(true,$r['success'],$r['message']);$data=json_decode($calls[0]['args']['body'],true)['data'][0];
+        idlm_integration_assert_same('Purchase',$data['event_name']);idlm_integration_assert_same(315500.75,$data['custom_data']['value']);idlm_integration_assert_same('INR',$data['custom_data']['currency']);
+        idlm_integration_assert_same('125000.00',$wpdb->get_var($wpdb->prepare("SELECT deal_value FROM {$wpdb->prefix}idlm_leads WHERE id=%d",$lead)));
+    } finally {update_option('idlm_currency_code','INR');}
+});
+idlm_integration_test('CAPIQUOTE-N external or zero-priced quote uses entered final Won amount',static function():void {
+    foreach(array(false,true) as $zero){
+        [$lead]=idlm_capi_native_fixture('meta','Won');if($zero){idlm_capi_quote_native_revision($lead,0);}
+        [$r,$calls]=idlm_capi_native_capture(static fn()=>IDLM_CAPI::fire_meta_capi((object)array('id'=>$lead),'Won'));
+        idlm_integration_assert_same(true,$r['success'],$r['message']);$data=json_decode($calls[0]['args']['body'],true)['data'][0]['custom_data'];idlm_integration_assert_same(125000,$data['value']);idlm_integration_assert_same('INR',$data['currency']);
+    }
+});
+idlm_integration_test('CAPIQUOTE-N retry preserves first quoted value and currency after quotation and deal edits',static function():void {
+    global $wpdb;[$lead]=idlm_capi_native_fixture('meta','Won');[$quote,$revision]=idlm_capi_quote_native_revision($lead,315500.75,'INR');
+    [$first,$calls]=idlm_capi_native_capture(static fn()=>IDLM_CAPI::fire_meta_capi((object)array('id'=>$lead),'Won'),429);$initial=json_decode($calls[0]['args']['body'],true)['data'][0];
+    $wpdb->update($wpdb->prefix.'idlm_quote_revisions',array('grand_total'=>999999,'currency_code'=>'USD'),array('id'=>$revision));$wpdb->update($wpdb->prefix.'idlm_leads',array('deal_value'=>888888),array('id'=>$lead));
+    [$r,$calls]=idlm_capi_native_capture(static fn()=>IDLM_CAPI::retry_capi_log($first['log_id']));$retry=json_decode($calls[0]['args']['body'],true)['data'][0];
+    idlm_integration_assert_same(true,$r['success'],$r['message']);idlm_integration_assert_same(315500.75,$retry['custom_data']['value']);idlm_integration_assert_same('INR',$retry['custom_data']['currency']);idlm_integration_assert_same($initial['event_id'],$retry['event_id']);idlm_integration_assert_same($initial['event_time'],$retry['event_time']);
+});

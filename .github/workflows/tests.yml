@@ -45,6 +45,10 @@ jobs:
       - name: Run fast behavioral suite
         shell: bash
         run: php tests/run.php | tee /tmp/idlm-runtime-evidence/fast-results.txt
+      - name: Run Facebook connection and setup regressions
+        run: |
+          php tests/facebook-connect-runtime.php
+          node tests/facebook-connect-ui.js
       - name: Install WordPress fixture
         shell: bash
         run: |

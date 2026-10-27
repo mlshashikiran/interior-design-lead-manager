@@ -1,5 +1,51 @@
 # Changelog
 
+## [1.102.97] - 2026-10-27
+
+### Fixed
+
+- Accept validated western/Indian thousands separators in catalogue CSV rates. Preview every row before import, show valid/invalid/duplicate counts and specific row errors in the same dialog, retain import results, and warn that blank codes create new items on every import. Revalidate uploads before checked transactional writes and preserve CSV active/inactive status. Builder: Shashi.
+
+## [1.102.96] - 2026-10-27
+
+### Fixed
+
+- Force a document reload after confirmed Start syncing rather than navigating to the existing settings fragment, which left Review showing stale Not selected values despite a successful save. Reopen Review using freshly rendered source state and automatically load the first saved form’s questions. Builder: Shashi.
+- Show progress and focused errors beside Start syncing, keep controls disabled until a successful reload, restore retry controls on failure, and block Review for unsaved checked forms. Builder: Shashi.
+
+## [1.102.95] - 2026-10-27
+
+### Fixed
+
+- Resolve fresh Meta Purchase value/currency from the linked quotation’s current saved revision grand total, including its already calculated discounts and tax. Use the entered final Won deal value and CRM currency when no plugin quotation or only a zero-priced draft exists. Preserve original value/currency for retries, existing successful delivery receipts and non-Purchase/platform behavior. Do not change CRM deal/quotation amounts. Builder: Shashi.
+
+## [1.102.94] - 2026-10-27
+
+### Added
+
+- Form-level Meta field mapping: load the selected form’s question labels/keys and choose a CRM destination for each field, with independent saves and custom full-name splitting. Scope mappings to app/Page/form, verify Page ownership, require a phone/email destination and reject lifecycle fields or duplicate destinations. Existing default mappings remain a fallback; saved form mappings survive ordinary settings saves. Builder: Shashi.
+
+### Changed
+
+- Explain import enablement, bounded failed-import recovery and the alternative manual Page-token setup. Mapping changes affect subsequent imports; raw answers, including unmapped fields, retain the existing encrypted submission-snapshot policy. Clarify that disabling import cancels queued work encountered while disabled. Builder: Shashi.
+
+## [1.102.93] - 2026-10-27
+
+### Fixed
+
+- Show Connected on the Facebook sign-in button after completed consent and after source activation, with separate Reconnect/Disconnect controls. Keep the consent state separate from enabled lead sync. Explain beside Start syncing that activation captures subsequent leads and bounded missed-delivery catch-up rather than importing all historical submissions. Builder: Shashi.
+
+## [1.102.92] - 2026-10-27
+
+### Changed
+
+- Connect Meta Instant Forms directly through the site’s own Meta app using Facebook Login for Business, encrypted local Page tokens, Page/form selection and automatic leadgen subscription. Retain the existing signed webhook, import/retry worker and legacy hosted transport during migration. Builder: Shashi.
+- Guide setup through Meta app, webhook, Facebook/forms and review steps. Retain entered details between steps and show saved credentials as explicit saved-value cards with Replace/Keep saved value controls, distinct unsaved/removal states and server-managed notices. Builder: Shashi.
+
+### Fixed
+
+- Allow local migration away from a hosted connection even when its shared service is unavailable. Refuse Facebook sign-in with unsaved setup changes and retain existing Page webhook fields when subscribing to leadgen. Builder: Shashi.
+
 ## [1.102.91] - 2026-10-26
 
 ### Changed

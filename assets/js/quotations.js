@@ -139,6 +139,115 @@
             document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { importClose.click(); } });
         }
     }
+    var importForm = document.querySelector('[data-catalogue-import-form]');
+    if (importForm && window.idlmQuoteData) {
+        var importFile = importForm.querySelector('[name="catalogue_csv"]');
+        var previewButton = importForm.querySelector('[data-catalogue-preview]');
+        var confirmImport = importForm.querySelector('[data-catalogue-confirm]');
+        var importDone = importForm.querySelector('[data-catalogue-import-done]');
+        var importStatus = importForm.querySelector('[data-catalogue-import-status]');
+        var importPreview = importForm.querySelector('[data-catalogue-import-preview]');
+        var importRequest = 0;
+        var importBusy = false;
+        var selectedImportFile = null;
+        if (catalogueImport) { catalogueImport.setAttribute('aria-labelledby', 'idlm-catalogue-import-title'); }
+        function showImportRows(report, complete) {
+            importPreview.replaceChildren();
+            var summary = document.createElement('p');
+            summary.className = 'idlm-catalogue-import-summary';
+            summary.textContent = report.total + ' items: ' + (complete ? report.imported + ' imported' : report.valid + ' ready to import') +
+                ', ' + report.invalid + ' invalid, ' + report.duplicates + ' duplicate codes skipped.';
+            importPreview.appendChild(summary);
+            if (!complete && report.generated_codes) {
+                var warning = document.createElement('p');
+                warning.textContent = report.generated_codes + ' items have blank codes and will receive new codes. Reimporting them creates additional items.';
+                importPreview.appendChild(warning);
+            }
+            var scroll = document.createElement('div');
+            scroll.className = 'idlm-catalogue-import-table';
+            scroll.tabIndex = 0;
+            scroll.setAttribute('role', 'region');
+            scroll.setAttribute('aria-label', 'CSV row validation results');
+            var table = document.createElement('table');
+            table.className = 'widefat striped';
+            var head = table.createTHead().insertRow();
+            ['CSV row', 'Item', 'Code', 'Category', 'Unit', 'Rate', 'Result'].forEach(function (label) {
+                var cell = document.createElement('th'); cell.scope = 'col'; cell.textContent = label; head.appendChild(cell);
+            });
+            var body = table.createTBody();
+            report.rows.forEach(function (row) {
+                var tr = body.insertRow();
+                tr.dataset.state = row.state;
+                [row.row, row.data.item_name, row.data.item_code || 'Auto-generated', row.data.category, row.data.unit,
+                    row.data.default_rate, (row.state === 'valid' ? 'Ready' : row.state.charAt(0).toUpperCase() + row.state.slice(1)) +
+                    (row.messages.length ? ': ' + row.messages.join(' ') : '')].forEach(function (value) {
+                    tr.insertCell().textContent = String(value);
+                });
+            });
+            scroll.appendChild(table); importPreview.appendChild(scroll);
+        }
+        function requestCatalogueImport(mode) {
+            if (importBusy || !importFile.files.length) { return; }
+            if (mode === 'import' && (confirmImport.disabled || selectedImportFile !== importFile.files[0])) { return; }
+            var file = importFile.files[0];
+            var request = ++importRequest;
+            importBusy = true;
+            confirmImport.disabled = true;
+            previewButton.disabled = true;
+            importFile.disabled = true;
+            importForm.setAttribute('aria-busy', 'true');
+            importStatus.classList.remove('is-error');
+            importStatus.textContent = mode === 'preview' ? 'Checking file and existing item codes…' : 'Importing valid items…';
+            var formData = new FormData(importForm);
+            // Disabled file inputs are excluded from FormData.
+            formData.set('catalogue_csv', file);
+            formData.set('import_mode', mode);
+            fetch(window.idlmQuoteData.ajaxUrl, { method: 'POST', body: formData, credentials: 'same-origin' })
+                .then(function (response) {
+                    return response.text().then(function (text) {
+                        var result;
+                        try { result = JSON.parse(text); } catch (error) { throw new Error('The server returned an unreadable response. Your session may have expired.'); }
+                        if (!result.success || !result.data || !Array.isArray(result.data.rows)) {
+                            throw new Error(result.data && result.data.message || 'Unable to process the CSV. Check your session and try again.');
+                        }
+                        return result.data;
+                    });
+                }).then(function (report) {
+                    if (request !== importRequest) { return; }
+                    showImportRows(report, mode === 'import');
+                    selectedImportFile = file;
+                    confirmImport.hidden = mode === 'import';
+                    confirmImport.disabled = mode === 'import' || report.valid === 0;
+                    confirmImport.textContent = 'Import ' + report.valid + ' valid items';
+                    importDone.hidden = mode !== 'import';
+                    previewButton.hidden = mode === 'import';
+                    importStatus.textContent = mode === 'import' ? 'Import complete. Review the results below, then refresh the catalogue.' :
+                        (report.valid ? 'Preview ready. Invalid rows and duplicate codes will be skipped.' : 'No items can be imported. Review the row errors below and choose a corrected file.');
+                }).catch(function (error) {
+                    if (request !== importRequest) { return; }
+                    selectedImportFile = null;
+                    importStatus.classList.add('is-error');
+                    importStatus.textContent = error.message + (mode === 'import' ? ' If the connection was interrupted, check the catalogue before importing again; the server may have completed the import.' : '');
+                    if (mode === 'import') { importDone.hidden = false; }
+                }).finally(function () {
+                    if (request !== importRequest) { return; }
+                    importBusy = false; importFile.disabled = false; previewButton.disabled = false;
+                    importForm.removeAttribute('aria-busy');
+                });
+        }
+        importForm.addEventListener('submit', function (event) { event.preventDefault(); requestCatalogueImport('preview'); });
+        importFile.addEventListener('change', function () {
+            selectedImportFile = null; confirmImport.hidden = true; confirmImport.disabled = true;
+            importDone.hidden = true; previewButton.hidden = false; importPreview.replaceChildren(); importStatus.textContent = '';
+            requestCatalogueImport('preview');
+        });
+        confirmImport.addEventListener('click', function () { requestCatalogueImport('import'); });
+        importDone.addEventListener('click', function () {
+            var params = new URLSearchParams(window.location.search);
+            params.delete('import_catalogue'); params.delete('idlm_notice'); params.delete('idlm_error');
+            window.location.search = params.toString();
+        });
+    }
     var categoryManager = document.querySelector('.idlm-category-manager.is-open');
     if (categoryManager) {
         if (categoryManager.parentNode !== document.body) { document.body.appendChild(categoryManager); }

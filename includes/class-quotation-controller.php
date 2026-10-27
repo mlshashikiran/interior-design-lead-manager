@@ -662,125 +662,61 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         self::redirect(array('workspace' => 'catalogue', 'manage_categories' => 1, 'idlm_notice' => $message));
     }
 
-    public static function handle_import_catalogue_csv() {
-        if (!self::can('idlm_manage_quote_items')) {
-            wp_die('You do not have permission to import quotation items.', 403);
-        }
-        check_admin_referer('idlm_import_catalogue_csv');
-        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0020: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
+    /** Shared upload boundary for the legacy form and the in-dialog preview/import. */
+    private static function catalogue_upload() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Both import handlers verify the import nonce/capability before this helper; PHP upload metadata is shape/MIME/size checked below, then the CSV service sanitizes and validates each cell.
         $upload = $_FILES['catalogue_csv'] ?? array();
-        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $upload_error = absint($upload['error'] ?? UPLOAD_ERR_NO_FILE);
-        $upload_size = absint($upload['size'] ?? 0);
-        $upload_name = sanitize_file_name(wp_unslash($upload['name'] ?? ''));
-        if (UPLOAD_ERR_OK !== $upload_error || empty($upload['tmp_name']) || !is_uploaded_file($upload['tmp_name'])) {
-            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Choose a CSV file to import.'));
+        if (!is_array($upload) || !is_scalar($upload['error'] ?? null) || !is_string($upload['tmp_name'] ?? null)
+            || !is_string($upload['name'] ?? null) || !is_scalar($upload['size'] ?? null)) {
+            return new WP_Error('idlm_catalogue_upload', 'Choose a CSV file to import.');
         }
-        if ($upload_size <= 0 || $upload_size > 5 * MB_IN_BYTES || 'csv' !== strtolower((string) pathinfo($upload_name, PATHINFO_EXTENSION))) {
-            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'CSV files must use the .csv extension and be no larger than 5 MB.'));
+        $error = (int) $upload['error'];
+        if (in_array($error, array(UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE), true)) {
+            return new WP_Error('idlm_catalogue_upload', 'The CSV exceeds the server upload limit. Choose a smaller file (maximum 5 MB).');
+        }
+        if (UPLOAD_ERR_OK !== $error || !is_uploaded_file($upload['tmp_name'])) {
+            return new WP_Error('idlm_catalogue_upload', 'The upload did not complete. Choose the CSV file again.');
+        }
+        $size = filesize($upload['tmp_name']);
+        if (!$size || $size > 5 * MB_IN_BYTES || 'csv' !== strtolower(pathinfo($upload['name'], PATHINFO_EXTENSION))) {
+            return new WP_Error('idlm_catalogue_upload', 'CSV files must use the .csv extension and be no larger than 5 MB.');
         }
         if (function_exists('finfo_open')) {
-            $file_info = finfo_open(FILEINFO_MIME_TYPE);
-            $mime_type = $file_info ? (string) finfo_file($file_info, $upload['tmp_name']) : '';
-            if ($file_info) { finfo_close($file_info); }
-            if ($mime_type && !in_array($mime_type, array('text/plain', 'text/csv', 'application/csv', 'application/vnd.ms-excel'), true)) {
-                self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'The uploaded file is not a recognized CSV document.'));
+            $info = finfo_open(FILEINFO_MIME_TYPE);
+            $mime = $info ? (string) finfo_file($info, $upload['tmp_name']) : '';
+            if ($info) { finfo_close($info); }
+            if ($mime && !in_array($mime, array('text/plain', 'text/csv', 'application/csv', 'application/vnd.ms-excel'), true)) {
+                return new WP_Error('idlm_catalogue_upload', 'The uploaded file is not a recognized CSV document.');
             }
         }
-        // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- REL007-BOUNDARY-0021: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
-        $handle = fopen($upload['tmp_name'], 'r');
-        // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fopen
-        if (!$handle) {
-            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Unable to read the CSV file.'));
+        return $upload['tmp_name'];
+    }
+
+    public static function ajax_import_catalogue_csv() {
+        if (!self::can('idlm_manage_quote_items')) { wp_send_json_error(array('message'=>'You do not have permission to import quotation items.'), 403); }
+        check_ajax_referer('idlm_import_catalogue_csv', '_wpnonce');
+        $mode = isset($_POST['import_mode']) && is_string($_POST['import_mode']) ? sanitize_key(wp_unslash($_POST['import_mode'])) : '';
+        if (!is_string($mode) || !in_array($mode, array('preview', 'import'), true)) { wp_send_json_error(array('message'=>'Choose preview or import.'), 400); }
+        $path = self::catalogue_upload();
+        $report = is_wp_error($path) ? $path : ('import' === $mode ? IDLM_Quotation_Catalogue_Import::import_file($path) : IDLM_Quotation_Catalogue_Import::inspect($path));
+        if (is_wp_error($report)) { wp_send_json_error(array('message'=>$report->get_error_message()), 400); }
+        wp_send_json_success($report);
+    }
+
+    public static function handle_import_catalogue_csv() {
+        if (!self::can('idlm_manage_quote_items')) { wp_die('You do not have permission to import quotation items.', 403); }
+        check_admin_referer('idlm_import_catalogue_csv');
+        $path = self::catalogue_upload();
+        $report = is_wp_error($path) ? $path : IDLM_Quotation_Catalogue_Import::import_file($path);
+        $args = array('workspace'=>'catalogue', 'import_catalogue'=>1);
+        if (is_wp_error($report)) { $args['idlm_error'] = $report->get_error_message(); }
+        else {
+            $args['idlm_notice'] = sprintf('%d items imported; %d invalid rows; %d duplicate codes skipped.', $report['imported'], $report['invalid'], $report['duplicates']);
+            foreach ($report['rows'] as $row) {
+                if ($row['state'] === 'invalid') { $args['idlm_notice'] .= ' Row ' . $row['row'] . ': ' . implode(' ', $row['messages']); break; }
+            }
         }
-        $headers = array_map(static function($value) { return sanitize_key(str_replace(array(' ', '-'), '_', (string) $value)); }, (array) fgetcsv($handle));
-        $required = array('item_code', 'item_name');
-        if (array_diff($required, $headers) || count($headers) !== count(array_unique($headers)) || count($headers) > 20) {
-            // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0022: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
-            fclose($handle);
-            // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'CSV requires unique item_code and item_name headers and no more than 20 columns.'));
-        }
-        global $wpdb;
-        $valid = 0;
-        $errors = 0;
-        $duplicates = 0;
-        $row_count = 0;
-        $transaction = IDLM_Quotation_Repository::begin_checked_transaction('catalogue');
-        if (is_wp_error($transaction)) {
-            // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0023: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
-            fclose($handle);
-            // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => $transaction->get_error_message()));
-        }
-        while (($values = fgetcsv($handle)) !== false) {
-            $row_count++;
-            if ($row_count > 2000) {
-                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0071: handle_import_catalogue_csv(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
-                $wpdb->query('ROLLBACK');
-                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-                // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0024: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
-                fclose($handle);
-                // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-                self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Catalogue imports are limited to 2,000 rows per file.'));
-            }
-            if (count($values) > count($headers) || array_filter($values, static function($value) { return strlen((string) $value) > 5000; })) {
-                $errors++;
-                continue;
-            }
-            $row = array_combine($headers, array_pad($values, count($headers), ''));
-            $code = sanitize_text_field($row['item_code'] ?? '');
-            $name = sanitize_text_field($row['item_name'] ?? '');
-            $category = sanitize_text_field($row['category'] ?? '');
-            $unit = sanitize_text_field($row['unit'] ?? 'Nos');
-            if (!$name || !$category || !$unit) {
-                $errors++;
-                continue;
-            }
-            if (IDLM_Quotation_Repository::catalogue_item_code_exists($code)) {
-                $duplicates++;
-                continue;
-            }
-            $rate = IDLM_Quotation_Calculator::decimal_units($row['default_rate'] ?? 0, 0, IDLM_Quotation_Calculator::MAX_AMOUNT_UNITS, 'Catalogue rate');
-            if (is_wp_error($rate)) { $errors++; continue; }
-            $now = current_time('mysql');
-            if (false === IDLM_Quotation_Repository::ensure_catalogue_term('category', $category, get_current_user_id(), $now) || false === IDLM_Quotation_Repository::ensure_catalogue_term('unit', $unit, get_current_user_id(), $now)) {
-                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0072: handle_import_catalogue_csv(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
-                $wpdb->query('ROLLBACK');
-                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-                // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0025: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
-                fclose($handle);
-                // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-                self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Catalogue import failed and was rolled back.'));
-            }
-            $ok = IDLM_Quotation_Repository::insert_catalogue_item(array(
-                'item_code' => $code, 'category' => $category, 'item_name' => $name,
-                'description' => sanitize_textarea_field($row['description'] ?? ''), 'unit' => $unit,
-                'is_wood' => in_array(strtolower(trim((string) ($row['is_wood'] ?? 'no'))), array('yes', '1', 'true'), true) ? 1 : 0,
-                'default_rate' => (float) $rate / 100,
-                'status' => 'active', 'created_by' => get_current_user_id(), 'created_at' => current_time('mysql'), 'updated_at' => current_time('mysql'),
-            ));
-            if (!$ok) {
-                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0073: handle_import_catalogue_csv(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
-                $wpdb->query('ROLLBACK');
-                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-                // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0026: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
-                fclose($handle);
-                // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-                self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Catalogue import failed and was rolled back.'));
-            }
-            $valid++;
-        }
-        // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0027: handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO.
-        fclose($handle);
-        // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0074: handle_import_catalogue_csv(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
-        if (false === $wpdb->query('COMMIT')) {
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-            $wpdb->query('ROLLBACK');
-            self::redirect(array('workspace' => 'catalogue', 'idlm_error' => 'Unable to commit the catalogue import.'));
-        }
-        self::redirect(array('workspace' => 'catalogue', 'idlm_notice' => sprintf('%d items imported; %d invalid rows; %d duplicate codes skipped.', $valid, $errors, $duplicates)));
+        self::redirect($args);
     }
 
     private static function csv_safe_cell($value) {

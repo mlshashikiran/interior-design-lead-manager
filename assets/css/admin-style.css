@@ -7915,3 +7915,35 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
     .idlm-dialog .idlm-dialog__footer .idlm-btn, .idlm-dialog .idlm-dialog__actions .idlm-btn, #idlm-routing-modal .idlm-routing-modal-footer .idlm-btn, #idlm-routing-modal .idlm-routing-form-error { width: 100%; }
     .idlm-log-payload-dialog .idlm-code-block { max-height: 220px; font-size: 11px; }
 }
+
+/* Guided Meta setup and write-only credential states. Builder: Shashi. */
+.idlm-wrap .idlm-meta-wizard__steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 18px 0; }
+.idlm-wrap .idlm-meta-wizard__steps .idlm-btn { white-space: normal; justify-content: flex-start; text-align: left; gap: 8px; }
+.idlm-wrap .idlm-meta-wizard__steps .is-current { border-color: var(--idlm-action); background: var(--idlm-action-soft); color: var(--idlm-action); }
+.idlm-wrap .idlm-meta-wizard > details { padding: 20px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); }
+.idlm-wrap .idlm-meta-wizard > details > summary { font-size: 16px; }
+.idlm-wrap .idlm-meta-wizard.is-enhanced > details > summary { list-style: none; cursor: default; }
+.idlm-wrap .idlm-meta-wizard.is-enhanced > details > summary::-webkit-details-marker { display: none; }
+.idlm-wrap .idlm-meta-wizard [hidden] { display: none !important; }
+.idlm-wrap .idlm-connector-secret__saved { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; padding: 12px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface-soft); }
+.idlm-wrap .idlm-connector-secret__saved span { grid-column: 1; font-size: 12px; }
+.idlm-wrap .idlm-connector-secret__saved .idlm-btn { grid-column: 2; grid-row: 1 / 3; }
+.idlm-wrap .idlm-connector-secret [data-idlm-secret-editor] > .idlm-btn { margin: 8px 6px 0 0; }
+.idlm-wrap .idlm-meta-wizard__review { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 20px; }
+.idlm-wrap .idlm-meta-wizard__review dd { margin: 0; overflow-wrap: anywhere; }
+.idlm-wrap .idlm-meta-wizard__advanced { margin: 16px 0; }
+@media (max-width: 600px) {
+  .idlm-wrap .idlm-meta-wizard__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .idlm-wrap .idlm-meta-wizard > details { padding: 14px; }
+  .idlm-wrap .idlm-meta-wizard__review { grid-template-columns: 1fr; }
+}
+.idlm-wrap .idlm-meta-form-mapping { min-width: 0; margin: 16px 0; padding: 16px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); }
+.idlm-wrap .idlm-meta-form-mapping legend { max-width: 100%; padding: 0 6px; font-weight: 600; overflow-wrap: anywhere; }
+.idlm-wrap .idlm-meta-field-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--idlm-border); }
+.idlm-wrap .idlm-meta-field-row label { min-width: 0; overflow-wrap: anywhere; }
+.idlm-wrap .idlm-meta-field-row small { display: block; font-weight: 400; margin-top: 4px; }
+.idlm-wrap .idlm-meta-form-mapping [data-idlm-form-mapping-save] { margin-top: 16px; }
+@media (max-width: 600px) { .idlm-wrap .idlm-meta-field-row { grid-template-columns: 1fr; gap: 8px; } }
+
+.idlm-wrap .idlm-meta-field-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 12px; font-size: 12px; font-weight: 600; }
+@media (max-width: 600px) { .idlm-wrap .idlm-meta-field-head { display: none; } }

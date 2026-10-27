@@ -193,7 +193,7 @@ idlm_integration_test('CONNECTOR-N hosted source survives general settings saves
         idlm_integration_assert_true(!is_wp_error($result));$saved=IDLM_Lead_Connector::config();
         idlm_integration_assert_same('111',$saved['page_id']);idlm_integration_assert_same(array('222'),$saved['forms']);idlm_integration_assert_same($config['connection'],$saved['connection']);idlm_integration_assert_same('hosted',$saved['mode']);
         $context=IDLM_Lead_Connector::settings_context();$html=IDLM_View::render('admin/settings/lead-connector.php',array('lead_connector'=>$context));
-        idlm_integration_assert_true(strpos($html,'Change Page or forms')!==false);idlm_integration_assert_true(strpos($html,'Manual setup')!==false);
+        idlm_integration_assert_true(strpos($html,'Reconnect Facebook')!==false);idlm_integration_assert_true(strpos($html,'Advanced: connect using a Page access token')!==false);
         $user=get_current_user_id();wp_set_current_user(0);try{idlm_integration_assert_true(is_wp_error(IDLM_Facebook_Connect::operation('start',array('return_url'=>'https://example.test/'))));}finally{wp_set_current_user($user);}
     } finally { update_option('idlm_meta_lead_connector',$previous,false);IDLM_Lead_Connector::save_settings(array()); }
 });
@@ -203,4 +203,30 @@ idlm_integration_test('CONNECTOR-N captured leads keep a valid portable backup s
     foreach($backup['schema']['columns'] as $table=>$columns){foreach($backup['tables'][$table] as $row){foreach($columns as $field=>$column){if(!$value_valid->invoke(null,$row[$field],$column)){throw new RuntimeException('Invalid backup value in '.$table.'.'.$field);}}}}
     $valid=IDLM_Backup_Validator::validate($backup,$backup['schema']['columns'],home_url(),$backup['user_identities'],static function($name){return true;});
     idlm_integration_assert_same(true,$valid);
+});
+
+idlm_integration_test('CONNECTOR-N per-form mapping reaches canonical import with full encrypted answers retained',static function():void {
+    idlm_connector_native_setup();
+    $config=IDLM_Lead_Connector::config();
+    $option='idlm_meta_form_mapping_'.hash('sha256','444|111|222');
+    $mapping=array_fill_keys(array_keys(IDLM_Lead_Connector::mapping_targets()),'');
+    $mapping['full_name']='customer_name';$mapping['phone']='contact_mobile';$mapping['budget']='project_budget';
+    update_option($option,$mapping,false);
+    $id='90000000000000000991';$phone='919811119991';
+    $record=array('id'=>$id,'form_id'=>'222','created_time'=>gmdate('c'),'field_data'=>array(array('name'=>'customer_name','values'=>array('Synthetic Formmapping')),array('name'=>'contact_mobile','values'=>array($phone)),array('name'=>'project_budget','values'=>array('1500000')),array('name'=>'unmapped_private_answer','values'=>array('Synthetic retained answer')),array('name'=>'stage','values'=>array('Won'))));
+    try {
+        list($result)=idlm_connector_native_http(array($id=>$record),static function()use($id){idlm_integration_assert_same(true,idlm_connector_native_enqueue_meta($id));return IDLM_Lead_Connector::process(idlm_connector_native_key('meta',$id));});
+        idlm_integration_assert_true(!is_wp_error($result),is_wp_error($result)?$result->get_error_message():'');
+        $lead=idlm_connector_native_find($phone);idlm_integration_assert_true((bool)$lead);
+        idlm_integration_assert_same('Synthetic',$lead->first_name);idlm_integration_assert_same('Formmapping',$lead->last_name);idlm_integration_assert_same('New',$lead->stage);
+        idlm_integration_assert_same(1500000,(int)$lead->budget);
+        $attribution=IDLM_Lead_Connector::attribution((int)$lead->id);
+        idlm_integration_assert_same($record['field_data'],$attribution['meta_lead']['field_data']);
+        $raw=IDLM_Secret_Store::stored(IDLM_Lead_Connector::ATTRIBUTION.$lead->id);
+        idlm_integration_assert_true(strpos($raw,'Synthetic retained answer')===false);
+        $backup=idlm_native_backup_call('snapshot');idlm_integration_assert_true(is_array($backup));
+        $options=array_column($backup['options'],'option_value','option_name');
+        idlm_integration_assert_same($mapping,maybe_unserialize($options[$option] ?? ''));
+        idlm_integration_assert_same(true,IDLM_Backup_Validator::validate($backup,$backup['schema']['columns'],home_url(),$backup['user_identities'],static function($name){return true;}));
+    } finally { delete_option($option); }
 });

@@ -239,6 +239,18 @@ try {
         echo "$passed passed, $failed failed\n";
         idlm_http_cleanup(); exit($failed ? 1 : 0);
     }
+    if (in_array('--catalogue-import-only', $argv, true)) {
+        idlm_http_check(idlm_http_request('/login', array('user_login'=>'idlm_admin','user_password'=>'idlm-integration-password'), 'admin')['status']===302, 'Administrator login failed');
+        $sessions['admin'] = json_decode(idlm_http_request('/session', array(), 'admin', false)['body'], true);
+        require __DIR__ . '/catalogue-import-http-cases.php';
+        if (in_array('--hold', $argv, true)) {
+            echo 'BROWSER URL='.$config['http_url'].' STOP='.$config['content_dir']."/stop\n";
+            $deadline=microtime(true)+1800;
+            while (!is_file($config['content_dir'].'/stop') && microtime(true)<$deadline) { usleep(100000); }
+        }
+        echo "$passed passed, $failed failed\n";
+        idlm_http_cleanup(); exit($failed ? 1 : 0);
+    }
     if (in_array('--request-input-only', $argv, true)) {
         idlm_http_check(idlm_http_request('/login', array('user_login'=>'idlm_admin','user_password'=>'idlm-integration-password'), 'admin')['status']===302, 'Administrator login failed');
         $sessions['admin'] = json_decode(idlm_http_request('/session', array(), 'admin', false)['body'], true);
@@ -399,6 +411,7 @@ try {
     require __DIR__ . '/quotation-classification-http-cases.php';
     require __DIR__ . '/quotation-history-http-cases.php';
     require __DIR__ . '/quotation-engine-http-cases.php';
+    require __DIR__ . '/catalogue-import-http-cases.php';
     require __DIR__ . '/quotation-numeric-http-cases.php';
     require __DIR__ . '/quotation-request-input-http-cases.php';
     require __DIR__ . '/release-static-http-cases.php';

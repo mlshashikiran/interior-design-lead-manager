@@ -18,6 +18,7 @@ final class IDLM_Lead_Connector {
         add_action('rest_api_init', array(__CLASS__, 'routes'));
         add_action(self::HOOK, array(__CLASS__, 'tick'));
         add_action('wp_ajax_idlm_test_lead_connector', array(__CLASS__, 'ajax_test'));
+        add_action('wp_ajax_idlm_meta_form_mapping', array(__CLASS__, 'ajax_form_mapping'));
         add_filter('rest_pre_serve_request', array(__CLASS__, 'serve_challenge'), 10, 4);
     }
 
@@ -48,7 +49,7 @@ final class IDLM_Lead_Connector {
             if (($existing['enabled'] ?? '') === '1') { $input['idlm_meta_lead_sync'] = '1'; } else { unset($input['idlm_meta_lead_sync']); }
         }
         $config = array('enabled'=>isset($input['idlm_meta_lead_sync']) ? '1' : '0');
-        foreach (array('page_id','app_id','whatsapp_page_id') as $field) {
+        foreach (array('page_id','app_id','login_config_id','whatsapp_page_id') as $field) {
             $value = $input['idlm_connector_' . $field] ?? '';
             if (!is_string($value) || ($value !== '' && self::id($value) === '')) { return self::settings_failure('Enter valid numeric Meta identifiers.', $input); }
             $config[$field] = $value;
@@ -88,6 +89,9 @@ final class IDLM_Lead_Connector {
         // A changed source starts a new bounded catch-up window; never scan historic leads implicitly.
         $config['started_at'] = isset($old['started_at']) && ($old['page_id'] ?? '') === $config['page_id'] ? (int)$old['started_at'] : time();
         if ($hosted) { $config = array_merge($existing, $config); }
+        elseif (($existing['mode'] ?? '') === 'direct' && ($existing['page_id'] ?? '') === $config['page_id'] && ($existing['app_id'] ?? '') === $config['app_id'] && ($existing['forms'] ?? array()) === $config['forms']) {
+            foreach (array('mode','connection','page_name','form_names') as $field) { if (isset($existing[$field])) { $config[$field] = $existing[$field]; } }
+        }
         update_option('idlm_meta_lead_connector', $config, false);
         if (self::config() !== $config) { return self::settings_failure('Connector settings could not be saved. Please retry.', $input); }
         update_option('idlm_interakt_lead_capture', isset($input['idlm_interakt_lead_capture']) ? '1' : '0', false);
@@ -100,7 +104,7 @@ final class IDLM_Lead_Connector {
         self::$settings_error = $message;
         $config = self::config();
         $config['enabled'] = isset($input['idlm_meta_lead_sync']) ? '1' : '0';
-        foreach (array('page_id','app_id','whatsapp_page_id') as $field) {
+        foreach (array('page_id','app_id','login_config_id','whatsapp_page_id') as $field) {
             $value = $input['idlm_connector_' . $field] ?? '';
             $config[$field] = is_string($value) ? sanitize_text_field(substr($value, 0, 100)) : '';
         }
@@ -130,6 +134,85 @@ final class IDLM_Lead_Connector {
 
     public static function mapping_fields() {
         return array('first_name'=>'first_name','last_name'=>'last_name','email'=>'email','phone'=>'phone_number','budget'=>'budget','project_timeline'=>'project_timeline','property_location'=>'city','property_type'=>'property_type','num_rooms'=>'num_rooms','preferred_studio'=>'preferred_studio');
+    }
+
+    /** Only profile/project destinations are configurable; lifecycle fields remain internal. */
+    public static function mapping_targets() {
+        $targets=array('full_name'=>'Full name (split into first and last name)');
+        foreach (self::mapping_fields() as $field=>$default) { $targets[$field]=ucwords(str_replace('_',' ',$field)); }
+        return $targets;
+    }
+
+    private static function form_mapping_option($form,$config) {
+        return 'idlm_meta_form_mapping_'.hash('sha256',($config['app_id'] ?? '').'|'.($config['page_id'] ?? '').'|'.$form);
+    }
+
+    public static function form_mapping($form,$config=null) {
+        if ($config===null) { $config=self::config(); }
+        $saved=self::option(self::form_mapping_option($form,$config),null);
+        if (is_array($saved)) { return $saved; }
+        return array_merge(self::mapping_fields(),is_array($config['mappings'] ?? null) ? $config['mappings'] : array(),array('full_name'=>'full_name'));
+    }
+
+    /** Read form metadata only, never respondent answers, through the selected Page token. */
+    private static function form_questions($form,$config) {
+        $data=self::graph($form,array('fields'=>'id,name,page,questions'));
+        if (is_wp_error($data)) { return $data; }
+        if (($data['id'] ?? '')!==$form || ($data['page']['id'] ?? '')!==($config['page_id'] ?? '') || !is_array($data['questions'] ?? null) || count($data['questions'])>100) {
+            return new WP_Error('idlm_form_fields','Meta did not return a supported form belonging to the selected Page.');
+        }
+        $questions=array();$unavailable=0;
+        foreach ($data['questions'] as $question) {
+            $key=$question['key'] ?? null;
+            if (!is_string($key) || $key==='' || strlen($key)>191 || preg_match('/[\x00-\x1f\x7f]/',$key)) { $unavailable++;continue; }
+            $questions[$key]=array('key'=>$key,'label'=>sanitize_text_field(is_string($question['label'] ?? null) ? $question['label'] : $key),'type'=>sanitize_text_field(is_string($question['type'] ?? null) ? $question['type'] : ''));
+        }
+        if (!$questions) { return new WP_Error('idlm_form_fields','Meta returned no mappable question keys. Keep the existing defaults or check form access.'); }
+        return array('form_id'=>$form,'name'=>sanitize_text_field(is_string($data['name'] ?? null) ? $data['name'] : $form),'fields'=>array_values($questions),'unavailable_count'=>$unavailable);
+    }
+
+    /** Administrator-only operation; AJAX transport additionally verifies the shared nonce. */
+    public static function form_mapping_operation($op,$input) {
+        if (!current_user_can('manage_options')) { return new WP_Error('idlm_form_forbidden','Administrator access required.'); }
+        if (!in_array($op,array('load','save'),true)) { return new WP_Error('idlm_form_operation','Invalid mapping operation.'); }
+        $form=self::id($input['form_id'] ?? null);$config=self::config();
+        if (!$form || !self::id($config['app_id'] ?? null) || !self::id($config['page_id'] ?? null) || !is_array($config['forms'] ?? null) || !in_array($form,$config['forms'],true)) {
+            return new WP_Error('idlm_form_scope','Choose a form saved for this connection first.');
+        }
+        $metadata=self::form_questions($form,$config);
+        if (is_wp_error($metadata)) { return $metadata; }
+        if (self::config()!==$config) { return new WP_Error('idlm_form_changed','The connection changed. Reload the form before saving.'); }
+        if ($op==='load') { return array_merge($metadata,array('mappings'=>self::form_mapping($form,$config),'targets'=>self::mapping_targets())); }
+        $json=$input['mappings'] ?? null;
+        if (!is_string($json) || strlen($json)>65536) { return new WP_Error('idlm_form_mapping','Invalid form mapping.'); }
+        $rows=json_decode($json,true,8);
+        if (!is_array($rows) || count($rows)>100) { return new WP_Error('idlm_form_mapping','Choose up to 100 form fields.'); }
+        $keys=array_column($metadata['fields'],'key');$targets=self::mapping_targets();
+        $mapping=array_fill_keys(array_keys($targets),'');$used=array();$sources=array();
+        foreach ($rows as $row) {
+            if (!is_array($row) || !is_string($row['source'] ?? null) || !is_string($row['target'] ?? null) || !in_array($row['source'],$keys,true) || isset($sources[$row['source']]) || ($row['target']!=='' && !isset($targets[$row['target']]))) {
+                return new WP_Error('idlm_form_mapping','Choose returned Meta fields and supported CRM destinations only.');
+            }
+            $sources[$row['source']]=true;
+            if ($row['target']==='') { continue; }
+            if (isset($used[$row['target']])) { return new WP_Error('idlm_form_mapping','Map each CRM destination only once.'); }
+            $used[$row['target']]=true;$mapping[$row['target']]=$row['source'];
+        }
+        if ($mapping['phone']==='' && $mapping['email']==='') { return new WP_Error('idlm_form_contact','Map at least one phone or email field so the CRM can identify the lead.'); }
+        $option=self::form_mapping_option($form,$config);
+        update_option($option,$mapping,false);
+        if (self::option($option,null)!==$mapping) { return new WP_Error('idlm_form_store','The form mapping could not be saved. Retry.'); }
+        return array('form_id'=>$form,'mappings'=>$mapping,'message'=>'Mapping saved for this form. It applies to future imports; existing CRM leads were not changed.');
+    }
+
+    public static function ajax_form_mapping() {
+        if (!current_user_can('manage_options')) { wp_send_json_error(array('message'=>'Administrator access required.'),403); }
+        check_ajax_referer('idlm_admin_nonce','nonce');
+        $input=wp_unslash($_POST);$op=$input['operation'] ?? '';
+        if (!is_string($op)) { wp_send_json_error(array('message'=>'Invalid mapping operation.'),400); }
+        $result=self::form_mapping_operation($op,$input);
+        if (is_wp_error($result)) { wp_send_json_error(array('message'=>$result->get_error_message()),400); }
+        wp_send_json_success($result);
     }
 
     public static function routes() {
@@ -332,8 +415,9 @@ final class IDLM_Lead_Connector {
         }
         $data=array('source'=>'Meta Ads','stage'=>'New','fb_lead_id'=>$record['id']);
         foreach (self::mapping_fields() as $field=>$default) { $name=$mappings[$field] ?? $default; $data[$field]=is_string($name) ? ($answers[$name] ?? '') : ''; }
-        if ($data['first_name'] === '' && !empty($answers['full_name'])) {
-            $parts=preg_split('/\s+/',trim($answers['full_name']),2); $data['first_name']=$parts[0]; if ($data['last_name']==='') { $data['last_name']=$parts[1] ?? ''; }
+        $full_name=$mappings['full_name'] ?? 'full_name';
+        if ($data['first_name'] === '' && is_string($full_name) && !empty($answers[$full_name])) {
+            $parts=preg_split('/\s+/',trim($answers[$full_name]),2); $data['first_name']=$parts[0]; if ($data['last_name']==='') { $data['last_name']=$parts[1] ?? ''; }
         }
         $data['email']=sanitize_email($data['email']);
         if ($data['phone'] === '' && $data['email'] === '') { return new WP_Error('idlm_connector_contact','Lead has no mapped email or phone.'); }
@@ -348,7 +432,7 @@ final class IDLM_Lead_Connector {
         if (is_wp_error($record)) { $record=self::graph($notification['id'],array('fields'=>self::META_BASE_FIELDS)); }
         if (is_wp_error($record)) { return $record; }
         if (($record['id'] ?? '') !== $notification['id'] || ($record['form_id'] ?? '') !== $notification['form_id']) { return new WP_Error('idlm_connector_identity','Retrieved lead identity differs from the notification.'); }
-        $config=self::config(); $data=self::map_meta($record,$config['mappings'] ?? array());
+        $config=self::config(); $data=self::map_meta($record,self::form_mapping($notification['form_id'],$config));
         if (is_wp_error($data)) { return $data; }
         $allowed=self::intake_allowed($data,$queued_at); if (is_wp_error($allowed)) { return $allowed; }
         $attribution=array('channel'=>'instant_form','page_id'=>$notification['page_id'],'form_id'=>$notification['form_id'],'lead_id'=>$record['id'],'created_time'=>is_string($record['created_time'] ?? null) ? $record['created_time'] : '', 'ad_id'=>self::id($record['ad_id'] ?? null));

@@ -45,3 +45,34 @@ idlm_test('INT005 bulk retry validates scalar bounded IDs before delivery',stati
     foreach(array(array_fill(0,51,1),array(array(1)),array('0'),array('-1'),array('1e2')) as $ids){$_POST=array('log_ids'=>$ids);expect_json_response(array('IDLM_Admin_Ajax','ajax_retry_capi_events'),false);}
     assert_same(0,count($GLOBALS['idlm_test_http_calls']));
 });
+
+function idlm_capi_quote_fast_seed($total=275000.50,$currency='INR'):void {
+    $GLOBALS['wpdb']->seed('idlm_quotes',array(array('id'=>20,'lead_id'=>1,'current_revision_id'=>22)));
+    $GLOBALS['wpdb']->seed('idlm_quote_revisions',array(array('id'=>21,'quote_id'=>20,'grand_total'=>100000,'currency_code'=>'USD'),array('id'=>22,'quote_id'=>20,'grand_total'=>$total,'currency_code'=>$currency)));
+}
+idlm_test('CAPIQUOTE Purchase uses current saved quotation total and its currency without changing CRM amounts',static function():void {
+    idlm_test_reset_environment();idlm_capi_fast_fixture('meta','Won','Purchase');
+    $row=lead_fixture(array('stage'=>'Won','lead_quality'=>'Qualified','num_rooms'=>2,'source'=>'Meta Ads','deal_value'=>125000,'quote_value'=>100000));$GLOBALS['wpdb']->seed('idlm_leads',array($row));
+    idlm_capi_quote_fast_seed();update_option('idlm_currency_code','USD');
+    $result=IDLM_CAPI::fire_meta_capi((object)$row,'Won');assert_true($result['attempted'],$result['message']);
+    $data=json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'],true)['data'][0]['custom_data'];
+    assert_same(275000.5,$data['value']);assert_same('INR',$data['currency']);assert_same(125000,$GLOBALS['wpdb']->tables['wp_idlm_leads'][0]['deal_value']);
+});
+idlm_test('CAPIQUOTE missing or zero-total quotation keeps entered deal value',static function():void {
+    foreach(array(false,true) as $zero_quote){
+        idlm_test_reset_environment();idlm_capi_fast_fixture('meta','Won','Purchase');$row=lead_fixture(array('stage'=>'Won','lead_quality'=>'Qualified','num_rooms'=>2,'source'=>'Meta Ads','deal_value'=>125000));$GLOBALS['wpdb']->seed('idlm_leads',array($row));
+        if($zero_quote){idlm_capi_quote_fast_seed(0);}
+        $r=IDLM_CAPI::fire_meta_capi((object)$row,'Won');assert_true($r['attempted'],$r['message']);$data=json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'],true)['data'][0]['custom_data'];assert_same(125000,$data['value']);
+    }
+});
+idlm_test('CAPIQUOTE non-Purchase events retain existing commercial value',static function():void {
+    idlm_test_reset_environment();idlm_capi_fast_fixture('meta','Qualified','Contact');$row=lead_fixture(array('stage'=>'Qualified','lead_quality'=>'Qualified','num_rooms'=>2,'source'=>'Meta Ads','deal_value'=>125000));$GLOBALS['wpdb']->seed('idlm_leads',array($row));idlm_capi_quote_fast_seed();
+    $r=IDLM_CAPI::fire_meta_capi((object)$row,'Qualified');assert_true($r['attempted'],$r['message']);assert_same(125000,json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'],true)['data'][0]['custom_data']['value']);
+});
+idlm_test('CAPIQUOTE invalid quotation links or unknown quotation currency fail before provider delivery',static function():void {
+    foreach(array('broken','currency') as $case){
+        idlm_test_reset_environment();idlm_capi_fast_fixture('meta','Won','Purchase');$row=lead_fixture(array('stage'=>'Won','lead_quality'=>'Qualified','num_rooms'=>2,'source'=>'Meta Ads','deal_value'=>125000));$GLOBALS['wpdb']->seed('idlm_leads',array($row));idlm_capi_quote_fast_seed(275000,$case==='currency'?'':'INR');
+        if($case==='broken'){$GLOBALS['wpdb']->tables['wp_idlm_quote_revisions'][1]['quote_id']=999;}
+        $r=IDLM_CAPI::fire_meta_capi((object)$row,'Won');assert_false($r['success']);assert_same(0,count($GLOBALS['idlm_test_http_calls']));
+    }
+});

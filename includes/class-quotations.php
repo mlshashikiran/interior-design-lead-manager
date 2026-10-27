@@ -37,6 +37,7 @@ class IDLM_Quotations {
         add_action('admin_post_idlm_bulk_catalogue_items', array(__CLASS__, 'handle_bulk_catalogue_items'));
         add_action('admin_post_idlm_catalogue_category_action', array(__CLASS__, 'handle_catalogue_category_action'));
         add_action('admin_post_idlm_import_catalogue_csv', array(__CLASS__, 'handle_import_catalogue_csv'));
+        add_action('wp_ajax_idlm_import_catalogue_csv', array('IDLM_Quotation_Controller', 'ajax_import_catalogue_csv'));
         add_action('admin_post_idlm_export_catalogue_csv', array(__CLASS__, 'handle_export_catalogue_csv'));
         add_action('wp_ajax_idlm_search_quote_catalogue', array(__CLASS__, 'ajax_search_catalogue'));
         add_action('wp_ajax_idlm_search_quote_leads', array(__CLASS__, 'ajax_search_leads'));

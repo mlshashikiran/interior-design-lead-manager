@@ -163,3 +163,7 @@ Builder: Shashi. No schema change. Encrypted `idlm_connector_job_*` pending inta
 ## Hosted Facebook connector state (local unreleased)
 
 Builder: Shashi. No CRM schema migration. `idlm_meta_lead_connector` additionally stores hosted mode, connection ID and selected Page/form names/IDs. Pending `idlm_facebook_pending_<user>` secret-store entries contain encrypted session claims and expiry and are excluded from portable backups. The separate service has private SQLite installation, consent-session, connection, identifier-event, replay-nonce and deletion-receipt tables. Tokens and installation secrets use Sodium encryption; lead answers are transient proxy responses. Service pruning bounds consent to 15 minutes, event metadata to seven days and deletion receipts to 30 days. See its README for backup/key and pruning obligations.
+
+## Meta form mappings — 1.102.94
+
+Builder: Shashi. Nonautoload `idlm_meta_form_mapping_{sha256(app_id|page_id|form_id)}` options contain allowlisted CRM destination keys and exact provider question-key strings. Empty destinations are explicit omissions. They are source-scoped configuration, contain no token/respondent values and are included in portable settings backups. Existing global connector mappings remain fallback-only. No table/schema migration. Encrypted per-lead Meta acquisition snapshots retain all returned answers independently of mapping choices.

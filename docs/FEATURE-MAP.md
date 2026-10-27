@@ -187,7 +187,7 @@ Builder: Shashi. Direct Page/form lead sync and Interakt contact creation are in
 
 ## Facebook Connect for customer installations (local unreleased)
 
-Builder: Shashi. Separate WordPress installations share a publisher-hosted Meta app/service and have distinct installation credentials. Customer flow: Connect Facebook, consent, choose Page/forms, activate. Owners: `IDLM_Facebook_Connect` (site consent/client), hosted `Service` (OAuth, Page subscriptions and tenant event routing), `IDLM_Lead_Connector` (canonical import). Interakt remains independent. Advanced manual setup remains available. Hosting and approved Meta permissions are external prerequisites; see META-LEAD-CONNECTOR.md.
+Builder: Shashi. New Facebook sign-in connections use each site's Meta app and Login for Business configuration. `IDLM_Facebook_Direct` owns session-bound consent, code exchange, encrypted local Page tokens, Page/form selection and subscription; `IDLM_Facebook_Connect` retains the AJAX facade and legacy hosted transport; `IDLM_Lead_Connector` owns signed webhook intake and canonical import. Token-based setup and existing hosted connections remain compatible. Public HTTPS and approved Meta access are external prerequisites; see META-LEAD-CONNECTOR.md.
 
 ## M6 handoff notification ownership — 2026-10-18
 
@@ -212,3 +212,7 @@ Shashi: task transport lives in `IDLM_Admin_Task_Controller`; integration creden
 ## Notification controls — 1.102.89
 
 Builder: Shashi. General settings expose independent existing handoff/routing email preferences and default-off outgoing WhatsApp consent. `IDLM_Settings::notification_enabled()` reads committed allowlisted consent for workers and direct delivery. `IDLM_Interakt_Dispatch` rotates its epoch on outgoing opt-in; ordinary and batch delivery refuse stale epochs, while incoming Interakt webhook authentication remains controlled separately. [Behavior, tests and portable hosting contract](NOTIFICATIONS-AND-HOSTING.md).
+
+## Form-level Meta mapping — 1.102.94
+
+Builder: Shashi. `IDLM_Lead_Connector` owns administrator/nonce-protected question discovery, Page/form identity validation, source-scoped mapping persistence and effective mapping resolution in canonical import. The shared lead-connector template and settings.js render one independent editor per selected form. Existing generic/default mappings, import enablement and encrypted snapshots remain independent. See META-LEAD-CONNECTOR.md.

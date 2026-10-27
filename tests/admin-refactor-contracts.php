@@ -512,7 +512,7 @@ idlm_test('settings controller retains capability, nonce, sanitization, grouped 
     assert_true(count(file($root . '/includes/class-admin.php')) <= 960, 'The Phase 3 settings-renderer extraction exceeded its 960-line facade size contract.');
 
     $settings_templates = glob($root . '/templates/admin/settings/*.php');
-    assert_true(is_array($settings_templates) && 14 === count($settings_templates));
+    assert_true(is_array($settings_templates) && 15 === count($settings_templates));
     foreach ($settings_templates as $template) {
         $template_source = (string) file_get_contents($template);
         assert_false(false !== strpos($template_source, 'get_option('), basename($template) . ' must receive option values through context.');
