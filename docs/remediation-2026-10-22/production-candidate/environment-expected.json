@@ -1,0 +1,355 @@
+{
+    "schema": "idlm-performance-baseline/v1",
+    "captured_at_utc": "2026-10-22T17:52:45+00:00",
+    "build": {
+        "revision": "1.102.88",
+        "plugin_version": "1.102.88",
+        "core_schema_version": "1.3.9",
+        "quotation_schema_version": "2.5.4"
+    },
+    "runtime": {
+        "wordpress_version": "7.1.3",
+        "php_version": "8.5.12",
+        "mysql_version": "8.4.0",
+        "environment_type": "staging",
+        "multisite": false,
+        "external_object_cache": false,
+        "action_scheduler_available": false,
+        "wp_cron_disabled": true,
+        "php_memory_limit": "256M",
+        "php_max_execution_time_seconds": 0
+    },
+    "storage": {
+        "plugin_tables": [
+            {
+                "table": "idlm_leads",
+                "present": true,
+                "estimated_rows": 48650,
+                "data_bytes": 23658496,
+                "index_bytes": 42221568,
+                "free_bytes": 6291456
+            },
+            {
+                "table": "idlm_lead_activity_log",
+                "present": true,
+                "estimated_rows": 397087,
+                "data_bytes": 52002816,
+                "index_bytes": 81002496,
+                "free_bytes": 5242880
+            },
+            {
+                "table": "idlm_capi_logs",
+                "present": true,
+                "estimated_rows": 65974,
+                "data_bytes": 14172160,
+                "index_bytes": 4227072,
+                "free_bytes": 4194304
+            },
+            {
+                "table": "idlm_audience_sync_logs",
+                "present": true,
+                "estimated_rows": 65920,
+                "data_bytes": 14172160,
+                "index_bytes": 1589248,
+                "free_bytes": 4194304
+            },
+            {
+                "table": "idlm_telemetry_logs",
+                "present": true,
+                "estimated_rows": 66214,
+                "data_bytes": 9977856,
+                "index_bytes": 1589248,
+                "free_bytes": 4194304
+            },
+            {
+                "table": "idlm_tasks",
+                "present": true,
+                "estimated_rows": 99099,
+                "data_bytes": 17350656,
+                "index_bytes": 29491200,
+                "free_bytes": 4194304
+            },
+            {
+                "table": "idlm_call_logs",
+                "present": true,
+                "estimated_rows": 0,
+                "data_bytes": 16384,
+                "index_bytes": 65536,
+                "free_bytes": 0
+            },
+            {
+                "table": "idlm_lead_touchpoints",
+                "present": true,
+                "estimated_rows": 98363,
+                "data_bytes": 27852800,
+                "index_bytes": 25313280,
+                "free_bytes": 6291456
+            },
+            {
+                "table": "idlm_routing_state",
+                "present": true,
+                "estimated_rows": 0,
+                "data_bytes": 16384,
+                "index_bytes": 0,
+                "free_bytes": 0
+            },
+            {
+                "table": "idlm_quotes",
+                "present": true,
+                "estimated_rows": 19737,
+                "data_bytes": 5783552,
+                "index_bytes": 8536064,
+                "free_bytes": 4194304
+            },
+            {
+                "table": "idlm_quote_revisions",
+                "present": true,
+                "estimated_rows": 19422,
+                "data_bytes": 9977856,
+                "index_bytes": 6356992,
+                "free_bytes": 4194304
+            },
+            {
+                "table": "idlm_quote_revision_sections",
+                "present": true,
+                "estimated_rows": 19950,
+                "data_bytes": 2637824,
+                "index_bytes": 540672,
+                "free_bytes": 4194304
+            },
+            {
+                "table": "idlm_quote_revision_items",
+                "present": true,
+                "estimated_rows": 19687,
+                "data_bytes": 6832128,
+                "index_bytes": 540672,
+                "free_bytes": 4194304
+            },
+            {
+                "table": "idlm_quote_payment_milestones",
+                "present": true,
+                "estimated_rows": 0,
+                "data_bytes": 16384,
+                "index_bytes": 16384,
+                "free_bytes": 0
+            },
+            {
+                "table": "idlm_quote_status_history",
+                "present": true,
+                "estimated_rows": 0,
+                "data_bytes": 16384,
+                "index_bytes": 32768,
+                "free_bytes": 0
+            },
+            {
+                "table": "idlm_number_sequences",
+                "present": true,
+                "estimated_rows": 0,
+                "data_bytes": 16384,
+                "index_bytes": 16384,
+                "free_bytes": 0
+            },
+            {
+                "table": "idlm_quote_catalogue_items",
+                "present": true,
+                "estimated_rows": 0,
+                "data_bytes": 16384,
+                "index_bytes": 49152,
+                "free_bytes": 0
+            },
+            {
+                "table": "idlm_quote_item_categories",
+                "present": true,
+                "estimated_rows": 0,
+                "data_bytes": 16384,
+                "index_bytes": 32768,
+                "free_bytes": 0
+            },
+            {
+                "table": "idlm_quote_item_units",
+                "present": true,
+                "estimated_rows": 1,
+                "data_bytes": 16384,
+                "index_bytes": 32768,
+                "free_bytes": 0
+            }
+        ],
+        "autoloaded_options": {
+            "option_count": 124,
+            "total_bytes": 46513
+        }
+    },
+    "scheduling": {
+        "wordpress_cron": {
+            "event_count": 15,
+            "idlm_event_count": 6,
+            "next_idlm_event_utc": "2026-10-22T13:20:52+00:00"
+        },
+        "action_scheduler": {
+            "present": false,
+            "status_counts": [],
+            "oldest_open_action_utc": null
+        }
+    },
+    "scenarios": [
+        {
+            "id": "dashboard-period-refresh",
+            "surface": "Dashboard",
+            "transport": "admin-ajax.php",
+            "operation": "idlm_get_dashboard_stats",
+            "roles": [
+                "administrator",
+                "assignment_manager",
+                "representative"
+            ],
+            "priority": "critical",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "lead-list-filter-sort",
+            "surface": "Lead list",
+            "transport": "admin-ajax.php",
+            "operation": "idlm_get_leads_table",
+            "roles": [
+                "administrator",
+                "assignment_manager",
+                "representative"
+            ],
+            "priority": "critical",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "lead-detail-activity",
+            "surface": "Lead drawer",
+            "transport": "admin-ajax.php",
+            "operation": "idlm_get_lead_details + idlm_get_lead_activity",
+            "roles": [
+                "administrator",
+                "representative"
+            ],
+            "priority": "critical",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "kanban-stage-load",
+            "surface": "Pipeline",
+            "transport": "admin-ajax.php",
+            "operation": "idlm_get_kanban_leads",
+            "roles": [
+                "administrator",
+                "assignment_manager",
+                "representative"
+            ],
+            "priority": "critical",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "quotation-list",
+            "surface": "Quotation workspace",
+            "transport": "authenticated page request",
+            "operation": "idlm_view=quotations",
+            "roles": [
+                "administrator",
+                "assignment_manager",
+                "representative"
+            ],
+            "priority": "critical",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "quotation-save",
+            "surface": "Quotation editor",
+            "transport": "admin-post.php",
+            "operation": "idlm_save_quote",
+            "roles": [
+                "administrator",
+                "assignment_manager",
+                "representative"
+            ],
+            "priority": "critical",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "webhook-ingestion",
+            "surface": "Inbound integration",
+            "transport": "REST",
+            "operation": "POST /interior-design-lead-manager/v1/webhook",
+            "roles": [
+                "scoped_webhook_key"
+            ],
+            "priority": "critical",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "lead-import-batch",
+            "surface": "Lead import",
+            "transport": "admin-ajax.php",
+            "operation": "idlm_import_leads_batch",
+            "roles": [
+                "administrator"
+            ],
+            "priority": "high",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "lead-export",
+            "surface": "Lead export",
+            "transport": "admin-ajax.php",
+            "operation": "idlm_export_leads",
+            "roles": [
+                "administrator",
+                "assignment_manager",
+                "representative"
+            ],
+            "priority": "high",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "capi-retry",
+            "surface": "CAPI operations",
+            "transport": "admin-ajax.php / scheduled action",
+            "operation": "idlm_retry_capi_events",
+            "roles": [
+                "administrator"
+            ],
+            "priority": "high",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "audience-sync",
+            "surface": "Audience operations",
+            "transport": "admin-ajax.php / scheduled action",
+            "operation": "audience batch sync",
+            "roles": [
+                "administrator",
+                "scheduler"
+            ],
+            "priority": "high",
+            "measurement_status": "not_measured"
+        },
+        {
+            "id": "mcp-summary-query",
+            "surface": "MCP analytics",
+            "transport": "REST / stdio JSON-RPC",
+            "operation": "summary and bounded query tools",
+            "roles": [
+                "scoped_mcp_key"
+            ],
+            "priority": "high",
+            "measurement_status": "not_measured"
+        }
+    ],
+    "privacy": {
+        "aggregate_only": true,
+        "excluded": [
+            "lead rows",
+            "contacts",
+            "request payloads",
+            "responses",
+            "credentials",
+            "URLs",
+            "filesystem paths",
+            "database name"
+        ]
+    }
+}

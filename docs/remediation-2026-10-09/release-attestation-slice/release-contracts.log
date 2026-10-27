@@ -1,0 +1,11 @@
+PASS Phase 9 distribution inventory includes runtime files and excludes development artifacts
+PASS Phase 9 release metadata authorities remain aligned
+PASS Phase 9 promotion accepts only a clean matrix-attested exact revision
+PASS Phase 9 checksum parsing binds the digest to one safe artifact name
+PASS Phase 9 staging report keeps every operational gate pending and production unapproved
+PASS Phase 9 candidate verifier reopens and independently inventories the CI archive
+PASS Phase 9 CI verifies the candidate before exposing staging evidence
+PASS native performance subprocesses inherit the disposable CI WordPress root
+PASS Phase 9 artifact policy rejects private files and high-confidence credential signatures
+PASS Phase 9 CI attestation binds a GitHub run to the exact revision
+10 passed, 0 failed

@@ -1,0 +1,4 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T11-T17-N-QUO005-pre-2.5-upgrade-and-reinstall-preserve-every-item-and-monetary-field
+
+2 passed, 0 failed

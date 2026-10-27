@@ -87,7 +87,7 @@ class IDLM_MCP_Core {
             ),
             array(
                 'name' => 'run_custom_query',
-                'description' => 'Run a bounded read-only SQL query on approved CRM tables. Queries must use SELECT with an explicit allowlisted FROM table and obey the configured row budget.',
+                'description' => 'Run a restricted SELECT with explicit approved fields, filters, aggregates and equality JOINs. Star, nested queries, comments and unsupported syntax are denied. Contact fields require a separate PII grant; row and MySQL statement-time budgets apply.',
                 'inputSchema' => array(
                     'type' => 'object',
                     'properties' => array(
@@ -102,7 +102,8 @@ class IDLM_MCP_Core {
         );
 
         return array_values(array_filter($tools, static function($tool) {
-            return IDLM_Production_Security::is_mcp_tool_allowed($tool['name']);
+            return IDLM_Production_Security::is_mcp_tool_allowed($tool['name']) &&
+                (!in_array($tool['name'], array('query_leads', 'get_lead_details'), true) || IDLM_Production_Security::mcp_pii_allowed());
         }));
     }
 
@@ -120,7 +121,7 @@ class IDLM_MCP_Core {
                 )
             );
         }
-        if (!$request || !isset($request['method'])) {
+        if (!is_array($request) || !isset($request['method']) || !is_string($request['method'])) {
             return array(
                 'jsonrpc' => '2.0',
                 'id' => null,
@@ -227,101 +228,27 @@ class IDLM_MCP_Core {
      * Core execution engine for read-only database tools
      */
     private static function prepare_custom_query($sql, $allowed_tables) {
-        $sql = trim((string) $sql);
-        if ('' === $sql) {
-            return array('error' => 'Query rejected: A SELECT query is required.');
-        }
-        $query_length_limit = IDLM_Production_Security::mcp_query_length_limit();
-        if (strlen($sql) > $query_length_limit) {
-            return array('error' => 'Query rejected: Query length exceeds the configured character limit.');
-        }
-        if (!preg_match('/^select\b/i', $sql)) {
-            return array('error' => 'Query rejected: Only read-only SELECT queries are permitted.');
-        }
-        if (preg_match('/(--|#|\/\*|\*\/|;|\x00)/', $sql)) {
-            return array('error' => 'Query rejected: comments, null bytes, and multiple statements are not permitted.');
-        }
-
-        $blocked_keywords = array(
-            'insert', 'update', 'delete', 'drop', 'alter', 'truncate', 'replace',
-            'create', 'grant', 'revoke', 'rename', 'analyze', 'optimize', 'repair',
-        );
-        foreach ($blocked_keywords as $keyword) {
-            if (preg_match('/\b' . $keyword . '\b/i', $sql)) {
-                return array('error' => 'Query rejected: Forbidden keyword "' . $keyword . '" found in query.');
-            }
-        }
-
-        if (preg_match('/\b(?:union|into|outfile|dumpfile|procedure)\b|\bfor\s+update\b|\block\s+in\s+share\s+mode\b/i', $sql)) {
-            return array('error' => 'Query rejected: unions, file output, procedures, and locking reads are not permitted.');
-        }
-        if (preg_match('/\b(?:sleep|benchmark|load_file|get_lock|release_lock|is_free_lock|is_used_lock|master_pos_wait|master_gtid_wait|wait_for_executed_gtid_set|wait_until_sql_thread_after_gtids|rand|random_bytes|sys_exec|sys_eval)\s*\(/i', $sql)) {
-            return array('error' => 'Query rejected: potentially unsafe database functions are not permitted.');
-        }
-        if (false !== strpos($sql, '@@') || false !== strpos($sql, ':=')) {
-            return array('error' => 'Query rejected: database variables and assignment expressions are not permitted.');
-        }
-
-        preg_match_all('/\b(?:from|join)\b/i', $sql, $reference_keywords);
-        preg_match_all('/\b(?:from|join)\s+(`?[a-zA-Z0-9_]+`?)/i', $sql, $table_matches);
-        $referenced_tables = (array) ($table_matches[1] ?? array());
-        if (empty($referenced_tables)) {
-            return array('error' => 'Query rejected: An explicit allowlisted FROM table is required.');
-        }
-        if (count($reference_keywords[0]) !== count($referenced_tables)) {
-            return array('error' => 'Query rejected: Derived tables and unsupported table expressions are not permitted.');
-        }
-        if (count($referenced_tables) > 4) {
-            return array('error' => 'Query rejected: Queries may reference at most four tables.');
-        }
-        if (preg_match('/\b(?:from|join)\s+`?[a-zA-Z0-9_]+`?\s*\./i', $sql)) {
-            return array('error' => 'Query rejected: Database-qualified table references are not permitted.');
-        }
-        if (preg_match('/\bcross\s+join\b/i', $sql)) {
-            return array('error' => 'Query rejected: CROSS JOIN is not permitted.');
-        }
-        if (preg_match('/\bfrom\s+`?[a-zA-Z0-9_]+`?(?:\s+(?:as\s+)?[a-zA-Z0-9_]+)?\s*,/i', $sql)) {
-            return array('error' => 'Query rejected: Comma-separated table joins are not permitted. Use explicit JOIN syntax.');
-        }
-
-        $allowed_tables = array_map('strtolower', (array) $allowed_tables);
-        foreach ($referenced_tables as $table_name) {
-            $normalized_table = strtolower(trim($table_name, '`'));
-            if (!in_array($normalized_table, $allowed_tables, true)) {
-                return array('error' => 'Query rejected: Access to table "' . $table_name . '" is restricted.');
-            }
-        }
-
-        $max_rows = IDLM_Production_Security::mcp_query_row_limit();
-        if (preg_match('/\blimit\s+(\d+)\s*,\s*(\d+)\s*$/i', $sql, $limit_match, PREG_OFFSET_CAPTURE)) {
-            $offset = absint($limit_match[1][0]);
-            $count = min($max_rows, absint($limit_match[2][0]));
-            $sql = substr($sql, 0, $limit_match[0][1]) . 'LIMIT ' . $offset . ', ' . $count;
-        } elseif (preg_match('/\blimit\s+(\d+)(?:\s+offset\s+(\d+))?\s*$/i', $sql, $limit_match, PREG_OFFSET_CAPTURE)) {
-            $count = min($max_rows, absint($limit_match[1][0]));
-            $offset = isset($limit_match[2][0]) ? absint($limit_match[2][0]) : 0;
-            $sql = substr($sql, 0, $limit_match[0][1]) . 'LIMIT ' . $count;
-            if ($offset) {
-                $sql .= ' OFFSET ' . $offset;
-            }
-        } elseif (preg_match('/\blimit\b/i', $sql)) {
-            return array('error' => 'Query rejected: LIMIT must be a trailing numeric clause.');
-        } else {
-            $sql .= ' LIMIT ' . $max_rows;
-        }
-
-        return array('query' => $sql);
+        require_once __DIR__ . '/class-mcp-query-policy.php';
+        return IDLM_MCP_Query_Policy::prepare($sql, $allowed_tables);
     }
 
     public static function execute_tool($name, $arguments) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
 
+        if (!is_string($name) || !is_array($arguments)) {
+            return array('error' => 'Invalid tool name or arguments.');
+        }
+
         if (!IDLM_Production_Security::is_mcp_enabled()) {
             return array('error' => 'MCP access is disabled for this environment.');
         }
         if (!IDLM_Production_Security::is_mcp_tool_allowed($name)) {
             return array('error' => 'Tool access denied by the current MCP credential policy.');
+        }
+
+        if (in_array($name, array('query_leads', 'get_lead_details'), true) && !IDLM_Production_Security::mcp_pii_allowed()) {
+            return array('error' => 'Tool access denied: An explicit MCP PII grant is required.');
         }
 
         switch ($name) {
@@ -336,6 +263,7 @@ class IDLM_MCP_Core {
                 }
 
                 if (!empty($params)) {
+                    // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- REL007-SQL-0377: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
                     $total_leads = $wpdb->get_var("SELECT COUNT(*) FROM $table_leads");
                     $non_dup_leads = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_leads WHERE $where", $params));
                     $total_won_val = $wpdb->get_var($wpdb->prepare("SELECT SUM(deal_value) FROM $table_leads WHERE stage = 'Won' AND is_duplicate = 0 AND conversion_time >= DATE_SUB(NOW(), INTERVAL %d DAY)", $days)) ?: 0;
@@ -345,7 +273,9 @@ class IDLM_MCP_Core {
                     $qualities = $wpdb->get_results($wpdb->prepare("SELECT lead_quality, COUNT(*) as count FROM $table_leads WHERE $where GROUP BY lead_quality", $params), ARRAY_A);
                     $avg_connected = $wpdb->get_var($wpdb->prepare("SELECT AVG(time_to_connected) FROM $table_leads WHERE time_to_connected IS NOT NULL AND $where", $params)) ?: 0;
                     $avg_won = $wpdb->get_var($wpdb->prepare("SELECT AVG(time_to_won) FROM $table_leads WHERE time_to_won IS NOT NULL AND $where", $params)) ?: 0;
+                    // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
                 } else {
+                    // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0378: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
                     $total_leads = $wpdb->get_var("SELECT COUNT(*) FROM $table_leads");
                     $non_dup_leads = $wpdb->get_var("SELECT COUNT(*) FROM $table_leads WHERE is_duplicate = 0");
                     $total_won_val = $wpdb->get_var("SELECT SUM(deal_value) FROM $table_leads WHERE stage = 'Won' AND is_duplicate = 0") ?: 0;
@@ -355,6 +285,7 @@ class IDLM_MCP_Core {
                     $qualities = $wpdb->get_results("SELECT lead_quality, COUNT(*) as count FROM $table_leads WHERE is_duplicate = 0 GROUP BY lead_quality", ARRAY_A);
                     $avg_connected = $wpdb->get_var("SELECT AVG(time_to_connected) FROM $table_leads WHERE time_to_connected IS NOT NULL AND is_duplicate = 0") ?: 0;
                     $avg_won = $wpdb->get_var("SELECT AVG(time_to_won) FROM $table_leads WHERE time_to_won IS NOT NULL AND is_duplicate = 0") ?: 0;
+                    // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 }
 
                 return array(
@@ -405,8 +336,10 @@ class IDLM_MCP_Core {
                 $params[] = $offset;
 
                 $query = "SELECT id, first_name, last_name, email, phone, budget, deal_value, stage, source, lead_quality, assigned_rep_id, created_at FROM $table_leads WHERE $where";
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0379: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
                 // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
                 $results = $wpdb->get_results($wpdb->prepare($query, $params), ARRAY_A);
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                 
                 foreach ($results as &$lead) {
                     $rep_id = intval($lead['assigned_rep_id']);
@@ -421,13 +354,17 @@ class IDLM_MCP_Core {
 
             case 'get_lead_details':
                 $lead_id = intval($arguments['id']);
+                // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0380: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
                 $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_leads WHERE id = %d", $lead_id), ARRAY_A);
+                // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 if (!$lead) {
                     return array('error' => "Lead not found for ID $lead_id");
                 }
 
                 $table_activity = $wpdb->prefix . 'idlm_lead_activity_log';
+                // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0381: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
                 $activities = $wpdb->get_results($wpdb->prepare("SELECT id, activity_type, details, created_at FROM $table_activity WHERE lead_id = %d ORDER BY created_at DESC LIMIT 200", $lead_id), ARRAY_A);
+                // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
                 $rep = null;
                 if (!empty($lead['assigned_rep_id'])) {
@@ -450,6 +387,7 @@ class IDLM_MCP_Core {
                 $yesterday = new DateTime('yesterday', $timezone);
                 $yesterday_start = $yesterday->format('Y-m-d 00:00:00');
                 $yesterday_end = $yesterday->format('Y-m-d 23:59:59');
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0382: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
                 $query = $wpdb->prepare("
                     SELECT 
                         l.assigned_rep_id,
@@ -467,6 +405,7 @@ class IDLM_MCP_Core {
                 ", $yesterday_start, $yesterday_end);
                 // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
                 $performance_data = $wpdb->get_results($query, ARRAY_A);
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
                 $result_reps = array();
                 foreach ($performance_data as $row) {
@@ -513,11 +452,17 @@ class IDLM_MCP_Core {
                     return $prepared_query;
                 }
 
-                // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-                $results = $wpdb->get_results($prepared_query['query'], ARRAY_A);
-                if ($wpdb->last_error) {
-                    return array('error' => 'Database error: ' . $wpdb->last_error);
-                }
+                $previous = $wpdb->suppress_errors(true);
+                try {
+                    // Compiler validates identifiers and prepares every literal.
+                    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0383: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
+                    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+                    $results = $wpdb->get_results($prepared_query['query'], ARRAY_A);
+                    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                    if ($wpdb->last_error) { return array('error' => 'Query failed or exceeded its execution budget.'); }
+                } catch (Throwable $error) {
+                    return array('error' => 'Query failed or exceeded its execution budget.');
+                } finally { $wpdb->suppress_errors($previous); }
                 return array_slice((array) $results, 0, IDLM_Production_Security::mcp_query_row_limit());
 
             default:

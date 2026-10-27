@@ -1,0 +1,346 @@
+PASS backup restore accepts generated backups smaller than 100 MB
+PASS heavy CRM log reads are bounded and audience payloads are lazy loaded
+PASS signed cursor pagination binds position to actor and normalized request scope
+PASS lead table keeps offset compatibility and adds bounded default keyset navigation
+PASS read-model cache reuses scoped results and generation invalidation forces a rebuild
+PASS dashboard cache context separates restricted representatives from global managers
+PASS lead lifecycle and dashboard settings rotate the read-cache generation
+PASS dashboard cache invalidation covers routing, deletion, reset, quotations, and retention
+PASS lead insert applies defaults, logs creation, and emits the New hook
+PASS lead insert detects normalized duplicate phones and suppresses duplicate conversion hooks
+PASS lead insert rejects invalid initial workflow states
+PASS lead update enforces Lost, Won, and Quote Shared invariants
+PASS Won transitions persist the actual close timestamp
+PASS qualification updates stage, handoff state, tasks, audit, and conversion hook
+PASS qualification without a floor plan requires and records a handoff remark
+PASS sales stage moves do not re-request the qualification handoff remark
+PASS qualified owner reassignment completes handoff and transfers pending work
+PASS unqualification is blocked until outreach compliance is complete
+PASS No Answer transition emits the legacy automation hook once
+PASS invalid AJAX nonce stops a destructive handler before database access
+PASS destructive AJAX handler denies users without manage_options
+PASS quick edit enforces object ownership for restricted representatives
+PASS quick stage edit preserves the structured quotation total
+PASS structured zero-total quotations cannot move a lead to Quote Shared
+PASS pre-sales cannot change stage from the lead drawer header
+PASS bulk lifecycle mutation enforces object ownership for every restricted representative
+PASS bulk lifecycle mutation remains available to the current lead owner
+PASS REST routes explicitly register permission callbacks and callback authentication remains enforced
+PASS lead webhook accepts a valid header key and rejects invalid payload/platform inputs
+PASS credential migration encrypts scoped secrets and removes legacy/query access
+PASS credential rotation replaces the encrypted scoped secret
+PASS production security applies MCP tool grants and bounded budgets
+PASS trusted proxy policy ignores spoofed forwarding headers and resolves configured chains
+PASS lead attachment policies are field-specific and reject unknown purposes
+PASS floor plan attachments normalize legacy and multi-file values safely
+PASS Google feed permission uses dedicated Basic Auth and preserves its challenge
+PASS MCP PII tool rejects unauthorized requests and returns lead data only with a valid API key
+PASS MCP rejects oversized bodies and oversized JSON-RPC batches
+PASS MCP SQL guard rejects mutation, comments, unsafe functions, and non-CRM tables
+PASS MCP SQL guard appends and caps a numeric row limit
+PASS REST permission callbacks rate limit repeated MCP requests
+PASS MCP lead query caps caller-supplied result size at 100
+PASS Interakt and Meta signatures require an exact SHA-256 HMAC
+PASS quotation policy gives administrators capability-controlled unrestricted lead access
+PASS quotation policy gives assignment managers unrestricted lead access without administrator capability
+PASS quotation policy and lead read model allow an owner only assigned leads
+PASS quotation policy prevents a restricted representative reading another owners leads
+PASS quotation policy and handler deny users without quotation capabilities
+PASS explicit catalogue-only grants do not grant customer quotation access
+PASS quotation line items calculate quantity multiplied by rate and sanitize optional/header rows
+PASS quotation line items calculate billable area from width and height
+PASS quotation quantities use the same positive two-decimal minimum as the editor
+PASS quotation totals apply wooden discount, optional soft close addition, additional discount, and fixed GST
+PASS quotation grand total rounds to the nearest rupee and records the adjustment
+PASS quotation calculator is deterministic and the legacy quotation API delegates without drift
+PASS quotation exports are revision-only, formula-safe, typed, and capability guarded
+PASS quotation bundle rejects a revision owned by a different quote
+PASS quotation repository owns table mapping and legacy aggregate read delegates
+PASS quotation repository persists and copies complete revision aggregates
+PASS quotation repository reports aggregate write failures to the facade rollback path
+PASS quotation repository owns catalogue CRUD, bulk actions, and paginated read models
+PASS quotation repository prepares scoped quotation list filters and propagates catalogue write failures
+PASS quotation migration compatibility delegates preserve version markers
+PASS quotation numbering is yearly, formatted, and monotonically increments
+PASS quotation autosave rejects missing capability and object-access mismatches
+PASS quotation autosave stores a scoped working copy with server-calculated totals
+PASS quotation editor retains revision remarks and exposes Width throughout the quotation UI
+PASS core schema baseline declares required lifecycle columns, defaults, and indexes
+PASS core migration check is idempotent at the current schema version
+PASS core migration upgrades an older schema and records the independent schema version
+PASS core migration reconciles the state-event amount column from schema 1.3.2
+PASS quotation installer declares transactional persistence tables and records schema state
+PASS scheduler registers and creates fallback jobs and durable outbox sweep idempotently
+PASS state registry keeps stable keys separate from persisted labels
+PASS grouped routing settings migrate legacy values and preserve compatibility defaults
+PASS white-label settings normalize safe values and reject inaccessible colours
+PASS white-label runtime surfaces do not retain fixed default accent colors
+PASS guarded view renderer rejects traversal and renders the correct authentication state
+PASS CRM authentication remains email-only, scoped, and core-backed
+PASS MCP CLI entry uses environment-driven paths and no Local-specific fallback
+PASS routing state installer declares an atomic keyed counter table
+PASS retention redacts nested credentials and contact PII
+PASS audience audit payloads are stored as fixed-size redacted summaries
+PASS diagnostic activity expires in bounded batches while CAPI uses configured retention
+PASS transactional deletion removes a lead and every core dependent row
+PASS quotation print source is semantic and has no DOM rewrite script
+PASS quotation renderer accepts valid list dates and rejects malformed dates
+PASS performance dataset profiles match the approved Phase 0 scale envelope
+PASS performance dataset rows are deterministic and use reserved synthetic identifiers
+PASS performance dataset command retains explicit production and confirmation gates
+PASS query-plan manifest covers critical global and restricted read shapes
+PASS query-plan capture is read-only, production-refusing, and aggregate-only
+PASS Phase 8 load manifest covers bounded read-only authenticated surfaces
+PASS Phase 8 result recorder emits deterministic aggregate percentiles and provisional evidence
+PASS Phase 8 runner refuses production and excludes authentication and response material
+PASS horizontal readiness blocks incomplete multi-node infrastructure without exposing values
+PASS horizontal readiness passes complete infrastructure and renders aggregate admin health state
+PASS operational health applies queue and recent-fault thresholds without exposing sensitive values
+PASS operational health marks critical gates and renders the administrator summary
+PASS admin facade preserves every public compatibility method and its size baseline
+PASS admin Phase 1 renderers retain delegates and guarded nested templates
+PASS admin Phase 2 leads renderer retains delegates and presentation-only guarded templates
+PASS Kanban header reports overall leads and filtered current-month wins by conversion date
+PASS Kanban omits early stages and exposes whitelisted card sorting
+PASS Kanban no longer exposes the superseded newly assigned queue
+PASS Kanban cards expose compact needs-update and task pills together
+PASS clickable lead and Kanban filter pills toggle their filters off
+PASS lead drawer header stage card uses the secured lifecycle quick edit
+PASS lead drawer Tasks tab shows a live overdue-task notification count
+PASS lead drawer WhatsApp tab lists recorded messages and marks them read only when opened
+PASS lead drawer task list orders overdue and pending work before completed tasks
+PASS settings support UI-only labels and draggable pipeline ordering
+PASS General settings prioritizes metrics above the two configuration cards
+PASS admin hooks, AJAX actions, shortcodes, and menu callbacks remain registered
+PASS admin core asset handles and localized JavaScript contract remain stable
+PASS admin utility stays asset-free while shortcode contexts enqueue their required assets
+PASS Phase 1 accessible dialog and design-token contracts remain present
+PASS admin page, overlay, workspace, and account selector contracts remain present
+PASS lead capability matrix preserves administrator, manager, representative, pre-sales, owner, and unauthorized access
+PASS role lead scopes override legacy visibility without granting mutation authority
+PASS settings controller retains capability, nonce, sanitization, grouped mirroring, and secret-store contracts
+PASS settings shortcode examples remain literal in the frontend workspace
+PASS admin Phase 4 shell responsibilities retain compatibility delegates
+PASS production scalability Phase 5 starts with a focused lead-detail AJAX read boundary
+PASS frontend UI UX Phase 2 preserves keyboard, selection, and data-alternative contracts
+PASS frontend UI UX Phase 3 preserves responsive workflow and interaction contracts
+PASS Phase 4 settings remove inline presentation and expose accessible tab and dialog contracts
+PASS settings keep horizontal tab contracts without a secondary sidebar
+PASS Phase 4 visual matrix keeps canonical responsive, role, motion, and state hooks
+PASS Phase 4 design-debt budgets prevent reintroducing legacy presentation volume
+PASS Phase 5 access and account forms expose recoverable password and status behavior
+PASS Phase 6 settings expose structured options, save state, and credential controls
+PASS settings notices use accessible non-duplicating floating toasts with safe auto-close behavior
+PASS CRM settings pipeline and lead-capture mappings retain accessible progressive disclosure contracts
+PASS white-label settings remain accessible, responsive, and isolated from theme styles
+PASS wp-admin stays a compact utility page while the frontend owns CRM navigation
+PASS frontend workspace uses the shared strip, white-label mark, and independent mobile drawer
+PASS workspace controls retain native semantics and one shared control contract
+PASS Phase 7 users and logs expose responsive filters, semantic tables, and lazy accessible payloads
+PASS frontend workspace button components outrank Elementor kit defaults without important overrides
+PASS compact CRM typography uses a consistent scalable hierarchy
+PASS CRM buttons use a shared radius and readable semantic contrast
+PASS final UI acceptance uses shared dialogs and non-blocking feedback instead of native browser prompts
+PASS pre-sales outreach stays recoverable while the activity request is pending
+PASS lead drawer status summary separates operational state from quieter context without card clutter
+PASS lead routing popup distills safeguards with conditional controls while retaining routing contracts
+PASS quotation read-all scope does not grant mutation authority
+PASS quotation explicit manager grant survives a narrower read scope
+PASS quotation all-read working-copy mutation denial has no side effects
+PASS CRM role membership cannot substitute for a revoked access capability
+PASS pending legacy migration denies inherited editorial grants but keeps explicit user enrollment
+PASS fresh CRM visibility is assigned-only and explicit mixed scopes remain restrictive
+PASS denied direct dashboard cache read performs no database or cache work
+PASS role scope role grants and user access edits fence warmed read cache
+PASS MCP rejects join-comma-options before database execution
+PASS MCP rejects join-comma-usermeta before database execution
+PASS MCP rejects parenthesized-comma before database execution
+PASS MCP rejects direct-options before database execution
+PASS MCP rejects nested-options before database execution
+PASS MCP rejects where-subquery before database execution
+PASS MCP rejects derived-query before database execution
+PASS MCP rejects cte before database execution
+PASS MCP rejects union before database execution
+PASS MCP rejects star-lead before database execution
+PASS MCP rejects star-users before database execution
+PASS MCP rejects qualified-star before database execution
+PASS MCP rejects password-hash before database execution
+PASS MCP rejects reset-key before database execution
+PASS MCP rejects auth-in-filter before database execution
+PASS MCP rejects auth-in-order before database execution
+PASS MCP rejects auth-in-aggregate before database execution
+PASS MCP rejects auth-quoted-alias before database execution
+PASS MCP rejects user-email before database execution
+PASS MCP rejects raw-log-payload before database execution
+PASS MCP rejects raw-log-response before database execution
+PASS MCP rejects raw-activity before database execution
+PASS MCP rejects raw-telemetry before database execution
+PASS MCP rejects private-file before database execution
+PASS MCP rejects double-quoted-table before database execution
+PASS MCP rejects database-qualified before database execution
+PASS MCP rejects quoted-database-qualified before database execution
+PASS MCP rejects comment before database execution
+PASS MCP rejects executable-comment before database execution
+PASS MCP rejects line-comment before database execution
+PASS MCP rejects multi-statement before database execution
+PASS MCP rejects outfile before database execution
+PASS MCP rejects sleep before database execution
+PASS MCP rejects benchmark before database execution
+PASS MCP rejects load-file before database execution
+PASS MCP rejects unknown-function before database execution
+PASS MCP rejects session-variable before database execution
+PASS MCP rejects assignment-variable before database execution
+PASS MCP rejects locking-read before database execution
+PASS MCP rejects cross-join before database execution
+PASS MCP rejects tautology-join before database execution
+PASS MCP rejects table-budget before database execution
+PASS MCP rejects condition-depth before database execution
+PASS MCP rejects expression-depth before database execution
+PASS MCP rejects natural-join before database execution
+PASS MCP rejects extra-join-condition before database execution
+PASS MCP rejects unknown-table-alias before database execution
+PASS MCP rejects ambiguous-column before database execution
+PASS MCP rejects offset-budget before database execution
+PASS MCP rejects fractional-limit before database execution
+PASS MCP rejects null-byte before database execution
+PASS MCP rejects backslash-literal before database execution
+PASS MCP customer contact grant is independent from SQL and typed-tool grants
+PASS MCP safe CRM representative join supports explicit aggregates and pagination
+PASS MCP parser consumes full bounded input and safely compiles quoted literal keywords
+PASS MCP custom query driver exceptions stay private and restore error suppression
+PASS lead CSV shared sanitizer protects formula, control and Unicode prefixes without dropping bytes
+PASS lead CSV normalizer preserves ordinary Unicode, embedded controls, numbers and apostrophes
+PASS shared CSV sanitizer keeps separators and backslashes in a single parsed text cell
+PASS Phase 9 distribution inventory includes runtime files and excludes development artifacts
+PASS Phase 9 release metadata authorities remain aligned
+PASS Phase 9 promotion accepts only a clean matrix-attested exact revision
+PASS Phase 9 checksum parsing binds the digest to one safe artifact name
+PASS Phase 9 staging report keeps every operational gate pending and production unapproved
+PASS Phase 9 candidate verifier reopens and independently inventories the CI archive
+PASS Phase 9 CI verifies the candidate before exposing staging evidence
+PASS native performance subprocesses inherit the disposable CI WordPress root
+PASS Phase 9 artifact policy rejects private files and high-confidence credential signatures
+PASS Phase 9 CI attestation binds a GitHub run to the exact revision
+PASS comment and upload mutations require current ownership even when all leads are visible
+PASS drawer pre-sales policy rejects qualification and commercial changes but accepts unchanged fields
+PASS Interakt backfill queues id-only jobs and deduplicates HTTP submissions and worker replay
+PASS Interakt backfill retries are bounded and removed leads never send
+PASS Interakt batch endpoint rejects oversized and unconfigured requests before sending
+PASS inbound matches enrich one lead while conflicting lead identities retain a review record
+PASS dashboard keeps pipeline and Won reporting separate without exposing implementation terminology
+PASS dashboard retains visible-scope data-quality coverage data without rendering removed guardrails
+PASS INT004 opaque ordinary jobs use WP-Cron and fresh credentials and traits
+PASS INT004 disable duplicate reversal ownership missing and invalid phone suppress ordinary delivery
+PASS INT004 legacy secret payload callbacks are refused without HTTP or rescheduling
+PASS INT004 provider failure and interrupted claims remain uncertain without automatic resend
+PASS INT004 failed durable claim prevents HTTP and can retry before any attempted send
+PASS INT004 enable epoch and recovery generation cancel earlier ordinary jobs
+
+Warning: Undefined property: stdClass::$num_rooms in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-capi.php on line 531
+
+Warning: Undefined property: stdClass::$num_rooms in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-capi.php on line 531
+PASS INT005 current Google defaults retry the original stage and report a new exact attempt
+PASS INT005 unknown ambiguous success and changed mappings cannot be guessed into a retry
+PASS INT005 ordinary and manual attempts share duplicate reversal and disabled gates
+
+Warning: Undefined property: stdClass::$num_rooms in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-capi.php on line 531
+
+Warning: Undefined property: stdClass::$num_rooms in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-capi.php on line 531
+
+Warning: Undefined property: stdClass::$num_rooms in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-capi.php on line 531
+PASS INT005 safe failed attempts are bounded across their result-log chain
+
+Warning: Undefined property: stdClass::$num_rooms in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-capi.php on line 531
+PASS INT005 failed outcome writes are uncertain and cannot use an older success
+PASS INT005 bulk retry validates scalar bounded IDs before delivery
+PASS INT006 every Meta entry change and message commits once across batch replay
+PASS INT006 malformed identity and signature reject entire batch before activity writes
+PASS INT006 partial failure retries only messages not durably committed
+PASS INT006 full international identity never selects a shared suffix or multiple canonicals
+PASS INT006 failed receipt or activity persistence cannot acknowledge delivery
+PASS INT006 Interakt media uses provider message ID and refuses changed replay content
+PASS dashboard context respects role groups, disabled users and mixed roles
+PASS dashboard payload removes unauthorized contexts and individual performance
+PASS pre-sales reporting retains outcomes after a Sales handoff
+PASS dashboard investigations enforce context before querying and bind current ownership
+PASS dashboard cache varies when capabilities change without a role change
+PASS sales rep Won outcomes use the close-date reporting basis
+PASS dashboard breakdowns separate acquisition measures from Won-close outcomes
+PASS dashboard KPI comparisons retain metric grain and omit date ranges
+PASS conversion timestamps remain exclusive to current Won leads
+PASS dashboard renders standard header and only authorized body tabs
+PASS schema migration lock contention rejects work before DDL or markers
+PASS unsupported core engines preserve pending marker until operator repair
+PASS failed durable option write cannot acknowledge schema completion
+PASS late workflow backfill failure retains completion marker and retry converges
+PASS routing installation requires verified transactional schema before publishing its version
+PASS manual task cleanup reports persistence failure without a false success response
+PASS newer core and routing schema markers refuse incompatible downgrade work
+PASS lead transition rolls back a required idlm_leads failure without hooks
+PASS lead transition rolls back a required idlm_lead_activity_log failure without hooks
+PASS lead transition rolls back a required idlm_lead_state_events failure without hooks
+PASS lead transition rolls back a required idlm_lead_outbox failure without hooks
+PASS lead transition rolls back a required idlm_tasks failure without hooks
+
+Warning: Undefined property: stdClass::$phone in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-lead-lifecycle-service.php on line 217
+PASS inbound touchpoint failure rolls back both new capture and attribution merge
+PASS failed core commit leaves no lead, event, activity, intent or success hook
+PASS lead writes refuse an unrelated active transaction without committing or rolling it back
+PASS lead writes refuse nontransactional required tables despite completed schema markers
+PASS outbox rejects dispatch inside an aggregate and survives failed post-commit acknowledgement
+PASS every historical missing qualification cycle is filled once without changing task history
+PASS repair insert and activity failures roll back legacy identities and remain retryable
+PASS ambiguous legacy qualification history is preserved and refuses speculative repair
+PASS closed and duplicate leads never acquire missing or reopened qualification work
+PASS stable cycle identity is independent of mutable task labels and dates
+PASS assignment eligibility requires enabled current CRM access and context role
+PASS all assignment pools exclude disabled revoked and deleted targets and sales excludes mixed presales
+PASS canonical ownership rejects disabled targets without changing the aggregate and permits unassignment
+PASS capacity counts active qualified work but excludes closed unqualified and duplicate history
+PASS full capacity rejects insertion and changed ownership without partial aggregate state
+PASS unchanged owner and closing remain allowed while reopening requires a slot
+PASS zero capacity remains unlimited and closed owner changes consume no slot
+PASS identity review submission retains contact and project fields without credentials or workflow instructions
+PASS identity review list and resolver deny ordinary read-all and suspended managers
+PASS identity conflict captures only supported fields and retains a pending review without actionable work
+PASS identity review reset inventory independently includes the PII holding table
+PASS legacy identity reviews preserve known contact data without reconstructing redacted names
+PASS retention initialization only schedules and never purges or advances completion markers
+PASS task and WhatsApp direct readers deny revoked CRM access without customer queries
+PASS WhatsApp EXISTS predicates correlate to the outer lead and sanitize stored read positions
+PASS retention health reports a failed batch even when the daily hook remains scheduled
+PASS CORE013 manual task types persist while lifecycle types remain reserved
+PASS CORE013 early-close contextual reasons retain evidence and administrator boundaries
+PASS CORE013 sales stages preserve undecided quality and Qualified alone promotes it
+PASS CORE013 downstream entry revalidates supplied quality but stage-only moves retain prior decisions
+PASS CORE013 custom stages and Won Lost reversals keep cleanup and immutable events
+PASS QUO004 schema lock and future markers reject work before DDL
+PASS QUO004 seed failure preserves schema marker and retry completes all flags
+PASS QUO004 physical engine mismatch and dependency engines block completion
+PASS QUO004 marker failure and commit failure cannot publish successful migration
+PASS QUO004 late lifecycle failure retries even with the schema version already current
+PASS QUO004 refuses foreign transaction before quotation DDL or implicit commit
+PASS QUO004 failed explicit reinstall remains pending at an already current version
+PASS QUO005 submitted classifications ignore forged provenance and distinguish default nonwood
+PASS QUO005 installers never resolve old classifications against the current catalogue
+PASS QUO005 revision copy preserves captured and unverified provenance without catalogue lookup
+PASS QUO010 draft edit policy refuses each commercial flag, finalized date and foreign revision
+PASS QUO010 remaining commercial history protects quotes previously normalized to Draft
+PASS QUO007 write gates reject each unsupported or missing dependency before mutations
+PASS QUO007 refuses foreign ownership without committing or rolling back its work
+PASS QUO007 number reservation and failed metadata pins leave numbering untouched
+PASS QUO008 rejects nonfinite exponent malformed negative and over-range monetary inputs
+PASS QUO008 rounds decimal text half up without binary-float or exponent interpretation
+PASS QUO008 tiny billable areas price the exact normalized minimum quantity
+PASS QUO008 adds rounded line cents and preserves optional wood discount GST and round-off semantics
+PASS QUO008 subtotal soft-close GST and final rounding must fit the lead projection
+PASS QUO008 limits all rows including optional headers and blank rows and bounds section shape
+PASS QUO006 captures sanitized contractual content and exact milestone values independently of live settings
+PASS QUO006 unknown or corrupt historical terms never resolve against current settings
+PASS QUO006 money honors explicit historical currencies while uncaptured catalogue prices use current currency
+PASS QUO006 complete older quotation backup inventories gain unknown terms without invented content
+PASS QUO006 milestone rounding allocates cents without exceeding the agreed percentage total
+PASS QUO009 normalizes supported paper aliases and rejects malformed values
+PASS QUO009 fresh and malformed options share warning-free print and PDF defaults without option writes
+
+330 passed, 0 failed

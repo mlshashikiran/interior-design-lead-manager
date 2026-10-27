@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-if ('cli' !== PHP_SAPI) {
+if ('cli' !== PHP_SAPI && !('cli-server' === PHP_SAPI && defined('IDLM_DISPOSABLE_HTTP_FIXTURE'))) {
     fwrite(STDERR, "Integration tests must run from the command line.\n");
     exit(1);
 }
@@ -78,6 +78,17 @@ final class IDLM_Integration_Database {
     }
 }
 
+/** Open an independent session using the same socket/TCP endpoint as WordPress. */
+function idlm_integration_other_connection(): mysqli {
+    global $wpdb;
+    list($host, $port, $socket) = $wpdb->parse_db_host(DB_HOST);
+    $connection = new mysqli($host, DB_USER, DB_PASSWORD, DB_NAME, $port ?: 0, $socket ?: null);
+    if ($connection->connect_errno) {
+        throw new RuntimeException('Unable to connect an independent disposable database session: ' . $connection->connect_error);
+    }
+    return $connection;
+}
+
 function idlm_integration_config(bool $require_database_name = false): array {
     $wp_root = getenv('IDLM_TEST_WP_ROOT');
     if (false === $wp_root || '' === trim($wp_root)) {
@@ -135,6 +146,22 @@ function idlm_integration_boot_wordpress(array $config, bool $install): int {
         }
     }
 
+    $mu_dir = $config['content_dir'] . DIRECTORY_SEPARATOR . 'mu-plugins';
+    if (!is_dir($mu_dir)) { mkdir($mu_dir, 0700, true); }
+    $guard = <<<'PHP'
+<?php
+if (!defined('ABSPATH')) { exit; }
+add_filter('pre_http_request', static function() {
+    file_put_contents(WP_CONTENT_DIR . '/outbound-attempts.log', "HTTP blocked\n", FILE_APPEND);
+    return new WP_Error('idlm_fixture_outbound_blocked', 'Disposable fixture blocks outbound HTTP.');
+}, PHP_INT_MAX);
+add_filter('pre_wp_mail', static function() {
+    file_put_contents(WP_CONTENT_DIR . '/outbound-attempts.log', "Mail intercepted\n", FILE_APPEND);
+    return true;
+}, PHP_INT_MAX);
+PHP;
+    file_put_contents($mu_dir . '/idlm-outbound-guard.php', $guard);
+
     define('DB_NAME', $config['db_name']);
     define('DB_USER', $config['db_user']);
     define('DB_PASSWORD', $config['db_password']);
@@ -149,10 +176,10 @@ function idlm_integration_boot_wordpress(array $config, bool $install): int {
     define('SECURE_AUTH_SALT', 'idlm-integration-secure-auth-salt');
     define('LOGGED_IN_SALT', 'idlm-integration-logged-in-salt');
     define('NONCE_SALT', 'idlm-integration-nonce-salt');
-    define('WP_HOME', 'http://idlm-integration.test');
-    define('WP_SITEURL', 'http://idlm-integration.test');
+    define('WP_HOME', $config['http_url'] ?? 'http://idlm-integration.test');
+    define('WP_SITEURL', $config['http_url'] ?? 'http://idlm-integration.test');
     define('WP_CONTENT_DIR', $config['content_dir']);
-    define('WP_CONTENT_URL', 'http://idlm-integration.test/wp-content');
+    define('WP_CONTENT_URL', ($config['http_url'] ?? 'http://idlm-integration.test') . '/wp-content');
     define('WP_PLUGIN_DIR', $config['content_dir'] . DIRECTORY_SEPARATOR . 'plugins');
     define('WP_PLUGIN_URL', 'http://idlm-integration.test/wp-content/plugins');
     define('WP_USE_THEMES', false);
@@ -167,6 +194,7 @@ function idlm_integration_boot_wordpress(array $config, bool $install): int {
 
     $table_prefix = $config['table_prefix'];
     require $config['wp_root'] . 'wp-settings.php';
+
 
     if (!$install) {
         return 0;
@@ -186,6 +214,33 @@ function idlm_integration_boot_wordpress(array $config, bool $install): int {
         throw new RuntimeException('WordPress installation did not return an administrator user ID.');
     }
     return (int) $installed['user_id'];
+}
+
+/** Reinstall after plugin telemetry registers its own error handler. */
+function idlm_integration_capture_known_core_diagnostics(array $config): void {
+    // Preserve one verified upstream 6.6/PHP 8.5 deprecation separately from
+    // plugin diagnostics. Never silence another file, line, message or core hash.
+    global $wp_version;
+    $core_file = ABSPATH . 'wp-includes/class-wp-theme-json.php';
+    if ('6.6' === $wp_version && PHP_VERSION_ID >= 80500 && PHP_VERSION_ID < 80600
+        && hash_file('sha256', $core_file) === '743dac6c9bac3b829d0eccf981b08b3c6ea109f7a837103d72d0ba50c12ccd12') {
+        $previous_handler = null;
+        $previous_handler = set_error_handler(static function($severity, $message, $file, $line) use ($core_file, $config, &$previous_handler) {
+            if (E_DEPRECATED === $severity && $file === $core_file && 2792 === $line
+                && 'Using null as an array offset is deprecated, use an empty string instead' === $message) {
+                $directory = getenv('IDLM_TEST_RUNTIME_EVIDENCE_DIR') ?: $config['content_dir'];
+                $record = array('wordpress' => '6.6', 'php' => PHP_VERSION, 'type' => 'upstream_core_deprecation',
+                    'file' => 'wp-includes/class-wp-theme-json.php', 'line' => $line, 'message' => $message,
+                    'source_sha256' => '743dac6c9bac3b829d0eccf981b08b3c6ea109f7a837103d72d0ba50c12ccd12');
+                if (false === file_put_contents($directory . '/known-core-diagnostics.jsonl', json_encode($record) . "\n", FILE_APPEND | LOCK_EX)) {
+                    return false;
+                }
+                return true;
+            }
+            return $previous_handler ? $previous_handler($severity, $message, $file, $line) : false;
+        });
+    }
+
 }
 
 function idlm_integration_load_plugin(array $config): void {

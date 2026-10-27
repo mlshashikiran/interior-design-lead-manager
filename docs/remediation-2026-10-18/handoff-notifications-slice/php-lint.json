@@ -1,0 +1,37 @@
+[
+  {
+    "file": "includes/class-handoff-notifications.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in includes/class-handoff-notifications.php"
+  },
+  {
+    "file": "includes/class-integrations.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in includes/class-integrations.php"
+  },
+  {
+    "file": "interior-design-lead-manager.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in interior-design-lead-manager.php"
+  },
+  {
+    "file": "tests/bootstrap.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/bootstrap.php"
+  },
+  {
+    "file": "tests/integration/run.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/integration/run.php"
+  },
+  {
+    "file": "tests/integration/handoff-notification-contracts.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/integration/handoff-notification-contracts.php"
+  },
+  {
+    "file": "tests/release-contracts.php",
+    "exit_code": 0,
+    "output": "No syntax errors detected in tests/release-contracts.php"
+  }
+]

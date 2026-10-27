@@ -43,6 +43,13 @@ includes/class-admin-settings-renderer.php; templates/admin/settings/
     markup behind the established admin/frontend callback.
 includes/class-admin-ajax.php
     [Compatibility controller] Authenticated AJAX delegates plus handlers not yet extracted.
+includes/class-admin-collection-reads.php
+    [Collection transport] Scoped lead list, bounded signed Kanban pages/full summaries and admin count.
+includes/class-admin-task-controller.php
+    [Task transport] Task reads/manual mutations and paged daily queue; Task_Queue_Service owns grouping/cursors.
+includes/class-admin-activity-controller.php
+    [Authenticated activity controller] Timeline reads and comment add/edit/delete, with the
+    existing inherited access/presentation helpers and stable Admin → Admin_Ajax delegates.
 includes/class-admin-lead-reads.php
     [Authenticated read controller] Lead-detail validation, scoped reads, drawer response,
     and WhatsApp read-state coordination behind both established admin delegate layers.
@@ -61,17 +68,47 @@ includes/class-dashboard.php
     [Aggregate queries] Canonical CRM metrics and date-range comparisons behind the cached
     public read-model entry point.
 
-includes/class-integrations.php
-    [REST + domain + integrations] Attribution cookies, webhook ingestion, Google feeds,
-    MCP transport, assignment pools/routing/fallbacks, handoff/routing email.
+includes/class-admin-telemetry-controller.php
+    [Authenticated telemetry controller] Client-error storage, administrator log clearing and
+    diagnostic text downloads behind the existing Admin → Admin_Ajax delegates.
 
+includes/class-admin-connection-controller.php
+    [Authenticated diagnostics] Nonce/admin guard, credential selection, provider checks and
+    JSON messages behind the existing Admin → Admin_Ajax connection-test delegates.
+
+includes/class-integrations.php
+    [Compatibility + routing] Stable REST callbacks, attribution capture, MCP transport,
+    assignment pools/routing/fallbacks and integration delegates.
+includes/class-integration-auth.php
+    [Authentication policy] Scoped credentials, rate limits, feed/MCP permissions and rotation.
+includes/class-webhook-intake.php
+    [Inbound transport] Authenticated parsing, mapping and canonical upsert coordination.
+includes/class-google-feed-controller.php
+    [Feed transport] Auth challenges, headers and conversion/audience CSV HTTP responses.
+
+includes/class-handoff-notifications.php
+    [Notification delivery] Opt-in qualified-handoff recipients, message construction and mail;
+    durable acknowledgement/retry stays in the existing lead outbox.
+
+includes/class-capi-delivery.php
+    [Integration] Minimal CAPI claims/receipts, legacy success adoption and explicit erasure
 includes/class-capi.php
-    [Integration] Meta CAPI, Google Measurement Protocol/offline CSV, LinkedIn conversion
-    events, idempotency lookup, asynchronous dispatch and retries.
+    [Orchestration facade] Eligibility, asynchronous claims/receipts, dispatch and retries.
+includes/class-capi-transport.php
+    [Provider transport] Meta/Google/LinkedIn payloads, HTTP requests and audit outcomes.
+includes/class-google-conversion-feed.php
+    [Export data] Google conversion queries, CSV formatting and output-buffer cleanup.
+
+includes/class-audience-dispatch.php
+    [Integration] Durable audience claims/outcomes, manual selection, bounded scheduled pages,
+    retry/unknown fences, queue cancellation and lead erasure.
 
 includes/class-audiences.php
     [Integration] Rule-based audience selection, Meta/LinkedIn uploads, Google CSV feeds,
-    sync audit logging.
+    explicit page outcomes behind the durable dispatcher.
+
+includes/class-interakt-dispatch.php
+    [Integration] Opaque ordinary jobs, live dispatch eligibility and uncertain-send claims.
 
 includes/class-interakt.php
     [Integration] Interakt tracking events and Interakt/Meta WhatsApp inbound webhooks.
@@ -132,7 +169,8 @@ assets/css/admin-style.css
 assets/css/dashboard.css, kanban.css, quotations.css, workspace.css
     [Module presentation] Module-specific layouts and print rules.
 assets/css/fonts.css; assets/fonts/
-    [Static dependency] Locally hosted Inter font faces.
+    [Static dependency] Locally hosted Inter font faces; OFL.txt, NOTICE.txt and
+    inter-provenance.json preserve the complete license and verified source hashes.
 
 mcp-server.php
     [CLI integration entry] Local stdio MCP server; loads WordPress and MCP core. Optional
@@ -166,6 +204,7 @@ tests/performance/
     critical benchmark manifests, deterministic synthetic seed tooling, and the guarded authenticated
     read-only load runner plus resilience qualification matrix.
 tests/release/
+    [Static package check] check-package.php extracts a built ZIP into disposable WordPress, runs unfiltered official diagnostics and refuses a diagnostic-bearing gate.
     [Phase 9 release tooling] Dry-run preflight plus explicitly confirmed `.distignore` inventory,
     version, secret-signature, single-directory ZIP, revision, CI-attestation and checksum gates.
 ```
@@ -173,3 +212,16 @@ tests/release/
 ## Responsibility hotspots
 
 The compatibility facades intentionally retain existing public methods/actions while focused admin AJAX and extracted page renderers, lifecycle, quotation controller/renderer, policy, repository, schema, security, routing, retention, settings, view, and integrity classes own their established behavior. Any future extraction from `class-integrations.php` must retain its route and hook contracts.
+
+
+## Inbound WhatsApp persistence (INT-006, Shashi)
+
+`includes/class-whatsapp-inbox.php` owns checked inbound identity, full-phone canonical selection and transactional activity/replay receipts. `class-interakt.php` keeps the established signed REST handlers and payload formatting. `IDLM_Lead_Lifecycle_Service::normalize_identity_phone()` is the shared canonical normalizer; explicit country digits remain intact and the existing India-local/trunk-zero convention applies. [Evidence](AUDIT-REMEDIATION-WHATSAPP-INBOUND-SLICE.md).
+
+## Local unreleased connector
+
+Builder: Shashi. `includes/class-lead-connector.php` owns direct Meta Page leadgen notifications, encrypted intake, current-token Graph retrieval, bounded catch-up, Interakt lead creation and encrypted per-lead acquisition context. Shared setup: `templates/admin/settings/lead-connector.php`. [Setup and boundaries](META-LEAD-CONNECTOR.md).
+
+## Publisher-hosted Facebook Connect (local unreleased)
+
+Builder: Shashi. `includes/class-facebook-connect.php` owns the authenticated customer-site consent UI operations and signed service client. `services/facebook-connect/` is a separately deployed publisher service, excluded from the plugin ZIP; its README owns provisioning and deployment. `IDLM_Lead_Connector` retains import, retry, catch-up and lifecycle ownership. The shared settings template and `assets/js/settings.js` expose named Page/form selection.

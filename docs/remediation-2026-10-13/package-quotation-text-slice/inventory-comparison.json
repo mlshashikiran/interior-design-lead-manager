@@ -1,0 +1,15 @@
+{
+  "builder": "Shashi",
+  "file_count": 450,
+  "artifact_sha256": "cbaa70e993dfb60c5c474396c88034830542af46ca74c4438a6457e99355146a",
+  "all_archived_bytes_match_source": true,
+  "inventory_matches_1_102_79": true,
+  "changed_runtime_inventory_files": [
+    "CHANGELOG.md",
+    "includes/class-quotation-calculator.php",
+    "includes/class-quotation-controller.php",
+    "interior-design-lead-manager.php",
+    "readme.txt"
+  ],
+  "all_other_runtime_dependency_font_bytes_retained": true
+}

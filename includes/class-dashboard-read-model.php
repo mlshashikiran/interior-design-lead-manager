@@ -15,6 +15,9 @@ final class IDLM_Dashboard_Read_Model {
      * Return cached dashboard aggregates for the current visibility scope.
      */
     public static function get_stats($period, $custom_start = '', $custom_end = '', $filters = array()) {
+        if (!IDLM_Lead_Access_Policy::has_rep_access()) {
+            return IDLM_Dashboard::filter_stats(array());
+        }
         $context = self::cache_context($period, $custom_start, $custom_end);
         $context['dashboard_filters'] = array_map('strval', (array) $filters);
 
@@ -47,11 +50,11 @@ final class IDLM_Dashboard_Read_Model {
             'currency_code' => get_option('idlm_currency_code', 'INR'),
             'monthly_lead_target' => get_option('idlm_monthly_lead_target', 100),
             'monthly_conversion_target' => get_option('idlm_monthly_conversion_target', 10),
-            'reps_see_all_leads' => IDLM_Settings::get('idlm_reps_see_all_leads', '1'),
+            'reps_see_all_leads' => IDLM_Settings::get('idlm_reps_see_all_leads', '0'),
         );
 
         return array(
-            'dashboard_contract' => 3,
+            'dashboard_contract' => 4,
             'access' => IDLM_Dashboard::access_context(),
             'period' => sanitize_key($period),
             'ranges' => $ranges,

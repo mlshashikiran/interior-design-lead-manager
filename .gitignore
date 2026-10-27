@@ -3,3 +3,8 @@ Thumbs.db
 build/
 graphify-out/
 .graphify_*
+/.hosting/
+
+# Local Python qualification bytecode
+__pycache__/
+*.py[cod]

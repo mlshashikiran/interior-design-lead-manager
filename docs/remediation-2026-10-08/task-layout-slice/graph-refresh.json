@@ -1,0 +1,23 @@
+{
+  "builder": "Shashi",
+  "query": "UI-002 tasks ajax_get_lead_details",
+  "finding": "Audit finding and lead-detail response owner found; inline grids confirmed in source.",
+  "mode": "scoped structural extraction and explicit documentation heading refresh",
+  "files": {
+    "includes/class-admin-lead-reads.php": "ed83caa484cd874332f319952b941333e415546ca4aad32f39f49ded1234f520",
+    "assets/css/admin-style.css": "dba141eb4b766e61b8811cacb435d01b1ca22732a2dca0a4643404f40d550fe8",
+    "tests/integration/quotation-http.php": "b4f855c990e6716c151b30593d6145fc281780a43af2a29bba75dc3971dc4984",
+    "tests/integration/http-router.php": "f7cfd5deabd3ea3dae5c6f13395f74612ba669f32ace58814070d367f4a47397",
+    "docs/AUDIT-REMEDIATION-TASK-LAYOUT-SLICE.md": "f820df1c62dda37f9bcda09af46e8ca9ba4889947c664f1846298b421f736f66",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "964af1d9853df04840aade6728bc897681210ba9287fdc9e42c7debdd36af2ef",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "c0048127bbc6578333336af7c0dee3e0e5abe281de0db72c0efd9610be46deb0",
+    "docs/CHANGELOG-DEV.md": "9f888e95fcf818d724fda9e09681d5e75f089a4a65300fba8f147a2c359caa84",
+    "tests/README.md": "6c85c010c2f7fa10b30189b65b1832472dabb7e9ba180335e362d0f046a92406"
+  },
+  "removed_stale_nodes": 200,
+  "source_nodes": 17,
+  "source_edges": 20,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "scope": "Unrelated graph content retained; no full semantic, HTML or report regeneration."
+}

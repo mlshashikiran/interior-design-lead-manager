@@ -1,0 +1,41 @@
+{
+  "builder": "Shashi",
+  "updated_at": "2026-10-18T06:04:25.548191+00:00",
+  "method": "Scoped Graphify AST plus source-verified delegate edge and literal document headings; outside-scope relationships retained. No full semantic/HTML rebuild.",
+  "code_files": [
+    "includes/class-admin-connection-controller.php",
+    "includes/class-admin-ajax.php",
+    "interior-design-lead-manager.php",
+    "tests/bootstrap.php",
+    "tests/release-contracts.php",
+    "tests/integration/http-router.php",
+    "tests/integration/quotation-http.php",
+    "tests/integration/connection-controller-http-cases.php"
+  ],
+  "document_files": [
+    "docs/AUDIT-REMEDIATION-PLAN.md",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md",
+    "docs/CHANGELOG-DEV.md",
+    "docs/ARCHITECTURE.md",
+    "docs/FEATURE-MAP.md",
+    "docs/PROJECT-MAP.md",
+    "docs/DEVELOPMENT.md",
+    "docs/INTERFACES.md",
+    "tests/README.md",
+    "docs/AUDIT-REMEDIATION-CONNECTION-CONTROLLER-SLICE.md"
+  ],
+  "extracted_nodes": 232,
+  "extracted_edges": 271,
+  "document_headings": 373,
+  "source_sha256": {
+    "includes/class-admin-connection-controller.php": "133802def0a655c6ba7d55a42e08119430d53bd9093e1be2a01989375d953073",
+    "includes/class-admin-ajax.php": "4c2992780fc3035f381f9b40b980bc8e3e093fabfede1b68086b94c94e443a4a",
+    "interior-design-lead-manager.php": "60bf692c8e50f383d82c4926aec17d61251662f1df0f55a1f3d180abf2e16a5b",
+    "tests/bootstrap.php": "50c2bc062fd6f3f4c01c226e11956957c57d0dc1e18b56ecf7a87e02a23d84da",
+    "tests/release-contracts.php": "d2aacc673f4c7147d1feeb98545645994c52b37cae86ea6bfcbd3a8bee55b15a",
+    "tests/integration/http-router.php": "c8e63592d7ae6a2db02bd5e891acb2bd574fe6781dc73e7118230a7514f3b38e",
+    "tests/integration/quotation-http.php": "8e89a0a72d2695cd0e7a224fb44453076edddf4ffd4913e61052d28ac95096ac",
+    "tests/integration/connection-controller-http-cases.php": "e0d47293d2e9921ef7ec1c0d596c203b908b99ba230d60af757e6febd277f90a"
+  }
+}

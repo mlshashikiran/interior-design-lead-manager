@@ -1,0 +1,54 @@
+{
+  "builder": "Shashi",
+  "classification_is_not_checker_suppression": true,
+  "metadata_input_sites": 6,
+  "sites": [
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 90,
+      "file_sha256": "1e694d29e15246aba27996530dadc98a1fc9bf1c7b11ef48047a2ed19963f23b",
+      "source_line": "        $action = isset($_REQUEST['action']) && is_string($_REQUEST['action']) ? sanitize_text_field(wp_unslash($_REQUEST['action'])) : '';",
+      "rationale": "IDLM_Recovery_Guard::begin_boot first acquires its existing worker lease. These string-shape checks, wp_unslash and sanitize_text_field feed only action-prefix/URI/route classification for retaining that lease through request shutdown. Non-string metadata becomes empty. Existing restore/export/reset exceptions, CLI behavior, worker slots, generations and lock SQL are unchanged. Classification grants no object/capability/authentication access and performs no CRM mutation; a nonce here would exclude the public signed-webhook protocol. Actual handlers keep their own authentication. Synthetic HTTP tests preserve the action/query-route hold, reject concurrent restore until shutdown and verify ordinary malformed-query requests emit no diagnostics or state changes."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 91,
+      "file_sha256": "1e694d29e15246aba27996530dadc98a1fc9bf1c7b11ef48047a2ed19963f23b",
+      "source_line": "        $uri = isset($_SERVER['REQUEST_URI']) && is_string($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';",
+      "rationale": "IDLM_Recovery_Guard::begin_boot first acquires its existing worker lease. These string-shape checks, wp_unslash and sanitize_text_field feed only action-prefix/URI/route classification for retaining that lease through request shutdown. Non-string metadata becomes empty. Existing restore/export/reset exceptions, CLI behavior, worker slots, generations and lock SQL are unchanged. Classification grants no object/capability/authentication access and performs no CRM mutation; a nonce here would exclude the public signed-webhook protocol. Actual handlers keep their own authentication. Synthetic HTTP tests preserve the action/query-route hold, reject concurrent restore until shutdown and verify ordinary malformed-query requests emit no diagnostics or state changes."
+    },
+    {
+      "file": "includes/class-recovery-guard.php",
+      "line": 92,
+      "file_sha256": "1e694d29e15246aba27996530dadc98a1fc9bf1c7b11ef48047a2ed19963f23b",
+      "source_line": "        $rest_route = isset($_GET['rest_route']) && is_string($_GET['rest_route']) ? sanitize_text_field(wp_unslash($_GET['rest_route'])) : '';",
+      "rationale": "IDLM_Recovery_Guard::begin_boot first acquires its existing worker lease. These string-shape checks, wp_unslash and sanitize_text_field feed only action-prefix/URI/route classification for retaining that lease through request shutdown. Non-string metadata becomes empty. Existing restore/export/reset exceptions, CLI behavior, worker slots, generations and lock SQL are unchanged. Classification grants no object/capability/authentication access and performs no CRM mutation; a nonce here would exclude the public signed-webhook protocol. Actual handlers keep their own authentication. Synthetic HTTP tests preserve the action/query-route hold, reject concurrent restore until shutdown and verify ordinary malformed-query requests emit no diagnostics or state changes."
+    },
+    {
+      "file": "interior-design-lead-manager.php",
+      "line": 297,
+      "file_sha256": "fcdabd78b1631fe9d2490b7fb3b5d30ff7720f155207ddd422d0d0e7912e425a",
+      "source_line": "        $action = isset($_REQUEST['action']) && is_string($_REQUEST['action']) ? sanitize_text_field(wp_unslash($_REQUEST['action'])) : '';",
+      "rationale": "idlm_boot_plugin reaches these metadata reads only after a checked schema installer returns WP_Error. String-shape checks, wp_unslash and sanitize_text_field feed only action/URI/REST-route detection deciding whether to return the existing generic 503. URI and query route are checked independently; no array cast or concatenated artificial match remains. Cron handling and both REST namespace checks remain. No request operation is dispatched from this branch, and the separate admin notice still requires manage_options before exposing internals. Nonce validation is not an authority for this failure gate; public requests also require safe 503 handling. HTTP tests assert CRM action and both query namespaces pause without mutation/disclosure, while administrators retain the repair notice with malformed metadata."
+    },
+    {
+      "file": "interior-design-lead-manager.php",
+      "line": 298,
+      "file_sha256": "fcdabd78b1631fe9d2490b7fb3b5d30ff7720f155207ddd422d0d0e7912e425a",
+      "source_line": "        $uri = isset($_SERVER['REQUEST_URI']) && is_string($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';",
+      "rationale": "idlm_boot_plugin reaches these metadata reads only after a checked schema installer returns WP_Error. String-shape checks, wp_unslash and sanitize_text_field feed only action/URI/REST-route detection deciding whether to return the existing generic 503. URI and query route are checked independently; no array cast or concatenated artificial match remains. Cron handling and both REST namespace checks remain. No request operation is dispatched from this branch, and the separate admin notice still requires manage_options before exposing internals. Nonce validation is not an authority for this failure gate; public requests also require safe 503 handling. HTTP tests assert CRM action and both query namespaces pause without mutation/disclosure, while administrators retain the repair notice with malformed metadata."
+    },
+    {
+      "file": "interior-design-lead-manager.php",
+      "line": 299,
+      "file_sha256": "fcdabd78b1631fe9d2490b7fb3b5d30ff7720f155207ddd422d0d0e7912e425a",
+      "source_line": "        $rest_route = isset($_GET['rest_route']) && is_string($_GET['rest_route']) ? sanitize_text_field(wp_unslash($_GET['rest_route'])) : '';",
+      "rationale": "idlm_boot_plugin reaches these metadata reads only after a checked schema installer returns WP_Error. String-shape checks, wp_unslash and sanitize_text_field feed only action/URI/REST-route detection deciding whether to return the existing generic 503. URI and query route are checked independently; no array cast or concatenated artificial match remains. Cron handling and both REST namespace checks remain. No request operation is dispatched from this branch, and the separate admin notice still requires manage_options before exposing internals. Nonce validation is not an authority for this failure gate; public requests also require safe 503 handling. HTTP tests assert CRM action and both query namespaces pause without mutation/disclosure, while administrators retain the repair notice with malformed metadata."
+    }
+  ],
+  "scope_limits": [
+    "No handler authorization changes, new schema, recovery lock/generation algorithm changes or new route registrations.",
+    "The recovery guard keeps its pre-existing idlm/v1 classification scope; this slice does not claim broader legacy-namespace recovery-fence qualification.",
+    "Server-variable array injection was not separately simulated; real HTTP tests exercise attacker-controlled query arrays."
+  ]
+}

@@ -11,77 +11,116 @@ if (!defined('ABSPATH')) {
 }
 
 final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
-    public static function upsert_inbound_lead($data, $platform, $payload = array()) {
+    public static function upsert_inbound_lead($data, $platform, $payload = array(), $options = array()) {
+        self::$last_validation_error = '';
+        $locks = self::acquire_inbound_identity_locks($data, $platform);
+        if (false === $locks) { self::$last_validation_error = 'Lead matching is busy. Please retry the submission.'; return false; }
+        try {
+            return self::transaction_result(IDLM_Lead_Transaction::run(static function() use ($data, $platform, $payload, $options) { return self::upsert_inbound_lead_work($data, $platform, $payload, $options); }));
+        } finally { self::release_inbound_identity_locks($locks); }
+    }
+
+    private static function transaction_result($result) {
+        if (is_wp_error($result)) { if (!self::$last_validation_error) { self::$last_validation_error = $result->get_error_message(); } return false; }
+        return $result;
+    }
+
+    private static function upsert_inbound_lead_work($data, $platform, $payload = array(), $options = array()) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
         $platform = sanitize_key($platform);
-        $lock_names = self::acquire_inbound_identity_locks($data, $platform);
-        if (false === $lock_names) {
-            self::$last_validation_error = 'Lead matching is busy. Please retry the submission.';
-            return false;
+        $replay = IDLM_Identity_Review::replay($data, $platform);
+        if (null !== $replay) { return $replay; }
+        $match = self::find_inbound_canonical_id($data, $platform);
+        if (isset($options['connector_queued_at'])) {
+            IDLM_Lead_Transaction::required(IDLM_Lead_Connector::intake_allowed($data, $options['connector_queued_at']));
+        }
+        $canonical_id = absint($match['lead_id']);
+        if ($canonical_id) {
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0394: upsert_inbound_lead_work(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+            $canonical = IDLM_Lead_Transaction::read($wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_leads} WHERE id = %d FOR UPDATE", $canonical_id)));
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            IDLM_Lead_Transaction::required((bool) $canonical);
+            $updates = self::build_inbound_canonical_updates($canonical, $data, $platform);
+            if (!empty($updates)) {
+                $updates['updated_at'] = current_time('mysql');
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0395: upsert_inbound_lead_work(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+                IDLM_Lead_Transaction::required($wpdb->update($table_leads, $updates, array('id' => $canonical_id)));
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                IDLM_Lead_Transaction::required(self::log_activity(
+                    $canonical_id,
+                    'attribution',
+                    sprintf('Matched a %s submission to this canonical lead. Updated: %s.', $platform, implode(', ', array_keys($updates)))
+                ));
+                IDLM_Lead_Transaction::defer('idlm_lead_attribution_merged', $canonical_id, $updates);
+                IDLM_Lead_Transaction::invalidate('inbound_lead_update', $canonical_id);
+            } else {
+                IDLM_Lead_Transaction::required(self::log_activity($canonical_id, 'attribution', sprintf('Matched a %s submission to this canonical lead.', $platform)));
+            }
+            if (isset($options['connector_attribution'])) {
+                IDLM_Lead_Transaction::required(IDLM_Lead_Connector::remember_attribution($canonical_id, $options['connector_attribution'], false));
+            }
+            if (isset($options['connector_message'])) {
+                $message_result=IDLM_WhatsApp_Inbox::record($options['connector_message'], true);
+                IDLM_Lead_Transaction::required(!is_wp_error($message_result) && in_array($message_result['status'] ?? '', array('processed','replayed'), true));
+            }
+            IDLM_Lead_Transaction::required(1 === self::record_lead_touchpoint($canonical_id, $platform, $data, $payload));
+            return array('lead_id' => $canonical_id, 'created' => false, 'matched' => true);
         }
 
-        try {
-            $match = self::find_inbound_canonical_id($data, $platform);
-            $canonical_id = absint($match['lead_id']);
-            if ($canonical_id) {
-                $canonical = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_leads} WHERE id = %d", $canonical_id));
-                $updates = self::build_inbound_canonical_updates($canonical, $data, $platform);
-                if (!empty($updates)) {
-                    $updates['updated_at'] = current_time('mysql');
-                    $wpdb->update($table_leads, $updates, array('id' => $canonical_id));
-                    self::log_activity(
-                        $canonical_id,
-                        'attribution',
-                        sprintf('Matched a %s submission to this canonical lead. Updated: %s.', $platform, implode(', ', array_keys($updates)))
-                    );
-                    do_action('idlm_lead_attribution_merged', $canonical_id, $updates);
-                    IDLM_Read_Model_Cache::invalidate('inbound_lead_update');
-                } else {
-                    self::log_activity($canonical_id, 'attribution', sprintf('Matched a %s submission to this canonical lead.', $platform));
-                }
-                self::record_lead_touchpoint($canonical_id, $platform, $data, $payload);
-                return array('lead_id' => $canonical_id, 'created' => false, 'matched' => true);
-            }
-
-            $data['original_source'] = !empty($data['source']) ? sanitize_text_field($data['source']) : '';
-            $data['latest_source'] = $data['original_source'];
-            if (!empty($match['ambiguous_candidate_ids'])) {
-                $review_id = self::record_inbound_review($data, $platform, $payload, $match['ambiguous_candidate_ids']);
-                if (!$review_id) {
-                    self::$last_validation_error = 'Unable to retain the conflicting submission for review.';
-                    return false;
-                }
-                foreach ($match['ambiguous_candidate_ids'] as $candidate_id) {
-                    self::log_activity(
-                        $candidate_id,
-                        'duplicate_review',
-                        sprintf('Inbound %s submission was retained for identity review as submission #%d; it matched more than one existing lead.', $platform, $review_id)
-                    );
-                }
-                return array(
-                    'lead_id' => 0,
-                    'created' => false,
-                    'matched' => false,
-                    'requires_duplicate_review' => true,
-                    'review_id' => $review_id,
-                );
-            }
-
-            $lead_id = self::insert_lead($data);
-            if (!$lead_id) {
+        $data['original_source'] = !empty($data['source']) ? sanitize_text_field($data['source']) : '';
+        $data['latest_source'] = $data['original_source'];
+        if (!empty($match['ambiguous_candidate_ids'])) {
+            $review_id = self::record_inbound_review($data, $platform, $payload, $match['ambiguous_candidate_ids']);
+            if (!$review_id) {
+                self::$last_validation_error = 'Unable to retain the conflicting submission for review.';
                 return false;
             }
-            self::record_lead_touchpoint($lead_id, $platform, $data, $payload);
+            foreach ($match['ambiguous_candidate_ids'] as $candidate_id) {
+                IDLM_Lead_Transaction::required(self::log_activity(
+                    $candidate_id,
+                    'duplicate_review',
+                    sprintf('Inbound %s submission was retained for identity review as submission #%d; it matched more than one existing lead.', $platform, $review_id)
+                ));
+            }
             return array(
-                'lead_id' => $lead_id,
-                'created' => true,
+                'lead_id' => 0,
+                'created' => false,
                 'matched' => false,
-                'requires_duplicate_review' => false,
+                'requires_duplicate_review' => true,
+                'review_id' => $review_id,
             );
-        } finally {
-            self::release_inbound_identity_locks($lock_names);
         }
+
+        $lead_id = self::insert_lead($data);
+        if (!$lead_id) {
+            return false;
+        }
+        if (isset($options['connector_attribution'])) {
+            IDLM_Lead_Transaction::required(IDLM_Lead_Connector::remember_attribution($lead_id, $options['connector_attribution'], true));
+        }
+        if (isset($options['connector_message'])) {
+            $message_result=IDLM_WhatsApp_Inbox::record($options['connector_message'], true);
+            IDLM_Lead_Transaction::required(!is_wp_error($message_result) && in_array($message_result['status'] ?? '', array('processed','replayed'), true));
+        }
+        IDLM_Lead_Transaction::required(1 === self::record_lead_touchpoint($lead_id, $platform, $data, $payload));
+        if (!empty($options['route'])) {
+            IDLM_Lead_Transaction::required(IDLM_Integrations::route_lead_assignment($lead_id, $data['source'] ?? ''));
+        }
+        if ('manual' === $platform) {
+            $creator = wp_get_current_user();
+            IDLM_Lead_Transaction::required(self::log_activity($lead_id, 'assignment', sprintf('Lead manually created and assigned to %s.', $creator->display_name), get_current_user_id()));
+        }
+        if (!empty($options['capi']) && (in_array($data['stage'] ?? '', array('Qualified','Quote Shared','Won'), true) || 'Qualified' === ($data['lead_quality'] ?? ''))) {
+            $stage = in_array($data['stage'] ?? '', array('Qualified','Quote Shared','Won'), true) ? $data['stage'] : 'Qualified';
+            IDLM_Lead_Transaction::defer('idlm_lead_stage_converted', $lead_id, $stage, (object) array('stage'=>''));
+        }
+        return array(
+            'lead_id' => $lead_id,
+            'created' => true,
+            'matched' => false,
+            'requires_duplicate_review' => false,
+        );
     }
 
     /** Acquire deterministic locks for every supplied identity, preventing concurrent repeat inserts. */
@@ -90,7 +129,9 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         $lock_names = array();
         foreach (self::get_inbound_identity_keys($data, $platform) as $identity) {
             $lock_name = 'idlm_' . substr(hash('sha256', $identity), 0, 40);
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0396: acquire_inbound_identity_locks(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
             if (1 !== (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 5)', $lock_name))) {
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                 self::release_inbound_identity_locks($lock_names);
                 return false;
             }
@@ -102,7 +143,9 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
     private static function release_inbound_identity_locks($lock_names) {
         global $wpdb;
         foreach ((array) $lock_names as $lock_name) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0397: release_inbound_identity_locks(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
             $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         }
     }
 
@@ -141,11 +184,13 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         $table_leads = $wpdb->prefix . 'idlm_leads';
         $external_id = self::get_inbound_external_id($data);
         if ($external_id) {
-            $touchpoint_leads = $wpdb->get_col($wpdb->prepare(
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0398: find_inbound_canonical_id(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+            $touchpoint_leads = IDLM_Lead_Transaction::read($wpdb->get_col($wpdb->prepare(
                 "SELECT DISTINCT t.lead_id FROM {$wpdb->prefix}idlm_lead_touchpoints t INNER JOIN {$table_leads} l ON l.id = t.lead_id WHERE t.platform = %s AND t.external_id = %s AND l.is_duplicate = 0 LIMIT 2",
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 sanitize_key($platform),
                 $external_id
-            ));
+            )));
             $touchpoint_leads = array_values(array_unique(array_filter(array_map('absint', $touchpoint_leads))));
             if (1 === count($touchpoint_leads)) {
                 return array('lead_id' => $touchpoint_leads[0], 'ambiguous_candidate_ids' => array());
@@ -156,10 +201,12 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
 
             // Preserve compatibility with legacy inbound rows that predate
             // touchpoints, but never select an arbitrary duplicate external ID.
-            $external_matches = $wpdb->get_col($wpdb->prepare(
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0399: find_inbound_canonical_id(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+            $external_matches = IDLM_Lead_Transaction::read($wpdb->get_col($wpdb->prepare(
                 "SELECT id FROM {$table_leads} WHERE is_duplicate = 0 AND fb_lead_id = %s LIMIT 2",
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 $external_id
-            ));
+            )));
             $external_matches = array_values(array_unique(array_filter(array_map('absint', $external_matches))));
             if (1 === count($external_matches)) {
                 return array('lead_id' => $external_matches[0], 'ambiguous_candidate_ids' => array());
@@ -190,8 +237,10 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         }
         // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
         $sql = "SELECT id, email, phone FROM {$table_leads} WHERE is_duplicate = 0 AND (" . implode(' OR ', $conditions) . ') ORDER BY id ASC';
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter -- REL007-SQL-0400: find_inbound_canonical_id(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
         // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $candidates = $wpdb->get_results($wpdb->prepare($sql, $params));
+        $candidates = IDLM_Lead_Transaction::read($wpdb->get_results($wpdb->prepare($sql, $params)));
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter
         $matching_ids = array();
         foreach ($candidates as $candidate) {
             $candidate_email = strtolower(trim((string) $candidate->email));
@@ -213,7 +262,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
     }
 
     /** Canonical India-default phone identity without dropping explicit country codes. */
-    private static function normalize_identity_phone($phone) {
+    public static function normalize_identity_phone($phone) {
         $digits = preg_replace('/[^0-9]/', '', (string) $phone);
         if (11 === strlen($digits) && '0' === $digits[0]) { $digits = substr($digits, 1); }
         return 10 === strlen($digits) ? '91' . $digits : $digits;
@@ -250,6 +299,24 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         return $updates;
     }
 
+    /** Keep only valid provider submission times; never create zero-date records. */
+    private static function inbound_submission_time($value) {
+        if (!is_string($value) || $value === '') { return null; }
+        $value = trim($value);
+        try {
+            if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/D', $value)) {
+                $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $value);
+                return $date && $date->format('Y-m-d H:i:s') === $value && (int)$date->format('Y') >= 1000 ? $value : null;
+            }
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:?\d{2})$/D', $value)) { return null; }
+            $date = new DateTimeImmutable($value);
+            $errors = DateTimeImmutable::getLastErrors();
+            if ($errors && ($errors['warning_count'] || $errors['error_count'])) { return null; }
+            $date = $date->setTimezone(function_exists('wp_timezone') ? wp_timezone() : new DateTimeZone('UTC'));
+            return (int)$date->format('Y') >= 1000 ? $date->format('Y-m-d H:i:s') : null;
+        } catch (Exception $error) { return null; }
+    }
+
     private static function record_lead_touchpoint($lead_id, $platform, $data, $payload = array(), $external_id = '') {
         global $wpdb;
         $table = $wpdb->prefix . 'idlm_lead_touchpoints';
@@ -262,53 +329,180 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             'source' => sanitize_text_field($data['source'] ?? ''),
             'external_id' => $external_id ? sanitize_text_field($external_id) : null,
             'payload' => wp_json_encode(IDLM_Data_Retention::redact($payload ?: $data)),
-            'submitted_at' => !empty($data['conversion_time']) ? sanitize_text_field($data['conversion_time']) : null,
+            'submitted_at' => self::inbound_submission_time($data['conversion_time'] ?? null),
             'received_at' => current_time('mysql'),
         );
-        foreach (array('utm_source', 'utm_medium', 'utm_campaign', 'utm_adgroup', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'fbclid', 'li_fat_id', 'landing_page') as $field) {
+        $attribution_fields = array('utm_source', 'utm_medium', 'utm_campaign', 'utm_adgroup', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'fbclid', 'li_fat_id', 'landing_page');
+        foreach ($attribution_fields as $field) {
             $row[$field] = sanitize_text_field($data[$field] ?? '');
         }
-        // A repeated external webhook is idempotent; submissions without an external ID remain distinct touches.
-        $wpdb->insert($table, $row);
+        // External replay is benign only when the durable tuple belongs to this lead.
+        if ($row['external_id']) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0401: record_lead_touchpoint(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+            $existing = $wpdb->get_row($wpdb->prepare("SELECT lead_id, utm_source, utm_medium, utm_campaign, utm_adgroup, utm_term, utm_content, gclid, gbraid, wbraid, fbclid, li_fat_id, landing_page FROM {$table} WHERE platform = %s AND external_id = %s FOR UPDATE", $row['platform'], $row['external_id']));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            if ($wpdb->last_error) { return false; }
+            if (null !== $existing) {
+                if (absint($existing->lead_id) !== absint($lead_id)) { return false; }
+                // A second trusted intake path may know attribution absent from the
+                // first. Preserve existing values and backfill only missing fields.
+                $updates = array();
+                foreach ($attribution_fields as $field) {
+                    if (($existing->$field === null || $existing->$field === '') && $row[$field] !== '') { $updates[$field] = $row[$field]; }
+                }
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0402: record_lead_touchpoint(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+                if ($updates && 1 !== $wpdb->update($table, $updates, array('platform'=>$row['platform'], 'external_id'=>$row['external_id'], 'lead_id'=>absint($lead_id)))) { return false; }
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                return 1;
+            }
+        }
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0403: record_lead_touchpoint(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+        $inserted = $wpdb->insert($table, $row);
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
+        if (false === $inserted && $row['external_id']) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0404: record_lead_touchpoint(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+            $existing = $wpdb->get_var($wpdb->prepare("SELECT lead_id FROM {$table} WHERE platform = %s AND external_id = %s FOR UPDATE", $row['platform'], $row['external_id']));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            if (null !== $existing && absint($existing) === absint($lead_id)) { return 1; }
+        }
+        return $inserted;
     }
 
     /** Retain conflicting submissions without creating an actionable lead record. */
     private static function record_inbound_review($data, $platform, $payload, $candidate_ids) {
         global $wpdb;
         $table = $wpdb->prefix . 'idlm_inbound_submission_reviews';
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0405: record_inbound_review(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
         $inserted = $wpdb->insert($table, array(
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
             'platform' => sanitize_key($platform),
             'source' => sanitize_text_field($data['source'] ?? ''),
             'email' => sanitize_email($data['email'] ?? ''),
             'phone' => sanitize_text_field($data['phone'] ?? ''),
             'candidate_lead_ids' => wp_json_encode(array_values(array_unique(array_map('absint', $candidate_ids)))),
+            'submission_data' => wp_json_encode(IDLM_Identity_Review::submission($data)),
+            'external_id' => self::get_inbound_external_id($data) ?: null,
             'payload' => wp_json_encode(IDLM_Data_Retention::redact($payload ?: $data)),
-            'submitted_at' => !empty($data['conversion_time']) ? sanitize_text_field($data['conversion_time']) : null,
+            'submitted_at' => self::inbound_submission_time($data['conversion_time'] ?? null),
             'received_at' => current_time('mysql'),
             'status' => 'pending',
         ));
         return $inserted ? absint($wpdb->insert_id) : 0;
     }
 
+    /** Manager decisions share intake identity locks and the checked aggregate owner. */
+    public static function resolve_inbound_review($review_id, $decision, $lead_id = 0, $note = '') {
+        global $wpdb;
+        if (!IDLM_Lead_Access_Policy::can_assign()) { return new WP_Error('idlm_review_forbidden', 'Manager access is required.'); }
+        if (!absint($review_id) || !in_array($decision, array('matched', 'separate', 'rejected'), true) || !is_string($note) || !trim(sanitize_textarea_field($note)) || strlen($note) > 1000) {
+            return new WP_Error('idlm_review_invalid', 'Select a decision and enter a reason of at most 1000 bytes.');
+        }
+        $table = $wpdb->prefix . 'idlm_inbound_submission_reviews';
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0406: resolve_inbound_review(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+        $hint = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $review_id));
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        if ($wpdb->last_error || !$hint) { return new WP_Error('idlm_review_missing', 'Review is unavailable.'); }
+        $data = IDLM_Identity_Review::data($hint);
+        $locks = self::acquire_inbound_identity_locks($data, $hint->platform);
+        if (false === $locks) { return new WP_Error('idlm_review_busy', 'Lead matching is busy. Please retry.'); }
+        try {
+            return IDLM_Lead_Transaction::run(static function() use ($review_id, $decision, $lead_id, $note, $table, $data, $hint) {
+                global $wpdb;
+                // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0407: resolve_inbound_review(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+                $review = IDLM_Lead_Transaction::read($wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d FOR UPDATE", $review_id)));
+                // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                if (!$review || 'pending' !== $review->status) { return new WP_Error('idlm_review_stale', 'Review is unavailable or already resolved.'); }
+                if ($review->platform !== $hint->platform || IDLM_Identity_Review::data($review) !== $data) { return new WP_Error('idlm_review_changed', 'Review changed during recovery. Reload and retry.'); }
+                if (!IDLM_Lead_Access_Policy::refresh_review_actor()) { return new WP_Error('idlm_review_forbidden', 'Manager access is required.'); }
+                $data = IDLM_Identity_Review::data($review);
+                $target = 0;
+                if ('matched' === $decision) {
+                    $ids = IDLM_Identity_Review::candidate_ids($review);
+                    if (!in_array(absint($lead_id), $ids, true)) { return new WP_Error('idlm_review_target', 'Select a live candidate from this review.'); }
+                    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0408: resolve_inbound_review(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+                    $lead = IDLM_Lead_Transaction::read($wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d FOR UPDATE", $lead_id)));
+                    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                    if (!$lead || !empty($lead->is_duplicate)) { return new WP_Error('idlm_review_target', 'Select a live canonical candidate.'); }
+                    $target = absint($lead_id);
+                    $updates = self::build_inbound_canonical_updates($lead, $data, $review->platform);
+                    if ($updates) {
+                        // Attribution only: never overwrite lifecycle, ownership or existing contact values.
+                        $updates['updated_at'] = current_time('mysql');
+                        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0409: resolve_inbound_review(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+                        IDLM_Lead_Transaction::required($wpdb->update($wpdb->prefix . 'idlm_leads', $updates, array('id' => $target)));
+                        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                        IDLM_Lead_Transaction::defer('idlm_lead_attribution_merged', $target, $updates);
+                    }
+                } elseif ('separate' === $decision) {
+                    // An explicit reviewed identity decision is the only duplicate bypass here.
+                    $target = self::insert_lead($data, true);
+                    IDLM_Lead_Transaction::required($target > 0);
+                }
+                if ($target) {
+                    IDLM_Lead_Transaction::required(1 === self::record_lead_touchpoint($target, $review->platform, $data, json_decode($review->payload, true) ?: array(), $review->external_id ?? ''));
+                    IDLM_Lead_Transaction::required(self::log_activity($target, 'identity_review', sprintf('Identity review #%d: %s. %s', $review_id, $decision, sanitize_textarea_field($note)), get_current_user_id()));
+                    IDLM_Lead_Transaction::invalidate('identity_review', $target);
+                }
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0410: resolve_inbound_review(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+                IDLM_Lead_Transaction::required(1 === $wpdb->update($table, array(
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                    'status' => $decision, 'resolved_lead_id' => $target ?: null,
+                    'resolved_by' => get_current_user_id(), 'resolved_at' => current_time('mysql'),
+                    'resolution_note' => sanitize_textarea_field($note),
+                ), array('id' => absint($review_id), 'status' => 'pending')));
+                return array('review_id' => absint($review_id), 'status' => $decision, 'lead_id' => $target);
+            });
+        } finally { self::release_inbound_identity_locks($locks); }
+    }
+
     protected static function backfill_duplicate_touchpoints() {
         global $wpdb;
+        $cursor_option = 'idlm_duplicate_touchpoint_backfill_cursor_v2';
+        $cursor = IDLM_Schema_Migration::version($cursor_option);
+        if (null === $cursor || ($cursor !== '' && !ctype_digit($cursor))) { return false; }
         $table_leads = $wpdb->prefix . 'idlm_leads';
-        $duplicates = $wpdb->get_results("SELECT * FROM {$table_leads} WHERE is_duplicate = 1 AND duplicate_of_id > 0 ORDER BY id ASC", ARRAY_A);
+        $table_touches = $wpdb->prefix . 'idlm_lead_touchpoints';
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0411: backfill_duplicate_touchpoints(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+        $duplicates = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$table_leads} WHERE is_duplicate = 1 AND duplicate_of_id > 0 AND id > %d ORDER BY id ASC LIMIT 100", (int) $cursor), ARRAY_A);
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        if ($wpdb->last_error || !is_array($duplicates)) { return false; }
         foreach ($duplicates as $duplicate) {
-            self::record_lead_touchpoint(
-                absint($duplicate['duplicate_of_id']),
-                'legacy_duplicate',
-                $duplicate,
-                array('legacy_duplicate_lead_id' => absint($duplicate['id'])),
-                'legacy-duplicate-' . absint($duplicate['id'])
-            );
+            $external_id = 'legacy-duplicate-' . absint($duplicate['id']);
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0412: backfill_duplicate_touchpoints(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+            $existing = $wpdb->get_row($wpdb->prepare("SELECT lead_id FROM {$table_touches} WHERE platform = 'legacy_duplicate' AND external_id = %s", $external_id));
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            if ($wpdb->last_error) { return false; }
+            if ($existing) {
+                if ((int) $existing->lead_id !== (int) $duplicate['duplicate_of_id']) { return false; }
+                continue;
+            }
+            if (1 !== self::record_lead_touchpoint(
+                absint($duplicate['duplicate_of_id']), 'legacy_duplicate', $duplicate,
+                array('legacy_duplicate_lead_id' => absint($duplicate['id'])), $external_id
+            )) { return false; }
         }
+        if ($duplicates) {
+            $last = end($duplicates);
+            $result = IDLM_Schema_Migration::publish($cursor_option, (string) $last['id']);
+            if (is_wp_error($result)) { return $result; }
+        }
+        return count($duplicates) < 100 ? true : IDLM_Schema_Migration::error('touchpoint_batch', 'CRM attribution migration is progressing in batches of 100. Retry to continue.');
     }
 
     /**
      * Add lead and run duplicate detection
      */
     public static function insert_lead($data, $skip_duplicate_detection = false) {
+        self::$last_validation_error = '';
+        // Inbound upsert already owns identity locks through its outer commit.
+        $locks = IDLM_Lead_Transaction::active() ? array() : self::acquire_inbound_identity_locks($data, '');
+        if (false === $locks) { self::$last_validation_error = 'Lead matching is busy. Please retry the submission.'; return false; }
+        try {
+            return self::transaction_result(IDLM_Lead_Transaction::run(static function() use ($data, $skip_duplicate_detection) { return self::insert_lead_work($data, $skip_duplicate_detection); }));
+        } finally { self::release_inbound_identity_locks($locks); }
+    }
+
+    private static function insert_lead_work($data, $skip_duplicate_detection = false) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
 
@@ -345,8 +539,17 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
 
         $data['created_at'] = current_time('mysql');
         $data['updated_at'] = current_time('mysql');
-        if ('Won' === $data['stage'] && empty($data['conversion_time'])) {
+        // The lead column is the Won close timestamp, not the inbound form's
+        // submission timestamp (which is kept on its touchpoint). In particular,
+        // a blank webhook mapping must not become a zero MySQL datetime.
+        if ('Won' !== $data['stage']) {
+            unset($data['conversion_time']);
+        } elseif (empty($data['conversion_time'])) {
             $data['conversion_time'] = current_time('mysql');
+        }
+        if (!empty($data['assigned_rep_id']) && !IDLM_Lead_Access_Policy::is_assignable_rep($data['assigned_rep_id'], 'any', true)) {
+            self::$last_validation_error = 'Please select an enabled CRM representative with current lead access.';
+            return false;
         }
         if (!empty($data['assigned_rep_id'])) {
             $data['assigned_at'] = current_time('mysql');
@@ -405,7 +608,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
             $duplicate_query = "SELECT id, email, phone FROM $table_leads WHERE is_duplicate = 0 AND (" . implode(" OR ", $conditions) . ")";
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-            $candidates = $wpdb->get_results($wpdb->prepare($duplicate_query, $params));
+            $candidates = IDLM_Lead_Transaction::read($wpdb->get_results($wpdb->prepare($duplicate_query, $params)));
 
             if (!empty($candidates)) {
                 $matching_ids = array();
@@ -458,6 +661,9 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             $data['handoff_exception_reason'] = '';
         }
 
+        $capacity = IDLM_Assignment_Capacity::validate_transition(null, $data);
+        if (is_wp_error($capacity)) { self::$last_validation_error = $capacity->get_error_message(); return false; }
+
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $inserted = $wpdb->insert($table_leads, $data);
         if ($inserted) {
@@ -468,8 +674,8 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             if ($is_duplicate) {
                 $log_msg .= " Marked as duplicate of Lead ID: " . $duplicate_of_id;
             }
-            self::log_activity($lead_id, 'creation', $log_msg);
-            self::record_reporting_event(
+            IDLM_Lead_Transaction::required(self::log_activity($lead_id, 'creation', $log_msg));
+            IDLM_Lead_Transaction::required(self::record_reporting_event(
                 $lead_id,
                 'stage_change',
                 '',
@@ -479,15 +685,22 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                 0,
                 null,
                 'Won' === $data['stage'] ? ($data['deal_value'] ?? 0) : ('Lost' === $data['stage'] ? ($data['quote_value'] ?? 0) : null)
-            );
+            ));
             if (!empty($data['assigned_rep_id'])) {
-                self::record_reporting_event($lead_id, 'assignment', '', $data['assigned_rep_id'], '', 'creation');
+                IDLM_Lead_Transaction::required(self::record_reporting_event($lead_id, 'assignment', '', $data['assigned_rep_id'], '', 'creation'));
+            }
+
+            if (!$is_duplicate && !empty($data['assigned_rep_id'])) {
+                $owner = get_userdata(absint($data['assigned_rep_id']));
+                if ($owner && in_array('idlm_pre_sales', (array) $owner->roles, true)) {
+                    IDLM_Lead_Transaction::required(self::create_presales_followup_tasks($lead_id, $data['assigned_rep_id']));
+                }
             }
 
             if ($is_duplicate && $duplicate_of_id > 0) {
                 // Fetch original lead to compare and merge attribution details
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-                $original_lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_leads} WHERE id = %d", $duplicate_of_id));
+                $original_lead = IDLM_Lead_Transaction::read($wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_leads} WHERE id = %d FOR UPDATE", $duplicate_of_id)));
                 if ($original_lead) {
                     $attribution_fields = array(
                         'fb_lead_id', 'fbclid', 'gclid', 'gbraid', 'wbraid', 'li_fat_id',
@@ -514,21 +727,21 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                     if (!empty($original_updates)) {
                         $original_updates['updated_at'] = current_time('mysql');
                         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-                        $wpdb->update($table_leads, $original_updates, array('id' => $duplicate_of_id));
-                        self::log_activity($duplicate_of_id, 'update', "Merged attribution data from duplicate Lead ID: {$lead_id}. Fields: " . implode(', ', array_keys($original_updates)));
+                        IDLM_Lead_Transaction::required($wpdb->update($table_leads, $original_updates, array('id' => $duplicate_of_id)));
+                        IDLM_Lead_Transaction::required(self::log_activity($duplicate_of_id, 'update', "Merged attribution data from duplicate Lead ID: {$lead_id}. Fields: " . implode(', ', array_keys($original_updates))));
                         
                         // Trigger hook for CAPI re-fire
-                        do_action('idlm_lead_attribution_merged', $duplicate_of_id, $original_updates);
+                        IDLM_Lead_Transaction::defer('idlm_lead_attribution_merged', $duplicate_of_id, $original_updates);
                     }
                 }
             }
 
             // Trigger CAPI for initial lead event only if it's NOT a duplicate (implemented by Shashi)
             if (!$is_duplicate) {
-                do_action('idlm_lead_stage_converted', $lead_id, 'New', (object) array('stage' => ''));
+                IDLM_Lead_Transaction::defer('idlm_lead_stage_converted', $lead_id, 'New', (object) array('stage' => ''));
             }
 
-            IDLM_Read_Model_Cache::invalidate('lead_insert');
+            IDLM_Lead_Transaction::invalidate('lead_insert', $lead_id);
             return $lead_id;
         }
 
@@ -539,20 +752,29 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
      * Update an existing lead, tracking specific status changes
      */
     public static function update_lead($lead_id, $data) {
+        self::$last_validation_error = '';
+        return self::transaction_result(IDLM_Lead_Transaction::run(static function() use ($lead_id, $data) { return self::update_lead_work($lead_id, $data); }));
+    }
+
+    private static function update_lead_work($lead_id, $data) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
 
         // Fetch old data to detect changes
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $old_lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_leads WHERE id = %d", $lead_id));
+        $old_lead = IDLM_Lead_Transaction::read($wpdb->get_row($wpdb->prepare("SELECT * FROM $table_leads WHERE id = %d FOR UPDATE", $lead_id)));
         if (!$old_lead) {
             return false;
         }
 
         self::$last_validation_error = '';
-        // Stage moves into the sales pipeline may normalize lead_quality to
-        // Qualified, but the handoff remark belongs to the explicit pre-sales
-        // qualification decision only.
+        if (isset($data['assigned_rep_id']) && absint($data['assigned_rep_id']) !== absint($old_lead->assigned_rep_id)
+            && !IDLM_Lead_Access_Policy::is_assignable_rep($data['assigned_rep_id'], 'any', true)) {
+            self::$last_validation_error = 'Please select an enabled CRM representative with current lead access.';
+            return false;
+        }
+        // Entering Qualified normalizes quality; downstream sales stages do not.
+        // The handoff remark belongs to an explicit quality decision only.
         $explicit_quality_update = array_key_exists('lead_quality', $data);
         $data = self::normalize_workflow_transition($old_lead, $data);
         if (false === $data) {
@@ -566,6 +788,8 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             ? sanitize_textarea_field($data['qualification_handoff_remark'])
             : '';
         unset($data['qualification_handoff_remark']);
+        $lost_remark = isset($data['lost_remark']) ? sanitize_textarea_field($data['lost_remark']) : '';
+        unset($data['lost_remark']);
 
         $data['updated_at'] = current_time('mysql');
 
@@ -687,13 +911,13 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             if ($data['stage'] === 'Won' && empty($old_lead->time_to_won) && !empty($old_lead->time_to_connected)) {
                 // Find when call status was set to Connected
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-                $activity_connected = $wpdb->get_var($wpdb->prepare(
+                $activity_connected = IDLM_Lead_Transaction::read($wpdb->get_var($wpdb->prepare(
                     "SELECT created_at FROM {$wpdb->prefix}idlm_lead_activity_log 
                      WHERE lead_id = %d AND activity_type = 'call_status_change' 
                      AND details LIKE %s ORDER BY id ASC LIMIT 1", 
                     $lead_id,
                     '%' . $wpdb->esc_like('Connected') . '%'
-                ));
+                )));
                 $connected_time = $activity_connected ? $activity_connected : $old_lead->created_at;
 
                 $work_start = IDLM_Settings::get('idlm_working_hours_start', '09:00');
@@ -711,14 +935,20 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             }
         }
 
+        $capacity = IDLM_Assignment_Capacity::validate_transition($old_lead, array_merge((array) $old_lead, $data));
+        if (is_wp_error($capacity)) { self::$last_validation_error = $capacity->get_error_message(); return false; }
+
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $updated = $wpdb->update($table_leads, $data, array('id' => $lead_id));
+        $updated = IDLM_Lead_Transaction::required($wpdb->update($table_leads, $data, array('id' => $lead_id)));
 
         if ($updated !== false) {
             $user_id = get_current_user_id();
+            if ('Lost' === ($data['stage'] ?? '') && '' !== trim($lost_remark)) {
+                IDLM_Lead_Transaction::required(self::log_activity($lead_id, 'lost_remark', 'Lost reason: ' . ($data['lost_reason'] ?? $old_lead->lost_reason) . '. Remark: ' . $lost_remark, $user_id));
+            }
 
             if (isset($data['stage']) && (string) $data['stage'] !== (string) $old_lead->stage) {
-                self::record_reporting_event(
+                IDLM_Lead_Transaction::required(self::record_reporting_event(
                     $lead_id,
                     'stage_change',
                     $old_lead->stage,
@@ -728,10 +958,10 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                     $user_id,
                     $data['updated_at'],
                     'Won' === $data['stage'] ? ($data['deal_value'] ?? $old_lead->deal_value) : ('Lost' === $data['stage'] ? ($data['quote_value'] ?? $old_lead->quote_value) : null)
-                );
+                ));
             }
             if (isset($data['assigned_rep_id']) && absint($data['assigned_rep_id']) !== absint($old_lead->assigned_rep_id)) {
-                self::record_reporting_event(
+                IDLM_Lead_Transaction::required(self::record_reporting_event(
                     $lead_id,
                     'assignment',
                     $old_lead->assigned_rep_id,
@@ -740,39 +970,43 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                     'manual',
                     $user_id,
                     $data['assigned_at'] ?? $data['updated_at']
-                );
+                ));
             }
 
             // Qualification ends the pre-sales sequence; never send unfinished
             // qualification tasks into the sales executive's daily backlog.
             if ($became_qualified) {
-                $wpdb->query($wpdb->prepare(
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0413: update_lead_work(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+                IDLM_Lead_Transaction::required($wpdb->query($wpdb->prepare(
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                     "UPDATE {$wpdb->prefix}idlm_tasks
                      SET status = 'completed', completed_at = %s, updated_at = %s
                      WHERE lead_id = %d AND status = 'pending' AND task_type = 'Qualification'",
                     current_time('mysql'), current_time('mysql'), absint($lead_id)
-                ));
+                )));
                 if (empty($old_lead->floor_plan_received) && '' !== trim($qualification_handoff_remark)) {
-                    self::log_activity(
+                    IDLM_Lead_Transaction::required(self::log_activity(
                         $lead_id,
                         'qualification_handoff_remark',
                         'Qualified without a floor plan. Handoff remark: ' . $qualification_handoff_remark,
                         $user_id
-                    );
+                    ));
                 }
             }
 
             if (isset($data['lead_quality']) && 'Unqualified' === $data['lead_quality']) {
-                $wpdb->query($wpdb->prepare(
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0414: update_lead_work(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+                IDLM_Lead_Transaction::required($wpdb->query($wpdb->prepare(
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                     "UPDATE {$wpdb->prefix}idlm_tasks
                      SET status = 'completed', completed_at = %s, updated_at = %s
                      WHERE lead_id = %d AND status = 'pending' AND task_type = 'Qualification'",
                     current_time('mysql'), current_time('mysql'), absint($lead_id)
-                ));
+                )));
             }
 
             if (isset($data['stage']) && 'Lost' === $data['stage'] && 'Lost' !== $old_lead->stage) {
-                self::archive_pending_tasks_for_lost_lead($lead_id);
+                IDLM_Lead_Transaction::required(self::archive_pending_tasks_for_lost_lead($lead_id));
             }
 
             if (isset($data['assigned_rep_id']) && absint($data['assigned_rep_id']) !== absint($old_lead->assigned_rep_id) && 'Qualified' === $old_lead->lead_quality) {
@@ -780,25 +1014,42 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                 $table_tasks = $wpdb->prefix . 'idlm_tasks';
                 if ('transfer' === $task_policy) {
                     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-                    $wpdb->update(
+                    IDLM_Lead_Transaction::required($wpdb->update(
                         $table_tasks,
                         array('assigned_rep_id' => absint($data['assigned_rep_id']), 'updated_at' => current_time('mysql')),
                         array('lead_id' => absint($lead_id), 'assigned_rep_id' => absint($old_lead->assigned_rep_id), 'status' => 'pending')
-                    );
+                    ));
                 } elseif ('complete_qualification' === $task_policy) {
+                    // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0415: update_lead_work(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
                     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-                    $wpdb->query($wpdb->prepare(
+                    IDLM_Lead_Transaction::required($wpdb->query($wpdb->prepare(
                         "UPDATE {$table_tasks}
                          SET status = 'completed', completed_at = %s, updated_at = %s
                          WHERE lead_id = %d AND assigned_rep_id = %d AND status = 'pending'
                            AND LOWER(task_type) = 'qualification'",
+                    // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                         current_time('mysql'),
                         current_time('mysql'),
                         absint($lead_id),
                         absint($old_lead->assigned_rep_id)
-                    ));
+                    )));
                 }
-                self::ensure_qualified_handoff_task($lead_id, absint($data['assigned_rep_id']));
+                IDLM_Lead_Transaction::required(self::ensure_qualified_handoff_task($lead_id, absint($data['assigned_rep_id'])));
+            }
+
+            // Reopened plans and pending pre-sales work follow the live owner under this same lock.
+            $plan_transition = (isset($data['assigned_rep_id']) && absint($data['assigned_rep_id']) !== absint($old_lead->assigned_rep_id))
+                || (isset($data['stage']) && in_array($old_lead->stage, array('Won', 'Lost'), true) && !in_array($data['stage'], array('Won', 'Lost'), true))
+                || (isset($data['lead_quality']) && in_array($old_lead->lead_quality, array('Qualified', 'Unqualified'), true) && !in_array($data['lead_quality'], array('Qualified', 'Unqualified'), true));
+            if ($plan_transition) {
+                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0416: update_lead_work(): canonical prefixed tables; identity predicates are fixed with bound contact values; IDs/cursors are bound; replay/ownership/required-write reads remain in the checked aggregate transaction.
+                $existing_plan = IDLM_Lead_Transaction::read($wpdb->get_var($wpdb->prepare(
+                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+                    "SELECT id FROM {$wpdb->prefix}idlm_tasks WHERE lead_id = %d AND task_type = 'Qualification' LIMIT 1", absint($lead_id)
+                )));
+                if ($existing_plan || !empty($old_lead->intake_owner_id)) {
+                    IDLM_Lead_Transaction::required(self::sync_presales_task_status($lead_id));
+                }
             }
 
             // Log details of changes
@@ -843,13 +1094,13 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                         $msg = "Callback Date/Time changed from $old_formatted to $new_formatted.";
                     }
 
-                    self::log_activity($lead_id, $type, $msg, $user_id);
+                    IDLM_Lead_Transaction::required(self::log_activity($lead_id, $type, $msg, $user_id));
 
                     // Trigger server-side Conversion API events if stage, status, or lead quality matches
                     if ($key === 'stage' && in_array($value, array(IDLM_State_Registry::STAGE_QUALIFIED, IDLM_State_Registry::STAGE_QUOTE_SHARED, IDLM_State_Registry::STAGE_WON), true)) {
-                        do_action('idlm_lead_stage_converted', $lead_id, $value, $old_lead);
+                        IDLM_Lead_Transaction::defer('idlm_lead_stage_converted', $lead_id, $value, $old_lead);
                     } elseif ($key === 'lead_quality' && $value === 'Qualified' && !$quality_promoted_stage) {
-                        do_action('idlm_lead_stage_converted', $lead_id, 'Qualified', $old_lead);
+                        IDLM_Lead_Transaction::defer('idlm_lead_stage_converted', $lead_id, 'Qualified', $old_lead);
                     }
 
                     // Trigger mapped Interakt events if field, value, and transition match
@@ -866,7 +1117,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                                 if ($key === $m_type && $value === $m_val) {
                                     $old_val = isset($old_lead->$key) ? $old_lead->$key : '';
                                     if ($old_val !== $value) {
-                                        do_action('idlm_trigger_interakt_event', $lead_id, $m_evt, $old_lead);
+                                        IDLM_Lead_Transaction::defer('idlm_trigger_interakt_event', $lead_id, $m_evt, $old_lead, array('field'=>$key, 'value'=>$value, 'owner'=>(int) ($data['assigned_rep_id'] ?? $old_lead->assigned_rep_id)));
                                         if ($key === 'call_status' && $value === 'No Answer') {
                                             $mapped_triggered = true;
                                         }
@@ -878,12 +1129,12 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
 
                     // Legacy call status fallback (only trigger if not already handled by mapped triggers)
                     if ($key === 'call_status' && $value === 'No Answer' && !$mapped_triggered) {
-                        do_action('idlm_lead_call_status_no_answer', $lead_id, $old_lead);
+                        IDLM_Lead_Transaction::defer('idlm_lead_call_status_no_answer', $lead_id, $old_lead, array('field'=>'call_status', 'value'=>'No Answer', 'owner'=>(int) ($data['assigned_rep_id'] ?? $old_lead->assigned_rep_id), 'event'=>get_option('idlm_interakt_event_name', 'lead_no_answer')));
                     }
                 }
             }
 
-            IDLM_Read_Model_Cache::invalidate('lead_update');
+            IDLM_Lead_Transaction::invalidate('lead_update', $lead_id);
             return true;
         }
 

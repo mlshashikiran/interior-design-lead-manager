@@ -1,0 +1,148 @@
+{
+  "builder": "Shashi",
+  "database": "idlm_test_94139_576f7657",
+  "assertions": "PASS",
+  "quote": [
+    {
+      "id": "2",
+      "current_revision_id": "7"
+    }
+  ],
+  "revisions": [
+    {
+      "id": "5",
+      "revision_number": "1",
+      "subtotal": "506.00",
+      "grand_total": "597.00"
+    },
+    {
+      "id": "6",
+      "revision_number": "2",
+      "subtotal": "507.00",
+      "grand_total": "598.00"
+    },
+    {
+      "id": "7",
+      "revision_number": "3",
+      "subtotal": "507.00",
+      "grand_total": "598.00"
+    }
+  ],
+  "items": [
+    {
+      "revision_id": "5",
+      "description": "UI001 browser manual 1",
+      "quantity": "1.000",
+      "line_subtotal": "100.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "5",
+      "description": "UI001 browser manual 2",
+      "quantity": "2.000",
+      "line_subtotal": "200.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "5",
+      "description": "UI001 browser manual 0.01",
+      "quantity": "0.010",
+      "line_subtotal": "1.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "5",
+      "description": "UI001 browser manual 2.05",
+      "quantity": "2.050",
+      "line_subtotal": "205.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "6",
+      "description": "UI001 browser manual 1",
+      "quantity": "1.000",
+      "line_subtotal": "100.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "6",
+      "description": "UI001 browser manual 2",
+      "quantity": "2.000",
+      "line_subtotal": "200.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "6",
+      "description": "UI001 browser manual 0.01",
+      "quantity": "0.010",
+      "line_subtotal": "1.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "6",
+      "description": "UI001 browser manual 2.05",
+      "quantity": "2.050",
+      "line_subtotal": "205.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "6",
+      "description": "UI001 browser tiny area",
+      "quantity": "0.010",
+      "line_subtotal": "1.00",
+      "length": "0.010",
+      "height": "0.010"
+    },
+    {
+      "revision_id": "7",
+      "description": "UI001 browser manual 1",
+      "quantity": "1.000",
+      "line_subtotal": "100.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "7",
+      "description": "UI001 browser manual 2",
+      "quantity": "2.000",
+      "line_subtotal": "200.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "7",
+      "description": "UI001 browser manual 0.01",
+      "quantity": "0.010",
+      "line_subtotal": "1.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "7",
+      "description": "UI001 browser manual 2.05",
+      "quantity": "2.050",
+      "line_subtotal": "205.00",
+      "length": "0.000",
+      "height": "0.000"
+    },
+    {
+      "revision_id": "7",
+      "description": "UI001 browser tiny area",
+      "quantity": "0.010",
+      "line_subtotal": "1.00",
+      "length": "0.010",
+      "height": "0.010"
+    }
+  ],
+  "php_diagnostics": "",
+  "browser_console_warnings_errors": [],
+  "scope": "Synthetic quote created and revised by actual browser; exact saved values, original R01 and latest pointer checked after mobile R03."
+}

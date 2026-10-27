@@ -1,0 +1,137 @@
+{
+  "builder": "Shashi",
+  "stages": [
+    {
+      "stage": "baseline",
+      "diagnostics": 2178,
+      "types": {
+        "WARNING": 2042,
+        "ERROR": 136
+      },
+      "codes": {
+        "WordPress.DB.DirectDatabaseQuery.DirectQuery": 467,
+        "WordPress.DB.DirectDatabaseQuery.NoCaching": 403,
+        "PluginCheck.Security.DirectDB.UnescapedDBParameter": 175,
+        "WordPress.DB.PreparedSQL.InterpolatedNotPrepared": 402,
+        "WordPress.DB.PreparedSQL.NotPrepared": 78,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fopen": 2,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fread": 1,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose": 11,
+        "WordPress.Security.NonceVerification.Recommended": 73,
+        "WordPress.Security.ValidatedSanitizedInput.MissingUnslash": 9,
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized": 49,
+        "WordPress.Security.EscapeOutput.OutputNotEscaped": 1,
+        "Squiz.PHP.DiscouragedFunctions.Discouraged": 4,
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors": 1,
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall": 2,
+        "WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting": 1,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fwrite": 1,
+        "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 3,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_readfile": 1,
+        "WordPress.WP.AlternativeFunctions.unlink_unlink": 2,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_is_writable": 2,
+        "WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare": 12,
+        "WordPress.Security.NonceVerification.Missing": 45,
+        "WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber": 3,
+        "WordPress.DB.DirectDatabaseQuery.SchemaChange": 3,
+        "unexpected_markdown_file": 2,
+        "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound": 1,
+        "WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound": 1,
+        "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound": 422,
+        "readme_parser_warnings_trimmed_section_changelog": 1
+      },
+      "raw": "docs/remediation-2026-10-18/package-bootstrap-request-slice/final/plugin-check.json"
+    },
+    {
+      "stage": "source fixes",
+      "diagnostics": 1744,
+      "types": {
+        "WARNING": 1608,
+        "ERROR": 136
+      },
+      "codes": {
+        "WordPress.DB.DirectDatabaseQuery.DirectQuery": 467,
+        "WordPress.DB.DirectDatabaseQuery.NoCaching": 403,
+        "PluginCheck.Security.DirectDB.UnescapedDBParameter": 175,
+        "WordPress.DB.PreparedSQL.InterpolatedNotPrepared": 402,
+        "WordPress.DB.PreparedSQL.NotPrepared": 78,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fopen": 2,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fread": 1,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose": 11,
+        "WordPress.Security.NonceVerification.Recommended": 73,
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized": 46,
+        "WordPress.Security.EscapeOutput.OutputNotEscaped": 1,
+        "Squiz.PHP.DiscouragedFunctions.Discouraged": 4,
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors": 1,
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall": 2,
+        "WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting": 1,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fwrite": 1,
+        "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 3,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_readfile": 1,
+        "WordPress.WP.AlternativeFunctions.unlink_unlink": 2,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_is_writable": 2,
+        "WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare": 12,
+        "WordPress.Security.NonceVerification.Missing": 45,
+        "WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber": 3,
+        "WordPress.DB.DirectDatabaseQuery.SchemaChange": 3,
+        "unexpected_markdown_file": 2,
+        "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound": 1,
+        "WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound": 1,
+        "readme_parser_warnings_trimmed_section_changelog": 1
+      },
+      "raw": "docs/remediation-2026-10-18/package-static-completion-slice/after-source-fixes/plugin-check.json"
+    },
+    {
+      "stage": "SQL review annotations",
+      "diagnostics": 201,
+      "types": {
+        "ERROR": 21,
+        "WARNING": 180
+      },
+      "codes": {
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fopen": 2,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fread": 1,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose": 11,
+        "WordPress.Security.NonceVerification.Recommended": 73,
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized": 46,
+        "WordPress.Security.EscapeOutput.OutputNotEscaped": 1,
+        "Squiz.PHP.DiscouragedFunctions.Discouraged": 4,
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors": 1,
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall": 2,
+        "WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting": 1,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fwrite": 1,
+        "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 3,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_readfile": 1,
+        "WordPress.WP.AlternativeFunctions.unlink_unlink": 2,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_is_writable": 2,
+        "unexpected_markdown_file": 2,
+        "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound": 1,
+        "WordPress.Security.NonceVerification.Missing": 45,
+        "readme_parser_warnings_trimmed_section_changelog": 1,
+        "WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound": 1
+      },
+      "raw": "docs/remediation-2026-10-18/package-static-completion-slice/after-sql-review/plugin-check.json"
+    },
+    {
+      "stage": "final",
+      "diagnostics": 0,
+      "types": {},
+      "codes": {},
+      "raw": "docs/remediation-2026-10-18/package-static-completion-slice/final/plugin-check.json"
+    }
+  ],
+  "resolved_without_new_exceptions": {
+    "template_global_prefix": 422,
+    "missing_unslash": 9,
+    "input_sanitization": 3,
+    "integer_status_output": 1,
+    "unexpected_markdown_notices": 2,
+    "readme_changelog_length": 1
+  },
+  "bounded_review_exceptions": {
+    "SQL": 1543,
+    "request_stream_CLI_hook": 197
+  },
+  "total_baseline": 2178,
+  "total_final": 0
+}

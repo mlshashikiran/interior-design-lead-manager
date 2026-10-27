@@ -1,0 +1,27 @@
+{
+  "builder": "Shashi",
+  "query": "UI-003 addLeadTask",
+  "finding": "Audit finding and shared task handler located; source confirmed missing label associations. Actual browser additionally exposed aria-hidden on the open drawer.",
+  "mode": "scoped structural extraction and explicit documentation heading refresh",
+  "files": {
+    "includes/class-admin-lead-reads.php": "ffa819682f29115f409987ecad4301417da41f14c28ef116d0f971d553bd153a",
+    "assets/js/admin-app.js": "179ead9df02e6d7ebb629b274745dd9c6dd3b0b6b3bdc47aeb623d687bc41baa",
+    "interior-design-lead-manager.php": "7c5a30a71342ae4603d3ffe69df2223f65135dbbbe8754122cbbc4fad06a0ac5",
+    "tests/release-contracts.php": "fe38b3abae540044656af41a05c3fad5deccc9869617203eba1a48ff963fd7e7",
+    "tests/integration/quotation-http.php": "7fc46b084abeb1b38670b0c91f209830927e9a13fe518c8e23718e0d43210b0c",
+    "tests/integration/task-accessibility-http-cases.php": "3d32303f84371b01459a17eb32940ee72832206684b9193071a78d885e4523fe",
+    "docs/AUDIT-REMEDIATION-TASK-ACCESSIBILITY-SLICE.md": "138383ae6e697ddc3b6c0641a7975c84a3447c85f8d050b4fd51c20f69ab44a3",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "ab6b69c5ff77b4b57c86a5fb999a28afc1c828ea630b468ce4ed2574dbfc0a5f",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "c61f6d62c81fa68b5b700cc106c880855f035b28d6f40523a715a167faf08d39",
+    "docs/CHANGELOG-DEV.md": "5f02a92a710942eafe8fc416dfb94f7095b7871295291781208b21590b078b4d",
+    "tests/README.md": "a302d3180a1053d4d3e192b4ea1415775685b7616a68cec373cc1b2ac5a4f570",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "adc3a04239413365620aaee6696f9d79c0ed061de2dbaf297ab77d9dada6a055",
+    "CHANGELOG.md": "8ee165ce689ad03b3513ccdbd9e3bff434659e533f9c459088d5bbe5e34b122e"
+  },
+  "removed_stale_nodes": 750,
+  "source_nodes": 121,
+  "source_edges": 219,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "scope": "Unrelated graph content retained; no full semantic, HTML or report regeneration."
+}

@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "yaml_parsed": true,
+  "checker_zip_sha256_pinned": "6ff4bd2145f3befcf907df158cc466b1649dafed5686de8369907403c3013fc4",
+  "diagnostic_gate_before_success_only_candidate_upload": true,
+  "additional_diagnostic_filters": false,
+  "remote_workflow_run": false
+}

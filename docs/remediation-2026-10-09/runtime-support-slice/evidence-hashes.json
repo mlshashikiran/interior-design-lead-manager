@@ -1,0 +1,22 @@
+{
+  "archive-identity.json": "637f1549756c0fb02122de251bae7a8c81a5b162d45e656f146cee01c3f02981",
+  "changed-php-files.json": "672e7257ed62a6bab0a99b9d1df9f557de48c17dc64949be8a9aa983b9290290",
+  "database-cleanup.json": "fd565dfccccf6a1ebb5ff32c9a33c39d203e6fa00e8871445750dd77e614950d",
+  "fast-diagnostics.txt": "fe375c3fa213a463408a93a43af8a3f8cc1c1e5a7e4f7ae45e0b9af92463bd46",
+  "fast-results.txt": "aa32bfab8b72e91dac23ed05d5208730b459547e776fbdbda15d9e6b39b21899",
+  "graph-refresh.json": "1e7b016978e9622475e8915d0f4408fd81ac8f6ffed8370c08f904a8319464f9",
+  "prerequisite-results.txt": "ca5f63754ce8ae77b0dde878ff961ddf0d57a60eb4253eab7afa31e73c1edba8",
+  "release-build.json": "3fc1f9a145612cfe4f4d60ea5f706e2b3741aedacc5ae74accd7639cab3a4a82",
+  "runtime-environment.json": "76f78271d7d6fcd9d27c4bbd29e1e3c6a052025db89c853090fbe92e256b79b2",
+  "source-hashes.json": "1336e55df6833e74052cbb4f190d5ff90d8a4a0bd9e380d8282846d8296d9d90",
+  "verification.json": "c2da8194133f9d6de84345fce62694b2c765e1ff4d8be42a59ba5d0181f14ed1",
+  "workflow-check.json": "f4180eb24785dc71e25b3316ceec7d0af7aec6c695ddbd5f1a9e76795fd0196e",
+  "wp66-export-http-diagnostics.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "wp66-export-http-results.txt": "7dff550ce8fd688702bc0ab30dc3284f9f8cb7194d773e3c085fb91126385a5a",
+  "wp66-full-http-diagnostics.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "wp66-full-http-results.txt": "78aa6da5e227cb33d384217bbc96626a7d528fc5205057a97755c9a861f37013",
+  "wp66-native-diagnostics.txt": "9570e7b7e11592cfb43407971e320d611c2fc233831cf3c761c061df6cb7fda3",
+  "wp66-native-results.txt": "0c5b702ffcdf650d1e7ff0620ec6e848d94e0ac7d7acaf851415bef8613f0106",
+  "wp71-export-http-diagnostics.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "wp71-export-http-results.txt": "696c4ebbfcb123c0b87303b392892f0169b047eb2d8b6a939056d8955ef2ce3d"
+}

@@ -1,0 +1,67 @@
+{
+  "builder": "Shashi",
+  "artifact_sha256": "e23945882160c472a7ce2c8575735084293a0a72ff6306f9cd6b0e586da4bb71",
+  "wordpress": "7.1.3",
+  "php_server": "8.5.12",
+  "real_wp_admin_entrypoint": true,
+  "read_only": true,
+  "cases": [
+    {
+      "case": "interior-design-lead-manager:administrator",
+      "status": 302,
+      "pass": true
+    },
+    {
+      "case": "idlm_leads_list:administrator",
+      "status": 302,
+      "pass": true
+    },
+    {
+      "case": "idlm_kanban:administrator",
+      "status": 302,
+      "pass": true
+    },
+    {
+      "case": "idlm_quotations:administrator",
+      "status": 302,
+      "pass": true
+    },
+    {
+      "case": "idlm_capi_logs:administrator",
+      "status": 302,
+      "pass": true
+    },
+    {
+      "case": "idlm_audience_sync_logs:administrator",
+      "status": 302,
+      "pass": true
+    },
+    {
+      "case": "idlm_settings:administrator",
+      "status": 302,
+      "pass": true
+    },
+    {
+      "case": "idlm_users_access:administrator",
+      "status": 302,
+      "pass": true
+    },
+    {
+      "case": "idlm_kanban:sales_executive",
+      "status": 302,
+      "pass": true
+    },
+    {
+      "case": "idlm_settings:sales_executive",
+      "status": 403,
+      "pass": true
+    },
+    {
+      "case": "idlm_kanban:idlm_pre_sales",
+      "status": 302,
+      "pass": true
+    }
+  ],
+  "errors": 0,
+  "credentials_or_response_bodies": false
+}

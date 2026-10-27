@@ -1,0 +1,8 @@
+{
+  "author": "Shashi",
+  "configured_site_database_used": false,
+  "remaining_owned_test_databases": [],
+  "owned_mysql_server_shutdown": true,
+  "owned_socket_removed": true,
+  "native_and_http_fixtures": "Standard runner shutdown cleanup removes generated databases and content/HTTP/core fixtures; no unrelated temporary data removed."
+}

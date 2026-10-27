@@ -1,0 +1,3395 @@
+{
+  "author": "Shashi",
+  "recorded_at": "2026-10-06T10:28:50.288423+00:00",
+  "candidate_version": "1.102.45",
+  "source_revision": "dirty working tree on ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "artifact_sha256": null,
+  "artifact_status": "NOT RUN: exact release artifact not built/installed",
+  "findings": {
+    "INT-001": "IMPLEMENTED",
+    "INT-002": "IMPLEMENTED"
+  },
+  "compatibility_decision": "Retain tool names, SQL property and transport envelopes; use restricted SELECT compiler and explicit PII/field grants. Repository has no stored client reports; user reports no known dependency. External clients not enumerated.",
+  "environment": {
+    "PHP": "8.4.14",
+    "WordPress": "7.1.2",
+    "MySQL": "8.4.0",
+    "engine": "InnoDB",
+    "scheduler": "WP-Cron",
+    "persistent_object_cache": false,
+    "database": "Owned temporary MySQL datadir and new idlm_test_* schemas only",
+    "configured_site_database_used": false,
+    "wp_config_loaded": false,
+    "outbound": "MU-plugin pre_http_request and pre_wp_mail interception before install; cron spawning disabled"
+  },
+  "checks": [
+    {
+      "command": "php tests/run.php",
+      "result": "238 passed, 0 failed",
+      "evidence": "fast-final.log"
+    },
+    {
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD='' IDLM_TEST_DB_HOST='localhost:/private/tmp/idlm-mcp-slice-mysql/mysql.sock' php tests/integration/run.php",
+      "result": "24 passed, 0 failed",
+      "evidence": "native-final.log"
+    },
+    {
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD='' IDLM_TEST_DB_HOST='localhost:/private/tmp/idlm-mcp-slice-mysql/mysql.sock' php tests/integration/quotation-http.php",
+      "result": "207 passed, 0 failed",
+      "evidence": "http-verified.log"
+    },
+    {
+      "command": "php -l each changed/new first-party PHP file",
+      "result": "16 PASS",
+      "evidence": "php-lint.log"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS",
+      "evidence": "whitespace.log"
+    },
+    {
+      "command": "php tests/audit-integration-security.php",
+      "result": "8 PASS / 5 FAIL; INT-S01/02/03/04 now pass; unrelated backup/provider findings retained",
+      "evidence": "audit-after.log"
+    }
+  ],
+  "baseline": {
+    "candidate_version": "1.102.44",
+    "files": 640,
+    "fast": "182 PASS / 0 FAIL",
+    "audit": "6 PASS / 7 FAIL; INT-S02 mixed-join and INT-S03 auth-column requests accepted",
+    "evidence": [
+      "fast-before.log",
+      "audit-before.log"
+    ]
+  },
+  "http_stdio_cases": [
+    {
+      "id": "T10-H-authorized-create-owner-0",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-authorized-create-other-1",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-authorized-create-readall-2",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-authorized-create-manager-3",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-authorized-create-owner-4",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-autosave-owner",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-discard-owner",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-save-owner",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-autosave-other",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-discard-other",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-save-other",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-autosave-readall",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-discard-readall",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-deny-foreign-save-readall",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-revision-new",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-owned-revision-new",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-quote",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-revision",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-autosave-substitute-lead",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-autosave-substitute-quote",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-autosave-substitute-revision",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-discard-substitute-quote",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-discard-substitute-revision",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-anonymous-save",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-missing-lead",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-missing-save-nonce",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-cross-user-autosave-nonce",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-key",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-owned-other-lead-key",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-different-actor-key",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-repeat-initial-request",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-new-lead-other",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-foreign-new-lead-readall",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-readall-owner-autosave-revision",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-owner-autosave-and-discard",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-owner-revision-and-repeat",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-request-key-source-substitution",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-stale-revision-no-write",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T12-H-exact-old-revision-export-owner",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T12-H-exact-old-revision-export-readall",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T12-H-exact-old-revision-export-manager",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T12-H-deny-foreign-revision",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T12-H-deny-non-owner",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-readall-read-without-editor",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-save",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-autosave",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-discard",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-export",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-reassigned-new-owner-autosave-and-save",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-manager-assigned-read-scope-save-autosave",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-manager-grant-revoked",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-revoked-session-save",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-revoked-session-autosave",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-revoked-session-export",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-disabled-user-save",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-disabled-user-autosave",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-disabled-user-discard",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-disabled-user-export",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-create-reassignment",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-create-revocation",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-create-role-revocation",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-autosave-reassignment",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-autosave-revocation",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-autosave-role-revocation",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-discard-reassignment",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-discard-revocation",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-C-before-write-lock-discard-role-revocation",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-quote-owner-list-count-before-reassignment",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-task-owner-attention-before-reassignment",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-task-owner-completed-before-reassignment",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T06-H-warm-dashboard-reassignment-invalidates-generation",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-live-quote-list-count-owner",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-live-task-attention-owner",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-live-task-completed-owner",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-live-quote-list-count-other",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-live-task-attention-other",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-live-task-completed-other",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-live-quote-list-count-readall",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-live-task-attention-readall",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-live-task-completed-readall",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-live-quote-list-count-manager",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-live-task-attention-manager",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-live-task-completed-manager",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-reassigned-deny-idlm_get_lead_details",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-reassigned-deny-idlm_get_lead_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-assigned-manager-quote-and-task-read-scope",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-mixed-assigned-role-wins-over-all",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T04-H-presales-historical-association-pending-completed",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-presales-quote-exclusion-presales",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-presales-quote-exclusion-mixedpresales",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-authorized-cursor-next-page",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-capability-invalidates-warmed-cache",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_get_leads_table",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_get_rep_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_get_dashboard_stats",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_get_lead_details",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_get_lead_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_filter_quotation_list",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_search_quote_leads",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-capability-deny-owner-save-autosave",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-role-capability-invalidates-warmed-cache",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_get_leads_table",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_get_rep_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_get_dashboard_stats",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_get_lead_details",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_get_lead_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_filter_quotation_list",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_search_quote_leads",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-role-capability-deny-owner-save-autosave",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-suspension-invalidates-warmed-cache",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_get_leads_table",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_get_rep_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_get_dashboard_stats",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_get_lead_details",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_get_lead_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_filter_quotation_list",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_search_quote_leads",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-suspension-deny-owner-save-autosave",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-H-role-scope-revokes-captured-cursor-and-global-cache",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-C-live-read-during-reassignment-tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-C-live-read-during-reassignment-quotes",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T05-C-live-read-during-reassignment-dashboard",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-editor-deny-idlm_get_leads_table",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-editor-deny-idlm_get_rep_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-editor-deny-idlm_get_dashboard_stats",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-editor-deny-idlm_filter_quotation_list",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-author-deny-idlm_get_leads_table",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-author-deny-idlm_get_rep_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-author-deny-idlm_get_dashboard_stats",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-author-deny-idlm_filter_quotation_list",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-contributor-deny-idlm_get_leads_table",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-contributor-deny-idlm_get_rep_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-contributor-deny-idlm_get_dashboard_stats",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-contributor-deny-idlm_filter_quotation_list",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-subscriber-deny-idlm_get_leads_table",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-subscriber-deny-idlm_get_rep_tasks",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-subscriber-deny-idlm_get_dashboard_stats",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-default-subscriber-deny-idlm_filter_quotation_list",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-explicit-catalogue-only-editor-keeps-non-customer-workflow",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-administrator-explicit-editorial-user-enrollment",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T01-H-manager-access-revocation-denies-despite-assignment-grant",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-credential-missing",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-credential-wrong",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-credential-webhook",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-query-string-credential-denied",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-initialize-list-and-session-transports",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-join-comma-options",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-join-comma-usermeta",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-parenthesized-comma",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-direct-options",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-nested-options",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-where-subquery",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-derived-query",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-cte",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-union",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-star-lead",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-star-users",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-qualified-star",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-password-hash",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-reset-key",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-auth-in-filter",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-auth-in-order",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-auth-in-aggregate",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-auth-quoted-alias",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-user-email",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-raw-log-payload",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-raw-log-response",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-raw-activity",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-raw-telemetry",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-private-file",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-double-quoted-table",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-database-qualified",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-quoted-database-qualified",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-comment",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-executable-comment",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-line-comment",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-multi-statement",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-outfile",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-sleep",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-benchmark",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-load-file",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-unknown-function",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-session-variable",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-assignment-variable",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-locking-read",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-cross-join",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-tautology-join",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-table-budget",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-condition-depth",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-expression-depth",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-natural-join",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-extra-join-condition",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-unknown-table-alias",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-ambiguous-column",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-offset-budget",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-fractional-limit",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-null-byte",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-reject-backslash-literal",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-safe-report-and-key-principal-independent-of-cookie",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-PII-grant-enable-revoke-and-tool-grant",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-A-actual-stdio-grammar-and-safe-report",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-A-stdio-explicit-PII-grant-and-revocation",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-A-live-stdio-option-grants-revoke-between-calls",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-rotation-and-live-policy-disable",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-aggregate-audit-does-not-record-SQL-PII-or-credentials",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T15-H-actual-HTTP-rate-limit",
+      "finding_ids": [
+        "INT-001",
+        "INT-002"
+      ],
+      "gap_ids": [
+        "GAP-15"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Scoped API credential / trusted actual stdio process",
+      "expected": "Permitted bounded read or denied request with no custom SQL, customer disclosure, business writes, working-copy/job/outbound changes; intentional aggregate HTTP audit allowed",
+      "actual": "Runner assertions passed"
+    },
+    {
+      "id": "T10-H-warning-free-affected-requests",
+      "finding_ids": [
+        "Previously implemented quotation/live-read slices"
+      ],
+      "gap_ids": [
+        "GAP-01/03/04/05/06/10/12 children as applicable"
+      ],
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "fixture": "Synthetic new idlm_test_* database, isolated WordPress core/content, blocked mail/outbound",
+      "principal": "Synthetic cookie-authenticated CRM actor",
+      "expected": "Prior slice named runner assertions",
+      "actual": "Runner assertions passed"
+    }
+  ],
+  "mcp_new_cases": 65,
+  "stdio_scenario_groups": 3,
+  "adversarial_matrix": {
+    "requests": {
+      "join-comma-options": "SELECT o.option_value FROM wp_idlm_leads l JOIN wp_idlm_leads x ON x.id=l.id, wp_options o",
+      "join-comma-usermeta": "SELECT m.meta_value FROM wp_idlm_leads l LEFT JOIN wp_users u ON u.ID=l.assigned_rep_id, wp_usermeta m",
+      "parenthesized-comma": "SELECT id FROM (wp_idlm_leads, wp_options)",
+      "direct-options": "SELECT option_value FROM wp_options",
+      "nested-options": "SELECT (SELECT option_value FROM wp_options LIMIT 1) FROM wp_idlm_leads",
+      "where-subquery": "SELECT id FROM wp_idlm_leads WHERE id IN (SELECT user_id FROM wp_usermeta)",
+      "derived-query": "SELECT x.id FROM (SELECT id FROM wp_idlm_leads) x",
+      "cte": "WITH x AS (SELECT option_value FROM wp_options) SELECT option_value FROM x",
+      "union": "SELECT id FROM wp_idlm_leads UNION SELECT ID FROM wp_users",
+      "star-lead": "SELECT * FROM wp_idlm_leads",
+      "star-users": "SELECT * FROM wp_users",
+      "qualified-star": "SELECT u.* FROM wp_idlm_leads l JOIN wp_users u ON u.ID=l.assigned_rep_id",
+      "password-hash": "SELECT user_pass FROM wp_users",
+      "reset-key": "SELECT user_activation_key FROM wp_users",
+      "auth-in-filter": "SELECT ID FROM wp_users WHERE user_pass LIKE 'SYNTHETIC-SECRET%'",
+      "auth-in-order": "SELECT ID FROM wp_users ORDER BY user_activation_key",
+      "auth-in-aggregate": "SELECT MAX(user_pass) FROM wp_users",
+      "auth-quoted-alias": "SELECT u.`user_pass` AS display_name FROM `wp_users` AS u",
+      "user-email": "SELECT user_email FROM wp_users",
+      "raw-log-payload": "SELECT payload FROM wp_idlm_capi_logs",
+      "raw-log-response": "SELECT response FROM wp_idlm_audience_sync_logs",
+      "raw-activity": "SELECT details FROM wp_idlm_lead_activity_log",
+      "raw-telemetry": "SELECT message, stack_trace FROM wp_idlm_telemetry_logs",
+      "private-file": "SELECT floor_plan_file, quote_file FROM wp_idlm_leads",
+      "double-quoted-table": "SELECT id FROM \"wp_idlm_leads\"",
+      "database-qualified": "SELECT id FROM mysql.wp_idlm_leads",
+      "quoted-database-qualified": "SELECT id FROM `wp_idlm_leads`.`wp_options`",
+      "comment": "SELECT id FROM wp_idlm_leads /* SYNTHETIC-SECRET */",
+      "executable-comment": "SELECT id FROM wp_idlm_leads /*!50000 UNION SELECT ID FROM wp_users */",
+      "line-comment": "SELECT id FROM wp_idlm_leads -- anything",
+      "multi-statement": "SELECT id FROM wp_idlm_leads; SELECT option_value FROM wp_options",
+      "outfile": "SELECT id FROM wp_idlm_leads INTO OUTFILE '/tmp/idlm-no-write'",
+      "sleep": "SELECT SLEEP(5) FROM wp_idlm_leads",
+      "benchmark": "SELECT BENCHMARK(99999,1) FROM wp_idlm_leads",
+      "load-file": "SELECT LOAD_FILE('/tmp/synthetic') FROM wp_idlm_leads",
+      "unknown-function": "SELECT custom_function(id) FROM wp_idlm_leads",
+      "session-variable": "SELECT @@global.version FROM wp_idlm_leads",
+      "assignment-variable": "SELECT @x:=id FROM wp_idlm_leads",
+      "locking-read": "SELECT id FROM wp_idlm_leads FOR UPDATE",
+      "cross-join": "SELECT l.id FROM wp_idlm_leads l CROSS JOIN wp_idlm_leads x",
+      "tautology-join": "SELECT l.id FROM wp_idlm_leads l JOIN wp_idlm_leads x ON l.id=l.id",
+      "table-budget": "SELECT l.id FROM wp_idlm_leads l JOIN wp_idlm_leads x ON x.id=l.id JOIN wp_idlm_leads y ON y.id=x.id JOIN wp_idlm_leads z ON z.id=y.id JOIN wp_idlm_leads v ON v.id=z.id",
+      "condition-depth": "SELECT id FROM wp_idlm_leads WHERE (((((((((id=1)))))))))",
+      "expression-depth": "SELECT YEAR(YEAR(YEAR(YEAR(YEAR(YEAR(YEAR(YEAR(YEAR(created_at))))))))) FROM wp_idlm_leads",
+      "natural-join": "SELECT id FROM wp_idlm_leads NATURAL JOIN wp_users",
+      "extra-join-condition": "SELECT l.id FROM wp_idlm_leads l JOIN wp_idlm_leads x ON x.id=l.id OR x.id=1",
+      "unknown-table-alias": "SELECT o.option_value FROM wp_idlm_leads l",
+      "ambiguous-column": "SELECT id FROM wp_idlm_leads l JOIN wp_idlm_leads x ON x.id=l.id",
+      "offset-budget": "SELECT id FROM wp_idlm_leads LIMIT 1 OFFSET 100001",
+      "fractional-limit": "SELECT id FROM wp_idlm_leads LIMIT 1.5",
+      "null-byte": "SELECT id FROM wp_idlm_leads\u0000",
+      "backslash-literal": "SELECT id FROM wp_idlm_leads WHERE stage='x\\' OR 1=1'"
+    },
+    "native_pii_states": [
+      "0",
+      "1"
+    ],
+    "native_rejection_checks": 104,
+    "native_expected": "No observed SQL after warmed policy options; caller SQL never reaches execution",
+    "transport_expected": "HTTP batch and actual stdio call reject before custom SQL; no synthetic secret/contact disclosure",
+    "evidence": [
+      "native-final.log",
+      "http-verified.log"
+    ]
+  },
+  "native_bounds": {
+    "dataset_rows": 205,
+    "rows_first_page": 200,
+    "rows_next_page": 5,
+    "statement_test_budget_ms": 250,
+    "aggregate": "Four-table equality join COUNT over synthetic repeated source; actual MySQL maximum statement execution time error",
+    "elapsed_assertion": "Less than 2 seconds; connection remains usable",
+    "sql_modes": [
+      "",
+      "ANSI_QUOTES,NO_BACKSLASH_ESCAPES"
+    ],
+    "computed_output_labels": "COUNT(id) and MAX(`id`) preserved",
+    "strict_mysqli_exceptions": "Verified the execution-time driver exception is redacted and database error suppression restored"
+  },
+  "live_stdio_policy": "One process / five handshaken calls while parent changes stored PII/tool/enable options externally: permitted, denied, permitted, denied, disabled. Cache refreshed per line. Constant changes require restart.",
+  "denial_oracle": "All IDLM business rows, working copies, cron/jobs and outbound attempts unchanged; expected aggregate mcp_access telemetry attribution excluded from business hash and independently checked for SQL/PII/credential redaction. Native direct grammar rejection observes zero SQL.",
+  "rate_limit_fixture": "Only owned rate counter reset between independent authorization requests; actual no-reset HTTP case confirms 429. Native Allow-header permission probes also consume existing counter. Production rate limiter unchanged.",
+  "not_run": [
+    "CI/support matrix including WP 5.8 and PHP 7.4/8.1",
+    "Exact packaged artifact qualification",
+    "MariaDB/older MySQL statement-time behavior",
+    "Persistent-cache/multi-node revocation",
+    "Production custom-report compatibility",
+    "High-volume/load/network/queue deadlines",
+    "In-flight policy revocation after SQL begins",
+    "Browser/layout checks (no UI surface changed)",
+    "Full global M0/T15/release gap completion"
+  ],
+  "remaining_risks": [
+    "Require explicit PII enrollment before intended customer tools; unknown client reports need rehearsal",
+    "Analytics labels/display names may carry operator-entered identifying text; review granted fields",
+    "Keep custom SQL disabled on database platforms without verified server statement-time enforcement",
+    "Trusted stdio host principal has tenant-wide scope; HTTP cookie/CRM roles do not scope MCP",
+    "Existing detailed-profile activity payload remains with explicit PII/tool grant"
+  ],
+  "source_sha256": {
+    ".github/workflows/tests.yml": "083d4fc01c6aaa596f9b40252b9a6cf441771be66082621f2cfa3ae23b3deab4",
+    "CHANGELOG.md": "92080c57655fbede208475372871c422a0ae65c46badc2fd2584a6b3dfe055b6",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "9da27741bbf3c9ad87a8f1853dc0d3341a385816b3842b85bd180c83fec96083",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "05b71e26f2fd8a76acdb584f57a3f5ef8e023071611ebe6fc6d835a38a9596ea",
+    "docs/CHANGELOG-DEV.md": "bd6f527ea6a4ed5122821daf83efaf9cb7be0823cb9edbcd1f302044cbee3211",
+    "docs/FEATURE-MAP.md": "c04a06f8ad0063118dac7cc918bafc4d39e52aa7ff07041a8fef4db00903ceab",
+    "docs/INTERFACES.md": "0ac2639aeb0131f1df1d8add7d2c1b4d5654b89c8bd6954a6e5db3a234bc07b4",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "51b540b142281b913c3b205f85b308a7d604b6c10246dd1d9b37089987320c2f",
+    "docs/PRODUCTION-SECURITY-CONFIG.md": "9ca23ca63f63b157641a9bd114619dc9a443e06043554931c70a0aba0acb523c",
+    "docs/SECURITY.md": "d53ddb3d8df1474ba6409f7ba49714f1bfc3a8f68c7188e7296032e8fe0740ab",
+    "docs/audit-remediation-backlog.csv": "b3c8bdb77588b1f3470111db39dd6628e69039f14310d21a6dd94d3120d4ae79",
+    "includes/class-mcp-core.php": "66985462fb6b7b5eea6bdc3f593ceb733d15d2fd89ddbba42a4cd256fd1814e4",
+    "includes/class-production-security.php": "3fd972d31f7d454c5e166fdae1699766ab70f1b4519ce45ac043787661c5c75b",
+    "interior-design-lead-manager.php": "f184a20b84b2184c953388450b9c40cb304969b66ca8d63842ecc2b4f1c0c292",
+    "mcp-server.php": "c5f463e8c7c3781d74a3cb9fc1f1c243b4c0ca4e395fece4e6a2884b0528c0cc",
+    "readme.txt": "3c71b7d42aa1bddcb22594d1ec31268ee5d3a46719b3883e03bf439eabd236b4",
+    "tests/README.md": "f8df112c9a7b36fd4c1a3e578301b665bfe882d6f69a242e7633fb1d848e91ef",
+    "tests/bootstrap.php": "6be7e77a5ddb9a7cdf6edea4bc8a5bda0340266abcddb574bca498685e9eda3b",
+    "tests/integration/http-router.php": "541dfdc82f0b7174948fe1f39432a200b6f7171b1a542b907f4f9661396203db",
+    "tests/integration/quotation-http.php": "39b4517cbfef41e420a75b27762c60bda81bfd1aed16c2684a3b1e779f79a3dd",
+    "tests/integration/run.php": "b70846fa1a9ff0f04af75ee5dcae6a9aa5764cae054cc9a67f8fc43105814482",
+    "tests/release-contracts.php": "0303bdf6e731c654456344f8cd38ac10d30f190e15430f137f01241a2e888e73",
+    "tests/release/class-release-artifact.php": "574b4e351894635ff5438b694db1e04bf2dcb93bf89d1c5a6b031c76fab586af",
+    "tests/run.php": "09f5b6ecdb59435a531a411358d04355495895454a6b5da93f51df7a74f45883",
+    "includes/class-mcp-query-policy.php": "1ec6d775f80be069cb838717526e92f51e23d2b2f655378c30bb80fb51a25f39",
+    "tests/mcp-query-cases.php": "7da571e62721f304fd3a747a38fadc4987ce342408b1bbe8c6f6d2eac73d765c",
+    "tests/mcp-query-contracts.php": "1f7ffd378e2dc14a9369f14441527835a2b46ee5b71ed0299b5c16c67d118c28",
+    "tests/integration/mcp-query-contracts.php": "0b3aecf4c7449f4fe6800f5cf15bdfc1bf5c1ff3e7c501be7d6a308e457cad56",
+    "tests/integration/mcp-http-cases.php": "9afe569b80812ede26d0ebfa1e770d2d09015227c5ce625f27f69a20e15fed40",
+    "docs/AUDIT-REMEDIATION-MCP-SLICE.md": "9dd99faa4e230b96da8e5481ef6537ccb230d58260e99161cc8d3eab2557f0d6"
+  },
+  "next_slice": [
+    "CORE-003 lead CSV protection",
+    "CORE-002 storage/deployment decision and legacy private-file rehearsal"
+  ],
+  "cleanup": "cleanup.json: owned server shut down, no disposable schemas remained, datadir removed",
+  "evidence_sha256": {
+    "audit-after.log": "7e774cca77a6b7bc19e61d7f4d29d58f80c2a118f53a4d18982b1c16c1d9281b",
+    "audit-before.log": "ecc89c903f65e25cbcc28822f45adfb3510c8f7319b017bb616fb1518662daca",
+    "cleanup.json": "f477ca60e1b59d7f3ff41885e477a096a119439954b25c90de11328c2d5fda1b",
+    "fast-before.log": "fec81f828d62f91474b130f9eb809618b2027b72549e4f041b0a59822f61a7e9",
+    "fast-final.log": "d9bc9c40c0afad93c036aa1eed33cc7e4341a31a71555d772f95a8ee8c4a521a",
+    "graph-query-after.log": "73f338591140e84fcb7db56be5a519c5ea9e1d9378251a81068ce2c96a727e69",
+    "graph-refresh.json": "2f14bbd3fffa0070ef55edd0823282b2165894240b29cb7b36ecfb5f2c26ea4a",
+    "graph-refresh.log": "c993a711104dd7655a19ce452ebedc7def4edbaa3e30be69976fd8e325b1fa1c",
+    "http-verified.log": "936f8d4957af88548298e632847e0be674921d4129f29656385e23898b8169f6",
+    "native-final.log": "dc7e69938be5cb290e028e96df9ee432cf3cf8be1dd17746caa04e4cba654d2b",
+    "php-lint.log": "b693ffa810ed7baeea090a9927a2f865349347bd401bb11290aa29f6492152e8",
+    "preservation.json": "c581d015c6ffa4c71ec4285d50c742303121e5cb221b5b8b6524cbf4e3426958",
+    "whitespace.log": "75ebccfc18cc5b1a8b32589edccfa2e9f53d9f4dcde857010b3235519655e37f"
+  }
+}

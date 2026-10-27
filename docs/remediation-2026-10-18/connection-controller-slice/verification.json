@@ -1,0 +1,58 @@
+{
+  "builder": "Shashi",
+  "candidate": "1.102.85",
+  "scope": "M6 administrator connection-controller extraction; complete M6 remains open",
+  "artifact_sha256": "0b661ad141ae319894035f5fcae9abd9ead5478a1fcc0408b97617d350ff44cc",
+  "package_file_count": 455,
+  "fast": {
+    "passed": 385,
+    "failed": 0,
+    "exit_code": 0,
+    "release_cases_included": 16
+  },
+  "HTTP_focused": {
+    "passed": 4,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "HTTP_stdio_full": {
+    "passed": 449,
+    "failed": 0,
+    "exit_code": 0
+  },
+  "PHP_lint": {
+    "files": 8,
+    "failed": 0
+  },
+  "method_extraction": {
+    "lines": 119,
+    "bytes_identical": true,
+    "executable_tokens_identical": true
+  },
+  "static_default_gate": {
+    "errors": 0,
+    "warnings": 0,
+    "exit_code": 0,
+    "extra_exclusions": [],
+    "new_source_exceptions": 0
+  },
+  "runtime": {
+    "WordPress": "6.6",
+    "PHP": "8.4.14",
+    "MySQL": "8.4.0",
+    "cache": "off",
+    "scheduler": "WP-Cron"
+  },
+  "fixture_setup_failure": "First admin-ajax request schedules WordPress wp_update_user_counts/wp_update_comment_type_batch. Prime admin_init via unregistered action before snapshot; retain per-denial unchanged snapshot assertions. No production change was needed.",
+  "unchanged_bundled_resource_files": 350,
+  "not_run": [
+    "Full native suite this slice: previous 1.102.84 334-case run remains historical",
+    "Browser/UI acceptance: no view/client contract changed",
+    "Complete supported remote CI matrix and clean revision attestation",
+    "Qualification of installed exact ZIP",
+    "Remaining M6 ownership/extraction work and M7 acceptance matrix",
+    "Live provider acceptance or actual Google remote validation"
+  ],
+  "production_release_approved": false,
+  "no_commit_push_tag_deploy": true
+}

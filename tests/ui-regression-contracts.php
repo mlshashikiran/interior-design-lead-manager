@@ -190,13 +190,13 @@ idlm_test('CRM settings pipeline and lead-capture mappings retain accessible pro
     $css = (string) file_get_contents($root . '/assets/css/admin-style.css');
     $script = (string) file_get_contents($root . '/assets/js/settings.js');
 
-    foreach (array('Pipeline stages', "'pipeline' => true", "'stage_totals' => \$kanban_stage_totals", 'Lead fields and options', '<details class="idlm-settings-disclosure"', 'Sales activity', 'Outcome tracking', 'Assignment and routing', 'Project requirements') as $contract) {
+    foreach (array('Pipeline stages', "'pipeline' => true", "'stage_totals' => \$idlm_kanban_stage_totals", 'Lead fields and options', '<details class="idlm-settings-disclosure"', 'Sales activity', 'Outcome tracking', 'Assignment and routing', 'Project requirements') as $contract) {
         assert_contains($contract, $general);
     }
     foreach (array('data-idlm-pipeline-editor', 'data-idlm-stage-total', 'kanban_stage_totals[', 'idlm-pipeline-stage-editor__position') as $contract) {
         assert_contains($contract, $editor . $script);
     }
-    foreach (array('role="tablist" aria-label="Lead capture source mappings"', 'role="tab"', 'aria-selected=', 'aria-controls=', 'role="tabpanel"', 'aria-labelledby=', 'Lead identity', 'Project details', 'Attribution', 'Advanced metadata', 'Required contact route', 'Contact route ready', 'Map an email or phone field') as $contract) {
+    foreach (array('role="tablist" aria-label="Lead capture source mappings"', 'role="tab"', 'aria-selected=', 'aria-controls=', 'role="tabpanel"', 'aria-labelledby=', 'Lead identity', 'Project details', 'Attribution', 'Advanced metadata', 'Email or phone required', 'Contact mapping present', 'Send a test lead to verify delivery', 'Map an email or phone field', '<details class="idlm-mapping-group" open>') as $contract) {
         assert_contains($contract, $webhooks);
     }
     assert_false(false !== strpos($webhooks, 'X-IDLM-API-Key: <?php echo'), 'Mapping details must never render the webhook API key in plaintext.');
@@ -261,7 +261,7 @@ idlm_test('frontend workspace uses the shared strip, white-label mark, and indep
     $script = (string) file_get_contents($root . '/assets/js/workspace.js');
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
 
-    foreach (array('idlm-workspace-mobile-toggle', 'idlm-workspace-backdrop', 'idlm-workspace-brand-mark', '$brand_name', '$workspace_title', 'idlm-workspace-account-trigger', 'idlm-workspace-account-menu', '>Profile</span>', '>Logout</span>', 'wp_logout_url($base_url)') as $contract) {
+    foreach (array('idlm-workspace-mobile-toggle', 'idlm-workspace-backdrop', 'idlm-workspace-brand-mark', '$idlm_brand_name', '$idlm_workspace_title', 'idlm-workspace-account-trigger', 'idlm-workspace-account-menu', '>Profile</span>', '>Logout</span>', 'wp_logout_url($idlm_base_url)') as $contract) {
         assert_contains($contract, $template);
     }
     foreach (array('--idlm-workspace-sidebar:248px', '--idlm-workspace-sidebar:64px', 'min-height:64px', 'border-radius:0', 'position:fixed', 'transform:translateX(-100%)', 'idlm-workspace .idlm-pending-calls-pill') as $contract) {

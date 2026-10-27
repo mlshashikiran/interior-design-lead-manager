@@ -1,0 +1,30 @@
+{
+  "builder": "Shashi",
+  "result": "PASS",
+  "database": "idlm_test_35787_e80f976e",
+  "rows": [
+    {
+      "lead_id": "5",
+      "assigned_rep_id": "2",
+      "title": "UI003 desktop keyboard recovery",
+      "priority": "High",
+      "task_type": "Site Visit",
+      "due_date": "2026-10-12 10:30:00",
+      "created_by": "1",
+      "status": "pending"
+    },
+    {
+      "lead_id": "5",
+      "assigned_rep_id": "2",
+      "title": "UI003 mobile Enter recovery",
+      "priority": "Low",
+      "task_type": "Call",
+      "due_date": "2026-10-13 09:15:00",
+      "created_by": "2",
+      "status": "pending"
+    }
+  ],
+  "browser_observations": 13,
+  "assertions": "Exact2taskrows; whitespace error/recovery; sequential keyboard order with native date segments; label activation and Escape focus return",
+  "php_diagnostics": ""
+}

@@ -1,0 +1,4 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T16-N-QUO004-complete-2.5.0-backup-restores-existing-values-with-additive-unverified-fields
+
+2 passed, 0 failed

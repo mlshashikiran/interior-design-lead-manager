@@ -1,0 +1,16 @@
+{
+  "assets/css/fonts.css": "acb31a6d4c15ae590722cf1b993c9cd6ef920cd50e1fc0223183fd0a38de6567",
+  "assets/fonts/inter-latin-300.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+  "assets/fonts/inter-latin-400.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+  "assets/fonts/inter-latin-500.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+  "assets/fonts/inter-latin-600.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+  "assets/fonts/inter-latin-700.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+  "tests/release/class-release-artifact.php": "0896504c94429c74385199bcd088c562cbdf8dc4382582db1b34809a72194ac6",
+  "tests/release-contracts.php": "2d0f88d83469ab8c889890f21dab2d7c4d8ff1a9e9ec5ab5c95a674d1a42a299",
+  "interior-design-lead-manager.php": "22de0578a776f22f5d833063468807d6f8ded870021196d4d1681d5acf0ffb2d",
+  "readme.txt": "999d17bf795e8dff7cde9a1453d1d0a23c156519fd49c74c1c657527fb683cef",
+  "CHANGELOG.md": "d3f0a5d9d26d63e560a89752eb7b62a5cba96194b1f3414c9f8ab4a072d3b2f2",
+  "docs/CHANGELOG-DEV.md": "21a6065554f0b2c7370f650dab90bb28904b8b8baf6d37e7dbba5926267e8c9e",
+  "docs/PRODUCTION-SCALABILITY-PLAN.md": "fccd8e4b6684cf52f88d10a7005a8bec79414033f0941062d7abc3a5a78ac939",
+  "docs/PROJECT-MAP.md": "e1133c413fc6b54a8404519d95dd164c8f16ec7d204d599a87aee5412527eebd"
+}

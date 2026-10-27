@@ -7,10 +7,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      IDLM_TEST_RUNTIME_EVIDENCE_DIR: /tmp/idlm-runtime-evidence
     strategy:
       fail-fast: false
       matrix:
-        php: ['7.4', '8.1', '8.4']
+        php: ['7.4', '8.1', '8.3', '8.4', '8.5']
         wordpress: ['6.6', 'latest']
     services:
       mysql:
@@ -29,10 +31,24 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mysqli, openssl, zip
+          extensions: mysqli, openssl, zip, dom, mbstring, iconv, gd
           coverage: none
+      - name: Install PDF inspection test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes poppler-utils
+      - name: Run runtime prerequisite regressions
+        shell: bash
+        run: |
+          mkdir -p /tmp/idlm-runtime-evidence
+          php tests/runtime-prerequisites.php | tee /tmp/idlm-runtime-evidence/prerequisite-results.txt
       - name: Run fast behavioral suite
-        run: php tests/run.php
+        shell: bash
+        run: php tests/run.php | tee /tmp/idlm-runtime-evidence/fast-results.txt
+      - name: Run Facebook connection and setup regressions
+        run: |
+          php tests/facebook-connect-runtime.php
+          node tests/facebook-connect-ui.js
       - name: Install WordPress fixture
         shell: bash
         run: |
@@ -45,25 +61,79 @@ jobs:
           tar -xzf /tmp/wordpress.tar.gz -C /tmp
           mkdir -p /tmp/wordpress/wp-content/plugins/interior-design-lead-manager
           cp -R . /tmp/wordpress/wp-content/plugins/interior-design-lead-manager/
+      - name: Record resolved runtime and dependency versions
+        run: |
+          mkdir -p /tmp/idlm-runtime-evidence
+          php -r 'require "/tmp/wordpress/wp-includes/version.php"; $db = new mysqli("127.0.0.1", "root", "root", "", 3306); $packages = json_decode(file_get_contents("vendor/dompdf/vendor/composer/installed.json"), true); $dependencies = []; foreach ($packages["packages"] as $package) { $dependencies[$package["name"]] = $package["version"]; } echo json_encode(["revision" => getenv("GITHUB_SHA"), "php" => PHP_VERSION, "wordpress" => $wp_version, "wordpress_minimum_php" => $required_php_version, "mysql" => $db->server_info, "extensions" => get_loaded_extensions(), "dependencies" => $dependencies], JSON_PRETTY_PRINT), PHP_EOL;' > /tmp/idlm-runtime-evidence/runtime-environment.json
+          sha256sum /tmp/wordpress.tar.gz > /tmp/idlm-runtime-evidence/wordpress-download.sha256
+          pdfinfo -v > /tmp/idlm-runtime-evidence/poppler-version.txt 2>&1
       - name: Run native WordPress/MySQL suite
         env:
           IDLM_TEST_WP_ROOT: /tmp/wordpress
           IDLM_TEST_DB_USER: root
           IDLM_TEST_DB_PASSWORD: root
           IDLM_TEST_DB_HOST: 127.0.0.1:3306
-        run: php tests/integration/run.php
+        run: php tests/integration/run.php | tee /tmp/idlm-runtime-evidence/native-results.txt
+        shell: bash
+      - name: Run disposable CRM, quotation and MCP transport security regressions
+        env:
+          IDLM_TEST_WP_ROOT: /tmp/wordpress
+          IDLM_TEST_DB_USER: root
+          IDLM_TEST_DB_PASSWORD: root
+          IDLM_TEST_DB_HOST: 127.0.0.1:3306
+        run: php tests/integration/quotation-http.php | tee /tmp/idlm-runtime-evidence/http-results.txt
+        shell: bash
+      - name: Run real Action Scheduler retention acceptance
+        if: matrix.wordpress == 'latest'
+        env:
+          IDLM_TEST_WP_ROOT: /tmp/wordpress
+          IDLM_TEST_DB_USER: root
+          IDLM_TEST_DB_PASSWORD: root
+          IDLM_TEST_DB_HOST: 127.0.0.1:3306
+          IDLM_TEST_ACTION_SCHEDULER: /tmp/idlm-action-scheduler/action-scheduler/action-scheduler.php
+        shell: bash
+        run: |
+          mkdir -p /tmp/idlm-action-scheduler
+          curl --fail --location https://downloads.wordpress.org/plugin/action-scheduler.4.2.0.zip --output /tmp/idlm-action-scheduler/scheduler.zip
+          echo 'a360712a5adb066a0d60db76cbe2768234731cbcc363ba7dc2d51bf4559e4551  /tmp/idlm-action-scheduler/scheduler.zip' | sha256sum --check
+          unzip -q /tmp/idlm-action-scheduler/scheduler.zip -d /tmp/idlm-action-scheduler
+          php tests/integration/retention-action-scheduler.php | tee /tmp/idlm-runtime-evidence/action-scheduler-retention-results.txt
+      - name: Upload resolved runtime qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-php-${{ matrix.php }}-wp-${{ matrix.wordpress }}-${{ github.sha }}
+          path: /tmp/idlm-runtime-evidence/
+          if-no-files-found: warn
+          retention-days: 30
 
   release-artifact:
     name: Release artifact gate
     if: github.event_name == 'push'
     needs: test
     runs-on: ubuntu-latest
+    env:
+      # ZIP DOS timestamps use the host timezone; pin this build input.
+      TZ: UTC
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.1'
-          extensions: zip
+          extensions: zip, mysqli, dom, mbstring, iconv, gd
+          tools: wp-cli
           coverage: none
       - name: Build and inspect CI-attested artifact
         run: php tests/release/build-release.php --build --confirm=build-idlm-release-artifact
@@ -74,6 +144,32 @@ jobs:
         run: sha256sum --check interior-design-lead-manager-*.sha256
       - name: Verify candidate promotion evidence
         run: php tests/release/verify-candidate.php --artifact-dir=build --expected-revision="${GITHUB_SHA}" > build/staging-rehearsal-gates.json
+      - name: Check final ZIP with pinned official Plugin Check
+        shell: bash
+        env:
+          IDLM_TEST_WP_ROOT: /tmp/idlm-package-check/wordpress
+          IDLM_TEST_DB_USER: root
+          IDLM_TEST_DB_PASSWORD: root
+          IDLM_TEST_DB_HOST: 127.0.0.1:3306
+        run: |
+          mkdir -p /tmp/idlm-package-check /tmp/idlm-package-check-evidence
+          curl --fail --location https://wordpress.org/wordpress-6.6.tar.gz --output /tmp/idlm-package-check/wordpress.tar.gz
+          tar -xzf /tmp/idlm-package-check/wordpress.tar.gz -C /tmp/idlm-package-check
+          curl --fail --location https://downloads.wordpress.org/plugin/plugin-check.2.1.0.zip --output /tmp/idlm-package-check/plugin-check.zip
+          echo '6ff4bd2145f3befcf907df158cc466b1649dafed5686de8369907403c3013fc4  /tmp/idlm-package-check/plugin-check.zip' | sha256sum --check
+          wp cli version > /tmp/idlm-package-check-evidence/wp-cli-version.txt
+          sha256sum /tmp/idlm-package-check/wordpress.tar.gz > /tmp/idlm-package-check-evidence/wordpress-download.sha256
+          artifacts=(build/interior-design-lead-manager-*.zip)
+          test "${#artifacts[@]}" -eq 1
+          php tests/release/check-package.php --artifact="${artifacts[0]}" --checker-zip=/tmp/idlm-package-check/plugin-check.zip --wp-cli="$(command -v wp)" --output-dir=/tmp/idlm-package-check-evidence
+      - name: Upload unfiltered package diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-check-${{ github.sha }}
+          path: /tmp/idlm-package-check-evidence/
+          if-no-files-found: warn
+          retention-days: 30
       - name: Upload release candidate evidence
         uses: actions/upload-artifact@v4
         with:

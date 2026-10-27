@@ -1,0 +1,10 @@
+{
+  "author": "Shashi",
+  "status": "PASS",
+  "configured_site_database_used": false,
+  "remaining_disposable_databases": [],
+  "owned_server_datadir": "/private/tmp/idlm-slice-mysql/isolated-data/",
+  "server_version": "8.4.0",
+  "cleanup": "Owned fixture databases/content cleaned by harness; owned temporary MySQL server shut down",
+  "owned_mysql_data_directory_removed": true
+}

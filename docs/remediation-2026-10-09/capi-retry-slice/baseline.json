@@ -1,0 +1,7 @@
+{
+  "includes/class-capi.php": "c5560cfb9bdbf6ac7d639587ddda2a095632167005bf21cbeea2d6908e39a66c",
+  "includes/class-db.php": "b11e7820ac5fdaa3b37fe23b72b808c71fd2cf6ab7c5ccaf940816ef8fac840c",
+  "includes/class-admin-ajax.php": "1d7373646fd853c72cc777c7e724961a11f103215a281458e2fc59a41b77fab1",
+  "includes/class-backup.php": "1738fafbdfd8144d63e05fc72e44bbcd4c26f607e751b3ef34d6609c6fae3e9f",
+  "includes/class-lead-deletion-service.php": "efb1113aa43abbec49a86422a0dbccdf76bf67dd4e92af95410070460f5a7ab9"
+}

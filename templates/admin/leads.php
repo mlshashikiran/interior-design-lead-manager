@@ -3,65 +3,65 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$stages = isset($context['stages']) && is_array($context['stages']) ? $context['stages'] : array();
-$call_statuses = isset($context['call_statuses']) && is_array($context['call_statuses']) ? $context['call_statuses'] : array();
-$studios = isset($context['studios']) && is_array($context['studios']) ? $context['studios'] : array();
-$num_rooms_options = isset($context['num_rooms_options']) && is_array($context['num_rooms_options']) ? $context['num_rooms_options'] : array();
-$reps = isset($context['reps']) && is_array($context['reps']) ? $context['reps'] : array();
-$pre_sales_reps = isset($context['pre_sales_reps']) && is_array($context['pre_sales_reps']) ? $context['pre_sales_reps'] : array();
-$active_rep_ids = isset($context['active_rep_ids']) && is_array($context['active_rep_ids']) ? $context['active_rep_ids'] : array();
-$is_pre_sales = !empty($context['is_pre_sales']);
-$can_assign_leads = !empty($context['can_assign_leads']);
-$can_manage_options = !empty($context['can_manage_options']);
-$reps_see_all = !empty($context['reps_see_all']);
-$pending_calls_count = isset($context['pending_calls_count']) ? absint($context['pending_calls_count']) : 0;
-$unread_whatsapp_count = isset($context['unread_whatsapp_count']) ? absint($context['unread_whatsapp_count']) : 0;
-$stale_lead_count = isset($context['stale_lead_count']) ? absint($context['stale_lead_count']) : 0;
-$new_leads_count = isset($context['new_leads_count']) ? absint($context['new_leads_count']) : 0;
-$not_called_count = isset($context['not_called_count']) ? absint($context['not_called_count']) : 0;
-$followup_count = isset($context['followup_count']) ? absint($context['followup_count']) : 0;
-$unassigned_count = isset($context['unassigned_count']) ? absint($context['unassigned_count']) : 0;
-$qualified_count = isset($context['qualified_count']) ? absint($context['qualified_count']) : 0;
-$pending_quality_count = isset($context['pending_quality_count']) ? absint($context['pending_quality_count']) : 0;
-$qualified_handoff_count = isset($context['qualified_handoff_count']) ? absint($context['qualified_handoff_count']) : 0;
-$overdue_handoff_count = isset($context['overdue_handoff_count']) ? absint($context['overdue_handoff_count']) : 0;
-$handoff_exception_count = isset($context['handoff_exception_count']) ? absint($context['handoff_exception_count']) : 0;
-$qualified_yesterday_count = isset($context['qualified_yesterday_count']) ? absint($context['qualified_yesterday_count']) : 0;
-$delivered_yesterday_count = isset($context['delivered_yesterday_count']) ? absint($context['delivered_yesterday_count']) : 0;
-$qualified_fallback_enabled = isset($context['qualified_fallback_enabled']) ? (string) $context['qualified_fallback_enabled'] : '0';
-$qualified_fallback_hours = isset($context['qualified_fallback_hours']) ? (string) $context['qualified_fallback_hours'] : '4';
-$qualified_fallback_end_at = isset($context['qualified_fallback_end_at']) ? (string) $context['qualified_fallback_end_at'] : '';
-$qualified_fallback_end_formatted = isset($context['qualified_fallback_end_formatted']) ? (string) $context['qualified_fallback_end_formatted'] : '';
-$assignment_mode = isset($context['assignment_mode']) ? (string) $context['assignment_mode'] : 'manual';
-$active_reps = isset($context['active_reps']) && is_array($context['active_reps']) ? $context['active_reps'] : array();
-$rep_studios = isset($context['rep_studios']) && is_array($context['rep_studios']) ? $context['rep_studios'] : array();
-$source_maps = isset($context['source_maps']) && is_array($context['source_maps']) ? $context['source_maps'] : array();
-$fallback_enabled = isset($context['fallback_enabled']) ? (string) $context['fallback_enabled'] : '0';
-$fallback_hours = isset($context['fallback_hours']) ? (string) $context['fallback_hours'] : '24';
-$qualified_fallback_include_existing = isset($context['qualified_fallback_include_existing']) ? (string) $context['qualified_fallback_include_existing'] : '0';
-$studio_mismatch_behavior = isset($context['studio_mismatch_behavior']) ? (string) $context['studio_mismatch_behavior'] : 'general_pool';
-$handoff_task_policy = isset($context['handoff_task_policy']) ? (string) $context['handoff_task_policy'] : 'transfer';
-$handoff_notifications_enabled = isset($context['handoff_notifications_enabled']) ? (string) $context['handoff_notifications_enabled'] : '0';
-$active_pre_sales_reps = isset($context['active_pre_sales_reps']) && is_array($context['active_pre_sales_reps']) ? $context['active_pre_sales_reps'] : array();
-$fallback_last_completed = isset($context['fallback_last_completed']) ? (string) $context['fallback_last_completed'] : 'Never';
-$fallback_last_status = isset($context['fallback_last_status']) ? (string) $context['fallback_last_status'] : 'not_run';
-$routing_exception_count = isset($context['routing_exception_count']) ? absint($context['routing_exception_count']) : 0;
-$unassigned_intake_count = isset($context['unassigned_intake_count']) ? absint($context['unassigned_intake_count']) : 0;
-$active_pre_sales_count = isset($context['active_pre_sales_count']) ? absint($context['active_pre_sales_count']) : 0;
-$assignment_mode_label = isset($context['assignment_mode_label']) ? (string) $context['assignment_mode_label'] : 'Not configured';
-$working_hours_start = isset($context['working_hours_start']) ? (string) $context['working_hours_start'] : '09:00';
-$working_hours_end = isset($context['working_hours_end']) ? (string) $context['working_hours_end'] : '18:00';
-$presales_targets = isset($context['presales_targets']) && is_array($context['presales_targets']) ? $context['presales_targets'] : array('calls' => 3, 'whatsapp' => 1);
-$max_active_leads_per_rep = isset($context['max_active_leads_per_rep']) ? absint($context['max_active_leads_per_rep']) : 30;
-$working_days = isset($context['working_days']) && is_array($context['working_days']) ? $context['working_days'] : array();
-$routing_exception_notifications_enabled = isset($context['routing_exception_notifications_enabled']) ? (string) $context['routing_exception_notifications_enabled'] : '0';
-$days_map = isset($context['days_map']) && is_array($context['days_map']) ? $context['days_map'] : array();
-$common_overlays_html = isset($context['common_overlays_html']) ? (string) $context['common_overlays_html'] : '';
+$idlm_stages = isset($context['stages']) && is_array($context['stages']) ? $context['stages'] : array();
+$idlm_call_statuses = isset($context['call_statuses']) && is_array($context['call_statuses']) ? $context['call_statuses'] : array();
+$idlm_studios = isset($context['studios']) && is_array($context['studios']) ? $context['studios'] : array();
+$idlm_num_rooms_options = isset($context['num_rooms_options']) && is_array($context['num_rooms_options']) ? $context['num_rooms_options'] : array();
+$idlm_reps = isset($context['reps']) && is_array($context['reps']) ? $context['reps'] : array();
+$idlm_pre_sales_reps = isset($context['pre_sales_reps']) && is_array($context['pre_sales_reps']) ? $context['pre_sales_reps'] : array();
+$idlm_active_rep_ids = isset($context['active_rep_ids']) && is_array($context['active_rep_ids']) ? $context['active_rep_ids'] : array();
+$idlm_is_pre_sales = !empty($context['is_pre_sales']);
+$idlm_can_assign_leads = !empty($context['can_assign_leads']);
+$idlm_can_manage_options = !empty($context['can_manage_options']);
+$idlm_reps_see_all = !empty($context['reps_see_all']);
+$idlm_pending_calls_count = isset($context['pending_calls_count']) ? absint($context['pending_calls_count']) : 0;
+$idlm_unread_whatsapp_count = isset($context['unread_whatsapp_count']) ? absint($context['unread_whatsapp_count']) : 0;
+$idlm_stale_lead_count = isset($context['stale_lead_count']) ? absint($context['stale_lead_count']) : 0;
+$idlm_new_leads_count = isset($context['new_leads_count']) ? absint($context['new_leads_count']) : 0;
+$idlm_not_called_count = isset($context['not_called_count']) ? absint($context['not_called_count']) : 0;
+$idlm_followup_count = isset($context['followup_count']) ? absint($context['followup_count']) : 0;
+$idlm_unassigned_count = isset($context['unassigned_count']) ? absint($context['unassigned_count']) : 0;
+$idlm_qualified_count = isset($context['qualified_count']) ? absint($context['qualified_count']) : 0;
+$idlm_pending_quality_count = isset($context['pending_quality_count']) ? absint($context['pending_quality_count']) : 0;
+$idlm_qualified_handoff_count = isset($context['qualified_handoff_count']) ? absint($context['qualified_handoff_count']) : 0;
+$idlm_overdue_handoff_count = isset($context['overdue_handoff_count']) ? absint($context['overdue_handoff_count']) : 0;
+$idlm_handoff_exception_count = isset($context['handoff_exception_count']) ? absint($context['handoff_exception_count']) : 0;
+$idlm_qualified_yesterday_count = isset($context['qualified_yesterday_count']) ? absint($context['qualified_yesterday_count']) : 0;
+$idlm_delivered_yesterday_count = isset($context['delivered_yesterday_count']) ? absint($context['delivered_yesterday_count']) : 0;
+$idlm_qualified_fallback_enabled = isset($context['qualified_fallback_enabled']) ? (string) $context['qualified_fallback_enabled'] : '0';
+$idlm_qualified_fallback_hours = isset($context['qualified_fallback_hours']) ? (string) $context['qualified_fallback_hours'] : '4';
+$idlm_qualified_fallback_end_at = isset($context['qualified_fallback_end_at']) ? (string) $context['qualified_fallback_end_at'] : '';
+$idlm_qualified_fallback_end_formatted = isset($context['qualified_fallback_end_formatted']) ? (string) $context['qualified_fallback_end_formatted'] : '';
+$idlm_assignment_mode = isset($context['assignment_mode']) ? (string) $context['assignment_mode'] : 'manual';
+$idlm_active_reps = isset($context['active_reps']) && is_array($context['active_reps']) ? $context['active_reps'] : array();
+$idlm_rep_studios = isset($context['rep_studios']) && is_array($context['rep_studios']) ? $context['rep_studios'] : array();
+$idlm_source_maps = isset($context['source_maps']) && is_array($context['source_maps']) ? $context['source_maps'] : array();
+$idlm_fallback_enabled = isset($context['fallback_enabled']) ? (string) $context['fallback_enabled'] : '0';
+$idlm_fallback_hours = isset($context['fallback_hours']) ? (string) $context['fallback_hours'] : '24';
+$idlm_qualified_fallback_include_existing = isset($context['qualified_fallback_include_existing']) ? (string) $context['qualified_fallback_include_existing'] : '0';
+$idlm_studio_mismatch_behavior = isset($context['studio_mismatch_behavior']) ? (string) $context['studio_mismatch_behavior'] : 'general_pool';
+$idlm_handoff_task_policy = isset($context['handoff_task_policy']) ? (string) $context['handoff_task_policy'] : 'transfer';
+$idlm_handoff_notifications_enabled = isset($context['handoff_notifications_enabled']) ? (string) $context['handoff_notifications_enabled'] : '0';
+$idlm_active_pre_sales_reps = isset($context['active_pre_sales_reps']) && is_array($context['active_pre_sales_reps']) ? $context['active_pre_sales_reps'] : array();
+$idlm_fallback_last_completed = isset($context['fallback_last_completed']) ? (string) $context['fallback_last_completed'] : 'Never';
+$idlm_fallback_last_status = isset($context['fallback_last_status']) ? (string) $context['fallback_last_status'] : 'not_run';
+$idlm_routing_exception_count = isset($context['routing_exception_count']) ? absint($context['routing_exception_count']) : 0;
+$idlm_unassigned_intake_count = isset($context['unassigned_intake_count']) ? absint($context['unassigned_intake_count']) : 0;
+$idlm_active_pre_sales_count = isset($context['active_pre_sales_count']) ? absint($context['active_pre_sales_count']) : 0;
+$idlm_assignment_mode_label = isset($context['assignment_mode_label']) ? (string) $context['assignment_mode_label'] : 'Not configured';
+$idlm_working_hours_start = isset($context['working_hours_start']) ? (string) $context['working_hours_start'] : '09:00';
+$idlm_working_hours_end = isset($context['working_hours_end']) ? (string) $context['working_hours_end'] : '18:00';
+$idlm_presales_targets = isset($context['presales_targets']) && is_array($context['presales_targets']) ? $context['presales_targets'] : array('calls' => 3, 'whatsapp' => 1);
+$idlm_max_active_leads_per_rep = isset($context['max_active_leads_per_rep']) ? absint($context['max_active_leads_per_rep']) : 30;
+$idlm_working_days = isset($context['working_days']) && is_array($context['working_days']) ? $context['working_days'] : array();
+$idlm_routing_exception_notifications_enabled = isset($context['routing_exception_notifications_enabled']) ? (string) $context['routing_exception_notifications_enabled'] : '0';
+$idlm_days_map = isset($context['days_map']) && is_array($context['days_map']) ? $context['days_map'] : array();
+$idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) $context['common_overlays_html'] : '';
 ?>
         <div class="wrap idlm-wrap">
             <header class="idlm-header">
                 <div class="idlm-header-meta">
-                    <h1><?php echo $is_pre_sales ? 'My Pre-Sales Queue' : 'Leads Database'; ?></h1>
+                    <h1><?php echo $idlm_is_pre_sales ? 'My Pre-Sales Queue' : 'Leads Database'; ?></h1>
                 </div>
                 <div class="idlm-header-actions" style="display: flex; align-items: center; gap: 15px;">
                     <label class="idlm-header-search" for="filter-search">
@@ -73,28 +73,28 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <span>Filters</span>
                         <span class="idlm-filter-count" aria-label="0 active filters" hidden>0</span>
                     </button>
-                    <?php if ($can_assign_leads && $qualified_handoff_count > 0): ?>
-                        <button type="button" class="idlm-handoff-alert-pill <?php echo $overdue_handoff_count > 0 ? 'is-overdue' : ''; ?>" id="idlm-qualified-handoffs-pill" title="Open qualified leads awaiting sales assignment">
+                    <?php if ($idlm_can_assign_leads && $idlm_qualified_handoff_count > 0): ?>
+                        <button type="button" class="idlm-handoff-alert-pill <?php echo $idlm_overdue_handoff_count > 0 ? 'is-overdue' : ''; ?>" id="idlm-qualified-handoffs-pill" title="Open qualified leads awaiting sales assignment">
                             <span class="dashicons dashicons-randomize" aria-hidden="true"></span>
-                            <span><strong><?php echo esc_html($qualified_handoff_count); ?></strong> Qualified Handoffs</span>
-                            <?php if ($overdue_handoff_count > 0): ?><em><?php echo esc_html($overdue_handoff_count); ?> overdue</em><?php endif; ?>
+                            <span><strong><?php echo esc_html($idlm_qualified_handoff_count); ?></strong> Qualified Handoffs</span>
+                            <?php if ($idlm_overdue_handoff_count > 0): ?><em><?php echo esc_html($idlm_overdue_handoff_count); ?> overdue</em><?php endif; ?>
                         </button>
                     <?php endif; ?>
-                    <?php if ($is_pre_sales && $pending_calls_count > 0): ?>
-                        <div class="idlm-pending-calls-pill" id="idlm-pending-calls-pill" title="<?php echo esc_attr($pending_calls_count); ?> calls currently in pending queues">
+                    <?php if ($idlm_is_pre_sales && $idlm_pending_calls_count > 0): ?>
+                        <div class="idlm-pending-calls-pill" id="idlm-pending-calls-pill" title="<?php echo esc_attr($idlm_pending_calls_count); ?> calls currently in pending queues">
                             <span class="idlm-pending-pulse-dot"></span>
-                            <span class="idlm-pending-text"><strong><?php echo esc_html($pending_calls_count); ?></strong> Pending Calls</span>
+                            <span class="idlm-pending-text"><strong><?php echo esc_html($idlm_pending_calls_count); ?></strong> Pending Calls</span>
                         </div>
                     <?php endif; ?>
-                    <button type="button" class="idlm-pending-calls-pill" id="idlm-stale-leads-pill" title="Show leads that need a fresh update" aria-label="Show <?php echo esc_attr($stale_lead_count); ?> leads that need a fresh update" <?php echo $stale_lead_count > 0 ? '' : 'style="display:none;"'; ?>>
+                    <button type="button" class="idlm-pending-calls-pill" id="idlm-stale-leads-pill" title="Show leads that need a fresh update" aria-label="Show <?php echo esc_attr($idlm_stale_lead_count); ?> leads that need a fresh update" <?php echo $idlm_stale_lead_count > 0 ? '' : 'style="display:none;"'; ?>>
                         <span class="dashicons dashicons-warning" aria-hidden="true"></span>
-                        <span class="idlm-pending-text"><strong><?php echo esc_html($stale_lead_count); ?></strong> Needs update</span>
+                        <span class="idlm-pending-text"><strong><?php echo esc_html($idlm_stale_lead_count); ?></strong> Needs update</span>
                     </button>
-                    <button type="button" class="idlm-whatsapp-unread-pill" id="idlm-whatsapp-unread-pill" title="<?php echo esc_attr($unread_whatsapp_count); ?> unread WhatsApp messages" aria-label="Show <?php echo esc_attr($unread_whatsapp_count); ?> unread WhatsApp messages" <?php echo $unread_whatsapp_count > 0 ? '' : 'style="display:none;"'; ?>>
+                    <button type="button" class="idlm-whatsapp-unread-pill" id="idlm-whatsapp-unread-pill" title="<?php echo esc_attr($idlm_unread_whatsapp_count); ?> unread WhatsApp messages" aria-label="Show <?php echo esc_attr($idlm_unread_whatsapp_count); ?> unread WhatsApp messages" <?php echo $idlm_unread_whatsapp_count > 0 ? '' : 'style="display:none;"'; ?>>
                         <span class="dashicons dashicons-whatsapp" aria-hidden="true"></span>
-                        <span class="idlm-whatsapp-unread-text"><strong><?php echo esc_html($unread_whatsapp_count); ?></strong> Unread WhatsApp</span>
+                        <span class="idlm-whatsapp-unread-text"><strong><?php echo esc_html($idlm_unread_whatsapp_count); ?></strong> Unread WhatsApp</span>
                     </button>
-                    <?php if ($can_manage_options): ?>
+                    <?php if ($idlm_can_manage_options): ?>
                         <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-import-btn">Import CSV</button>
                         <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-export-btn">Export CSV</button>
                         <button type="button" class="idlm-btn idlm-btn-icon idlm-routing-settings-button" id="idlm-routing-settings-btn" onclick="openRoutingSettingsModal(this)" title="Lead Routing Settings" aria-label="Open lead routing settings">
@@ -105,11 +105,11 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                 </div>
             </header>
 
-            <?php if ('1' === $qualified_fallback_enabled && $can_assign_leads): ?>
+            <?php if ('1' === $idlm_qualified_fallback_enabled && $idlm_can_assign_leads): ?>
                 <div class="notice notice-warning" style="margin: 12px 0; padding: 10px 14px; border-left: 4px solid #d97706; background: #fffbeb;">
                     <strong>Manager OOO qualified handoff is active.</strong>
-                    Qualified pre-sales leads will be assigned automatically after <?php echo esc_html($qualified_fallback_hours); ?> working hours.
-                    <?php if ($qualified_fallback_end_at): ?>Ends <?php echo esc_html($qualified_fallback_end_formatted); ?>.<?php endif; ?>
+                    Qualified pre-sales leads will be assigned automatically after <?php echo esc_html($idlm_qualified_fallback_hours); ?> working hours.
+                    <?php if ($idlm_qualified_fallback_end_at): ?>Ends <?php echo esc_html($idlm_qualified_fallback_end_formatted); ?>.<?php endif; ?>
                 </div>
             <?php endif; ?>
 
@@ -117,45 +117,45 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
             <section class="idlm-metric-grid" aria-label="Lead summary">
                 <button class="idlm-metric" type="button" data-filter="New">
                     <span class="idlm-metric-label">New Leads</span>
-                    <span class="idlm-metric-value"><span data-metric-count="new"><?php echo esc_html($new_leads_count); ?></span> <span class="idlm-metric-hint">filtered</span></span>
+                    <span class="idlm-metric-value"><span data-metric-count="new"><?php echo esc_html($idlm_new_leads_count); ?></span> <span class="idlm-metric-hint">filtered</span></span>
                 </button>
                 <button class="idlm-metric" type="button" data-filter="Not Called">
                     <span class="idlm-metric-label">Not Called</span>
-                    <span class="idlm-metric-value"><span data-metric-count="not_called"><?php echo esc_html($not_called_count); ?></span> <span class="idlm-metric-hint">active only</span></span>
+                    <span class="idlm-metric-value"><span data-metric-count="not_called"><?php echo esc_html($idlm_not_called_count); ?></span> <span class="idlm-metric-hint">active only</span></span>
                 </button>
                 <button class="idlm-metric" type="button" data-filter="Follow-up">
                     <span class="idlm-metric-label">Follow-up</span>
-                    <span class="idlm-metric-value"><span data-metric-count="followup"><?php echo esc_html($followup_count); ?></span> <span class="idlm-metric-hint">active only</span></span>
+                    <span class="idlm-metric-value"><span data-metric-count="followup"><?php echo esc_html($idlm_followup_count); ?></span> <span class="idlm-metric-hint">active only</span></span>
                 </button>
-                <?php if ($can_assign_leads || (!$is_pre_sales && $reps_see_all)): ?>
+                <?php if ($idlm_can_assign_leads || (!$idlm_is_pre_sales && $idlm_reps_see_all)): ?>
                 <button class="idlm-metric" type="button" data-filter="Unassigned">
                     <span class="idlm-metric-label">Unassigned</span>
-                    <span class="idlm-metric-value"><span data-metric-count="unassigned"><?php echo esc_html($unassigned_count); ?></span> <span class="idlm-metric-hint">needs owner</span></span>
+                    <span class="idlm-metric-value"><span data-metric-count="unassigned"><?php echo esc_html($idlm_unassigned_count); ?></span> <span class="idlm-metric-hint">needs owner</span></span>
                 </button>
                 <?php endif; ?>
-                <?php if ($can_assign_leads): ?>
-                <button class="idlm-metric <?php echo $overdue_handoff_count > 0 ? 'is-alert' : ''; ?>" type="button" data-filter="Qualified Handoffs">
+                <?php if ($idlm_can_assign_leads): ?>
+                <button class="idlm-metric <?php echo $idlm_overdue_handoff_count > 0 ? 'is-alert' : ''; ?>" type="button" data-filter="Qualified Handoffs">
                     <span class="idlm-metric-label">Qualified Handoffs</span>
-                    <span class="idlm-metric-value"><span data-metric-count="qualified_handoffs"><?php echo esc_html($qualified_handoff_count); ?></span> <span class="idlm-metric-hint" data-metric-hint="qualified_handoffs"><?php echo $overdue_handoff_count > 0 ? esc_html($overdue_handoff_count) . ' overdue' : 'awaiting assignment'; ?></span></span>
+                    <span class="idlm-metric-value"><span data-metric-count="qualified_handoffs"><?php echo esc_html($idlm_qualified_handoff_count); ?></span> <span class="idlm-metric-hint" data-metric-hint="qualified_handoffs"><?php echo $idlm_overdue_handoff_count > 0 ? esc_html($idlm_overdue_handoff_count) . ' overdue' : 'awaiting assignment'; ?></span></span>
                 </button>
                 <div class="idlm-metric" aria-label="Yesterday qualification delivery reconciliation">
                     <span class="idlm-metric-label">Yesterday Delivery</span>
-                    <span class="idlm-metric-value"><span data-metric-count="delivered_yesterday"><?php echo esc_html($delivered_yesterday_count); ?></span>/<span data-metric-count="qualified_yesterday"><?php echo esc_html($qualified_yesterday_count); ?></span> <span class="idlm-metric-hint">handoffs / qualified</span></span>
+                    <span class="idlm-metric-value"><span data-metric-count="delivered_yesterday"><?php echo esc_html($idlm_delivered_yesterday_count); ?></span>/<span data-metric-count="qualified_yesterday"><?php echo esc_html($idlm_qualified_yesterday_count); ?></span> <span class="idlm-metric-hint">handoffs / qualified</span></span>
                 </div>
-                <?php if ($handoff_exception_count > 0): ?>
+                <?php if ($idlm_handoff_exception_count > 0): ?>
                 <button class="idlm-metric is-alert" type="button" data-filter="Routing Exceptions">
                     <span class="idlm-metric-label">Routing Exceptions</span>
-                    <span class="idlm-metric-value"><span data-metric-count="routing_exceptions"><?php echo esc_html($handoff_exception_count); ?></span> <span class="idlm-metric-hint">manager review</span></span>
+                    <span class="idlm-metric-value"><span data-metric-count="routing_exceptions"><?php echo esc_html($idlm_handoff_exception_count); ?></span> <span class="idlm-metric-hint">manager review</span></span>
                 </button>
                 <?php endif; ?>
                 <?php endif; ?>
                 <button class="idlm-metric" type="button" data-filter="Qualified">
                     <span class="idlm-metric-label">Qualified Leads</span>
-                    <span class="idlm-metric-value"><span data-metric-count="qualified"><?php echo esc_html($qualified_count); ?></span> <span class="idlm-metric-hint">active</span></span>
+                    <span class="idlm-metric-value"><span data-metric-count="qualified"><?php echo esc_html($idlm_qualified_count); ?></span> <span class="idlm-metric-hint">active</span></span>
                 </button>
                 <button class="idlm-metric" type="button" data-filter="Pending Quality">
                     <span class="idlm-metric-label">Pending Quality</span>
-                    <span class="idlm-metric-value"><span data-metric-count="pending_quality"><?php echo esc_html($pending_quality_count); ?></span> <span class="idlm-metric-hint">to evaluate</span></span>
+                    <span class="idlm-metric-value"><span data-metric-count="pending_quality"><?php echo esc_html($idlm_pending_quality_count); ?></span> <span class="idlm-metric-hint">to evaluate</span></span>
                 </button>
             </section>
 
@@ -204,8 +204,8 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <label for="filter-stage">Stage</label>
                         <select id="filter-stage" class="idlm-input">
                             <option value="">All Stages</option>
-                            <?php foreach ($stages as $stage): ?>
-                                <option value="<?php echo esc_attr($stage); ?>"><?php echo esc_html($stage); ?></option>
+                            <?php foreach ($idlm_stages as $idlm_stage): ?>
+                                <option value="<?php echo esc_attr($idlm_stage); ?>"><?php echo esc_html($idlm_stage); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -213,23 +213,23 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <label for="filter-call-status">Call status</label>
                         <select id="filter-call-status" class="idlm-input">
                             <option value="">All Statuses</option>
-                            <?php foreach ($call_statuses as $cs): ?>
-                                <option value="<?php echo esc_attr($cs); ?>"><?php echo esc_html($cs); ?></option>
+                            <?php foreach ($idlm_call_statuses as $idlm_cs): ?>
+                                <option value="<?php echo esc_attr($idlm_cs); ?>"><?php echo esc_html($idlm_cs); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <?php if ($can_assign_leads || (!$is_pre_sales && $reps_see_all)): ?>
+                    <?php if ($idlm_can_assign_leads || (!$idlm_is_pre_sales && $idlm_reps_see_all)): ?>
                     <div class="idlm-filter-group">
                         <label for="filter-rep">Assigned representative</label>
                         <select id="filter-rep" class="idlm-input">
                             <option value="">All Reps</option>
                             <option value="0">Unassigned</option>
-                            <?php foreach ($reps as $rep):
-                                if (!in_array($rep->ID, $active_rep_ids)) {
+                            <?php foreach ($idlm_reps as $idlm_rep):
+                                if (!in_array($idlm_rep->ID, $idlm_active_rep_ids)) {
                                     continue;
                                 }
                             ?>
-                                <option value="<?php echo esc_attr($rep->ID); ?>"><?php echo esc_html($rep->display_name); ?></option>
+                                <option value="<?php echo esc_attr($idlm_rep->ID); ?>"><?php echo esc_html($idlm_rep->display_name); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -262,7 +262,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <label for="filter-quality">Lead quality</label>
                         <select id="filter-quality" class="idlm-input">
                             <option value="">All Qualities</option>
-                            <?php if ($can_assign_leads): ?>
+                            <?php if ($idlm_can_assign_leads): ?>
                                 <option value="Qualified Awaiting Assignment">Qualified – Awaiting Assignment</option>
                                 <option value="Routing Exception">Routing Exceptions</option>
                             <?php endif; ?>
@@ -276,7 +276,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                     <div class="idlm-filter-group">
                         <label for="filter-followup">Engagement status</label>
                         <select id="filter-followup" class="idlm-input">
-                            <?php if ($is_pre_sales): ?>
+                            <?php if ($idlm_is_pre_sales): ?>
                                 <option value="action_required" selected>Action Required</option>
                                 <option value="my_qualified_history">My Qualified History (read-only)</option>
                             <?php endif; ?>
@@ -299,13 +299,14 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                     <label class="screen-reader-text" for="idlm-bulk-action-select">Bulk action</label>
                     <select id="idlm-bulk-action-select" class="idlm-input">
                         <option value="">Select Bulk Action</option>
-                        <?php if ($can_assign_leads): ?>
+                        <?php if ($idlm_can_assign_leads): ?>
                             <option value="bulk_assign">Assign to Rep</option>
                         <?php endif; ?>
                         <option value="bulk_stage">Change Stage</option>
                         <option value="bulk_unqualified">Mark Unqualified</option>
                         <option value="bulk_audience_queue">Add to Audience Sync Queue</option>
-                        <?php if ($can_manage_options): ?>
+                        <option value="bulk_audience_cancel">Remove from Audience Sync Queue</option>
+                        <?php if ($idlm_can_manage_options): ?>
                             <option value="bulk_delete">Delete leads</option>
                         <?php endif; ?>
                     </select>
@@ -314,20 +315,20 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                     <label class="screen-reader-text" for="idlm-bulk-rep">Representative for bulk assignment</label>
                     <select id="idlm-bulk-rep" class="idlm-input" style="display:none;">
                         <option value="">Select Rep</option>
-                        <?php foreach ($reps as $rep):
-                            if (!in_array($rep->ID, $active_rep_ids)) {
+                        <?php foreach ($idlm_reps as $idlm_rep):
+                            if (!in_array($idlm_rep->ID, $idlm_active_rep_ids) || !IDLM_Lead_Access_Policy::is_assignable_rep($idlm_rep->ID)) {
                                 continue;
                             }
                         ?>
-                            <option value="<?php echo esc_attr($rep->ID); ?>"><?php echo esc_html($rep->display_name); ?></option>
+                            <option value="<?php echo esc_attr($idlm_rep->ID); ?>"><?php echo esc_html($idlm_rep->display_name); ?></option>
                         <?php endforeach; ?>
                     </select>
 
                     <label class="screen-reader-text" for="idlm-bulk-stage">Stage for bulk update</label>
                     <select id="idlm-bulk-stage" class="idlm-input" style="display:none;">
                         <option value="">Select Stage</option>
-                        <?php foreach ($stages as $stage): ?>
-                            <option value="<?php echo esc_attr($stage); ?>"><?php echo esc_html($stage); ?></option>
+                        <?php foreach ($idlm_stages as $idlm_stage): ?>
+                            <option value="<?php echo esc_attr($idlm_stage); ?>"><?php echo esc_html($idlm_stage); ?></option>
                         <?php endforeach; ?>
                     </select>
 
@@ -344,10 +345,10 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                     <option value="name|asc">Name: A to Z</option>
                     <option value="name|desc">Name: Z to A</option>
                     <option value="budget|desc">Budget: high to low</option>
-                    <option value="lead_quality|asc"><?php echo $is_pre_sales ? 'Follow-up status' : 'Lead quality'; ?></option>
+                    <option value="lead_quality|asc"><?php echo $idlm_is_pre_sales ? 'Follow-up status' : 'Lead quality'; ?></option>
                     <option value="assigned_at|desc">Recently assigned</option>
                     <option value="created_at|desc">Recently created</option>
-                    <?php if (!$is_pre_sales): ?>
+                    <?php if (!$idlm_is_pre_sales): ?>
                         <option value="stage|asc">Stage</option>
                         <option value="assigned_rep|asc">Assigned representative</option>
                     <?php endif; ?>
@@ -361,7 +362,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                     <thead>
                         <tr>
                             <th class="idlm-selection-column idlm-col-priority-primary"><input type="checkbox" id="idlm-select-all" aria-label="Select all leads on this page" aria-controls="idlm-leads-table"></th>
-                            <?php if ($is_pre_sales): ?>
+                            <?php if ($idlm_is_pre_sales): ?>
                             <th class="idlm-sortable-column idlm-col-priority-primary" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="name">Lead<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
                             <th class="idlm-sortable-column idlm-col-priority-low" aria-sort="none"><button type="button" class="idlm-table-sort-button" data-sort="source">Channel<span class="idlm-sort-indicator" aria-hidden="true"></span></button></th>
                             <th class="idlm-col-priority-low">Studio</th>
@@ -460,16 +461,16 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                         <div class="idlm-form-group">
                             <label for="idlm-add-lead-rooms">Number of rooms</label>
                             <select id="idlm-add-lead-rooms" name="num_rooms" class="idlm-input">
-                                <?php foreach ($num_rooms_options as $opt): ?>
-                                    <option value="<?php echo esc_attr($opt); ?>"><?php echo esc_html($opt); ?></option>
+                                <?php foreach ($idlm_num_rooms_options as $idlm_opt): ?>
+                                    <option value="<?php echo esc_attr($idlm_opt); ?>"><?php echo esc_html($idlm_opt); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="idlm-form-group">
                             <label for="idlm-add-lead-studio">Preferred studio location</label>
                             <select id="idlm-add-lead-studio" name="preferred_studio" class="idlm-input">
-                                <?php foreach ($studios as $studio): ?>
-                                    <option value="<?php echo esc_attr($studio); ?>"><?php echo esc_html($studio); ?></option>
+                                <?php foreach ($idlm_studios as $idlm_studio): ?>
+                                    <option value="<?php echo esc_attr($idlm_studio); ?>"><?php echo esc_html($idlm_studio); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -528,16 +529,16 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                 <label for="idlm-routing-mode-select">Assignment strategy</label>
                                 <select name="assignment_mode" id="idlm-routing-mode-select" class="idlm-input" aria-describedby="idlm-routing-strategy-help idlm-routing-settings-error" onchange="toggleRoutingModalSourcePanel(this.value)">
 
-                                    <option value="manual" <?php selected($assignment_mode, 'manual'); ?>>Manual assignment</option>
-                                    <option value="pre_sales" <?php selected($assignment_mode, 'pre_sales'); ?>>Pre-sales rotation</option>
-                                    <option value="round_robin" <?php selected($assignment_mode, 'round_robin'); ?>>All-representative rotation</option>
-                                    <option value="source_based" <?php selected($assignment_mode, 'source_based'); ?>>Route by source</option>
-                                    <option value="studio_based" <?php selected($assignment_mode, 'studio_based'); ?>>Route by studio</option>
+                                    <option value="manual" <?php selected($idlm_assignment_mode, 'manual'); ?>>Manual assignment</option>
+                                    <option value="pre_sales" <?php selected($idlm_assignment_mode, 'pre_sales'); ?>>Pre-sales rotation</option>
+                                    <option value="round_robin" <?php selected($idlm_assignment_mode, 'round_robin'); ?>>All-representative rotation</option>
+                                    <option value="source_based" <?php selected($idlm_assignment_mode, 'source_based'); ?>>Route by source</option>
+                                    <option value="studio_based" <?php selected($idlm_assignment_mode, 'studio_based'); ?>>Route by studio</option>
                                 </select>
                                 <p class="idlm-routing-outcome" id="idlm-routing-strategy-help" role="status" aria-live="polite"></p>
-                                <div class="idlm-routing-current-summary" role="status" aria-live="polite" aria-label="Current routing setup" data-pre-sales-count="<?php echo esc_attr($active_pre_sales_count); ?>" data-unassigned-count="<?php echo esc_attr($unassigned_intake_count); ?>">
+                                <div class="idlm-routing-current-summary" role="status" aria-live="polite" aria-label="Current routing setup" data-pre-sales-count="<?php echo esc_attr($idlm_active_pre_sales_count); ?>" data-unassigned-count="<?php echo esc_attr($idlm_unassigned_intake_count); ?>">
                                     <strong>Current setup</strong>
-                                    <span id="idlm-routing-current-summary-text"><?php echo esc_html($assignment_mode_label); ?> · <?php echo esc_html($active_pre_sales_count); ?> pre-sales available · <?php echo esc_html($unassigned_intake_count); ?> unassigned · Backlog recovery <?php echo '1' === $fallback_enabled ? 'on' : 'off'; ?></span>
+                                    <span id="idlm-routing-current-summary-text"><?php echo esc_html($idlm_assignment_mode_label); ?> · <?php echo esc_html($idlm_active_pre_sales_count); ?> pre-sales available · <?php echo esc_html($idlm_unassigned_intake_count); ?> unassigned · Backlog recovery <?php echo '1' === $idlm_fallback_enabled ? 'on' : 'off'; ?></span>
                                 </div>
                             </section>
 
@@ -556,17 +557,17 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                     <?php
 
 
-                                    foreach ($reps as $rep):
+                                    foreach ($idlm_reps as $idlm_rep):
                                     ?>
                                         <label class="idlm-routing-rep-row">
                                             <span class="idlm-routing-rep-name">
-                                            <input type="checkbox" name="active_reps[]" value="<?php echo esc_attr($rep->ID); ?>" <?php checked(in_array($rep->ID, $active_reps)); ?>>
-                                            <?php echo esc_html($rep->display_name); ?>
+                                            <input type="checkbox" name="active_reps[]" value="<?php echo esc_attr($idlm_rep->ID); ?>" <?php checked(in_array($idlm_rep->ID, $idlm_active_reps)); ?>>
+                                            <?php echo esc_html($idlm_rep->display_name); ?>
                                             </span>
-                                            <select name="rep_studios[<?php echo esc_attr($rep->ID); ?>]" class="idlm-input" aria-label="Studio location for <?php echo esc_attr($rep->display_name); ?>">
+                                            <select name="rep_studios[<?php echo esc_attr($idlm_rep->ID); ?>]" class="idlm-input" aria-label="Studio location for <?php echo esc_attr($idlm_rep->display_name); ?>">
                                                 <option value="">No studio assigned</option>
-                                                <?php foreach ($studios as $studio): ?>
-                                                    <option value="<?php echo esc_attr($studio); ?>" <?php selected(isset($rep_studios[$rep->ID]) ? $rep_studios[$rep->ID] : '', $studio); ?>><?php echo esc_html($studio); ?></option>
+                                                <?php foreach ($idlm_studios as $idlm_studio): ?>
+                                                    <option value="<?php echo esc_attr($idlm_studio); ?>" <?php selected(isset($idlm_rep_studios[$idlm_rep->ID]) ? $idlm_rep_studios[$idlm_rep->ID] : '', $idlm_studio); ?>><?php echo esc_html($idlm_studio); ?></option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </label>
@@ -577,21 +578,21 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
 
                         <!-- Source maps sub panel -->
 
-                        <div id="idlm-routing-source-mapping-subpanel" class="idlm-form-grid idlm-routing-section idlm-routing-source-section<?php echo 'source_based' === $assignment_mode ? '' : ' is-inactive'; ?>" aria-disabled="<?php echo 'source_based' === $assignment_mode ? 'false' : 'true'; ?>">
+                        <div id="idlm-routing-source-mapping-subpanel" class="idlm-form-grid idlm-routing-section idlm-routing-source-section<?php echo 'source_based' === $idlm_assignment_mode ? '' : ' is-inactive'; ?>" aria-disabled="<?php echo 'source_based' === $idlm_assignment_mode ? 'false' : 'true'; ?>">
                             <div class="idlm-routing-section-heading full">
                                 <div><h3>Source assignments</h3><p>Choose who receives each source. These rules apply when “Route by source” is selected above.</p></div>
                             </div>
-                            <?php foreach (array('Website', 'Meta Ads', 'Google Ads', 'LinkedIn Ads', 'Referral', 'Offline/Walk-in') as $src):
-                                $field_name = 'source_map_' . str_replace(array(' ', '/', '-'), '_', strtolower($src));
-                                $field_id = 'idlm-' . $field_name;
-                                $val = isset($source_maps[$src]) ? $source_maps[$src] : 0;
+                            <?php foreach (array('Website', 'Meta Ads', 'Google Ads', 'LinkedIn Ads', 'Referral', 'Offline/Walk-in') as $idlm_src):
+                                $idlm_field_name = 'source_map_' . str_replace(array(' ', '/', '-'), '_', strtolower($idlm_src));
+                                $idlm_field_id = 'idlm-' . $idlm_field_name;
+                                $idlm_val = isset($idlm_source_maps[$idlm_src]) ? $idlm_source_maps[$idlm_src] : 0;
                             ?>
                                 <div class="idlm-form-group">
-                                    <label for="<?php echo esc_attr($field_id); ?>">Route <?php echo esc_html($src); ?> to</label>
-                                    <select id="<?php echo esc_attr($field_id); ?>" name="<?php echo esc_attr($field_name); ?>" class="idlm-input"<?php disabled('source_based' !== $assignment_mode); ?>>
+                                    <label for="<?php echo esc_attr($idlm_field_id); ?>">Route <?php echo esc_html($idlm_src); ?> to</label>
+                                    <select id="<?php echo esc_attr($idlm_field_id); ?>" name="<?php echo esc_attr($idlm_field_name); ?>" class="idlm-input"<?php disabled('source_based' !== $idlm_assignment_mode); ?>>
                                         <option value="0">Unassigned</option>
-                                        <?php foreach ($reps as $rep): ?>
-                                            <option value="<?php echo esc_attr($rep->ID); ?>" <?php selected($val, $rep->ID); ?>><?php echo esc_html($rep->display_name); ?></option>
+                                        <?php foreach ($idlm_reps as $idlm_rep): ?>
+                                            <option value="<?php echo esc_attr($idlm_rep->ID); ?>" <?php selected($idlm_val, $idlm_rep->ID); ?>><?php echo esc_html($idlm_rep->display_name); ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -614,11 +615,11 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                 <div class="idlm-form-group idlm-control-full">
                                     <span class="idlm-form-label">Available now</span>
                                     <div class="idlm-routing-days">
-                                        <?php if (empty($pre_sales_reps)): ?>
+                                        <?php if (empty($idlm_pre_sales_reps)): ?>
                                             <span class="description">No users currently have the Pre-Sales Representative role.</span>
                                         <?php else: ?>
-                                            <?php foreach ($pre_sales_reps as $pre_sales_rep): ?>
-                                                <label><input type="checkbox" name="active_pre_sales_reps[]" value="<?php echo esc_attr($pre_sales_rep->ID); ?>" <?php checked(in_array($pre_sales_rep->ID, $active_pre_sales_reps)); ?>> <?php echo esc_html($pre_sales_rep->display_name); ?></label>
+                                            <?php foreach ($idlm_pre_sales_reps as $idlm_pre_sales_rep): ?>
+                                                <label><input type="checkbox" name="active_pre_sales_reps[]" value="<?php echo esc_attr($idlm_pre_sales_rep->ID); ?>" <?php checked(in_array($idlm_pre_sales_rep->ID, $idlm_active_pre_sales_reps)); ?>> <?php echo esc_html($idlm_pre_sales_rep->display_name); ?></label>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
                                     </div>
@@ -631,14 +632,14 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                             <div><h3>Unassigned lead recovery</h3><p>Optionally return older unassigned leads to the active pre-sales pool.</p></div>
                                         </div>
                                 <label class="idlm-routing-switch-row">
-                                    <input type="checkbox" name="fallback_assignment_enabled" value="1" <?php checked($fallback_enabled, '1'); ?>>
+                                    <input type="checkbox" name="fallback_assignment_enabled" value="1" <?php checked($idlm_fallback_enabled, '1'); ?>>
                                     <span><strong>Automatically assign the unassigned backlog</strong><small>When enabled, eligible leads return to the active pre-sales pool after the fallback threshold.</small></span>
                                 </label>
-                                        <div id="idlm-routing-backlog-controls" class="idlm-routing-conditional-controls"<?php echo '1' === $fallback_enabled ? '' : ' hidden aria-hidden="true"'; ?>>
-                                            <input type="hidden" name="fallback_assignment_controls_active" value="1"<?php disabled('1' !== $fallback_enabled); ?>>
+                                        <div id="idlm-routing-backlog-controls" class="idlm-routing-conditional-controls"<?php echo '1' === $idlm_fallback_enabled ? '' : ' hidden aria-hidden="true"'; ?>>
+                                            <input type="hidden" name="fallback_assignment_controls_active" value="1"<?php disabled('1' !== $idlm_fallback_enabled); ?>>
                                             <div class="idlm-form-group">
                                                 <label for="idlm-fallback-hours">Recovery threshold</label>
-                                                <div class="idlm-routing-input-suffix"><input id="idlm-fallback-hours" type="number" name="fallback_assignment_hours" class="idlm-input" min="1" max="720" value="<?php echo esc_attr($fallback_hours); ?>"<?php disabled('1' !== $fallback_enabled); ?>><span>working hours</span></div>
+                                                <div class="idlm-routing-input-suffix"><input id="idlm-fallback-hours" type="number" name="fallback_assignment_hours" class="idlm-input" min="1" max="720" value="<?php echo esc_attr($idlm_fallback_hours); ?>"<?php disabled('1' !== $idlm_fallback_enabled); ?>><span>working hours</span></div>
                                                 <p class="description">Wait this long before an eligible unassigned lead is reassigned.</p>
                                             </div>
                                         </div>
@@ -649,41 +650,41 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                             <div><h3>Qualified lead handoff</h3><p>Cover qualified leads when a manager is unavailable.</p></div>
                                         </div>
                                 <label class="idlm-routing-switch-row">
-                                    <input type="checkbox" name="qualified_fallback_enabled" value="1" <?php checked($qualified_fallback_enabled, '1'); ?>>
+                                    <input type="checkbox" name="qualified_fallback_enabled" value="1" <?php checked($idlm_qualified_fallback_enabled, '1'); ?>>
                                     <span><strong>Manager OOO: auto-assign qualified leads</strong><small>After the threshold, hand qualified pre-sales leads to studio-matched active sales representatives, then the general sales pool.</small></span>
                                 </label>
-                                        <div id="idlm-routing-qualified-controls" class="idlm-routing-conditional-controls idlm-routing-fallback-fields"<?php echo '1' === $qualified_fallback_enabled ? '' : ' hidden aria-hidden="true"'; ?>>
-                                            <input type="hidden" name="qualified_fallback_controls_active" value="1"<?php disabled('1' !== $qualified_fallback_enabled); ?>>
+                                        <div id="idlm-routing-qualified-controls" class="idlm-routing-conditional-controls idlm-routing-fallback-fields"<?php echo '1' === $idlm_qualified_fallback_enabled ? '' : ' hidden aria-hidden="true"'; ?>>
+                                            <input type="hidden" name="qualified_fallback_controls_active" value="1"<?php disabled('1' !== $idlm_qualified_fallback_enabled); ?>>
                                 <div class="idlm-form-group">
                                     <label for="idlm-qualified-fallback-hours">Qualified handoff threshold</label>
-                                    <div class="idlm-routing-input-suffix"><input id="idlm-qualified-fallback-hours" type="number" name="qualified_fallback_hours" class="idlm-input" min="1" max="720" value="<?php echo esc_attr($qualified_fallback_hours); ?>"><span>working hours</span></div>
+                                    <div class="idlm-routing-input-suffix"><input id="idlm-qualified-fallback-hours" type="number" name="qualified_fallback_hours" class="idlm-input" min="1" max="720" value="<?php echo esc_attr($idlm_qualified_fallback_hours); ?>"><span>working hours</span></div>
                                     <p class="description">Manager OOO wait time measured from qualification.</p>
                                 </div>
                                 <div class="idlm-form-group">
                                     <label for="idlm-qualified-fallback-end">Manager OOO ends</label>
-                                    <input id="idlm-qualified-fallback-end" type="datetime-local" name="qualified_fallback_end_at" class="idlm-input" value="<?php echo esc_attr($qualified_fallback_end_at ? str_replace(' ', 'T', substr($qualified_fallback_end_at, 0, 16)) : ''); ?>">
+                                    <input id="idlm-qualified-fallback-end" type="datetime-local" name="qualified_fallback_end_at" class="idlm-input" value="<?php echo esc_attr($idlm_qualified_fallback_end_at ? str_replace(' ', 'T', substr($idlm_qualified_fallback_end_at, 0, 16)) : ''); ?>">
                                     <p class="description">Optional. OOO handoff disables automatically after this time.</p>
                                 </div>
                                 <div class="idlm-form-group">
                                     <label for="idlm-studio-mismatch-behavior">Missing studio behavior</label>
                                     <select id="idlm-studio-mismatch-behavior" name="studio_mismatch_behavior" class="idlm-input">
-                                        <option value="general_pool" <?php selected($studio_mismatch_behavior, 'general_pool'); ?>>Use general active sales pool</option>
-                                        <option value="hold_for_manager" <?php selected($studio_mismatch_behavior, 'hold_for_manager'); ?>>Hold for manager review</option>
+                                        <option value="general_pool" <?php selected($idlm_studio_mismatch_behavior, 'general_pool'); ?>>Use general active sales pool</option>
+                                        <option value="hold_for_manager" <?php selected($idlm_studio_mismatch_behavior, 'hold_for_manager'); ?>>Hold for manager review</option>
                                     </select>
                                 </div>
                                 <div class="idlm-form-group">
                                     <label for="idlm-handoff-task-policy">Pending task policy</label>
                                     <select id="idlm-handoff-task-policy" name="handoff_task_policy" class="idlm-input">
-                                        <option value="transfer" <?php selected($handoff_task_policy, 'transfer'); ?>>Transfer pending tasks to sales owner</option>
-                                        <option value="retain" <?php selected($handoff_task_policy, 'retain'); ?>>Keep tasks with pre-sales</option>
-                                        <option value="complete_qualification" <?php selected($handoff_task_policy, 'complete_qualification'); ?>>Complete qualification tasks only</option>
+                                        <option value="transfer" <?php selected($idlm_handoff_task_policy, 'transfer'); ?>>Transfer pending tasks to sales owner</option>
+                                        <option value="retain" <?php selected($idlm_handoff_task_policy, 'retain'); ?>>Keep tasks with pre-sales</option>
+                                        <option value="complete_qualification" <?php selected($idlm_handoff_task_policy, 'complete_qualification'); ?>>Complete qualification tasks only</option>
                                     </select>
                                 </div>
                                 <div class="idlm-form-group">
-                                    <label class="idlm-routing-switch-row"><input type="checkbox" name="qualified_fallback_include_existing" value="1" <?php checked($qualified_fallback_include_existing, '1'); ?>><span><strong>Include historical qualified leads</strong><small>Off by default to prevent an immediate bulk handoff when OOO is first enabled.</small></span></label>
+                                    <label class="idlm-routing-switch-row"><input type="checkbox" name="qualified_fallback_include_existing" value="1" <?php checked($idlm_qualified_fallback_include_existing, '1'); ?>><span><strong>Include historical qualified leads</strong><small>Off by default to prevent an immediate bulk handoff when OOO is first enabled.</small></span></label>
                                 </div>
                                 <div class="idlm-form-group">
-                                    <label class="idlm-routing-switch-row"><input type="checkbox" name="handoff_notifications_enabled" value="1" <?php checked($handoff_notifications_enabled, '1'); ?>><span><strong>Email handoff participants</strong><small>Notify the previous pre-sales owner and the new sales owner.</small></span></label>
+                                    <label class="idlm-routing-switch-row"><input type="checkbox" name="handoff_notifications_enabled" value="1" <?php checked($idlm_handoff_notifications_enabled, '1'); ?>><span><strong>Email handoff participants</strong><small>Notify the previous pre-sales owner and the new sales owner.</small></span></label>
                                 </div>
                                         </div>
                                     </div>
@@ -703,38 +704,38 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                         <div class="idlm-routing-fallback-fields">
                                 <div class="idlm-form-group">
                                     <label for="idlm-max-active-leads">Maximum active leads per rep</label>
-                                    <div class="idlm-routing-input-suffix"><input id="idlm-max-active-leads" type="number" name="max_active_leads_per_rep" class="idlm-input" min="0" max="10000" value="<?php echo esc_attr($max_active_leads_per_rep); ?>"><span>leads</span></div>
+                                    <div class="idlm-routing-input-suffix"><input id="idlm-max-active-leads" type="number" name="max_active_leads_per_rep" class="idlm-input" min="0" max="10000" value="<?php echo esc_attr($idlm_max_active_leads_per_rep); ?>"><span>leads</span></div>
                                     <p class="description">Use 0 for no limit.</p>
                                 </div>
                                 <div class="idlm-form-group">
-                                    <label class="idlm-routing-switch-row"><input type="checkbox" name="routing_exception_notifications_enabled" value="1" <?php checked($routing_exception_notifications_enabled, '1'); ?>><span><strong>Email routing exceptions</strong><small>Notify the WordPress administrator when a routing pool is unavailable.</small></span></label>
+                                    <label class="idlm-routing-switch-row"><input type="checkbox" name="routing_exception_notifications_enabled" value="1" <?php checked($idlm_routing_exception_notifications_enabled, '1'); ?>><span><strong>Email routing exceptions</strong><small>Notify the WordPress administrator when a routing pool is unavailable.</small></span></label>
                                 </div>
                                 <div class="idlm-form-group">
                                     <span class="idlm-form-label">Daily working hours</span>
                                     <div class="idlm-routing-time-range">
-                                    <input type="time" name="working_hours_start" class="idlm-input" aria-label="Working day starts" value="<?php echo esc_attr($working_hours_start); ?>">
+                                    <input type="time" name="working_hours_start" class="idlm-input" aria-label="Working day starts" value="<?php echo esc_attr($idlm_working_hours_start); ?>">
                                     <span>to</span>
-                                    <input type="time" name="working_hours_end" class="idlm-input" aria-label="Working day ends" value="<?php echo esc_attr($working_hours_end); ?>">
+                                    <input type="time" name="working_hours_end" class="idlm-input" aria-label="Working day ends" value="<?php echo esc_attr($idlm_working_hours_end); ?>">
                                     </div>
                                     <p class="description">Hours when the business is open.</p>
                                 </div>
                                 <div class="idlm-form-group">
                                     <label for="idlm-presales-calls">Calls per follow-up cycle</label>
-                                    <input id="idlm-presales-calls" type="number" name="presales_calls_per_day" class="idlm-input" min="1" max="20" value="<?php echo esc_attr($presales_targets['calls']); ?>">
+                                    <input id="idlm-presales-calls" type="number" name="presales_calls_per_day" class="idlm-input" min="1" max="20" value="<?php echo esc_attr($idlm_presales_targets['calls']); ?>">
                                     <p class="description">Partial progress carries forward until this target is reached.</p>
                                 </div>
                                 <div class="idlm-form-group">
                                     <label for="idlm-presales-whatsapp">WhatsApp messages per follow-up cycle</label>
-                                    <input id="idlm-presales-whatsapp" type="number" name="presales_whatsapp_per_day" class="idlm-input" min="0" max="20" value="<?php echo esc_attr($presales_targets['whatsapp']); ?>">
+                                    <input id="idlm-presales-whatsapp" type="number" name="presales_whatsapp_per_day" class="idlm-input" min="0" max="20" value="<?php echo esc_attr($idlm_presales_targets['whatsapp']); ?>">
                                     <p class="description">Enter 0 when WhatsApp is not required.</p>
                                 </div>
                                 <div class="idlm-form-group idlm-routing-days-group">
                                 <span class="idlm-form-label">Business working days</span>
                                 <div class="idlm-routing-days">
-                                    <?php foreach ($days_map as $val => $label): ?>
+                                    <?php foreach ($idlm_days_map as $idlm_val => $idlm_label): ?>
                                         <label>
-                                            <input type="checkbox" name="working_days[]" value="<?php echo esc_attr($val); ?>" <?php checked(in_array($val, $working_days)); ?>>
-                                            <?php echo esc_html($label); ?>
+                                            <input type="checkbox" name="working_days[]" value="<?php echo esc_attr($idlm_val); ?>" <?php checked(in_array($idlm_val, $idlm_working_days)); ?>>
+                                            <?php echo esc_html($idlm_label); ?>
                                         </label>
                                     <?php endforeach; ?>
                                 </div>
@@ -742,7 +743,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                 </div>
                                             <div class="idlm-form-group idlm-routing-days-group">
                                                 <span class="idlm-form-label">Fallback health</span>
-                                                <p class="description">Last completed: <?php echo esc_html($fallback_last_completed); ?> · Status: <?php echo esc_html($fallback_last_status); ?> · Open exceptions: <?php echo esc_html($routing_exception_count); ?></p>
+                                                <p class="description">Last completed: <?php echo esc_html($idlm_fallback_last_completed); ?> · Status: <?php echo esc_html($idlm_fallback_last_status); ?> · Open exceptions: <?php echo esc_html($idlm_routing_exception_count); ?></p>
                                                 <button type="button" class="idlm-btn idlm-btn-secondary idlm-run-fallback-now" aria-describedby="idlm-routing-fallback-progress">Run fallback now</button>
                                                 <p class="idlm-routing-fallback-progress" id="idlm-routing-fallback-progress" role="status" aria-live="polite"></p>
                                                 <div class="idlm-routing-fallback-confirm" hidden><p>Run fallback routing now? This can assign eligible unassigned leads immediately.</p><div><button type="button" class="idlm-btn idlm-btn-secondary idlm-cancel-fallback-run">Cancel</button><button type="button" class="idlm-btn idlm-btn-primary idlm-confirm-fallback-run">Run fallback</button></div></div>
@@ -762,7 +763,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
             </div>
         </div>
 
-        <?php if ($can_manage_options): ?>
+        <?php if ($idlm_can_manage_options): ?>
         <!-- Import Leads Modal -->
         <div class="idlm-modal idlm-dialog" id="idlm-import-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-import-title" aria-describedby="idlm-import-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-import-drag-zone">
             <div class="idlm-modal-content idlm-dialog__panel idlm-import-dialog-panel">
@@ -851,24 +852,24 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                                 <label for="import-default-studio" style="font-size: 11px;">Default Preferred Studio</label>
                                 <select id="import-default-studio" class="idlm-input">
                                     <option value="">No default studio</option>
-                                    <?php foreach ($studios as $studio): ?>
-                                        <option value="<?php echo esc_attr($studio); ?>"><?php echo esc_html($studio); ?></option>
+                                    <?php foreach ($idlm_studios as $idlm_studio): ?>
+                                        <option value="<?php echo esc_attr($idlm_studio); ?>"><?php echo esc_html($idlm_studio); ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="idlm-form-group">
                                 <label for="import-default-stage" style="font-size: 11px;">Default Pipeline Stage</label>
                                 <select id="import-default-stage" class="idlm-input">
-                                    <?php foreach ($stages as $stage): ?>
-                                        <option value="<?php echo esc_attr($stage); ?>"><?php echo esc_html($stage); ?></option>
+                                    <?php foreach ($idlm_stages as $idlm_stage): ?>
+                                        <option value="<?php echo esc_attr($idlm_stage); ?>"><?php echo esc_html($idlm_stage); ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="idlm-form-group">
                                 <label for="import-default-call-status" style="font-size: 11px;">Default Call Status</label>
                                 <select id="import-default-call-status" class="idlm-input">
-                                    <?php foreach ($call_statuses as $cs): ?>
-                                        <option value="<?php echo esc_attr($cs); ?>"><?php echo esc_html($cs); ?></option>
+                                    <?php foreach ($idlm_call_statuses as $idlm_cs): ?>
+                                        <option value="<?php echo esc_attr($idlm_cs); ?>"><?php echo esc_html($idlm_cs); ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -945,7 +946,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
         <?php endif; ?>
 
         <!-- Shared overlays (drawer, modals, and task sidebar) -->
-        <?php echo $common_overlays_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Guarded plugin template output. ?>
+        <?php echo $idlm_common_overlays_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Guarded plugin template output. ?>
 
         <!-- Export Leads Modal -->
         <div class="idlm-modal idlm-dialog" id="idlm-export-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-export-title" aria-describedby="idlm-export-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="input[name='idlm-export-scope']:checked">
@@ -1025,8 +1026,8 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             <label for="export-filter-stage" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Lead Stage</label>
                             <select id="export-filter-stage" class="idlm-input idlm-control-full">
                                 <option value="">All Stages</option>
-                                <?php foreach ($stages as $stage): ?>
-                                    <option value="<?php echo esc_attr($stage); ?>"><?php echo esc_html($stage); ?></option>
+                                <?php foreach ($idlm_stages as $idlm_stage): ?>
+                                    <option value="<?php echo esc_attr($idlm_stage); ?>"><?php echo esc_html($idlm_stage); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -1034,23 +1035,23 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
                             <label for="export-filter-call-status" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Call Status</label>
                             <select id="export-filter-call-status" class="idlm-input idlm-control-full">
                                 <option value="">All Statuses</option>
-                                <?php foreach ($call_statuses as $cs): ?>
-                                    <option value="<?php echo esc_attr($cs); ?>"><?php echo esc_html($cs); ?></option>
+                                <?php foreach ($idlm_call_statuses as $idlm_cs): ?>
+                                    <option value="<?php echo esc_attr($idlm_cs); ?>"><?php echo esc_html($idlm_cs); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <?php if ($can_assign_leads || (!$is_pre_sales && $reps_see_all)): ?>
+                        <?php if ($idlm_can_assign_leads || (!$idlm_is_pre_sales && $idlm_reps_see_all)): ?>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
                             <label for="export-filter-rep" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Assigned Rep</label>
                             <select id="export-filter-rep" class="idlm-input idlm-control-full">
                                 <option value="">All Reps</option>
                                 <option value="0">Unassigned</option>
-                                <?php foreach ($reps as $rep):
-                                    if (!in_array($rep->ID, $active_rep_ids)) {
+                                <?php foreach ($idlm_reps as $idlm_rep):
+                                    if (!in_array($idlm_rep->ID, $idlm_active_rep_ids)) {
                                         continue;
                                     }
                                 ?>
-                                    <option value="<?php echo esc_attr($rep->ID); ?>"><?php echo esc_html($rep->display_name); ?></option>
+                                    <option value="<?php echo esc_attr($idlm_rep->ID); ?>"><?php echo esc_html($idlm_rep->display_name); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -1088,7 +1089,7 @@ $common_overlays_html = isset($context['common_overlays_html']) ? (string) $cont
             </div>
         </div>
 
-        <?php if ($can_manage_options): ?>
+        <?php if ($idlm_can_manage_options): ?>
         <div class="idlm-modal idlm-dialog" id="idlm-bulk-delete-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-bulk-delete-title" aria-describedby="idlm-bulk-delete-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-bulk-delete-cancel">
             <div class="idlm-modal-content idlm-dialog__panel">
                 <header class="idlm-modal-header idlm-dialog__header">

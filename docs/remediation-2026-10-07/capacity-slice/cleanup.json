@@ -1,0 +1,10 @@
+{
+  "author": "Shashi",
+  "status": "PASS",
+  "disposable_schemas_remaining": 0,
+  "owned_mysql_pid": 99583,
+  "owned_mysql_shutdown": "Verified task-owned datadir/process; SIGTERM; shutdown complete",
+  "task_owned_database_directory_removed": true,
+  "configured_site_database_used": false,
+  "http_fixture_cleanup": "Runner terminates its owned HTTP process, drops its uniquely created schema and removes its temporary copied core/content on shutdown"
+}

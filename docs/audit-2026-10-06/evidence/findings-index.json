@@ -1,0 +1,313 @@
+{
+  "author": "Shashi",
+  "findings": [
+    {
+      "id": "CORE-001",
+      "severity": "High",
+      "title": "P1 High: broad default CRM visibility and ineffective capability revocation",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-001--p1-high-broad-default-crm-visibility-and-ineffective-capability-revocation"
+    },
+    {
+      "id": "CORE-002",
+      "severity": "High",
+      "title": "P1 High: confidential uploads use public static URLs and survive deletion",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-002--p1-high-confidential-uploads-use-public-static-urls-and-survive-deletion"
+    },
+    {
+      "id": "CORE-003",
+      "severity": "High",
+      "title": "P1 High: lead CSV formula injection",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-003--p1-high-lead-csv-formula-injection"
+    },
+    {
+      "id": "CORE-004",
+      "severity": "High",
+      "title": "P1 High: canonical upsert acknowledges failed persistence and emits false side effects",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-004--p1-high-canonical-upsert-acknowledges-failed-persistence-and-emits-false-side-effects"
+    },
+    {
+      "id": "CORE-005",
+      "severity": "High",
+      "title": "P1 High: lead row and immutable reporting events/tasks are not atomic",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-005--p1-high-lead-row-and-immutable-reporting-eventstasks-are-not-atomic"
+    },
+    {
+      "id": "CORE-006",
+      "severity": "Medium",
+      "title": "P2 Medium: partial six-task plan cannot self-repair",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-006--p2-medium-partial-six-task-plan-cannot-self-repair"
+    },
+    {
+      "id": "CORE-007",
+      "severity": "High",
+      "title": "P1 High: schema migration markers advance without successful schema verification",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-007--p1-high-schema-migration-markers-advance-without-successful-schema-verification"
+    },
+    {
+      "id": "CORE-008",
+      "severity": "Medium",
+      "title": "P2 Medium: CRM reset leaves pending identity-review PII and there is no resolution interface",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-008--p2-medium-crm-reset-leaves-pending-identity-review-pii-and-there-is-no-resolution-interface"
+    },
+    {
+      "id": "CORE-009",
+      "severity": "Medium",
+      "title": "P2 Medium: disabled users remain assignable",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-009--p2-medium-disabled-users-remain-assignable"
+    },
+    {
+      "id": "CORE-010",
+      "severity": "Medium",
+      "title": "P2 Medium: unassigned recovery exceeds configured rep capacity",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-010--p2-medium-unassigned-recovery-exceeds-configured-rep-capacity"
+    },
+    {
+      "id": "CORE-011",
+      "severity": "High",
+      "title": "P1 High: task queue leaks reassigned lead PII to former owner",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-011--p1-high-task-queue-leaks-reassigned-lead-pii-to-former-owner"
+    },
+    {
+      "id": "CORE-012",
+      "severity": "Medium",
+      "title": "P2 Medium: retention and heavy reads remain unbounded/weakly recoverable",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-012--p2-medium-retention-and-heavy-reads-remain-unboundedweakly-recoverable"
+    },
+    {
+      "id": "CORE-013",
+      "severity": "Low",
+      "title": "P3 Low: documentation and state registries overstate consistency",
+      "report": "CORE-REVIEW.md",
+      "anchor": "core-013--p3-low-documentation-and-state-registries-overstate-consistency"
+    },
+    {
+      "id": "INT-001",
+      "severity": "High",
+      "title": "HIGH \u2014 MCP SQL allowlist bypass after an explicit JOIN",
+      "report": "INTEGRATION-SECURITY-REVIEW.md",
+      "anchor": "int-001--high--mcp-sql-allowlist-bypass-after-an-explicit-join"
+    },
+    {
+      "id": "INT-002",
+      "severity": "High",
+      "title": "HIGH \u2014 MCP explicitly exposes WordPress authentication columns",
+      "report": "INTEGRATION-SECURITY-REVIEW.md",
+      "anchor": "int-002--high--mcp-explicitly-exposes-wordpress-authentication-columns"
+    },
+    {
+      "id": "INT-003",
+      "severity": "High",
+      "title": "HIGH \u2014 Incomplete backup payload commits an unintended CRM reset",
+      "report": "INTEGRATION-SECURITY-REVIEW.md",
+      "anchor": "int-003--high--incomplete-backup-payload-commits-an-unintended-crm-reset"
+    },
+    {
+      "id": "INT-004",
+      "severity": "Medium",
+      "title": "MEDIUM \u2014 Ordinary queued Interakt ignores disabling and retains revoked key",
+      "report": "INTEGRATION-SECURITY-REVIEW.md",
+      "anchor": "int-004--medium--ordinary-queued-interakt-ignores-disabling-and-retains-revoked-key"
+    },
+    {
+      "id": "INT-005",
+      "severity": "Medium",
+      "title": "MEDIUM \u2014 Manual CAPI retry cannot replay current Google defaults and bypasses worker gates",
+      "report": "INTEGRATION-SECURITY-REVIEW.md",
+      "anchor": "int-005--medium--manual-capi-retry-cannot-replay-current-google-defaults-and-bypasses-worker-gates"
+    },
+    {
+      "id": "INT-006",
+      "severity": "Medium",
+      "title": "MEDIUM \u2014 Meta webhook acknowledges dropped batch messages and appends replays",
+      "report": "INTEGRATION-SECURITY-REVIEW.md",
+      "anchor": "int-006--medium--meta-webhook-acknowledges-dropped-batch-messages-and-appends-replays"
+    },
+    {
+      "id": "INT-007",
+      "severity": "Medium",
+      "title": "MEDIUM \u2014 Disabling Google audience rule does not stop its pull feed",
+      "report": "INTEGRATION-SECURITY-REVIEW.md",
+      "anchor": "int-007--medium--disabling-google-audience-rule-does-not-stop-its-pull-feed"
+    },
+    {
+      "id": "INT-008",
+      "severity": "Medium",
+      "title": "MEDIUM \u2014 Seven-day CAPI pruning removes configured retention and idempotency evidence",
+      "report": "INTEGRATION-SECURITY-REVIEW.md",
+      "anchor": "int-008--medium--seven-day-capi-pruning-removes-configured-retention-and-idempotency-evidence"
+    },
+    {
+      "id": "INT-009",
+      "severity": "Medium",
+      "title": "MEDIUM \u2014 Audience failures discard manual work; manual queue can bypass exclusion",
+      "report": "INTEGRATION-SECURITY-REVIEW.md",
+      "anchor": "int-009--medium--audience-failures-discard-manual-work-manual-queue-can-bypass-exclusion"
+    },
+    {
+      "id": "INT-010",
+      "severity": "Medium",
+      "title": "MEDIUM \u2014 Remaining platform tokens are plaintext and some requests put secrets in URLs",
+      "report": "INTEGRATION-SECURITY-REVIEW.md",
+      "anchor": "int-010--medium--remaining-platform-tokens-are-plaintext-and-some-requests-put-secrets-in-urls"
+    },
+    {
+      "id": "QUO-001",
+      "severity": "High",
+      "title": "P1: new quotation accepts an existing revision without binding authorization",
+      "report": "QUOTATION-REVIEW.md",
+      "anchor": "quo-001--p1-new-quotation-accepts-an-existing-revision-without-binding-authorization"
+    },
+    {
+      "id": "QUO-002",
+      "severity": "High",
+      "title": "P1: quotation lists disclose data after lead reassignment",
+      "report": "QUOTATION-REVIEW.md",
+      "anchor": "quo-002--p1-quotation-lists-disclose-data-after-lead-reassignment"
+    },
+    {
+      "id": "QUO-003",
+      "severity": "High",
+      "title": "P1: all-lead read scope grants quotation mutations on another owner's lead",
+      "report": "QUOTATION-REVIEW.md",
+      "anchor": "quo-003--p1-all-lead-read-scope-grants-quotation-mutations-on-another-owners-lead"
+    },
+    {
+      "id": "QUO-004",
+      "severity": "High",
+      "title": "P1: failed quotation migration can be marked complete",
+      "report": "QUOTATION-REVIEW.md",
+      "anchor": "quo-004--p1-failed-quotation-migration-can-be-marked-complete"
+    },
+    {
+      "id": "QUO-005",
+      "severity": "High",
+      "title": "P1: schema install rewrites immutable item classifications from current catalogue",
+      "report": "QUOTATION-REVIEW.md",
+      "anchor": "quo-005--p1-schema-install-rewrites-immutable-item-classifications-from-current-catalogue"
+    },
+    {
+      "id": "QUO-006",
+      "severity": "Medium",
+      "title": "P2: current currency and payment/template settings change historical PDF/print",
+      "report": "QUOTATION-REVIEW.md",
+      "anchor": "quo-006--p2-current-currency-and-paymenttemplate-settings-change-historical-pdfprint"
+    },
+    {
+      "id": "QUO-007",
+      "severity": "Medium",
+      "title": "P2, conditional integrity risk: transactions rely on an unchecked default table engine",
+      "report": "QUOTATION-REVIEW.md",
+      "anchor": "quo-007--p2-conditional-integrity-risk-transactions-rely-on-an-unchecked-default-table-engine"
+    },
+    {
+      "id": "QUO-008",
+      "severity": "Medium",
+      "title": "P2: numeric normalization permits nonfinite/overrange values and inconsistent tiny areas",
+      "report": "QUOTATION-REVIEW.md",
+      "anchor": "quo-008--p2-numeric-normalization-permits-nonfiniteoverrange-values-and-inconsistent-tiny-areas"
+    },
+    {
+      "id": "QUO-009",
+      "severity": "Medium",
+      "title": "P2: Letter setting falls back to A4 for downloaded PDF",
+      "report": "QUOTATION-REVIEW.md",
+      "anchor": "quo-009--p2-letter-setting-falls-back-to-a4-for-downloaded-pdf"
+    },
+    {
+      "id": "QUO-010",
+      "severity": "High",
+      "title": "P1 upgrade data-loss risk: legacy commercial quotation states are erased",
+      "report": "QUOTATION-REVIEW.md",
+      "anchor": "quo-010--p1-upgrade-data-loss-risk-legacy-commercial-quotation-states-are-erased"
+    },
+    {
+      "id": "REL-001",
+      "severity": "High",
+      "title": "P1 High: exact candidate cannot satisfy release attestation",
+      "report": "RELEASE.md",
+      "anchor": "rel-001--p1-high-exact-candidate-cannot-satisfy-release-attestation"
+    },
+    {
+      "id": "REL-002",
+      "severity": "Medium",
+      "title": "P2 Medium: bundled Inter fonts lack the complete distribution license notice",
+      "report": "RELEASE.md",
+      "anchor": "rel-002--p2-medium-bundled-inter-fonts-lack-the-complete-distribution-license-notice"
+    },
+    {
+      "id": "REL-003",
+      "severity": "Medium",
+      "title": "P2 Medium: public plugin credit defaults on",
+      "report": "RELEASE.md",
+      "anchor": "rel-003--p2-medium-public-plugin-credit-defaults-on"
+    },
+    {
+      "id": "REL-004",
+      "severity": "Medium",
+      "title": "P2 Medium: public service/privacy/support and lifecycle disclosures are incomplete",
+      "report": "RELEASE.md",
+      "anchor": "rel-004--p2-medium-public-serviceprivacysupport-and-lifecycle-disclosures-are-incomplete"
+    },
+    {
+      "id": "REL-005",
+      "severity": "Medium",
+      "title": "P2 Medium: compatibility promises exceed verification and omit prerequisites",
+      "report": "RELEASE.md",
+      "anchor": "rel-005--p2-medium-compatibility-promises-exceed-verification-and-omit-prerequisites"
+    },
+    {
+      "id": "REL-006",
+      "severity": "Medium",
+      "title": "P2 Medium: ZIP builder does not normalize the root-directory timestamp",
+      "report": "RELEASE.md",
+      "anchor": "rel-006--p2-medium-zip-builder-does-not-normalize-the-root-directory-timestamp"
+    },
+    {
+      "id": "REL-007",
+      "severity": "Medium",
+      "title": "P2 Medium: final package fails static submission diagnostics and includes local artifacts",
+      "report": "RELEASE.md",
+      "anchor": "rel-007--p2-medium-final-package-fails-static-submission-diagnostics-and-includes-local-artifacts"
+    },
+    {
+      "id": "UI-001",
+      "severity": "High",
+      "title": "P1 High: ordinary quotation quantities cannot pass browser validation",
+      "report": "UI-REVIEW.md",
+      "anchor": "ui-001--p1-high-ordinary-quotation-quantities-cannot-pass-browser-validation"
+    },
+    {
+      "id": "UI-002",
+      "severity": "Medium",
+      "title": "P2 Medium: mobile task form remains a compressed two-column layout",
+      "report": "UI-REVIEW.md",
+      "anchor": "ui-002--p2-medium-mobile-task-form-remains-a-compressed-two-column-layout"
+    },
+    {
+      "id": "UI-003",
+      "severity": "Medium",
+      "title": "P2 Medium: task controls lack associated accessible labels",
+      "report": "UI-REVIEW.md",
+      "anchor": "ui-003--p2-medium-task-controls-lack-associated-accessible-labels"
+    },
+    {
+      "id": "UI-004",
+      "severity": "Medium",
+      "title": "P2 Medium: fresh-install quotation downloads emit PHP 8.4 diagnostics",
+      "report": "UI-REVIEW.md",
+      "anchor": "ui-004--p2-medium-fresh-install-quotation-downloads-emit-php-84-diagnostics"
+    }
+  ]
+}

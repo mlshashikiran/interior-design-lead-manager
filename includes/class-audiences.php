@@ -5,13 +5,10 @@ if (!defined('ABSPATH')) {
 
 class IDLM_Audiences {
     /**
-     * Daily 2:00 AM Cron/Scheduler Batch Sync executor
+     * Resolve enabled rules in saved order for scheduled, manual and pull consumers.
+     * Explicit empty/invalid saved rules never revive legacy settings.
      */
-    public static function run_batch_sync() {
-        global $wpdb;
-        $table_leads = $wpdb->prefix . 'idlm_leads';
-
-        // Load dynamic rules list
+    public static function get_active_rules() {
         $rules = get_option('idlm_audience_sync_rules');
         if ($rules === false) {
             $rules = array();
@@ -54,75 +51,87 @@ class IDLM_Audiences {
             }
         }
 
-        // Filter enabled rules
         $active_rules = array();
-        foreach ($rules as $r) {
-            if (isset($r['enabled']) && $r['enabled'] == '1') {
-                $active_rules[] = $r;
-            }
-        }
-
-        if (empty($active_rules)) {
-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-            error_log('IDLM Custom Audience Sync: No active audience rules found.');
-            return;
-        }
-
-        // Fetch manual bulk sync queue from WP options
-        $queue_leads = get_option('idlm_audience_sync_queue', array());
-
-        $total_processed_rules = 0;
-
-        foreach ($active_rules as $rule) {
-            $conditions = array("is_duplicate = 0");
-
-            if ($rule['stage'] !== 'all') {
-                $conditions[] = $wpdb->prepare("stage = %s", $rule['stage']);
-            }
-            if ($rule['call_status'] !== 'all') {
-                $conditions[] = $wpdb->prepare("call_status = %s", $rule['call_status']);
-            }
-            if ($rule['lead_quality'] !== 'all') {
-                $conditions[] = $wpdb->prepare("lead_quality = %s", $rule['lead_quality']);
-            }
-
-            $where_clause = implode(" AND ", $conditions);
-
-            if (!empty($queue_leads)) {
-                $lead_ids_in = implode(',', array_map('intval', $queue_leads));
-                $query = "SELECT * FROM {$table_leads} WHERE (id IN ($lead_ids_in) OR ({$where_clause}))";
-            } else {
-                $query = "SELECT * FROM {$table_leads} WHERE {$where_clause}";
-            }
-
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-            $leads = $wpdb->get_results($query);
-
-            if (empty($leads)) {
-                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-                error_log("IDLM Custom Audience Sync: No leads matched filter rules for audience segment URN: {$rule['audience_id']}.");
+        foreach (is_array($rules) ? $rules : array() as $rule) {
+            if (!is_array($rule) || !isset($rule['enabled']) || !is_scalar($rule['enabled']) || (string) $rule['enabled'] !== '1'
+                || !isset($rule['platform'], $rule['audience_id']) || !is_string($rule['platform'])
+                || !in_array($rule['platform'], array('meta', 'google', 'linkedin'), true)
+                || !is_scalar($rule['audience_id']) || trim((string) $rule['audience_id']) === '') {
                 continue;
             }
-
-            // Sync to designated platform
-            if ($rule['platform'] === 'meta') {
-                $is_val = isset($rule['is_value']) && $rule['is_value'] == '1';
-                self::sync_to_meta($leads, $rule['audience_id'], $is_val);
-            } elseif ($rule['platform'] === 'google') {
-                self::sync_to_google($leads, $rule['audience_id']);
-            } elseif ($rule['platform'] === 'linkedin') {
-                self::sync_to_linkedin($leads, $rule['audience_id']);
+            foreach (array('stage', 'call_status', 'lead_quality') as $field) {
+                if (isset($rule[$field]) && !is_scalar($rule[$field])) {
+                    continue 2;
+                }
+                $rule[$field] = empty($rule[$field]) ? 'all' : (string) $rule[$field];
             }
-            $total_processed_rules++;
+            $active_rules[] = $rule;
         }
+        return $active_rules;
+    }
 
-        // Clear manual queue after successful sync run
-        if (!empty($queue_leads)) {
-            update_option('idlm_audience_sync_queue', array());
+    /** First enabled Google match wins; disabled duplicates cannot shadow it. */
+    public static function resolve_google_feed_rule($list_id) {
+        foreach (self::get_active_rules() as $rule) {
+            if ($rule['platform'] !== 'google') {
+                continue;
+            }
+            $target_id = ltrim(trim((string) $rule['audience_id']), '/');
+            $target_id = preg_replace('/\/userlists\//i', '/userLists/', $target_id);
+            if ($target_id === $list_id || basename($target_id) === $list_id || $rule['audience_id'] === $list_id) {
+                return $rule;
+            }
         }
+        return null;
+    }
 
-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-        error_log("IDLM Custom Audience Sync completed: processed {$total_processed_rules} sync rules.");
+    /**
+     * Daily 2:00 AM Cron/Scheduler Batch Sync executor
+     */
+    public static function run_batch_sync($manual_only = false) {
+        return IDLM_Audience_Dispatch::run((bool) $manual_only);
+    }
+
+    public static function has_credentials($rule) {
+        if ($rule['platform'] === 'google') { return true; } // Pull mapping, not an upload.
+        return (bool) IDLM_Secret_Store::get('idlm_' . $rule['platform'] . '_access_token', '', true);
+    }
+
+    /** The same nonduplicate and current rule predicate serves scheduled and pull reads. */
+    public static function rule_conditions($rule) {
+        global $wpdb;
+        $conditions = array('is_duplicate = 0');
+        foreach (array('stage', 'call_status', 'lead_quality') as $field) {
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0384: rule_conditions(): rule_conditions iterates only stage/call_status/lead_quality identifiers and prepares each value; no arbitrary field or SQL fragment is accepted.
+            if (!empty($rule[$field]) && $rule[$field] !== 'all') { $conditions[] = $wpdb->prepare("{$field} = %s", $rule[$field]); }
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        }
+        return implode(' AND ', $conditions);
+    }
+
+    /** Return an explicit outcome; the dispatcher owns the log/state transaction. */
+    public static function send_page($leads, $rule) {
+        if ($rule['platform'] === 'meta') { return self::sync_to_meta($leads, $rule['audience_id'], !empty($rule['is_value']) && (string) $rule['is_value'] === '1'); }
+        if ($rule['platform'] === 'linkedin') { return self::sync_to_linkedin($leads, $rule['audience_id']); }
+        return array('status'=>'sent', 'payload'=>array('mode'=>'pull'), 'response'=>'Pull feed mapped; provider consumption is not confirmed.', 'retry_after'=>0);
+    }
+
+    private static function outcome($response, $payload, $success_codes) {
+        if (is_wp_error($response)) { return array('status'=>'uncertain','payload'=>$payload,'response'=>$response->get_error_message(),'retry_after'=>0); }
+        $code=(int) wp_remote_retrieve_response_code($response); $body=wp_remote_retrieve_body($response);
+        $decoded=json_decode($body,true); $valid=is_array($decoded) || trim($body)==='';
+        $partial=!empty($decoded['num_invalid_entries']);
+        foreach (is_array($decoded['elements'] ?? null) ? $decoded['elements'] : array() as $element) {
+            if (is_array($element) && (!empty($element['error']) || isset($element['status']) && (int)$element['status']>=400)) { $partial=true; }
+        }
+        if (in_array($code,$success_codes,true) && $partial) { $status='uncertain'; }
+        elseif (in_array($code,$success_codes,true) && $valid && empty($decoded['error'])) { $status='sent'; }
+        elseif ($code===429 || $code>=500 && $code<=599 || !empty($decoded['error']['is_transient'])) { $status='failed'; }
+        elseif ($code>=400 && $code<=499 || !empty($decoded['error'])) { $status='blocked'; }
+        else { $status='uncertain'; }
+        $retry=wp_remote_retrieve_header($response,'retry-after');
+        $delay=is_scalar($retry) && ctype_digit((string)$retry) ? (int)$retry : (is_string($retry) ? max(0,(int)strtotime($retry)-time()) : 0);
+        return array('status'=>$status,'payload'=>$payload,'response'=>$body,'retry_after'=>min(3600,max(0,$delay)));
     }
 
     /**
@@ -133,10 +142,10 @@ class IDLM_Audiences {
         if (empty($audience_id)) {
             $audience_id = get_option('idlm_meta_audience_id');
         }
-        $access_token = get_option('idlm_meta_access_token');
+        $access_token = IDLM_Secret_Store::get('idlm_meta_access_token', '', true);
 
         if (empty($audience_id) || empty($access_token)) {
-            return;
+            return array('status'=>'blocked','payload'=>array(),'response'=>'Credentials missing.','retry_after'=>0);
         }
 
         $schema = array('EMAIL', 'PHONE', 'FN', 'LN');
@@ -167,28 +176,16 @@ class IDLM_Audiences {
             )
         );
 
-        $endpoint = "https://graph.facebook.com/v25.0/{$audience_id}/users?access_token={$access_token}";
+        $endpoint = "https://graph.facebook.com/v25.0/" . rawurlencode($audience_id) . "/users";
 
-        $response = wp_remote_post($endpoint, array(
-            'headers' => array('Content-Type' => 'application/json'),
+        if (!IDLM_Recovery_Guard::lease_valid()) { return array('status'=>'uncertain','payload'=>array(),'response'=>'Worker fence lost.','retry_after'=>0); }
+        $response = IDLM_Secret_Store::request($endpoint, array(
+            'headers' => array('Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $access_token),
             'body'    => json_encode($payload),
             'timeout' => 30
-        ));
+        ), array($access_token));
 
-        // Log upload status in global logs
-        if (is_wp_error($response)) {
-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-            error_log('IDLM Custom Audience Meta sync failed: ' . $response->get_error_message());
-            IDLM_DB::log_audience_sync('meta', $audience_id, count($leads), $payload, $response->get_error_message(), 'failed');
-        } else {
-            $code = wp_remote_retrieve_response_code($response);
-            $response_body = wp_remote_retrieve_body($response);
-            if ($code == 200) {
-                IDLM_DB::log_audience_sync('meta', $audience_id, count($leads), $payload, $response_body, 'success');
-            } else {
-                IDLM_DB::log_audience_sync('meta', $audience_id, count($leads), $payload, $response_body, 'failed');
-            }
-        }
+        return self::outcome($response, $payload, array(200));
     }
 
     /**
@@ -200,23 +197,13 @@ class IDLM_Audiences {
     public static function get_leads_matching_rule($rule) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
-        $conditions = array("is_duplicate = 0");
-
-        if (!empty($rule['stage']) && $rule['stage'] !== 'all') {
-            $conditions[] = $wpdb->prepare("stage = %s", $rule['stage']);
-        }
-        if (!empty($rule['call_status']) && $rule['call_status'] !== 'all') {
-            $conditions[] = $wpdb->prepare("call_status = %s", $rule['call_status']);
-        }
-        if (!empty($rule['lead_quality']) && $rule['lead_quality'] !== 'all') {
-            $conditions[] = $wpdb->prepare("lead_quality = %s", $rule['lead_quality']);
-        }
-
-        $where_clause = implode(" AND ", $conditions);
+        $where_clause = self::rule_conditions($rule);
         $query = "SELECT * FROM {$table_leads} WHERE {$where_clause}";
 
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter -- REL007-SQL-0385: get_leads_matching_rule(): rule_conditions iterates only stage/call_status/lead_quality identifiers and prepares each value; no arbitrary field or SQL fragment is accepted.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
         return $wpdb->get_results($query);
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter
     }
 
     /**
@@ -259,26 +246,16 @@ class IDLM_Audiences {
     }
 
     /**
-     * Sync to Google Ads (Pull Feed Logging)
-     */
-    private static function sync_to_google($leads, $user_list_name = '') {
-        $list_name = basename(trim($user_list_name));
-        $lead_count = count($leads);
-        
-        IDLM_DB::log_audience_sync('google', $list_name, $lead_count, array('mode' => 'pull'), 'Pull Feed Active. Leads mapped: ' . $lead_count, 'success');
-    }
-
-    /**
      * Sync to LinkedIn Contact Segment
      */
     private static function sync_to_linkedin($leads, $segment_urn = '') {
         if (empty($segment_urn)) {
             $segment_urn = get_option('idlm_linkedin_segment_urn');
         }
-        $access_token = get_option('idlm_linkedin_access_token');
+        $access_token = IDLM_Secret_Store::get('idlm_linkedin_access_token', '', true);
 
         if (empty($segment_urn) || empty($access_token)) {
-            return;
+            return array('status'=>'blocked','payload'=>array(),'response'=>'Credentials missing.','retry_after'=>0);
         }
 
         $elements = array();
@@ -300,25 +277,16 @@ class IDLM_Audiences {
         // LinkedIn custom lists API segment mutate
         $endpoint = "https://api.linkedin.com/v2/adSegments/{$segment_urn}/contacts";
 
-        $response = wp_remote_post($endpoint, array(
+        if (!IDLM_Recovery_Guard::lease_valid()) { return array('status'=>'uncertain','payload'=>array(),'response'=>'Worker fence lost.','retry_after'=>0); }
+        $response = IDLM_Secret_Store::request($endpoint, array(
             'headers' => array(
                 'Authorization' => 'Bearer ' . $access_token,
                 'Content-Type' => 'application/json'
             ),
             'body' => json_encode($payload),
             'timeout' => 30
-        ));
+        ), array($access_token));
 
-        if (!is_wp_error($response)) {
-            $code = wp_remote_retrieve_response_code($response);
-            $response_body = wp_remote_retrieve_body($response);
-            if ($code == 200 || $code == 201) {
-                IDLM_DB::log_audience_sync('linkedin', basename($segment_urn), count($leads), $payload, $response_body, 'success');
-            } else {
-                IDLM_DB::log_audience_sync('linkedin', basename($segment_urn), count($leads), $payload, $response_body, 'failed');
-            }
-        } else {
-            IDLM_DB::log_audience_sync('linkedin', basename($segment_urn), count($leads), $payload, $response->get_error_message(), 'failed');
-        }
+        return self::outcome($response, $payload, array(200, 201));
     }
 }

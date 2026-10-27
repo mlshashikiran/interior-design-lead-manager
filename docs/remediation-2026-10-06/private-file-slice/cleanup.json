@@ -1,0 +1,11 @@
+{
+  "author": "Shashi",
+  "owned_datadir": "/private/tmp/idlm-private-slice-mysql/data/",
+  "disposable_databases_remaining": [],
+  "configured_site_database_used": false,
+  "shutdown": "completed",
+  "owned_datadir_removed": true,
+  "pid_and_socket_absent": true,
+  "held_browser_fixture_removed": true,
+  "verification_runs": "Fresh owned servers used for final guard and HTTP purpose/scope characterization; each had zero remaining idlm_test_* databases before shutdown"
+}

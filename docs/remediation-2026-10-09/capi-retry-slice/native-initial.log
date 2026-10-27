@@ -1,0 +1,13 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T08-N-INT005-current Google defaults and custom platform events retry exact attempts
+PASS T08-N-INT005-worker forced attribution and retry share current exclusion gates
+PASS T08-N-INT005-legacy ambiguity mapping changes and prior success never report a resend
+PASS T08-N-INT005-snapshots bind destination commercial data and timing while credentials refresh
+PASS T08-N-INT005-failures bounded across root chain and uncertain or permanent results refuse replay
+PASS T08-N-INT005-required claim log and acknowledgement failures preserve uncertainty
+PASS T08-C-INT005-crash after synthetic acceptance never automatically resends
+PASS T08-C-INT005-independent manual workers and normal worker serialize provider delivery
+PASS T08-T16-T17-N-INT005-receipts stay outside backups and erase on restore and reset
+PASS T08-N-INT005-active transactions and malformed identities refuse provider calls
+
+11 passed, 0 failed

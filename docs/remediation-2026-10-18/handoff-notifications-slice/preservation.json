@@ -1,0 +1,97 @@
+{
+  "builder": "Shashi",
+  "baseline_file_count": 1755,
+  "unchanged_file_count": 1738,
+  "scoped_changes": [
+    {
+      "file": "CHANGELOG.md",
+      "before_sha256": "011e8b2b88ab1fe3ea7233e6b7c37efd04d6c64fef6ce2e6ca69d34234966869",
+      "after_sha256": "dbd61d7ea300e4f6ba3e281677307a701a0627c2793d5660be6ca431fde070aa"
+    },
+    {
+      "file": "interior-design-lead-manager.php",
+      "before_sha256": "54dff5b01d62e774cb05f42e09646aafe3126a2effa19da082c66fdd926c7caf",
+      "after_sha256": "ac9bf2e7e4cf0334091f1d7d6fc98b1f7fb55b53fe26bfced8f75d8fc5a638a6"
+    },
+    {
+      "file": "readme.txt",
+      "before_sha256": "56afcd1ebf6f30fbe9d7b4bdc1bb7e62f068c5e1a1f262e15078d000011477db",
+      "after_sha256": "5b1e11b877cc4da81c104167501bc2450fafdd5b5886208131589edab475e702"
+    },
+    {
+      "file": "tests/bootstrap.php",
+      "before_sha256": "90a4c087d1b2376fae903fa51c60be7bf65e7d84765f06fc68f973a3ff6340af",
+      "after_sha256": "a446f2f06a8b32561106173038408dfa6fc1672a345c0a38664654c893aea668"
+    },
+    {
+      "file": "tests/README.md",
+      "before_sha256": "0723d4d15af0c8107c577a0c6d061a7e2923d1617425a1ab94facd40596f437f",
+      "after_sha256": "c0a16ae6bb9beef700266e4d38bc7c8379fbebbc8b2507758d52559be7c90077"
+    },
+    {
+      "file": "tests/release-contracts.php",
+      "before_sha256": "3ce99d2c7d01dd6c3053c13b4168e70275526e5d541f3f9e26549b5e0aaefbd6",
+      "after_sha256": "d62146420ff9013d517f56e5172b2673c8e9d3935259450ddc5d7c6439ab6dab"
+    },
+    {
+      "file": "includes/class-integrations.php",
+      "before_sha256": "df8f102828fdaf768d750f6ae08206300a2a2aaac020a66c79577c1c50addb7a",
+      "after_sha256": "6143488b28c273c56cbb36984fa23ac1b3104e3845f720dcf3f80d7920b1c523"
+    },
+    {
+      "file": "docs/audit-remediation-backlog.csv",
+      "before_sha256": "820e31c218c3ebe390a5eedd56c238de14ed82d6e5a3d96cc8a23b7181bb5338",
+      "after_sha256": "217ccc9e865e028ba0a04fa6c92f0ebcb473314cc746c8488bff42acb24420cf"
+    },
+    {
+      "file": "docs/ARCHITECTURE.md",
+      "before_sha256": "bc85afca1e6c7e1f59e79735d5a407919a672982d8f418b0897f1e28cbee7703",
+      "after_sha256": "446b8ec299819102a245223149a59560eef722a8981d8793929cc895c6b432f0"
+    },
+    {
+      "file": "docs/CHANGELOG-DEV.md",
+      "before_sha256": "87be62ca3ef90b3ac0198dca262ba10cbd61b4d3791c7d2d530e3518c017335a",
+      "after_sha256": "124e65afab8f07a9906a0454696d2e8d53e82fc201ed6acbe51bc387129a1381"
+    },
+    {
+      "file": "docs/PRODUCTION-SCALABILITY-PLAN.md",
+      "before_sha256": "9598ec6348a1f80e803f2d1019319dd38d8a91edf35312e71c76d0a774b21818",
+      "after_sha256": "622e50e9a2fd52be5e2893a51c752dde354f8d4ac69a45c4fa71ce60356915e8"
+    },
+    {
+      "file": "docs/FEATURE-MAP.md",
+      "before_sha256": "c31ef088fda65e1f7e9efa03bad279778b4e60bebfacb5cce5cd1688e4d4cae4",
+      "after_sha256": "cf1ac904dc9e6c3c45ad8cee0676d96d3e72408dbde68b4b5a163abe3e156f45"
+    },
+    {
+      "file": "docs/PROJECT-MAP.md",
+      "before_sha256": "b183ffc1fe5a1f99a1619ec81eb4a9e921e27c5539a345e38d34d1551448b66d",
+      "after_sha256": "9bf2f34e7749bcf4721100c0e4f14b7926d94219c6b1f11c8234974b6eae884c"
+    },
+    {
+      "file": "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+      "before_sha256": "a8decff766ad7eced791d9d301d397c15e45ca3f460a8794da70a206fd9e3b14",
+      "after_sha256": "d7fb2db58104d6f499473fa207b94db131bd8c3817f9a1f2e532c8e17eca86a3"
+    },
+    {
+      "file": "docs/DEVELOPMENT.md",
+      "before_sha256": "fb9aeb2cd7545a8cdf24b5495e3d0092054ae765dd7b00d24e027af6557b8321",
+      "after_sha256": "a51e89c3f707cf2370f59b538c6691435152649ca45a903b3cb0204a83820d39"
+    },
+    {
+      "file": "docs/AUDIT-REMEDIATION-PLAN.md",
+      "before_sha256": "8cba3aa86fee28cfb0fb3632bb136b6b8cf3c4f5d272fc22a3af305a664ee41a",
+      "after_sha256": "ad9bfd2b7139cf448c37086e5e494413db54e8f86734d62255b6cb7057225b32"
+    },
+    {
+      "file": "tests/integration/run.php",
+      "before_sha256": "31180390337b2751eaa81a2a69520a2055f6bf6a28c6779710cc361499d9f857",
+      "after_sha256": "b611a49a12a56bbda617c4dbdfb8af0f81eade8da8bfe4831a90b1ceda886da9"
+    }
+  ],
+  "unexpected_changes": [],
+  "unrelated_working_tree_edits_preserved": true,
+  "historical_samples_and_fault_logs_byte_identical": true,
+  "version": "1.102.84",
+  "no_reset_commit_push_deploy": true
+}

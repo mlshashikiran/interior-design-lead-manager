@@ -1,0 +1,112 @@
+{
+  "builder": "Shashi",
+  "mode": "Manual current-source characterization, with lightweight section/contact/local-link and release-omission checks; not new runtime regression execution",
+  "readme_sections": [
+    "== External services ==",
+    "== Privacy and data lifecycle ==",
+    "== Support and security ==",
+    "== Updates and recovery =="
+  ],
+  "claims": [
+    {
+      "claim": "Meta hashed contact/names; request-context IP/UA; event/commercial data",
+      "source": "includes/class-capi.php:434"
+    },
+    {
+      "claim": "Google Measurement Protocol and provider-required secret URL",
+      "source": "includes/class-capi.php:539"
+    },
+    {
+      "claim": "Google feed plaintext contact, country IN, empty postcode, hashed names",
+      "source": "includes/class-audiences.php:205"
+    },
+    {
+      "claim": "LinkedIn audiences hashed email and plaintext names",
+      "source": "includes/class-audiences.php:257"
+    },
+    {
+      "claim": "Interakt ordinary/batch plaintext contact/project traits",
+      "sources": [
+        "includes/class-interakt-dispatch.php:151",
+        "includes/class-interakt-batch.php:70"
+      ]
+    },
+    {
+      "claim": "Automatic 30-day attribution cookies with no local consent guard",
+      "source": "includes/class-integrations.php:290"
+    },
+    {
+      "claim": "Default retention 90/180/14; seven-day selected activity; bounded scheduler",
+      "source": "includes/class-data-retention.php:111"
+    },
+    {
+      "claim": "Lead deletion/reset preserve configuration; private cleanup after commit",
+      "sources": [
+        "includes/class-lead-deletion-service.php:21",
+        "includes/class-lead-deletion-service.php:175",
+        "includes/class-private-files.php:380"
+      ]
+    },
+    {
+      "claim": "WhatsApp minimal replay receipts have no automatic expiry or deletion/reset removal",
+      "sources": [
+        "includes/class-whatsapp-inbox.php:40",
+        "includes/class-lead-deletion-service.php:94",
+        "includes/class-backup.php:46"
+      ]
+    },
+    {
+      "claim": "JSON backup excludes secrets/private files/users/runtime; restore restrictions",
+      "source": "includes/class-backup.php:16"
+    },
+    {
+      "claim": "Deactivation preserves data; no uninstall or privacy eraser registration",
+      "sources": [
+        "interior-design-lead-manager.php:252",
+        "Registration/file-name review across bootstrap/includes"
+      ]
+    },
+    {
+      "claim": "No telemetry sender; protected credential storage; remote saved artwork fetch",
+      "sources": [
+        "includes/class-telemetry.php:161",
+        "includes/class-secret-store.php",
+        "includes/class-quotation-exporter.php:305"
+      ]
+    },
+    {
+      "claim": "Support/security email authorized by user; manual reviewed ZIP default follows current release process",
+      "sources": [
+        "User reply 2026-10-09: mlshashikiran@gmail.com",
+        "docs/PRODUCTION-RELEASE.md"
+      ]
+    }
+  ],
+  "source_hashes": {
+    "includes/class-integrations.php": "eb7e767192ebfcc7019402ab93ac857c178cddf8aeac5693bc3bdf8f1fcf88fc",
+    "includes/class-capi.php": "8f7bc666fd8e534ea7eb676acbb49212e07edbd5049bec1923ee73753b1ba9bd",
+    "includes/class-audiences.php": "e0f31a7c3ffb3cdb40d5f8548df84807ae21721a10f2d58a695d4c89996b3063",
+    "includes/class-interakt.php": "4783091cbed19c2456653c587f0f1690fe322563c7738b54661e70c28f622c0d",
+    "includes/class-interakt-dispatch.php": "f37af39cc4e18fe3285f44a84e0648061ad051e26b036d59bc50e92db6b11421",
+    "includes/class-interakt-batch.php": "b66a848191ace9f14404ae57a1c03e140dfc7ba4dfbb1805210e66c665ce444d",
+    "includes/class-data-retention.php": "11c9cfa9a4580a113acd6ef996086b1a044fdbaa39a92d61ab7191b6dbc878fc",
+    "includes/class-identity-review.php": "da3f0fb75c3e8b3dcdd74240dd38161fdec577214552e53c669e67b81cddd818",
+    "includes/class-lead-deletion-service.php": "759d3d640376690310731bb1b5b9d4f67dace1c85b775d549b4ce5baeed7d3d2",
+    "includes/class-private-files.php": "946564b2272f382c45e7cb9a721bd9fafd8de8e16b6582fb105a669490fba1c7",
+    "includes/class-backup.php": "140b5fafbeee78c7ace9a24f10bec44ccd2bbff3136e7caef5b7109fb460b85a",
+    "includes/class-whatsapp-inbox.php": "1eca0e2172e49e048d6c8f547dce5851e972d874540d220b4a46d65b569be77a",
+    "includes/class-secret-store.php": "b69d786e9c4310ad121339977b58b0d245af80f07ca9dea0ab929c27e065741f",
+    "includes/class-telemetry.php": "b328b88b67268c4ec614a8218b8afd8c2143fcf76f38220bd430f76cd6b32d6f",
+    "includes/class-quotation-exporter.php": "e4c23e9c47d9efefe321ffb005aa63df5086b46dbed9340c88dc291f7cb032c7",
+    "includes/class-mcp-core.php": "66985462fb6b7b5eea6bdc3f593ceb733d15d2fd89ddbba42a4cd256fd1814e4"
+  },
+  "remaining_qualifications": [
+    "Consent-aware attribution policy/enforcement before relevant deployment",
+    "WhatsApp replay-receipt retention/erasure policy",
+    "Production legacy upload/cache migration",
+    "Provider retention/deletion and live API eligibility",
+    "Installed full-site recovery and support floor/matrix"
+  ],
+  "runtime_behavior_changed": false,
+  "bootstrap_metadata_changed": true
+}

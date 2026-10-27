@@ -1,0 +1,441 @@
+Paper test contractual cover
+                                           Quotation #:                                                                Q-2026-000001
+IDLM Integration Tests                     Revision:                                                                               R02
+
+                                           Created / Modified By:                                         fixture_owner / fixture_owner
+
+                                           Created / Updated Date:                          08-10-2026 11:12 AM / 08-10-2026 11:12 AM
+
+
+
+
+    Customer Details
+
+CLIENT NAME                 PHONE NUMBER               EMAIL ID                 PROPERTY NAME              LOCATION
+
+
+Synthetic paper fixture     —                          —                        —                          —
+
+
+
+
+    Quotation Summary
+
+ Section-wise subtotal before discount
+
+
+Sl No                                      Section                                      Subtotal before discount
+
+
+1                                          General                                                                         ₹6,000.00
+
+
+
+                                                                  Subtotal                                               ₹6,000.00
+
+                                                                  Wooden Subtotal                                             ₹0.00
+
+                                                                  Wooden Discount (0.00%)                                     ₹0.00
+
+                                                                  Total                                                  ₹6,000.00
+
+                                                                  GST (18%)                                              ₹1,080.00
+
+
+                                                                  Grand Total                                          ₹7,080.00
+    Section & Item Breakdown
+
+
+    General
+
+S.NO   ITEM            DESCRIPTION                       WIDTH   HEIGHT   AREA / QTY   UNIT      RATE   SUBTOTAL
+
+
+1      Uncategorised   PAPER-ROW-001 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+2      Uncategorised   PAPER-ROW-002 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+3      Uncategorised   PAPER-ROW-003 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+4      Uncategorised   PAPER-ROW-004 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+5      Uncategorised   PAPER-ROW-005 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+6      Uncategorised   PAPER-ROW-006 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+7      Uncategorised   PAPER-ROW-007 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+8      Uncategorised   PAPER-ROW-008 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+9      Uncategorised   PAPER-ROW-009 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+10     Uncategorised   PAPER-ROW-010 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+S.NO   ITEM            DESCRIPTION                       WIDTH   HEIGHT   AREA / QTY   UNIT      RATE   SUBTOTAL
+
+
+11     Uncategorised   PAPER-ROW-011 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+12     Uncategorised   PAPER-ROW-012 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+13     Uncategorised   PAPER-ROW-013 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+14     Uncategorised   PAPER-ROW-014 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+15     Uncategorised   PAPER-ROW-015 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+16     Uncategorised   PAPER-ROW-016 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+17     Uncategorised   PAPER-ROW-017 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+18     Uncategorised   PAPER-ROW-018 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+19     Uncategorised   PAPER-ROW-019 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+20     Uncategorised   PAPER-ROW-020 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+21     Uncategorised   PAPER-ROW-021 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+S.NO   ITEM            DESCRIPTION                       WIDTH   HEIGHT   AREA / QTY   UNIT      RATE   SUBTOTAL
+
+
+22     Uncategorised   PAPER-ROW-022 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+23     Uncategorised   PAPER-ROW-023 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+24     Uncategorised   PAPER-ROW-024 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+25     Uncategorised   PAPER-ROW-025 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+26     Uncategorised   PAPER-ROW-026 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+27     Uncategorised   PAPER-ROW-027 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+28     Uncategorised   PAPER-ROW-028 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+29     Uncategorised   PAPER-ROW-029 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+30     Uncategorised   PAPER-ROW-030 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+31     Uncategorised   PAPER-ROW-031 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+32     Uncategorised   PAPER-ROW-032 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+S.NO   ITEM            DESCRIPTION                       WIDTH   HEIGHT   AREA / QTY   UNIT      RATE   SUBTOTAL
+
+
+33     Uncategorised   PAPER-ROW-033 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+34     Uncategorised   PAPER-ROW-034 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+35     Uncategorised   PAPER-ROW-035 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+36     Uncategorised   PAPER-ROW-036 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+37     Uncategorised   PAPER-ROW-037 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+38     Uncategorised   PAPER-ROW-038 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+39     Uncategorised   PAPER-ROW-039 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+40     Uncategorised   PAPER-ROW-040 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+41     Uncategorised   PAPER-ROW-041 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+42     Uncategorised   PAPER-ROW-042 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+43     Uncategorised   PAPER-ROW-043 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+S.NO   ITEM            DESCRIPTION                       WIDTH   HEIGHT   AREA / QTY   UNIT      RATE   SUBTOTAL
+
+
+44     Uncategorised   PAPER-ROW-044 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+45     Uncategorised   PAPER-ROW-045 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+46     Uncategorised   PAPER-ROW-046 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+47     Uncategorised   PAPER-ROW-047 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+48     Uncategorised   PAPER-ROW-048 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+49     Uncategorised   PAPER-ROW-049 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+50     Uncategorised   PAPER-ROW-050 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+51     Uncategorised   PAPER-ROW-051 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+52     Uncategorised   PAPER-ROW-052 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+53     Uncategorised   PAPER-ROW-053 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+54     Uncategorised   PAPER-ROW-054 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00   ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+S.NO   ITEM            DESCRIPTION                       WIDTH   HEIGHT   AREA / QTY   UNIT      RATE               SUBTOTAL
+
+
+55     Uncategorised   PAPER-ROW-055 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00               ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+56     Uncategorised   PAPER-ROW-056 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00               ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+57     Uncategorised   PAPER-ROW-057 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00               ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+58     Uncategorised   PAPER-ROW-058 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00               ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+59     Uncategorised   PAPER-ROW-059 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00               ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+60     Uncategorised   PAPER-ROW-060 Custom fitted       0.00     0.00         1.00    Nos    ₹100.00               ₹100.00
+                       cabinetry with durable finishes
+                       and detailed installation
+                       specifications
+
+
+GENERAL SUBTOTAL                                                                                        ₹6,000.00
+Paper test contractual closing
+
+
+
+Payment Structure
+
+ Milestone                       Percentage                                    Amount
+
+
+ Paper test deposit              50.00%                                       ₹3,540.00
+
+
+ Paper test completion           50.00%                                       ₹3,540.00
+
+
+ Total                           100.00%                                      ₹7,080.00
+
+
+
+
+                                              Paper test contractual footer
+

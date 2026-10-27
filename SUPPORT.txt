@@ -1,0 +1,42 @@
+# Support, security reports and managed updates
+
+Author / Builder: Shashi. Updated: 2026-10-09. Applies to candidate 1.102.75.
+
+## Contact
+
+For plugin support, reviewed update requests and private security reports, contact Shashi at **[mlshashikiran@gmail.com](mailto:mlshashikiran@gmail.com)**. This address is the owner-supplied contact for all three purposes. For customer data/access requests, contact the administrator of the WordPress site that holds the records; the plugin author does not automatically receive or control that site's CRM data.
+
+For support, include the plugin, PHP and WordPress versions, the affected workflow, expected/actual behavior and synthetic reproduction steps. Share redacted diagnostics only. Do not email live customer exports, passwords, access tokens, API secrets, encryption keys, salts or a full database backup. If further private evidence is needed, agree on a secure transfer method first. No response-time or availability guarantee is published.
+
+Report suspected vulnerabilities privately to the same address with a concise description, affected version and synthetic reproduction. Avoid posting customer data, secrets or exploitable details in public issues. Email sent to this address is handled by the recipient's mail service; contacting support is a user-initiated transfer, not automatic plugin telemetry.
+
+## Distribution and updates
+
+The current process is a manually supplied, reviewed ZIP. The plugin contains no custom automatic update service, license activation server or guaranteed WordPress.org update listing. A development checkout, internal Git URL, local rehearsal ZIP or an artifact marked unapproved is not a production release channel. Request an approved ZIP, version, checksum and migration/recovery notes through the support contact.
+
+Before replacing the plugin:
+
+1. Take and verify a full WordPress database backup, filesystem/media backup and secure copy of the encryption key or matching WordPress salts. The plugin's JSON export is only a partial CRM backup; see [Privacy and data lifecycle](PRIVACY.txt).
+2. Verify the supplied version/checksum and rehearse that exact ZIP on a staging copy. Check schema status, sign-in/access, lead/task/quotation flows, private downloads, scheduler state and required integrations using synthetic data.
+3. Record the provider/rule and queue state; pause configured outbound work for maintenance. Existing provider requests already in flight cannot be recalled. Restore the intended settings deliberately after successful verification.
+4. Deploy only the approved artifact through the site's controlled WordPress/plugin update process. Retain the original backup and release identity for recovery.
+
+No rollback is guaranteed by installing an older ZIP. A schema or data change may require restoring the matching database, private files, media and encryption material together. Recovery may reintroduce erased records or provider work, so reconcile it before reopening integrations. Full-database loss can also remove delivery receipts and permit a later replay; the plugin does not guarantee exactly-once provider delivery.
+
+## Host requirements and compatibility
+
+Selected minimums: **WordPress 6.6 and PHP 7.4**. WordPress versions below 6.6 are outside scope. The release matrix is PHP 7.4/8.1/8.4/8.5 × WordPress 6.6/latest; `latest` is resolved and recorded on each CI run. Minimum metadata and a configured workflow are not passing evidence. Only a successful complete matrix tied to the candidate revision can qualify an approved ZIP. Run maintained WordPress/PHP releases on deployed sites.
+
+- **Database:** WordPress database driver (`mysqli` in the fixture), MySQL and InnoDB for the CRM/quotation and required WordPress tables. Schema installation/verification and named locking must work. Unsupported engines/failed migrations block writes. MariaDB, multisite/network activation and distributed topologies remain unqualified.
+- **Credentials:** OpenSSL with AES-256-GCM, random-byte support and the matching secret key/WordPress salts. Missing crypto fails stored-secret writes/migration/reads without replacing existing bytes. Preserve encryption material with backups. Environment credentials use a separate path, not a certification of crypto-free deployments.
+- **PDF:** complete bundled Dompdf runtime, DOM, mbstring, iconv, GD with the needed image codecs, and writable temporary/font-cache storage. Missing prerequisites return to quotation Preview / Print before binary output; renderer/resource failures also use this fallback. Repair prerequisites and verify both a text and an image document.
+- **XLSX:** ZipArchive and writable temporary storage. Missing ZIP or unavailable storage produces a generic download error. CSV and browser print remain independent of the renderer/ZIP dependencies.
+- **Jobs/transport:** Action Scheduler is optional, with WP-Cron fallback; a working cron trigger/external runner is needed for prompt jobs and retention. Persistent object cache is optional. WordPress HTTP/HTTPS, uploads and temporary storage must work. No production memory/time/volume guarantee is established.
+
+Enable modules in the web server's PHP runtime, not only the CLI used by tests. Rehearse installation, credential save/read, a quotation with images, PDF/XLSX/CSV/print and scheduled work using synthetic data before deployment.
+
+## Current qualification boundary
+
+The audit remediation candidate is local and unapproved for production. REL-005 aligns the selected minimums and records named local evidence; complete exact-revision CI and final installed-artifact qualification remain required. Do not infer a tested matrix from metadata alone. Multisite/network activation, distributed database/cache topologies, all scheduler variants, provider sandboxes and full installed-artifact recovery remain subject to qualification. This document does not claim directory approval, legal compliance, or a production release.
+
+Single-server qualification candidate 1.102.88: current local WordPress 7.1.3 / PHP 8.5.12 runs exercise the selected 25–50-user / 50k-lead workload on the documented reference host. These results do not approve deployment or replace exact-revision CI. Network activation is rejected before schema writes; single-site activation remains the supported topology. See the supplied release notes for measured limits and operational acceptance.

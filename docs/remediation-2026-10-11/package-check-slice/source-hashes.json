@@ -1,0 +1,22 @@
+{
+  "tests/release/check-package.php": "462a5259a6d77296b1fe9d97d54afaf5287e097937410e0aee8150c3b6ab3bd7",
+  "tests/release/class-release-artifact.php": "66260bb424b578bb10db0c752327181fef5fd28100847d2198d50a6d200fe999",
+  "tests/release-contracts.php": "4a19c9f801cb04e8e81eeb98342a927ae1debfb9f71f5bf57e60a604aac1e3d2",
+  "includes/class-mcp-query-policy.php": "3d150ae9c9cf68b1c195f14dbaa4ebdf4f6b94137da184c3304d995cdf5cfebc",
+  "includes/class-quotation-exporter.php": "1be1730833c082ff345dbacb98484bb0f3a2bafa21314d36e22e4f3c2ee0e7a1",
+  "includes/class-quotation-renderer.php": "f26ca10d0b7ff525b7b9ffa6e27747bb653b1ba060b864eaf98260690c19141b",
+  "interior-design-lead-manager.php": "fdd1f43d21d993056d89821535a675e2a8d609d093999679d9d1c4f9b789dbe0",
+  ".distignore": "716007fedbb0b10a20426f25194b4bcd0a5a233d03a97ef891964676de1c1de4",
+  ".github/workflows/tests.yml": "430e77d804ca3b81c4d97a0e5500c0263667193df1170a5b2ab95e732f3f2ac2",
+  "readme.txt": "36ebf0a18774325d16588b0ce00cab6e01e435a28148f1ddcd600583965a0f57",
+  "CHANGELOG.md": "45fd71e7cb5e252bdde3cec918f0b1fd03dc93c8bf3a8b750d699ace8af12463",
+  "docs/AUDIT-REMEDIATION-PACKAGE-CHECK-SLICE.md": "b33c30c200c3ee9650cd23812b4c850ccf34ed5b5cd1cfd5b01adbeabef2ae87",
+  "docs/AUDIT-REMEDIATION-PLAN.md": "0877fccc9c952d9cb580e1a1e08abcf778f49e65dda44b6846052fb817740475",
+  "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "d6f32292bd6f75392accf912281cacdadec94d7bce3bbf1f09d8b60f8253b17d",
+  "docs/audit-remediation-backlog.csv": "f73021e98093eb495932c2def7cd6c6c1605ef28135e8ad8f2dfd1fed90da9ff",
+  "docs/PRODUCTION-SCALABILITY-PLAN.md": "eafb38dc6d2388b9306fb3c56509e03982be5a855d93d1fd596f50d45e6c6237",
+  "docs/PRODUCTION-RELEASE.md": "ba4b887c6e6bca0b5333b49eea5e53ecb03a268e838ca0ee0582fa649df812dc",
+  "docs/CHANGELOG-DEV.md": "70c65028abe50c8c44a6e46fa3b856e7cccd2e2f50f0858b368ac740a1044463",
+  "docs/PROJECT-MAP.md": "b1eb8b1ab6be0f3f56e11ae5450ace7035bee876b44547aafa64fa5e97829aa7",
+  "tests/README.md": "756e30d553ddee273ffe6d7f07699098ec3062d77b22c4fa42024955d67db105"
+}

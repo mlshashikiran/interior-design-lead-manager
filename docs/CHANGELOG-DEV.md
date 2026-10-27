@@ -1,5 +1,321 @@
 # Engineering Change Log
 
+## 1.102.97 — catalogue CSV preview/import (2026-10-27)
+
+Builder: Shashi. `IDLM_Quotation_Catalogue_Import` owns shared read-only validation and engine-checked import. The quotation controller validates actual CSV uploads and exposes authenticated `wp_ajax_idlm_import_catalogue_csv` with `idlm_manage_quote_items` plus the existing import nonce; `import_mode=preview|import` selects the operation. The legacy admin-post action remains supported. No browser row data is trusted and no preview/upload is persisted. Import re-reads the file/current codes within the transaction; database failures roll back all item/term writes and identify the failing CSV record when available. CSV-only grouped-rate normalization leaves strict quotation decimal parsing unchanged. Preserve active/inactive and reject malformed grouping, column counts, field lengths and enums; strip UTF-8 header BOM. Limits remain 5 MB / 2,000 records.
+
+The shared popup previews all row outcomes using DOM text nodes, imports valid rows only, and retains per-row results and server errors until closed. Repeated blank-code imports create new items; the UI explicitly warns and disables automatic import retry after uncertain transport failure. The supplied kitchen CSV contains 66 items, of which 64 were previously skipped because rates include commas; all 66 validate with the new parser. Release preparation: 404 fast, six native quotation-engine and four actual multipart HTTP checks pass. A disposable browser import of the supplied file imports all 66 items. No production import or deployment. Full CI exposed an inbox test inheriting enabled connector capture from the new form-mapping test. Inbox fixtures now explicitly choose immediate receipt; an additional native notification test verifies queued authenticated intake also survives outgoing notifications being disabled. Initial failure evidence remains in GitHub run 40537959225.
+
+## 1.102.91 — independent pipeline column loading (2026-10-26)
+
+Builder: Shashi. The shared pipeline client requests `per_column=1`: initial responses contain at most twenty leads per configured sales stage; continuations request one `column_stage` and append twenty more. Signed tokens bind stage, actor, current visibility, filters, sort and batch size. Preserve the older 100-card whole-board API for existing callers. Keep full filtered stage counts, monetary totals and board statistics independent of loaded cards. Column-local request locks, refresh sequence fencing, deduplication and retry controls prevent overlapping/stale appends; filter changes reset batches, while stage updates restore loaded depth and column scroll position. Desktop and mobile use bounded column scroll areas. No schema, lifecycle or provider changes. HTTP regressions cover independent/exhaustive batches, empty columns, scope, cross-column/token/filter/sort denials and live access revocation.
+
+Local verification: 395 fast / five prerequisite / six focused actual HTTP groups pass on PHP 8.4.14, WordPress 7.1.3 and isolated MySQL 8.4.0. PHP and JavaScript syntax checks pass. Browser checks at 1280px and 390px verify independent 20→40 batches, failure/retry without losing cards, drawer continuity, mobile stage switching, stage-move count/depth/scroll restoration, cancellation of an in-flight batch on filter changes and no horizontal page overflow. All data and delivery remain synthetic/intercepted. CI and final artifact identity are recorded in the release handoff after the complete remote run.
+
+## 1.102.90 — quotation editor document panel removal (2026-10-24)
+
+Builder: Shashi. Remove the document-content review panel from the shared quotation renderer, covering create/edit in both admin and shortcode workspaces. Keep Quotation Setup defaults, currency fields, save/autosave capture and historical document snapshots unchanged. Record the editor omission in AGENTS.md so later builds preserve it. CI run 40015627959 exposed a test-only clock mismatch after UTC and Asia/Kolkata crossed different dates: the 20,000-task sample used MySQL NOW() while due-today counts use the site clock. Set the synthetic task due date with current_time('mysql'); retain the full count, memory and query-plan assertions. Runtime bytes are unchanged by this fixture repair.
+
+## 1.102.89 — notification control and portable hosting (2026-10-23)
+
+Builder: Shashi. [Notification and hosting contract](NOTIFICATIONS-AND-HOSTING.md). Centralize existing email preferences and a new default-off WhatsApp opt-in under General settings. Recheck committed consent for delivery, cancel old WhatsApp queue epochs on re-enable, and keep authenticated incoming replies independent. Preserve WP-Cron/transient fallbacks and checked resource limits. The owner waived live email/WhatsApp delivery tests; host-specific resource tuning and panel access are not plugin-build prerequisites. Tests use intercepted transports, real settings authorization, independent sessions and a fallback runtime initialized with 128 MiB. No live configuration change or deployment.
+
+## 1.102.88 — actual host/provider acceptance repairs (2026-10-23)
+
+Builder: Shashi. [Acceptance repairs, synthetic verification and general operator gates](HOST-PROVIDER-ACCEPTANCE-1.102.88.md). Reproduce and fix real Action Scheduler retention continuation, deduplicate pending jobs under a session fence, retain WP-Cron fallback and flag stalled health. Correct GA4 numeric CRM client identity and space-separated wire names while preserving click attribution, Google Ads labels and receipt identity. Accept encoded Interakt dashboard keys once, retaining legacy form. Add PHP 8.3 host coverage and a pinned real-AS native CI acceptance step. Runtime bytes change; the previous CI/installed-load evidence is historical and does not attest the repaired artifact. No live changes or deployment.
+
+## 1.102.88 — M6 exit and production qualification (2026-10-22)
+
+Builder: Shashi. [M6 completion and M7 qualification, candidate 1.102.88](M6-M7-RELEASE-CANDIDATE.md). Seven owners / 46 stable delegates complete the finite M6 exit. Latest-runtime checks: 388 fast, 337 native and 468 HTTP cases PASS; installed-archive native/HTTP reruns also PASS. Official Plugin Check reports zero diagnostics. Measured large-data fixes bound Kanban pages and scope task grouping. The selected single-server 50k-lead / 25–50-user envelope and 100k stress boundary have aggregate evidence. M8 clean exact-revision CI/promotion and production acceptance remain pending; REL-001 stays IN PROGRESS (43 IMPLEMENTED / one IN PROGRESS / zero CLOSED). Keep extraction parity distinct from intentional M7 fixes: task calendar day, bounded signed pipeline navigation, full filtered stage totals, scoped task grouping, per-request REST rate accounting with fresh credential checks, unsupported network-activation rejection, explicit administrator permission input/nonce boundaries and full-width block-theme workspace alignment. Schemas stay core 1.3.9 / quotation 2.5.4. Add PHP 8.5 CI coverage and guarded synthetic pacing/intake tooling. Final frozen-archive pacing: 1,800 mixed reads over three minutes at 10 requests/second with zero errors / p95 86.48ms; 100 inbound requests persist as 90 canonical leads and 100 touchpoints. Eleven actual wp-admin legacy-route cases also pass after early guarded redirection. No deployment or remote attestation is inferred.
+
+### CI-qualified build — 2026-10-23
+
+Builder: Shashi. [Complete CI and artifact verification](CI-QUALIFIED-BUILD-1.102.88.md): eight matrix cells plus release/package gates PASS, with 388 fast / 337 native / 468 HTTP cases per cell and zero official package diagnostics. Repair only test/build prerequisites, TCP/account assumptions, crash-session synchronization and minute-boundary test behavior; retain the exact upstream WordPress 6.6/PHP 8.5 deprecation separately. All 464 qualified runtime file hashes remain unchanged. REL-001 IMPLEMENTED; 44 IMPLEMENTED / zero IN PROGRESS / zero CLOSED. CI ZIP, source and installed-runtime identity verified. A documentation-only CI rerun exposed that PROCESSLIST disappearance alone did not establish schema-lock readiness. The worker harness additionally acquires/releases the actual schema and retention fences with a five-second bound before recovery assertions; operations still run once. Failed run 39908223648 remains recorded. Actual-site/provider acceptance remains pending; no deployment.
+
+## 1.102.87 — M6 activity controller (2026-10-21)
+
+Builder: Shashi. [M6 activity controller, candidate 1.102.87](AUDIT-REMEDIATION-ACTIVITY-CONTROLLER-SLICE.md). Extract four byte-identical timeline/comment handlers (232 lines) behind both stable facades. 387 fast / eight pre-extraction and eight post-extraction focused HTTP (WP 6.6) / 461 full HTTP-stdio (WP 7.1.3) cases and eight PHP lints PASS. The 457-file ZIP matches source. Default Plugin Check retains the same nine existing Users & Access warnings; no new diagnostics. M6/M7 and REL-001 remain IN PROGRESS; backlog stays 43 IMPLEMENTED / one IN PROGRESS / zero CLOSED. Keep visibility distinct from mutation authority, protected activity types immutable, author/admin edit rules, 15-second duplicate suppression, text escaping, timeline limits and client selectors. No policy/schema/lifecycle changes.
+
+## 1.102.86 — M6 telemetry controller (2026-10-20)
+
+Builder: Shashi. [M6 telemetry controller, candidate 1.102.86](AUDIT-REMEDIATION-TELEMETRY-CONTROLLER-SLICE.md). Extract three byte-identical handlers (129 lines) behind both unchanged facades. 387 fast / four focused HTTP (WP 7.1.3) / 453 full HTTP-stdio (WP 6.6) cases and seven PHP lints PASS. The 456-file ZIP matches source. Default Plugin Check reports nine warnings in existing Users & Access code; complete static gate fails, with no telemetry diagnostics. M6/M7 and REL-001 remain IN PROGRESS; backlog stays 43 IMPLEMENTED / one IN PROGRESS / zero CLOSED. Preserve client fields, nonce/admin guards, persisted values, text-download headers and latest-50 semantics; no schema/UI/policy change.
+
+## 1.102.85 — M6 administrator connection controller (2026-10-18)
+
+Builder: Shashi. [M6 connection controller, candidate 1.102.85](AUDIT-REMEDIATION-CONNECTION-CONTROLLER-SLICE.md). Move the 119-line authenticated diagnostic handler byte-for-byte behind both existing facades; nonce/admin guards, credentials, provider requests and JSON messages remain unchanged. 385 fast / four focused HTTP / 449 full HTTP-stdio cases and eight PHP lints PASS. Default Plugin Check gate PASS with zero diagnostics on the source-matching 455-file ZIP. M6/M7 and REL-001 remain IN PROGRESS; backlog stays 43 IMPLEMENTED / one IN PROGRESS / zero CLOSED. Current graph/maps identify the new owner; provider responses are intercepted and live acceptance remains unqualified.
+
+## 1.102.84 — M6 handoff notification owner (2026-10-18)
+
+Builder: Shashi. [M6 handoff notification ownership, candidate 1.102.84](AUDIT-REMEDIATION-HANDOFF-NOTIFICATIONS-SLICE.md). Extract opt-in email delivery behind the unchanged integration callback and durable outbox. Method-body executable tokens match; 385 fast / four focused native / 334 full native cases and seven PHP lints PASS. Default Plugin Check gate PASS with zero diagnostics on the source-matching 454-file ZIP. M6/M7 and REL-001 remain IN PROGRESS; backlog remains 43 IMPLEMENTED / one IN PROGRESS / zero CLOSED. Update maps and feature-extension checklist. No policy/schema/UI changes.
+
+## 1.102.83 — REL-007 local static completion (2026-10-18)
+
+Builder: Shashi. [REL-007 static completion, candidate 1.102.83](AUDIT-REMEDIATION-PACKAGE-STATIC-COMPLETION-SLICE.md). Official Plugin Check 2.1.0 default static gate PASS on the 453-file source-matching ZIP: zero errors, zero warnings, zero review-required diagnostics. 385 fast (including 16 release), 331 native and 445 HTTP/stdio cases PASS; 88 changed PHP files lint clean. Source fixes resolve 438 diagnostic instances; 694 bounded, source-specific review exceptions account for 1,740 instances. Private managed ZIP selected by Shashi. REL-007 IMPLEMENTED locally; REL-001, M6/M7 and exact clean CI/installed-artifact qualification remain IN PROGRESS. Preserve template markup/public contracts, prepared SQL/locks/transactions, schemas and bundled resource bytes. Decode only the pinned checker’s exact exit-zero clean response; malformed output, stderr, failures or any diagnostic continue to fail the gate.
+
+## 1.102.82 — REL-007 bootstrap metadata (2026-10-18)
+
+Builder: Shashi. Reject non-string request-classification metadata before string operations; unslash and sanitize action/URI/REST-route fields once. Preserve pending CRM 503, private administrator notices, request-lifetime recovery leases and lock/generation algorithms. No schema change. [REL-007 bootstrap request metadata, candidate 1.102.82](AUDIT-REMEDIATION-PACKAGE-BOOTSTRAP-REQUEST-SLICE.md). Validate and unslash action/URI/REST-route metadata before recovery and pending-migration classification. Five focused HTTP / 443 accumulated HTTP-stdio / two native / 382 fast contracts PASS (including 14 release cases). Unfiltered Plugin Check retains 136 errors / 2,042 warnings; 1,521 review-required diagnostics. REL-007 remains IN PROGRESS; M6/M7 and exact release qualification remain incomplete.
+
+## 1.102.81 — REL-007 request validation (2026-10-18)
+
+Builder: Shashi. Reject malformed catalogue wood flags and milestone names before writes; unslash the remaining settings/catalogue domain inputs once. Escape numeric Meta connector challenge output while retaining exact digits. No schema change. [REL-007 request validation, candidate 1.102.81](AUDIT-REMEDIATION-PACKAGE-REQUEST-INPUT-SLICE.md). Reject malformed wood flags/milestone names before writes; unslash settings/catalogue inputs once and escape numeric connector challenges. 382 final fast / six focused HTTP / 438 accumulated HTTP-stdio / 14 release contracts PASS (scope/timing limits in slice). Final unfiltered Plugin Check: 136 errors / 2,050 warnings; 1,536 review-required. REL-007 remains IN PROGRESS; M6/M7 and exact release qualification remain incomplete.
+
+## 2026-10-17 — CAPI duplicate and uncertainty guard
+
+Builder: Shashi. Unreleased local iteration; no schema or release version change. Attribution merges and the legacy force flag no longer replay accepted conversions. Provider 5xx, timeouts, unrecognized success responses and Google non-2xx responses fence subsequent delivery as uncertain; older failed receipts without a confirmed-rejection marker also require reconciliation. LinkedIn 201 with an empty body is accepted. Fresh explicit Meta/LinkedIn 401, 403 and 429 rejections retain bounded manual retry. Historical failed logs without receipts, third-party/browser duplicates, GA4 client identity and Google event configuration still need operator review. No provider delivery or production deployment performed.
+
+## 2026-10-17 — Direct and webhook compatibility
+
+Builder: Shashi. Unreleased local iteration; schema and release version unchanged. Preserve missing webhook UTM/click attribution on an existing same-submission touchpoint without overwriting earlier values, in the existing checked transaction. Keep inbound submission time on the touchpoint instead of placing blank/incorrect timestamps in the lead's Won-close column. Prefer a stored Meta lead ID over WhatsApp referral metadata for Meta CRM CAPI, and do not require connector-only metadata to send those events. Stop constructing `_fbc` from a guessed CRM creation timestamp; authentic browser cookie capture remains separate. Exercise both delivery orders, provider deduplication, standalone webhook, corrupt connector metadata, backup validation and rollback. Historical invalid dates are unchanged. Provider calls are mocked; production qualification is still required. [Connector behavior and verification](META-LEAD-CONNECTOR.md).
+
+## 2026-10-17 — Meta lead acquisition fields
+
+Builder: Shashi. Unreleased local iteration; no schema or release version change. Request the Meta Lead model's supported fields, retain the returned allowlisted response encrypted with existing per-lead acquisition context, and fall back to the original request when optional fields are rejected. Scope the hosted proxy to the same field sets and selected forms. Form answers are sensitive and follow existing attribution erasure and backup rules; the current snapshot can be replaced by a later submission. Literal UTMs are not guaranteed, historical leads are not enriched, and no arbitrary extra fields are sent to CAPI. Live Meta permissions and the separately deployed proxy still require qualification. [Field and retention details](META-LEAD-CONNECTOR.md).
+
+## 1.102.80 — REL-007 quotation text boundary (2026-10-13)
+
+Builder: Shashi. Fix double-unslashing of item descriptions and make item/section parsers consistently accept unslashed domain values. Controllers remove WordPress request slashes once. Two fast regressions and actual HTTP reproduce literal-backslash loss, then pass through save/autosave/editor recovery/new revisions/history/print/parsed CSV/XLSX. 367 fast / four focused HTTP / 433 accumulated HTTP-stdio / 14 release contracts PASS. Four delegated-input justifications; unfiltered Plugin Check retains 136 errors / 2,016 warnings and 1,467 review-required diagnostics. Schemas unchanged; REL-007 remains IN PROGRESS. [Evidence and queue](AUDIT-REMEDIATION-PACKAGE-QUOTATION-TEXT-SLICE.md).
+
+## 1.102.79 — REL-007 assignment-origin SQL (2026-10-13)
+
+Builder: Shashi. Escape the literal `automatic_` reporting prefix and use pattern placeholders; refresh dashboard cache contract to 4. Native stored events reproduce four automatic assignments instead of two, then verify the repair, source/date/current-owner scope, read-only history and old/warm caches. 365 fast / 3 focused native / 14 release contracts PASS. Review three SQL statements with nine new diagnostic justifications. Official package check retains 136 errors / 2,018 warnings; REL-007 remains IN PROGRESS. [Evidence and current queue](AUDIT-REMEDIATION-PACKAGE-DASHBOARD-SLICE.md).
+
+## 1.102.77 — REL-007 inventory/static diagnostic checkpoint (2026-10-11)
+
+Builder: Shashi. Remove five local artifacts, add independent rejection and protect dependency notices/resources. Add guarded disposable Plugin Check runner and pinned unfiltered CI gate; retain a hash-bound per-diagnostic source ledger and four narrow output/resource exceptions. 14 release / 363 fast contracts pass; remaining source review prevents REL-007 implementation/closure. [Evidence and work queue](AUDIT-REMEDIATION-PACKAGE-CHECK-SLICE.md).
+
+## 1.102.76 — REL-006 release ZIP reproducibility (2026-10-11)
+
+Builder: Shashi. Check root creation and normalize all archive timestamps, modes and compression after sorting the local inventory. Pin CI packaging timezone to UTC. The new real-archive regression reproduces pre-fix failure, then passes with existing release contracts; three full candidate packages match despite independent build times/source metadata/order. No runtime/schema change or production approval. [Build contract, evidence and qualification limits](AUDIT-REMEDIATION-ZIP-REPRODUCIBILITY-SLICE.md).
+
+## 1.102.75 — REL-005 runtime support and prerequisites (2026-10-09)
+
+Builder: Shashi. Raise the selected WordPress minimum to 6.6 on user instruction and retain PHP 7.4; align public metadata and document actual host/dependency and qualification limits. Add pre-vendor PDF checks, safe XLSX temporary failure and disabled-function/cipher-aware crypto gates. Five focused contracts and full local WordPress 6.6 native/HTTP plus parsed exports pass; exact CI/PHP 7.4/8.1 and final artifact remain unqualified. [Evidence and limits](AUDIT-REMEDIATION-RUNTIME-SUPPORT-SLICE.md).
+
+## 1.102.74 — REL-004 public privacy/support disclosures (2026-10-09)
+
+Builder: Shashi. Publish current provider payload/purpose/terms, automatic attribution cookies, retention, credential/private-file handling, erasure/backup/removal limits and manual update/recovery instructions in the readme and required public privacy/support guides. Use the owner-supplied contact for support/private security reports. Preserve explicit consent/receipt and deployment limitations. Twelve release contracts and 455-file archive/source identity pass; runtime behavior and schemas unchanged. [Source review, package evidence and qualification limits](AUDIT-REMEDIATION-PUBLIC-DISCLOSURES-SLICE.md).
+
+## 1.102.73 — REL-003 public credit opt-in (2026-10-09)
+
+Builder: Shashi. Default missing/fresh public credit to off, preserve stored scalar choices without rewriting branding, and require the explicit checkbox string on save. Clarify the optional sign-in/workspace credit with linked help; shared preview/reset inherit the off default. Four fast regressions and four disposable actual HTTP cases cover fresh/upgrade/public/save/denial behavior, with desktop/mobile keyboard and reset evidence. Historical saved-on values do not prove consent. [Policy, evidence and release limits](AUDIT-REMEDIATION-ATTRIBUTION-OPT-IN-SLICE.md).
+
+## 1.102.72 — REL-002 Inter distribution notice (2026-10-09)
+
+Builder: Shashi. Verify that the five existing Inter font copies match the official Google Latin WOFF2 and embedded upstream revision. Bundle that revision's complete unmodified OFL, a readable source notice and per-file hash inventory. Shared release inventory now requires every font resource and notice; two regressions reproduce the missing notice and unguarded omission, then pass alongside ten existing release contracts. Actual package/extraction matches all 453 files. Font/CSS bytes and schemas remain unchanged. [Provenance, package evidence and release limits](AUDIT-REMEDIATION-FONT-NOTICE-SLICE.md).
+
+## 2026-10-09 — REL-001 release-attestation checkpoint
+
+Builder: Shashi. Local documentation/evidence iteration on `1.102.71`; runtime, schemas, release tools and workflow unchanged. Record current guarded preflight, ten existing release contracts, 450-file package/extraction identity and expected promotion rejection. An independent build still fails byte reproducibility. REL-001 remains in progress behind the remaining release findings and M6/M7 qualifications; no complete-source commit, matching remote CI or production approval is inferred. [Evidence and execution order](AUDIT-REMEDIATION-RELEASE-ATTESTATION-SLICE.md).
+
+## 1.102.71 — INT-010 protected platform credentials (2026-10-09)
+
+Builder: Shashi. Extend compatible AES-256-GCM/environment storage to all seven platform secrets, verify concurrent-safe migration and scoped completion, refuse damaged/unavailable secrets, and load current credentials from primary SQL. Platform fields are write-only with explicit clear; saved-credential connection tests remain usable. Meta uses Bearer headers; covered provider echoes and old copied-key queue payloads are scrubbed in bounded batches. Schemas unchanged. [Verification, key recovery, provider-required URL and release limits](AUDIT-REMEDIATION-SECRET-STORE-SLICE.md).
+
+## 2026-10-09 — Quotation template toggle visibility
+
+Builder: Shashi. Unreleased local UI correction on `1.102.70`; schemas unchanged. Cover and closing controls now include the existing shared switch track, which their shared CSS requires to display checked state and keyboard focus. Clarify that Quotation Setup defaults are copied when saving a new revision, earlier revisions retain saved content, and enabled templates require nonempty HTML. The builder describes this as document content rather than an unexplained terms section.
+
+Verification: actual local workspace controls toggle through their labels and Space, show keyboard focus, and fit desktop and 390 px mobile layouts without horizontal overflow. Confirmed the new builder explanation renders. Restored the original unsaved checkbox states without submitting settings or quotations. Renderer PHP lint, diff whitespace checks and five existing QUO-006 document contracts pass.
+
+## 1.102.70 — INT-009 audience manual work and exclusions (2026-10-09)
+
+Shashi: `IDLM_Audience_Dispatch` owns minimal nonautoload per-lead/rule claims, manual selection snapshots, bounded pages/cursors, rejection retry limits, unknown-outcome fences and a database session lock. Audience adapters return explicit page outcomes; audit logs and acknowledgements commit together. AJAX now reports outcomes and selected-only manual dispatch; shared lead controls support queue removal. Current nonduplicate/stage/call/quality predicates apply to both manual and scheduled work. Restore/reset clear runtime state; lead erasure removes its work and queue ID. Schemas unchanged; local implementation, provider/artifact qualification pending.
+
+## 2026-10-09 — Retention-independent CAPI delivery evidence
+
+Builder: Shashi. Candidate `1.102.69`; schemas unchanged. INT-008 verifies the configured log policy already repaired by CORE-012, adds committed minimal ordinary/manual/forced delivery claims and atomic log/receipt acknowledgements, and preserves surviving legacy successes in bounded pruning transactions. Receipts survive same-site restore, respect duplicate-family success and retain interrupted uncertainty; explicit lead deletion/reset erases them. [Policy, evidence and limitations](AUDIT-REMEDIATION-CAPI-RETENTION-SLICE.md).
+
+## 2026-10-09 — Disabled Google audience pull feed
+
+Builder: Shashi. Candidate `1.102.68`; schemas unchanged. INT-007 shares current enabled-rule resolution across scheduled/manual sync and Google pulls, skips disabled duplicate targets, preserves first-enabled saved order and legacy fallback only when no explicit rules option exists. Disabled/removed/unmatched rules return 404 before contact reads/CSV; feed responses disallow cache storage. [Policy, evidence and qualifications](AUDIT-REMEDIATION-GOOGLE-AUDIENCE-SLICE.md).
+
+## 2026-10-09 — WhatsApp inbound batches and replay
+
+Builder: Shashi. Candidate `1.102.67`; schemas unchanged. Process all Meta entries/changes/messages; share atomic activity plus minimal provider-ID receipts with Interakt, verify current primary settings/HMAC before parsing, normalize full-phone identities consistently with intake and refuse ambiguous canonical matches. Acknowledge only committed messages; preserve partial retry and same-site restore/reset replay fences. [Evidence, compatibility and qualifications](AUDIT-REMEDIATION-WHATSAPP-INBOUND-SLICE.md).
+
+## 2026-10-09 — CAPI manual retry identity and eligibility
+
+Builder: Shashi. Candidate `1.102.66`; schemas unchanged. Share current lead/platform gates and serialization across ordinary, forced attribution and manual delivery; resolve exact Google defaults/custom mappings, snapshot new-log identity and commercial values, return exact attempt/log IDs and use a durable three-attempt manual receipt with uncertainty handling. Backup/restore/reset exclude or erase retry state. [Evidence and remaining qualification](AUDIT-REMEDIATION-CAPI-RETRY-SLICE.md).
+
+## 2026-10-09 — Ordinary Interakt dispatch eligibility
+
+Builder: Shashi. Candidate `1.102.65`; schemas unchanged. Queue opaque durable jobs through AS/WP-Cron, rebuild current contact payloads and credentials, enforce intended rule/owner and enable/recovery epochs, and retain uncertain attempts without automatic resend. Stable outbox handoff and backup/reset cleanup preserve recovery boundaries. Legacy copied-key callbacks are refused. [Compatibility, evidence and remaining qualification](AUDIT-REMEDIATION-INTERAKT-DISPATCH-SLICE.md).
+
+## 2026-10-09 — Task labels and keyboard recovery
+
+Builder: Shashi. Candidate `1.102.64`; schemas unchanged. Associate visible task labels, correct drawer accessibility visibility, use keyboard form submission and linked title errors, and restore focus after task save or ordinary drawer dismissal. Add a focused actual HTTP semantics regression and desktop/mobile browser/SQL evidence. [Evidence and remaining qualification](AUDIT-REMEDIATION-TASK-ACCESSIBILITY-SLICE.md).
+
+## 2026-10-08 — Mobile task drawer layout
+
+Builder: Shashi. Unreleased style correction on `1.102.63`; schemas unchanged. Replace inline task grids with responsive shared CSS: stack panels/fields at 820 px, align full-width 44 px controls and wrap long labels. Actual viewport, task-save and scroll evidence covers administrator/representative workspace use. [Evidence and remaining qualification](AUDIT-REMEDIATION-TASK-LAYOUT-SLICE.md).
+
+## 2026-10-08 — Ordinary quotation quantity browser qualification
+
+Builder: Shashi. Candidate stays `1.102.63`; production source and schemas unchanged. Qualify the existing hundredth-step quantity repair with native form validation, desktop/mobile saves, autosave recovery and exact revision persistence. Add three focused native HTTP regression cases and an owned browser-fixture hold mode. [Evidence and remaining qualification](AUDIT-REMEDIATION-QUOTATION-QUANTITY-SLICE.md).
+
+## 2026-10-08 — Quotation paper size and fresh download defaults
+
+Builder: Shashi. Candidate `1.102.63`, schemas unchanged. Canonical case-insensitive A4/Letter/A3/Legal values drive settings, print and PDF; absent/invalid values resolve to A4 without implicit writes. Remove the Dompdf A4 override and explicitly configure quotation CSV escaping. [Policy, test evidence and remaining release gates](AUDIT-REMEDIATION-QUOTATION-PAPER-SLICE.md).
+
+## 2026-10-07 — Historical quotation document terms and currency
+
+Builder: Shashi. Candidate `1.102.62`, quotation schema `2.5.4`; other schemas/receipts unchanged. Save current contractual terms and allocated milestone amounts per new revision; preserve original currency across edits and historical output. Additive upgrades leave old terms NULL/unknown; strict backups retain known snapshots or exact unknown defaults. [Policy, evidence and qualification](AUDIT-REMEDIATION-QUOTATION-DOCUMENT-SLICE.md).
+
+## 2026-10-07 — Finite quotation numbers and normalized pricing
+
+Builder: Shashi. Candidate `1.102.61`, schemas unchanged. QUO-008 validates finite ordinary decimals and representable products/totals, bounds row/section counts, and applies half-up integer hundredths before quantity pricing and adjustment/GST calculation. Save/autosave refuse invalid values without partial writes; browser limits/rounding match the server. Catalogue/settings numeric paths use checked values. Historical rows remain unchanged. [Policy, verification and limits](AUDIT-REMEDIATION-QUOTATION-NUMERIC-SLICE.md).
+
+## 2026-10-07 — Runtime quotation engines and metadata locks
+
+Builder: Shashi. Candidate `1.102.60`, schemas unchanged. QUO-007 shares checked transaction starts and current physical InnoDB validation across save/working-copy/import/number boundaries. Pin table metadata until completion; use transaction-local READ COMMITTED to retain live authority after metadata checks. Unsupported environments fail without writes or automatic conversion; operator repair enables fresh retry. [Evidence and qualification limits](AUDIT-REMEDIATION-QUOTATION-ENGINE-SLICE.md).
+
+## 2026-10-07 — Commercial quotation history preservation
+
+Builder: Shashi. Candidate `1.102.59`, quotation schema `2.5.3`, lifecycle receipt `1.1.0`; physical columns/core/routing unchanged. Replace destructive state normalization with checked identity-preserving relationship verification. Share read-only commercial/finalization evidence policy across save/autosave/discard and editor rendering; preserve ordinary draft revisions. Legacy Shared imports retain known sharing without invented dates, and complete 2.5.2 backups preserve exact history. [QUO-010 evidence and recovery limits](AUDIT-REMEDIATION-QUOTATION-HISTORY-SLICE.md).
+
+## 2026-10-07 — Historical quotation item classifications
+
+Builder: Shashi. Candidate `1.102.58`, quotation schema `2.5.2`; core/routing unchanged. QUO-005 removes the catalogue classification rewrite for all installer paths. Add `classification_source` with a conservative `legacy_unverified` default; new normalization derives submitted/default provenance and revision copies preserve it. Complete prior quotation 2.5.0/2.5.1 backup inventories normalize provenance before existing core migrations and strict restore preflight. No historical monetary recalculation or inferred catalogue reconstruction. [Policy and evidence](AUDIT-REMEDIATION-QUOTATION-CLASSIFICATION-SLICE.md).
+
+## 2026-10-07 — Checked quotation migration completion
+
+Builder: Shashi. Candidate `1.102.57`, quotation schema `2.5.1`; core/routing schemas unchanged. QUO-004 reuses schema locks and physical verification, checks every seed/read/write/marker/commit, applies phase transactions with recovery/session fencing, and publishes schema completion last. Activation/boot report failures and retry pending steps. Current 2.5.0 upgrades skip the old classification rewrite; legacy missing-snapshot provenance (QUO-005), lifecycle commercial-state preservation (QUO-010) and runtime engine drift (QUO-007) remain separate. [Policy and evidence](AUDIT-REMEDIATION-QUOTATION-MIGRATION-SLICE.md).
+
+## 2026-10-07 — State vocabulary and lifecycle contracts
+
+Builder: Shashi. Candidate `1.102.56`; schemas unchanged. CORE-013 centralizes contextual manual-task and early-close lists, preserves persisted labels and authorization/evidence gates, and names qualification coupling separately from validation. Focused docs distinguish current writers, historical repair and allowed reversal effects. [Policy and evidence](AUDIT-REMEDIATION-STATE-POLICY-SLICE.md).
+
+## 2026-10-07 — Bounded retention and heavy reads
+
+Builder: Shashi. Candidate `1.102.55`; schemas unchanged. CORE-012 uses checked 100-row retention transactions with durable progress, a session lock, recovery fencing, continuations and generic health faults. Task responses page 50 cards with signed keysets and scoped total counts; qualification progress reads 100 dates per batch with a shared application deadline. WhatsApp uses SQL counts/EXISTS. Lead CSV stages 100-row keyset reads with 10,000-row/32 MiB/20-second limits before download headers. [Policy and evidence](AUDIT-REMEDIATION-BOUNDED-WORK-SLICE.md).
+
+## 2026-10-07 — Identity-review lifecycle and erasure
+
+Builder: Shashi. Candidate `1.102.54`, core schema `1.3.9`. Manager-only inspection and nonce-protected canonical/separate/reject decisions share identity locks and checked lifecycle persistence. Store sanitized submission fields and decision metadata; external-ID replays retain the durable decision. Delete the entire associated review on erasure, include reviews in reset, and prune in checked 100-row batches. Prior complete backup inventories normalize nullable additions. CORE-008 remains IMPLEMENTED, not CLOSED. [Policy/evidence/limits](AUDIT-REMEDIATION-IDENTITY-REVIEW-SLICE.md).
+
+## 2026-10-07 — Transactional active-workload capacity
+
+Builder: Shashi.
+
+- Candidate `1.102.53`; schemas unchanged. Share positive-workload admission across canonical insert/update and automatic assignment. Serialize on the representative account row, read current capacity settings/count under locks, retain zero as unlimited, and let rollback/crash release admission.
+- Refresh unassigned recovery pools per lead; preserve unchanged/closed historical workload and report per-lead bulk failures. Reopening and duplicate reactivation require room. CORE-010 remains IMPLEMENTED, not CLOSED. [Policy, verification and limits](AUDIT-REMEDIATION-CAPACITY-SLICE.md).
+
+## 2026-10-07 — Live assignment eligibility
+
+Builder: Shashi.
+
+- Candidate `1.102.52`; core `1.3.8`, routing `1.0.1` and quotation `2.5.0` unchanged. Centralize current role/capability/disabled target eligibility across manual, initial and fallback assignment. Lock live account/meta/role data inside checked ownership writes; fail closed on absent targets, read errors or nontransactional authentication dependencies.
+- Keep historical owner discovery/filters and unchanged-owner edits; filter mutation choices. CORE-009 remains IMPLEMENTED, not CLOSED; CORE-010 capacity remains OPEN. [Policy, verification and limits](AUDIT-REMEDIATION-ASSIGNMENT-ELIGIBILITY-SLICE.md).
+
+## 2026-10-07 — Stable six-cycle task repair
+
+Builder: Shashi.
+
+- Candidate `1.102.51`, core schema `1.3.8`, routing `1.0.1` and quotation `2.5.0`. Add stable nullable task cycles/unique lead-cycle key and checked legacy adoption/missing fill. Keep DB/task facades and history while reconciling active evidence, reopening, working dates and pending ownership.
+- Add a fenced 100-lead checkpointed sweep, truthful outreach repair failure and current/prior complete backup support. Ambiguous history remains preserved for administrator review.
+- CORE-006 remains IMPLEMENTED, not CLOSED. [Executed policy/evidence/limits](AUDIT-REMEDIATION-TASK-PLAN-SLICE.md).
+
+## 2026-10-07 — Coupled core lead writes and durable after-commit intent
+
+Builder: Shashi.
+
+- Candidate `1.102.50`, core schema `1.3.7`; routing `1.0.1` and quotation `2.5.0` unchanged. Check canonical lead/history/tasks/activity/touchpoint writes and commit under one transaction owner, with locked transition reads and no nested foreign transaction commits. Private-file migration shares the owner. Disable core wpdb SQL reconnect replay while the transaction is active.
+- Add protected durable hook/cache intent, bounded recovery sweeps, session claims and recovery epoch/live-lead checks. Preserve external hook arguments, manual/CSV/webhook responses and routing owner comparisons; known delivery handoff failures remain replayable after commit.
+- CORE-004/005 remain IMPLEMENTED, not CLOSED. [Implementation, evidence and limitations](AUDIT-REMEDIATION-LIFECYCLE-SLICE.md).
+
+## 2026-10-06 — Physical core schema and restart-safe migrations
+
+Builder: Shashi.
+
+- Candidate `1.102.49`, core schema `1.3.6`, routing schema `1.0.1`; quotation schema remains `2.5.0`. Core and routing installers return checked results, verify physical declarations and InnoDB engines, and publish durable markers under one database-scoped session lock.
+- Bootstrap and activation stop on incomplete migration. Checked backfill markers advance to `1.0.1`; legacy duplicate attribution uses bounded, resumable, identity-verified batches. Historical columns and rows remain additive.
+- CORE-007 local evidence and remaining qualification gates are recorded in [the schema slice report](AUDIT-REMEDIATION-SCHEMA-SLICE.md).
+
+## 2026-10-06 — Complete backup validation and recovery fencing
+
+Builder: Shashi.
+
+- Candidate `1.102.48`, unchanged core `1.3.5` and quotation `2.5.0` schema. Add strict same-site/full aggregate preflight, temporary constraint staging, consistent snapshot export, protected option/cache handling and monotonic quotation counters.
+- Add cooperative MySQL session locks for bootstrap, CRM mutations and affected workers; committed restore/reset generations invalidate old provider jobs and autosaves. Existing public callbacks, routes, forms and external provider payloads remain stable; internal queued CAPI/Interakt arguments gain an optional generation.
+- INT-003 remains IMPLEMENTED, not CLOSED after local evidence; see [the sixth slice report](AUDIT-REMEDIATION-RESTORE-SLICE.md) for verification and deployment limits.
+
+## 2026-10-06 — WordPress-contained private lead files
+
+Builder: Shashi.
+
+- Add private file/chunk tables (core schema `1.3.5`, verified private schema marker `1`) and authenticated live-object downloads. New uploads never publish raw bytes; preserve attachment IDs, upload callbacks/payloads and owner/explicit manager workflows.
+- Migrate legacy tagged and saved files with original/variant checksums, bounded scans and locked retry journals; revoke removed/expired/deleted files and erase with deletion/reset transactions. Disclose JSON backup exclusions and reject unsafe partial restores.
+- Candidate `1.102.47`; CORE-002 is IMPLEMENTED, not CLOSED. See [the fifth slice report](AUDIT-REMEDIATION-PRIVATE-FILE-SLICE.md) for actual disposable/native/browser evidence, operational steps and qualification limits. No configured-site migration or deployment.
+
+## 2026-10-06 — Lead CSV formula protection
+
+Builder: Shashi.
+
+- Reuse the quotation export text normalizer for all lead CSV text fields; protect control, Unicode spacing/format and full-width formula prefixes. Keep schema-controlled numeric columns and existing 40-column/authentication/filter/download contracts.
+- Add parsed disposable HTTP downloads and direct byte-preservation regressions; retain earlier audit/slice evidence and existing dirty changes. Candidate `1.102.46`; CORE-003 stays IMPLEMENTED pending supported-matrix and artifact qualification. See [the fourth slice report](AUDIT-REMEDIATION-CSV-SLICE.md).
+
+## 2026-10-06 — MCP query and field-grant remediation
+
+Builder: Shashi.
+
+- Compile custom queries through an explicit restricted grammar; validate all table/field references and expose only CRM-associated representative IDs/display names. Require independent PII and tool grants, exclude authentication/private/raw-log fields, and enforce row/offset/MySQL execution budgets.
+- Preserve HTTP/stdio contracts and computed-column labels; let the selected stdio loader own ABSPATH. Add actual transport, native SQL-mode/time-bound, pre-execution denial and grant/revocation tests.
+- Candidate `1.102.45`; INT-001/002 are IMPLEMENTED, not CLOSED. See [the third slice report](AUDIT-REMEDIATION-MCP-SLICE.md) for configuration, compatibility impact and unexecuted qualification. No deployment or schema change.
+
+## 2026-10-06 — Effective CRM access and live-read remediation
+
+Builder: Shashi.
+
+- Require effective CRM enrollment and preserve later capability revocations. Apply the user-approved one-time editorial-role/global-visibility migration with stored-state verification and fail-closed pending access; preserve explicit scopes/direct grants and individual CRM enrollment through existing user controls.
+- Join quotation lists/counts and task queues to canonical live lead visibility; retain historical pre-sales reads and explicit manager mutations. Invalidate warmed reads on permission/scope edits and deny unauthorized direct dashboard reads before cache work.
+- Added actual disposable HTTP role/read/cache/cursor/barrier regressions and native migration/failure/retry contracts; record implementation and limits in [the second slice report](AUDIT-REMEDIATION-READ-SLICE.md).
+- Candidate advanced to `1.102.44`; no schema change or configured-site deployment. CORE-001/011 and QUO-002 are IMPLEMENTED, not CLOSED.
+
+## 2026-10-06 — Quotation remediation slice (QUO-001 / QUO-003)
+
+Builder: Shashi.
+
+- Added live-owner/explicit-manager mutation authority independently of quote read visibility; enforce it across save, autosave, discard and editor controls. Lock the lead before the quote; refresh user/role grants after waits.
+- Reject persisted revision IDs on new saves; bind UUID retries to actor, lead, quote and source revision. Insert every authorized new revision and reserve initial numbering in the save transaction.
+- Added disposable real HTTP and synchronized authority-change regressions, a pre-install outbound HTTP/mail guard, fast policy contracts and CI execution. Preserve the existing dirty candidate; record local baseline and acceptance evidence in [the slice report](AUDIT-REMEDIATION-QUOTATION-SLICE.md).
+- Version advanced from `1.102.42` to `1.102.43`; schema unchanged. Findings remain IMPLEMENTED pending broader qualification, not CLOSED.
+
+
+## 2026-10-02 — Responsive lead drawer
+
+Builder: Shashi.
+
+- Removed activity, WhatsApp, and task payloads from the critical lead-detail request. Each drawer tab now fetches its own bounded payload after the core lead details render.
+- Added an access-scoped, nonce-protected WhatsApp drawer endpoint with a 100-message cap; messages remain marked read only after the WhatsApp tab is opened.
+- Plugin version advanced from `1.102.41` to `1.102.42`; database schema remains unchanged.
+
+## 2026-10-02 — Catalogue editor access
+
+Builder: Shashi.
+
+- Granted WordPress Editors `idlm_manage_quote_items`, matching recognized CRM managers while preserving the separate quotation-setup and lead-manager capability boundaries.
+- Plugin version advanced from `1.102.40` to `1.102.41`; database schema remains unchanged.
+
+## 2026-10-02 — Secure quotation revision exports
+
+Builder: Shashi.
+
+- Added signed PDF, CSV, and XLSX download endpoints to the quotation detail view while retaining Preview / Print as a separate action.
+- Export authorization now combines `idlm_view_quotes`, `idlm_download_quote_pdf`, a format-specific nonce, exact revision ownership, and the existing scoped lead-access policy.
+- PDF generation uses the bundled Dompdf 3.1.6 packaged release, pinned by SHA-256; renderer failures are intentionally generic and fall back to the detail view without persisting a file. CSV is UTF-8-BOM/native `fputcsv` and XLSX is a typed minimal OOXML workbook.
+- Plugin version advanced from `1.102.39` to `1.102.40`; database schema remains unchanged.
+
+## 2026-10-02 — Canonical quotation revisions
+
+Builder: Shashi.
+
+- Consolidated quotation changes into the current-Draft → locked R+1 → superseded-source lifecycle. Each saved revision records its creator, updater, reason, status-history row, and lead activity.
+- Aligned editor, autosave, and save authorization with draft-edit plus revision capability; new quotations retain their separate create capability.
+- Removed the dormant final-state revision route and normalized legacy quotation states to one current Draft revision plus Superseded history, without changing CRM lead stages.
+- Repaired the revision-reason modal/autosave submit handoff and bumped quotation schema from 2.4.0 to 2.5.0.
+- Plugin version advanced from 1.102.38 to 1.102.39.
+
 ## 2026-09-21 — Canonical inbound lead matching
 
 Builder: Shashi.
@@ -1056,3 +1372,68 @@ Use this log for meaningful architectural or behavioral engineering changes. Pub
 
 - **Change:** Settings notice toasts now render top-centre with opaque high-contrast surfaces and explicit accessible close buttons, including a JS fallback when WordPress common.js is unavailable. Builder: Shashi.
 - **Compatibility notes:** Auto-close, hover/focus pause, stacking, and reduced-motion behavior are preserved. Version advanced from `1.101.59` to `1.101.60`.
+
+## 2026-10-11 — REL-007 source checkpoint (1.102.78)
+
+Shashi: local candidate **1.102.78**, schemas unchanged. Meta verification rejects non-string/missing parameters and unslashes only raw WP fallbacks; plain-text/zero challenges and REST token bytes remain correct. Prefix nine MCP CLI globals. Review **37 SQL locations**, record 97 additional specific justifications without suppressing diagnostics. **365 fast / 7 focused Meta HTTP / 430 full HTTP-stdio / 14 release contracts PASS**. Official final 450-file ZIP: **138 errors / 2,018 warnings**, ledger **671 justified / 1,484 review-required / one readme limit**. **REL-007 IN PROGRESS, not IMPLEMENTED or CLOSED; 0 OPEN / 2 IN PROGRESS / 42 IMPLEMENTED**. [Source fixes, exact artifact and remaining queue](AUDIT-REMEDIATION-PACKAGE-SOURCE-SLICE.md). Continue REL-007 SQL/request source review; REL-001 remains prerequisite-blocked.
+
+## Unreleased local Meta/Interakt lead connector — 2026-10-17
+
+Builder: Shashi. Add signed direct Page leadgen intake, encrypted background retrieval/retry and bounded form catch-up; opt-in Interakt lead creation commits message receipts and acquisition context with the lead. Preserve exact Meta IDs and use separate opt-in business-messaging CAPI for eligible WhatsApp referrals. Settings remain off until configured. Core schema/release version unchanged. [Setup, persistence, recovery and limits](META-LEAD-CONNECTOR.md).
+
+
+## Local connector settings validation — 2026-10-17
+
+Builder: Shashi. Replace connector setup validation `wp_die()` calls with recoverable errors in the shared settings form. Preserve submitted non-secret values, identify missing enablement prerequisites, retain already-saved credentials without rendering their values, and allow disabled draft setup. Invalid setup no longer truncates the admin/workspace settings page or reports a successful save. Regression coverage exercises the settings controller, complete connector view, disabled draft save and malformed inputs; fast suite: 374 passed, 0 failed.
+
+## Unreleased publisher-hosted Facebook connection — 2026-10-17
+
+Builder: Shashi. Add a shared publisher service for separate customer WordPress installations and a Connect Facebook → consent → named Page/form selection flow. Per-install signed requests/responses, encrypted server-side tokens, single-use session-bound consent, tenant-owned event delivery, reconnect/disconnect and Meta revocation/deletion handlers replace customer credential entry. Preserve advanced manual setup and existing Interakt intake. Service source is excluded from plugin releases; no hosting, Meta approval or live OAuth qualification has occurred. Validation: 375 fast checks, 14 focused native connector checks, 17 mocked service checks and 15 mocked client/runtime checks passed; PHP/JS syntax and diff whitespace checks passed. Core schema/release version unchanged. See services/facebook-connect/README.md for deployment and staging requirements.
+
+## Local Facebook setup feedback — 2026-10-17
+
+Builder: Shashi. An unprovisioned installation now keeps Connect Facebook interactive and focuses a visible prerequisite explanation instead of silently disabling the button. No service call is sent until provisioned. Settings JavaScript uses its modification time for cache invalidation during local iterations. No credentials, service deployment or release version changed.
+
+## Guided manual Facebook setup and saved-secret status — 2026-10-17
+
+Builder: Shashi. Confirmed the local access token and app secret were persisted; the shared password enhancer incorrectly inferred missing credentials from deliberately empty write-only fields. Pass saved/managed booleans through connector context, retain hidden secret values and show accurate Saved securely/Ready to save badges. Introduce four expandable manual setup steps with Save progress and Continue controls, opening the first incomplete saved step. Allow the authenticated webhook verification challenge after saving a Page and verify token while imports remain disabled; signed POST intake still requires sync enablement. Checks: 378 fast tests and 15 mocked hosted-client tests passed, changed PHP and JS syntax checks passed; authenticated desktop navigation and 390px mobile overflow verified without changing real credentials/settings. No live Meta delivery or release/version change.
+
+## Direct site-owned Facebook sign-in — 2026-10-27 (unreleased)
+
+Builder: Shashi. New Instant Form connections use each WordPress site's Meta app and Facebook Login for Business configuration instead of a shared connection service. Added an authenticated, expiring, one-use/session/recovery/app/epoch-bound callback, encrypted local consent/Page tokens, bounded Page/active-form selection, lead-read checks for each form and automatic Page subscription. The existing signed webhook/import/retry/catch-up pipeline remains authoritative. Existing hosted transport remains compatible; local disconnect permits migration even when the hosted service is down. Settings explain direct app configuration and show the exact login callback; manual token setup remains available. No schema or release version change for this local iteration.
+
+Verification: 22 mocked direct/compatibility runtime checks, 18 legacy service checks and 395 fast checks passed. Changed PHP syntax, JavaScript syntax and diff whitespace checks passed. Exercised the shared local settings via its wp-admin redirect and workspace view on desktop and a 390px mobile viewport; incomplete-setup guidance and console checks passed. No live OAuth, Meta subscription, credential change or deployment was performed. See META-LEAD-CONNECTOR.md for app setup, migration and live qualification requirements.
+
+## Guided Meta setup and explicit credential states — 2026-10-27 (unreleased)
+
+Builder: Shashi. Replaced the mixed manual/consent accordion with four focused steps: Meta app, webhook, Facebook/forms and review. App validation, Back/Next with retained entries, Save details and continue, return-to-picker behavior and unsaved-setup checks guide the Facebook sign-in path. Manual token setup stays in an advanced review panel. Saved credentials display a saved-value card and explicit Replace/Keep saved value actions; empty new fields, entered replacements, pending removals and server-managed credentials have distinct states. The view still receives only booleans, never stored plaintext. Shared wp-admin/workspace controls and settings persistence contracts remain intact; this local UI iteration does not change the schema or release version.
+
+Verification: 396 fast checks and 22 mocked connection checks passed; PHP/JavaScript syntax and diff checks passed. Browser checks cover step navigation, missing-ID validation, retained entries, replacement/cancel, desktop/mobile layout and console errors. No credential or live connection was changed during browser verification.
+
+## Meta connector test ZIP 1.102.92 — 2026-10-27
+
+Builder: Shashi. Packaged the direct Facebook connector and guided credential setup at Shashi’s request for manual live CRM testing. Header, IDLM_VERSION, stable tag, changelog, implementation release and release contracts align at 1.102.92. Public privacy disclosure now describes direct consent/token storage and selected lead intake. No schema change.
+
+396 fast, 22 mocked direct/compatibility and 18 legacy service checks passed; all ten changed/new PHP files linted, JavaScript syntax and diff checks passed. The guarded builder validated the 466-file inventory. Independent ZIP CRC, every packaged byte against source, required new runtime files, excluded development/service files and checksum verification passed. Archive SHA-256: abd84e89f57921b0166cf0828e1b78445c7019370ab38f15401be3104ef527a3. The artifact retains its truthful local_rehearsal_only/non-CI classification; no clean-revision remote matrix or production promotion is claimed. No upload, installation or live mutation was performed.
+
+## Facebook connected state and sync scope — 1.102.93, 2026-10-27
+
+Builder: Shashi. Added a display-only, administrator/session-bound pending-consent state so the sign-in button shows Connected before Page/form activation and after reload. Successful Page loading updates it immediately; Reconnect and Disconnect remain separate controls. Existing saved source connection and import enablement stay separate. The picker now explains Start syncing explicitly: new leads from activation onward, no automatic historical import, and catch-up limited to missed submissions after activation within seven days. Runtime regressions check consent-before-sync markup/state and disconnect reset. Local test build only; no live mutation or CI attestation.
+
+## Per-form Meta mappings — 1.102.94, 2026-10-27
+
+Builder: Shashi. Added administrator/shared-nonce-protected form question discovery and independent mapping saves, verified against current selected form identity and Page ownership. Exact provider question keys map only to allowlisted profile/project destinations; duplicate destinations and missing phone/email mappings fail closed. Custom full-name sources split through the existing mapper. Source-scoped nonautoload mapping options survive ordinary settings saves and portable backups without overwriting the connector configuration. Legacy global/default mappings remain fallback-only. Canonical import resolves the form mapping at processing time; full encrypted Meta answer/optional-field snapshots remain independent of selected CRM destinations. No schema change, historical backfill or bulk remapping. The review screen explains import enablement (including cancellation while disabled), bounded retry recovery and the optional manual Page-token path.
+
+Verification: 396 fast checks, 30 mocked direct/metadata/mapping checks and 24 focused native connector checks passed. The new native mapping/import case also separately passed its additional portable-backup assertions. An initial native failure was an outdated hosted-connection UI-label assertion from the earlier wizard/button change; its narrow rerun passed, followed by all 24 connector cases. Native runs used a fresh, isolated socket-only MySQL 8.4 server with disposable databases; no CRM database was accessed. Browser preview checks use synthetic Meta metadata and cover field loading, destination selection, save feedback, duplicate rejection and desktop/mobile layout. PHP/JavaScript syntax and diff checks passed. Three existing invalid-array notification-consent fixtures still emit the unrelated class-settings.php:19 warning in the fast suite, as traced in the prior iteration; the suite reports no failed checks. Live Meta question availability and production consent are not certified by mocked HTTP. No deployment or live mutation.
+
+## Quotation-based Meta Purchase value — 1.102.95, 2026-10-27
+
+Builder: Shashi. The quotation/CAPI trace confirmed that quotation writes project grand_total to quote_value while outbound delivery previously read only deal_value. Shashi clarified the intended precedence: latest plugin quotation when available, entered Won amount for externally prepared quotations. Added a read-only commercial resolver for fresh Meta Purchase events, using the linked quotation’s current saved revision grand_total and its saved currency. A missing quote or zero-total draft keeps the entered close value; invalid revision linkage/total/currency or read errors refuse unverified delivery. Existing retry snapshots, accepted-event receipts, other event/platform values and CRM/quotation persistence are unchanged. Public CAPI disclosure now reflects this price source and the existing absence of fabricated browser context. No schema migration.
+
+Verification: 400 fast checks passed, including current-vs-stale quotation selection, currency, manual/zero fallback, unchanged CRM amounts/non-Purchase behavior and malformed quote refusal. The isolated MySQL 8.4 runs passed four new quotation-value/schema checks and eight existing retry/schema checks. Native HTTP interception proves current quotation value/currency on the initial payload and preserved event identity/time/value/currency on retry after quote and deal changes. No live CRM database or Meta endpoint was used. PHP syntax and diff checks passed. The build remains a local non-CI-qualified test ZIP; no deployment or resend of prior Purchase events.
+
+## Start syncing review refresh — 1.102.96, 2026-10-27
+
+Builder: Shashi. Reproduced the reported failure using actual client assets and a synthetic HTTP selection endpoint: Start syncing persisted the selected form, but location.assign to the existing settings anchor performed no document reload. The page remained at Connecting and the old Review rendered Not selected with no mapping cards. The handler now requires connected=true, remembers Review plus a one-use metadata-autoload flag, cleans the callback marker with history.replaceState and explicitly reloads the document. The new server-rendered form cards populate immediately and first-form question loading runs after Review opens. A dedicated inline status near the button announces progress/error, keeps controls disabled while saving, restores editable retry state on failure and prevents unsaved checked forms from advancing. No provider credential, server selection, ingestion, schema or CAPI-price logic changed.
+
+Verification: five dependency-free Node behavioral client tests, 30 mocked connection/mapping checks and 400 fast checks passed. Browser regressions reproduce the pre-fix stale-review symptom, then verify confirmed selection triggers a full refresh, saved form names and mapping dropdowns appear, and a synthetic permission failure remains on selection with a focused inline error. Tests use loopback synthetic endpoints; no Meta call or live CRM change. PHP/JavaScript syntax and diff checks passed. Local test build only, not CI-attested or deployed.

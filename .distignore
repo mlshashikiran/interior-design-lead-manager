@@ -11,3 +11,11 @@ tests/
 design-system/
 docs/
 graphify-out/
+includes/graphify-out/
+.graphify_*
+.graphifyignore
+design.md
+quote-builder-redesign.html
+/.hosting/
+
+/services/facebook-connect/

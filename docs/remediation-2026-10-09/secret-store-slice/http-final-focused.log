@@ -1,0 +1,7 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T07-T20-H-INT010 encrypted platform tokens absent from rendered settings
+PASS T07-H-INT010 settings credential mutation rejects actor and nonce
+PASS T20-H-INT010 blank retains rotation replaces clear revokes without echo
+PASS T20-H-INT010 contradictory replace clear and array values refuse persistence
+PASS T07-T08-H-INT010 blank connection tests use stored header token and return scrubbed errors
+5 passed, 0 failed

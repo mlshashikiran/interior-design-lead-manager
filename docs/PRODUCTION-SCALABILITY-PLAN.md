@@ -4,7 +4,8 @@ Author / Builder: Shashi
 Status: Approved staged plan; Phases 0 through 9 are in progress  
 Prepared: 2026-08-30  
 Planning release: 1.98.2  
-Current implementation release: 1.102.38
+Current implementation release: 1.102.97
+Latest audit checkpoint: [Portable hosting and notification controls 1.102.89](NOTIFICATIONS-AND-HOSTING.md); exact new-revision build evidence is in the current CI artifact. Historical checkpoint: [CI-qualified production build 1.102.88](CI-QUALIFIED-BUILD-1.102.88.md). M6 COMPLETE; selected single-server M7 qualification and exact M8 build/promotion evidence verified. Eight remote matrix cells and the official package gate PASS. REL-001 IMPLEMENTED; 44 IMPLEMENTED / zero IN PROGRESS / zero CLOSED. Actual-host acceptance and deployment remain pending.
 Baseline implementation: 1.98.1
 
 ## Objective
@@ -418,3 +419,78 @@ The production and scalability program is complete only when:
 - Multi-node infrastructure passes when horizontal deployment is required.
 - Monitoring, alerts, ownership, and recovery runbooks are active and tested.
 - Public contracts, schema state, release metadata, documentation, and artifact checksum are aligned.
+
+## CORE-012 bounded retention and read work — 2026-10-07
+
+Shashi: candidate **1.102.55**, schemas unchanged. Checked 100-row retention batches rotate across targets with transactional progress, recovery/session fencing, continuations and health faults. Task cards page 50 after SQL grouping; WhatsApp uses SQL count/EXISTS; CSV stages 100-row reads with explicit row/file/time limits before headers. **279 fast / 171 native / 308 HTTP-stdio PASS**, desktop/mobile pagination and a local 5,000-lead read-plan sample. IMPLEMENTED, not CLOSED; M7 production workload/runtime/artifact gates remain open. [Policy, evidence and limitations](AUDIT-REMEDIATION-BOUNDED-WORK-SLICE.md). Next: CORE-013.
+
+
+## CORE-013 — State vocabulary and lifecycle policy (2026-10-07)
+
+Shashi: candidate **1.102.56**, schemas unchanged. Shared manual-task and early-close subsets now drive forms and handlers; qualification coupling is distinguished from supplied-quality validation. [Current policy](STATE-POLICY.md) records current writers, reversal effects and historical repair differences. **284 fast / 5 focused native / 14 task-plan native checks PASS** (18 distinct native cases; fresh schema runs twice). CORE-013 is IMPLEMENTED, not CLOSED; runtime/artifact qualification remains open. **25 OPEN / 19 IMPLEMENTED**. [Evidence and limits](AUDIT-REMEDIATION-STATE-POLICY-SLICE.md). Next: QUO-004, outstanding M2 quotation migration integrity.
+
+
+## QUO-004 — Checked quotation migration completion (2026-10-07)
+
+Shashi: candidate **1.102.57**, quotation schema **2.5.1**, core/routing unchanged. Physical verification precedes checked data phases; final schema completion and durable pending/ready status prevent false acknowledgements. Boot/activation propagate failures and retry incomplete work, reading committed markers directly. Complete 2.5.0 backup compatibility retained. **291 fast / 202 native / 312 HTTP-stdio PASS**. Two final targeted native checks also pass (203 distinct native cases across final runs). IMPLEMENTED, not CLOSED; QUO-005/010 historical semantics and M7/M8 qualification remain open. **24 OPEN / 20 IMPLEMENTED**. [Policy and evidence](AUDIT-REMEDIATION-QUOTATION-MIGRATION-SLICE.md). Next: QUO-005.
+
+
+## 2026-10-08 — QUO-009 paper and coupled UI-004 defaults
+
+Shashi: candidate **1.102.63**, schemas unchanged. Shared paper normalization aligns setup/print/PDF, preserves existing A3/Legal support and safe A4 defaults; PDF CSS no longer forces A4. Explicit quotation CSV escaping removes PHP 8.4 download diagnostics. **312 fast / 11 focused actual HTTP PASS**, with all 377 pre-existing HTTP/stdio cases passing in the accumulated run, actual browser desktop/mobile selection and nine-page A4/Letter dimension/text/visual evidence. QUO-009 and coupled UI-004 are **IMPLEMENTED, not CLOSED**; runtime/artifact and exhaustive PDF resource/transport qualification remain open. **17 OPEN / 27 IMPLEMENTED**. [Policy and evidence](AUDIT-REMEDIATION-QUOTATION-PAPER-SLICE.md). Next: UI-001.
+
+## INT-010 protected platform credentials — 2026-10-09
+
+Shashi: candidate **1.102.71**, schemas unchanged. Seven platform secrets use verified encrypted/environment storage and fresh primary reads; write-only fields support retain/replace/explicit clear. Meta uses Bearer authentication; covered transports scrub secret echoes and refuse redirects. Legacy copied-key queues are cleaned in bounded batches. **350 fast / 306 full native / 425 full actual HTTP PASS** (12 focused native and 5 focused HTTP also pass); commands and hashes are recorded in the [slice and machine evidence](AUDIT-REMEDIATION-SECRET-STORE-SLICE.md). **INT-010 IMPLEMENTED, not CLOSED; 7 OPEN / 37 IMPLEMENTED**. Provider-required Google query secrets, historic traces, installed scheduler/runtime/key-management and exact artifact qualification remain open. Automation mobile overflow was observed. Next listed finding: REL-001, with M6/M7 prerequisites still required.
+
+## REL-002 verified Inter license and provenance — 2026-10-09
+
+Shashi: candidate **1.102.72**, schemas and font/CSS bytes unchanged. All five font files exactly match the official Google Latin variable-font distribution; embedded Inter revision resolves to the pinned upstream source/license. Bundle complete OFL 1.1, human notice and per-file provenance hashes; require all font resources/notices in release inventory. **12 release contracts PASS**, two pre-fix failures reproduced, actual **453-file** rehearsal/extraction identity verified. **REL-002 IMPLEMENTED, not CLOSED; 5 OPEN / 1 IN PROGRESS / 38 IMPLEMENTED**. REL-001 clean/CI/final artifact, other dependency and reproducibility gates remain. [Sources, implementation and evidence](AUDIT-REMEDIATION-FONT-NOTICE-SLICE.md). Next executable finding: REL-003.
+
+## REL-003 optional public credit — 2026-10-09
+
+Shashi: candidate **1.102.73**, schemas unchanged. Fresh/missing/partial attribution defaults off; saved on/off choices remain unchanged without inferring historical consent. Only the explicit checkbox string opts in on authorized save; clear linked help and shared preview/reset inherit the off default. **356 fast / 4 actual HTTP PASS**, desktop/mobile keyboard/reset checks and all changed PHP lint PASS. **REL-003 IMPLEMENTED, not CLOSED; 4 OPEN / 1 IN PROGRESS / 39 IMPLEMENTED**. Complete runtime/CI/final artifact qualification remains pending. [Policy and evidence](AUDIT-REMEDIATION-ATTRIBUTION-OPT-IN-SLICE.md). Next executable finding: REL-004.
+
+## REL-004 public service/privacy/support disclosures — 2026-10-09
+
+Shashi: candidate **1.102.74**, schemas/runtime behavior unchanged. Publish actual provider transfers, automatic attribution cookies, protected credentials, retention/erasure/removal/partial-backup limits, owner-supplied private support/security contact and manual ZIP update/recovery instructions. Require bundled public privacy/support guides. **12 release contracts PASS; 455-file archive/source identity PASS; 4 PHP lint PASS**; no new full runtime/installed-artifact qualification claimed. **REL-004 IMPLEMENTED, not CLOSED; 3 OPEN / 1 IN PROGRESS / 40 IMPLEMENTED**. Consent/receipt-erasure and provider/deployment/recovery limits remain explicit. [Source review and evidence](AUDIT-REMEDIATION-PUBLIC-DISCLOSURES-SLICE.md). Next executable finding: REL-005.
+
+## REL-005 runtime support and prerequisites — 2026-10-09
+
+Shashi: candidate **1.102.75**, schemas unchanged. User selected **WordPress 6.6 / PHP 7.4**; align header/readme, publish prerequisites, refuse unavailable PDF/XLSX storage and crypto operations, and retain all six CI cells with resolved runtime/dependency/download/log evidence. **361 fast / 5 focused prerequisite contracts / 306 WP 6.6 native / 429 WP 6.6 full HTTP-stdio / 11 WP 6.6 export HTTP / 11 WP 7.1.2 export HTTP PASS**, on PHP 8.4.14/MySQL 8.4.0. Missing module/ZIP/renderer simulations are distinguished from actual disabled crypto and temporary-directory conditions. **REL-005 IMPLEMENTED, not CLOSED; 2 OPEN / 1 IN PROGRESS / 41 IMPLEMENTED**. PHP 7.4/8.1, resolved latest 7.1.3, actual absent-extension hosts, complete exact CI and installed artifact remain unqualified. [Evidence, policy and limits](AUDIT-REMEDIATION-RUNTIME-SUPPORT-SLICE.md). Next executable finding: REL-006.
+
+## REL-006 reproducible release ZIP metadata — 2026-10-11
+
+Shashi: candidate **1.102.76**, runtime/schemas unchanged. Reproduce the root timestamp defect with two full packages; check root creation, sort builder inventory and normalize root/file timestamps, UNIX modes and file compression. CI packaging pins UTC. **13 release contracts PASS**; separated **455-file** full builds and a source-metadata/order-perturbed copy produce identical ZIP bytes, with independent content/metadata inspection. **REL-006 IMPLEMENTED, not CLOSED; 1 OPEN / 1 IN PROGRESS / 42 IMPLEMENTED**. Exact clean revision/matching CI/final artifact and cross-toolchain qualification remain open. [Evidence and build contract](AUDIT-REMEDIATION-ZIP-REPRODUCIBILITY-SLICE.md). Next executable finding: REL-007.
+
+## REL-007 package inventory and diagnostic checkpoint — 2026-10-11
+
+Shashi: local candidate **1.102.77**, runtime semantics/schemas unchanged. Exclude five local graph/design/prototype files, independently reject their reintroduction, protect dependency licenses/resources and document four narrow output/resource exceptions. Add disposable unfiltered official Plugin Check 2.1.0 with a failing diagnostic wrapper and CI candidate-upload gate. **14 release / 363 fast contracts PASS**; final 450-file ZIP matches source. Checker: **138 errors / 2,032 warnings remain**; ledger records 574 examined justifications, **1,595 source-review-required findings** and one readme limit. **REL-007 IN PROGRESS, not IMPLEMENTED or CLOSED; 0 OPEN / 2 IN PROGRESS / 42 IMPLEMENTED**. [Exact artifact, diagnostics and review queue](AUDIT-REMEDIATION-PACKAGE-CHECK-SLICE.md). Next executable work: continue REL-007 SQL/request source review; REL-001 remains prerequisite-blocked.
+
+## REL-007 SQL/request source checkpoint — 2026-10-11
+
+Shashi: local candidate **1.102.78**, schemas unchanged. Meta verification rejects non-string/missing parameters and unslashes only raw WP fallbacks; plain-text/zero challenges and REST token bytes remain correct. Prefix nine MCP CLI globals. Review **37 SQL locations**, record 97 additional specific justifications without suppressing diagnostics. **365 fast / 7 focused Meta HTTP / 430 full HTTP-stdio / 14 release contracts PASS**. Official final 450-file ZIP: **138 errors / 2,018 warnings**, ledger **671 justified / 1,484 review-required / one readme limit**. **REL-007 IN PROGRESS, not IMPLEMENTED or CLOSED; 0 OPEN / 2 IN PROGRESS / 42 IMPLEMENTED**. [Source fixes, exact artifact and remaining queue](AUDIT-REMEDIATION-PACKAGE-SOURCE-SLICE.md). Continue REL-007 SQL/request source review; REL-001 remains prerequisite-blocked.
+
+## REL-007 local static completion — 2026-10-18
+
+Shashi: [REL-007 static completion, candidate 1.102.83](AUDIT-REMEDIATION-PACKAGE-STATIC-COMPLETION-SLICE.md). Official Plugin Check 2.1.0 default static gate PASS on the 453-file source-matching ZIP: zero errors, zero warnings, zero review-required diagnostics. 385 fast (including 16 release), 331 native and 445 HTTP/stdio cases PASS; 88 changed PHP files lint clean. Source fixes resolve 438 diagnostic instances; 694 bounded, source-specific review exceptions account for 1,740 instances. Private managed ZIP selected by Shashi. REL-007 IMPLEMENTED locally; REL-001, M6/M7 and exact clean CI/installed-artifact qualification remain IN PROGRESS. Backlog: **43 IMPLEMENTED / one IN PROGRESS / zero CLOSED**. Historical checkpoints retain their original failure results.
+
+## M6 handoff notification ownership — 2026-10-18
+
+Shashi: [M6 handoff notification ownership, candidate 1.102.84](AUDIT-REMEDIATION-HANDOFF-NOTIFICATIONS-SLICE.md). Extract opt-in email delivery behind the unchanged integration callback and durable outbox. Method-body executable tokens match; 385 fast / four focused native / 334 full native cases and seven PHP lints PASS. Default Plugin Check gate PASS with zero diagnostics on the source-matching 454-file ZIP. M6/M7 and REL-001 remain IN PROGRESS; backlog remains 43 IMPLEMENTED / one IN PROGRESS / zero CLOSED. Next bounded M6 work: inventory one integration auth/intake/feed or AJAX handler responsibility and preserve its existing delegate/transport contracts before extracting it. Do not treat this single mail extraction as the M6 exit review.
+
+## M6 administrator connection controller — 2026-10-18
+
+Shashi: [M6 connection controller, candidate 1.102.85](AUDIT-REMEDIATION-CONNECTION-CONTROLLER-SLICE.md). Move the 119-line authenticated diagnostic handler byte-for-byte behind both existing facades; nonce/admin guards, credentials, provider requests and JSON messages remain unchanged. 385 fast / four focused HTTP / 449 full HTTP-stdio cases and eight PHP lints PASS. Default Plugin Check gate PASS with zero diagnostics on the source-matching 455-file ZIP. M6/M7 and REL-001 remain IN PROGRESS; backlog stays 43 IMPLEMENTED / one IN PROGRESS / zero CLOSED. Continue the remaining bounded M6 ownership review; this handler extraction does not complete M6 or qualify the release.
+
+## M6 telemetry controller — 2026-10-20
+
+Shashi: [M6 telemetry controller, candidate 1.102.86](AUDIT-REMEDIATION-TELEMETRY-CONTROLLER-SLICE.md). Extract three byte-identical handlers (129 lines) behind both unchanged facades. 387 fast / four focused HTTP (WP 7.1.3) / 453 full HTTP-stdio (WP 6.6) cases and seven PHP lints PASS. The 456-file ZIP matches source. Default Plugin Check reports nine warnings in existing Users & Access code; complete static gate fails, with no telemetry diagnostics. M6/M7 and REL-001 remain IN PROGRESS; backlog stays 43 IMPLEMENTED / one IN PROGRESS / zero CLOSED. Continue the remaining bounded M6 ownership review.
+
+## M6 activity controller — 2026-10-21
+
+Shashi: [M6 activity controller, candidate 1.102.87](AUDIT-REMEDIATION-ACTIVITY-CONTROLLER-SLICE.md). Extract four byte-identical timeline/comment handlers (232 lines) behind both stable facades. 387 fast / eight pre-extraction and eight post-extraction focused HTTP (WP 6.6) / 461 full HTTP-stdio (WP 7.1.3) cases and eight PHP lints PASS. The 457-file ZIP matches source. Default Plugin Check retains the same nine existing Users & Access warnings; no new diagnostics. M6/M7 and REL-001 remain IN PROGRESS; backlog stays 43 IMPLEMENTED / one IN PROGRESS / zero CLOSED. Continue bounded M6 review of the remaining coupled responsibilities.
+
+## CI-qualified build checkpoint — 2026-10-23
+
+Shashi: [CI-qualified production build 1.102.88](CI-QUALIFIED-BUILD-1.102.88.md). M6 COMPLETE; selected single-server M7 qualification and exact M8 build/promotion evidence verified. Eight remote matrix cells and the official package gate PASS. REL-001 IMPLEMENTED; 44 IMPLEMENTED / zero IN PROGRESS / zero CLOSED. Actual-host acceptance and deployment remain pending. Historical checkpoints retain their original results.

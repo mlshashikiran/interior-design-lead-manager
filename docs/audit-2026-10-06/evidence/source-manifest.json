@@ -1,0 +1,2572 @@
+{
+  "author": "Shashi",
+  "base": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "version": "1.102.42",
+  "files": [
+    {
+      "path": ".DS_Store",
+      "bytes": 6148,
+      "sha256": "3694779fe6170daf4b814f38d38a00ec129b6fdba265ad65cdd76af8caef9300"
+    },
+    {
+      "path": ".distignore",
+      "bytes": 142,
+      "sha256": "9498f4f671a4626e538b7003949cc0531be0dfeef0fa9ae917dda482950e1d94"
+    },
+    {
+      "path": ".github/workflows/tests.yml",
+      "bytes": 2742,
+      "sha256": "587c2a75e05187dcea9812f6780ca07ff189b280b0c72d7608889bebb15a3163"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 64,
+      "sha256": "ef5571ba2bae970d672bdf7933266c7743fa8732ce555eb18db35b913e29b1d2"
+    },
+    {
+      "path": ".hosting/qoak-hostarmada-ssh-config",
+      "bytes": 308,
+      "sha256": "d48fa28dd626de07bc175347788de6575ebe07bcfd21871b1f7a7450e440b9d7"
+    },
+    {
+      "path": "AGENTS.md",
+      "bytes": 10368,
+      "sha256": "016be8db1fc6f57f9640a1bfcc01a4250188606b97d4f03c19722b46088e3900"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 66242,
+      "sha256": "666334447482c0f441a6818f3a38f008461b3b347e6e27aa9773d492c006e4ae"
+    },
+    {
+      "path": "assets/css/admin-style.css",
+      "bytes": 218550,
+      "sha256": "fc4428715521c459f723e80cc2156fb8e0052f364fb89954590a6db0263f761e"
+    },
+    {
+      "path": "assets/css/dashboard.css",
+      "bytes": 13546,
+      "sha256": "1b023dd52473e6f261faaabba91a3a5c980e196dde8112c8a947d18ac283d208"
+    },
+    {
+      "path": "assets/css/fonts.css",
+      "bytes": 1899,
+      "sha256": "acb31a6d4c15ae590722cf1b993c9cd6ef920cd50e1fc0223183fd0a38de6567"
+    },
+    {
+      "path": "assets/css/kanban.css",
+      "bytes": 14061,
+      "sha256": "7e71666c95f9be7aa0cb682642b1161ffa5ec1fb043c1fb2ad2555b49eff14b2"
+    },
+    {
+      "path": "assets/css/login.css",
+      "bytes": 2636,
+      "sha256": "4723fe58a3b8a2c412b6bf02cc135ba617d67d74cff0292da5ce2f6cba53cd44"
+    },
+    {
+      "path": "assets/css/quotations.css",
+      "bytes": 60215,
+      "sha256": "8d0f3256eb898d3c51f834ab0b7377c61444f5cd20c5bc860de7ffc84b13ed33"
+    },
+    {
+      "path": "assets/css/workspace.css",
+      "bytes": 15263,
+      "sha256": "689cfd28fc75e938d899d4a003e810a4a82c3853730b95c31735f2f1fdde328d"
+    },
+    {
+      "path": "assets/fonts/inter-latin-300.woff2",
+      "bytes": 48432,
+      "sha256": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4"
+    },
+    {
+      "path": "assets/fonts/inter-latin-400.woff2",
+      "bytes": 48432,
+      "sha256": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4"
+    },
+    {
+      "path": "assets/fonts/inter-latin-500.woff2",
+      "bytes": 48432,
+      "sha256": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4"
+    },
+    {
+      "path": "assets/fonts/inter-latin-600.woff2",
+      "bytes": 48432,
+      "sha256": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4"
+    },
+    {
+      "path": "assets/fonts/inter-latin-700.woff2",
+      "bytes": 48432,
+      "sha256": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4"
+    },
+    {
+      "path": "assets/js/access-account.js",
+      "bytes": 3826,
+      "sha256": "849d669056a73b74dac2d332c9f08250135e8d4410fcab9dc21ab012b4008895"
+    },
+    {
+      "path": "assets/js/admin-app.js",
+      "bytes": 170382,
+      "sha256": "491d2bf9a602c2041291ac9b2f8682af121544a04dee3ddad1f2c19818320baa"
+    },
+    {
+      "path": "assets/js/chart.js",
+      "bytes": 208522,
+      "sha256": "48444a82d4edcb5bec0f1965faacdde18d9c17db3063d042abada2f705c9f54a"
+    },
+    {
+      "path": "assets/js/dashboard.js",
+      "bytes": 45117,
+      "sha256": "66a125497b75240f7a88fc68b726c067b4d207001f1786d7982d2cafd750d63a"
+    },
+    {
+      "path": "assets/js/dialog.js",
+      "bytes": 17858,
+      "sha256": "d5b463c674698e9a5b1e47c3a414ec88c72aef9366bd9a00093e9600435263cf"
+    },
+    {
+      "path": "assets/js/kanban.js",
+      "bytes": 35318,
+      "sha256": "71bf3aa1c5ef71688eb27ec922db7a92eac2529a0a94cb1abd2fdd335b578c9d"
+    },
+    {
+      "path": "assets/js/quotations.js",
+      "bytes": 53237,
+      "sha256": "753e671f43d78e8072441c6ab91f8cbb595332063147edb19f3748cfed4567c2"
+    },
+    {
+      "path": "assets/js/settings.js",
+      "bytes": 33726,
+      "sha256": "c00c08ecde9bbcb53129492e033afe105b8f4014a1899ac18b14b04df74ebfbf"
+    },
+    {
+      "path": "assets/js/users-logs.js",
+      "bytes": 13069,
+      "sha256": "ef53e5cc72920d6b2f23aee788176cb9b84af8845e91017fc7485e9bdf25649e"
+    },
+    {
+      "path": "assets/js/workspace.js",
+      "bytes": 5794,
+      "sha256": "5b8d29958f665a873effca3e7d7f893b89e126aa692b2451659598f55dc1dbe8"
+    },
+    {
+      "path": "data-point-labels.csv",
+      "bytes": 27004,
+      "sha256": "0d8ca5bdba83b20aac967354c590c50143850a61a9ac9e5aa467a11d1088edec"
+    },
+    {
+      "path": "design-system/interior-design-lead-manager/MASTER.md",
+      "bytes": 14436,
+      "sha256": "91c64fe6da437b565a256bbd1c97599d61e50eba45b95cda1ee881841e751664"
+    },
+    {
+      "path": "design-system/interior-design-lead-manager/pages/access-account.md",
+      "bytes": 981,
+      "sha256": "cd3339b87f18318103a29bb626eef4beeeb73b23452de001aedad1a393d1e0f9"
+    },
+    {
+      "path": "design-system/interior-design-lead-manager/pages/dashboard.md",
+      "bytes": 1069,
+      "sha256": "1b329a35766a0f3a9db29beaf2b38ef2dc2e2266aedbdc065bf0561cd765a4e7"
+    },
+    {
+      "path": "design-system/interior-design-lead-manager/pages/kanban.md",
+      "bytes": 1681,
+      "sha256": "db9c7835cd29dd1a8600e39e6a012166cc7f12f0481c272eb195545c27732304"
+    },
+    {
+      "path": "design-system/interior-design-lead-manager/pages/leads.md",
+      "bytes": 2265,
+      "sha256": "44e711b5692c9fd083c242a7f88fe4838541e048bb76e7a2e255de9c263e3e46"
+    },
+    {
+      "path": "design-system/interior-design-lead-manager/pages/quotations.md",
+      "bytes": 1353,
+      "sha256": "04f1a22ee28342c922a234a65a3b50382866b44d5da87fc3d5d37df7ae9a8d39"
+    },
+    {
+      "path": "design-system/interior-design-lead-manager/pages/settings.md",
+      "bytes": 2146,
+      "sha256": "b48b99229a570e319c429a7c33ae1446a7a9e85bffc438bfd1463019eb20496a"
+    },
+    {
+      "path": "design-system/interior-design-lead-manager/pages/users-logs.md",
+      "bytes": 996,
+      "sha256": "a689ea2ad04983c41dbf966e6970558ad6bc171df0849639c0f32cac55b0526b"
+    },
+    {
+      "path": "design.md",
+      "bytes": 17805,
+      "sha256": "0f4307714691c1277cee9b49db3305677a437e40811f8e2d661446b1bc428c1c"
+    },
+    {
+      "path": "docs/ADMIN-REFACTOR-PLAN.md",
+      "bytes": 17141,
+      "sha256": "80b3c59cf71828e5896efac3baf9681ab871fa8cdd16009c9604d9f9f9e8d652"
+    },
+    {
+      "path": "docs/ADMIN-REFACTOR-VERIFICATION.md",
+      "bytes": 3232,
+      "sha256": "e20012c40d84ff7e7d5f1964656794feb54ef229e392b8790ad9712a3cc437bd"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "bytes": 12739,
+      "sha256": "f7a97f9509d8ba472333f94317dcc47c7b7b49224fd548642d4537bfeafdbc46"
+    },
+    {
+      "path": "docs/CHANGELOG-DEV.md",
+      "bytes": 127885,
+      "sha256": "29e547a67995cb75f0171f6508c124aa6a3f094a898eaf1c2deafdb6641ebd18"
+    },
+    {
+      "path": "docs/DASHBOARD-ANALYTICS-AUDIT-2026-09-06.md",
+      "bytes": 9714,
+      "sha256": "5bece6843bc7abfa6920f537946a760b77ce75088a72f8e378df0921f3754519"
+    },
+    {
+      "path": "docs/DATA-MODEL.md",
+      "bytes": 8706,
+      "sha256": "a1bee980fee63dc0f828bd05a74b57e495c779c07a789d2644ec24ccb4c9f0e8"
+    },
+    {
+      "path": "docs/DESIGN.md",
+      "bytes": 22661,
+      "sha256": "b44c9f4fa006b70c2c37502db1b696d1787015d5f9e5603e515b0414b2493c79"
+    },
+    {
+      "path": "docs/DEVELOPMENT.md",
+      "bytes": 7576,
+      "sha256": "5f541c2770a8180f4392db1a892d6530b30c106cd633916a8fc5a040c3f28205"
+    },
+    {
+      "path": "docs/FEATURE-MAP.md",
+      "bytes": 16195,
+      "sha256": "87ca69818b73cd2b40f0adffe5c6273a9b270e50ebf5ea0c5894ee80d3bd4bc1"
+    },
+    {
+      "path": "docs/FLOWS.md",
+      "bytes": 10574,
+      "sha256": "7283e281fab2a96c40e4c03f29d0a01eab976e5d1020bf13d79ac81a57392993"
+    },
+    {
+      "path": "docs/HORIZONTAL-DEPLOYMENT.md",
+      "bytes": 3920,
+      "sha256": "7fe3abb4900734b9e92f69c55870e0b9ee045b3c1e802a9c386f2eec061d6451"
+    },
+    {
+      "path": "docs/INTERFACES.md",
+      "bytes": 11941,
+      "sha256": "45ea6e3c8d2d9eab7512b66ad69caa0dbe3566307df350f6a48919647474e41c"
+    },
+    {
+      "path": "docs/LEAD-ROUTING-POPUP-AUDIT-2026-09-03.md",
+      "bytes": 5292,
+      "sha256": "387aac1035a85ef5a039e238e47150ee6aa778eec06561aa2cd1b13e366d1d5b"
+    },
+    {
+      "path": "docs/LOAD-RESILIENCE-QUALIFICATION.md",
+      "bytes": 3686,
+      "sha256": "fd0f271b61045c8089cc174c8d0d28049bc7e32faff293172bb2dd5d8cb6041b"
+    },
+    {
+      "path": "docs/LOGICS.md",
+      "bytes": 18007,
+      "sha256": "ce77d5b38e11d55d9fe1afa9cb3988dd7116c22c1c752cc1f39698982f40f89a"
+    },
+    {
+      "path": "docs/OPERATIONS-RUNBOOKS.md",
+      "bytes": 5033,
+      "sha256": "b517ba37cc62c81e6436288e5d36805aeb8e9d8b949c4700b03dfad2daced4dc"
+    },
+    {
+      "path": "docs/PERFORMANCE-BASELINE.md",
+      "bytes": 9278,
+      "sha256": "f4dd4cd016ec364edcabfa9bf2e407583fdf6fd93285ed0e965c189c34265fcb"
+    },
+    {
+      "path": "docs/PRODUCTION-RELEASE.md",
+      "bytes": 4261,
+      "sha256": "a882c06d94bd17e91a10a472ce7ab5e1c7f5a36d5486a34d85f0fe198d5af6fe"
+    },
+    {
+      "path": "docs/PRODUCTION-SCALABILITY-PLAN.md",
+      "bytes": 34243,
+      "sha256": "7f8c93ef34abd5c829525763faf801c6ec1e7b50b028cbbf952ba760803d7b44"
+    },
+    {
+      "path": "docs/PRODUCTION-SECURITY-CONFIG.md",
+      "bytes": 2760,
+      "sha256": "47e656c8dc9ce71ac2909d12eefb602083a800e4209aee96a8f996000f078d60"
+    },
+    {
+      "path": "docs/PROJECT-MAP.md",
+      "bytes": 9795,
+      "sha256": "5f1973e7e1e73a9881eb3cbe78a219d9c9682bb903b4ff4fa7fc54232f3b2400"
+    },
+    {
+      "path": "docs/SECURITY.md",
+      "bytes": 7955,
+      "sha256": "497fe363a9b6603f3e3e6760cc66662711bb248d37ce3bbd5aa21cdf0cf10da6"
+    },
+    {
+      "path": "docs/SETTINGS.md",
+      "bytes": 3471,
+      "sha256": "8a3a50222227af8233a5fc8f821b885e4b646151b3c7791482d41328789c5170"
+    },
+    {
+      "path": "docs/TECH-DEBT.md",
+      "bytes": 6467,
+      "sha256": "c2c281f56a1ee9ee87835032d1eeb2a2aeaa47971c51648073584bdc25bfed95"
+    },
+    {
+      "path": "docs/TELEPHONY-INTEGRATION.md",
+      "bytes": 2161,
+      "sha256": "b399b8fa81fd9ce2d1f334da943a34ca5eba7f279641e2c4f50e1504e3ce2071"
+    },
+    {
+      "path": "docs/UI-UX-AUDIT-2026-09-01.md",
+      "bytes": 16493,
+      "sha256": "44c8c69677b0bcd66f9d5bb5010c1e5c76a158cf46e06c23909e106a7f968e7f"
+    },
+    {
+      "path": "docs/UI-VISUAL-REGRESSION-MATRIX.md",
+      "bytes": 3898,
+      "sha256": "e8deca0c11045084f9fcc499667b9edd737fb2c459dbf83e37fe8388a2de152e"
+    },
+    {
+      "path": "docs/WHITE-LABEL-SETTINGS-PLAN.md",
+      "bytes": 13633,
+      "sha256": "280aab75d268821ad3d9d7412b6cfaadf313c636aa07c4d474dbd72d09365d78"
+    },
+    {
+      "path": "docs/legacy/CHANGELOG-FULL.md",
+      "bytes": 267228,
+      "sha256": "ecf91c6f8f0b575df03cf7624c93c11351744a4ecbe5126485d21f1b7fc132b3"
+    },
+    {
+      "path": "docs/legacy/README-FULL.txt",
+      "bytes": 82061,
+      "sha256": "c7325296aeb052e3bdfaa07b35443e79f1f906516c54495f00b807b22bbcb766"
+    },
+    {
+      "path": "docs/ui-audit/01-screen-inventory.md",
+      "bytes": 3652,
+      "sha256": "12d1f15712ec0e348a19cc49e447cf9e47c3ecaff7a00ff34353c9c3f4461790"
+    },
+    {
+      "path": "docs/ui-audit/02-component-inventory.md",
+      "bytes": 4107,
+      "sha256": "679fe29b778dedd1722f6dd62436f0170b1dde0418bf6dc6fc723823c45a8dba"
+    },
+    {
+      "path": "docs/ui-audit/03-design-system-audit.md",
+      "bytes": 3353,
+      "sha256": "aafc795550333d99ad9a2fd74f9b971dfb3ea3d599b330a1ab44984bbaded46a"
+    },
+    {
+      "path": "docs/ui-audit/04-consistency-issues.md",
+      "bytes": 3823,
+      "sha256": "8a454b3cdac5ebb563329eac8f8327ed5c683bad1d8328f502b36fb67b81c1fd"
+    },
+    {
+      "path": "docs/ui-audit/05-ux-simplification.md",
+      "bytes": 2921,
+      "sha256": "8556d4836f3619cc959f5e547b7f82775b089177249b3dff60839e3d0a03db98"
+    },
+    {
+      "path": "docs/ui-audit/06-component-architecture.md",
+      "bytes": 1792,
+      "sha256": "0cb2d202075c316d5801e3895b227583077ed349a2ea0af98534399e94a94296"
+    },
+    {
+      "path": "docs/ui-audit/07-rework-plan.md",
+      "bytes": 3221,
+      "sha256": "6ab83309e1fb6b25e49590da9cb46859a1e2611ea3e67ac7e1bd25f14df2017f"
+    },
+    {
+      "path": "docs/ui-audit/09-implementation-batch.md",
+      "bytes": 1571,
+      "sha256": "2fde37fa89039ccab45e7241e93cb04c500a9ba61dab4fcc4146e140767b1e35"
+    },
+    {
+      "path": "includes/class-admin-account-controller.php",
+      "bytes": 4037,
+      "sha256": "a743ebaee998c58be7ce32f9f1558a646c7796ce149e3f5dbb0c987dde168272"
+    },
+    {
+      "path": "includes/class-admin-ajax.php",
+      "bytes": 190598,
+      "sha256": "59745d1edac09bfd15fcedd1f9ca4bc038f417315b46d3ceee4e15bb1e07c8a3"
+    },
+    {
+      "path": "includes/class-admin-assets.php",
+      "bytes": 7524,
+      "sha256": "b917297f55d0482e5e03ed8a633eda44bc786107b7910c631b59fec08986423f"
+    },
+    {
+      "path": "includes/class-admin-dashboard-renderer.php",
+      "bytes": 994,
+      "sha256": "7e3543b564f959256b737ac8311eb1c03775d7ffbeac56f836c5a72104068515"
+    },
+    {
+      "path": "includes/class-admin-kanban-renderer.php",
+      "bytes": 2382,
+      "sha256": "ed4e828c80d04a96957ca9bfac49b848505c90a79a17cb56cf5a39263c8bc554"
+    },
+    {
+      "path": "includes/class-admin-lead-notifications.php",
+      "bytes": 12832,
+      "sha256": "34c6153071355bf0be03dd99887ef10c17a59ca5347276644f3b048f31f6315d"
+    },
+    {
+      "path": "includes/class-admin-lead-reads.php",
+      "bytes": 62091,
+      "sha256": "715ff52af3473832909e4cba96ef98f9959d4e318f9b5ee0bd6352c54bf739ca"
+    },
+    {
+      "path": "includes/class-admin-leads-renderer.php",
+      "bytes": 15620,
+      "sha256": "5001eefabbef21eee1cef03ea0c4d620b7534bb73a372b5bad4cfcc000c89618"
+    },
+    {
+      "path": "includes/class-admin-logs-renderer.php",
+      "bytes": 7404,
+      "sha256": "f7b8e8b6be44a81ed348277eff74140c6ca26d5b4cbb13b6cc4618f4965fad0b"
+    },
+    {
+      "path": "includes/class-admin-presenter.php",
+      "bytes": 5252,
+      "sha256": "8aa38656e3ae7ae7f8855b7cbbf22ea085cabdfb803a144e4aab856a48e7f108"
+    },
+    {
+      "path": "includes/class-admin-settings-controller.php",
+      "bytes": 26041,
+      "sha256": "691591cd34f2419f6a90925bc31c10d3d41bccb53e8f04e4916e6ebb7787ea69"
+    },
+    {
+      "path": "includes/class-admin-settings-renderer.php",
+      "bytes": 18784,
+      "sha256": "529939157fd8e6174774d42eca78ba8a7f15e767acd2cee63081eef0d34305fb"
+    },
+    {
+      "path": "includes/class-admin-shortcodes.php",
+      "bytes": 5292,
+      "sha256": "30898a633fb87c978e9c0ccbe265bc36554f9cdb4392f3db0b4b699127027c6b"
+    },
+    {
+      "path": "includes/class-admin-users-controller.php",
+      "bytes": 8227,
+      "sha256": "67888d9127b0112460a44527daf8c2d558b37c3ca6a022f6b5b8068ba593f753"
+    },
+    {
+      "path": "includes/class-admin.php",
+      "bytes": 23296,
+      "sha256": "ac19ec32097df7c584c5dfdf26746127712dd9cfd2ec7ac954ef1d1ec46f63e4"
+    },
+    {
+      "path": "includes/class-audiences.php",
+      "bytes": 13361,
+      "sha256": "d754764fd1486e358cf1a709f1a1e93128720e95d3d05aa837e76e1666d27b62"
+    },
+    {
+      "path": "includes/class-auth.php",
+      "bytes": 7879,
+      "sha256": "dbb784549dad23ac4fac5ad07556251aace0d3498c72d84336c6cf25fc03922c"
+    },
+    {
+      "path": "includes/class-backup.php",
+      "bytes": 10313,
+      "sha256": "824797cdb4e178b39061bafa896e3f5912b58e13ae8e001bdd65f9166cc27c06"
+    },
+    {
+      "path": "includes/class-capi.php",
+      "bytes": 43233,
+      "sha256": "d6da134d220ce0ba44ea6aa633e7d3b8755cecd15c48551834dcc6518ef775c6"
+    },
+    {
+      "path": "includes/class-cursor-pagination.php",
+      "bytes": 4203,
+      "sha256": "ea519320fe449ccb6a5fae7894f68139b0191310ae99afc0fa1b1450a3778a8b"
+    },
+    {
+      "path": "includes/class-dashboard-read-model.php",
+      "bytes": 2738,
+      "sha256": "7e529529e808bce4cbffc0e2942efbf7cf54a7ae2e3b1727f361c994816b8168"
+    },
+    {
+      "path": "includes/class-dashboard.php",
+      "bytes": 105165,
+      "sha256": "5315546f9bd48ef33617a9580ff040802d03ac34216e06e72361be573553e779"
+    },
+    {
+      "path": "includes/class-data-retention.php",
+      "bytes": 6518,
+      "sha256": "73350beae765cfbfc61ca65dd625c91a9cd0f47a593c4952f13dc7ca7f8bdec5"
+    },
+    {
+      "path": "includes/class-db.php",
+      "bytes": 58028,
+      "sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0"
+    },
+    {
+      "path": "includes/class-horizontal-readiness.php",
+      "bytes": 5123,
+      "sha256": "f2db7df16f81500061eacaa72a42ce2cef012b957933944c0bd592466e74271e"
+    },
+    {
+      "path": "includes/class-integrations.php",
+      "bytes": 82065,
+      "sha256": "5ca9f7ed9e9371c14b0e2869eb6712bca90acf38459281b36f64316fd408f59d"
+    },
+    {
+      "path": "includes/class-integrity-command.php",
+      "bytes": 768,
+      "sha256": "51674066db2ec61f18314480f6f29df77f4366550654c01159767d214625cdb8"
+    },
+    {
+      "path": "includes/class-interakt-batch.php",
+      "bytes": 4641,
+      "sha256": "e4e2fe986cc3cf363600f0e4fc960693a4d567099450a148eb8b79138366c7ad"
+    },
+    {
+      "path": "includes/class-interakt.php",
+      "bytes": 21357,
+      "sha256": "711c31fa1f19017d6b9e10b509108f1e6be447e0921a856f69bc2e5b8f990233"
+    },
+    {
+      "path": "includes/class-lead-access-policy.php",
+      "bytes": 5549,
+      "sha256": "ddaabcea5f1812a3337e9849d461f2189a5b245daf7fb943e209467e21472ee6"
+    },
+    {
+      "path": "includes/class-lead-deletion-service.php",
+      "bytes": 11153,
+      "sha256": "920482435fcdfca13e12304679663956507f6ce420c62aca7a4ecdb0d7ddc144"
+    },
+    {
+      "path": "includes/class-lead-lifecycle-service.php",
+      "bytes": 45756,
+      "sha256": "da94acb4a6e8cf8d68506b5f7b0f3d361b652439f447152ecf924a401d9bd27a"
+    },
+    {
+      "path": "includes/class-mcp-core.php",
+      "bytes": 27335,
+      "sha256": "49c11204fef7081e168eb24dce73818e1e9cbb77abb780fa5b3c12985957a186"
+    },
+    {
+      "path": "includes/class-operational-health.php",
+      "bytes": 16974,
+      "sha256": "2d37ffe0cbd86ba8c02510428d4ad895c12e89912ffe9b2f473fc900ababe249"
+    },
+    {
+      "path": "includes/class-production-security.php",
+      "bytes": 11787,
+      "sha256": "5c81cef4cf5790aaa2c5eda661603f67e92e8adb16e4140148a452ece6cc26f8"
+    },
+    {
+      "path": "includes/class-quotation-calculator.php",
+      "bytes": 8116,
+      "sha256": "ba289e5f729e73ed6afce3d323b71ff5e95fb89bbc05fa2478aa5556ec8a0d32"
+    },
+    {
+      "path": "includes/class-quotation-controller.php",
+      "bytes": 38708,
+      "sha256": "1d27bc5b6eea5228f1c26ed1a61c2efd73a31b72c91d4cad191c2131a68495cc"
+    },
+    {
+      "path": "includes/class-quotation-exporter.php",
+      "bytes": 28937,
+      "sha256": "e82a566d9a97342fc188e01b5c68e2d973bc50c67cdaa7069e81f2af981d4f53"
+    },
+    {
+      "path": "includes/class-quotation-lead-read-model.php",
+      "bytes": 4054,
+      "sha256": "88bf8f07d07ca01d41295234c8fd6cb95219af53c62b88e0e88e51c6a4c2f18c"
+    },
+    {
+      "path": "includes/class-quotation-policy.php",
+      "bytes": 1339,
+      "sha256": "972ef21c069b67823c91ab84743b654677c4e944e592ad399de3606f57ee4e38"
+    },
+    {
+      "path": "includes/class-quotation-renderer.php",
+      "bytes": 77387,
+      "sha256": "6a9a65c488464520af4d30103e6d3c9edb12e8ec8aef6106e6d91880e9894450"
+    },
+    {
+      "path": "includes/class-quotation-repository.php",
+      "bytes": 37402,
+      "sha256": "18df764541e110fc99fec05dd4f4de7559d5fed435b514a86fe840084d6b3087"
+    },
+    {
+      "path": "includes/class-quotation-schema.php",
+      "bytes": 22499,
+      "sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6"
+    },
+    {
+      "path": "includes/class-quotations.php",
+      "bytes": 12280,
+      "sha256": "f5adf8cfc7ebb9718f01ac1f1105f7446bb64b6eb7d9fce324126c260df484b8"
+    },
+    {
+      "path": "includes/class-read-model-cache.php",
+      "bytes": 5939,
+      "sha256": "5867826a38208f55bf2a43e8bff7ae56a87d6c905b00a0f89d09ae1c8c224a5f"
+    },
+    {
+      "path": "includes/class-routing-state.php",
+      "bytes": 1986,
+      "sha256": "d716d833dad7d7d43cf197076eb9341c2698a65c27969da2350484d327db0ff9"
+    },
+    {
+      "path": "includes/class-scheduler.php",
+      "bytes": 2916,
+      "sha256": "eab7f793ec78d34fd337d52a2930f4ec25310e829ec838a44f1d07974ea07ed7"
+    },
+    {
+      "path": "includes/class-secret-store.php",
+      "bytes": 3644,
+      "sha256": "3676d0d7d8c414ea56104944e33e10d156a823da5ed3a9eb5efccbfcb4d86dfa"
+    },
+    {
+      "path": "includes/class-settings.php",
+      "bytes": 13478,
+      "sha256": "5415bc2909a191b0297b4362754ebfc36be9f143d9e454c0d6ac5d15ecbaffcf"
+    },
+    {
+      "path": "includes/class-state-registry.php",
+      "bytes": 3881,
+      "sha256": "0e1e8a38dcee20995eb854173b84cae8d43499d5a6309a437975f119e3a61491"
+    },
+    {
+      "path": "includes/class-task-queue-service.php",
+      "bytes": 2488,
+      "sha256": "d96e11077951575fbc813a70ead0d4c70ffce69db35bad9bedb6d1a4318bc6b3"
+    },
+    {
+      "path": "includes/class-telemetry.php",
+      "bytes": 9451,
+      "sha256": "56deedba79ea25977d23303b860d416b368fb961cd7c347013bee67a3bb971d6"
+    },
+    {
+      "path": "includes/class-view.php",
+      "bytes": 1054,
+      "sha256": "b14f93a24cd10f7bc043486c76864972a78f7e01745f343da15db3dbacc705a6"
+    },
+    {
+      "path": "interior-design-lead-manager.php",
+      "bytes": 11111,
+      "sha256": "5e22b5e459907c8e986256d9e31b0e9f7ff83ec24cdd2811a9fe069b7681f3ad"
+    },
+    {
+      "path": "mcp-server.php",
+      "bytes": 2653,
+      "sha256": "487e0c7b775745aaea0421de0360f425c8c7e41cf37831b31d2b0336cc9f17cc"
+    },
+    {
+      "path": "readme.txt",
+      "bytes": 37715,
+      "sha256": "645c8fb306ee918697a6fc4a6fe2df590228875a3ea2f224569a7c104bd0ce7e"
+    },
+    {
+      "path": "templates/access-restricted.php",
+      "bytes": 11334,
+      "sha256": "12c981761292f3548e9e26e6cf41d9fef6185c42c79aa788c03ecebac2f20453"
+    },
+    {
+      "path": "templates/admin/common-overlays.php",
+      "bytes": 15102,
+      "sha256": "ea9b4f993e8e1df3238b54e6b8348d97dc92e16547667cb828302aedf64cc83b"
+    },
+    {
+      "path": "templates/admin/dashboard.php",
+      "bytes": 20757,
+      "sha256": "94517eb01ca9ba36cb04efd387be4a510b14ec8c672357171a89698f63d4c73a"
+    },
+    {
+      "path": "templates/admin/kanban.php",
+      "bytes": 24366,
+      "sha256": "370a0147d01d11b3929bc7631727a0cb61216b084fce00f226f6820447a361fd"
+    },
+    {
+      "path": "templates/admin/leads.php",
+      "bytes": 93292,
+      "sha256": "fe8736aa1f44a9edbf7c773b5c0decc97554f9a679a2982c61bc9185f13b1542"
+    },
+    {
+      "path": "templates/admin/logs/audience.php",
+      "bytes": 6928,
+      "sha256": "7f0dfb31bd3becc16e3270768555bbcbb6d4a65f5f093b220a2ab3fc1d97017f"
+    },
+    {
+      "path": "templates/admin/logs/capi.php",
+      "bytes": 7998,
+      "sha256": "7661b50280f1738520fa0aa9c163f54dd2701cea38416b03d29ee41087a32738"
+    },
+    {
+      "path": "templates/admin/logs/payload-dialog.php",
+      "bytes": 2822,
+      "sha256": "20fdad3de2c622f84bf0b3c4f33d11ec7edc2c974da4653786e9048e4a135f14"
+    },
+    {
+      "path": "templates/admin/settings/backup.php",
+      "bytes": 3059,
+      "sha256": "7fddd8c25feaf3936f57a32d68326da89aba24cd4a4cc0aa9dc609ca02e88137"
+    },
+    {
+      "path": "templates/admin/settings/capi.php",
+      "bytes": 13287,
+      "sha256": "3837802dc32c12376abf019e2d3276d0a3426656409afb0f760f3d81f82ebef7"
+    },
+    {
+      "path": "templates/admin/settings/danger-zone.php",
+      "bytes": 3861,
+      "sha256": "66c5608202a093c5a38b5c50cf4562a37e7e917f87629adae281b783caaff3b7"
+    },
+    {
+      "path": "templates/admin/settings/general.php",
+      "bytes": 14033,
+      "sha256": "b1069156e8d45bc0827071c9b0bb792188e08a31250c8b68179d9bf082effd22"
+    },
+    {
+      "path": "templates/admin/settings/health.php",
+      "bytes": 17224,
+      "sha256": "76f92172d507e31c97bbf755c0e7a229e58ffd1c2530d2f936e3f70502762ce9"
+    },
+    {
+      "path": "templates/admin/settings/help.php",
+      "bytes": 6647,
+      "sha256": "2e5ab9ff6d0f51752ed25b0e40ea1150c396ea6b3a6d36960389c43dcb60f99d"
+    },
+    {
+      "path": "templates/admin/settings/mcp.php",
+      "bytes": 18534,
+      "sha256": "a88d166638a5cd1dc282a634d9b5bd08f0c343deb3bba57a93364e425eb263cf"
+    },
+    {
+      "path": "templates/admin/settings/routing.php",
+      "bytes": 23853,
+      "sha256": "83e7af77010b5421e3b0fdeabb093d92b6069938c4f9ac2bb14daea25a4dae59"
+    },
+    {
+      "path": "templates/admin/settings/shell.php",
+      "bytes": 31093,
+      "sha256": "2e425e7a3d538925e4ab381e6219d4a9cee7120f6a7e3824ea7bae74a915445a"
+    },
+    {
+      "path": "templates/admin/settings/sync-reminders.php",
+      "bytes": 26549,
+      "sha256": "519b2a1e29109ef3430038c1a7d68ec3dc9cafe5d7dd9081b2e732a742885aac"
+    },
+    {
+      "path": "templates/admin/settings/token-editor.php",
+      "bytes": 5672,
+      "sha256": "eba671bef676d60d589083577767c88b02be56b07d3423a0d52b54098dbaf2a2"
+    },
+    {
+      "path": "templates/admin/settings/webhooks.php",
+      "bytes": 12933,
+      "sha256": "7684dccee63375f988ef55c51544b7f7d468ca192d4209aca5b2375acfa93655"
+    },
+    {
+      "path": "templates/admin/settings/white-label.php",
+      "bytes": 15308,
+      "sha256": "6879f1b4efe148457d8f17f82fb7caa4fa957b08db41e0ce76b0edee0bfbe73f"
+    },
+    {
+      "path": "templates/admin/users.php",
+      "bytes": 15400,
+      "sha256": "200bd3311df2e40f2a48a1c0363a6326dd3a3ff3bc4c1096ca51ad308019f1ed"
+    },
+    {
+      "path": "templates/my-account.php",
+      "bytes": 6524,
+      "sha256": "c4d10dc17c066315a7c6a2ce25b62cc8c3f17ad1f6dbd9c87c44b8ed84f64a72"
+    },
+    {
+      "path": "templates/workspace.php",
+      "bytes": 5031,
+      "sha256": "faee6dc624c589c238ff243c97aaf3803190fe34196b9c09c10317ce428e3dfa"
+    },
+    {
+      "path": "tests/README.md",
+      "bytes": 5128,
+      "sha256": "fae05efcd75eaa08bb8bf7b710b3a1ab5606615279940af08b0e7ee4ceee4d66"
+    },
+    {
+      "path": "tests/admin-refactor-contracts.php",
+      "bytes": 46568,
+      "sha256": "5e1303210125204cbcbb87f3ea85064885c331ca1fdf8c3d9d834d71d1ddbfde"
+    },
+    {
+      "path": "tests/bootstrap.php",
+      "bytes": 51293,
+      "sha256": "2f64eed321cd8980eea5eb9ee1de792d93f25192f4b24ffeb350b6597d217bbb"
+    },
+    {
+      "path": "tests/dashboard-contracts.php",
+      "bytes": 11014,
+      "sha256": "65b56975f7daa7820f2f511c5cb296d8ce988cbe7b6935d81817c6484332f985"
+    },
+    {
+      "path": "tests/high-priority-contracts.php",
+      "bytes": 9723,
+      "sha256": "82f3207228607f4c4b42589b0c5ec52b4b2122217663d516694d062a8446564f"
+    },
+    {
+      "path": "tests/inbound-task-integrity-contracts.php",
+      "bytes": 6235,
+      "sha256": "b7fa2ca815bf23b5d13047e79115d86ae84dab91afe2d6018628eeec8423c1cd"
+    },
+    {
+      "path": "tests/integration/bootstrap.php",
+      "bytes": 8325,
+      "sha256": "84e5eb720a6ee6f78eca6fbfc0a4fb5ebad2fa9e7c08dfd90f593f5d58cff102"
+    },
+    {
+      "path": "tests/integration/high-priority-contracts.php",
+      "bytes": 6660,
+      "sha256": "76e2994690ac0edc1276271f388f4db25bc4b6421a0a7c20ac4fc5bf5a2a8248"
+    },
+    {
+      "path": "tests/integration/performance-bootstrap.php",
+      "bytes": 322,
+      "sha256": "de25dcb89c31a83bf3b32856f21806771a80b404360acf7cc62c403466b108c6"
+    },
+    {
+      "path": "tests/integration/run.php",
+      "bytes": 45714,
+      "sha256": "7ecb253dc0e77806b8d233861581c544dafb3fd7b3f418f2cffdf35fadcc17cd"
+    },
+    {
+      "path": "tests/integration/worker.php",
+      "bytes": 2830,
+      "sha256": "2ae5d446412eb1c141de15df07ac44cda83fe2ffda581ee2d13c81aa244474d9"
+    },
+    {
+      "path": "tests/interakt-action-scheduler-contracts.php",
+      "bytes": 1991,
+      "sha256": "4e02820dbd048a971a8f6f325352da4c9c9635f0c5409e16b0e22872c8452e22"
+    },
+    {
+      "path": "tests/performance/README.md",
+      "bytes": 5685,
+      "sha256": "a00bc22f92d440d8c86ceeabee4e95954623453c2182f4868ab9c76d0df811a1"
+    },
+    {
+      "path": "tests/performance/capture-baseline.php",
+      "bytes": 9296,
+      "sha256": "cf53335175d4b2642c3225c9740b318c7fb1a4987316f775227b39732d67a38a"
+    },
+    {
+      "path": "tests/performance/capture-query-plans.php",
+      "bytes": 11350,
+      "sha256": "48c76a86a3e549b9bd8c85910f0ddf148b6c4c113015ab8bb0f6535a4ff58ae9"
+    },
+    {
+      "path": "tests/performance/class-dataset-generator.php",
+      "bytes": 13469,
+      "sha256": "f6dcf33232a8874bccf3f922a5a39c9bc9f122cd1bec36f1ecc131d503486347"
+    },
+    {
+      "path": "tests/performance/class-qualification-result.php",
+      "bytes": 5076,
+      "sha256": "6153c995657b8e39c4d52634c9a8dd623c09eefdfd64b03a021584311ab7e418"
+    },
+    {
+      "path": "tests/performance/qualification-matrix.php",
+      "bytes": 1386,
+      "sha256": "10a4c8bd7abc6567a57d1e001c5e8520552e92479a0e3bf1c7d9f72bb4a1c5b2"
+    },
+    {
+      "path": "tests/performance/qualification-scenarios.php",
+      "bytes": 1777,
+      "sha256": "45a3e251055066373546fa70b45d7d058c0577d28269627d72c5a03c322fcd29"
+    },
+    {
+      "path": "tests/performance/query-plan-scenarios.php",
+      "bytes": 4080,
+      "sha256": "8d9a0c5a5f00fdb8fba21d98be9f8f0432c481187358b914185a00b3057dbeea"
+    },
+    {
+      "path": "tests/performance/run-load-qualification.php",
+      "bytes": 14592,
+      "sha256": "affed6c01e95d1508fd4b0bb82be6279962aba7d3c2856b4930dc4fbc77214de"
+    },
+    {
+      "path": "tests/performance/scenarios.php",
+      "bytes": 3623,
+      "sha256": "656c05355c20e562bf9f3a70b345e678c95b96cb296142086d27e4276734ccc9"
+    },
+    {
+      "path": "tests/performance/seed-dataset.php",
+      "bytes": 27828,
+      "sha256": "07e6b8ff6a9c35521e19f4612bd937ebd24df4f19a83459718e74263502510e8"
+    },
+    {
+      "path": "tests/release/build-release.php",
+      "bytes": 3772,
+      "sha256": "8a96c2774b54f4f89087537f0ef8efb9eaf2526854a06a1a955d110c8ce60f4c"
+    },
+    {
+      "path": "tests/release/class-release-artifact.php",
+      "bytes": 19505,
+      "sha256": "305112028b84eedc9fd4e47c67a5af86e1f4d764acab847b9b835cb34d7e2e92"
+    },
+    {
+      "path": "tests/release/class-release-candidate.php",
+      "bytes": 11190,
+      "sha256": "4b3c0d52523d4e09721e936c4a3db7feb3f37af1676e1b68b67bc8cc212c04fc"
+    },
+    {
+      "path": "tests/release/verify-candidate.php",
+      "bytes": 1407,
+      "sha256": "34fda094e6a8db64c641bcfcab4284a1a5eca6b6a9f14cbcd03ebce4ff021439"
+    },
+    {
+      "path": "tests/release-contracts.php",
+      "bytes": 10143,
+      "sha256": "357707d9212496f9b9ebf3bb4f657d6190c7fce2b2785dfaf3addd08ec57ce78"
+    },
+    {
+      "path": "tests/run.php",
+      "bytes": 99830,
+      "sha256": "dcb47d349fbd8899078e3ff141e6834babc6cddcdc8603fc68410feede9bbc73"
+    },
+    {
+      "path": "tests/support/wp/wp-admin/includes/upgrade.php",
+      "bytes": 69,
+      "sha256": "51d909431e60d5c9f6854cacae5bd3962378b3a731c88c02b425c8c0a2d86f07"
+    },
+    {
+      "path": "tests/ui-regression-contracts.php",
+      "bytes": 34383,
+      "sha256": "f002f0ed6be6e8d3a928e47fad69f1b68399102fb55b6a9e35e002a7d59e09d9"
+    },
+    {
+      "path": "vendor/README.md",
+      "bytes": 525,
+      "sha256": "7f83bb137ff1f0d79521da615bf1725fd3c015fffe9dfc9e93d9c64b156d525c"
+    },
+    {
+      "path": "vendor/dompdf/AUTHORS.md",
+      "bytes": 485,
+      "sha256": "77ea0ce6fa0498844411b5e35fdb93f75dd2d7723b729d0a913f50629bed14ac"
+    },
+    {
+      "path": "vendor/dompdf/LICENSE.LGPL",
+      "bytes": 24352,
+      "sha256": "a90fe41057cac85869176942a0bca3da94a49e277ee5f8c5284be1aeaa59497e"
+    },
+    {
+      "path": "vendor/dompdf/README.md",
+      "bytes": 7917,
+      "sha256": "0f9ef825b4e9bb687328bd88f11694b91df93d9070067c8b7fe08c2471d891c2"
+    },
+    {
+      "path": "vendor/dompdf/VERSION",
+      "bytes": 6,
+      "sha256": "9055b0fda916b0a5d355de8c5dced0c64fe7b55c67a1123d0c5ed7109210abe3"
+    },
+    {
+      "path": "vendor/dompdf/autoload.inc.php",
+      "bytes": 49,
+      "sha256": "7f1b4af81f31279b422b7944023fcda3bd62e9d2526a783142853ed8015f7917"
+    },
+    {
+      "path": "vendor/dompdf/vendor/autoload.php",
+      "bytes": 178,
+      "sha256": "49cab11ffc11898a06429cd4f428db8acd76a135fb952c053f848e8a7ccd87e5"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/ClassLoader.php",
+      "bytes": 16068,
+      "sha256": "c944c4b1228ef6bef01b0029205c562c96536f8e550052d753b57723d520e69a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/InstalledVersions.php",
+      "bytes": 14991,
+      "sha256": "c13545b80c74150db8ef2e6e6ae614ca5bab5d02eb0a2e90e20123177fdc330b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/LICENSE",
+      "bytes": 1070,
+      "sha256": "c8cce4b6b9729f264ffdf9296d505d63432497feeed1f586d1902b942197e024"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/autoload_classmap.php",
+      "bytes": 298,
+      "sha256": "ded20eeae95d1f39fc6b33eea2c4f62d8931bb3c772238d2a0069ad76a9af8f0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/autoload_namespaces.php",
+      "bytes": 149,
+      "sha256": "6d1b582b311799934568f00d45e01de7a04f8a1865a8a72c7841904ad4dac3a7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/autoload_psr4.php",
+      "bytes": 494,
+      "sha256": "870770f2f5ad80c04c127f091a8bcfed28a56f307b92538e573f8575cf4d352b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/autoload_real.php",
+      "bytes": 1897,
+      "sha256": "994a8520918b7ece75c317e4e5d9d147c4cd2499a5fe27a990ac9e964cca5004"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/autoload_static.php",
+      "bytes": 1871,
+      "sha256": "b2e6fc0c4c38dd1050c8d45a81f4277a3d684e6b347f2b2f898ce515f7c6d89e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/installed.json",
+      "bytes": 11571,
+      "sha256": "c20d27d2a18a8863e72f08ab9e09100da283d17b2eb56cd537dbe29ece69a3c4"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/installed.php",
+      "bytes": 2541,
+      "sha256": "c4c79924aaa0deac7f0c8b745505a41111e272bfdca486f028bc19e49e85cc5e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/composer/platform_check.php",
+      "bytes": 925,
+      "sha256": "818a5ae174e8ee3a95878379a3a345d02fd9a17e7a7a27bd5b604eebe7c64cb2"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/AUTHORS.md",
+      "bytes": 485,
+      "sha256": "77ea0ce6fa0498844411b5e35fdb93f75dd2d7723b729d0a913f50629bed14ac"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/LICENSE.LGPL",
+      "bytes": 24352,
+      "sha256": "a90fe41057cac85869176942a0bca3da94a49e277ee5f8c5284be1aeaa59497e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/README.md",
+      "bytes": 7917,
+      "sha256": "0f9ef825b4e9bb687328bd88f11694b91df93d9070067c8b7fe08c2471d891c2"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/VERSION",
+      "bytes": 6,
+      "sha256": "9055b0fda916b0a5d355de8c5dced0c64fe7b55c67a1123d0c5ed7109210abe3"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/composer.json",
+      "bytes": 1391,
+      "sha256": "446542a406056e23e3fdad779732a7c1b0dfe68f58f93c88a0cc36c00bdd63c4"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/Cpdf.php",
+      "bytes": 237030,
+      "sha256": "b91b54759ec46cb8c1d6abeabb8f58a049d5d7970c4cec184ce4e731cd790593"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Courier-Bold.afm",
+      "bytes": 15827,
+      "sha256": "ae9795b10828b84f92ccfcd08afd440dba12ec337e2dc534d76884dc909a52ce"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Courier-BoldOblique.afm",
+      "bytes": 15887,
+      "sha256": "ab20ef0a50b4110ce90b3768f0c1311a0b35a0e1e4dc0671029a1c83d0469957"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Courier-Oblique.afm",
+      "bytes": 15938,
+      "sha256": "0e69bd2b628274adb8f0654e586d3dc34d38911834356371719e35098c3eaa03"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Courier.afm",
+      "bytes": 15826,
+      "sha256": "04244eaf4fa3a5923664b7375cbc219e15f791f0a0469ff45fd81982dfa433bf"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Bold.ttf",
+      "bytes": 705684,
+      "sha256": "e6476c1b80502924294eed40894c5b18e06c181444ca953e5334262df9c27724"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Bold.ufm",
+      "bytes": 213432,
+      "sha256": "7db5542a1d3767dbada39b7bdb69be104c27674a9455aeecb43636373d197f6f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Bold.ufm.json",
+      "bytes": 273671,
+      "sha256": "87beefbbe4745b500d7454e19265ba5586d2380077ad3e2676e6ecb58c310cda"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSans-BoldOblique.ttf",
+      "bytes": 643292,
+      "sha256": "eb436dca0c2594b73d8b603b892e374fdfd8d885d25ffb4f18df4c4c0b49e50f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSans-BoldOblique.ufm",
+      "bytes": 197682,
+      "sha256": "936c7595366d6408fe808ab9b6d28b099e5d8e848cf26a96a338ec1e44a4a8bf"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Oblique.ttf",
+      "bytes": 635416,
+      "sha256": "4af75fa16ee6d3ad43e1ecec41862c24954af26a55c6bb1ebb27bd486a50f5f4"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSans-Oblique.ufm",
+      "bytes": 187007,
+      "sha256": "32ae0d1e8bfe5503d2b1d0e9804a05db0caf52c8f72d76930d136668bf62d6c7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSans.ttf",
+      "bytes": 757076,
+      "sha256": "7da195a74c55bef988d0d48f9508bd5d849425c1770dba5d7bfc6ce9ed848954"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSans.ufm",
+      "bytes": 226679,
+      "sha256": "2bac7acfea072267e034c64c564d701fbd368bd67eb16c10ddd856fd0b5a7845"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSans.ufm.json",
+      "bytes": 273582,
+      "sha256": "83b97be33aee87173407f0d00089e9de45d9dee972257b4a67a2ab490fddac98"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSansMono-Bold.ttf",
+      "bytes": 331992,
+      "sha256": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSansMono-Bold.ufm",
+      "bytes": 119821,
+      "sha256": "ee94bee18a8656bf7e0ed1bbf648bb0841c14862a9729f18b0e0301f079b9c02"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSansMono-BoldOblique.ttf",
+      "bytes": 253580,
+      "sha256": "91713a71d550bba22c2a6b2bb2a9ad8f9a159e12e4e9f0a5b2677998ba21213e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSansMono-BoldOblique.ufm",
+      "bytes": 98124,
+      "sha256": "76cf3c2cc2050fb087efc8c010b858e2ea71591efa15df38c18eb6c8c53054a4"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSansMono-Oblique.ttf",
+      "bytes": 251932,
+      "sha256": "742097840c541870e8d6dc5c9b37bb1ceeea6c0dedd1d475faf903ef9df734b0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSansMono-Oblique.ufm",
+      "bytes": 98107,
+      "sha256": "f7516e86350c208441363ba7fa8814128e9fb034b32970c2ca1be2f3e2250d5d"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSansMono.ttf",
+      "bytes": 340712,
+      "sha256": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSansMono.ufm",
+      "bytes": 119770,
+      "sha256": "5ff9e15e4789ab096ce90cce7163c5a2f1e0fc660a5c71d9e936f7c6f94aaa80"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSerif-Bold.ttf",
+      "bytes": 356088,
+      "sha256": "c47b5527bcdc8dcf9ea8c77054454c5a884beaca2f44851a2a823ee639cbf07f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSerif-Bold.ufm",
+      "bytes": 136331,
+      "sha256": "9e2717af074f44d030300af9cc53992cd67379a918edac7f076f0e93ea4822a0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSerif-BoldItalic.ttf",
+      "bytes": 347460,
+      "sha256": "8d3dd3d31350309042ed226af82b34539bd773518e6107cb352712853ba80308"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSerif-BoldItalic.ufm",
+      "bytes": 133558,
+      "sha256": "03fddc0b5b365c815bb9786b80136eb25db5cc2b337a96bc733562957f4a2ea2"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSerif-Italic.ttf",
+      "bytes": 345996,
+      "sha256": "2e39b1d50f90b933b00c7bb54a96afd3f86419b3d717c7cf202e36f2d4973e47"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSerif-Italic.ufm",
+      "bytes": 133199,
+      "sha256": "d68db053ac01f0bfc5702e50bff358749ca551d78107e42c85527fc9f3471569"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSerif.ttf",
+      "bytes": 380132,
+      "sha256": "42d1edeb7952f31b1f96d767ed7030b08a39e0c372b0071641518864e2bffb51"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/DejaVuSerif.ufm",
+      "bytes": 136367,
+      "sha256": "86d2d73799268d79139efd2ed07e4f49271b1ff75ce7e633b6969200a2dc1027"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Helvetica-Bold.afm",
+      "bytes": 72244,
+      "sha256": "96d0db06197ba1797a7d32da09ec31d959855b473c8e77a417118af6e2ceea62"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Helvetica-Bold.afm.json",
+      "bytes": 12873,
+      "sha256": "d3ff2c8c7389aba925b2f68cf29e01af881f41dd9512340e4d6d90d3583f4554"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Helvetica-BoldOblique.afm",
+      "bytes": 72340,
+      "sha256": "a1cd80608dd088e4086438bc731611f36f7f05dd754b0235386d346d09191831"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Helvetica-Oblique.afm",
+      "bytes": 77591,
+      "sha256": "fbe56985a7fb096def4fbcbf323d3af8bbc89e7d32ad5ef869e63db2b9fb1bd7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Helvetica.afm",
+      "bytes": 77492,
+      "sha256": "04d56716b66fbac94e90d73dbe808f6683fabe05c15fd20c16d614e25fe61b14"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Helvetica.afm.json",
+      "bytes": 12864,
+      "sha256": "5759b810307f043d401677f6b7327d0ca492bea33e4490f657a48a7b8daeaf1e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Symbol.afm",
+      "bytes": 9953,
+      "sha256": "3d2128a820375a10de9bc8bf6cfb15ded482c01ca0f95cc0b3277f37ec8bde66"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Times-Bold.afm",
+      "bytes": 66987,
+      "sha256": "74e2dc7d48b4efa84605eb541829378b481efe3b75866621a625c62c79cd5af3"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Times-Bold.afm.json",
+      "bytes": 12862,
+      "sha256": "4761fbd1b05b02b42bcd0f82398fb7f4173a144d35b685c68604a2d88525fc53"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Times-BoldItalic.afm",
+      "bytes": 62173,
+      "sha256": "f1df4371ae6b7175636987c4298492563cc6f7ddd438f40e9cf2f89866894221"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Times-Italic.afm",
+      "bytes": 69143,
+      "sha256": "a795ca83fbc882e0b803825b28152a6c6108a74f22f55bacfeab0476f190c86f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/Times-Roman.afm",
+      "bytes": 63026,
+      "sha256": "9906146f4c4775ee45f68786968ae229b3cfcbd8f45f143637184dfbb9f2ee9c"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/ZapfDingbats.afm",
+      "bytes": 9752,
+      "sha256": "a32565c90afd1b57a7008fc567b78d95cf1c22adff5e086094d666d88b039859"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/installed-fonts.dist.json",
+      "bytes": 2224,
+      "sha256": "2f283514d03165b050cebcf8bcb73e4089fe3eefd528d36659ff2636861d5555"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/fonts/mustRead.html",
+      "bytes": 1040,
+      "sha256": "d95f12680c210b9b058381728edfd745089653ae27e2f6d16e908b54cca69d8e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/res/broken_image.png",
+      "bytes": 618,
+      "sha256": "4f718b373d94cec5d6589ef33ebc2ef5003a3362529a18835203831b2ca7e08d"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/res/broken_image.svg",
+      "bytes": 581,
+      "sha256": "0878bc39f6c8ad9397b985ef3728531aa6f70a00c3524650cd0e5b2270cbd1ba"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/res/html.css",
+      "bytes": 7482,
+      "sha256": "a2ff4a84942f8a9fc7d80e34f6efe34e8d2cd7412b728130049db6ddb70df3c9"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/res/sRGB2014.icc",
+      "bytes": 3024,
+      "sha256": "384b832de3412066743b52a75ee906b6fb9fb8d9e09e936fc2c43223815c6e0a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/lib/res/sRGB2014.icc.LICENSE",
+      "bytes": 596,
+      "sha256": "9cf90e74c374f17628dc52e4b3d3470795627225572c2484317b3c4bd61a5c42"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/phpunit.xml",
+      "bytes": 711,
+      "sha256": "63ca60e4e226365fd2bdef0cac8b6d47a81721832b33f3d251b0b793fcc44fbc"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Adapter/CPDF.php",
+      "bytes": 29686,
+      "sha256": "7dca4a096b08c006f12bfccd733068223d92e502b9a625c49bd919373f714001"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Adapter/GD.php",
+      "bytes": 30107,
+      "sha256": "d5ae31dd1bd08e52414283c7f375f318bacc3e52c479e074be52640b3ee94d3b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Adapter/PDFLib.php",
+      "bytes": 46616,
+      "sha256": "21577e01ed8b4894426954b59ba2f5577ccfe9cb06f4be4b372c73f86f0eee2b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Canvas.php",
+      "bytes": 14863,
+      "sha256": "f076a318e78fc8309b66cbcad3f89da7d0114640e8bec3461b8c9d3295bd3e77"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/CanvasFactory.php",
+      "bytes": 1907,
+      "sha256": "dbf86f9d2b194fb6181f9909f3515f44e1ff0d27f0421595fc57196f8f478ee7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Cellmap.php",
+      "bytes": 28773,
+      "sha256": "3818a679b74af9be481686247ca5a271d82ca12eeb6f578baa3a5423a39b8a0c"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/AttributeTranslator.php",
+      "bytes": 18432,
+      "sha256": "c38cdc3d280f34d956441cdd9221f3d28cfbbab50eb145c72731f99a08af2ee3"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Color.php",
+      "bytes": 10701,
+      "sha256": "9ae95660b4fe9dc346f76feb44f0419e00b899b167de5a11de93bbe07492314c"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Content/Attr.php",
+      "bytes": 493,
+      "sha256": "633ebf6b27f5386d047ffb2bb38bd1fbaddff730aef60f501826992667d5ad42"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Content/CloseQuote.php",
+      "bytes": 167,
+      "sha256": "be641efbae44620e6333a3fe63c20ac73cac8bc78309485ebce48fd260dad4a9"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Content/ContentPart.php",
+      "bytes": 167,
+      "sha256": "40007d32b85c974fa44cd8995006dca0c72533c694fb35420ba44e1224d31e5f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Content/Counter.php",
+      "bytes": 625,
+      "sha256": "8fb37771b42d6d7b8ae339d71df2f8dd97d64a903ef3479391506273493be419"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Content/Counters.php",
+      "bytes": 799,
+      "sha256": "c0ddee0c37b55fc665249dc747d8f32fbf32470f759d9baa7685b979f057eab6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Content/NoCloseQuote.php",
+      "bytes": 172,
+      "sha256": "7fc87a31f32677509f5dfeca6df488b372e05d7025159c6b1bcc006cfc57dc9d"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Content/NoOpenQuote.php",
+      "bytes": 170,
+      "sha256": "2ca17e043e26fda130594ea6f512d44d0ee20c0e520a0d4482b0ed8271b98289"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Content/OpenQuote.php",
+      "bytes": 165,
+      "sha256": "405ce66757266b6a791aa7a4c5d3c88581ae9588c2bb4b084c7fc41c772cf552"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Content/StringPart.php",
+      "bytes": 482,
+      "sha256": "cd072116ac43c1fd73bde9d37f591bb7c60aaecdede2c940f5e721f1935edd57"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Content/Url.php",
+      "bytes": 488,
+      "sha256": "6c037c75b2d15c62fd23ab46eb253aa9b44dc7990d6d79692e7e9da1e7c704a3"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Style.php",
+      "bytes": 144470,
+      "sha256": "0b6006930a9d27a5989b177fd1a887e909ea28c1862465722814127b6a6b07b6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Css/Stylesheet.php",
+      "bytes": 73550,
+      "sha256": "2ece432f057cfebf28204a64ae321cb90752e6fe9336ccfa170edbe05966254f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Dompdf.php",
+      "bytes": 43920,
+      "sha256": "b2b85bb19b55dffa3097638e3828566fb30d00dadd1c09e9a554666302a09bb7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Exception/ImageException.php",
+      "bytes": 571,
+      "sha256": "6520a06c37519b1445d2e4706b9476b530d3521327a4891e985a9c123e4d3bcf"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Exception.php",
+      "bytes": 551,
+      "sha256": "059a9eafb1e4a192f530e09d6b6ecb38fe2e9ffd64a3bc424a805369e79daa3e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FontMetrics.php",
+      "bytes": 20844,
+      "sha256": "78bba32741c5b25c749ade71452206ae273368f44dd11c57b67f0b8f1d82eb6b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Frame/Factory.php",
+      "bytes": 8237,
+      "sha256": "f3eefc443b64dfe7b0bac3332ccdd32566baefee4529ecec327b1c004d0b36ed"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Frame/FrameListIterator.php",
+      "bytes": 1944,
+      "sha256": "7290e898b692ed5a8bbd595d915a7b9b214b5aeba43b8564c41bb99b2780ebe6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Frame/FrameTree.php",
+      "bytes": 9004,
+      "sha256": "afb047edd5e3327701fbce9494ebc1f618274735853adca257b69573d2fed197"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Frame/FrameTreeIterator.php",
+      "bytes": 1565,
+      "sha256": "0dfd34f4c85a757a6c52b03dc3719afc18b8586d355a8a9e3e424261f11982dc"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Frame.php",
+      "bytes": 31834,
+      "sha256": "0079323fbf65748969f5a76d8dea279e8746b85050e6426d16f615101b72f1e9"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/AbstractFrameDecorator.php",
+      "bytes": 22736,
+      "sha256": "105bab019e7313f113cb408004a60c12064a5c75fc5a07333a68b3817732e2e0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/Block.php",
+      "bytes": 6124,
+      "sha256": "7a29df5f144fb8cd1409404a0dd76cd1cade1054fb60b68290841747fae13315"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/Image.php",
+      "bytes": 3050,
+      "sha256": "807bbc00c9ca0e03964324f2d71a002ceecde4a49b029f335ed0146655ffc8c0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/Inline.php",
+      "bytes": 3827,
+      "sha256": "2a0a62860d46404870a6574ffef24c25b417a35a47813bdab808b70b70f3d1cb"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/ListBullet.php",
+      "bytes": 2823,
+      "sha256": "b01ab031dde5e75bf1f6caa7b76d9054b719aec67f401c8e816814aac3248fd6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/ListBulletImage.php",
+      "bytes": 2770,
+      "sha256": "49d4c3aa177a53caf2537eb8dc2fc1c2d7c2b079b783b49dd173fbbcabe94a44"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/NullFrameDecorator.php",
+      "bytes": 726,
+      "sha256": "4a23432e903970961e03c222f4dbc7f08609a2d5a812f39927b8c3bbbb50e8d2"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/Page.php",
+      "bytes": 25435,
+      "sha256": "d082f4e162dfe1288c128e3d36dc9a6e3bb88e5828e305d53f106b85d4cbde32"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/Table.php",
+      "bytes": 10119,
+      "sha256": "d7effe41fb83bbcca890a408a17bf6bae55d30c759b63967f6b40e593b5a0379"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/TableCell.php",
+      "bytes": 2703,
+      "sha256": "74ef22ec5ae7a68eb50e602cd6565b67826738bf0e3f500ee119c167533a6fb2"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/TableRow.php",
+      "bytes": 571,
+      "sha256": "b5091613c614d2676f28b15dd1639cd1e8dcee9c9ccc61aff6e62f85ae53f6f0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/TableRowGroup.php",
+      "bytes": 2047,
+      "sha256": "39c0513b5986c9ba5eeed09a596e61489319ac56f110130c15262ed3959e28f5"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameDecorator/Text.php",
+      "bytes": 8069,
+      "sha256": "5cb7ef72243f14f2226bdbc74f0f9d3d249311bd5822f814ac0062eb5b68cf40"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/AbstractFrameReflower.php",
+      "bytes": 19347,
+      "sha256": "a6a727b2cefbba55dfc091342ea3100b3d65334d36bec029387e00e9bc2a149b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/Block.php",
+      "bytes": 34563,
+      "sha256": "d89df1b5a3ca144fa5623c09ca2801cade84d18f2ed191f96014554b92620809"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/Image.php",
+      "bytes": 7973,
+      "sha256": "dfc36c123d2983295f0ac84e1057b99e616b676d9f09af697768f1f38eab9e9b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/Inline.php",
+      "bytes": 6064,
+      "sha256": "6122d1ac5f9e86a57e4eaedfee7231e147967fef653a597337f1fe2ad72b28dc"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/ListBullet.php",
+      "bytes": 1199,
+      "sha256": "e6b401d71a6f043b3e609dbbdc710284cf0c6e3e5f49595581dd473c4353a7af"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/NullFrameReflower.php",
+      "bytes": 696,
+      "sha256": "596322683288979433299afe474c4c14c5c781dc7efab6c8e8623003ed52226a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/Page.php",
+      "bytes": 5883,
+      "sha256": "ea314d2fb17f2c90750ec012690d99217a1714e156b5ec4a444b7ebb55163728"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/Table.php",
+      "bytes": 17291,
+      "sha256": "10711dd54b3f613222fa835f4a09fd606d375a84485db24021c828ac7834309f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/TableCell.php",
+      "bytes": 5122,
+      "sha256": "550ce6b6eea4658b92dcf1a3d70c2d624c86e9f7b4eed839a9f7dbd027284542"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/TableRow.php",
+      "bytes": 2196,
+      "sha256": "b5ad41cd6ddb7fdc0751c96a49101034a11ca5df45509968dd3940d75cde82b7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/TableRowGroup.php",
+      "bytes": 2437,
+      "sha256": "a780a278d8a27ddef4265fe1c8549f2ce524036d61d1f5755d1964c824edb1c0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/FrameReflower/Text.php",
+      "bytes": 20322,
+      "sha256": "c86a1fa18a1cd1d9f339736897043db1f7efc3b7976668b507b95c555793b6c1"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Helpers.php",
+      "bytes": 46474,
+      "sha256": "518ab7de5ff1ef2b1221859567e7664c25eecf8af0ff1e0e4cbd13fa5e0696d7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Image/Cache.php",
+      "bytes": 11970,
+      "sha256": "58ee1e2b7a6022ac42158dbe0f10f73edf26bbe2c358e41850d81c29812cc6f7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/JavascriptEmbedder.php",
+      "bytes": 929,
+      "sha256": "ea5f773881ff4bb847fa52b0dd2ba11c92a785081cc4a71c745b800ed290abda"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/LineBox.php",
+      "bytes": 10678,
+      "sha256": "dbd360c194d6f05649a17ce565faa3c9500e235100c3e5316f9c969d2bef3291"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Options.php",
+      "bytes": 32335,
+      "sha256": "0d75f8af136c80ba949355fba06109688f1ad46fbc932fb2a8d2bb22f41a020e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/PhpEvaluator.php",
+      "bytes": 1289,
+      "sha256": "25755287d6d4e970b96d4c47d625eed07c6d10ed9f11933966fda5ee2887aaa0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Positioner/Absolute.php",
+      "bytes": 4668,
+      "sha256": "3896ed95eba2eb718d14c42caa5f42baa2fc1ffd10212e42e6a3a01462550c94"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Positioner/AbstractPositioner.php",
+      "bytes": 1139,
+      "sha256": "3d4056f5f7eb2cd067695b9cd35d6f7b53f1ac47b78674504a020f9e7439c2d7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Positioner/Block.php",
+      "bytes": 861,
+      "sha256": "8079a0a6511c3b6255872b182b174902239338cd0eb727222e1ddee761028d39"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Positioner/Fixed.php",
+      "bytes": 3628,
+      "sha256": "8697355a0aa32d83521f654afc7069d44cf0abca934bf0a4ddd080458851ffe0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Positioner/Inline.php",
+      "bytes": 1749,
+      "sha256": "8f41e5a2829f2466946c4322e56027b72189e4428248de0b00c0ff538b9caa5c"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Positioner/ListBullet.php",
+      "bytes": 1332,
+      "sha256": "f2abf034d889e0ea192ebc03fe7e912b36dbc0b17360c3b759ef1854136436c4"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Positioner/NullPositioner.php",
+      "bytes": 495,
+      "sha256": "c16193e5fb12e8cc70c6d1e4d4b65eac739ebdc8f94a933a4ae8a3ac89de7ea6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Positioner/TableCell.php",
+      "bytes": 810,
+      "sha256": "5d26edfc1c3defea1efeb0d39047ba147e9a10787433ce71ce0487b8edbdccee"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Positioner/TableRow.php",
+      "bytes": 747,
+      "sha256": "e0a089cd53d6a17b5d7cb183686d924818c0f58c3fba058a838c82b4640f27a7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Renderer/AbstractRenderer.php",
+      "bytes": 45310,
+      "sha256": "49fa7e605773408c8bc9199d8264c681a7a0587ebd11a062a8c0bed40aefc927"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Renderer/Block.php",
+      "bytes": 2343,
+      "sha256": "edef0e185f81b44f0d0c6e465f544b25805290617e94d52cca6924e7e2f2c4fa"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Renderer/Image.php",
+      "bytes": 2096,
+      "sha256": "dd7066aa06e33e7ebe7fde16700a64b18b6e4df55ab2ba3a3d83dac59fd0572e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Renderer/Inline.php",
+      "bytes": 3952,
+      "sha256": "d037839e2ac43f708689a5ce3113b3951f876902e2ae961b8e633b3f5d8455ad"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Renderer/ListBullet.php",
+      "bytes": 6565,
+      "sha256": "343c3dd5f515867f8f6462605d234f0ddc0e01b722522afe4d340fdd88f778e8"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Renderer/TableCell.php",
+      "bytes": 6491,
+      "sha256": "13a6259681af8329677c1bf08a2cd07bf5e8f967c823077c8f5dabbbdb060681"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Renderer/TableRow.php",
+      "bytes": 1108,
+      "sha256": "a8ee13601a583693ea1715f9aeb539bc5f6e0d3655eeec3136128facc564b6da"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Renderer/TableRowGroup.php",
+      "bytes": 1113,
+      "sha256": "29a35412319555463deef042575854e024ef306fdd022a561c154242cd333722"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Renderer/Text.php",
+      "bytes": 5227,
+      "sha256": "cb443537ba5bb1d4714b8623f0b515821047bdd250bf9b7a76b544b0eaf096b5"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/dompdf/src/Renderer.php",
+      "bytes": 8987,
+      "sha256": "cd538c4c809d07dd8cad7e6d6c11c1d54688df8d48661f6c68214e98083495f5"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/LICENSE",
+      "bytes": 24362,
+      "sha256": "273cc5937b062c569acdd8c4cc8a4440ff4dcddbc33a7b2baa8f4ff0611ae403"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/README.md",
+      "bytes": 1592,
+      "sha256": "1defaae9d01dd1e2affc0049be4daa56e6224e33c49c4be04da654138f6744c6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/composer.json",
+      "bytes": 865,
+      "sha256": "fa463d43f0de5dbb94b32d037b9802682d533c86d34f6d4e099f54b31a2fdf61"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/adobe-standard-encoding.map",
+      "bytes": 7861,
+      "sha256": "045862c7f7ee25f3189bcb4ddad71b4a4a3d83be6014caa6a78c526d83e6c677"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/cp1250.map",
+      "bytes": 4797,
+      "sha256": "687c7729cd497336a84716ba44a3777744402d1ca3ad6ae74e8e389d8e80a5eb"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/cp1251.map",
+      "bytes": 5031,
+      "sha256": "ea3ff12b341c823ea5e3f3a253257df40836d868af40fdad53d3bfd0206932d6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/cp1252.map",
+      "bytes": 4792,
+      "sha256": "8a251d8af9d4b554bb7bba02bfbe15c78225ee0efffa7761828eeafa8272cb83"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/cp1253.map",
+      "bytes": 4494,
+      "sha256": "6715e2a0beafeba8b08aae3a454440d537356ab9902c1d1ba5e9e0f29a17c1bd"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/cp1254.map",
+      "bytes": 4772,
+      "sha256": "38a892578841c904b87d54c6a23d8b1b6bf5c2f902353796fc9fd714725ff61a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/cp1255.map",
+      "bytes": 4531,
+      "sha256": "e9b704afce4e3c362387877cf8cd3c29eded8457f6004d0b58fa3dc2d8d25549"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/cp1257.map",
+      "bytes": 4678,
+      "sha256": "a8a1559a5c8119fd3ca2ce46b10eaf33a63f112c51acf0a85297aff4311196b6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/cp1258.map",
+      "bytes": 4740,
+      "sha256": "3dfb88cd186e495c34094d3a7732f110b9ef4510ebf95c51f9324bf45453f45e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/cp874.map",
+      "bytes": 4488,
+      "sha256": "38a400e36bcd90dfb4931d9d01dfe7018dbb9dac55c64df18e785320512973bc"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/iso-8859-1.map",
+      "bytes": 4861,
+      "sha256": "73e7343c445333d044e047cabac07b288c5b521681e525c104d8273c17a14df0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/iso-8859-11.map",
+      "bytes": 4937,
+      "sha256": "372fdce743fe8af01b828296a9e13e46699977e127ed0b3fe7ef3d2208682fa1"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/iso-8859-15.map",
+      "bytes": 4835,
+      "sha256": "f413926bd0bef61cb457dbf6869e85e5863ab455907ef4b735201ef67439220f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/iso-8859-16.map",
+      "bytes": 4881,
+      "sha256": "d769fefb6a958962a4d74783e801213e63c219444acfe0d1b08a931c80a4aa32"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/iso-8859-2.map",
+      "bytes": 4825,
+      "sha256": "476bd95d6c7a1350916bcc3f86caffe3c83db8f0c828c4d19671dc7935d3060a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/iso-8859-4.map",
+      "bytes": 4844,
+      "sha256": "3baa7992f48e3ea88b6b0f0a543276e2f17216744cf48e192d0e1d2c8911d5ad"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/iso-8859-5.map",
+      "bytes": 4975,
+      "sha256": "6cac6f551a8d331e37a3fdd830a736f775cade8472e0d61db77083d1172802fb"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/iso-8859-7.map",
+      "bytes": 4680,
+      "sha256": "ea4878aaba2c3e6b71b072f7a0d329a1e4794ea68a15ace0987774c3ed15b90c"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/iso-8859-9.map",
+      "bytes": 4879,
+      "sha256": "1d0a70b0e972f8f929a24eabc00619ad02a74cea703bcb5f4d3de6d3fc1c2743"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/koi8-r.map",
+      "bytes": 4995,
+      "sha256": "df649eaf8af5727fd56d2b6e4f65fed41a383513b94fb23112597c5dbc6201a8"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/maps/koi8-u.map",
+      "bytes": 4995,
+      "sha256": "621fd8841ba4c081bfde849e1e3387ef66e9b3bbbef087c4cc1c07d3ea089beb"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/AdobeFontMetrics.php",
+      "bytes": 7095,
+      "sha256": "5db7607bd69ef98543cae508dcf94b8876c4496403c313c112f1febdee77e774"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/BinaryStream.php",
+      "bytes": 10078,
+      "sha256": "4fd03bb83fae8c71824e5c5df8465574d58ab9f51a7c8ce9894e64e00102ac8a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/EOT/File.php",
+      "bytes": 3330,
+      "sha256": "6204903f1bf871d85619c6038b9add0aff0b4efbf664c90cd0f96504b300ea93"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/EOT/Header.php",
+      "bytes": 3233,
+      "sha256": "e3cd35b2a14f01d51f482f6a2c5d6c65fc0c184f5cdbaeed41bfaab4178a90f8"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/EncodingMap.php",
+      "bytes": 781,
+      "sha256": "3c6dfa01ba0f9a6d9e9614ad86741b9927a38e4c1a91f0d4fb59a2f306de3994"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Exception/FontNotFoundException.php",
+      "bytes": 202,
+      "sha256": "3ac23f1460dd369575e5c4b65015a21d2eba3b28fe08dc84dc71651f8c196108"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Font.php",
+      "bytes": 1685,
+      "sha256": "1b7fa263eab4b414f4c27bc2b10b298f2b89e95fa0e976a3c648c7d1d78c4504"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Glyph/Outline.php",
+      "bytes": 2233,
+      "sha256": "2189f5bdc68be4da31383709675447c30e220639aff0742432b0ad4247a8a71b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Glyph/OutlineComponent.php",
+      "bytes": 651,
+      "sha256": "13faeef9f9020e111e48c16c099abd82f38fe86bc91f1a86bb3176065e11ec84"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Glyph/OutlineComposite.php",
+      "bytes": 7193,
+      "sha256": "f10d1cf4a9f2d82b054be6653461381339c71fcd07e3fcfebc695b6b34eb4b75"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Glyph/OutlineSimple.php",
+      "bytes": 8347,
+      "sha256": "30fd3d0918e8d3bdb93ce38a4279112a1fb8596732789c37b5baf176bac411e3"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Header.php",
+      "bytes": 670,
+      "sha256": "d0ffa585a7e9c67d3ed096672061de2afe0b5a204329a2171798183d8175c030"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/OpenType/File.php",
+      "bytes": 340,
+      "sha256": "f42aef187645f22fea9903cf4c6ce20f7e36ecff9e3b2e56d9f7868b5d24f563"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/OpenType/TableDirectoryEntry.php",
+      "bytes": 383,
+      "sha256": "514da70c395f441c03e9107d35c4ffd7753f54f4864ced5ae8837eb77ddd7fdd"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/DirectoryEntry.php",
+      "bytes": 2400,
+      "sha256": "304f7ff9b04a597023d72cac51f0fa6e5cef25065f5f5b627e8f7c85ba1b0401"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Table.php",
+      "bytes": 1758,
+      "sha256": "9f804110a9aa5762d3fb29569b7f1d181b6352b33d81b2e7bfc79524d7dd0bce"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/cmap.php",
+      "bytes": 11510,
+      "sha256": "98ee19e441708d001cef5732c4793789e3c36b00162675a1cc00bfdb5732987d"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/cvt.php",
+      "bytes": 600,
+      "sha256": "3ec465f9f51c755ed4f0fc3eb57abf7716772a803eccbda7c0d196f4b66969e7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/fpgm.php",
+      "bytes": 601,
+      "sha256": "2fc38f013b42eb02dda79e0930ddfd4c76784f33fa6acc0b2f50d483eec9f01f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/glyf.php",
+      "bytes": 4418,
+      "sha256": "963910ef75c0ea4b5f68ccab106be6facfd22c012f05a4c3e74b5c23b47d1c76"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/head.php",
+      "bytes": 1399,
+      "sha256": "33c1cf826ad18c30ce345bc8aee141535f3efb3c6c5d59b131c0f9f4ae91f23f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/hhea.php",
+      "bytes": 1152,
+      "sha256": "60c24538eea3ea0f38d750fb84fe6b7ee6562a5af61af3bc51968f72a7d0dbea"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/hmtx.php",
+      "bytes": 1745,
+      "sha256": "05fcddd5aa5375cb60f679f20f4fb0ac8a64e4f6077ccf32b207b4857cb81888"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/kern.php",
+      "bytes": 1800,
+      "sha256": "cc38a25a3dedb5e82fb0a289d7bac5fd70bd4b62f09226b5e99a2442dd43bc33"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/loca.php",
+      "bytes": 1760,
+      "sha256": "2717daff5c49eea77fca56a961096097f0b9704f21635bddaa338c84ef747a8e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/maxp.php",
+      "bytes": 1190,
+      "sha256": "ccb8eb8ffb66f1f8e09833f51670fbfdedfdf365a09d4b5099fe2fb61d9f68ee"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/name.php",
+      "bytes": 6434,
+      "sha256": "7be6193f04b9c4737e7edc2769b236eaf9062117fbfec25788d9c31d71cd199a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/nameRecord.php",
+      "bytes": 1123,
+      "sha256": "f198ce644429c8e3873ff06ab0250d66c83cecd9f6cf62ebe1dcb2b20b91ee40"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/os2.php",
+      "bytes": 1520,
+      "sha256": "e8f252f7721a1b1f60ad1ec75fcd06c31cdddbca92acfbdd3a977a728102a786"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/post.php",
+      "bytes": 3074,
+      "sha256": "c67ba7eea25395f58b84e86b59400158da7daa6699eb82dc3f03c4888c150766"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/Table/Type/prep.php",
+      "bytes": 604,
+      "sha256": "39b9122f82f263eb91ee853ecfc3e11a70e9599f52770a7953e2b4cec6d56fbe"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/TrueType/Collection.php",
+      "bytes": 2035,
+      "sha256": "2bb603df2b583edd7ea9440859d46581005d6b5a5f26d19a227252b44517ba79"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/TrueType/File.php",
+      "bytes": 15693,
+      "sha256": "a4625a75ae6357e401a2c462e39b35382af22c843f960471f2e8a7782a83accc"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/TrueType/Header.php",
+      "bytes": 706,
+      "sha256": "6978f491f7a73fe3adc8bbc2c4a0938bb4ee8636d50aff16bb4663d0ba9ff587"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/TrueType/TableDirectoryEntry.php",
+      "bytes": 681,
+      "sha256": "987650b226d5666b50fb47f9e26d69de78458b610e9c1cb98147809a325e05b8"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/WOFF/File.php",
+      "bytes": 1941,
+      "sha256": "713affcc3d6f6e417d1c8c52a26d7a52a59a64b147c7a0334ce8d478892f9225"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/WOFF/Header.php",
+      "bytes": 818,
+      "sha256": "2a7e86727a65829632b6019d89e4f33e3fd76d650eca09981a00953e61bf9ff1"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-font-lib/src/FontLib/WOFF/TableDirectoryEntry.php",
+      "bytes": 728,
+      "sha256": "8b169414c8ed44ab1c4290ac5e075bf33caabaffc74ed205f4792649ad4ce603"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/AUTHORS.md",
+      "bytes": 349,
+      "sha256": "340d560f854b6d3ef6aa7a88aa0998badf7e7eff981abda69790a476eb50cc2e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/LICENSE",
+      "bytes": 7652,
+      "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/README.md",
+      "bytes": 990,
+      "sha256": "b7ad4c209df68438677b077d776d8b47868cea5d268b3674755f69ea3b945d95"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/composer.json",
+      "bytes": 717,
+      "sha256": "6ee3f9cace6e16e3ddf87a2e6f77ed8dece8a5baabfef2190e91139e279d7c22"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/CssLength.php",
+      "bytes": 3070,
+      "sha256": "28409008601d8f740d4082103a8adf0612b1ea20d23067dc2c28d1826b0e56d4"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/DefaultStyle.php",
+      "bytes": 666,
+      "sha256": "de59b8d5ab9deee9882f22f92f0deae1499e9138d8c9a1719cda0c42ff7c6050"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Document.php",
+      "bytes": 10865,
+      "sha256": "65e040239527a87c693988c4b876355140b177e3f20ab86d4576e51385eb5dcc"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Gradient/Stop.php",
+      "bytes": 258,
+      "sha256": "da93e66da71b3925be0ad7432fa9c3a6609c82a3f41a517718ae0f64fb5e8caf"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Style.php",
+      "bytes": 19879,
+      "sha256": "3f5ed0dbec553f43576f89f090881bdefe1d3fe983af9a1c8763a3433533d221"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Surface/CPdf.php",
+      "bytes": 218225,
+      "sha256": "aab4643e0d089f50df25c11e2c73a73d45bd663ff220b31309edb4fe41788a21"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Surface/SurfaceCpdf.php",
+      "bytes": 13703,
+      "sha256": "4fea0ead17cf7f683a4d477cbdbae3c5f509c32993c893568ca0f0449caf0b46"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Surface/SurfaceInterface.php",
+      "bytes": 2114,
+      "sha256": "82b07df3f89e0fa61d0ad5ff1ea37a57ccce391aadd82375548e936f6e8970a9"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Surface/SurfacePDFLib.php",
+      "bytes": 11716,
+      "sha256": "464c3018d91f3e4b9a0e652de966af27d5f270c890584f2de18982d8b7b21a2e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/AbstractTag.php",
+      "bytes": 10014,
+      "sha256": "61f3d5f9c1241e11806fd31c9c17b42eefee8eed2f86c997aa4d5bc947358b26"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Anchor.php",
+      "bytes": 205,
+      "sha256": "9ad41c62aa03309fabd2fcc0737e473952f7044614dda98df429a449094f366c"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Circle.php",
+      "bytes": 938,
+      "sha256": "f9b05167bcc5bbbc486d633b828d35142c66d435ec51ca5c332d547a8fa739f2"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/ClipPath.php",
+      "bytes": 618,
+      "sha256": "d02b5de167478596eea4f876dc456905ffc69520a3cb0d44f55d8e496a4b53dc"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Ellipse.php",
+      "bytes": 1094,
+      "sha256": "aa0b54ca84fe941d0960d7a761a15ba8491d3f1116a204c33683ebc95aa437a6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Group.php",
+      "bytes": 615,
+      "sha256": "a36f245b208c7afb15e8b16c52ba646e2dd39ccb5bdb6f68e4b968807d8dd609"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Image.php",
+      "bytes": 2058,
+      "sha256": "15953e64346872f49440d0d28939654553d8ee9072565a09878a2bacdcf5ddc6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Line.php",
+      "bytes": 1091,
+      "sha256": "c862733735750b9c8d3d4dcce700cccef280411beb82e88a40261a8b15bffeb6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/LinearGradient.php",
+      "bytes": 2256,
+      "sha256": "ed668101e36cbbd52fe95a93e0b6e9e6d6b1d0e19a0676ba42fdcfd4aea8d679"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Path.php",
+      "bytes": 19899,
+      "sha256": "419d6c5bd3231d08a80f20fba1154084c8d8e1efbab0928d78f3037507c4965b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Polygon.php",
+      "bytes": 949,
+      "sha256": "baa5379b75fb18219b989a9340354fcad1bf1d634778500f02b9a28a6f18faf8"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Polyline.php",
+      "bytes": 918,
+      "sha256": "8b1e698d33a9864baed9b09aa0134ef392b4ff80a6256727ea5c67ba52f8d9f0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/RadialGradient.php",
+      "bytes": 270,
+      "sha256": "fd3961089e0aa0a043b6878ddb96bae6ed16f732c9a27404069bfb9d331ac967"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Rect.php",
+      "bytes": 1314,
+      "sha256": "0f4c81ee59d9fd33f922a68f336ad1bdaab8cd287d12dd45a58376ca246c02ed"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Shape.php",
+      "bytes": 1517,
+      "sha256": "5a4bacb6e18ea9cc6be366932d69d89e658b982ca2a706021b5ed2b285605a33"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Stop.php",
+      "bytes": 260,
+      "sha256": "b70d97da441e9307a399538c472bd71573b4446e7dc4c33b3b92849e4aaf9f1a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/StyleTag.php",
+      "bytes": 487,
+      "sha256": "09b56f2909137c8a993e8f91a84411522bfb271f601d0da542f4b36398323a6b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Symbol.php",
+      "bytes": 656,
+      "sha256": "4421a534c77da6506665f9e6e24338e16b924e04d15eaff106d39043b0454129"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/Text.php",
+      "bytes": 1690,
+      "sha256": "304611faa7dced08bec5d114a48c1a68912c4db9ac1dd3e1812ca33ed56410b0"
+    },
+    {
+      "path": "vendor/dompdf/vendor/dompdf/php-svg-lib/src/Svg/Tag/UseTag.php",
+      "bytes": 3698,
+      "sha256": "cd5d6d30faf148589bfc551ba1be6878025b8b400146f55d451e0ffc341a90c2"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/CREDITS",
+      "bytes": 687,
+      "sha256": "c200beec6b198f14e98293647d729317f74e18422c2bc13d792b9bf4985d87e7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/LICENSE.txt",
+      "bytes": 2973,
+      "sha256": "fef48d3bbf037920a4f52ade06733b18ce31217a5847447a348dfef2e2e196cb"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/README.md",
+      "bytes": 9853,
+      "sha256": "ccbdbcd5a9af56d220bff7bfc351428d91c775b75782b78323edea302457ecee"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/RELEASE.md",
+      "bytes": 5070,
+      "sha256": "cb57c732944c979447db0c4e8526667da0d218afa5e29f7972eee894b18cf40a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/UPGRADING.md",
+      "bytes": 496,
+      "sha256": "53910b638c095dd11dce06e13eb027c6f3cae8d0e1f0338505e6377cb4a4c8d6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/bin/entities.php",
+      "bytes": 638,
+      "sha256": "e01995619d9dbd7d7928c2700d377988003b463a40f7269b0f4fbac6595c2ad1"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/composer.json",
+      "bytes": 1039,
+      "sha256": "c14d70699ab9080e56325d8c4691bac3f858e1143caa01093ee72fb8b81ddaf6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Elements.php",
+      "bytes": 20545,
+      "sha256": "81035f4c41fae903a40d791569a2e4c823a3fde959d123b1e9386770e8f69b5e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Entities.php",
+      "bytes": 60947,
+      "sha256": "77a7a65408e5a9b606fc207a5a7ccee328fba18404e9cca76f86dad09a9f6ba6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Exception.php",
+      "bytes": 129,
+      "sha256": "98e1aff973669aef2875b7e7c81cf188a699416d03ffff729b2450755db672fb"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/InstructionProcessor.php",
+      "bytes": 1780,
+      "sha256": "45f57ef9b2ebbf7cbabd2a63157795e320a93309748f0e9c564efda2640f2533"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/CharacterReference.php",
+      "bytes": 1531,
+      "sha256": "baca2e1f57a64390d3eb1b1837972baef6d7707db39394dc4989414a42f021c6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/DOMTreeBuilder.php",
+      "bytes": 23333,
+      "sha256": "1790ca80f1bee7c1337a29139267e2b7f91a37f8dc3a11ff747c2b696ade2039"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/EventHandler.php",
+      "bytes": 3676,
+      "sha256": "cca5854a372d1016de77f5797d40e1c7c80b9e225b937f516ad7388dd82fc8bd"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/FileInputStream.php",
+      "bytes": 1161,
+      "sha256": "0edf5d09d02cc5228849eb0d4bb220cd6f29786d30814f447c851042e4ff9e32"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/InputStream.php",
+      "bytes": 2499,
+      "sha256": "c3e48ea4183ea18e1e1a8fa385f131e1cb19d0d0180bc6248406c4e3dca6e63f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/ParseError.php",
+      "bytes": 130,
+      "sha256": "f53c9a4482dce16027a6335ed5f1f82655d148d3ec1b96594bf4e4927461cd12"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/README.md",
+      "bytes": 1699,
+      "sha256": "77fa7822c19040035f13136de8471da108d24ee11dd84327f8735c22f61e1612"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/Scanner.php",
+      "bytes": 11460,
+      "sha256": "82a2a92d7cf4f973d941f144ba83991f07ca43425e07cbb053993baa005987e8"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/StringInputStream.php",
+      "bytes": 9675,
+      "sha256": "f094e4493e107eddf2d594cfa3f5965e11cbc996ead5bc43593200bb9cec6d1a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/Tokenizer.php",
+      "bytes": 36676,
+      "sha256": "542bb78bd4c0e83b4e0a6b3520f4da04e761fd210d64a4b19e6e5114743f0509"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/TreeBuildingRules.php",
+      "bytes": 3272,
+      "sha256": "13c6257a6ab3bd120b4298b5636815d89eed0c4b61cdbf85b0e37026ef3e6c7a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Parser/UTF8Utils.php",
+      "bytes": 7276,
+      "sha256": "b9c8e677e6d6296e58e212a3fab19b304e4c4b477ae6c3fbbc803405d92736ab"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Serializer/HTML5Entities.php",
+      "bytes": 44292,
+      "sha256": "3bb133248b05db95f451c985f267bdeff3732ec7174d93a46d19181b732e20e5"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Serializer/OutputRules.php",
+      "bytes": 16903,
+      "sha256": "2cb906ce4bbff970e6fefd459c02e744215f733e22c07b87ce35e1f05c092f89"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Serializer/README.md",
+      "bytes": 929,
+      "sha256": "be020e06a6e202d7c3a1c52a84fb235b42810eaffe991d7dbdeac5297b98ab8a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Serializer/RulesInterface.php",
+      "bytes": 2615,
+      "sha256": "4e9491f1fed7ae267c9ad0f5e55ce1439f9dc31864c0285db7891b80b3f08885"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5/Serializer/Traverser.php",
+      "bytes": 4301,
+      "sha256": "5e791a46bab9cddeef168a53a9d441fad9f3c627ab5438300664d590f7dc4be6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/masterminds/html5/src/HTML5.php",
+      "bytes": 8516,
+      "sha256": "eaa56b6ec1f71c982e1b02f1b89266f9813665f8bb2ad1fbf94c8487afaccd0b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/CHANGELOG.md",
+      "bytes": 14432,
+      "sha256": "eff4b07c4353f30820b9b0fad5c59ab8a1ad598199a834e8f6fe1f7ca9d6571b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/LICENSE",
+      "bytes": 1104,
+      "sha256": "48d350a9bc14589e71bd4256c3ca2539d02232fa482f155d9bb61f8f71d39575"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/README.md",
+      "bytes": 20741,
+      "sha256": "85ce61fdf391aecb1e91543c4afed235328e7a194673987af9052814ee72f259"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/composer.json",
+      "bytes": 1236,
+      "sha256": "4f2c00a82d3c0d9ff39641a6b837932937d054f5bf2d039f827038624a94470e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/CSSElement.php",
+      "bytes": 522,
+      "sha256": "a56d9708ef0f72cf278f683d936552ba0a85e8078bb7ea5774d07d6023ab62d5"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/CSSList/AtRuleBlockList.php",
+      "bytes": 1849,
+      "sha256": "0858e3650682ea6a8ca0547d011219f7c3623421a95ed2f0914537b939a0f3d9"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/CSSList/CSSBlockList.php",
+      "bytes": 7421,
+      "sha256": "545bf911eb6824e0ec8574168d46220b3a7f186fa601b32fef6e059e7eaec1ca"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/CSSList/CSSList.php",
+      "bytes": 16283,
+      "sha256": "7de00597b766375fff0901a88dc89e4353ac72d8e527b4d2b220baf2d469b9e4"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/CSSList/Document.php",
+      "bytes": 4186,
+      "sha256": "5a8f6c2d6417fabdc35bc00a2b571a14e33859dfb76c693f08764723bf5fddbb"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/CSSList/KeyFrame.php",
+      "bytes": 2125,
+      "sha256": "f12714bcb0d85c37306964d6b9afc630fa45a3e5a326dcaec78768627938c545"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Comment/Comment.php",
+      "bytes": 1276,
+      "sha256": "98e01b5805822ad9b8ac3b27ff4d228433be9c339ab591d946171a30e825093c"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Comment/Commentable.php",
+      "bytes": 452,
+      "sha256": "7c7e16b258d5e444caa9fba0e6b82521ec44549c12c0e89d7d82987924076215"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/OutputFormat.php",
+      "bytes": 11500,
+      "sha256": "ef7fdd8e3c5652a9031ebe08730a7c3bb701657dd079e3fda99c001fc84b96cc"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/OutputFormatter.php",
+      "bytes": 6459,
+      "sha256": "4b3708aec96256c43b3f7e53731812ce5c3c9d6efb4d84bbe45b3ea28fad49da"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Parser.php",
+      "bytes": 1840,
+      "sha256": "6f8b9416c2dd386f4cd70ae580de7ddbf6168c481858a300c3bc0dc498bc17ab"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Parsing/Anchor.php",
+      "bytes": 658,
+      "sha256": "cd41c3e7c0566dcb9882fefb6ab98701cca98163d0be74be34abd4574816dd7b"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Parsing/OutputException.php",
+      "bytes": 358,
+      "sha256": "f905d3dbd772ee82aae33b387b67f2878d94d532b19b1e7d333b1f342c1da1c5"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Parsing/ParserState.php",
+      "bytes": 14441,
+      "sha256": "e6cebd58e8cc89071a80d5729c338068cdf95713ea5591ad074802c556d005b8"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Parsing/SourceException.php",
+      "bytes": 523,
+      "sha256": "863f30655ecdb78db69f356c712639941a4493a8c8bd550527b6d10b2f761e23"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Parsing/UnexpectedEOFException.php",
+      "bytes": 273,
+      "sha256": "8dd4143d1aca069df14155c2379eabab99d2f6233dda5b1ce4dcf755071b3ab5"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Parsing/UnexpectedTokenException.php",
+      "bytes": 1476,
+      "sha256": "f75073305bb3ca7018f94d646a7645175788e2a0b965846956383dfa738fe40e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Position/Position.php",
+      "bytes": 1429,
+      "sha256": "7d27a364f0e3327d3172f6e13a4acf25995192e23a42ccd0d3076f16e2717f76"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Position/Positionable.php",
+      "bytes": 1196,
+      "sha256": "4dddc8de2cb28b6f0af0ce760776b773bd101836227141c66276c6f4160e343c"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Property/AtRule.php",
+      "bytes": 873,
+      "sha256": "f1b30c9eca85f17930b2734a1031c0e54aee7b90f9552fc1fe4fc605ca211df6"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Property/CSSNamespace.php",
+      "bytes": 2895,
+      "sha256": "766bbe2613503f3780a1f12da19c886bb049f2a584696f106d572eb6e3e7db6a"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Property/Charset.php",
+      "bytes": 2739,
+      "sha256": "ce28567f60b3c270d09b85f65b001578424e1224d59969747cbf9a70eb61c26f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Property/Import.php",
+      "bytes": 2811,
+      "sha256": "99191d1bebe3baeee1b357b8308c52e3bcbda090ceac5a38ec08077953c96238"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Property/KeyframeSelector.php",
+      "bytes": 733,
+      "sha256": "09f570068df3e716c22286d94a89f1a3b5a7cf85e99bbd315d8d69ef2f282bd5"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Property/Selector.php",
+      "bytes": 3694,
+      "sha256": "f1cfd23838417650c768a8c17d6ea2b4888e26abe96a990d72b45cf297e9071f"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Renderable.php",
+      "bytes": 423,
+      "sha256": "f9019215109d997d033ba58ca67f1c6aa693a1aa76cbda928fda6c4e6c4d54e9"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Rule/Rule.php",
+      "bytes": 10605,
+      "sha256": "a15404dbcba622849db92bf3edb6e2c16d818ab4c932037b63e007ef2f49d311"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/RuleSet/AtRuleSet.php",
+      "bytes": 1700,
+      "sha256": "a4062aad6392209d8cf59e9d2efc7df68d30f929f4d30cddd813ebb5973ca4d7"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/RuleSet/DeclarationBlock.php",
+      "bytes": 31297,
+      "sha256": "5c1b504f694237452e9eff0a282bfcc3fb25c586e6eee809687c8c7936f34c3e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/RuleSet/RuleSet.php",
+      "bytes": 12128,
+      "sha256": "c9e0756a5cb532e3d71bade3540f0e242416e6c93f3ba2fc824cf16c5f598a07"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Settings.php",
+      "bytes": 2641,
+      "sha256": "c4eba7beaa5d2530b3d7d2c328a7bd3bdc80768973711aabae76b8754d84aaad"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/CSSFunction.php",
+      "bytes": 2906,
+      "sha256": "dc099df6bfb8dec9c2715aa49cc2adbd4e1697a58547107f0aa8026472368f6c"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/CSSString.php",
+      "bytes": 3033,
+      "sha256": "285022395b0cf8d78a73d563c9885543f48728415a049554c70be466b15e1f6e"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/CalcFunction.php",
+      "bytes": 4399,
+      "sha256": "a8904ea59b525572eea2af1f6ead807f1c38c51a167022cad3c87747ad3f4110"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/CalcRuleValueList.php",
+      "bytes": 482,
+      "sha256": "0c5429777d0e9e237f61fb8de629a28306637cf9db45f8623529a4fe20997487"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/Color.php",
+      "bytes": 6539,
+      "sha256": "1935b0ab79d37eb1d67a4db975d655cc595da312f289b04247c6166f21a69502"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/LineName.php",
+      "bytes": 1965,
+      "sha256": "e3d5bb994610c3f07b39cd83a7704462a9885e741e2b3ea6ef8e29e370083830"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/PrimitiveValue.php",
+      "bytes": 228,
+      "sha256": "0ad2bd7eab0798eb7e1fae74bd2e1cb74c4fa796b581df12a7e08b56cdbf7b90"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/RuleValueList.php",
+      "bytes": 556,
+      "sha256": "2fe68d7ad4e010ce20d69ae028c52f0c8958551d500f8b9885e78a9d29c6fcfa"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/Size.php",
+      "bytes": 6260,
+      "sha256": "b8beb7714cfe924e2b9074c90ca75cc815dcaa3c91f197f8e441033b30bb2c26"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/URL.php",
+      "bytes": 2361,
+      "sha256": "2cdd6533dbd2fd0cb6c411341f4e3f3e26fb0a06ec5384230f198cdfdc1b5131"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/Value.php",
+      "bytes": 8080,
+      "sha256": "57cefd4181313b5b55e9bf4cea01385fb39a10b9b59b42e5a7e4cf6461953ac9"
+    },
+    {
+      "path": "vendor/dompdf/vendor/sabberworm/php-css-parser/src/Value/ValueList.php",
+      "bytes": 2807,
+      "sha256": "82ce0e32ade1d0a3097b646a4eebdae1576460bb43bda1f672e2ef42a2581557"
+    }
+  ]
+}

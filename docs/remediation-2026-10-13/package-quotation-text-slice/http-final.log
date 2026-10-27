@@ -1,0 +1,6 @@
+ENV PHP=8.4.14 WP=6.6 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T10-H-REL007-literal-item-and-section-text-survives-authorized-save
+PASS T10-H-REL007-autosave-editor-recovery-and-new-revision-preserve-literal-text
+PASS T12-H-REL007-print-CSV-XLSX-retain-exact-saved-literal-text
+PASS T10-H-REL007-literal-text-requests-without-PHP-diagnostics
+4 passed, 0 failed

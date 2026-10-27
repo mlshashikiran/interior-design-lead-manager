@@ -1,0 +1,21 @@
+{
+  "scope": "Fresh isolated filesystem extraction; no WordPress activation or application qualification",
+  "version": "1.102.72",
+  "artifact_sha256": "890b5aa4744d19e1cdcf5ee5216d4a52ee215880ba05a59442841cbef7756f7f",
+  "matching": 453,
+  "modified": [],
+  "missing": [],
+  "extra": [],
+  "font_resource_hashes": {
+    "assets/css/fonts.css": "acb31a6d4c15ae590722cf1b993c9cd6ef920cd50e1fc0223183fd0a38de6567",
+    "assets/fonts/OFL.txt": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
+    "assets/fonts/NOTICE.txt": "7f72f71baf735c6b681cb73062f101780e25bc98b85d35f7c6e9f680afa139f1",
+    "assets/fonts/inter-provenance.json": "b2f48115a7d6d5d051eaf04f7f4ba51ae4954b6c68928955951af43d8c0f0f74",
+    "assets/fonts/inter-latin-300.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+    "assets/fonts/inter-latin-400.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+    "assets/fonts/inter-latin-500.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+    "assets/fonts/inter-latin-600.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+    "assets/fonts/inter-latin-700.woff2": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4"
+  },
+  "temporary_fixture_removed": true
+}

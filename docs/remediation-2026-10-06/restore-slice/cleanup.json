@@ -1,0 +1,9 @@
+{
+  "author": "Shashi",
+  "owned_datadir": "/private/tmp/idlm-restore-slice-mysql/data/",
+  "disposable_databases_remaining": [],
+  "configured_site_database_used": false,
+  "shutdown": "completed",
+  "owned_mysql_directory_removed": true,
+  "browser_http_fixture_removed": true
+}

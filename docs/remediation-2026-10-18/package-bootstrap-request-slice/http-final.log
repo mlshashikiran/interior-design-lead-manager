@@ -1,0 +1,7 @@
+ENV PHP=8.4.14 WP=6.6 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T20-H-REL007-healthy-bootstrap-ignores-array-request-metadata-without-diagnostics
+PASS T20-H-REL007-pending-migration-blocks-CRM-action-with-malformed-route-without-diagnostics
+PASS T20-H-REL007-pending-migration-keeps-admin-notice-available-with-array-metadata
+PASS T20-H-REL007-pending-migration-pauses-both-REST-query-namespaces
+PASS T20-H-REL007-CRM-bootstrap-holds-worker-fence-through-response
+5 passed, 0 failed

@@ -1,0 +1,38 @@
+[
+  {
+    "file": "includes/class-settings.php",
+    "exit_code": 0
+  },
+  {
+    "file": "templates/admin/settings/white-label.php",
+    "exit_code": 0
+  },
+  {
+    "file": "tests/run.php",
+    "exit_code": 0
+  },
+  {
+    "file": "tests/attribution-opt-in-contracts.php",
+    "exit_code": 0
+  },
+  {
+    "file": "tests/integration/attribution-opt-in-http-cases.php",
+    "exit_code": 0
+  },
+  {
+    "file": "tests/integration/quotation-http.php",
+    "exit_code": 0
+  },
+  {
+    "file": "tests/integration/http-router.php",
+    "exit_code": 0
+  },
+  {
+    "file": "interior-design-lead-manager.php",
+    "exit_code": 0
+  },
+  {
+    "file": "tests/release-contracts.php",
+    "exit_code": 0
+  }
+]

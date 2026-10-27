@@ -1,0 +1,19 @@
+{
+  "builder": "Shashi",
+  "query": "release candidate attestation",
+  "traversal": "bounded BFS; three starts, depth two, at most twenty nodes",
+  "finding": "Immutable REL-001 and IDLM_Release_Candidate verify_directory/validate_manifest/inspect_zip located; source verified correct negative release gates.",
+  "mode": "Scoped documentation headings and explicit checkpoint relation; no runtime/source extraction required",
+  "files": {
+    "docs/AUDIT-REMEDIATION-RELEASE-ATTESTATION-SLICE.md": "ecec09cc5b1c709bdd4c0349146ae7d8ed4ed8b07228ba41aaddfbced4ca262e",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "16d73b2025e5252bfd3d9c79ea3c062ca8a878ae4fd006396f87703186b323e6",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "bd399531bc22156b42b598e55d9db1b001a854af95376eff2b5f88f705b6e453",
+    "docs/PRODUCTION-RELEASE.md": "3d119f4ac1ac61af180dfc4270e729acfc1a2c2efeca7636564f3c7021fdfac3",
+    "docs/CHANGELOG-DEV.md": "21a6065554f0b2c7370f650dab90bb28904b8b8baf6d37e7dbba5926267e8c9e"
+  },
+  "removed_stale_nodes": 180,
+  "added_document_nodes": 193,
+  "scope": "Unrelated graph retained; no full semantic/HTML/report rebuild",
+  "input_tokens": 0,
+  "output_tokens": 0
+}

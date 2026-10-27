@@ -40,8 +40,10 @@ class IDLM_Telemetry {
      */
     public static function error_handler($errno, $errstr, $errfile, $errline) {
         // Respect error_reporting settings (especially silencer operator @)
+        // phpcs:disable PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall -- REL007-BOUNDARY-0048: error_handler(): no-argument error_reporting() reads the current mask to respect suppressed errors; it does not enable error display or change reporting settings.
         // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting
         if (!(error_reporting() & $errno)) {
+        // phpcs:enable PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall
             return false;
         }
 
@@ -202,6 +204,10 @@ class IDLM_Telemetry {
      * Prune logs older than 14 days and cap database table rows at 1000
      */
     public static function prune_logs() {
+        return IDLM_Recovery_Guard::run(static function() { return self::prune_logs_work(); }, null, false, '', array());
+    }
+
+    private static function prune_logs_work() {
         global $wpdb;
         $table_telemetry = $wpdb->prefix . 'idlm_telemetry_logs';
 

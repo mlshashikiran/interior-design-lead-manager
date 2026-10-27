@@ -1,0 +1,198 @@
+[
+  {
+    "case": "desktop-accessible-names",
+    "data": [
+      {
+        "id": "idlm-new-task-title",
+        "labels": [
+          "Task Title / Description *"
+        ]
+      },
+      {
+        "id": "idlm-new-task-due",
+        "labels": [
+          "Due Date & Time"
+        ]
+      },
+      {
+        "id": "idlm-new-task-priority",
+        "labels": [
+          "Priority"
+        ]
+      },
+      {
+        "id": "idlm-new-task-type",
+        "labels": [
+          "Task Type"
+        ]
+      }
+    ]
+  },
+  {
+    "case": "desktop-empty-native-required",
+    "data": {
+      "due": "",
+      "errorHidden": true,
+      "focus": "idlm-new-task-title",
+      "invalid": null,
+      "priority": "Medium",
+      "title": "",
+      "type": "General"
+    }
+  },
+  {
+    "case": "desktop-whitespace-error-retains-fields",
+    "data": {
+      "due": "2026-10-12T10:30",
+      "errorHidden": false,
+      "focus": "idlm-new-task-title",
+      "invalid": "true",
+      "priority": "High",
+      "title": "   ",
+      "type": "Site Visit"
+    }
+  },
+  {
+    "case": "desktop-corrected-clears-error",
+    "data": {
+      "due": "2026-10-12T10:30",
+      "errorHidden": true,
+      "focus": "idlm-new-task-title",
+      "invalid": null,
+      "priority": "High",
+      "title": "UI003 desktop keyboard recovery",
+      "type": "Site Visit"
+    }
+  },
+  {
+    "case": "desktop-keyboard-order",
+    "data": [
+      "idlm-new-task-title",
+      "idlm-new-task-due",
+      "idlm-new-task-due",
+      "idlm-new-task-due",
+      "idlm-new-task-due",
+      "idlm-new-task-due",
+      "idlm-new-task-due",
+      "idlm-new-task-due",
+      "idlm-new-task-priority",
+      "idlm-new-task-type",
+      "idlm-btn-add-task"
+    ]
+  },
+  {
+    "case": "desktop-keyboard-save",
+    "data": {
+      "due": "",
+      "errorHidden": true,
+      "focus": "idlm-new-task-title",
+      "invalid": null,
+      "priority": "Medium",
+      "title": "",
+      "type": "General"
+    },
+    "tasks": "UI003 desktop keyboard recovery\n\nSITE VISIT\nOct 12, 2026 10:30 AM\n×"
+  },
+  {
+    "case": "desktop-escape-focus-return",
+    "data": {
+      "active": false,
+      "focusText": "PII-SYNTHETIC-4  — open lead details",
+      "hidden": "true"
+    }
+  },
+  {
+    "case": "mobile-whitespace-error-retains-fields",
+    "data": {
+      "due": "2026-10-13T09:15",
+      "errorHidden": false,
+      "focus": "idlm-new-task-title",
+      "invalid": "true",
+      "priority": "Low",
+      "title": " ",
+      "type": "Call"
+    }
+  },
+  {
+    "case": "mobile-correction-clears-error",
+    "data": {
+      "due": "2026-10-13T09:15",
+      "errorHidden": true,
+      "focus": "idlm-new-task-title",
+      "invalid": null,
+      "priority": "Low",
+      "title": "UI003 mobile Enter recovery",
+      "type": "Call"
+    }
+  },
+  {
+    "case": "mobile-enter-from-title-save",
+    "data": {
+      "due": "",
+      "errorHidden": true,
+      "focus": "idlm-new-task-title",
+      "invalid": null,
+      "priority": "Medium",
+      "title": "",
+      "type": "General"
+    },
+    "tasks": "UI003 desktop keyboard recovery\n\nSITE VISIT\nOct 12, 2026 10:30 AM\n×\n\nUI003 mobile Enter recovery\n\nCALL\nOct 13, 2026 09:15 AM\n×"
+  },
+  {
+    "case": "mobile-escape-focus-return",
+    "data": {
+      "focusText": "PII-SYNTHETIC-4  — open lead details",
+      "hidden": "true"
+    }
+  },
+  {
+    "case": "mobile-reopen-names-and-clean-state",
+    "data": {
+      "due": "",
+      "errorHidden": true,
+      "focus": "",
+      "invalid": null,
+      "priority": "Medium",
+      "title": "",
+      "type": "General"
+    },
+    "names": [
+      {
+        "id": "idlm-new-task-title",
+        "labels": [
+          "Task Title / Description *"
+        ]
+      },
+      {
+        "id": "idlm-new-task-due",
+        "labels": [
+          "Due Date & Time"
+        ]
+      },
+      {
+        "id": "idlm-new-task-priority",
+        "labels": [
+          "Priority"
+        ]
+      },
+      {
+        "id": "idlm-new-task-type",
+        "labels": [
+          "Task Type"
+        ]
+      }
+    ]
+  },
+  {
+    "case": "mobile-label-click-focuses-title",
+    "data": {
+      "due": "",
+      "errorHidden": true,
+      "focus": "idlm-new-task-title",
+      "invalid": null,
+      "priority": "Medium",
+      "title": "",
+      "type": "General"
+    }
+  }
+]

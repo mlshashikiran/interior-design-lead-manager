@@ -1,0 +1,10 @@
+{
+    "builder": "Shashi",
+    "accepted_new": 90,
+    "accepted_replays": 10,
+    "persisted_canonical_leads": 90,
+    "persisted_touchpoints": 100,
+    "duplicate_rows": 0,
+    "pass": true,
+    "customer_data": false
+}

@@ -1,0 +1,7 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T10-T12-N-QUO006-saved-output-retains-currency-template-and-payments-after-settings-changes
+PASS T17-N-QUO006-additive-2.5.3-upgrade-preserves-exact-old-revisions-with-null-terms
+PASS T17-N-QUO006-document-column-DDL-failure-does-not-publish-upgrade-and-retry-preserves-history
+PASS T16-T17-N-QUO006-current-and-complete-2.5.3-backup-roundtrip-retain-terms-or-explicit-unknown
+
+5 passed, 0 failed

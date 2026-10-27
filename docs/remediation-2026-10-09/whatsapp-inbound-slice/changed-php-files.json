@@ -1,0 +1,17 @@
+[
+  "includes/class-whatsapp-inbox.php",
+  "includes/class-interakt.php",
+  "includes/class-lead-lifecycle-service.php",
+  "includes/class-backup.php",
+  "interior-design-lead-manager.php",
+  "tests/bootstrap.php",
+  "tests/run.php",
+  "tests/release-contracts.php",
+  "tests/whatsapp-inbound-contracts.php",
+  "tests/integration/run.php",
+  "tests/integration/worker.php",
+  "tests/integration/http-router.php",
+  "tests/integration/quotation-http.php",
+  "tests/integration/whatsapp-inbound-contracts.php",
+  "tests/integration/whatsapp-inbound-http-cases.php"
+]

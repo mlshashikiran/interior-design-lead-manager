@@ -17,7 +17,28 @@ if (!function_exists('wp_remote_post')) {
     function wp_remote_retrieve_body($response) { return $response['body']; }
 }
 
+idlm_test('administrator can qualify a pre-sales lead with the normal handoff remark and ownership safeguards', static function(): void {
+    idlm_test_login(9, array('administrator'), array('manage_options'));
+    $GLOBALS['idlm_test_users'][7] = (object) array('ID' => 7, 'roles' => array('idlm_pre_sales'), 'display_name' => 'Pre Sales', 'user_email' => 'pre@example.test');
+    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 7, 'floor_plan_received' => 0))));
+    $_POST = array('lead_id' => 1, 'decision' => 'qualify');
+    expect_json_response(array('IDLM_Admin_Ajax', 'ajax_presales_decision'), false);
+    assert_same('', $GLOBALS['wpdb']->rows('idlm_leads')[0]['lead_quality']);
+    $_POST['handoff_remark'] = 'Client will provide the floor plan after the visit.';
+    expect_json_response(array('IDLM_Admin_Ajax', 'ajax_presales_decision'), true);
+    $lead = $GLOBALS['wpdb']->rows('idlm_leads')[0];
+    assert_same('Qualified', $lead['stage']);
+    assert_same('awaiting_manager', $lead['handoff_status']);
+    assert_same(7, $lead['intake_owner_id']);
+    assert_same(9, $lead['qualified_by_user_id']);
+    assert_true(in_array('qualification_handoff_remark', array_column($GLOBALS['wpdb']->rows('idlm_lead_activity_log'), 'activity_type'), true));
+    idlm_test_login(8, array('sales_executive'), array('idlm_access_leads'));
+    $_POST = array('lead_id' => 1, 'decision' => 'qualify', 'handoff_remark' => 'Not authorized');
+    expect_json_response(array('IDLM_Admin_Ajax', 'ajax_presales_decision'), false);
+});
+
 idlm_test('comment and upload mutations require current ownership even when all leads are visible', static function(): void {
+    update_option('idlm_role_lead_scopes', array('sales_executive' => 'all'));
     idlm_test_login(7, array('sales_executive'), array('idlm_access_leads'));
     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('id' => 1, 'assigned_rep_id' => 8))));
     $GLOBALS['wpdb']->seed('idlm_lead_activity_log', array(array('id' => 1, 'lead_id' => 1, 'user_id' => 7, 'activity_type' => 'comment', 'details' => 'Original')));
@@ -50,7 +71,7 @@ idlm_test('Interakt backfill queues id-only jobs and deduplicates HTTP submissio
     $GLOBALS['idlm_test_http_code'] = 200;
     $GLOBALS['idlm_test_queue_failure'] = false;
     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 7))));
-    update_option('idlm_interakt_enabled', '1');
+    update_option('idlm_interakt_enabled', '1');update_option('idlm_whatsapp_notifications_enabled','1');
     update_option('idlm_interakt_api_key', 'test-secret');
     update_option('idlm_interakt_mappings', array(array('event' => 'qualified')));
     assert_same('queued', IDLM_Interakt_Batch::enqueue(1, 'qualified', 'request_123'));
@@ -70,7 +91,7 @@ idlm_test('Interakt backfill retries are bounded and removed leads never send', 
     $GLOBALS['idlm_test_http_code'] = 500;
     $GLOBALS['idlm_test_queue_failure'] = false;
     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture()));
-    update_option('idlm_interakt_enabled', '1');
+    update_option('idlm_interakt_enabled', '1');update_option('idlm_whatsapp_notifications_enabled','1');
     update_option('idlm_interakt_api_key', 'test-secret');
     update_option('idlm_interakt_mappings', array(array('event' => 'qualified')));
     IDLM_Interakt_Batch::enqueue(1, 'qualified', 'retry_123');

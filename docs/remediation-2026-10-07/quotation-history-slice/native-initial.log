@@ -1,0 +1,4 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T10-T17-N-QUO010-upgrade-preserves-commercial-states-pointers-times-and-all-revisions
+
+2 passed, 0 failed

@@ -1,0 +1,62 @@
+{
+  "builder": "Shashi",
+  "classification_is_not_checker_suppression": true,
+  "request_parser_sites": 7,
+  "sites": [
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 520,
+      "file_sha256": "48367aca62c7ca21175960b788c643bc02ac828b58c665c17b6222be98d50e16",
+      "source_line": "        $rate = IDLM_Quotation_Calculator::decimal_units(wp_unslash($_POST['default_rate'] ?? 0), 0, IDLM_Quotation_Calculator::MAX_AMOUNT_UNITS, 'Catalogue rate');",
+      "rationale": "handle_save_catalogue_item checks idlm_manage_quote_items and idlm_save_catalogue_item nonce first. The once-unslashed value enters decimal_units, which rejects structured values, exponent/negative/nonfinite/over-range text and rounds bounded ordinary decimals into integer hundredths. A WP_Error redirects before any repository write. A valid 10.005 persists as 10.01 in actual HTTP tests."
+    },
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 522,
+      "file_sha256": "48367aca62c7ca21175960b788c643bc02ac828b58c665c17b6222be98d50e16",
+      "source_line": "        $is_wood = wp_unslash($_POST['is_wood'] ?? '0');",
+      "rationale": "After the catalogue capability/nonce guards, the exact unslashed field must be a string in the strict 0/1 allowlist. The normalized integer is used in repository data; array/non-domain input redirects before reads or writes. HTTP tests reproduce baseline acceptance/warning, assert rejection with identical durable snapshot, and verify both valid classifications and literal description text."
+    },
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 745,
+      "file_sha256": "48367aca62c7ca21175960b788c643bc02ac828b58c665c17b6222be98d50e16",
+      "source_line": "        $settings['paper_size'] = self::normalize_paper_size(wp_unslash($_POST['paper_size'] ?? 'A4'));",
+      "rationale": "handle_save_settings checks idlm_manage_quote_settings and idlm_save_quote_settings nonce before reading input. normalize_paper_size accepts only strings, trims/case-normalizes and maps through fixed a4/letter/a3/legal names, defaulting all other shapes to A4. The HTTP settings case persists Letter. This does not claim new PDF/browser format qualification."
+    },
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 750,
+      "file_sha256": "48367aca62c7ca21175960b788c643bc02ac828b58c665c17b6222be98d50e16",
+      "source_line": "        $soft_close = IDLM_Quotation_Calculator::decimal_units(wp_unslash($_POST['soft_close_percent'] ?? 0), 0, 10000, 'Soft close percentage');",
+      "rationale": "After settings capability/nonce guards, the once-unslashed field enters decimal_units with 0..10000 hundredths bounds. Structured/exponent/negative/out-of-range values return WP_Error and redirect before the sole option write. The HTTP suite exercises invalid percentages and half-up 1.005 -> 1.01."
+    },
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 752,
+      "file_sha256": "48367aca62c7ca21175960b788c643bc02ac828b58c665c17b6222be98d50e16",
+      "source_line": "        $payment_rows = wp_unslash($_POST['payment_structure'] ?? array());",
+      "rationale": "After settings capability/nonce guards, recursively unslash rows once. Require an array of at most 50 rows, each an array with a string name; sanitize names without another unslash. decimal_units validates each percentage to 0..10000 hundredths; summed retained rows must not exceed 10000. Reject before update_option on any malformed row. Actual HTTP regression proves malformed names no longer silently drop with success; literal backslashes/apostrophes survive, HTML is removed and 33.335 rounds to 33.34. Structured, exponent, over-range and literal-backslash decimal inputs remain rejected."
+    },
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 770,
+      "file_sha256": "48367aca62c7ca21175960b788c643bc02ac828b58c665c17b6222be98d50e16",
+      "source_line": "        $settings['currency_code'] = self::currency_code(wp_unslash($_POST['currency_code'] ?? $settings['currency_code']));",
+      "rationale": "After settings capability/nonce guards, currency_code accepts the unslashed domain value, applies sanitize_key and uppercase, then a fixed nine-code allowlist or INR fallback. Its other caller supplies already-unslashed stored settings during new-quote save; neither domain call unslashes again. Actual HTTP lower-case usd persists USD; no currency conversion or historical rewrite occurs."
+    },
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 773,
+      "file_sha256": "48367aca62c7ca21175960b788c643bc02ac828b58c665c17b6222be98d50e16",
+      "source_line": "        $number_separator = wp_unslash($_POST['number_separator'] ?? '');",
+      "rationale": "After settings capability/nonce guards, use the unslashed value only after strict membership in the literal - / _ allowlist; arrays/other shapes map to the existing - fallback. Only that mapped literal enters settings. Actual HTTP tests persist / unchanged."
+    }
+  ],
+  "additional_source_fix": {
+    "file": "includes/class-lead-connector.php",
+    "line": 164,
+    "file_sha256": "297eba4b5d56a04171667f6962be9ba3c8e57b5ffc5df767d1f42ca986c0541c",
+    "rationale": "serve_challenge already requires the exact GET route, status 200, string data and ctype_digit. esc_html now escapes output at the sink; fast tests retain zero, leading zeros and a long digit string byte-for-byte. Existing token/route/shape guards remain intact. This removes a static output-escaping error without changing protocol response bytes."
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "builder": "Shashi",
+  "actions": [
+    {
+      "method": "ajax_get_lead_activity",
+      "action": "idlm_get_lead_activity",
+      "registrations": [
+        {
+          "file": "includes/class-admin.php",
+          "line": 28,
+          "source": "add_action('wp_ajax_idlm_get_lead_activity', array(__CLASS__, 'ajax_get_lead_activity'));"
+        }
+      ],
+      "facades": [
+        {
+          "file": "includes/class-admin.php",
+          "line": 430,
+          "source": "public static function ajax_get_lead_activity() { return IDLM_Admin_Ajax::ajax_get_lead_activity(); }"
+        },
+        {
+          "file": "includes/class-admin-ajax.php",
+          "line": 20,
+          "source": "public static function ajax_get_lead_activity() {"
+        }
+      ],
+      "clients": [
+        {
+          "file": "assets/js/admin-app.js",
+          "line": 2973,
+          "source": "action: 'idlm_get_lead_activity',"
+        }
+      ]
+    },
+    {
+      "method": "ajax_save_activity_comment",
+      "action": "idlm_save_activity_comment",
+      "registrations": [
+        {
+          "file": "includes/class-admin.php",
+          "line": 32,
+          "source": "add_action('wp_ajax_idlm_save_activity_comment', array(__CLASS__, 'ajax_save_activity_comment'));"
+        }
+      ],
+      "facades": [
+        {
+          "file": "includes/class-admin.php",
+          "line": 436,
+          "source": "public static function ajax_save_activity_comment() { return IDLM_Admin_Ajax::ajax_save_activity_comment(); }"
+        },
+        {
+          "file": "includes/class-admin-ajax.php",
+          "line": 359,
+          "source": "public static function ajax_save_activity_comment() {"
+        }
+      ],
+      "clients": [
+        {
+          "file": "assets/js/admin-app.js",
+          "line": 3017,
+          "source": "action: 'idlm_save_activity_comment',"
+        },
+        {
+          "file": "assets/js/admin-app.js",
+          "line": 3046,
+          "source": "action: 'idlm_save_activity_comment',"
+        }
+      ]
+    },
+    {
+      "method": "ajax_edit_activity_comment",
+      "action": "idlm_edit_activity_comment",
+      "registrations": [
+        {
+          "file": "includes/class-admin.php",
+          "line": 33,
+          "source": "add_action('wp_ajax_idlm_edit_activity_comment', array(__CLASS__, 'ajax_edit_activity_comment'));"
+        }
+      ],
+      "facades": [
+        {
+          "file": "includes/class-admin.php",
+          "line": 437,
+          "source": "public static function ajax_edit_activity_comment() { return IDLM_Admin_Ajax::ajax_edit_activity_comment(); }"
+        },
+        {
+          "file": "includes/class-admin-ajax.php",
+          "line": 366,
+          "source": "public static function ajax_edit_activity_comment() {"
+        }
+      ],
+      "clients": [
+        {
+          "file": "assets/js/admin-app.js",
+          "line": 2483,
+          "source": "action: 'idlm_edit_activity_comment',"
+        }
+      ]
+    },
+    {
+      "method": "ajax_delete_activity_comment",
+      "action": "idlm_delete_activity_comment",
+      "registrations": [
+        {
+          "file": "includes/class-admin.php",
+          "line": 34,
+          "source": "add_action('wp_ajax_idlm_delete_activity_comment', array(__CLASS__, 'ajax_delete_activity_comment'));"
+        }
+      ],
+      "facades": [
+        {
+          "file": "includes/class-admin.php",
+          "line": 438,
+          "source": "public static function ajax_delete_activity_comment() { return IDLM_Admin_Ajax::ajax_delete_activity_comment(); }"
+        },
+        {
+          "file": "includes/class-admin-ajax.php",
+          "line": 373,
+          "source": "public static function ajax_delete_activity_comment() {"
+        }
+      ],
+      "clients": [
+        {
+          "file": "assets/js/admin-app.js",
+          "line": 2528,
+          "source": "action: 'idlm_delete_activity_comment',"
+        }
+      ]
+    }
+  ],
+  "public_contracts_changed": false
+}

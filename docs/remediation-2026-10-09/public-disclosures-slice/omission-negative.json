@@ -1,0 +1,18 @@
+{
+    "PRIVACY.md": {
+        "valid": false,
+        "errors": [
+            "missing_required:PRIVACY.md"
+        ],
+        "file_count": 454,
+        "total_bytes": 14029737
+    },
+    "SUPPORT.md": {
+        "valid": false,
+        "errors": [
+            "missing_required:SUPPORT.md"
+        ],
+        "file_count": 454,
+        "total_bytes": 14038102
+    }
+}

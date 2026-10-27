@@ -1,0 +1,7 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T01-T19-H-REL003 fresh sign-in workspace and checkbox default to no credit
+PASS T20-H-REL003 upgrade retains saved choices and partial branding stays off
+FAIL T19-T20-H-REL003 authorized opt-in opt-out persists and controls both public views: Stored opt-in wrong
+FAIL T01-T20-H-REL003 denied actor and nonce cannot change public credit: Credit state wrong for anonymous
+2 passed, 2 failed
+BROWSER URL=http://127.0.0.1:57109 STOP=/var/folders/7z/fv8kbkrn4pxdw8wj17g20t7h0000gn/T/idlm_test_63940_8d9ddf3b-content/stop

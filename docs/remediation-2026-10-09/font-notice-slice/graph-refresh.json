@@ -1,0 +1,28 @@
+{
+  "builder": "Shashi",
+  "query": "REL-002 Inter font license",
+  "finding": "Focused lookup located immutable missing-notice finding; existing fonts/CSS and shared release inventory verified against current source and primary font/license distributions.",
+  "mode": "Scoped structural PHP extraction and explicit document/license heading refresh",
+  "files": {
+    "tests/release/class-release-artifact.php": "e972fb6f10e9d05775c8fbcc10d900d0723d9a56b543a13efa18e5464c541474",
+    "tests/release-contracts.php": "039d5739532d826c4d081856d07e19003fee60b617227769cf1ea70ac5b53d96",
+    "interior-design-lead-manager.php": "74a38c05842ffb50d44ab380640eb4821464f57119dffd74e6f60c2f9753c322",
+    "docs/AUDIT-REMEDIATION-FONT-NOTICE-SLICE.md": "1ea6a91932e591f3c960f491ac8b5777c44a7d3ba7e524efe19a80a72579a891",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "61745abd08fb990b8243daba3ccb42b95603ac9212387298f8df5df4107b212a",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "a8dd74c308ac7f22f44414e4a521b4816ea8fdd50d82581eecea2e73c0e784d7",
+    "docs/CHANGELOG-DEV.md": "6935a044289bd579383d59ebe9d4e8b8189bd8d3418de0886462cb84af376182",
+    "docs/PROJECT-MAP.md": "2f823aef14ebda67cc6352b855d7d5f7c8ae3fd287d6a28d3ba5b6546ac63570",
+    "docs/PRODUCTION-RELEASE.md": "c189f56077a94819d9d0200aed5b430fd444d44ff7142cdf55d4300f2ef30d4f",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "cb51ca7b7c936a3a6d41be9692413b0aa643ef138197c9f396af261e96900cea",
+    "CHANGELOG.md": "03893b5cdec0ca4d9889e76680bf3e715565bfa24711c2ef546fb324134f45ed",
+    "assets/fonts/OFL.txt": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
+    "assets/fonts/NOTICE.txt": "7f72f71baf735c6b681cb73062f101780e25bc98b85d35f7c6e9f680afa139f1",
+    "assets/fonts/inter-provenance.json": "b2f48115a7d6d5d051eaf04f7f4ba51ae4954b6c68928955951af43d8c0f0f74"
+  },
+  "removed_stale_nodes": 451,
+  "source_nodes": 29,
+  "source_edges": 30,
+  "scope": "Unrelated graph retained; no full semantic/HTML/report regeneration",
+  "input_tokens": 0,
+  "output_tokens": 0
+}

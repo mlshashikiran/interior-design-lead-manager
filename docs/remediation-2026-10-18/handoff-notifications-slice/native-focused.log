@@ -1,0 +1,6 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS M6-handoff-opt-in-and-hook-preserve-recipient-and-message-contract
+PASS M6-handoff-missing-lead-and-recipient-fallbacks-remain-compatible
+PASS M6-handoff-committed-intent-survives-mail-rejection-and-acknowledges-retry
+
+4 passed, 0 failed

@@ -1,0 +1,15 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T07-T09-N-INT006-complete mixed entry change text button list media and status batch replays once
+PASS T07-N-INT006-malformed oversized missing ID and bad signature batches write nothing
+PASS T09-N-INT006-partial batch is explicit and replays resume uncommitted messages
+PASS T09-N-INT006-full-phone canonical matching refuses suffix and conflicting canonical identities
+PASS T09-N-INT006-required activity receipt commit and options engine faults never acknowledge
+PASS T07-N-INT006-Interakt ID media namespace changed replay and current secret checks
+FAIL T09-C-INT006-independent replay and interruption before or after commit append at most once
+  Expected 200, got 401.
+FAIL T09-T16-T17-N-INT006-minimal receipt survives activity pruning restore deletion and reset
+  Expected 200, got 401.
+FAIL T09-N-INT006-active caller transaction and malformed receipt refuse writes
+  Expected 503, got 401.
+
+7 passed, 3 failed

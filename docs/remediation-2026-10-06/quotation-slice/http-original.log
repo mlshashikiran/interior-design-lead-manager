@@ -1,0 +1,48 @@
+ENV PHP=8.4.14 WP=7.1.2 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T10-H-authorized-create-owner-0
+PASS T10-H-authorized-create-other-1
+PASS T10-H-authorized-create-readall-2
+PASS T10-H-authorized-create-manager-3
+PASS T10-H-authorized-create-owner-4
+PASS T10-H-deny-foreign-save-owner
+PASS T10-H-deny-foreign-autosave-owner
+PASS T10-H-deny-foreign-discard-owner
+PASS T10-H-deny-foreign-save-other
+PASS T10-H-deny-foreign-autosave-other
+PASS T10-H-deny-foreign-discard-other
+FAIL T10-H-deny-foreign-save-readall: Expected denial, got 302
+PASS T10-H-deny-foreign-autosave-readall
+PASS T10-H-deny-foreign-discard-readall
+FAIL T10-H-foreign-revision-new: Expected denial, got 302
+FAIL T10-H-owned-revision-new: Expected denial, got 302
+PASS T10-H-foreign-quote
+FAIL T10-H-foreign-revision: Expected denial, got 302
+PASS T10-H-autosave-substitute-lead
+PASS T10-H-autosave-substitute-quote
+PASS T10-H-autosave-substitute-revision
+FAIL T10-H-foreign-key: Expected denial, got 302
+FAIL T10-H-owned-other-lead-key: Expected denial, got 302
+FAIL T10-H-different-actor-key: Expected denial, got 302
+PASS T10-H-repeat-initial-request
+PASS T10-H-owner-autosave-and-discard
+PASS T10-H-owner-revision-and-repeat
+FAIL T10-H-request-key-source-substitution: Expected denial, got 302
+PASS T10-H-stale-revision-no-write
+PASS T12-H-exact-old-revision-export-owner
+PASS T12-H-exact-old-revision-export-readall
+PASS T12-H-exact-old-revision-export-manager
+PASS T12-H-deny-foreign-revision
+PASS T12-H-deny-non-owner
+FAIL T10-H-readall-read-without-editor: Read/edit UI separation failed
+PASS T10-H-reassigned-former-owner-save
+PASS T10-H-reassigned-former-owner-autosave
+PASS T10-H-reassigned-former-owner-discard
+PASS T10-H-reassigned-former-owner-export
+PASS T10-H-reassigned-new-owner-autosave
+FAIL T10-H-manager-assigned-read-scope-save-autosave: Explicit manager cannot autosave
+PASS T10-H-revoked-session-save
+PASS T10-H-revoked-session-autosave
+PASS T10-H-revoked-session-export
+FAIL T10-C-before-write-lock-reassignment: HTTP worker did not reach locking read
+FAIL T10-C-before-write-lock-revocation: HTTP worker did not reach locking read
+34 passed, 12 failed

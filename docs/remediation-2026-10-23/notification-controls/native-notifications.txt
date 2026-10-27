@@ -1,0 +1,7 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS NOTIFY outgoing default off preserves authenticated incoming WhatsApp
+PASS NOTIFY committed disable overrides warm caches for ordinary and batch jobs
+PASS NOTIFY re-enable cancels old ordinary and administrative backfill intent
+PASS NOTIFY handoff email observes a committed disable despite cached options
+
+5 passed, 0 failed

@@ -1,0 +1,8 @@
+{
+  "builder": "Shashi",
+  "synthetic_files": 3,
+  "separate_destination_restore": true,
+  "sha256_all_match": true,
+  "private_attachment_api_tested_by": "installed native/HTTP private-file cases",
+  "contains_real_customer_data": false
+}

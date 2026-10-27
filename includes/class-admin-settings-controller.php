@@ -24,10 +24,16 @@ class IDLM_Admin_Settings_Controller {
 
     /** Normalize a structured vocabulary post while retaining the legacy comma field. */
     private static function posted_vocabulary($array_key, $legacy_key, $fallback) {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- REL007-BOUNDARY-0085: posted_vocabulary(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
         if (isset($_POST[$array_key]) && is_array($_POST[$array_key])) {
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
+            // phpcs:disable WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0086: posted_vocabulary(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
             $raw_values = wp_unslash($_POST[$array_key]);
+            // phpcs:enable WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         } else {
+            // phpcs:disable WordPress.Security.NonceVerification.Missing -- REL007-BOUNDARY-0087: posted_vocabulary(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
             $legacy_value = isset($_POST[$legacy_key]) ? sanitize_text_field(wp_unslash($_POST[$legacy_key])) : '';
+            // phpcs:enable WordPress.Security.NonceVerification.Missing
             $raw_values = explode(',', $legacy_value);
         }
 
@@ -75,14 +81,35 @@ class IDLM_Admin_Settings_Controller {
         }
 
         check_admin_referer('idlm_settings_save_action');
+        foreach (IDLM_Secret_Store::platform_options() as $option) {
+            $field = in_array($option, array('idlm_meta_access_token','idlm_google_api_secret','idlm_linkedin_access_token'), true) ? substr($option, 5) : $option;
+            $clear = !empty($_POST[$field . '_clear']);
+            // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0088: process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
+            $raw = wp_unslash($_POST[$field] ?? '');
+            // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            if (!is_string($raw)) { wp_die('Invalid credential value.', 400); }
+            $value = sanitize_text_field($raw);
+            if (!$clear && '' === $value) { continue; }
+            if (($clear && '' !== $value) || !IDLM_Secret_Store::set($option, $clear ? '' : $value)) {
+                wp_die('Credential could not be saved. Check environment ownership and encryption configuration; retry the settings save.', 503);
+            }
+        }
+        $connector_result = IDLM_Lead_Connector::save_settings(wp_unslash($_POST));
+        if (is_wp_error($connector_result)) {
+            return false;
+        }
         $label_defaults = array('call_status' => 'Call Status', 'lost_reason' => 'Lost Reason', 'preferred_studio' => 'Preferred Studio', 'num_rooms' => 'Rooms');
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0089: process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
         $posted_ui_labels = (isset($_POST['ui_labels']) && is_array($_POST['ui_labels'])) ? wp_unslash($_POST['ui_labels']) : array();
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $ui_labels = array();
         foreach ($label_defaults as $key => $default) {
             $ui_labels[$key] = sanitize_text_field(isset($posted_ui_labels[$key]) ? $posted_ui_labels[$key] : $default) ?: $default;
         }
         update_option('idlm_ui_labels', $ui_labels);
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0090: process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
         $posted_value_labels = (isset($_POST['value_labels']) && is_array($_POST['value_labels'])) ? wp_unslash($_POST['value_labels']) : array();
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $value_labels = array();
         foreach ($posted_value_labels as $group => $labels) {
             $group = sanitize_key($group);
@@ -94,7 +121,9 @@ class IDLM_Admin_Settings_Controller {
             }
         }
         update_option('idlm_value_labels', $value_labels);
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0091: process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
         $white_label_raw = (isset($_POST['white_label']) && is_array($_POST['white_label'])) ? wp_unslash($_POST['white_label']) : array();
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $white_label_validation = IDLM_Settings::validate_white_label($white_label_raw);
         self::$white_label_values = $white_label_validation['settings'];
         self::$white_label_errors = $white_label_validation['errors'];
@@ -149,6 +178,7 @@ class IDLM_Admin_Settings_Controller {
         update_option('idlm_handoff_task_policy', in_array($handoff_task_policy, array('transfer', 'retain', 'complete_qualification'), true) ? $handoff_task_policy : 'transfer');
         update_option('idlm_handoff_notifications_enabled', isset($_POST['handoff_notifications_enabled']) ? '1' : '0');
         update_option('idlm_routing_exception_notifications_enabled', isset($_POST['routing_exception_notifications_enabled']) ? '1' : '0');
+        update_option('idlm_whatsapp_notifications_enabled', isset($_POST['whatsapp_notifications_enabled']) && is_string($_POST['whatsapp_notifications_enabled']) && '1' === sanitize_text_field(wp_unslash($_POST['whatsapp_notifications_enabled'])) ? '1' : '0');
         update_option('idlm_max_active_leads_per_rep', isset($_POST['max_active_leads_per_rep']) ? min(10000, max(0, absint(wp_unslash($_POST['max_active_leads_per_rep'])))) : 30);
         update_option('idlm_working_hours_start', isset($_POST['working_hours_start']) ? sanitize_text_field(wp_unslash($_POST['working_hours_start'])) : '09:00');
         update_option('idlm_working_hours_end', isset($_POST['working_hours_end']) ? sanitize_text_field(wp_unslash($_POST['working_hours_end'])) : '18:00');
@@ -167,7 +197,9 @@ class IDLM_Admin_Settings_Controller {
 
         // Save the studio location assigned to each representative.
         $allowed_studios = get_option('idlm_custom_studios', array('Downtown Studio', 'North Studio', 'South Studio'));
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0092: process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
         $posted_rep_studios = (!empty($_POST['rep_studios']) && is_array($_POST['rep_studios'])) ? wp_unslash($_POST['rep_studios']) : array();
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $rep_studios = array();
         foreach ($posted_rep_studios as $rep_id => $studio) {
             $rep_id = absint($rep_id);
@@ -200,7 +232,9 @@ class IDLM_Admin_Settings_Controller {
 
         // Save the monetary field consolidated in each Kanban stage header.
         $kanban_stage_totals = array();
+        // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0093: process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
         $posted_stage_totals = (isset($_POST['kanban_stage_totals']) && is_array($_POST['kanban_stage_totals'])) ? wp_unslash($_POST['kanban_stage_totals']) : array();
+        // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $allowed_total_sources = array('none', 'quote_value', 'deal_value');
         foreach ($posted_stage_totals as $encoded_stage => $total_source) {
             $stage_name = sanitize_text_field(rawurldecode($encoded_stage));
@@ -247,13 +281,11 @@ class IDLM_Admin_Settings_Controller {
         // Save CAPI configurations
         update_option('idlm_meta_capi_enabled', isset($_POST['meta_capi_enabled']) ? '1' : '0');
         update_option('idlm_meta_pixel_id', isset($_POST['meta_pixel_id']) ? sanitize_text_field(wp_unslash($_POST['meta_pixel_id'])) : '');
-        update_option('idlm_meta_access_token', isset($_POST['meta_access_token']) ? sanitize_text_field(wp_unslash($_POST['meta_access_token'])) : '');
         if (isset($_POST['meta_audience_id'])) {
             update_option('idlm_meta_audience_id', sanitize_text_field(wp_unslash($_POST['meta_audience_id'])));
         }
         update_option('idlm_google_capi_enabled', isset($_POST['google_capi_enabled']) ? '1' : '0');
         update_option('idlm_google_measurement_id', isset($_POST['google_measurement_id']) ? sanitize_text_field(wp_unslash($_POST['google_measurement_id'])) : '');
-        update_option('idlm_google_api_secret', isset($_POST['google_api_secret']) ? sanitize_text_field(wp_unslash($_POST['google_api_secret'])) : '');
         if (isset($_POST['google_user_list_resource'])) {
             update_option('idlm_google_user_list_resource', sanitize_text_field(wp_unslash($_POST['google_user_list_resource'])));
         }
@@ -267,7 +299,6 @@ class IDLM_Admin_Settings_Controller {
 
         update_option('idlm_linkedin_capi_enabled', isset($_POST['linkedin_capi_enabled']) ? '1' : '0');
         update_option('idlm_linkedin_conversion_id', isset($_POST['linkedin_conversion_id']) ? sanitize_text_field(wp_unslash($_POST['linkedin_conversion_id'])) : '');
-        update_option('idlm_linkedin_access_token', isset($_POST['linkedin_access_token']) ? sanitize_text_field(wp_unslash($_POST['linkedin_access_token'])) : '');
         if (isset($_POST['linkedin_segment_urn'])) {
             update_option('idlm_linkedin_segment_urn', sanitize_text_field(wp_unslash($_POST['linkedin_segment_urn'])));
         }
@@ -372,26 +403,24 @@ class IDLM_Admin_Settings_Controller {
 
         // Save Interakt Settings
         $interakt_enabled = isset($_POST['idlm_interakt_enabled']) ? '1' : '0';
-        $interakt_api_key = isset($_POST['idlm_interakt_api_key']) ? sanitize_text_field(wp_unslash($_POST['idlm_interakt_api_key'])) : '';
         update_option('idlm_interakt_enabled', $interakt_enabled);
-        update_option('idlm_interakt_api_key', $interakt_api_key);
 
-        $interakt_webhook_secret = isset($_POST['idlm_interakt_webhook_secret']) ? sanitize_text_field(wp_unslash($_POST['idlm_interakt_webhook_secret'])) : '';
-        update_option('idlm_interakt_webhook_secret', $interakt_webhook_secret);
 
         // Save Meta Webhook Settings
         $meta_webhook_enabled = isset($_POST['idlm_meta_webhook_enabled']) ? '1' : '0';
-        $meta_webhook_verify_token = isset($_POST['idlm_meta_webhook_verify_token']) ? sanitize_text_field(wp_unslash($_POST['idlm_meta_webhook_verify_token'])) : '';
-        $meta_webhook_app_secret = isset($_POST['idlm_meta_webhook_app_secret']) ? sanitize_text_field(wp_unslash($_POST['idlm_meta_webhook_app_secret'])) : '';
         update_option('idlm_meta_webhook_enabled', $meta_webhook_enabled);
-        update_option('idlm_meta_webhook_verify_token', $meta_webhook_verify_token);
-        update_option('idlm_meta_webhook_app_secret', $meta_webhook_app_secret);
 
         $interakt_mappings = array();
         if (isset($_POST['interakt_mapping_type']) && isset($_POST['interakt_mapping_value']) && isset($_POST['interakt_mapping_event'])) {
+            // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0094: process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
             $types = wp_unslash($_POST['interakt_mapping_type']);
+            // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0095: process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
             $values = wp_unslash($_POST['interakt_mapping_value']);
+            // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0096: process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
             $events = wp_unslash($_POST['interakt_mapping_event']);
+            // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
             if (is_array($types) && is_array($values) && is_array($events)) {
                 $count = count($types);

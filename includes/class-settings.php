@@ -10,6 +10,15 @@ class IDLM_Settings {
     const ROUTING_OPTION = 'idlm_routing_settings';
     const WHITE_LABEL_OPTION = 'idlm_white_label_settings';
 
+    /** Check committed notification consent immediately before enqueue/delivery. */
+    public static function notification_enabled($option_name) {
+        if (!in_array($option_name, array('idlm_handoff_notifications_enabled', 'idlm_routing_exception_notifications_enabled', 'idlm_whatsapp_notifications_enabled'), true)) { return false; }
+        global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Prepared allowlisted consent option; a worker must see a committed disable rather than an earlier cached snapshot.
+        $value = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $option_name));
+        return !$wpdb->last_error && '1' === (string) $value;
+    }
+
     public static function init() {
         if (self::VERSION !== get_option(self::VERSION_OPTION, '')) {
             self::sync_routing_from_legacy();
@@ -32,7 +41,7 @@ class IDLM_Settings {
             'login_heading' => 'One workspace for every customer conversation.',
             'support_email' => '',
             'footer_text' => '',
-            'show_plugin_attribution' => '1',
+            'show_plugin_attribution' => '0',
         );
     }
 
@@ -47,7 +56,8 @@ class IDLM_Settings {
             $normalized = self::normalize_hex($settings[$key]);
             $settings[$key] = $normalized ?: self::white_label_defaults()[$key];
         }
-        $settings['show_plugin_attribution'] = '1' === (string) $settings['show_plugin_attribution'] ? '1' : '0';
+        // Shashi: missing/default credit is off; preserve existing scalar choices.
+        $settings['show_plugin_attribution'] = is_scalar($settings['show_plugin_attribution']) && '1' === (string) $settings['show_plugin_attribution'] ? '1' : '0';
         return $settings;
     }
 
@@ -67,7 +77,7 @@ class IDLM_Settings {
             'login_heading' => sanitize_text_field(isset($raw['login_heading']) ? $raw['login_heading'] : $defaults['login_heading']),
             'support_email' => sanitize_email(isset($raw['support_email']) ? $raw['support_email'] : ''),
             'footer_text' => sanitize_textarea_field(isset($raw['footer_text']) ? $raw['footer_text'] : ''),
-            'show_plugin_attribution' => !empty($raw['show_plugin_attribution']) ? '1' : '0',
+            'show_plugin_attribution' => '1' === ($raw['show_plugin_attribution'] ?? '') ? '1' : '0',
         );
         $errors = array();
 
@@ -222,7 +232,7 @@ class IDLM_Settings {
 
     public static function routing_defaults() {
         return array(
-            'idlm_reps_see_all_leads' => '1',
+            'idlm_reps_see_all_leads' => '0',
             'idlm_assignment_mode' => 'manual',
             'idlm_active_assignment_reps' => array(),
             'idlm_active_pre_sales_reps' => null,

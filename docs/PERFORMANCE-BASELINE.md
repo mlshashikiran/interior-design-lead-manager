@@ -1,7 +1,7 @@
 # Performance Baseline
 
 Author / Builder: Shashi  
-Status: Phase 0 started; targets await business/operations sign-off  
+Status: historical baseline retained; current delegated single-server envelope below
 Release: 1.99.7  
 Started: 2026-08-30
 
@@ -147,3 +147,9 @@ No bottleneck is ranked until total-time and user-impact evidence exists.
 - Pending: business forecast and owner sign-off.
 - Pending: first small/target dataset measurements and server-side database/resource capture.
 - Pending: `EXPLAIN` evidence and ranked bottleneck list.
+
+## Current delegated envelope — 2026-10-22
+
+Shashi specified latest stable versions, one server and 25–50 users, delegating remaining sizing choices. Select 50k leads, 400k activities, 100k tasks/touchpoints, 200k retained log rows and 20k quote graphs as the expected dataset. The 100k-lead doubled profile is a stress boundary; the old 250k provisional envelope is unqualified. Reference host: 10 logical CPUs / 16 GiB, Nginx, 16 PHP-FPM workers, MySQL 8.4.0, PHP 8.5.12, WordPress 7.1.3, OPcache, no persistent cache and externally driven WP-Cron. This is measured capacity on this host, not a smaller-host guarantee.
+
+Keep read targets: list p95 <1.5s / p99 <3s; dashboard p95 <2.5s cold / <1s explicitly warm; error rate <1%; no access/integrity violations. Inbound is bounded by the existing 120/minute per-IP rate policy. External delivery, long-duration soak and the real deployment host require acceptance. [Measured results, source-matching artifact and remaining gates](M6-M7-RELEASE-CANDIDATE.md).

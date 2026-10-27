@@ -1,0 +1,25 @@
+{
+  "same_files": true,
+  "differences": [
+    {
+      "file": "interior-design-lead-manager/",
+      "contents_equal": true,
+      "timestamp1": [
+        2026,
+        10,
+        6,
+        1,
+        2,
+        50
+      ],
+      "timestamp2": [
+        2026,
+        10,
+        6,
+        1,
+        6,
+        16
+      ]
+    }
+  ]
+}

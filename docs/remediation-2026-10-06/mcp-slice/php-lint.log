@@ -1,0 +1,16 @@
+No syntax errors detected in includes/class-mcp-core.php
+No syntax errors detected in includes/class-production-security.php
+No syntax errors detected in interior-design-lead-manager.php
+No syntax errors detected in mcp-server.php
+No syntax errors detected in tests/bootstrap.php
+No syntax errors detected in tests/integration/http-router.php
+No syntax errors detected in tests/integration/quotation-http.php
+No syntax errors detected in tests/integration/run.php
+No syntax errors detected in tests/release-contracts.php
+No syntax errors detected in tests/release/class-release-artifact.php
+No syntax errors detected in tests/run.php
+No syntax errors detected in includes/class-mcp-query-policy.php
+No syntax errors detected in tests/mcp-query-cases.php
+No syntax errors detected in tests/mcp-query-contracts.php
+No syntax errors detected in tests/integration/mcp-query-contracts.php
+No syntax errors detected in tests/integration/mcp-http-cases.php

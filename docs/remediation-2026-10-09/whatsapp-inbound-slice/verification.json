@@ -1,0 +1,164 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-09",
+  "finding": "INT-006",
+  "status": "IMPLEMENTED, not CLOSED",
+  "candidate": "1.102.67",
+  "base": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "schemas": {
+    "core": "1.3.9",
+    "routing": "1.0.1",
+    "quotation": "2.5.4",
+    "lifecycle_receipt": "1.1.0"
+  },
+  "environment": {
+    "PHP": "8.4.14",
+    "WordPress": "7.1.3",
+    "MySQL": "8.4.0",
+    "scheduler": "WP-Cron",
+    "persistent_cache": false
+  },
+  "backlog": {
+    "OPEN": 11,
+    "IMPLEMENTED": 33,
+    "CLOSED": 0
+  },
+  "checks": [
+    {
+      "command": "php tests/run.php",
+      "result": "330 passed, 0 failed",
+      "log": "fast-final.log",
+      "stderr": "existing synthetic missing-phone warning"
+    },
+    {
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD=empty IDLM_TEST_DB_HOST=localhost:/private/tmp/idlm-int006.sock IDLM_TEST_FILTER=INT006 php tests/integration/run.php",
+      "result": "10 passed, 0 failed (fresh schema and nine INT006 cases)",
+      "log": "native.log",
+      "stderr": "empty"
+    },
+    {
+      "command": "same owned socket environment; php tests/integration/run.php",
+      "result": "260 passed, 0 failed",
+      "log": "native-full.log",
+      "stderr": "only existing deliberate identity-review write-failure diagnostics"
+    },
+    {
+      "command": "same owned socket environment; php tests/integration/quotation-http.php --whatsapp-inbound-only",
+      "result": "6 passed, 0 failed",
+      "log": "http.log",
+      "stderr": "empty"
+    },
+    {
+      "command": "same owned socket environment; php tests/integration/quotation-http.php",
+      "result": "404 passed, 0 failed; warning-free affected requests",
+      "log": "http-full.log",
+      "stderr": "empty"
+    },
+    {
+      "command": "php -l for 15 changed PHP files; git diff --check",
+      "result": "PASS",
+      "log": "lint.log"
+    }
+  ],
+  "initial_failure": "Initial native 7 passed/3 failed: fixture retained stale cached secret after independent primary rotation, so update_option skipped reset. Fixture cache eviction corrected the remaining tests; initial logs retained.",
+  "graph": {
+    "query": "INT-006 handle_meta_webhook_request process_incoming_whatsapp_message",
+    "finding": "Located INT-006 audit and callback; source confirmed first-message-only handling, missing provider-ID receipts and suffix/newest-lead matching.",
+    "mode": "scoped structural extraction and explicit documentation heading refresh",
+    "evidence": "graph-refresh.json"
+  },
+  "provider_reference": "https://www.interakt.shop/resource-center/interakts-webhooks/",
+  "fault_concurrency_recovery": [
+    "all entries/changes/messages and mixed media/button/list/status",
+    "full-phone canonical matching, duplicate and international suffix conflicts",
+    "activity/receipt/COMMIT faults and nontransactional options",
+    "current primary HMAC secret after independent rotation",
+    "two independent workers replay same ID",
+    "process exit77 before and after commit",
+    "retention-independent minimal receipt, backup exclusion and same-site restore/reset tombstone",
+    "active caller transaction and malformed receipt refusal"
+  ],
+  "cleanup": {
+    "builder": "Shashi",
+    "owned_test_databases_dropped": true,
+    "remaining_databases": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "owned_content_removed_by_test_shutdown": true,
+    "dedicated_socket_only_server_stopped": true,
+    "owned_mysql_data_removed": true,
+    "configured_site_untouched": true
+  },
+  "no_real_provider_send": true,
+  "commit_package_deployment": false,
+  "remaining_qualification": [
+    "provider timing/latency/volume and all event/media variants",
+    "receipt retention and privacy-erasure policy",
+    "legacy ID-less activities",
+    "cross-provider identity reconciliation",
+    "database-loss or foreign restore cannot reconstruct excluded receipts",
+    "persistent-cache/distributed database runtime",
+    "exact artifact/CI/runtime matrix"
+  ],
+  "source_hashes": {
+    "includes/class-whatsapp-inbox.php": "62d05c163ead5c63c4b5dd75851888da3a9be4245e6efec52f623e35dd44bfd5",
+    "includes/class-interakt.php": "57f89874d1fccf0b78bcd15b7e3a0ebceed9dcaac8cf320029611aed749b9461",
+    "includes/class-lead-lifecycle-service.php": "7c850c41f663e37e235e381b193744d3303d72b4d4529c6bb707620d8a8c8bc4",
+    "includes/class-backup.php": "9a54960ae2799c850038705910aa9caf31255d5244640c7ade9f715f12a36643",
+    "interior-design-lead-manager.php": "c472ea754fe1d23a270f73fea7fd513a5c137649b4153d710bbc4a5f1b037c25",
+    "tests/bootstrap.php": "772eeb47bd780c4e70d22d23fdb1e4ae8294accc34084934e8062e7249795a7f",
+    "tests/run.php": "0cd4f3c5d09d4ed48db76e8c3c19666cc1715e3fccc5ea6fa947fc4e7d0f38de",
+    "tests/release-contracts.php": "46049205db4c836482c6c9f90244ef2918cc214bc9ea928c431903230005ca7a",
+    "tests/whatsapp-inbound-contracts.php": "738c5c62db1729b72c7f270b63f8cb0307c3c7c5186fbb8a94aadf5ac1620f87",
+    "tests/integration/run.php": "449beef19e648eda207e68a01f8b042c46eaa377c9a7f4ca50c8a0f67f71cdfd",
+    "tests/integration/worker.php": "2a46948ca806998e0c3c426f54138e234df6b049d112f1e5152c80731f890ee7",
+    "tests/integration/http-router.php": "87a87cba049f2ab1aa5f9a50a61080e8e35384351dae0ac7f1981179f5095ea3",
+    "tests/integration/quotation-http.php": "a4a93c8a310137dbc757c16095ffa1f0c2a1a64014873d09f3cb06e68a36f1e3",
+    "tests/integration/whatsapp-inbound-contracts.php": "100272c0e39214e361ae4978dcfb844b84da44d4005ecbeaa66c181aa2454e14",
+    "tests/integration/whatsapp-inbound-http-cases.php": "2a68dbea7d57008afb0d029679c54d900f7b9541d8ce53150dcada3118d8be13",
+    "docs/AUDIT-REMEDIATION-WHATSAPP-INBOUND-SLICE.md": "23071b21280234fbbd12d73522921fee5749ea5ddef6508535846bcda2abf6b2",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "3acad8ed6b6c1f023b26b1ad79de6a746eede9809636f03db46612b572f010f6",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "d503d926fa88af7259254f80ea2e372242da8279d361fdc6cc43113d77157a71",
+    "docs/DATA-MODEL.md": "e6717ba639d67f0c0a22258cd624607b993bf598bdf3f8dc39b62ddee8a84139",
+    "docs/INTERFACES.md": "005e3450a34d24af3a7d2709fe0dd868ec6f3f722acf8f3bdaa1a56861804515",
+    "docs/FEATURE-MAP.md": "bdb4a9be495cff1f904fb78589383f7e0be5e609b992ef7c6fd51cf1cff53f24",
+    "docs/SECURITY.md": "97ae45f8984a54e56224bdada90fba43a6c5a7c3fc5abfffcbc96f94be25a20f",
+    "docs/FLOWS.md": "1a76d3745d23994f0c432464dca224df2e6a1f84d8596ef84111110e5fd3fdb9",
+    "docs/PROJECT-MAP.md": "f95296e636f95a2ecc862683160353546fa7647de3691e91f9f7f3c4533c236f",
+    "docs/ARCHITECTURE.md": "ce8864e7114605b80a19de6876321ad7759c8de5ecf0011ac46d532436755b6f",
+    "docs/CHANGELOG-DEV.md": "1be0b04bf833edafe14761d4bec9d6639717446b181f2cf81a7d9d406896e23f",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "b0b1a28fe0835dc77dae335ccea277ee2763f728edc4cc8ef8f021bafa249922",
+    "tests/README.md": "2f798a90bbddb83f44f36c7930ab8f058536f5ce93ff517f40cb870ea863088e",
+    "CHANGELOG.md": "6bea8726ed406dae40a6e87a9ebb17ce320dab817e31f8dd78eb4bd2bc20dd4e",
+    "readme.txt": "07103453ea2fa72bfdd16ccbdba11c473d97a74a968498c575a182c4b002fbcc",
+    "docs/audit-remediation-backlog.csv": "10a1d92167b6f74150653db2cbc61ff8b374d8243fee9148ff5c7dca6e458473"
+  },
+  "evidence_hashes": {
+    "baseline.json": "c816a4b39600ed800be528052fac5e27cfd76a841ca638dcdcbb11fbcb7b48d8",
+    "changed-php-files.json": "cbdca6a62ca7c37c128111ec335a1f8dd7768bd0150800e43f65e83a6605abdb",
+    "cleanup-databases.log": "bc3dc967a9da6d0145cad70c2e361e4ea42d4e1c3fc5d4598d46925fa05ff318",
+    "cleanup.json": "fcadf1001a94dccf7a3adfb6c1c8f1b9f8a24dbf0b55bd4359330635bfb95935",
+    "fast-final.log": "ca35d2a1898ed6dd8a181a6a775a4bc526bacf5edbfdb1e236eaccfcf68cfe93",
+    "fast-final.stderr.log": "50e79ff71c92c4492270cb9df7f3e186992edae602180e34d6d40949a587f739",
+    "fast-initial.log": "991cb519f0c4ed6a35f15326e362a924d7d2fb86becda1849c9b0ea0ed8aba62",
+    "fast-initial.stderr.log": "50e79ff71c92c4492270cb9df7f3e186992edae602180e34d6d40949a587f739",
+    "fast.log": "ca35d2a1898ed6dd8a181a6a775a4bc526bacf5edbfdb1e236eaccfcf68cfe93",
+    "fast.stderr.log": "50e79ff71c92c4492270cb9df7f3e186992edae602180e34d6d40949a587f739",
+    "graph-refresh.json": "35c240f7ce30565d24db80ef2298a79dde8612eefd7e1f64d8a520075a321989",
+    "graph-refresh.log": "2bb4be6b5df28e82420fd6e4b84da80f15f865beacce1f9ffc1ce652eb33e7d3",
+    "http-full.log": "f165a55c8ae330c06a3ad0599d5275f9bf076b074828b4e7da626cfe7190c09f",
+    "http-full.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "http.log": "3d7ee5e9c9c1fbda73538150e5c4c7101f71a2a9b22e47b2892e1b55310fd924",
+    "http.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "lint.log": "704356903f2b352dcddf3b6bdfbd3191970f160c1d17bf86740f61f699e25be1",
+    "native-full.log": "7c1cf92296ccb2442b0dda693dbe1f73e22205a2723fde37b6ef3b1763eea796",
+    "native-full.stderr.log": "e1b124a301be14de31ae8e6902cba739b9eb5e7e591bac105a79d76845b5604a",
+    "native-initial.log": "38bc6d04e571855b0c614a1087379d09de33ffae3a524f3d4082e4cda7f962d7",
+    "native-initial.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native.log": "27d11420fde8ae599f7505bd526a46dc13a3a35580bd7e619035851fad324e06",
+    "native.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

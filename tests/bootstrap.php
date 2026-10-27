@@ -9,8 +9,9 @@ declare(strict_types=1);
 
 define('ABSPATH', __DIR__ . '/support/wp/');
 define('IDLM_TESTING', true);
+define('DB_NAME', 'idlm_test_unit');
 define('IDLM_VERSION', '1.101.75');
-define('IDLM_DB_VERSION', '1.3.4');
+define('IDLM_DB_VERSION', '1.3.9');
 define('IDLM_PATH', dirname(__DIR__) . '/');
 define('IDLM_URL', 'https://example.test/wp-content/plugins/interior-design-lead-manager/');
 define('ARRAY_A', 'ARRAY_A');
@@ -108,6 +109,7 @@ function selected($selected, $current = true, $display = true): string {
 }
 
 class WP_REST_Request {
+    private array $attributes = array();
     private array $headers;
     private array $params;
     private array $json;
@@ -123,6 +125,9 @@ class WP_REST_Request {
         $this->body = $body;
         $this->route = $route;
     }
+
+    public function get_attributes(): array { return $this->attributes; }
+    public function set_attributes(array $attributes): void { $this->attributes = $attributes; }
 
     public function get_header(string $name): string {
         return (string) ($this->headers[strtolower($name)] ?? '');
@@ -144,6 +149,10 @@ class WP_REST_Request {
         return $this->body;
     }
 
+    public function get_query_params(): array { return $this->params; }
+
+    public function get_method(): string { return 'GET'; }
+
     public function get_route(): string {
         return $this->route;
     }
@@ -151,9 +160,17 @@ class WP_REST_Request {
 
 final class IDLM_Test_WPDB {
     public string $prefix = 'wp_';
+    public string $options = 'wp_options';
     public string $users = 'wp_users';
+    public string $usermeta = 'wp_usermeta';
+    public string $posts = 'wp_posts';
+    public string $postmeta = 'wp_postmeta';
     public int $insert_id = 0;
     public string $last_error = '';
+    public int $reconnect_retries = 5;
+    private $transaction_snapshot = null;
+    public bool $suppress_errors = false;
+    public function suppress_errors($value = true) { $previous = $this->suppress_errors; $this->suppress_errors = (bool) $value; return $previous; }
     public array $tables = array();
     public array $queries = array();
     public array $dbdelta = array();
@@ -161,6 +178,9 @@ final class IDLM_Test_WPDB {
     public $custom_get_var_result = null;
     public string $last_get_results_query = '';
     public array $failed_writes = array();
+    public string $query_fail_contains = '';
+    public bool $deny_schema_lock = false;
+    public array $schema_engines = array();
     private array $next_ids = array();
 
     public function __construct() {
@@ -168,6 +188,7 @@ final class IDLM_Test_WPDB {
     }
 
     public function reset(): void {
+        $this->transaction_snapshot = null;
         $this->insert_id = 0;
         $this->last_error = '';
         $this->queries = array();
@@ -176,15 +197,18 @@ final class IDLM_Test_WPDB {
         $this->custom_get_var_result = null;
         $this->last_get_results_query = '';
         $this->failed_writes = array();
+        $this->query_fail_contains = '';
+        $this->deny_schema_lock = false;
+        $this->schema_engines = array();
         $this->next_ids = array();
         $this->tables = array();
         foreach (array(
             'idlm_leads', 'idlm_lead_activity_log', 'idlm_tasks', 'idlm_call_logs',
-            'idlm_lead_touchpoints', 'idlm_inbound_submission_reviews', 'idlm_capi_logs', 'idlm_audience_sync_logs',
+            'idlm_lead_outbox', 'idlm_lead_state_events', 'idlm_lead_touchpoints', 'idlm_inbound_submission_reviews', 'idlm_capi_logs', 'idlm_audience_sync_logs',
             'idlm_telemetry_logs', 'idlm_quotes', 'idlm_quote_revisions',
             'idlm_quote_revision_sections', 'idlm_quote_revision_items',
             'idlm_quote_payment_milestones', 'idlm_quote_status_history',
-            'idlm_number_sequences', 'idlm_quote_catalogue_items',
+            'idlm_number_sequences', 'idlm_quote_catalogue_items', 'idlm_private_files', 'idlm_private_file_chunks',
             'idlm_quote_item_categories', 'idlm_quote_item_units',
         ) as $name) {
             $this->tables[$this->prefix . $name] = array();
@@ -249,6 +273,8 @@ final class IDLM_Test_WPDB {
     }
 
     public function insert(string $table, array $data, $format = null) {
+        $this->last_error = '';
+
         $table = $this->resolve_table($table);
         if ($this->should_fail_write('insert', $table)) {
             $this->insert_id = 0;
@@ -267,9 +293,18 @@ final class IDLM_Test_WPDB {
     }
 
     public function update(string $table, array $data, array $where, $format = null, $where_format = null) {
+        $this->last_error = '';
+
         $table = $this->resolve_table($table);
         if ($this->should_fail_write('update', $table)) {
             return false;
+        }
+        if ('wp_options' === $table && isset($where['option_name'], $where['option_value']) && isset($GLOBALS['idlm_test_options'][$where['option_name']])) {
+            $name = $where['option_name'];
+            if (in_array($name, $GLOBALS['idlm_test_option_write_failures'] ?? array(), true)) { return false; }
+            if ($GLOBALS['idlm_test_options'][$name] !== $where['option_value']) { return 0; }
+            $GLOBALS['idlm_test_options'][$name] = $data['option_value'];
+            return 1;
         }
         $updated = 0;
         foreach ($this->tables[$table] ?? array() as $index => $row) {
@@ -283,6 +318,8 @@ final class IDLM_Test_WPDB {
     }
 
     public function delete(string $table, array $where, $where_format = null) {
+        $this->last_error = '';
+
         $table = $this->resolve_table($table);
         if ($this->should_fail_write('delete', $table)) {
             return false;
@@ -322,7 +359,16 @@ final class IDLM_Test_WPDB {
     }
 
     public function query(string $query) {
+        if (preg_match("/INSERT INTO wp_options .*VALUES \('(?P<key>idlm_connector_erased_[a-f0-9]+)','(?P<value>[0-9.]+)'/", $query, $marker)) { $GLOBALS['idlm_test_options'][$marker['key']] = $marker['value']; return 1; }
+        if (preg_match("/INSERT INTO wp_options .*VALUES \('idlm_recovery_generation','([0-9]+)'/", $query, $epoch)) { $GLOBALS['idlm_test_options']['idlm_recovery_generation'] = $epoch[1]; return 1; }
+
         $this->queries[] = $query;
+        $this->last_error = '';
+        if ($this->query_fail_contains && strpos($query, $this->query_fail_contains) !== false) { $this->last_error = 'Synthetic query failure'; return false; }
+        if ($query === 'SET TRANSACTION READ WRITE' && null !== $this->transaction_snapshot) { $this->last_error = 'Existing transaction'; return false; }
+        if ($query === 'START TRANSACTION') { $this->transaction_snapshot = array($this->tables, $GLOBALS['idlm_test_options']); return 1; }
+        if ($query === 'ROLLBACK') { if (null !== $this->transaction_snapshot) { [$this->tables, $GLOBALS['idlm_test_options']] = $this->transaction_snapshot; } $this->transaction_snapshot = null; return 1; }
+        if ($query === 'COMMIT') { $this->transaction_snapshot = null; return 1; }
         $normalized = preg_replace('/\s+/', ' ', trim($query));
         if (preg_match("/UPDATE (wp_idlm_quote_catalogue_items) SET status = 'inactive'.*WHERE id IN \(([^)]+)\)/i", $normalized, $matches)) {
             $ids = array_map('intval', explode(',', $matches[2]));
@@ -355,6 +401,8 @@ final class IDLM_Test_WPDB {
     }
 
     public function get_row(string $query, $output = OBJECT) {
+        $this->last_error = '';
+
         $query = preg_replace('/\s+/', ' ', trim($query));
 
         if (preg_match("/FROM (wp_idlm_number_sequences) WHERE sequence_type = '([^']+)' AND sequence_year = ([0-9]+)/i", $query, $matches)) {
@@ -366,9 +414,19 @@ final class IDLM_Test_WPDB {
             return null;
         }
 
+        if (preg_match('/SELECT \* FROM wp_users WHERE ID = ([0-9]+) FOR UPDATE/i', $query, $m)) { return get_userdata((int) $m[1]); }
         if (preg_match("/FROM (wp_idlm_quote_revisions) WHERE save_request_key = '([^']+)'/i", $query, $matches)) {
             foreach ($this->tables[$matches[1]] as $row) {
                 if ((string) ($row['save_request_key'] ?? '') === stripslashes($matches[2])) {
+                    return $this->format_row($row, $output);
+                }
+            }
+            return null;
+        }
+
+        if (preg_match('/FROM (wp_idlm_quotes) WHERE lead_id = ([0-9]+) ORDER BY id ASC LIMIT 1/i', $query, $matches)) {
+            foreach ($this->tables[$matches[1]] as $row) {
+                if ((int) ($row['lead_id'] ?? 0) === (int) $matches[2]) {
                     return $this->format_row($row, $output);
                 }
             }
@@ -393,14 +451,51 @@ final class IDLM_Test_WPDB {
     }
 
     public function get_var(string $query) {
-        $query = preg_replace('/\s+/', ' ', trim($query));
-        if (false !== stripos($query, 'GET_LOCK(') || false !== stripos($query, 'RELEASE_LOCK(')) {
-            return 1;
+        $this->last_error = '';
+        if (preg_match('/SELECT COUNT\(\*\) FROM wp_idlm_quote_revisions WHERE quote_id = ([0-9]+) AND LOWER/', $query, $match)) {
+            return count(array_filter($this->tables['wp_idlm_quote_revisions'] ?? array(), static function($row) use ($match) {
+                return (int) ($row['quote_id'] ?? 0) === (int) $match[1] && !in_array(strtolower(trim($row['status'] ?? 'Draft')), array('draft', 'superseded'), true);
+            }));
         }
+        if (preg_match('/SELECT COUNT\(\*\) FROM wp_idlm_quote_status_history WHERE quote_id = ([0-9]+) AND/', $query, $match)) {
+            return count(array_filter($this->tables['wp_idlm_quote_status_history'] ?? array(), static function($row) use ($match) {
+                return (int) ($row['quote_id'] ?? 0) === (int) $match[1] &&
+                    (!in_array(strtolower(trim($row['from_status'] ?? '')), array('', 'draft', 'superseded'), true) || !in_array(strtolower(trim($row['to_status'] ?? '')), array('', 'draft', 'superseded'), true));
+            }));
+        }
+        if (strpos($query, 'SELECT ENGINE FROM information_schema.TABLES') === 0) { foreach ($this->schema_engines as $table => $engine) { if (strpos($query, $table) !== false) { return $engine; } } return 'InnoDB'; }
+        $query = preg_replace('/\s+/', ' ', trim($query));
+        if (strpos($query, "SELECT option_value FROM wp_options WHERE option_name = 'wp_user_roles' FOR UPDATE") === 0) {
+            $roles = array(); foreach (idlm_get_crm_role_slugs() as $name) { $roles[$name] = array('name' => $name, 'capabilities' => idlm_test_role_caps($name)); }
+            return serialize($roles);
+        }
+        if (preg_match("/SELECT option_value FROM wp_options WHERE option_name = '([^']+)'/", $query, $option)) { foreach ($this->tables['wp_options'] ?? array() as $row) { if ($row['option_name']===$option[1]) { return $row['option_value']; } } }
+        if (preg_match("/SELECT option_value FROM wp_options WHERE option_name = '([^']+)'/", $query, $option)) { return $GLOBALS['idlm_test_options'][$option[1]] ?? null; }
+        if (preg_match('/SELECT COUNT\(\*\) FROM wp_idlm_leads WHERE assigned_rep_id = ([0-9]+)/', $query, $m)) {
+            return count(array_filter($this->tables['wp_idlm_leads'], static fn($r) => (int)($r['assigned_rep_id'] ?? 0) === (int)$m[1] && IDLM_Assignment_Capacity::is_active($r)));
+        }
+        if ($query === 'SELECT CONNECTION_ID()' || $query === 'SELECT @@autocommit') { return 1; }
+        if (preg_match("/SELECT lead_id FROM (wp_idlm_lead_touchpoints) WHERE platform = '([^']+)' AND external_id = '([^']+)'/", $query, $touch)) {
+            foreach ($this->tables[$touch[1]] as $row) { if (($row['platform'] ?? '') === $touch[2] && ($row['external_id'] ?? '') === $touch[3]) { return $row['lead_id']; } } return null;
+        }
+        if (preg_match("/SELECT (GET_LOCK|RELEASE_LOCK|IS_USED_LOCK)\('([^']+)'/", $query, $lock)) {
+            $held = $GLOBALS['idlm_test_named_locks'][$lock[2]] ?? 0;
+            if ($lock[1] === 'GET_LOCK' && $this->deny_schema_lock && strpos($lock[2], 'idlm_schema_') === 0) { return 0; }
+            if ($lock[1] === 'GET_LOCK') { $GLOBALS['idlm_test_named_locks'][$lock[2]] = $held + 1; return 1; }
+            if ($lock[1] === 'RELEASE_LOCK') { $GLOBALS['idlm_test_named_locks'][$lock[2]] = max(0, $held - 1); return $held ? 1 : null; }
+            return $held ? 1 : null;
+        }
+        if (strpos($query, "SELECT option_value FROM wp_options WHERE option_name = 'idlm_recovery_generation'") === 0) { return $GLOBALS['idlm_test_options']['idlm_recovery_generation'] ?? null; }
+
 
         if (preg_match('/SELECT assigned_rep_id FROM (wp_idlm_leads) WHERE id = ([0-9]+)/i', $query, $matches)) {
             $row = $this->find_by_id($matches[1], (int) $matches[2]);
             return $row ? ($row['assigned_rep_id'] ?? 0) : null;
+        }
+
+        if (preg_match('/SELECT quote_value FROM (wp_idlm_leads) WHERE id = ([0-9]+)/i', $query, $matches)) {
+            $row = $this->find_by_id($matches[1], (int) $matches[2]);
+            return $row ? ($row['quote_value'] ?? 0) : null;
         }
 
         if (preg_match('/SELECT (?:id|1) FROM (wp_idlm_leads) WHERE id = ([0-9]+)(.*)$/i', $query, $matches)) {
@@ -454,6 +549,15 @@ final class IDLM_Test_WPDB {
         if (preg_match('/SELECT MAX\(revision_number\) FROM (wp_idlm_quote_revisions) WHERE quote_id = ([0-9]+)/i', $query, $matches)) {
             $numbers = array_column(array_filter($this->tables[$matches[1]], static fn(array $row): bool => (int) $row['quote_id'] === (int) $matches[2]), 'revision_number');
             return $numbers ? max($numbers) : null;
+        }
+
+        if (preg_match('/SELECT id FROM (wp_idlm_quotes) WHERE lead_id = ([0-9]+) LIMIT 1/i', $query, $matches)) {
+            foreach ($this->tables[$matches[1]] as $row) {
+                if ((int) ($row['lead_id'] ?? 0) === (int) $matches[2]) {
+                    return $row['id'];
+                }
+            }
+            return null;
         }
 
         if (preg_match("/SELECT id FROM (wp_idlm_quote_item_categories) WHERE category_name = '([^']*)' AND status = 'active'/i", $query, $matches)) {
@@ -515,8 +619,41 @@ final class IDLM_Test_WPDB {
     }
 
     public function get_results(string $query, $output = OBJECT): array {
+        $this->last_error = '';
         $this->last_get_results_query = preg_replace('/\s+/', ' ', trim($query));
         $query = $this->last_get_results_query;
+        if (strpos($query, 'SELECT option_name, option_value FROM wp_options WHERE option_name IN') === 0) {
+            $rows=array();foreach(array('idlm_max_active_leads_per_rep',IDLM_Settings::ROUTING_OPTION) as $key) {
+                if (array_key_exists($key,$GLOBALS['idlm_test_options'])) { $value=$GLOBALS['idlm_test_options'][$key];$rows[]=(object)array('option_name'=>$key,'option_value'=>is_array($value)?serialize($value):$value); }
+            }return $rows;
+        }
+        if (preg_match("/SELECT \* FROM (wp_idlm_tasks) WHERE lead_id = ([0-9]+) AND task_type = 'Qualification'/i", $query, $m)) {
+            $rows = array_values(array_filter($this->tables[$m[1]], static fn(array $row): bool => (int) ($row['lead_id'] ?? 0) === (int) $m[2] && 'Qualification' === ($row['task_type'] ?? '')));
+            usort($rows, static fn(array $a, array $b): int => array($a['due_date'] ?? '', $a['id']) <=> array($b['due_date'] ?? '', $b['id']));
+            return $this->format_rows($rows, $output);
+        }
+        if (preg_match('/^SHOW (COLUMNS|INDEX) FROM `([a-z_]+)`$/', $query, $metadata)) {
+            foreach (array_reverse($this->dbdelta) as $sql) {
+                if (strpos($sql, 'CREATE TABLE ' . $metadata[2] . ' (') !== 0) { continue; }
+                $rows = array();
+                foreach (explode("\n", $sql) as $line) {
+                    $line = rtrim(trim($line), ',');
+                    if ($metadata[1] === 'COLUMNS' && preg_match('/^([a-z_]+) ([a-z]+(?:\([0-9,]+\))?(?: unsigned)?)(.*)$/i', $line, $m)) {
+                        preg_match("/DEFAULT (NULL|'[^']*'|[0-9.]+)/", $m[3], $d);
+                        $rows[] = array('Field' => $m[1], 'Type' => $m[2], 'Null' => strpos($m[3], 'NOT NULL') === false ? 'YES' : 'NO', 'Extra' => strpos($m[3], 'AUTO_INCREMENT') !== false ? 'auto_increment' : '', 'Default' => empty($d) || $d[1] === 'NULL' ? null : trim($d[1], "'"));
+                    }
+                    if ($metadata[1] === 'INDEX' && preg_match('/^(PRIMARY KEY|UNIQUE KEY ([a-z_]+)|KEY ([a-z_]+))\s*\(([^)]+)\)$/i', $line, $m)) {
+                        foreach (array_map('trim', explode(',', $m[4])) as $i => $column) { $rows[] = array('Key_name' => $m[1] === 'PRIMARY KEY' ? 'PRIMARY' : ($m[2] ?: $m[3]), 'Seq_in_index' => $i + 1, 'Column_name' => $column, 'Non_unique' => strpos($m[1], 'KEY ') === 0 ? 1 : 0, 'Sub_part' => null); }
+                    }
+                }
+                return ARRAY_A === $output ? $rows : array_map(static function ($row) { return (object) $row; }, $rows);
+            }
+            return array();
+        }
+        if (preg_match('/^SHOW INDEX FROM wp_idlm_private_file(s|_chunks)$/', $query, $match)) {
+            $definitions = $match[1] === 's' ? array('PRIMARY' => array('id'), 'attachment_id' => array('attachment_id')) : array('PRIMARY' => array('file_id','variant','part'));
+            $rows = array(); foreach ($definitions as $name => $columns) { foreach ($columns as $i => $column) { $rows[] = (object) array('Non_unique' => 0, 'Key_name' => $name, 'Seq_in_index' => $i + 1, 'Column_name' => $column); } } return $rows;
+        }
 
         if (preg_match('/SELECT l\.id, l\.first_name, l\.last_name, l\.phone, l\.email, l\.project_name, l\.property_location, l\.preferred_studio, l\.assigned_rep_id, u\.display_name AS assigned_rep_name FROM (wp_idlm_leads) l LEFT JOIN wp_users u ON u\.ID = l\.assigned_rep_id WHERE (.+?)(?: ORDER BY|$)/i', $query, $matches)) {
             $where = $matches[2];
@@ -577,8 +714,17 @@ final class IDLM_Test_WPDB {
             return $this->format_rows(array_values($days), $output);
         }
 
+        if (strpos($query, 'SELECT DISTINCT c.id, c.phone FROM') === 0) {
+            preg_match('/ IN \(([^)]+)\)/', $query, $m); $phones=array_map(static fn($v)=>trim($v," '"),explode(',',$m[1]??''));$found=array();
+            foreach($this->tables['wp_idlm_leads'] as $row) {
+                $digits=preg_replace('/[^0-9]/','',$row['phone']??''); if(!in_array($digits,$phones,true)){continue;}
+                $id=!empty($row['is_duplicate'])?($row['duplicate_of_id']??0):$row['id'];
+                foreach($this->tables['wp_idlm_leads'] as $c){if($c['id']==$id && empty($c['is_duplicate'])){$found[$id]=(object)array('id'=>$id,'phone'=>$c['phone']);}}
+            } return array_slice(array_values($found),0,3);
+        }
         if (preg_match('/SELECT id, email, phone FROM (wp_idlm_leads).*is_duplicate = 0/i', $query, $matches)) {
             $rows = array_values(array_filter($this->tables[$matches[1]], static fn(array $row): bool => empty($row['is_duplicate'])));
+            $rows = array_map(static fn(array $row): array => array('id'=>$row['id'], 'email'=>$row['email'] ?? '', 'phone'=>$row['phone'] ?? ''), $rows);
             return $this->format_rows($rows, $output);
         }
 
@@ -652,7 +798,14 @@ final class IDLM_Test_WPDB {
     }
 
     public function get_col(string $query): array {
+        if ($query === 'SHOW COLUMNS FROM wp_idlm_private_files') { return array('id','lead_id','attachment_id','purpose','filename','mime','byte_size','sha256','state','archive','created_at'); }
+        if ($query === 'SHOW COLUMNS FROM wp_idlm_private_file_chunks') { return array('file_id','variant','part','data'); }
         $query = preg_replace('/\s+/', ' ', trim($query));
+        if (preg_match('/SELECT id FROM (wp_idlm_leads) WHERE id = ([0-9]+) OR duplicate_of_id = ([0-9]+)/i', $query, $matches)) {
+            return array_values(array_map('intval', array_column(array_filter($this->tables[$matches[1]] ?? array(), static function(array $row) use ($matches): bool {
+                return (int) $row['id'] === (int) $matches[2] || (int) ($row['duplicate_of_id'] ?? 0) === (int) $matches[3];
+            }), 'id')));
+        }
         if (preg_match("/SELECT DISTINCT t\.lead_id FROM (wp_idlm_lead_touchpoints) t INNER JOIN (wp_idlm_leads) l ON l\.id = t\.lead_id WHERE t\.platform = '([^']+)' AND t\.external_id = '([^']+)' AND l\.is_duplicate = 0/i", $query, $matches)) {
             return array_values(array_unique(array_map('intval', array_column(array_filter($this->tables[$matches[1]] ?? array(), static function(array $row) use ($matches): bool {
                 return ($row['platform'] ?? '') === stripslashes($matches[3]) && ($row['external_id'] ?? '') === stripslashes($matches[4]);
@@ -690,14 +843,17 @@ $GLOBALS['idlm_test_use_object_cache'] = false;
 $GLOBALS['idlm_test_password_counter'] = 0;
 $GLOBALS['idlm_test_asset_calls'] = array();
 $GLOBALS['idlm_test_menu_calls'] = array();
+$GLOBALS['idlm_test_remote_response'] = null;
 
 function idlm_test_reset_environment(): void {
+    $GLOBALS['idlm_test_option_write_failures'] = array();
     $GLOBALS['wpdb']->reset();
     $GLOBALS['idlm_test_options'] = array();
     $GLOBALS['idlm_test_actions'] = array();
     $GLOBALS['idlm_test_routes'] = array();
     $GLOBALS['idlm_test_hooks'] = array();
     $GLOBALS['idlm_test_users'] = array();
+    $GLOBALS['idlm_test_role_cap_overrides'] = array();
     $GLOBALS['idlm_test_user_meta'] = array();
     $GLOBALS['idlm_test_current_user_id'] = 0;
     $GLOBALS['idlm_test_current_roles'] = array();
@@ -731,6 +887,7 @@ function idlm_test_login(int $user_id, array $roles, array $caps = array()): voi
             'user_email' => 'user' . $user_id . '@example.test',
         );
     }
+    $GLOBALS['idlm_test_users'][$user_id]->caps = array_fill_keys($caps, true);
 }
 
 function dbDelta(string $sql): array {
@@ -743,6 +900,7 @@ function get_option(string $name, $default = false) {
 }
 
 function update_option(string $name, $value, $autoload = null): bool {
+    if (in_array($name, $GLOBALS['idlm_test_option_write_failures'] ?? array(), true)) { return false; }
     $GLOBALS['idlm_test_options'][$name] = $value;
     return true;
 }
@@ -826,6 +984,22 @@ function esc_url($value): string {
     return esc_url_raw($value);
 }
 
+function disabled($disabled, $current = true, bool $display = true): string {
+    $result = (string) $disabled === (string) $current ? ' disabled="disabled"' : '';
+    if ($display) { echo $result; }
+    return $result;
+}
+
+function checked($checked, $current = true, bool $display = true): string {
+    $result = (string) $checked === (string) $current ? ' checked="checked"' : '';
+    if ($display) { echo $result; }
+    return $result;
+}
+
+function get_rest_url($blog_id = null, string $path = ''): string {
+    return 'https://example.test/wp-json/' . ltrim($path, '/');
+}
+
 function esc_html($value): string {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
@@ -855,7 +1029,7 @@ function wp_json_encode($value, int $flags = 0): string {
 }
 
 function wp_salt(string $scheme = 'auth'): string {
-    return 'idlm-test-salt-' . $scheme;
+    return ($GLOBALS['idlm_test_salt'] ?? 'idlm-test-salt-') . $scheme;
 }
 
 function maybe_serialize($value) {
@@ -878,6 +1052,14 @@ function wp_generate_password(int $length = 12, bool $special_chars = true, bool
 
 function get_bloginfo(string $show = ''): string {
     return 'Test Site';
+}
+
+function bloginfo(string $show = ''): void {
+    echo get_bloginfo($show);
+}
+
+function number_format_i18n($number, int $decimals = 0): string {
+    return number_format((float) $number, $decimals, '.', ',');
 }
 
 function get_current_user_id(): int {
@@ -942,6 +1124,24 @@ function sanitize_user($value): string {
     return preg_replace('/[^a-zA-Z0-9_.@-]/', '', (string) $value);
 }
 
+function idlm_test_role_caps(string $name): array {
+    if (isset($GLOBALS['idlm_test_role_cap_overrides'][$name])) { return $GLOBALS['idlm_test_role_cap_overrides'][$name]; }
+    if ('administrator' === $name) { return array('manage_options' => true, 'idlm_access_leads' => true); }
+    return in_array($name, array('sales_manager','sales_executive','idlm_pre_sales','marketing','marketing_manager','campaign_team'), true) ? array('idlm_access_leads' => true) : array();
+}
+class WP_Role {
+    public $name; public $capabilities;
+    public function __construct($name, $caps) { $this->name=$name; $this->capabilities=$caps; }
+    public function has_cap($cap) { return !empty($this->capabilities[$cap]); }
+}
+function get_role($name) { return new WP_Role($name, idlm_test_role_caps($name)); }
+function user_can($user, string $cap): bool {
+    if (!is_object($user)) { $user=get_userdata((int) $user); } if (!$user) { return false; }
+    $caps=array();foreach((array)$user->roles as $name){$caps=array_merge($caps,idlm_test_role_caps($name));}
+    $caps=array_merge($caps,(array)($user->caps ?? array()));return !empty($caps[$cap]);
+}
+function maybe_unserialize($value) { $decoded=is_string($value)?@unserialize($value):false;return false === $decoded ? $value : $decoded; }
+
 function current_user_can(string $capability, ...$args): bool {
     return !empty($GLOBALS['idlm_test_caps'][$capability]);
 }
@@ -969,7 +1169,7 @@ function do_action(string $hook, ...$args): void {
 }
 
 function add_action(string $hook, $callback, int $priority = 10, int $accepted_args = 1): void {
-    $GLOBALS['idlm_test_hooks'][] = array('type' => 'action', 'hook' => $hook, 'callback' => $callback);
+    $GLOBALS['idlm_test_hooks'][] = array('type' => 'action', 'hook' => $hook, 'callback' => $callback, 'priority' => $priority);
 }
 
 function add_filter(string $hook, $callback, int $priority = 10, int $accepted_args = 1): void {
@@ -1095,6 +1295,14 @@ function wp_parse_url(string $url, int $component = -1) {
     return parse_url($url, $component);
 }
 
+function wp_safe_remote_get(string $url, array $args = array()) {
+    return $GLOBALS['idlm_test_remote_response'] ?? new WP_Error('remote_unavailable', 'No test response configured.');
+}
+
+function wp_remote_retrieve_header($response, string $header): string {
+    return (string) ($response['headers'][strtolower($header)] ?? '');
+}
+
 function is_wp_error($value): bool {
     return $value instanceof WP_Error;
 }
@@ -1125,6 +1333,10 @@ function plugin_dir_url(string $file): string {
 
 function wp_create_nonce(string $action): string {
     return 'test-nonce';
+}
+
+function wp_nonce_url(string $actionurl, string $action = '-1', string $name = '_wpnonce'): string {
+    return add_query_arg(array($name => wp_create_nonce($action)), $actionurl);
 }
 
 function wp_nonce_field(string $action, string $name = '_wpnonce'): void {
@@ -1171,17 +1383,39 @@ require_once dirname(__DIR__) . '/includes/class-state-registry.php';
 require_once dirname(__DIR__) . '/includes/class-lead-access-policy.php';
 require_once dirname(__DIR__) . '/includes/class-read-model-cache.php';
 require_once dirname(__DIR__) . '/includes/class-cursor-pagination.php';
+require_once dirname(__DIR__) . '/includes/class-schema-migration.php';
 require_once dirname(__DIR__) . '/includes/class-routing-state.php';
+require_once dirname(__DIR__) . '/includes/class-capi-delivery.php';
+require_once dirname(__DIR__) . '/includes/class-capi-transport.php';
+require_once dirname(__DIR__) . '/includes/class-google-conversion-feed.php';
 require_once dirname(__DIR__) . '/includes/class-data-retention.php';
 require_once dirname(__DIR__) . '/includes/class-db.php';
+require_once dirname(__DIR__) . '/includes/class-private-files.php';
+require_once dirname(__DIR__) . '/includes/class-recovery-guard.php';
+require_once dirname(__DIR__) . '/includes/class-lead-transaction.php';
+require_once dirname(__DIR__) . '/includes/class-lead-outbox.php';
+require_once dirname(__DIR__) . '/includes/class-presales-task-plan.php';
+require_once dirname(__DIR__) . '/includes/class-assignment-capacity.php';
+require_once dirname(__DIR__) . '/includes/class-backup-validator.php';
 require_once dirname(__DIR__) . '/includes/class-lead-lifecycle-service.php';
+require_once dirname(__DIR__) . '/includes/class-identity-review.php';
 require_once dirname(__DIR__) . '/includes/class-task-queue-service.php';
 require_once dirname(__DIR__) . '/includes/class-lead-deletion-service.php';
 require_once dirname(__DIR__) . '/includes/class-integrity-command.php';
+require_once dirname(__DIR__) . '/includes/class-handoff-notifications.php';
+require_once dirname(__DIR__) . '/includes/class-integration-auth.php';
+require_once dirname(__DIR__) . '/includes/class-webhook-intake.php';
+require_once dirname(__DIR__) . '/includes/class-google-feed-controller.php';
 require_once dirname(__DIR__) . '/includes/class-integrations.php';
+require_once dirname(__DIR__) . '/includes/class-audiences.php';
+require_once dirname(__DIR__) . '/includes/class-audience-dispatch.php';
 require_once dirname(__DIR__) . '/includes/class-scheduler.php';
+require_once dirname(__DIR__) . '/includes/class-whatsapp-inbox.php';
 require_once dirname(__DIR__) . '/includes/class-interakt.php';
+require_once dirname(__DIR__) . '/includes/class-lead-connector.php';
+require_once dirname(__DIR__) . '/includes/class-facebook-connect.php';
 require_once dirname(__DIR__) . '/includes/class-interakt-batch.php';
+require_once dirname(__DIR__) . '/includes/class-interakt-dispatch.php';
 require_once dirname(__DIR__) . '/includes/class-dashboard-read-model.php';
 require_once dirname(__DIR__) . '/includes/class-dashboard.php';
 require_once dirname(__DIR__) . '/includes/class-admin-dashboard-renderer.php';
@@ -1198,21 +1432,31 @@ require_once dirname(__DIR__) . '/includes/class-admin-account-controller.php';
 require_once dirname(__DIR__) . '/includes/class-admin-users-controller.php';
 require_once dirname(__DIR__) . '/includes/class-admin.php';
 require_once dirname(__DIR__) . '/includes/class-admin-lead-reads.php';
+require_once dirname(__DIR__) . '/includes/class-admin-connection-controller.php';
+require_once dirname(__DIR__) . '/includes/class-admin-telemetry-controller.php';
+require_once dirname(__DIR__) . '/includes/class-admin-activity-controller.php';
+require_once dirname(__DIR__) . '/includes/class-admin-task-controller.php';
+require_once dirname(__DIR__) . '/includes/class-admin-collection-reads.php';
 require_once dirname(__DIR__) . '/includes/class-admin-ajax.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-lead-read-model.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-policy.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-repository.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-schema.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-calculator.php';
+require_once dirname(__DIR__) . '/includes/class-quotation-catalogue-import.php';
+require_once dirname(__DIR__) . '/includes/class-quotation-document.php';
+require_once dirname(__DIR__) . '/includes/class-quotation-exporter.php';
 require_once dirname(__DIR__) . '/includes/class-quotations.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-controller.php';
 require_once dirname(__DIR__) . '/includes/class-quotation-renderer.php';
 
 // Dashboard role registry mirrors the production recognition helper.
 function wp_roles(): object {
-    return (object) array('roles' => array(
+    return (object) array('role_key' => 'wp_user_roles', 'roles' => array(
         'marketing' => array('name' => 'Marketing'),
         'marketing_manager' => array('name' => 'Marketing Manager'),
         'campaign_team' => array('name' => 'Marketing Manager'),
     ));
 }
+
+function doing_action($hook = null) { return false; }

@@ -1,0 +1,12 @@
+2026-10-07T04:16:16.320425Z 0 [System] [MY-015015] [Server] MySQL Server - start.
+2026-10-07T04:16:16.463195Z 0 [System] [MY-010116] [Server] /Users/shashi_protecto/Library/Application Support/Local/lightning-services/mysql-8.4.0+2/bin/darwin-arm64/bin/mysqld (mysqld 8.4.0) starting as process 99583
+2026-10-07T04:16:16.465372Z 0 [Warning] [MY-010159] [Server] Setting lower_case_table_names=2 because file system for /private/tmp/idlm-capacity-mysql/data/ is case insensitive
+2026-10-07T04:16:16.469491Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+2026-10-07T04:16:16.524403Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+2026-10-07T04:16:16.661906Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+2026-10-07T04:16:16.661924Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+2026-10-07T04:16:16.663576Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/private/tmp' in the path is accessible to all OS users. Consider choosing a different directory.
+2026-10-07T04:16:16.673456Z 0 [System] [MY-010931] [Server] /Users/shashi_protecto/Library/Application Support/Local/lightning-services/mysql-8.4.0+2/bin/darwin-arm64/bin/mysqld: ready for connections. Version: '8.4.0'  socket: '/private/tmp/idlm-capacity-mysql/mysql.sock'  port: 0  MySQL Community Server - GPL.
+2026-10-07T04:26:52.542078Z 0 [System] [MY-013172] [Server] Received SHUTDOWN from user <via user signal>. Shutting down mysqld (Version: 8.4.0).
+2026-10-07T04:26:53.052949Z 0 [System] [MY-010910] [Server] /Users/shashi_protecto/Library/Application Support/Local/lightning-services/mysql-8.4.0+2/bin/darwin-arm64/bin/mysqld: Shutdown complete (mysqld 8.4.0)  MySQL Community Server - GPL.
+2026-10-07T04:26:53.052966Z 0 [System] [MY-015016] [Server] MySQL Server - end.

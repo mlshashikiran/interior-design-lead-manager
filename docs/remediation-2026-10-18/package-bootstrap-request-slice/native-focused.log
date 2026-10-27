@@ -1,0 +1,4 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS active native connection fences restore/reset and stale epochs never execute or retry
+
+2 passed, 0 failed

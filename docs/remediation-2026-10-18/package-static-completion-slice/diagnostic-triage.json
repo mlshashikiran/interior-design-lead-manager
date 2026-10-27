@@ -1,0 +1,25 @@
+{
+  "builder": "Shashi",
+  "candidate": "1.102.83",
+  "gate": "PASS",
+  "REVIEW_REQUIRED": 0,
+  "diagnostics": [],
+  "carried_baseline": {
+    "errors": 136,
+    "warnings": 2042,
+    "review_required": 1521,
+    "justified": 656,
+    "release_channel_limit": 1
+  },
+  "release_channel": "Private managed ZIP; explicitly selected by user on 2026-10-18",
+  "source_changes_resolving_diagnostic_instances": 438,
+  "reviewed_source_exceptions_resolving_diagnostic_instances": 1740,
+  "exception_sites": 694,
+  "source_review": "source-review.json",
+  "final_gate": "final/plugin-check-summary.json",
+  "diagnostic_filters": [],
+  "checker_exclusions": [],
+  "blanket_file_ignores_added": false,
+  "CLOSED": false,
+  "production_release_approved": false
+}

@@ -1,0 +1,10 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T10-T17-N-QUO010-upgrade-preserves-commercial-states-pointers-times-and-all-revisions
+PASS T17-N-QUO010-old-completed-receipts-do-not-authorize-loss-or-guess-invalid-acceptance-links
+PASS T17-N-QUO010-lifecycle-read-marker-and-commit-failures-preserve-entire-commercial-aggregate
+PASS T17-C-QUO010-interrupted-and-competing-installers-never-rewrite-commercial-history
+PASS T10-N-QUO010-read-only-evidence-and-query-failures-do-not-block-ordinary-revision-history
+PASS T17-N-QUO010-legacy-shared-intake-retains-shared-flag-and-refuses-historical-pointer-guessing
+PASS T16-T17-N-QUO010-2.5.2-backup-roundtrip-and-recovery-retain-commercial-state-exactly
+
+8 passed, 0 failed

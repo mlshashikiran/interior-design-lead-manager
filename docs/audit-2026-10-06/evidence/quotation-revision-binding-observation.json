@@ -1,0 +1,22 @@
+{
+  "author": "Shashi",
+  "recorded_from": "Previously executed isolated tests/audit-quotation-probes.php --forged-new-revision output",
+  "environment": "Existing in-memory WordPress/DB test doubles; no configured site database",
+  "scenario": "QUO-S09-forged-new-revision",
+  "status": "FAIL",
+  "observed": {
+    "current_user_id": 7,
+    "current_user_caps": ["idlm_view_quotes", "idlm_create_quotes"],
+    "own_lead_id": 9,
+    "original_quote": {"id": 99, "lead_id": 10, "current_revision_id": 50},
+    "revision_id": 50,
+    "revision_quote_id_before": 99,
+    "revision_quote_id_after": 100,
+    "revision_subtotal_after": 100,
+    "revision_grand_total_after": 118,
+    "new_quote": {"id": 100, "lead_id": 9, "owner_user_id": 7},
+    "new_quote_current_revision_pointer_written": false,
+    "original_quote_current_revision_pointer_after": 50
+  },
+  "limitation": "This records the earlier test-double handler observation. No native database or HTTP reproduction was executed by this reviewer."
+}

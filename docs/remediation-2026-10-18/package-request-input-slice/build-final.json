@@ -1,0 +1,39 @@
+{
+    "schema": "idlm-release-artifact/v1",
+    "mode": "build",
+    "author_builder": "Shashi",
+    "version": "1.102.81",
+    "version_aligned": true,
+    "revision": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+    "git_clean": false,
+    "changed_entry_count": 268,
+    "ci": {
+        "provider": "local",
+        "attested": false,
+        "run_id": "",
+        "matrix_passed": false,
+        "revision_matches": false
+    },
+    "inventory": {
+        "valid": true,
+        "errors": [],
+        "file_count": 453,
+        "total_bytes": 14067259
+    },
+    "artifact_status": "local_rehearsal_only",
+    "production_release_approved": false,
+    "blockers": [
+        "working_tree_dirty",
+        "ci_attestation_missing"
+    ],
+    "build_requested": true,
+    "artifact": {
+        "artifact": "interior-design-lead-manager-1.102.81.zip",
+        "manifest": "interior-design-lead-manager-1.102.81.manifest.json",
+        "checksum_file": "interior-design-lead-manager-1.102.81.sha256",
+        "sha256": "939801e027b993693d47a499ca29fce32a83e445fe583b227babdc60f096cec3",
+        "size_bytes": 5221187,
+        "file_count": 453,
+        "inspection_valid": true
+    }
+}

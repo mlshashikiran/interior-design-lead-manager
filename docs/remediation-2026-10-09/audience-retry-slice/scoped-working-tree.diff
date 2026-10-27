@@ -1,0 +1,743 @@
+--- baseline/includes/class-audiences.php
++++ candidate/includes/class-audiences.php
+@@ -88,77 +88,48 @@
+     /**
+      * Daily 2:00 AM Cron/Scheduler Batch Sync executor
+      */
+-    public static function run_batch_sync() {
+-        return IDLM_Recovery_Guard::run(static function() { return self::run_batch_sync_work(); }, null, false, '', array());
+-    }
+-
+-    private static function run_batch_sync_work() {
++    public static function run_batch_sync($manual_only = false) {
++        return IDLM_Audience_Dispatch::run((bool) $manual_only);
++    }
++
++    public static function has_credentials($rule) {
++        if ($rule['platform'] === 'google') { return true; } // Pull mapping, not an upload.
++        return (bool) get_option('idlm_' . $rule['platform'] . '_access_token', '');
++    }
++
++    /** The same nonduplicate and current rule predicate serves scheduled and pull reads. */
++    public static function rule_conditions($rule) {
+         global $wpdb;
+-        $table_leads = $wpdb->prefix . 'idlm_leads';
+-
+-        $active_rules = self::get_active_rules();
+-
+-        if (empty($active_rules)) {
+-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+-            error_log('IDLM Custom Audience Sync: No active audience rules found.');
+-            return;
+-        }
+-
+-        // Fetch manual bulk sync queue from WP options
+-        $queue_leads = get_option('idlm_audience_sync_queue', array());
+-
+-        $total_processed_rules = 0;
+-
+-        foreach ($active_rules as $rule) {
+-            $conditions = array("is_duplicate = 0");
+-
+-            if ($rule['stage'] !== 'all') {
+-                $conditions[] = $wpdb->prepare("stage = %s", $rule['stage']);
+-            }
+-            if ($rule['call_status'] !== 'all') {
+-                $conditions[] = $wpdb->prepare("call_status = %s", $rule['call_status']);
+-            }
+-            if ($rule['lead_quality'] !== 'all') {
+-                $conditions[] = $wpdb->prepare("lead_quality = %s", $rule['lead_quality']);
+-            }
+-
+-            $where_clause = implode(" AND ", $conditions);
+-
+-            if (!empty($queue_leads)) {
+-                $lead_ids_in = implode(',', array_map('intval', $queue_leads));
+-                $query = "SELECT * FROM {$table_leads} WHERE (id IN ($lead_ids_in) OR ({$where_clause}))";
+-            } else {
+-                $query = "SELECT * FROM {$table_leads} WHERE {$where_clause}";
+-            }
+-
+-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+-            $leads = $wpdb->get_results($query);
+-
+-            if (empty($leads)) {
+-                // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+-                error_log("IDLM Custom Audience Sync: No leads matched filter rules for audience segment URN: {$rule['audience_id']}.");
+-                continue;
+-            }
+-
+-            // Sync to designated platform
+-            if ($rule['platform'] === 'meta') {
+-                $is_val = isset($rule['is_value']) && $rule['is_value'] == '1';
+-                self::sync_to_meta($leads, $rule['audience_id'], $is_val);
+-            } elseif ($rule['platform'] === 'google') {
+-                self::sync_to_google($leads, $rule['audience_id']);
+-            } elseif ($rule['platform'] === 'linkedin') {
+-                self::sync_to_linkedin($leads, $rule['audience_id']);
+-            }
+-            $total_processed_rules++;
+-        }
+-
+-        // Clear manual queue after successful sync run
+-        if (!empty($queue_leads)) {
+-            update_option('idlm_audience_sync_queue', array());
+-        }
+-
+-        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+-        error_log("IDLM Custom Audience Sync completed: processed {$total_processed_rules} sync rules.");
++        $conditions = array('is_duplicate = 0');
++        foreach (array('stage', 'call_status', 'lead_quality') as $field) {
++            if (!empty($rule[$field]) && $rule[$field] !== 'all') { $conditions[] = $wpdb->prepare("{$field} = %s", $rule[$field]); }
++        }
++        return implode(' AND ', $conditions);
++    }
++
++    /** Return an explicit outcome; the dispatcher owns the log/state transaction. */
++    public static function send_page($leads, $rule) {
++        if ($rule['platform'] === 'meta') { return self::sync_to_meta($leads, $rule['audience_id'], !empty($rule['is_value']) && (string) $rule['is_value'] === '1'); }
++        if ($rule['platform'] === 'linkedin') { return self::sync_to_linkedin($leads, $rule['audience_id']); }
++        return array('status'=>'sent', 'payload'=>array('mode'=>'pull'), 'response'=>'Pull feed mapped; provider consumption is not confirmed.', 'retry_after'=>0);
++    }
++
++    private static function outcome($response, $payload, $success_codes) {
++        if (is_wp_error($response)) { return array('status'=>'uncertain','payload'=>$payload,'response'=>$response->get_error_message(),'retry_after'=>0); }
++        $code=(int) wp_remote_retrieve_response_code($response); $body=wp_remote_retrieve_body($response);
++        $decoded=json_decode($body,true); $valid=is_array($decoded) || trim($body)==='';
++        $partial=!empty($decoded['num_invalid_entries']);
++        foreach (is_array($decoded['elements'] ?? null) ? $decoded['elements'] : array() as $element) {
++            if (is_array($element) && (!empty($element['error']) || isset($element['status']) && (int)$element['status']>=400)) { $partial=true; }
++        }
++        if (in_array($code,$success_codes,true) && $partial) { $status='uncertain'; }
++        elseif (in_array($code,$success_codes,true) && $valid && empty($decoded['error'])) { $status='sent'; }
++        elseif ($code===429 || $code>=500 && $code<=599 || !empty($decoded['error']['is_transient'])) { $status='failed'; }
++        elseif ($code>=400 && $code<=499 || !empty($decoded['error'])) { $status='blocked'; }
++        else { $status='uncertain'; }
++        $retry=wp_remote_retrieve_header($response,'retry-after');
++        $delay=is_scalar($retry) && ctype_digit((string)$retry) ? (int)$retry : (is_string($retry) ? max(0,(int)strtotime($retry)-time()) : 0);
++        return array('status'=>$status,'payload'=>$payload,'response'=>$body,'retry_after'=>min(3600,max(0,$delay)));
+     }
+ 
+     /**
+@@ -172,7 +143,7 @@
+         $access_token = get_option('idlm_meta_access_token');
+ 
+         if (empty($audience_id) || empty($access_token)) {
+-            return;
++            return array('status'=>'blocked','payload'=>array(),'response'=>'Credentials missing.','retry_after'=>0);
+         }
+ 
+         $schema = array('EMAIL', 'PHONE', 'FN', 'LN');
+@@ -205,28 +176,14 @@
+ 
+         $endpoint = "https://graph.facebook.com/v25.0/{$audience_id}/users?access_token={$access_token}";
+ 
+-        if (!IDLM_Recovery_Guard::lease_valid()) { return false; }
++        if (!IDLM_Recovery_Guard::lease_valid()) { return array('status'=>'uncertain','payload'=>array(),'response'=>'Worker fence lost.','retry_after'=>0); }
+         $response = wp_remote_post($endpoint, array(
+             'headers' => array('Content-Type' => 'application/json'),
+             'body'    => json_encode($payload),
+             'timeout' => 30
+         ));
+ 
+-        // Log upload status in global logs
+-        if (!IDLM_Recovery_Guard::lease_valid()) { return false; }
+-        if (is_wp_error($response)) {
+-            // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+-            error_log('IDLM Custom Audience Meta sync failed: ' . $response->get_error_message());
+-            IDLM_DB::log_audience_sync('meta', $audience_id, count($leads), $payload, $response->get_error_message(), 'failed');
+-        } else {
+-            $code = wp_remote_retrieve_response_code($response);
+-            $response_body = wp_remote_retrieve_body($response);
+-            if ($code == 200) {
+-                IDLM_DB::log_audience_sync('meta', $audience_id, count($leads), $payload, $response_body, 'success');
+-            } else {
+-                IDLM_DB::log_audience_sync('meta', $audience_id, count($leads), $payload, $response_body, 'failed');
+-            }
+-        }
++        return self::outcome($response, $payload, array(200));
+     }
+ 
+     /**
+@@ -238,19 +195,7 @@
+     public static function get_leads_matching_rule($rule) {
+         global $wpdb;
+         $table_leads = $wpdb->prefix . 'idlm_leads';
+-        $conditions = array("is_duplicate = 0");
+-
+-        if (!empty($rule['stage']) && $rule['stage'] !== 'all') {
+-            $conditions[] = $wpdb->prepare("stage = %s", $rule['stage']);
+-        }
+-        if (!empty($rule['call_status']) && $rule['call_status'] !== 'all') {
+-            $conditions[] = $wpdb->prepare("call_status = %s", $rule['call_status']);
+-        }
+-        if (!empty($rule['lead_quality']) && $rule['lead_quality'] !== 'all') {
+-            $conditions[] = $wpdb->prepare("lead_quality = %s", $rule['lead_quality']);
+-        }
+-
+-        $where_clause = implode(" AND ", $conditions);
++        $where_clause = self::rule_conditions($rule);
+         $query = "SELECT * FROM {$table_leads} WHERE {$where_clause}";
+ 
+         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared
+@@ -297,16 +242,6 @@
+     }
+ 
+     /**
+-     * Sync to Google Ads (Pull Feed Logging)
+-     */
+-    private static function sync_to_google($leads, $user_list_name = '') {
+-        $list_name = basename(trim($user_list_name));
+-        $lead_count = count($leads);
+-        
+-        IDLM_DB::log_audience_sync('google', $list_name, $lead_count, array('mode' => 'pull'), 'Pull Feed Active. Leads mapped: ' . $lead_count, 'success');
+-    }
+-
+-    /**
+      * Sync to LinkedIn Contact Segment
+      */
+     private static function sync_to_linkedin($leads, $segment_urn = '') {
+@@ -316,7 +251,7 @@
+         $access_token = get_option('idlm_linkedin_access_token');
+ 
+         if (empty($segment_urn) || empty($access_token)) {
+-            return;
++            return array('status'=>'blocked','payload'=>array(),'response'=>'Credentials missing.','retry_after'=>0);
+         }
+ 
+         $elements = array();
+@@ -338,7 +273,7 @@
+         // LinkedIn custom lists API segment mutate
+         $endpoint = "https://api.linkedin.com/v2/adSegments/{$segment_urn}/contacts";
+ 
+-        if (!IDLM_Recovery_Guard::lease_valid()) { return false; }
++        if (!IDLM_Recovery_Guard::lease_valid()) { return array('status'=>'uncertain','payload'=>array(),'response'=>'Worker fence lost.','retry_after'=>0); }
+         $response = wp_remote_post($endpoint, array(
+             'headers' => array(
+                 'Authorization' => 'Bearer ' . $access_token,
+@@ -348,17 +283,6 @@
+             'timeout' => 30
+         ));
+ 
+-        if (!IDLM_Recovery_Guard::lease_valid()) { return false; }
+-        if (!is_wp_error($response)) {
+-            $code = wp_remote_retrieve_response_code($response);
+-            $response_body = wp_remote_retrieve_body($response);
+-            if ($code == 200 || $code == 201) {
+-                IDLM_DB::log_audience_sync('linkedin', basename($segment_urn), count($leads), $payload, $response_body, 'success');
+-            } else {
+-                IDLM_DB::log_audience_sync('linkedin', basename($segment_urn), count($leads), $payload, $response_body, 'failed');
+-            }
+-        } else {
+-            IDLM_DB::log_audience_sync('linkedin', basename($segment_urn), count($leads), $payload, $response->get_error_message(), 'failed');
+-        }
++        return self::outcome($response, $payload, array(200, 201));
+     }
+ }
+--- baseline/includes/class-admin-ajax.php
++++ candidate/includes/class-admin-ajax.php
+@@ -971,9 +971,9 @@
+         }
+ 
+         // Trigger the batch sync immediately
+-        IDLM_Audiences::run_batch_sync();
+-
+-        wp_send_json_success(array('message' => 'Custom Audience background batch sync triggered!'));
++        $result = IDLM_Audiences::run_batch_sync(true);
++        if (is_wp_error($result)) { wp_send_json_error(array('message'=>$result->get_error_message()), 409); }
++        wp_send_json_success(array('message'=>'Selected audience work processed. Failed or uncertain work remains queued; Google mapping does not confirm a provider pull.', 'outcomes'=>$result));
+     }
+ 
+     /**
+@@ -1558,15 +1558,16 @@
+                 wp_send_json_success(array('message' => 'Successfully marked selected leads as Unqualified.'));
+                 break;
+ 
++            case 'bulk_audience_cancel':
++                $result = IDLM_Audience_Dispatch::cancel($ids);
++                if (is_wp_error($result) || false === $result) { wp_send_json_error(array('message'=>is_wp_error($result) ? $result->get_error_message() : 'Audience work is busy. Retry shortly.'), 409); }
++                wp_send_json_success(array('message'=>'Selected manual audience work removed. Unknown delivery outcomes remain blocked.', 'removed_count'=>$result['removed']));
++                break;
++
+             case 'bulk_audience_queue':
+-                $queue = get_option('idlm_audience_sync_queue', array());
+-                $new_queue = array_unique(array_merge($queue, $ids));
+-                update_option('idlm_audience_sync_queue', $new_queue);
+-
+-                foreach ($ids as $id) {
+-                    IDLM_DB::log_activity($id, 'audience_queue', 'Lead manually added to 2:00 AM custom audience sync queue.', 0);
+-                }
+-                wp_send_json_success(array('message' => 'Selected leads added to 2:00 AM audience batch sync queue.'));
++                $result = IDLM_Audience_Dispatch::enqueue($ids);
++                if (is_wp_error($result) || false === $result) { wp_send_json_error(array('message'=>is_wp_error($result) ? $result->get_error_message() : 'Audience queue is busy. Retry shortly.'), 409); }
++                wp_send_json_success(array('message'=>'Selected leads queued. Current audience exclusions apply at dispatch.', 'queued_count'=>$result['queued']));
+                 break;
+ 
+             case 'bulk_delete':
+--- baseline/includes/class-db.php
++++ candidate/includes/class-db.php
+@@ -1148,7 +1148,7 @@
+         $table_audience_logs = $wpdb->prefix . 'idlm_audience_sync_logs';
+ 
+         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+-        $wpdb->insert($table_audience_logs, array(
++        $saved = $wpdb->insert($table_audience_logs, array(
+             'platform' => $platform,
+             'audience_id' => $audience_id,
+             'lead_count' => $lead_count,
+@@ -1157,5 +1157,6 @@
+             'status' => $status,
+             'created_at' => current_time('mysql')
+         ));
++        return 1 === $saved ? (int) $wpdb->insert_id : 0;
+     }
+ }
+--- baseline/includes/class-scheduler.php
++++ candidate/includes/class-scheduler.php
+@@ -7,6 +7,8 @@
+     public static function init() {
+         // Register the activation schedule setup
+         add_action('wp', array(__CLASS__, 'setup_schedules'));
++
++        add_action(IDLM_Audience_Dispatch::HOOK, array('IDLM_Audience_Dispatch', 'resume'), 10, 3);
+ 
+         // Action Scheduler hooks
+         add_action('idlm_daily_audience_sync', array('IDLM_Audiences', 'run_batch_sync'));
+@@ -65,6 +67,8 @@
+     public static function clear_schedules() {
+         if (function_exists('as_unschedule_all_actions')) { as_unschedule_all_actions(IDLM_Lead_Outbox::HOOK); }
+         wp_clear_scheduled_hook(IDLM_Lead_Outbox::HOOK);
++        if (function_exists('as_unschedule_all_actions')) { as_unschedule_all_actions(IDLM_Audience_Dispatch::HOOK); }
++        wp_clear_scheduled_hook(IDLM_Audience_Dispatch::HOOK);
+         if (function_exists('as_unschedule_all_actions')) {
+             as_unschedule_all_actions('idlm_daily_audience_sync');
+             as_unschedule_all_actions('idlm_hourly_assignment_fallback');
+--- baseline/includes/class-backup.php
++++ candidate/includes/class-backup.php
+@@ -43,7 +43,7 @@
+         $option_name = strtolower($option_name); // Match protected names under native case-insensitive option collation.
+         if (0 !== strpos($option_name, 'idlm_') || self::core_migration_option($option_name) || 'idlm_duplicate_touchpoint_backfill_cursor_v2' === $option_name) { return false; }
+         if (in_array($option_name, array('idlm_retention_progress', 'idlm_quotation_migration_status', 'idlm_crm_access_policy_version', 'idlm_read_cache_generation', 'idlm_private_file_schema_version', 'idlm_private_file_migration_cursor', 'idlm_private_file_migration_status', 'idlm_schema_version', 'idlm_quotation_schema_version', 'idlm_plugin_activated_at', 'idlm_roles_version', 'idlm_legacy_quote_migration_version', 'idlm_quotation_snapshot_migration_version'), true)) { return false; }
+-        if (preg_match('/^idlm_(?:recovery_|rc_|fallback_last_|interakt_batch_|interakt_dispatch_|capi_retry_|capi_delivery_|whatsapp_receipt_|audience_sync_queue$|.*(?:migration|schema|retention|payload).*version$|.*_lock_|.*rate_limit)/', $option_name)) { return false; }
++        if (preg_match('/^idlm_(?:recovery_|rc_|fallback_last_|interakt_batch_|interakt_dispatch_|capi_retry_|capi_delivery_|audience_work_|audience_scan$|whatsapp_receipt_|audience_sync_queue$|.*(?:migration|schema|retention|payload).*version$|.*_lock_|.*rate_limit)/', $option_name)) { return false; }
+         return !preg_match('/(?:_api_key|_access_token|_password|_secret|_verify_token|credential)/i', $option_name);
+     }
+ 
+@@ -213,7 +213,7 @@
+             $names = $wpdb->get_col("SELECT option_name FROM {$wpdb->options}"); if ($wpdb->last_error) { return self::failure(); }
+             $clear = array();
+             foreach ($names as $name) {
+-                if (self::backup_option($name) || strpos($name, 'idlm_interakt_batch_') === 0 || strpos($name, 'idlm_interakt_dispatch_') === 0 || strpos($name, 'idlm_capi_retry_') === 0 || $name === 'idlm_audience_sync_queue' || preg_match('/^_transient_(?:timeout_)?idlm_quote_autosave_/', $name)) {
++                if (self::backup_option($name) || strpos($name, 'idlm_interakt_batch_') === 0 || strpos($name, 'idlm_interakt_dispatch_') === 0 || strpos($name, 'idlm_capi_retry_') === 0 || $name === 'idlm_audience_sync_queue' || $name === IDLM_Audience_Dispatch::SCAN || strpos($name, IDLM_Audience_Dispatch::PREFIX) === 0 || preg_match('/^_transient_(?:timeout_)?idlm_quote_autosave_/', $name)) {
+                     $clear[] = $name; if (false === $wpdb->delete($wpdb->options, array('option_name'=>$name))) { return self::failure(); }
+                 }
+             }
+@@ -238,7 +238,7 @@
+     }
+ 
+     private static function cancel_queued_jobs() {
+-        $hooks = array('idlm_async_capi_upload_event', 'idlm_async_interakt_track_event', 'idlm_async_interakt_batch_event');
++        $hooks = array('idlm_async_capi_upload_event', 'idlm_async_interakt_track_event', 'idlm_async_interakt_batch_event', IDLM_Audience_Dispatch::HOOK);
+         foreach ($hooks as $hook) {
+             if (function_exists('as_unschedule_all_actions')) { as_unschedule_all_actions($hook); }
+             wp_unschedule_hook($hook);
+--- baseline/includes/class-lead-deletion-service.php
++++ candidate/includes/class-lead-deletion-service.php
+@@ -93,11 +93,12 @@
+         }
+ 
+         $runtime_options = $wpdb->get_col($wpdb->prepare(
+-            "SELECT option_name FROM {$wpdb->prefix}options WHERE option_name IN ('idlm_audience_sync_queue', 'idlm_legacy_quote_migration_version', 'idlm_quotation_snapshot_migration_version') OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s",
++            "SELECT option_name FROM {$wpdb->prefix}options WHERE option_name IN ('idlm_audience_sync_queue', 'idlm_audience_scan', 'idlm_legacy_quote_migration_version', 'idlm_quotation_snapshot_migration_version') OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s",
+             $wpdb->esc_like('idlm_interakt_batch_') . '%',
+             $wpdb->esc_like('idlm_interakt_dispatch_') . '%',
+             $wpdb->esc_like('idlm_capi_retry_') . '%',
+-            $wpdb->esc_like(IDLM_CAPI_Delivery::PREFIX) . '%'
++            $wpdb->esc_like(IDLM_CAPI_Delivery::PREFIX) . '%',
++            $wpdb->esc_like(IDLM_Audience_Dispatch::PREFIX) . '%'
+         ));
+         if ($wpdb->last_error) {
+             $wpdb->query('ROLLBACK');
+@@ -147,6 +148,7 @@
+             array('idlm_async_capi_upload_event', ''),
+             array('idlm_async_interakt_track_event', 'idlm-interakt'),
+             array('idlm_async_interakt_batch_event', 'idlm-interakt'),
++            array(IDLM_Audience_Dispatch::HOOK, ''),
+         );
+         $wp_cron_hooks = array_column($action_scheduler_hooks, 0);
+ 
+@@ -181,6 +183,7 @@
+         $engine = $wpdb->get_var($wpdb->prepare('SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s', $wpdb->prefix . 'idlm_inbound_submission_reviews'));
+         if ($wpdb->last_error || 'INNODB' !== strtoupper((string) $engine)) { return new WP_Error('idlm_delete_review_engine', 'Review erasure requires InnoDB. No data was removed.'); }
+         if (false === $wpdb->query('START TRANSACTION')) { return new WP_Error('idlm_delete_transaction', 'Unable to start the lead deletion transaction.'); }
++        if (!IDLM_Audience_Dispatch::erase_leads($ids)) { $wpdb->query('ROLLBACK'); return new WP_Error('idlm_delete_audience', 'Audience work erasure failed. Deletion rolled back.'); }
+         if (!IDLM_CAPI_Delivery::erase_leads($ids)) { $wpdb->query('ROLLBACK'); return new WP_Error('idlm_delete_capi', 'CAPI delivery evidence erasure failed. Deletion rolled back.'); }
+         if (!IDLM_Identity_Review::erase_leads($ids)) { $wpdb->query('ROLLBACK'); return new WP_Error('idlm_delete_review', 'Identity review erasure failed. Deletion rolled back.'); }
+         if (!IDLM_Private_Files::erase_leads($ids)) { $wpdb->query('ROLLBACK'); return new WP_Error('idlm_delete_files', 'Private file cleanup could not be prepared. Deletion rolled back.'); }
+--- baseline/interior-design-lead-manager.php
++++ candidate/interior-design-lead-manager.php
+@@ -3,7 +3,7 @@
+  * Plugin Name:       Interior Design Lead Manager
+  * Plugin URI:        https://github.com/shashi-protecto/interior-design-lead-manager
+  * Description:       A premium lead management system to replace Google Sheets and Pabbly for interior design firms. Captures leads from ad webhooks, manages routing, schedules custom audience batch uploads, triggers conversions server-side using Action Scheduler, and includes a full analytics workspace.
+- * Version:           1.102.69
++ * Version:           1.102.70
+  * Requires PHP:      7.4
+  * Author:            Shashi
+  * License:           GPL-2.0+
+@@ -15,7 +15,7 @@
+ }
+ 
+ // Define Plugin Constants
+-define('IDLM_VERSION', '1.102.69');
++define('IDLM_VERSION', '1.102.70');
+ define('IDLM_DB_VERSION', '1.3.9');
+ define('IDLM_PATH', plugin_dir_path(__FILE__));
+ define('IDLM_URL', plugin_dir_url(__FILE__));
+@@ -58,6 +58,7 @@
+ require_once IDLM_PATH . 'includes/class-interakt-batch.php';
+ require_once IDLM_PATH . 'includes/class-interakt-dispatch.php';
+ require_once IDLM_PATH . 'includes/class-audiences.php';
++require_once IDLM_PATH . 'includes/class-audience-dispatch.php';
+ require_once IDLM_PATH . 'includes/class-dashboard-read-model.php';
+ require_once IDLM_PATH . 'includes/class-dashboard.php';
+ require_once IDLM_PATH . 'includes/class-whatsapp-inbox.php';
+--- baseline/readme.txt
++++ candidate/readme.txt
+@@ -3,7 +3,7 @@
+ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
+ Requires at least: 5.8
+ Tested up to: 7.0
+-Stable tag: 1.102.69
++Stable tag: 1.102.70
+ License: GPLv2 or later
+ License URI: http://www.gnu.org/licenses/gpl-2.0.html
+ 
+--- baseline/CHANGELOG.md
++++ candidate/CHANGELOG.md
+@@ -1,4 +1,9 @@
+ # Changelog
++
++## [1.102.70] - 2026-10-09
++### Fixed
++- Preserve manual audience work per lead/rule, apply current exclusions, and report confirmed, rejected or uncertain outcomes with bounded retries and pages. Selected retry no longer scans unrelated contacts. Builder: Shashi.
++- Commit audience claims before provider HTTP and acknowledge logs/outcomes atomically; serialize overlapping runs and fence recovery callbacks. Add manual queue removal and clear runtime state on restore, erasure and reset. Builder: Shashi.
+ 
+ ## [1.102.69] - 2026-10-09
+ 
+--- baseline/docs/CHANGELOG-DEV.md
++++ candidate/docs/CHANGELOG-DEV.md
+@@ -1,4 +1,8 @@
+ # Engineering Change Log
++
++## 1.102.70 — INT-009 audience manual work and exclusions (2026-10-09)
++
++Shashi: `IDLM_Audience_Dispatch` owns minimal nonautoload per-lead/rule claims, manual selection snapshots, bounded pages/cursors, rejection retry limits, unknown-outcome fences and a database session lock. Audience adapters return explicit page outcomes; audit logs and acknowledgements commit together. AJAX now reports outcomes and selected-only manual dispatch; shared lead controls support queue removal. Current nonduplicate/stage/call/quality predicates apply to both manual and scheduled work. Restore/reset clear runtime state; lead erasure removes its work and queue ID. Schemas unchanged; local implementation, provider/artifact qualification pending.
+ 
+ ## 2026-10-09 — Retention-independent CAPI delivery evidence
+ 
+--- baseline/docs/PRODUCTION-SCALABILITY-PLAN.md
++++ candidate/docs/PRODUCTION-SCALABILITY-PLAN.md
+@@ -4,7 +4,7 @@
+ Status: Approved staged plan; Phases 0 through 9 are in progress  
+ Prepared: 2026-08-30  
+ Planning release: 1.98.2  
+-Current implementation release: 1.102.69
++Current implementation release: 1.102.70
+ Baseline implementation: 1.98.1
+ 
+ ## Objective
+--- baseline/tests/bootstrap.php
++++ candidate/tests/bootstrap.php
+@@ -1368,6 +1368,8 @@
+ require_once dirname(__DIR__) . '/includes/class-lead-deletion-service.php';
+ require_once dirname(__DIR__) . '/includes/class-integrity-command.php';
+ require_once dirname(__DIR__) . '/includes/class-integrations.php';
++require_once dirname(__DIR__) . '/includes/class-audiences.php';
++require_once dirname(__DIR__) . '/includes/class-audience-dispatch.php';
+ require_once dirname(__DIR__) . '/includes/class-scheduler.php';
+ require_once dirname(__DIR__) . '/includes/class-whatsapp-inbox.php';
+ require_once dirname(__DIR__) . '/includes/class-interakt.php';
+--- baseline/tests/run.php
++++ candidate/tests/run.php
+@@ -1730,6 +1730,7 @@
+ require_once __DIR__ . '/capi-retention-contracts.php';
+ require_once __DIR__ . '/whatsapp-inbound-contracts.php';
+ require_once __DIR__ . '/google-audience-contracts.php';
++require_once __DIR__ . '/audience-retry-contracts.php';
+ require_once __DIR__ . '/dashboard-contracts.php';
+ require_once __DIR__ . '/schema-migration-contracts.php';
+ require_once __DIR__ . '/lifecycle-persistence-contracts.php';
+--- baseline/tests/release-contracts.php
++++ candidate/tests/release-contracts.php
+@@ -27,7 +27,7 @@
+ idlm_test('Phase 9 release metadata authorities remain aligned', static function(): void {
+     $evidence = IDLM_Release_Artifact::version_evidence(dirname(__DIR__));
+     assert_true($evidence['aligned']);
+-    assert_same('1.102.69', $evidence['version']);
++    assert_same('1.102.70', $evidence['version']);
+     assert_count_value(5, $evidence['sources']);
+     assert_count_value(1, array_unique(array_values($evidence['sources'])));
+ });
+--- baseline/tests/release/class-release-artifact.php
++++ candidate/tests/release/class-release-artifact.php
+@@ -29,6 +29,7 @@
+             'includes/class-backup-validator.php',
+             'includes/class-recovery-guard.php',
+             'includes/class-capi-delivery.php',
++            'includes/class-audience-dispatch.php',
+             'includes/class-integrations.php',
+             'includes/class-mcp-query-policy.php',
+             'includes/class-quotations.php',
+--- baseline/tests/integration/run.php
++++ candidate/tests/integration/run.php
+@@ -825,6 +825,7 @@
+     require_once __DIR__ . '/capi-retention-contracts.php';
+     require_once __DIR__ . '/whatsapp-inbound-contracts.php';
+     require_once __DIR__ . '/google-audience-contracts.php';
++    require_once __DIR__ . '/audience-retry-contracts.php';
+ 
+     $passed = 0;
+     $failed = 0;
+--- baseline/tests/integration/worker.php
++++ candidate/tests/integration/worker.php
+@@ -15,6 +15,19 @@
+     idlm_integration_load_plugin($config);
+ 
+     $mode = $argv[1] ?? '';
++    if (in_array($mode,array('audience-crash','audience-race'),true)) {
++        if ($mode==='audience-race') {
++            $barrier=WP_CONTENT_DIR.'/audience-barrier';file_put_contents($barrier,getmypid()."\n",FILE_APPEND|LOCK_EX);$deadline=microtime(true)+10;
++            while(count(file($barrier,FILE_IGNORE_NEW_LINES))<2){if(microtime(true)>$deadline){throw new RuntimeException('Audience barrier timed out');}usleep(10000);}
++        }
++        add_filter('pre_http_request',static function($pre,$args,$url)use($mode){
++            if(strpos($url,'/users?')===false){return $pre;}
++            file_put_contents(WP_CONTENT_DIR.'/audience-provider.log',"synthetic accepted\n",FILE_APPEND|LOCK_EX);
++            if($mode==='audience-crash'){exit(77);}usleep(300000);return array('response'=>array('code'=>200),'body'=>'{}','headers'=>array());
++        },PHP_INT_MAX,3);
++        $r=IDLM_Audiences::run_batch_sync(true);echo is_wp_error($r)?'busy':wp_json_encode($r);exit(0);
++    }
++
+     if (in_array($mode,array('wa-beforecommit','wa-aftercommit','wa-race'),true)) {
+         if ($mode==='wa-race') { $barrier=WP_CONTENT_DIR.'/wa-barrier';file_put_contents($barrier,getmypid()."\n",FILE_APPEND|LOCK_EX);$deadline=microtime(true)+10;while(count(file($barrier,FILE_IGNORE_NEW_LINES))<2){if(microtime(true)>$deadline){throw new RuntimeException('WhatsApp barrier timeout');}usleep(10000);} }
+         if ($mode==='wa-beforecommit') { add_filter('query',static function($sql){if(strpos($sql,'INSERT INTO `wp_options`')===0 && strpos($sql,'idlm_whatsapp_receipt_')!==false){exit(77);}return $sql;}); }
+--- baseline/tests/integration/quotation-http.php
++++ candidate/tests/integration/quotation-http.php
+@@ -119,6 +119,12 @@
+         idlm_http_check(!empty($sessions[$actor]['save']), 'Cookie-authenticated session missing');
+     }
+     echo 'ENV PHP=' . PHP_VERSION . ' WP=' . $wp_version . ' DB=' . $wpdb->db_version() . " scheduler=WP-Cron cache=off\n";
++    if (in_array('--audience-retry-only', $argv, true)) {
++        idlm_http_check(idlm_http_request('/login',array('user_login'=>'idlm_admin','user_password'=>'idlm-integration-password'),'admin')['status']===302,'Administrator login failed');
++        $sessions['admin']=json_decode(idlm_http_request('/session',array(),'admin',false)['body'],true);
++        require __DIR__.'/audience-retry-http-cases.php';
++        echo "$passed passed, $failed failed\n";idlm_http_cleanup();exit($failed?1:0);
++    }
+     if (in_array('--capi-retention-only', $argv, true)) {
+         idlm_http_check(idlm_http_request('/login',array('user_login'=>'idlm_admin','user_password'=>'idlm-integration-password'),'admin')['status']===302,'Administrator login failed');
+         $sessions['admin']=json_decode(idlm_http_request('/session',array(),'admin',false)['body'],true);
+@@ -319,6 +325,7 @@
+     require __DIR__ . '/capi-retention-http-cases.php';
+     require __DIR__ . '/whatsapp-inbound-http-cases.php';
+     require __DIR__ . '/google-audience-http-cases.php';
++    require __DIR__ . '/audience-retry-http-cases.php';
+     { $errors=is_file($config['content_dir'].'/php-errors.log') ? file_get_contents($config['content_dir'].'/php-errors.log') : ''; idlm_http_case('T10-H-warning-free-affected-requests',static function() use($errors): void { idlm_http_check(trim($errors)==='', 'PHP diagnostics: ' . $errors); }); }
+     echo "$passed passed, $failed failed\n";
+     if (in_array('--hold', $argv,true)) { if (getenv('IDLM_TEST_DOCUMENT_EVIDENCE_DIR') && function_exists('idlm_document_http_settings')) { update_option('idlm_quote_settings', idlm_document_http_settings('Changed live', 'USD'), false); } echo 'BROWSER URL='.$config['http_url'].' LEAD='.$leads[4].' QUOTE='.$quotes[4].' STOP='.$config['content_dir']."/stop\n"; $deadline=microtime(true)+900; while (!is_file($config['content_dir'].'/stop') && microtime(true)<$deadline) { usleep(100000); } }
+--- baseline/tests/integration/http-router.php
++++ candidate/tests/integration/http-router.php
+@@ -138,6 +138,16 @@
+     },PHP_INT_MAX,3);
+     add_action('wp_ajax_idlm_retry_capi_events',static function(){error_reporting(E_ALL);set_error_handler(static function($level,$message){throw new RuntimeException('CAPI retry diagnostic: '.$message);});},-100);
+ }
++// Synthetic audience responses and SQL faults apply only in this owned fixture.
++if (is_file(WP_CONTENT_DIR.'/audience-provider-response.json')) {
++    add_filter('pre_http_request',static function($pre,$args,$url){
++        if(strpos($url,'/users?')===false && strpos($url,'/contacts')===false){return $pre;}
++        $platform=strpos($url,'facebook')!==false?'meta':'linkedin';$responses=json_decode(file_get_contents(WP_CONTENT_DIR.'/audience-provider-response.json'),true);$response=$responses[$platform]??array('code'=>200,'body'=>'{}');
++        file_put_contents(WP_CONTENT_DIR.'/audience-provider-calls.jsonl',wp_json_encode(array('platform'=>$platform,'body'=>json_decode($args['body'],true)))."\n",FILE_APPEND|LOCK_EX);
++        return array('response'=>array('code'=>$response['code']),'body'=>$response['body'],'headers'=>array('retry-after'=>$response['retry_after']??''));
++    },PHP_INT_MAX,3);
++    add_filter('query',static function($sql){return is_file(WP_CONTENT_DIR.'/fail-audience-outcome') && strpos($sql,'INSERT INTO `wp_idlm_audience_sync_logs`')===0 ? 'SELECT * FROM idlm_int009_missing_table' : $sql;});
++}
+ // Elevate warnings/deprecations only for the affected lead CSV handler.
+ add_action('wp_ajax_idlm_export_leads', static function() {
+     error_reporting(E_ALL);
+--- baseline/tests/README.md
++++ candidate/tests/README.md
+@@ -166,3 +166,7 @@
+ ## INT-008 CAPI retention and replay evidence
+ 
+ Builder: Shashi. Standard fast/native/HTTP runners include the CAPI retention contracts. `IDLM_TEST_FILTER=INT008 php tests/integration/run.php` selects fresh schema plus thirteen focused native children; workers use synchronized pruning/dispatch and acceptance-interruption fixtures. `php tests/integration/quotation-http.php --capi-retention-only` selects three real AJAX children. Use the existing explicit disposable MySQL variables, newly owned databases and intercepted HTTP/mail. Expected Google-feed credential-denial debug lines are isolated by that HTTP helper; unexpected diagnostics still fail the full runner. [Evidence and qualifications](../docs/AUDIT-REMEDIATION-CAPI-RETENTION-SLICE.md).
++
++## INT-009 audience manual work and exclusions
++
++Builder: Shashi. Fast contracts run in `php tests/run.php`. Native: `IDLM_TEST_FILTER=INT009 php tests/integration/run.php` (fresh schema plus nineteen children). HTTP: `php tests/integration/quotation-http.php --audience-retry-only` (six actual cookie-authenticated AJAX/control children); also included in the full HTTP suite. Supply only disposable `IDLM_TEST_DB_*` credentials; fixtures refuse existing databases and intercept providers/mail. Cases cover current filters, selected-only pages, partial destination/page outcomes, bounded retries, durable claim/audit failures, independent process overlap/crash, unknown destination fences, queue changes/cancellation, restore/reset/erasure, and shared admin/shortcode controls. [Slice evidence](../docs/AUDIT-REMEDIATION-AUDIENCE-RETRY-SLICE.md).
+--- baseline/docs/AUDIT-REMEDIATION-PLAN.md
++++ candidate/docs/AUDIT-REMEDIATION-PLAN.md
+@@ -335,3 +335,7 @@
+ ## 2026-10-09 — INT-008 CAPI retention and delivery evidence
+ 
+ Shashi: candidate **1.102.69**, schemas unchanged. Configured CAPI retention was already corrected by CORE-012; INT-008 adds minimal durable claim/acceptance/uncertainty receipts, atomic log acknowledgements and bounded transactional legacy-success preservation before pruning. **340 fast / 275 full native / 14 final focused native / 414 full actual HTTP PASS** (276 distinct native cases across runs). **INT-008 IMPLEMENTED, not CLOSED; 9 OPEN / 35 IMPLEMENTED**. Historical lost evidence, provider reconciliation, runtime/artifact and recovery/volume qualification remain open. [Policy and evidence](AUDIT-REMEDIATION-CAPI-RETENTION-SLICE.md). Next: INT-009.
++
++## 2026-10-09 — INT-009 audience manual work and exclusions
++
++Shashi: candidate **1.102.70**, schemas unchanged. Durable per-lead/rule outcomes retain failed manual work, share current exclusions, bound pages/retries, fence unknown delivery and serialize overlapping runs. Selected retry no longer includes unrelated matching contacts; shared controls allow manual removal and report Google mapping separately. **344 fast / 291 full native / 20 final focused native / 420 full actual HTTP PASS** (295 distinct native cases across runs; broader logs precede the last scoped safeguards). **INT-009 IMPLEMENTED, not CLOSED; 8 OPEN / 36 IMPLEMENTED**. Provider/removal/consent, runtime/volume, reconciliation and exact artifact qualification remain open. [Policy and evidence](AUDIT-REMEDIATION-AUDIENCE-RETRY-SLICE.md). Next: INT-010.
+--- baseline/docs/AUDIT-REMEDIATION-TEST-MATRIX.md
++++ candidate/docs/AUDIT-REMEDIATION-TEST-MATRIX.md
+@@ -221,3 +221,7 @@
+ ## 2026-10-09 — INT-008 CAPI retention and delivery evidence
+ 
+ Shashi: candidate **1.102.69**, schemas unchanged. Configured CAPI retention was already corrected by CORE-012; INT-008 adds minimal durable claim/acceptance/uncertainty receipts, atomic log acknowledgements and bounded transactional legacy-success preservation before pruning. **340 fast / 275 full native / 14 final focused native / 414 full actual HTTP PASS** (276 distinct native cases across runs). **INT-008 IMPLEMENTED, not CLOSED; 9 OPEN / 35 IMPLEMENTED**. Historical lost evidence, provider reconciliation, runtime/artifact and recovery/volume qualification remain open. [Policy and evidence](AUDIT-REMEDIATION-CAPI-RETENTION-SLICE.md). Next: INT-009.
++
++## 2026-10-09 — INT-009 audience manual work and exclusions
++
++Shashi: candidate **1.102.70**, schemas unchanged. Durable per-lead/rule outcomes retain failed manual work, share current exclusions, bound pages/retries, fence unknown delivery and serialize overlapping runs. Selected retry no longer includes unrelated matching contacts; shared controls allow manual removal and report Google mapping separately. **344 fast / 291 full native / 20 final focused native / 420 full actual HTTP PASS** (295 distinct native cases across runs; broader logs precede the last scoped safeguards). **INT-009 IMPLEMENTED, not CLOSED; 8 OPEN / 36 IMPLEMENTED**. Provider/removal/consent, runtime/volume, reconciliation and exact artifact qualification remain open. [Policy and evidence](AUDIT-REMEDIATION-AUDIENCE-RETRY-SLICE.md). Next: INT-010.
+--- baseline/docs/audit-remediation-backlog.csv
++++ candidate/docs/audit-remediation-backlog.csv
+@@ -20,7 +20,7 @@
+ INT-006,Medium,MEDIUM — Meta webhook acknowledges dropped batch messages and appends replays,M4,Meta webhook intake / message claims,T07;T09,CORE-004,Provider message identity and durable acknowledgement,IMPLEMENTED,working-tree 1.102.67 (base ff148ba),docs/AUDIT-REMEDIATION-WHATSAPP-INBOUND-SLICE.md; docs/remediation-2026-10-09/whatsapp-inbound-slice/verification.json; 330 fast / 260 full native / 404 full HTTP PASS; all batch messages; exact canonical full-phone matching; atomic provider-ID replay receipts; independent concurrency/crash; live provider/retention/runtime/artifact qualification pending; not CLOSED
+ INT-007,Medium,MEDIUM — Disabling Google audience rule does not stop its pull feed,M4,Audience rule resolver / feed,T07;T08,M1,,IMPLEMENTED,working-tree 1.102.68 (base ff148ba),"docs/AUDIT-REMEDIATION-GOOGLE-AUDIENCE-SLICE.md; docs/remediation-2026-10-09/google-audience-slice/verification.json; 335 fast / 4 focused native / 7 focused HTTP PASS; disabled contact-read denial, active duplicate/legacy parity, credentials/filter/cache contracts; provider/runtime/artifact qualification pending; not CLOSED"
+ INT-008,Medium,MEDIUM — Seven-day CAPI pruning removes configured retention and idempotency evidence,M4,CAPI delivery claims / retention,T08;T14;T16,CORE-005;CORE-012,Replay-claim lifetime versus PII retention,IMPLEMENTED,working-tree 1.102.69 (base ff148ba),"docs/AUDIT-REMEDIATION-CAPI-RETENTION-SLICE.md; docs/remediation-2026-10-09/capi-retention-slice/verification.json; 340 fast / 275 full native / 14 final focused native / 414 full HTTP PASS; configured retention, receipt/log atomicity, bounded legacy migration, duplicate/reversal/uncertainty, independent crash/race, restore/erasure; provider/runtime/artifact qualification pending; not CLOSED"
+-INT-009,Medium,MEDIUM — Audience failures discard manual work; manual queue can bypass exclusion,M4,Audience claim / retry dispatch,T08;T14,INT-007,Manual retry and exclusion semantics,OPEN,,
++INT-009,Medium,MEDIUM — Audience failures discard manual work; manual queue can bypass exclusion,M4,Audience durable dispatch / current exclusions,T08;T14,INT-007,Manual retry and exclusion semantics,IMPLEMENTED,working-tree 1.102.70 (base ff148ba),"docs/AUDIT-REMEDIATION-AUDIENCE-RETRY-SLICE.md; docs/remediation-2026-10-09/audience-retry-slice/verification.json; 344 fast / 291 full native / 20 final focused native / 420 full HTTP PASS; selected-only bounded pages, current exclusions, partial success, retries/unknown fences, independent crash/race, atomic audit/ack, recovery/erasure; provider/runtime/artifact qualification pending; not CLOSED"
+ INT-010,Medium,MEDIUM — Remaining platform tokens are plaintext and some requests put secrets in URLs,M4,Secret store / provider request adapters,T07;T08;T09;T14;T20,M1,Credential migration and supported provider authentication,OPEN,,
+ QUO-001,High,P1: new quotation accepts an existing revision without binding authorization,M1,Quotation controller / object policy,T10,M0,,IMPLEMENTED,working-tree 1.102.43 (base ff148ba),docs/AUDIT-REMEDIATION-QUOTATION-SLICE.md; docs/remediation-2026-10-06/quotation-slice/verification.json
+ QUO-002,High,P1: quotation lists disclose data after lead reassignment,M1,Quotation read model / live lead scope,T05;T10;T12,CORE-001,Current versus historical lead visibility,IMPLEMENTED,working-tree 1.102.44 (base ff148ba),docs/AUDIT-REMEDIATION-READ-SLICE.md; docs/remediation-2026-10-06/read-slice/verification.json
+--- baseline/docs/FEATURE-MAP.md
++++ candidate/docs/FEATURE-MAP.md
+@@ -176,3 +176,7 @@
+ ## Retention-independent CAPI delivery (`1.102.69`)
+ 
+ Builder: Shashi. `IDLM_CAPI_Delivery` owns minimal claims/receipts; `IDLM_CAPI` retains current eligibility and provider mapping/transport; `IDLM_Data_Retention` migrates expired success evidence before bounded deletion. Ordinary sends, manual retry and intended forced attribution refresh share this boundary. Payload expiry never permits a new ordinary send; prior acceptance and interrupted uncertainty remain independent of logs. Lead deletion/reset erases receipts and same-site restore preserves local ones. Provider acceptance, receipt reconstruction after database loss and exact runtime/artifact qualification remain separate. [INT-008](AUDIT-REMEDIATION-CAPI-RETENTION-SLICE.md).
++
++## Audience work and exclusions — INT-009
++
++Shashi: `IDLM_Audience_Dispatch` owns enqueue/cancel, current per-rule exclusions, committed claims, bounded pages/retries, unknown outcomes, scheduled cursor and recovery cleanup. `IDLM_Audiences` resolves rules and returns adapter outcomes. The shared Leads bulk selector queues/removes manual work; administrator settings process selected IDs only. Google reports mapped rather than provider acceptance. [Policy and evidence](AUDIT-REMEDIATION-AUDIENCE-RETRY-SLICE.md).
+--- baseline/docs/FLOWS.md
++++ candidate/docs/FLOWS.md
+@@ -36,7 +36,7 @@
+ 
+ ## Audience sync
+ 
+-**Trigger** daily schedule or admin manual queue → **Handler** `IDLM_Audiences::run_batch_sync()` → **Validation** enabled rules and configured credentials/target → **Business logic** query non-duplicate leads by stage/call/quality rule and merge queued lead IDs → **Persistence** sync status/payload/response log; clear processed queue → **Side effects** hashed identifiers posted to Meta/LinkedIn. Google customer match is exposed as an authenticated CSV feed rather than uploaded by the scheduled method → **Response** audit rows or streamed REST CSV.
++**Trigger** daily schedule or admin selected queue → **Handler** `IDLM_Audience_Dispatch` via `IDLM_Audiences::run_batch_sync()` → **Validation** current enabled definitions, credentials, nonduplicate and stage/call/quality filters → **Business logic** selected-only manual work and bounded scheduled keyset pages → **Persistence** checked claims before transport, audit/outcome acknowledgement together, failed/unknown selections retained → **Side effects** Meta/LinkedIn page upload; Google mapping audit only → **Response** truthful counts and retained-work summary; authenticated Google CSV remains a pull feed. See [INT-009 policy](AUDIT-REMEDIATION-AUDIENCE-RETRY-SLICE.md).
+ 
+ ## Quotation lifecycle and print/PDF
+ 
+--- baseline/docs/DATA-MODEL.md
++++ candidate/docs/DATA-MODEL.md
+@@ -151,3 +151,7 @@
+ ## Retention-independent CAPI receipts (`1.102.69`)
+ 
+ Builder: Shashi. Nonautoload `idlm_capi_delivery_<lead-id>_<sha256(platform|event)>` options hold version, lead/platform/event, current processing/sent/failed/uncertain status, an independent historical-success boolean, attempt ID and update time. They contain no request, response, contact identifiers, credentials or commercial payload. `IDLM_CAPI_Delivery` verifies primary state and InnoDB options/CAPI tables; the existing platform/lead lock serializes claims. Claims commit before HTTP; logs and acknowledgements commit together afterwards. Surviving expired legacy successes become receipts in the same 100-row retention transaction as their log deletion. Configured integration-log retention remains authoritative. Receipts persist for the lead's CRM lifetime, survive same-site restore and recovery generation changes, and are erased by explicit lead deletion/reset. They are excluded from backup export/import; database loss or erasure followed by restore cannot recover evidence already pruned from logs. [Policy and evidence](AUDIT-REMEDIATION-CAPI-RETENTION-SLICE.md).
++
++## Minimal audience work — INT-009
++
++Shashi: nonautoload `idlm_audience_work_<lead_id>` holds version/generation/lead ID, manual rule fingerprints and status/attempt/cooldown/UTC-day/destination hashes; no contacts, credentials or payload. `idlm_audience_sync_queue` retains selected IDs and `idlm_audience_scan` stores per-rule UTC-day keyset progress. Processing precedes HTTP; audit/ack are atomic. Diagnostic retention does not remove this work. Explicit lead erasure removes its record/queue ID; restore/reset clear runtime state and continuations. JSON export/import excludes these options. [Lifetime and limits](AUDIT-REMEDIATION-AUDIENCE-RETRY-SLICE.md).
+--- baseline/docs/ARCHITECTURE.md
++++ candidate/docs/ARCHITECTURE.md
+@@ -47,7 +47,7 @@
+ - **Presentation/controllers:** `IDLM_Admin` is the thin compatibility facade for registrations, menus, and public callbacks. `IDLM_Admin_Assets` owns shared asset registration/context enqueueing; `IDLM_Admin_Shortcodes` owns frontend shortcode/workspace orchestration; `IDLM_Admin_Account_Controller` owns account presentation/update coordination; `IDLM_Admin_Users_Controller` owns administrator-only CRM user creation, managed-role changes, access suspension, password-reset initiation, and administrator safeguards. `IDLM_Admin_Presenter` and `IDLM_Admin_Lead_Notifications` own display formatting and WhatsApp/reminder presentation support. Focused page renderers own context/query coordination. `IDLM_Admin_Ajax` remains the authenticated AJAX compatibility coordinator, while `IDLM_Admin_Lead_Reads` owns the extracted lead-detail read and drawer response behind both established delegate layers. `IDLM_Cursor_Pagination` signs user/filter-bound keyset positions used by the default manager lead queue while legacy page/offset requests remain compatible. `IDLM_Dashboard_Read_Model` scopes and caches the aggregate queries built by `IDLM_Dashboard`; `IDLM_Read_Model_Cache` provides generation invalidation, object-cache/transient storage, and rebuild locking. `IDLM_Lead_Access_Policy` centralizes effective representative capabilities plus ownership/visibility decisions.
+ - **Settings/views:** `IDLM_Admin_Settings_Controller` owns authenticated CRM/integration settings POST persistence, and `IDLM_Admin_Settings_Renderer` owns settings context/environment reads plus ten guarded section templates behind the established `IDLM_Admin` callback. `IDLM_Settings` provides grouped non-secret routing reads with mirrored legacy options. `IDLM_View` includes guarded root or nested plugin templates with a single context array; templates remain responsible for context-specific escaping.
+ - **Quotations:** `IDLM_Quotations` remains the compatibility facade. `IDLM_Quotation_Controller` owns request/transaction handlers; `IDLM_Quotation_Renderer` owns escaped views and semantic server-rendered print output; policy, lead read model, calculator, schema, and repository classes own their established boundaries.
+-- **Integration:** `IDLM_Integrations` accepts inbound leads, captures browser attribution, exports authenticated Google feeds, exposes MCP, routes assignments, and sends routing/handoff email. `IDLM_CAPI`, `IDLM_Audiences`, and `IDLM_Interakt` perform platform-specific outbound calls. `IDLM_CAPI_Delivery` commits minimal delivery claims before CAPI transport and acknowledgements with logs afterwards; retention preserves expired legacy success evidence in those receipts.
++- **Integration:** `IDLM_Integrations` accepts inbound leads, captures browser attribution, exports authenticated Google feeds, exposes MCP, routes assignments, and sends routing/handoff email. `IDLM_CAPI`, `IDLM_Audiences`, and `IDLM_Interakt` perform platform-specific outbound calls. `IDLM_Audience_Dispatch` commits per-lead/rule audience claims before transport, owns bounded manual/scheduled pages and acknowledges outcomes with audit logs; `IDLM_Audiences` supplies current predicates and adapters. `IDLM_CAPI_Delivery` commits minimal delivery claims before CAPI transport and acknowledgements with logs afterwards; retention preserves expired legacy success evidence in those receipts.
+ - **Scheduling/diagnostics:** `IDLM_Scheduler` selects Action Scheduler when available and otherwise WP-Cron. `IDLM_Telemetry` installs PHP error/exception handlers and persists diagnostic events. `IDLM_Operational_Health` provides aggregate schema/database/scheduler/retention/credential/storage/cache/queue/fault checks with initial warning/critical thresholds. `IDLM_Horizontal_Readiness` provides an aggregate-only administrator preflight for shared database/media/configuration declarations, persistent cache, Action Scheduler, controlled cron, and node-local export assumptions.
+ 
+ ## Lead data flow
+--- baseline/docs/PROJECT-MAP.md
++++ candidate/docs/PROJECT-MAP.md
+@@ -71,9 +71,13 @@
+     [Integration] Meta CAPI, Google Measurement Protocol/offline CSV, LinkedIn conversion
+     events, idempotency lookup, asynchronous dispatch and retries.
+ 
++includes/class-audience-dispatch.php
++    [Integration] Durable audience claims/outcomes, manual selection, bounded scheduled pages,
++    retry/unknown fences, queue cancellation and lead erasure.
++
+ includes/class-audiences.php
+     [Integration] Rule-based audience selection, Meta/LinkedIn uploads, Google CSV feeds,
+-    sync audit logging.
++    explicit page outcomes behind the durable dispatcher.
+ 
+ includes/class-interakt-dispatch.php
+     [Integration] Opaque ordinary jobs, live dispatch eligibility and uncertain-send claims.
+--- baseline/docs/INTERFACES.md
++++ candidate/docs/INTERFACES.md
+@@ -127,3 +127,7 @@
+ ## WhatsApp inbound receipt contract (INT-006, Shashi)
+ 
+ Existing Meta/Interakt REST paths and HMAC headers remain. Current primary enablement/secret reads precede parsing. Signed Meta payloads iterate all `entry[].changes[].value.messages[]`; status-only changes produce no reply. Interakt `message_received` uses documented `data.message.id`. Responses add `processed`, `replayed`, `failed`: 200 only if every relevant message is durably handled or already handled; 400 for malformed identity/content, 413 for over 1 MiB/100 messages, 409 for unmatched/ambiguous phone or changed-ID content, 503 for busy/unverified/failed persistence. Complete validation precedes writes; partial committed messages remain replay-safe. Public reply helpers accept a third provider message ID and refuse the old ID-less call. [Compatibility and remaining qualification](AUDIT-REMEDIATION-WHATSAPP-INBOUND-SLICE.md).
++
++## Audience queue dispatch — INT-009
++
++Shashi: existing `idlm_bulk_action` adds `bulk_audience_cancel` alongside `bulk_audience_queue`, using its nonce and per-lead access checks, with 100-ID dispatch-owner limits. Existing administrator `idlm_trigger_manual_audience_sync` returns selected-only counts (`accepted`, `mapped`, `excluded`, `failed`, `uncertain`, `pending`, `pages`, `mode`); busy/persistence errors return HTTP 409. `idlm_audience_continue(generation, manual_only, UTC_day)` resumes checked work under the recovery owner; stale epochs/days do not send. Daily hooks call scheduled mode. [Policy](AUDIT-REMEDIATION-AUDIENCE-RETRY-SLICE.md).
+--- baseline/docs/SECURITY.md
++++ candidate/docs/SECURITY.md
+@@ -85,3 +85,7 @@
+ ## CAPI delivery evidence and erasure — INT-008
+ 
+ Builder: Shashi. Minimal server-only receipts preserve acceptance/uncertainty independently of diagnostic retention. Direct primary reads, current eligibility, existing session locks, checked InnoDB claim/acknowledgement transactions and recovery fencing prevent a lost log from authorizing resend. Receipt bodies contain lead/platform/event identity and attempt status/time, with no credentials/contact/provider payload. Their lead-lifetime retention ends at explicit lead deletion/reset; same-site restore preserves existing local receipts and excludes imported receipt options. A full database loss, explicit erasure or earlier historical pruning cannot be repaired from excluded receipts. Uncertain outcomes require reconciliation; exactly-once provider delivery and a public reconciliation interface are not claimed. [Evidence](AUDIT-REMEDIATION-CAPI-RETENTION-SLICE.md).
++
++## Audience current exclusions and uncertain outcomes — INT-009
++
++Shashi: selected IDs cannot override duplicate/stage/call/quality predicates. Primary locking claims, current rule/credential reload, nonautoload minimal state, checked InnoDB transactions and one session lock protect dispatch/ack and overlap. Unknown outcomes fence the same destination even after filter changes; explicit reselection cannot override them. Bulk queue/cancel retains object access and nonce checks; execution remains administrator-only. Removal stops manual work, not provider membership. Restore/reset starts a new audience epoch and clears work; external in-flight calls cannot be recalled. Consent/provider removal and plaintext-token/URL remediation remain separate qualifications. [Evidence and limits](AUDIT-REMEDIATION-AUDIENCE-RETRY-SLICE.md).
+--- baseline/assets/js/admin-app.js
++++ candidate/assets/js/admin-app.js
+@@ -1218,7 +1218,7 @@
+     $('#idlm-manual-sync-trigger').click(function(e) {
+         e.preventDefault();
+         var $btn = $(this);
+-        $btn.text('Syncing Custom Audiences...').prop('disabled', true);
++        $btn.text('Processing Selected Audience Work...').prop('disabled', true);
+ 
+         $.ajax({
+             url: idlm_vars.ajax_url,
+@@ -1231,13 +1231,13 @@
+                 if (response.success) {
+                     showToast(response.data.message, 'success');
+                 } else {
+-                    showToast('Sync failed.', 'error');
+-                }
+-                $btn.text('Run Custom Audience Sync Job Now').prop('disabled', false);
++                    showToast(response.data && response.data.message ? response.data.message : 'Sync failed.', 'error');
++                }
++                $btn.text('Process Selected Audience Queue').prop('disabled', false);
+             },
+             error: function() {
+                 showToast('Server sync failed.', 'error');
+-                $btn.text('Run Custom Audience Sync Job Now').prop('disabled', false);
++                $btn.text('Process Selected Audience Queue').prop('disabled', false);
+             }
+         });
+     });
+--- baseline/templates/admin/leads.php
++++ candidate/templates/admin/leads.php
+@@ -305,6 +305,7 @@
+                         <option value="bulk_stage">Change Stage</option>
+                         <option value="bulk_unqualified">Mark Unqualified</option>
+                         <option value="bulk_audience_queue">Add to Audience Sync Queue</option>
++                        <option value="bulk_audience_cancel">Remove from Audience Sync Queue</option>
+                         <?php if ($can_manage_options): ?>
+                             <option value="bulk_delete">Delete leads</option>
+                         <?php endif; ?>
+--- baseline/templates/admin/settings/sync-reminders.php
++++ candidate/templates/admin/settings/sync-reminders.php
+@@ -26,6 +26,8 @@
+                             <h3>Custom Audience Batch Sync Rules</h3>
+                             <p class="idlm-card-desc">Configure multiple Custom Audience batch sync jobs to run daily at 2:00 AM. You can target specific segments by choosing custom pipeline stages, call statuses, or lead qualities for each platform's destination list.</p>
+                             
++                            <p class="idlm-card-desc">Select leads in the Leads table to queue or remove manual work. Current rule filters still apply. Confirmed temporary failures retry up to three times; reselect leads to retry a rejected destination. Unknown delivery outcomes remain blocked. Google mapping does not confirm that Google fetched the feed.</p>
++
+                             <table class="idlm-table" id="idlm-audience-rules-table" data-idlm-ui="w-full">
+                                 <thead>
+                                     <tr>
+@@ -103,6 +105,7 @@
+                             
+                             <div class="idlm-table-actions">
+                                 <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-add-audience-rule">+ Add Sync Rule</button>
++                                <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-manual-sync-trigger">Process Selected Audience Queue</button>
+                             </div>
+                         </article>
+ 

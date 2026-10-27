@@ -1,0 +1,7 @@
+{
+  "remaining_disposable_databases": [],
+  "mysql_server_stopped": true,
+  "owned_mysql_data_removed": true,
+  "fixture_configuration_removed": true,
+  "rehearsal_artifact_retained_locally": true
+}

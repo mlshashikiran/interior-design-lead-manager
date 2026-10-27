@@ -1,0 +1,135 @@
+{
+  "finding": "REL-004",
+  "builder": "Shashi",
+  "date": "2026-10-09",
+  "candidate": "1.102.74",
+  "status": "IMPLEMENTED, not CLOSED",
+  "schemas_changed": false,
+  "runtime_behavior_changed": false,
+  "bootstrap_version_metadata_changed": true,
+  "backlog_counts": {
+    "IMPLEMENTED": 40,
+    "IN PROGRESS": 1,
+    "OPEN": 3
+  },
+  "audit_source": "docs/audit-2026-10-06/RELEASE.md:74",
+  "owner_contact": {
+    "source": "Direct user reply to support/security/update question on 2026-10-09",
+    "email": "mlshashikiran@gmail.com",
+    "uses": [
+      "Support",
+      "Private security reports",
+      "Reviewed update requests"
+    ],
+    "email_sent": false,
+    "update_process": "Manual reviewed ZIP; no automatic service or approved release invented"
+  },
+  "primary_sources": {
+    "WordPress_directory_guideline": "https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/",
+    "Google_privacy": "https://policies.google.com/privacy",
+    "Google_API_terms": "https://developers.google.com/terms",
+    "Google_Customer_Match_policy": "https://support.google.com/adspolicy/answer/6299717",
+    "LinkedIn_privacy": "https://www.linkedin.com/legal/privacy-policy",
+    "LinkedIn_API_terms": "https://www.linkedin.com/legal/l/api-terms-of-use",
+    "Interakt_privacy": "https://www.interakt.shop/privacy-policy/",
+    "Interakt_terms": "https://www.interakt.shop/terms-of-service/",
+    "Meta_privacy": "https://www.facebook.com/privacy/policy/",
+    "Meta_Business_Tools_terms": "https://www.facebook.com/legal/terms/businesstools",
+    "Meta_Customer_List_terms": "https://www.facebook.com/legal/terms/customaudience"
+  },
+  "source_access_limit": "Meta policy/terms verification fetches redirected to login; full text not reviewed. Interakt wrong guessed terms URL corrected to official terms-of-service. No legal/provider compliance certification.",
+  "changes": [
+    "Four public readme disclosure sections; complete current-data/lifecycle and support/update guides",
+    "Required public guides in shared release inventory and existing CI inventory contract",
+    "Five aligned version authorities and Shashi public/development changelogs",
+    "Source-reviewed cookie, plaintext/hash, private-file, receipt, retention, JSON and removal limits documented explicitly"
+  ],
+  "checks": [
+    {
+      "ids": "T16/T20-source-disclosure-review",
+      "actual": "Claim-to-current-source review; readme sections/contact/local links PASS",
+      "log": "disclosure-source-review.json",
+      "limits": "No new behavioral/native/HTTP qualification"
+    },
+    {
+      "ids": "T22-REL004-release-baseline",
+      "command": "php docs/remediation-2026-10-09/public-disclosures-slice/focused-runner.php before changes",
+      "actual": "12 PASS / 0 FAIL; missing disclosure sections separately reproduced",
+      "logs": [
+        "baseline-release.log",
+        "reproduction.json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "ids": "T22-REL004-release-final",
+      "command": "php docs/remediation-2026-10-09/public-disclosures-slice/focused-runner.php",
+      "actual": "12 PASS / 0 FAIL",
+      "exit_code": 0,
+      "log": "release-final.log"
+    },
+    {
+      "ids": "T22-REL004-omission-negative",
+      "command": "Direct validate_inventory with PRIVACY.md then SUPPORT.md omitted",
+      "actual": "Both omissions rejected",
+      "exit_code": 0,
+      "log": "omission-negative.json"
+    },
+    {
+      "ids": "T22-REL004-package",
+      "command": "php tests/release/build-release.php --build --confirm=build-idlm-release-artifact --allow-dirty --output-dir=<owned evidence package>",
+      "actual": "455 files, aligned 1.102.74, package inspection PASS",
+      "exit_code": 0,
+      "log": "build.json"
+    },
+    {
+      "ids": "T22-REL004-archive-source-identity",
+      "command": "Independent Python ZipFile reader comparing every runtime entry to current source bytes",
+      "actual": "455 matches; all three public disclosure files present and unchanged; no docs/tests entries",
+      "exit_code": 0,
+      "log": "installed-identity.json"
+    },
+    {
+      "ids": "T22-REL004-syntax-whitespace",
+      "command": "php -l for three changed PHP files and owned focused runner; git diff --check",
+      "actual": "4 PHP lint PASS; whitespace PASS",
+      "logs": [
+        "php-lint.log",
+        "changed-php-files.json",
+        "diff-check.log"
+      ]
+    }
+  ],
+  "environment": {
+    "PHP": "8.4.14",
+    "ZIP_extension": true,
+    "no_database_http_server_browser_or_application_fixture": true,
+    "web_fetches": "Public policy/terms only; no provider customer API calls"
+  },
+  "artifact": {
+    "sha256": "23e16e84bec6fbe83ed66a8b7227615d27d97327253b221680f6363980b6e085",
+    "file_count": 455,
+    "revision": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+    "git_clean": false,
+    "artifact_status": "local_rehearsal_only",
+    "production_release_approved": false
+  },
+  "evidence": {
+    "baseline_hashes": "baseline-hashes.json",
+    "source_hashes": "source-hashes.json",
+    "claim_source_review": "disclosure-source-review.json",
+    "graph_refresh": "graph-refresh.json",
+    "archive_identity": "installed-identity.json"
+  },
+  "remaining_qualification": [
+    "Attribution script has no built-in consent gate; relevant site deployment requires a consent-aware policy/enforcement decision",
+    "Minimal WhatsApp replay receipts persist without scheduled/user-facing erasure; receipt policy qualification remains",
+    "Provider permission/retention/deletion/live API acceptance remains external and unqualified",
+    "Production legacy/public/cache file migration and complete full-site/key recovery remain pending",
+    "REL-005 support floor/extensions/matrix, REL-006 byte reproducibility and REL-007 Plugin Check/inventory triage remain",
+    "REL-001 clean complete commit/matching CI/final installed artifact gates remain; no new fast/native/HTTP/browser/support matrix claim"
+  ],
+  "cleanup": "No databases/servers/browser tabs created; no email/provider/site mutations; local rehearsal archive retained as unapproved evidence",
+  "no_commit_push_tag_or_deployment": true,
+  "next": "REL-005"
+}

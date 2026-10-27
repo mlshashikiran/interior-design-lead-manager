@@ -63,6 +63,12 @@ final class IDLM_Production_Security {
         return in_array(sanitize_key($tool_name), self::mcp_allowed_tools(), true);
     }
 
+    /** Independent, explicit contact/profile-data grant; absent means denied. */
+    public static function mcp_pii_allowed() {
+        return defined('IDLM_MCP_ALLOW_PII') ? true === IDLM_MCP_ALLOW_PII
+            : '1' === (string) get_option('idlm_mcp_allow_pii', '0');
+    }
+
     public static function mcp_payload_limit() {
         $default = 'production' === self::environment_type() ? 262144 : 1048576;
         return defined('IDLM_MCP_MAX_PAYLOAD_BYTES')

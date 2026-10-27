@@ -1,0 +1,22 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T08-N-INT009 failed manual upload retains selected work
+PASS T08-N-INT009 queued duplicate and changed filters cannot override current exclusions
+PASS T08-N-INT009 partial destination success is retained and only failed destination retries
+PASS T08-T14-N-INT009 transient retry limit Retry After and explicit reselection preserve success
+PASS T08-N-INT009 permanent rejection timeout and malformed acceptance remain queued with truthful outcomes
+PASS T08-N-INT009 disabled changed and missing credential rules retain work and current credentials are used
+PASS T08-T14-N-INT009 queue and claim write failures roll back before HTTP
+PASS T08-T14-N-INT009 log outcome and acknowledgement commit failure retain unknown claim
+PASS T08-N-INT009 manual pages are bounded and continuation never adds unrelated matching contacts
+PASS T08-T14-N-INT009 scheduled pages resume a primary cursor and do not repeat same day acceptance
+PASS T08-T14-N-INT009 corrupt receipts unsupported engines and stale callbacks refuse transport
+PASS T08-T16-N-INT009 cancellation erasure reset and restore remove queued runtime state
+PASS T08-T14-N-INT009 a changed filter cannot reopen an unknown destination and reselection uses current definitions
+PASS T08-T14-N-INT009 erased legacy queue IDs disappear without retained orphan work
+PASS T08-T14-C-INT009 independent overlapping workers send a manual page once
+PASS T08-T14-C-INT009 interrupted provider acceptance blocks retry even after explicit reselection
+PASS T08-T14-N-INT009 queue acknowledgement preserves an enqueue during provider dispatch
+PASS T08-T14-N-INT009 partial page response retains work and recovery clears continuation jobs
+PASS T08-T16-N-INT009 erasure after transport claim cannot recreate work or an orphan acknowledgement
+
+20 passed, 0 failed

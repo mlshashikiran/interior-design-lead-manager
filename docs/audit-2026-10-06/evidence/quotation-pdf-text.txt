@@ -1,0 +1,117 @@
+IDLM Audit Fixture
+
+Quotation #:
+
+Q-2026-000001
+
+Revision:
+
+R01
+
+Created / Modified By:
+
+audit_admin / audit_admin
+
+Created / Updated Date:
+
+06-10-2026 01:31 AM / 06-10-2026 01:31 AM
+
+Customer Details
+CLIENT NAME
+
+PHONE NUMBER
+
+EMAIL ID
+
+PROPERTY NAME
+
+LOCATION
+
+Synthetic 24 Audit
+
++15550000024
+
+lead24@example.test
+
+—
+
+—
+
+Quotation Summary
+Section-wise subtotal before discount
+
+Sl No
+
+Section
+
+1
+
+General
+
+Subtotal before discount
+₹2,010.00
+
+Subtotal
+
+₹2,010.00
+
+Wooden Subtotal
+
+₹0.00
+
+Wooden Discount (0.00%)
+
+₹0.00
+
+Total
+GST (18%)
+
+Grand Total
+
+₹2,010.00
+₹361.80
+
+₹2,372.00
+
+Section & Item Breakdown
+General
+S.NO ITEM
+
+DESCRIPTION
+
+WIDTH
+
+HEIGHT
+
+AREA / QTY
+
+UNIT
+
+RATE
+
+SUBTOTAL
+
+1
+
+Audit custom line
+
+0.00
+
+0.00
+
+2.01
+
+Nos
+
+₹1,000.00
+
+₹2,010.00
+
+Synthetic Cabinet
+Uncategorised
+
+GENERAL SUBTOTAL
+
+₹2,010.00
+
+

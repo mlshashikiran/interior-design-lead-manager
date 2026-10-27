@@ -99,8 +99,12 @@ final class IDLM_Admin_Shortcodes {
         }
         $sections['my-account'] = array('My Account', 'dashicons-admin-users', array('IDLM_Admin', 'render_my_account_page'));
 
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0082: render_workspace_shortcode(): current CRM access gates workspace routing; idlm_view/quotation query presence select only an allowlisted view, whose handler retains its own capability/object rules; these GETs do not mutate state.
         $requested = isset($_GET['idlm_view']) ? sanitize_key(wp_unslash($_GET['idlm_view'])) : '';
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0083: render_workspace_shortcode(): current CRM access gates workspace routing; idlm_view/quotation query presence select only an allowlisted view, whose handler retains its own capability/object rules; these GETs do not mutate state.
         if (!$requested && (isset($_GET['workspace']) || isset($_GET['quote_id']) || isset($_GET['lead_id']) || isset($_GET['quote_search']))) {
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
             $requested = 'quotations';
         }
         $active = isset($sections[$requested]) ? $requested : 'dashboard';

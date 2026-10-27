@@ -1,0 +1,174 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-13",
+  "finding": "REL-007",
+  "candidate": "1.102.79",
+  "status": "IN PROGRESS, not IMPLEMENTED or CLOSED",
+  "production_release_approved": false,
+  "schema_changed": false,
+  "artifact": {
+    "sha256": "2b8ca1b6fac59837b0c3e4ecb4b0621436f094c3b6199c19b01880da37705179",
+    "file_count": 450,
+    "status": "local_rehearsal_only"
+  },
+  "checks": {
+    "native_before": "1 passed, 1 failed; expected automatic=2, actual=4",
+    "native_final": "3 passed, 0 failed: fresh schema, existing dashboard, REL007 regression",
+    "fast": "365 passed, 0 failed; existing six num_rooms and one phone fixture warnings retained",
+    "release": "14 passed, 0 failed",
+    "unfiltered_static": {
+      "builder": "Shashi",
+      "mode": "static_default_checks_no_exclusions",
+      "artifact_sha256": "2b8ca1b6fac59837b0c3e4ecb4b0621436f094c3b6199c19b01880da37705179",
+      "checker_zip_sha256": "6ff4bd2145f3befcf907df158cc466b1649dafed5686de8369907403c3013fc4",
+      "checker_version": "2.1.0",
+      "wordpress": "6.6",
+      "php": "8.4.14",
+      "command": [
+        "/opt/homebrew/Cellar/php/8.4.14_1/bin/php",
+        "/Applications/Local.app/Contents/Resources/extraResources/bin/wp-cli/wp-cli.phar",
+        "--path=/private/tmp/idlm-rel007/wordpress",
+        "--skip-plugins=interior-design-lead-manager",
+        "--skip-themes",
+        "plugin",
+        "check",
+        "interior-design-lead-manager",
+        "--format=strict-json",
+        "--fields=file,line,column,type,code,message,docs"
+      ],
+      "exit_code": 0,
+      "runner_exit_code": 1,
+      "diagnostics_pass": false,
+      "diagnostic_count": 2154,
+      "types": {
+        "WARNING": 2018,
+        "ERROR": 136
+      },
+      "codes": {
+        "WordPress.DB.DirectDatabaseQuery.DirectQuery": 458,
+        "WordPress.DB.PreparedSQL.InterpolatedNotPrepared": 403,
+        "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound": 400,
+        "WordPress.DB.DirectDatabaseQuery.NoCaching": 396,
+        "PluginCheck.Security.DirectDB.UnescapedDBParameter": 175,
+        "WordPress.DB.PreparedSQL.NotPrepared": 78,
+        "WordPress.Security.NonceVerification.Recommended": 69,
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized": 55,
+        "WordPress.Security.NonceVerification.Missing": 42,
+        "WordPress.Security.ValidatedSanitizedInput.MissingUnslash": 23,
+        "WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare": 12,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose": 11,
+        "Squiz.PHP.DiscouragedFunctions.Discouraged": 4,
+        "WordPress.PHP.DevelopmentFunctions.error_log_error_log": 3,
+        "WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber": 3,
+        "WordPress.DB.DirectDatabaseQuery.SchemaChange": 3,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fopen": 2,
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall": 2,
+        "WordPress.WP.AlternativeFunctions.unlink_unlink": 2,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_is_writable": 2,
+        "unexpected_markdown_file": 2,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fread": 1,
+        "WordPress.Security.EscapeOutput.OutputNotEscaped": 1,
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors": 1,
+        "WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting": 1,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fwrite": 1,
+        "WordPress.WP.AlternativeFunctions.file_system_operations_readfile": 1,
+        "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound": 1,
+        "WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound": 1,
+        "readme_parser_warnings_trimmed_section_changelog": 1
+      },
+      "production_release_approved": false
+    }
+  },
+  "source_review": {
+    "statements": 3,
+    "new_justifications": 9,
+    "dispositions": {
+      "REVIEW_REQUIRED": 1473,
+      "JUSTIFICATION_RECORDED": 680,
+      "RELEASE_CHANNEL_LIMITATION": 1
+    }
+  },
+  "limits": [
+    "No full native, HTTP/browser, provider, supported PHP 7.4/8.1 matrix, remote exact CI or installed-artifact behavior qualification in this slice.",
+    "Prior justifications carried only for matching path/line/column/code/source line; checker diagnostics remain unfiltered.",
+    "No configured site, commit, push, tag, provider send or deployment."
+  ],
+  "backlog_counts": {
+    "IMPLEMENTED": 42,
+    "IN_PROGRESS": 2
+  },
+  "php_lint": [
+    {
+      "file": "includes/class-dashboard.php",
+      "status": "PASS",
+      "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-dashboard.php"
+    },
+    {
+      "file": "includes/class-dashboard-read-model.php",
+      "status": "PASS",
+      "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-dashboard-read-model.php"
+    },
+    {
+      "file": "interior-design-lead-manager.php",
+      "status": "PASS",
+      "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/interior-design-lead-manager.php"
+    },
+    {
+      "file": "tests/integration/run.php",
+      "status": "PASS",
+      "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/integration/run.php"
+    },
+    {
+      "file": "tests/integration/package-dashboard-contracts.php",
+      "status": "PASS",
+      "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/integration/package-dashboard-contracts.php"
+    },
+    {
+      "file": "tests/release-contracts.php",
+      "status": "PASS",
+      "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/release-contracts.php"
+    }
+  ],
+  "graph_refresh": {
+    "builder": "Shashi",
+    "candidate": "1.102.79",
+    "mode": "scoped_structural_extraction_plus_explicit_document_headings",
+    "full_semantic_regeneration": false,
+    "source_files": [
+      "includes/class-dashboard.php",
+      "includes/class-dashboard-read-model.php",
+      "interior-design-lead-manager.php",
+      "tests/integration/run.php",
+      "tests/integration/package-dashboard-contracts.php",
+      "tests/release-contracts.php"
+    ],
+    "documentation_files": [
+      "docs/AUDIT-REMEDIATION-PACKAGE-DASHBOARD-SLICE.md",
+      "docs/AUDIT-REMEDIATION-PLAN.md",
+      "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+      "docs/PRODUCTION-SCALABILITY-PLAN.md",
+      "docs/CHANGELOG-DEV.md",
+      "tests/README.md"
+    ],
+    "removed_source_nodes": 39,
+    "extracted_nodes": 41,
+    "extracted_edges": 39,
+    "unrelated_graph_retained": true,
+    "graph_html_and_report_refreshed": false
+  },
+  "cleanup": {
+    "remaining_disposable_databases": [],
+    "mysql_server_stopped": true,
+    "fixture_configuration_removed": true,
+    "rehearsal_artifacts_retained_locally": true
+  },
+  "commands": [
+    "php tests/run.php",
+    "IDLM_TEST_FILTER=dashboard php tests/integration/run.php (disposable IDLM_TEST_* environment)",
+    "php docs/remediation-2026-10-09/release-attestation-slice/focused-runner.php",
+    "php tests/release/build-release.php --build --confirm=build-idlm-release-artifact --allow-dirty --output-dir=<owned temporary artifact directory>",
+    "php tests/release/check-package.php --artifact=<1.102.79 rehearsal ZIP> --checker-zip=<official pinned 2.1.0 ZIP> --wp-cli=<local WP-CLI> --output-dir=<owned evidence directory>",
+    "php -l <six changed PHP inputs>",
+    "git diff --check"
+  ]
+}

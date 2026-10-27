@@ -1,0 +1,7 @@
+{
+    "builder": "Shashi",
+    "actual_wp_cron_entrypoint_executed": true,
+    "external_object_cache": false,
+    "action_scheduler": false,
+    "provider_calls_blocked": true
+}

@@ -1,0 +1,20 @@
+[
+  "includes/class-capi-delivery.php",
+  "includes/class-capi.php",
+  "includes/class-data-retention.php",
+  "includes/class-backup.php",
+  "includes/class-lead-deletion-service.php",
+  "interior-design-lead-manager.php",
+  "tests/bootstrap.php",
+  "tests/run.php",
+  "tests/capi-retention-contracts.php",
+  "tests/release-contracts.php",
+  "tests/release/class-release-artifact.php",
+  "tests/integration/run.php",
+  "tests/integration/worker.php",
+  "tests/integration/http-router.php",
+  "tests/integration/quotation-http.php",
+  "tests/integration/capi-retention-contracts.php",
+  "tests/integration/capi-retention-http-cases.php",
+  "tests/integration/google-audience-http-cases.php"
+]

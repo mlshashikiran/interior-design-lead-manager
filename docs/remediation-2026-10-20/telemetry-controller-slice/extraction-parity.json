@@ -1,0 +1,23 @@
+{
+  "builder": "Shashi",
+  "methods": [
+    {
+      "method": "ajax_log_js_error",
+      "lines": 16,
+      "sha256": "d0eba7d9c482d5332a5537ed2d6b50e085ba9907dbf312d7b22e6e5eb5ce4341",
+      "bytes_identical": true
+    },
+    {
+      "method": "ajax_clear_telemetry_logs",
+      "lines": 14,
+      "sha256": "64aa6421a539f35620a57faf2aaba443c6888cee878be6ad52f27a13fc352a10",
+      "bytes_identical": true
+    },
+    {
+      "method": "ajax_download_diagnostic_report",
+      "lines": 99,
+      "sha256": "c7b9d43cc25129db6e82f23dceb10b1cb2ef18b82e152fafad79bf69ead7498b",
+      "bytes_identical": true
+    }
+  ]
+}

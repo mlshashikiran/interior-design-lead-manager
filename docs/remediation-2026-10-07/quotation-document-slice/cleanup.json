@@ -1,0 +1,13 @@
+{
+  "author": "Shashi",
+  "remaining_owned_schemas": [],
+  "owned_runners": "final HTTP and native runners exited successfully; held browser fixture released",
+  "owned_content": "removed by runner shutdown callbacks",
+  "owned_mysql_socket_exists": false,
+  "configured_site_database": "not accessed",
+  "outbound_http_mail": "intercepted",
+  "browser": "valid fixture tab closed; viewport reset; failed-login error tab cleanup API blocked, remains turn-temporary",
+  "committed": false,
+  "packaged": false,
+  "deployed": false
+}

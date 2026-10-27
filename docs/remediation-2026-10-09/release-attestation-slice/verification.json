@@ -1,0 +1,104 @@
+{
+  "finding": "REL-001",
+  "builder": "Shashi",
+  "date": "2026-10-09",
+  "candidate_version": "1.102.71",
+  "base_revision": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "status": "IN PROGRESS",
+  "qualification": "Prerequisite-blocked; not IMPLEMENTED or CLOSED",
+  "runtime_release_tools_workflow_schemas_changed": false,
+  "backlog_counts": {
+    "IMPLEMENTED": 37,
+    "IN PROGRESS": 1,
+    "OPEN": 6
+  },
+  "environment": {
+    "php": "8.4.14",
+    "ZipArchive": true,
+    "databases": "None",
+    "providers_mail_browsers": "None"
+  },
+  "commands": [
+    {
+      "command": "php tests/release/build-release.php",
+      "exit_code": 0,
+      "result": "Inventory/version preflight PASS; promotion blockers remain",
+      "evidence": "preflight.json"
+    },
+    {
+      "command": "php tests/release/build-release.php --build --confirm=build-idlm-release-artifact --allow-dirty --output-dir=<owned rehearsal-a/b>",
+      "exit_code": 0,
+      "result": "Two local_rehearsal_only builds, production approval false",
+      "evidence": [
+        "build-a.json",
+        "build-b.json"
+      ]
+    },
+    {
+      "command": "php docs/remediation-2026-10-09/release-attestation-slice/focused-runner.php",
+      "exit_code": 0,
+      "passed": 10,
+      "failed": 0,
+      "result": "Existing release-contracts.php reused, assertion helpers copied verbatim from tests/run.php",
+      "evidence": "release-contracts.log"
+    },
+    {
+      "command": "php tests/release/verify-candidate.php --artifact-dir=<owned rehearsal-a> --expected-revision=ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+      "expected_exit_code": 1,
+      "actual_exit_code": 1,
+      "result": "Expected rejection; no positive release attestation",
+      "evidence": "promotion-negative.json"
+    },
+    {
+      "command": "php -l <focused-runner.php>; git diff --check",
+      "exit_code": 0,
+      "result": "PASS",
+      "evidence": [
+        "runner-lint.log",
+        "diff-check.log"
+      ]
+    }
+  ],
+  "T22_cases": {
+    "metadata_inventory": "PASS 450 files and five version authorities",
+    "synthetic_positive_negative_logic": "PASS; synthetic CI values never represent real remote CI",
+    "actual_dirty_promotion_rejection": "PASS expected denial",
+    "archive_source_extracted_identity": "PASS static filesystem identity only",
+    "independent_zip_bytes": "FAIL REL-006",
+    "matching_committed_remote_CI": "BLOCKED",
+    "final_artifact_native_HTTP_browser_upgrade_restore_output_plugin_check": "NOT RUN",
+    "operator_staging_rollout_rollback": "NOT RUN"
+  },
+  "artifacts": {
+    "rehearsal_a_sha256": "d8cd2cc715d235e7edc8b09b167a288c43289fbea2e2b5409cad384fb834d94a",
+    "rehearsal_b_sha256": "909e66d66de8f38d880350e538efbf9010a09a0b5381bfb241f53358a1181ccc",
+    "file_count": 450,
+    "uncompressed_bytes": 14008683,
+    "status": "local_rehearsal_only",
+    "runtime_hashes": "runtime-source-manifest.json",
+    "release_input_hashes": "release-source-hashes.json",
+    "initial_git_status": "working-tree.txt",
+    "extraction_identity": "installed-identity.json",
+    "rebuild_comparison": "reproducibility.json",
+    "graph_refresh": "graph-refresh.json"
+  },
+  "prerequisites": {
+    "REL-002": "OPEN font provenance/full license",
+    "REL-003": "OPEN opt-in public attribution",
+    "REL-004": "OPEN disclosures/support/lifecycle",
+    "REL-005": "OPEN actual support floor and prerequisites/matrix",
+    "REL-006": "OPEN reproducibility; current FAIL reproduced",
+    "REL-007": "OPEN intentional inventory and source-specific Plugin Check triage",
+    "M1-M5": "37 findings IMPLEMENTED locally, none CLOSED; slice qualification limits remain",
+    "M6": "Ownership/extraction exit review outstanding",
+    "M7": "Workload/runtime/cache/scheduler/topology/lifecycle/recovery/provider qualification outstanding",
+    "clean_complete_candidate_commit": "Absent for current bytes",
+    "matching_authentic_CI": "Absent for current bytes",
+    "final_artifact_qualification": "NOT RUN"
+  },
+  "preservation": "All captured release/runtime input hashes still match; original Git changes untouched",
+  "trust_boundary": "CI manifest fields are unsigned workflow metadata. Independently verify authentic run/artifact origin; local flags and JSON edits cannot substitute for CI or audit closure. Builder automated blockers do not certify all audit gates.",
+  "cleanup": "Owned isolated extraction removed; retained two rehearsal ZIPs/manifests/checksums under internal evidence only; no DB or servers created",
+  "next_executable_finding": "REL-002",
+  "revisit": "REL-001 at final release after prerequisites; no commit, push, tag or deployment performed"
+}

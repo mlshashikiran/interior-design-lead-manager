@@ -54,92 +54,66 @@ final class IDLM_Admin_Lead_Notifications {
         self::$whatsapp_unread_snapshot = null;
     }
 
-    /** Resolve unread WhatsApp leads and message count with one indexed query. */
-    protected static function get_unread_whatsapp_snapshot() {
+    /** Correlated predicate avoids materializing the activity history or a
+     * growing IN-list. Aliases are internal allowlisted identifiers. */
+    public static function whatsapp_exists_sql($lead_alias = 'l', $unread = false) {
         global $wpdb;
-
-        if (null !== self::$whatsapp_unread_snapshot) {
-            return self::$whatsapp_unread_snapshot;
-        }
-
-        $read_ids = self::get_whatsapp_read_activity_ids();
-        $visibility_restricted = (bool) IDLM_Lead_Access_Policy::restriction_user_id();
-        $current_user_id = get_current_user_id();
-        $latest_activity_id = absint($wpdb->get_var("SELECT MAX(id) FROM {$wpdb->prefix}idlm_lead_activity_log"));
-        $cache_key = 'unread_' . md5(wp_json_encode(array(
-            'user_id' => $current_user_id,
-            'restricted' => $visibility_restricted,
-            'latest_activity_id' => $latest_activity_id,
-            'read_ids' => $read_ids,
-        )));
-        $cached = wp_cache_get($cache_key, 'idlm_whatsapp');
-        if (is_array($cached) && isset($cached['lead_ids'], $cached['count'])) {
-            self::$whatsapp_unread_snapshot = $cached;
-            return self::$whatsapp_unread_snapshot;
-        }
-
-        $whatsapp_reply_pattern = $wpdb->esc_like('[WhatsApp Reply]:') . '%';
-        $direct_reply_pattern = $wpdb->esc_like('[Direct WA Reply]:') . '%';
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        $activities = $wpdb->get_results($wpdb->prepare(
-            "SELECT a.id, a.lead_id
-             FROM {$wpdb->prefix}idlm_lead_activity_log a
-             INNER JOIN {$wpdb->prefix}idlm_leads l ON l.id = a.lead_id
-             WHERE l.is_duplicate = 0
-               AND (
-                   a.activity_type = 'whatsapp_reply'
-                   OR (a.activity_type = 'comment' AND (a.details LIKE %s OR a.details LIKE %s))
-               )
-               AND (%d = 0 OR l.assigned_rep_id = %d)",
-            $whatsapp_reply_pattern,
-            $direct_reply_pattern,
-            $visibility_restricted ? 1 : 0,
-            $current_user_id
-        ));
-
-        $unread_lead_ids = array();
-        $unread_count = 0;
-        foreach ($activities as $activity) {
-            $lead_id = absint($activity->lead_id);
-            $last_read_id = isset($read_ids[$lead_id]) ? absint($read_ids[$lead_id]) : 0;
-            if (absint($activity->id) > $last_read_id) {
-                $unread_lead_ids[$lead_id] = $lead_id;
-                $unread_count++;
+        $lead = 'l' === $lead_alias ? 'l' : $wpdb->prefix . 'idlm_leads';
+        $read = '';
+        if ($unread) {
+            $cases = '';
+            foreach (array_slice(self::get_whatsapp_read_activity_ids(), -1000, null, true) as $id => $activity) {
+                $cases .= $wpdb->prepare(' WHEN %d THEN %d', $id, $activity);
             }
+            $read = ' AND wa.id > ' . ($cases ? "CASE wa.lead_id{$cases} ELSE 0 END" : '0');
         }
-
-        self::$whatsapp_unread_snapshot = array(
-            'lead_ids' => array_values($unread_lead_ids),
-            'count' => $unread_count,
-        );
-        wp_cache_set($cache_key, self::$whatsapp_unread_snapshot, 'idlm_whatsapp', 15);
-
-        return self::$whatsapp_unread_snapshot;
+        return "EXISTS (SELECT 1 FROM {$wpdb->prefix}idlm_lead_activity_log wa WHERE wa.lead_id = {$lead}.id AND " . self::reply_sql('wa') . $read . ')';
     }
 
-    /** Return lead IDs with WhatsApp replies not yet viewed by the current representative. */
-    public static function get_unread_whatsapp_lead_ids() {
-        $snapshot = self::get_unread_whatsapp_snapshot();
-        return $snapshot['lead_ids'];
+    private static function reply_sql($alias) {
+        return "({$alias}.activity_type = 'whatsapp_reply' OR ({$alias}.activity_type = 'comment' AND ({$alias}.details LIKE '[WhatsApp Reply]:%' OR {$alias}.details LIKE '[Direct WA Reply]:%')))";
     }
 
-    /** Return the number of unread WhatsApp message activities visible to the current user. */
-    public static function get_unread_whatsapp_count() {
-        $snapshot = self::get_unread_whatsapp_snapshot();
-        return $snapshot['count'];
+    /** Compatibility IDs are now a bounded keyset page; production filters use EXISTS. */
+    public static function get_unread_whatsapp_lead_ids($after = 0, $limit = 100) {
+        return self::whatsapp_lead_ids(true, $after, $limit);
     }
 
-    /** Return lead IDs that have received at least one WhatsApp reply. */
-    public static function get_whatsapp_received_lead_ids() {
+    public static function get_whatsapp_received_lead_ids($after = 0, $limit = 100) {
+        return self::whatsapp_lead_ids(false, $after, $limit);
+    }
+
+    private static function whatsapp_lead_ids($unread, $after, $limit) {
         global $wpdb;
+        if (!IDLM_Lead_Access_Policy::has_rep_access()) { return array(); }
+        $params = array(); $scope = IDLM_Lead_Access_Policy::scope_sql('l', $params);
+        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0173: whatsapp_lead_ids(): fixed alias/activity lists; live lead scope and unread CASE IDs are individually prepared; since/cursor/limit values bound; unread state is not shared across actors.
+        $scope = $params ? $wpdb->prepare($scope, $params) : $scope;
+        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
+        $exists = self::whatsapp_exists_sql('l', $unread);
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0174: whatsapp_lead_ids(): fixed alias/activity lists; live lead scope and unread CASE IDs are individually prepared; since/cursor/limit values bound; unread state is not shared across actors.
+        $rows = $wpdb->get_col($wpdb->prepare("SELECT l.id FROM {$wpdb->prefix}idlm_leads l WHERE l.is_duplicate = 0 AND l.id > %d{$scope} AND {$exists} ORDER BY l.id LIMIT %d", absint($after), min(100, max(1, absint($limit)))));
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        return array_map('absint', (array) $rows);
+    }
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-        return array_map('absint', $wpdb->get_col(
-            "SELECT DISTINCT lead_id
-             FROM {$wpdb->prefix}idlm_lead_activity_log
-             WHERE activity_type = 'whatsapp_reply'
-                OR (activity_type = 'comment' AND (details LIKE '[WhatsApp Reply]:%' OR details LIKE '[Direct WA Reply]:%'))"
-        ));
+    /** Count in SQL; no per-message PHP allocation or permission-stale cache. */
+    public static function get_unread_whatsapp_count() {
+        global $wpdb;
+        if (!IDLM_Lead_Access_Policy::has_rep_access()) { return 0; }
+        $params = array(); $scope = IDLM_Lead_Access_Policy::scope_sql('l', $params);
+        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0175: get_unread_whatsapp_count(): fixed alias/activity lists; live lead scope and unread CASE IDs are individually prepared; since/cursor/limit values bound; unread state is not shared across actors.
+        $scope = $params ? $wpdb->prepare($scope, $params) : $scope;
+        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
+        $cases = '';
+        foreach (array_slice(self::get_whatsapp_read_activity_ids(), -1000, null, true) as $id => $activity) {
+            $cases .= $wpdb->prepare(' WHEN %d THEN %d', $id, $activity);
+        }
+        $read = $cases ? "CASE a.lead_id{$cases} ELSE 0 END" : '0';
+        $reply = self::reply_sql('a');
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0176: get_unread_whatsapp_count(): fixed alias/activity lists; live lead scope and unread CASE IDs are individually prepared; since/cursor/limit values bound; unread state is not shared across actors.
+        return (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_leads l INNER JOIN {$wpdb->prefix}idlm_lead_activity_log a ON a.lead_id = l.id WHERE l.is_duplicate = 0{$scope} AND {$reply} AND a.id > {$read}");
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
 
     /** Get all active follow-up reminder rules with legacy singular-option fallback. */
@@ -253,12 +227,14 @@ final class IDLM_Admin_Lead_Notifications {
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         return intval($wpdb->get_var($wpdb->prepare(
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0177: get_stale_lead_count(): fixed alias/activity lists; live lead scope and unread CASE IDs are individually prepared; since/cursor/limit values bound; unread state is not shared across actors.
             "SELECT COUNT(*) FROM {$table_leads}
              WHERE assigned_rep_id > 0
                AND is_duplicate = 0
                AND stage NOT IN ('Won', 'Lost')
                AND COALESCE(assigned_at, created_at) < %s
                AND {$no_recent_action}{$sales_board_clause}{$rep_clause}",
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $cutoff
         )));
     }
@@ -274,6 +250,7 @@ final class IDLM_Admin_Lead_Notifications {
         }, self::REP_ACTION_ACTIVITY_TYPES));
 
         return $wpdb->prepare(
+            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0178: get_no_recent_assigned_rep_action_sql(): fixed alias/activity lists; live lead scope and unread CASE IDs are individually prepared; since/cursor/limit values bound; unread state is not shared across actors.
             "NOT EXISTS (
                 SELECT 1 FROM {$table_activity} a
                 WHERE a.lead_id = {$lead_prefix}id
@@ -282,6 +259,7 @@ final class IDLM_Admin_Lead_Notifications {
                   AND a.created_at > COALESCE({$lead_prefix}assigned_at, {$lead_prefix}created_at)
                   AND a.activity_type IN ({$activity_types})
             )",
+            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $since
         );
     }

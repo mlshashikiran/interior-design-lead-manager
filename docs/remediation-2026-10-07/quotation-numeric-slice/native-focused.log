@@ -1,0 +1,6 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T10-T12-N-QUO008-half-cent-tiny-area-and-limit-values-persist-exactly-without-altering-history
+PASS T10-N-QUO008-invalid-numbers-are-rejected-under-strict-and-permissive-SQL-modes
+PASS T10-T12-N-QUO008-rounded-lines-optional-rows-and-GST-split-match-independent-decimal-SQL
+
+4 passed, 0 failed

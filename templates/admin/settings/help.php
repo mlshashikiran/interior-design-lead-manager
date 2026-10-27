@@ -3,10 +3,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
+$idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
 ?>
             <!-- Tab: Help & FAQs -->
-            <section id="settings-help" class="idlm-settings-tab-content <?php echo $active_tab === 'help' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-help" <?php echo $active_tab === 'help' ? '' : 'hidden'; ?>>
+            <section id="settings-help" class="idlm-settings-tab-content <?php echo $idlm_active_tab === 'help' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-help" <?php echo $idlm_active_tab === 'help' ? '' : 'hidden'; ?>>
                 <div class="idlm-grid-full">
                     <article class="idlm-card">
                         <h3>Cloudflare "Under Attack" Mode & Security Blocks Guidance</h3>

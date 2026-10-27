@@ -1,0 +1,106 @@
+{
+  "finding": "REL-003",
+  "builder": "Shashi",
+  "date": "2026-10-09",
+  "candidate": "1.102.73",
+  "status": "IMPLEMENTED, not CLOSED",
+  "schemas_changed": false,
+  "backlog_counts": {
+    "IMPLEMENTED": 39,
+    "IN PROGRESS": 1,
+    "OPEN": 4
+  },
+  "audit_source": "docs/audit-2026-10-06/RELEASE.md:70",
+  "primary_source": "https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/#10-plugins-may-not-embed-external-links-or-credits-on-the-public-site-without-explicitly-asking-the-users-permission",
+  "policy": {
+    "fresh_missing_partial": "off",
+    "stored_scalar_on_off": "Preserved without rewriting branding or inventing consent",
+    "malformed_stored": "Off without array-to-string warning",
+    "authorized_save": "Only posted checkbox string 1 opts in; absence/other/array opts out",
+    "historical_consent": "Not recorded; saved on is not proof of explicit consent; administrator review required when intent unknown",
+    "custom_branding_footer": "Preserved on upgrade/read",
+    "reset": "Shared defaults off; user must save to publish"
+  },
+  "checks": [
+    {
+      "ids": "T01/T19/T20-fast-baseline",
+      "command": "php tests/run.php before production repair with four new cases",
+      "actual": "353 PASS / 3 expected FAIL",
+      "exit_code": 1,
+      "log": "baseline-fast.log"
+    },
+    {
+      "ids": "T01/T19/T20-fast-final",
+      "command": "php tests/run.php",
+      "actual": "356 PASS / 0 FAIL",
+      "exit_code": 0,
+      "log": "fast-final.log",
+      "warnings": "Seven inherited displayed warnings; baseline multiset identical"
+    },
+    {
+      "ids": "T01/T19/T20-actual-HTTP",
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD=<empty owned test credential> IDLM_TEST_DB_HOST=localhost:<owned socket> php tests/integration/quotation-http.php --attribution-only",
+      "actual": "4 PASS / 0 FAIL including affected-request PHP diagnostic gate",
+      "exit_code": 0,
+      "log": "http-final-clean.log",
+      "authority": "Real WordPress runtime/cookie sessions/nonces/controllers/public shortcode render and independent primary SQL assertions"
+    },
+    {
+      "ids": "T19-browser",
+      "actual": "Desktop/mobile defaults, Space, preview and restore checks PASS",
+      "log": "browser-verification.json"
+    },
+    {
+      "ids": "T01/T19/T20-syntax",
+      "actual": "9 changed PHP files PASS; git diff --check PASS",
+      "logs": [
+        "php-lint.log",
+        "changed-php-files.json",
+        "diff-check.log"
+      ]
+    }
+  ],
+  "environment": {
+    "php": "8.4.14",
+    "WordPress": "7.1.3",
+    "MySQL": "8.4.0",
+    "scheduler": "WP-Cron",
+    "persistent_cache": "off",
+    "configured_site_loaded": false,
+    "outbound_provider_http_mail": "Intercepted by existing harness"
+  },
+  "fixture_corrections": [
+    "First HTTP fixture failure was cached parent option after independent HTTP save; primary SQL assertions corrected it",
+    "Browser fixture now maps plugin script/style URLs into owned loopback assets and enqueues real shared settings JavaScript",
+    "Owned CRM route prints footer scripts without the unrelated WP 7.1 deprecated skip-link callback"
+  ],
+  "evidence": {
+    "baseline_hashes": "baseline-hashes.json",
+    "source_hashes": "source-hashes.json",
+    "warning_comparison": "warning-comparison.json",
+    "graph_refresh": "graph-refresh.json",
+    "browser": "browser-verification.json",
+    "browser_screenshot": "mobile-default-off.jpg",
+    "cleanup": "cleanup.json",
+    "early_HTTP_failure": "http-focused.log"
+  },
+  "limits": [
+    "No clean complete candidate commit/matching remote CI/exact final installed-ZIP qualification",
+    "Supported runtime/cache/scheduler matrix not qualified",
+    "Accumulated native/full HTTP suites not rerun by this bounded slice",
+    "Saved on does not prove historical consent",
+    "Directory submission compliance not certified",
+    "No commit, push, tag or deployment"
+  ],
+  "cleanup": {
+    "owned_test_databases_remaining": 0,
+    "dedicated_socket_only_mysql_shutdown": true,
+    "held_fixture_clean_exit": 0,
+    "final_http_clean_exit": 0,
+    "initial_failed_fixture_exit": 1,
+    "browser_owned_tab_closed": true,
+    "viewport_override_reset": true,
+    "configured_site_touched": false
+  },
+  "next": "REL-004"
+}

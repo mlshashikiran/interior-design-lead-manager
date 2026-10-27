@@ -1,0 +1,600 @@
+[
+  {
+    "case": "T19-B-UI002-baseline390",
+    "data": {
+      "columns": "134.398px 201.594px",
+      "formWidth": 102.3984375,
+      "titleWidth": 102.3984375,
+      "viewport": 390
+    }
+  },
+  {
+    "case": "T19-B-UI002-fixed390-admin",
+    "data": {
+      "controls": [
+        {
+          "height": 34,
+          "id": "idlm-new-task-title",
+          "width": 318
+        },
+        {
+          "height": 36,
+          "id": "idlm-new-task-due",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-priority",
+          "width": 294
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-type",
+          "width": 294
+        },
+        {
+          "height": 34,
+          "id": "idlm-btn-add-task",
+          "width": 318
+        }
+      ],
+      "drawerWidth": 390,
+      "formClientWidth": 318,
+      "formScrollWidth": 318,
+      "formWidth": 318,
+      "innerColumns": "294px",
+      "outerColumns": "350px",
+      "viewport": 390
+    }
+  },
+  {
+    "case": "T19-B-UI002-final390-admin-filled",
+    "data": {
+      "controls": [
+        {
+          "height": 44,
+          "id": "idlm-new-task-title",
+          "left": 33,
+          "right": 351,
+          "value": "UI002 administrator mobile task — confirm the site visit and review all project measurements",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-due",
+          "left": 33,
+          "right": 351,
+          "value": "2026-10-09T10:30",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-priority",
+          "left": 33,
+          "right": 351,
+          "value": "High",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-type",
+          "left": 33,
+          "right": 351,
+          "value": "Site Visit",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-btn-add-task",
+          "left": 33,
+          "right": 351,
+          "value": "",
+          "width": 318
+        }
+      ],
+      "drawerBodyClient": 382,
+      "drawerBodyScroll": 382,
+      "drawerWidth": 390,
+      "formClientWidth": 318,
+      "formScrollWidth": 318,
+      "formWidth": 318,
+      "innerColumns": "318px",
+      "outerColumns": "350px",
+      "viewport": 390
+    }
+  },
+  {
+    "case": "T19-B-UI002-final320-admin-filled",
+    "data": {
+      "controls": [
+        {
+          "height": 44,
+          "id": "idlm-new-task-title",
+          "left": 33,
+          "right": 281,
+          "value": "UI002 administrator mobile task — confirm the site visit and review all project measurements",
+          "width": 248
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-due",
+          "left": 33,
+          "right": 281,
+          "value": "2026-10-09T10:30",
+          "width": 248
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-priority",
+          "left": 33,
+          "right": 281,
+          "value": "High",
+          "width": 248
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-type",
+          "left": 33,
+          "right": 281,
+          "value": "Site Visit",
+          "width": 248
+        },
+        {
+          "height": 44,
+          "id": "idlm-btn-add-task",
+          "left": 33,
+          "right": 281,
+          "value": "",
+          "width": 248
+        }
+      ],
+      "drawerBodyClient": 312,
+      "drawerBodyScroll": 312,
+      "drawerWidth": 320,
+      "formClientWidth": 248,
+      "formScrollWidth": 248,
+      "formWidth": 248,
+      "innerColumns": "248px",
+      "outerColumns": "280px",
+      "viewport": 320
+    }
+  },
+  {
+    "case": "T04-T19-B-UI002-admin320-create",
+    "data": "UI002 administrator mobile task — confirm the site visit and review all project measurements\n\nSITE VISIT\nOct 09, 2026 10:30 AM\n×"
+  },
+  {
+    "case": "T19-B-UI002-final768-admin",
+    "data": {
+      "controls": [
+        {
+          "height": 44,
+          "id": "idlm-new-task-title",
+          "left": 75,
+          "right": 687,
+          "value": "",
+          "width": 612
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-due",
+          "left": 75,
+          "right": 687,
+          "value": "",
+          "width": 612
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-priority",
+          "left": 75,
+          "right": 687,
+          "value": "Medium",
+          "width": 612
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-type",
+          "left": 75,
+          "right": 687,
+          "value": "General",
+          "width": 612
+        },
+        {
+          "height": 44,
+          "id": "idlm-btn-add-task",
+          "left": 75,
+          "right": 687,
+          "value": "",
+          "width": 612
+        }
+      ],
+      "drawerBodyClient": 692,
+      "drawerBodyScroll": 692,
+      "drawerWidth": 700,
+      "formClientWidth": 612,
+      "formScrollWidth": 612,
+      "formWidth": 612,
+      "innerColumns": "612px",
+      "outerColumns": "644px",
+      "viewport": 768
+    }
+  },
+  {
+    "case": "T19-B-UI002-final1280-admin",
+    "data": {
+      "controls": [
+        {
+          "height": 34,
+          "id": "idlm-new-task-title",
+          "left": 75,
+          "right": 499.796875,
+          "value": "",
+          "width": 424.796875
+        },
+        {
+          "height": 36,
+          "id": "idlm-new-task-due",
+          "left": 75,
+          "right": 499.796875,
+          "value": "",
+          "width": 424.796875
+        },
+        {
+          "height": 32,
+          "id": "idlm-new-task-priority",
+          "left": 89,
+          "right": 282.3984375,
+          "value": "Medium",
+          "width": 193.3984375
+        },
+        {
+          "height": 32,
+          "id": "idlm-new-task-type",
+          "left": 292.3984375,
+          "right": 485.796875,
+          "value": "General",
+          "width": 193.3984375
+        },
+        {
+          "height": 34,
+          "id": "idlm-btn-add-task",
+          "left": 75,
+          "right": 499.796875,
+          "value": "",
+          "width": 424.796875
+        }
+      ],
+      "drawerBodyClient": 1210,
+      "drawerBodyScroll": 1210,
+      "drawerWidth": 1212,
+      "formClientWidth": 425,
+      "formScrollWidth": 425,
+      "formWidth": 424.796875,
+      "innerColumns": "193.398px 193.398px",
+      "outerColumns": "456.797px 685.195px",
+      "viewport": 1280
+    }
+  },
+  {
+    "case": "T04-T19-B-UI002-admin1280-create",
+    "data": "UI002 administrator mobile task — confirm the site visit and review all project measurements\n\nSITE VISIT\nOct 09, 2026 10:30 AM\n×\n\nUI002 administrator desktop task\n\nDESIGN MOCKUP\nOct 10, 2026 03:45 PM\n×"
+  },
+  {
+    "case": "T19-B-UI002-final390-representative",
+    "data": {
+      "controls": [
+        {
+          "height": 44,
+          "id": "idlm-new-task-title",
+          "left": 33,
+          "right": 351,
+          "value": "UI002 representative mobile task",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-due",
+          "left": 33,
+          "right": 351,
+          "value": "2026-10-11T09:15",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-priority",
+          "left": 33,
+          "right": 351,
+          "value": "Low",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-type",
+          "left": 33,
+          "right": 351,
+          "value": "Quote Revision",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-btn-add-task",
+          "left": 33,
+          "right": 351,
+          "value": "",
+          "width": 318
+        }
+      ],
+      "drawerBodyClient": 382,
+      "drawerBodyScroll": 382,
+      "drawerWidth": 390,
+      "formClientWidth": 318,
+      "formScrollWidth": 318,
+      "formWidth": 318,
+      "innerColumns": "318px",
+      "outerColumns": "350px",
+      "viewport": 390
+    }
+  },
+  {
+    "case": "T04-T19-B-UI002-representative390-create",
+    "data": "UI002 administrator mobile task — confirm the site visit and review all project measurements\n\nSITE VISIT\nOct 09, 2026 10:30 AM\n×\n\nUI002 administrator desktop task\n\nDESIGN MOCKUP\nOct 10, 2026 03:45 PM\n×\n\nUI002 representative mobile task\n\nQUOTE REVISION\nOct 11, 2026 09:15 AM\n×"
+  },
+  {
+    "case": "T19-B-UI002-task-list-scroll-and-access",
+    "data": {
+      "bodyClientHeight": 585,
+      "bodyScrollHeight": 862,
+      "bodyScrollTop": 277.5,
+      "listBottom": 690.9765625,
+      "listClientWidth": 348,
+      "listScrollWidth": 348,
+      "viewportHeight": 844
+    }
+  },
+  {
+    "case": "T19-B-UI002-long-label320-static-captured-markup",
+    "data": {
+      "controls": [
+        {
+          "height": 44,
+          "id": "idlm-new-task-title",
+          "left": 33,
+          "right": 281,
+          "value": "",
+          "width": 248
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-due",
+          "left": 33,
+          "right": 281,
+          "value": "",
+          "width": 248
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-priority",
+          "left": 33,
+          "right": 281,
+          "value": "Medium",
+          "width": 248
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-type",
+          "left": 33,
+          "right": 281,
+          "value": "General",
+          "width": 248
+        },
+        {
+          "height": 44,
+          "id": "idlm-btn-add-task",
+          "left": 33,
+          "right": 281,
+          "value": "",
+          "width": 248
+        }
+      ],
+      "drawerBodyClient": 312,
+      "drawerBodyScroll": 312,
+      "drawerWidth": 320,
+      "formClientWidth": 248,
+      "formScrollWidth": 248,
+      "formWidth": 248,
+      "innerColumns": "248px",
+      "outerColumns": "280px",
+      "viewport": 320
+    },
+    "labels": [
+      {
+        "client": 248,
+        "height": 26,
+        "scroll": 248,
+        "text": "Aufgabentitel und ausführliche Beschreibung des geplanten Kundenbesuchs *"
+      },
+      {
+        "client": 248,
+        "height": 26,
+        "scroll": 248,
+        "text": "Fälligkeitsdatum und gewünschte Uhrzeit für den nächsten Kundenkontakt"
+      },
+      {
+        "client": 248,
+        "height": 26,
+        "scroll": 248,
+        "text": "Priorität der geplanten Nachverfolgungsaufgabe"
+      },
+      {
+        "client": 248,
+        "height": 26,
+        "scroll": 248,
+        "text": "Art der geplanten Aufgabe und Kundenkommunikation"
+      }
+    ]
+  },
+  {
+    "case": "T19-B-UI002-long-label390-static-captured-markup",
+    "data": {
+      "controls": [
+        {
+          "height": 44,
+          "id": "idlm-new-task-title",
+          "left": 33,
+          "right": 351,
+          "value": "",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-due",
+          "left": 33,
+          "right": 351,
+          "value": "",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-priority",
+          "left": 33,
+          "right": 351,
+          "value": "Medium",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-type",
+          "left": 33,
+          "right": 351,
+          "value": "General",
+          "width": 318
+        },
+        {
+          "height": 44,
+          "id": "idlm-btn-add-task",
+          "left": 33,
+          "right": 351,
+          "value": "",
+          "width": 318
+        }
+      ],
+      "drawerBodyClient": 382,
+      "drawerBodyScroll": 382,
+      "drawerWidth": 390,
+      "formClientWidth": 318,
+      "formScrollWidth": 318,
+      "formWidth": 318,
+      "innerColumns": "318px",
+      "outerColumns": "350px",
+      "viewport": 390
+    },
+    "labels": [
+      {
+        "client": 318,
+        "height": 26,
+        "scroll": 318,
+        "text": "Aufgabentitel und ausführliche Beschreibung des geplanten Kundenbesuchs *"
+      },
+      {
+        "client": 318,
+        "height": 26,
+        "scroll": 318,
+        "text": "Fälligkeitsdatum und gewünschte Uhrzeit für den nächsten Kundenkontakt"
+      },
+      {
+        "client": 318,
+        "height": 13,
+        "scroll": 318,
+        "text": "Priorität der geplanten Nachverfolgungsaufgabe"
+      },
+      {
+        "client": 318,
+        "height": 13,
+        "scroll": 318,
+        "text": "Art der geplanten Aufgabe und Kundenkommunikation"
+      }
+    ]
+  },
+  {
+    "case": "T19-B-UI002-long-label768-static-captured-markup",
+    "data": {
+      "controls": [
+        {
+          "height": 44,
+          "id": "idlm-new-task-title",
+          "left": 75,
+          "right": 687,
+          "value": "",
+          "width": 612
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-due",
+          "left": 75,
+          "right": 687,
+          "value": "",
+          "width": 612
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-priority",
+          "left": 75,
+          "right": 687,
+          "value": "Medium",
+          "width": 612
+        },
+        {
+          "height": 44,
+          "id": "idlm-new-task-type",
+          "left": 75,
+          "right": 687,
+          "value": "General",
+          "width": 612
+        },
+        {
+          "height": 44,
+          "id": "idlm-btn-add-task",
+          "left": 75,
+          "right": 687,
+          "value": "",
+          "width": 612
+        }
+      ],
+      "drawerBodyClient": 692,
+      "drawerBodyScroll": 692,
+      "drawerWidth": 700,
+      "formClientWidth": 612,
+      "formScrollWidth": 612,
+      "formWidth": 612,
+      "innerColumns": "612px",
+      "outerColumns": "644px",
+      "viewport": 768
+    },
+    "labels": [
+      {
+        "client": 612,
+        "height": 13,
+        "scroll": 612,
+        "text": "Aufgabentitel und ausführliche Beschreibung des geplanten Kundenbesuchs *"
+      },
+      {
+        "client": 612,
+        "height": 13,
+        "scroll": 612,
+        "text": "Fälligkeitsdatum und gewünschte Uhrzeit für den nächsten Kundenkontakt"
+      },
+      {
+        "client": 612,
+        "height": 13,
+        "scroll": 612,
+        "text": "Priorität der geplanten Nachverfolgungsaufgabe"
+      },
+      {
+        "client": 612,
+        "height": 13,
+        "scroll": 612,
+        "text": "Art der geplanten Aufgabe und Kundenkommunikation"
+      }
+    ]
+  }
+]

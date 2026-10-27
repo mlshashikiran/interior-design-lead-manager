@@ -1,0 +1,32 @@
+{
+  "builder": "Shashi",
+  "query": "REL-005 runtime compatibility prerequisites quotation exporter secret store",
+  "finding": "Bounded lookup located release checklist and credential store; current exporter, vendor requirements and CI verified prerequisite and support contracts.",
+  "mode": "Scoped PHP structural extraction and explicit documentation heading refresh",
+  "source_hashes": {
+    "interior-design-lead-manager.php": "a9dae43233dd680525dff3ff90bb61414bb180907544a793207853ebd1ae627c",
+    "includes/class-quotation-exporter.php": "b79d7142312708a9d300ccd1f8af80e6fd9b19fd805082cb6060d740209fd7ac",
+    "includes/class-secret-store.php": "78a6215c4af9243137f04a8102a3eebe8fed26874958493c6c7609ec9fca7282",
+    "tests/release-contracts.php": "03ce8d50a112cb595b6db9ba7c4db398495c8a8548c19595f6a58ccb62cb691d",
+    "tests/run.php": "31c2e1f156fccef4dc3d3b4f30121346f592a04517904ecd3cc73a99a7899d32",
+    "tests/runtime-support-contracts.php": "48135604d4595650363aabe8e87cbf50ee4c324cd3e15b88d504b4e73f0785a5",
+    "tests/runtime-prerequisite-probe.php": "86063393c9c613e3b13a73799f6b7fd1b4263ec195a83c27f94077d611c31543",
+    "tests/runtime-prerequisites.php": "49a55afefbeb1644d333c9971b1e2f8ac6134c5c0174bb503cf38322a26e5046",
+    "docs/AUDIT-REMEDIATION-RUNTIME-SUPPORT-SLICE.md": "240187a950027e1e2d3dbfd87289f6f3d29aeb0a71657f2aef6ba0fb0cfe4417",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "79a2973999b7c7ab954d19a795636a9e3663b454519d84faf968b5653b3f4fff",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "f3f17c7d982f285d86fc94fc0a01a36e99ed5da496886e45f94f5c9ebda4a841",
+    "docs/CHANGELOG-DEV.md": "079df16218da5d2fefae8e8bfb207040a860ef4f21991120b863d9feb9ca7109",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "ab02ecd623ebdcbb58f49276c78a4dcf5e2704aa3ba9428d6ff1a21c4bd5d324",
+    "docs/DEVELOPMENT.md": "8c33a0b24f461216863e0b59b108eab62b9cdb55a184fa6c4a794d3d6a88daae",
+    "tests/README.md": "e0908a5485b0e29a9ef1e7805e2047910ab5800be894e60e88314cd08cf70f8d",
+    "CHANGELOG.md": "757eaee16da4d56781dae1377f606f447d2575ab7075c0da3c3277faf1a88a87",
+    "readme.txt": "323ee4955328bf0fe4ed8ff9de66a4ddeec65ce4d2ca2a8b2bc55953a84c0361",
+    "SUPPORT.md": "1eae2b2df13d42da9994e21d9ed5be34c940817a4b77aea58e05acaf2178d773",
+    ".github/workflows/tests.yml": "683520d5cabb877e2c685d08eb197f7b67e107228adf716eb1052f3dbef517bf",
+    "docs/audit-remediation-backlog.csv": "8770c6c448a9fd9e2698c7a498a9c31aa46746ba1d17ee89cf2ae2df2e8cc25d"
+  },
+  "removed_stale_nodes": 547,
+  "source_nodes": 75,
+  "source_edges": 75,
+  "scope": "Unrelated graph retained; no full semantic/HTML/report regeneration"
+}

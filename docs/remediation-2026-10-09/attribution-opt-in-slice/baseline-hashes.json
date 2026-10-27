@@ -1,0 +1,13 @@
+{
+  "includes/class-settings.php": "ba084b66d0f58bab64cd567efb4949b6f844ef9d4d0ef69e326de758220b3402",
+  "templates/admin/settings/white-label.php": "6879f1b4efe148457d8f17f82fb7caa4fa957b08db41e0ce76b0edee0bfbe73f",
+  "tests/run.php": "7fc803bb33135b90691249a9a5312c2503a10e38eb82d16dfb1fc35c5d5e2812",
+  "tests/integration/quotation-http.php": "a838ab64e8789af016f2e21fbcdc752f2b6c8af591c24749a038470492fe9257",
+  "tests/integration/http-router.php": "9703cd2ab0340aaeb67918083bb7d1e430443b008a3388774173c444149d8da6",
+  "interior-design-lead-manager.php": "74a38c05842ffb50d44ab380640eb4821464f57119dffd74e6f60c2f9753c322",
+  "readme.txt": "83e0f51d7ba6b68688c63dfbc846202f3249139fc9abb97e0f2627b66aa1e519",
+  "CHANGELOG.md": "03893b5cdec0ca4d9889e76680bf3e715565bfa24711c2ef546fb324134f45ed",
+  "tests/release-contracts.php": "039d5739532d826c4d081856d07e19003fee60b617227769cf1ea70ac5b53d96",
+  "docs/CHANGELOG-DEV.md": "6935a044289bd579383d59ebe9d4e8b8189bd8d3418de0886462cb84af376182",
+  "docs/PRODUCTION-SCALABILITY-PLAN.md": "cb51ca7b7c936a3a6d41be9692413b0aa643ef138197c9f396af261e96900cea"
+}

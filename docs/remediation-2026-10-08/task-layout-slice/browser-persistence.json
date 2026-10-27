@@ -1,0 +1,40 @@
+{
+  "builder": "Shashi",
+  "result": "PASS",
+  "database": "idlm_test_85281_7e2e5f3f",
+  "tasks": [
+    {
+      "lead_id": "5",
+      "assigned_rep_id": "2",
+      "title": "UI002 administrator mobile task \u2014 confirm the site visit and review all project measurements",
+      "task_type": "Site Visit",
+      "priority": "High",
+      "status": "pending",
+      "due_date": "2026-10-09 10:30:00",
+      "created_by": "1"
+    },
+    {
+      "lead_id": "5",
+      "assigned_rep_id": "2",
+      "title": "UI002 administrator desktop task",
+      "task_type": "Design Mockup",
+      "priority": "Medium",
+      "status": "pending",
+      "due_date": "2026-10-10 15:45:00",
+      "created_by": "1"
+    },
+    {
+      "lead_id": "5",
+      "assigned_rep_id": "2",
+      "title": "UI002 representative mobile task",
+      "task_type": "Quote Revision",
+      "priority": "Low",
+      "status": "pending",
+      "due_date": "2026-10-11 09:15:00",
+      "created_by": "2"
+    }
+  ],
+  "php_diagnostics": "",
+  "geometry_assertions": "PASS mobile controls all full width and44px high; one-column grids; no form/body or long-label horizontal overflow",
+  "browser_observations": 14
+}

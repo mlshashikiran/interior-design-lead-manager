@@ -1,0 +1,105 @@
+{
+    "environment": "Dependency-free PHP doubles; no native DB, HTTP, uploads, external callbacks, or browser",
+    "results": [
+        {
+            "id": "CORE-S01 ordinary contributor without CRM capability denied",
+            "status": "FAIL",
+            "expected": false,
+            "actual": true
+        },
+        {
+            "id": "CORE-S02 fresh default contributor assigned-only scope",
+            "status": "FAIL",
+            "expected": 8,
+            "actual": 0
+        },
+        {
+            "id": "CORE-S03 contributor cannot mutate other owner",
+            "status": "PASS",
+            "expected": false,
+            "actual": false
+        },
+        {
+            "id": "CORE-S04 subscriber denied",
+            "status": "PASS",
+            "expected": false,
+            "actual": false
+        },
+        {
+            "id": "CORE-S15 disabled representative denied login access",
+            "status": "PASS",
+            "expected": false,
+            "actual": false
+        },
+        {
+            "id": "CORE-S16 disabled representative excluded assignment",
+            "status": "FAIL",
+            "expected": false,
+            "actual": true
+        },
+        {
+            "id": "CORE-S05 failed canonical write returns failure",
+            "status": "FAIL",
+            "expected": false,
+            "actual": true
+        },
+        {
+            "id": "CORE-S06 failed canonical write emits no attribution hook",
+            "status": "FAIL",
+            "expected": false,
+            "actual": true
+        },
+        {
+            "id": "CORE-S07 failed touchpoint write returns failure",
+            "status": "FAIL",
+            "expected": false,
+            "actual": true
+        },
+        {
+            "id": "CORE-S08 failed required state event rejects or rolls back update",
+            "status": "FAIL",
+            "expected": false,
+            "actual": true
+        },
+        {
+            "id": "CORE-S09 failed state event does not leave changed stage",
+            "status": "FAIL",
+            "expected": "New",
+            "actual": "Contacted"
+        },
+        {
+            "id": "CORE-S10 partial qualification plan retry fills six tasks",
+            "status": "FAIL",
+            "expected": 6,
+            "actual": 5
+        },
+        {
+            "id": "CORE-S11 single-email match keeps canonical ownership",
+            "status": "PASS",
+            "expected": 7,
+            "actual": 7
+        },
+        {
+            "id": "CORE-S12 single email conflicting country phone actual documented test policy matches",
+            "status": "PASS",
+            "expected": true,
+            "actual": true
+        },
+        {
+            "id": "CORE-S13 valid cursor accepted",
+            "status": "PASS",
+            "expected": {
+                "id": 1
+            },
+            "actual": {
+                "id": 1
+            }
+        },
+        {
+            "id": "CORE-S14 cross-user cursor rejected",
+            "status": "PASS",
+            "expected": true,
+            "actual": true
+        }
+    ]
+}

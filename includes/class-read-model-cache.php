@@ -31,6 +31,9 @@ final class IDLM_Read_Model_Cache {
         add_action('added_option', array(__CLASS__, 'invalidate_on_option_change'), 10, 2);
         add_action('updated_option', array(__CLASS__, 'invalidate_on_option_change'), 10, 3);
         add_action('deleted_option', array(__CLASS__, 'invalidate_on_option_change'), 10, 1);
+        add_action('added_user_meta', array(__CLASS__, 'invalidate_on_user_access_change'), 10, 4);
+        add_action('updated_user_meta', array(__CLASS__, 'invalidate_on_user_access_change'), 10, 4);
+        add_action('deleted_user_meta', array(__CLASS__, 'invalidate_on_user_access_change'), 10, 4);
         add_action(IDLM_Data_Retention::HOOK, array(__CLASS__, 'invalidate_after_retention'), 20);
     }
 
@@ -104,9 +107,19 @@ final class IDLM_Read_Model_Cache {
             'idlm_monthly_lead_target',
             'idlm_monthly_conversion_target',
             'idlm_reps_see_all_leads',
+            'idlm_role_lead_scopes',
         );
-        if (in_array((string) $option, $options, true)) {
+        global $wpdb;
+        if (in_array((string) $option, $options, true) || (string) $option === $wpdb->prefix . 'user_roles') {
             self::invalidate('settings');
+        }
+    }
+
+    /** Capability, role and suspension edits must invalidate warmed reads. */
+    public static function invalidate_on_user_access_change($meta_id, $user_id, $meta_key, $meta_value = null) {
+        global $wpdb;
+        if (in_array((string) $meta_key, array($wpdb->prefix . 'capabilities', 'idlm_crm_access_disabled'), true)) {
+            self::invalidate('user_access');
         }
     }
 

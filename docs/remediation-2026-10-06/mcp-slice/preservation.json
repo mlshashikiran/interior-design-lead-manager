@@ -1,0 +1,111 @@
+{
+  "author": "Shashi",
+  "recorded_at": "2026-10-06T10:28:50.288423+00:00",
+  "baseline_files": 640,
+  "changed_starting_files": {
+    ".github/workflows/tests.yml": {
+      "before": "17d69e4d80801184cdddaec5a9d110131db83f0722558b214a8e91a3ca6d38ad",
+      "after": "083d4fc01c6aaa596f9b40252b9a6cf441771be66082621f2cfa3ae23b3deab4"
+    },
+    "CHANGELOG.md": {
+      "before": "2ceba7459dc8f82718df27e1fcdec136bd9e83f9186129b486556674d87b38f9",
+      "after": "92080c57655fbede208475372871c422a0ae65c46badc2fd2584a6b3dfe055b6"
+    },
+    "docs/AUDIT-REMEDIATION-PLAN.md": {
+      "before": "df8e43267a29e03012d750cbea1556328948ea8d0b20bba59cf4893a9823f8a8",
+      "after": "9da27741bbf3c9ad87a8f1853dc0d3341a385816b3842b85bd180c83fec96083"
+    },
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": {
+      "before": "b7cf6cef4f1b469edfad641ca0f209fc5f66534d9fb0458296ef4da37491ae60",
+      "after": "05b71e26f2fd8a76acdb584f57a3f5ef8e023071611ebe6fc6d835a38a9596ea"
+    },
+    "docs/CHANGELOG-DEV.md": {
+      "before": "5cc49e4f05365d5eec4f1ffc10181c9b6b26bf3701324e4c1a100c26415afc97",
+      "after": "bd6f527ea6a4ed5122821daf83efaf9cb7be0823cb9edbcd1f302044cbee3211"
+    },
+    "docs/FEATURE-MAP.md": {
+      "before": "769eaceee9b98f1161b19874189d81f1ab81af7516a9053e61ae5aed1c662fb5",
+      "after": "c04a06f8ad0063118dac7cc918bafc4d39e52aa7ff07041a8fef4db00903ceab"
+    },
+    "docs/INTERFACES.md": {
+      "before": "7662ba69103d8acb4d7d2a926d743fb361335e0bcfd396d167e0178095d69f27",
+      "after": "0ac2639aeb0131f1df1d8add7d2c1b4d5654b89c8bd6954a6e5db3a234bc07b4"
+    },
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": {
+      "before": "d5d46f28ab7af419e1a10c344d958ff879ac8e703e9cdd8e740d5f65277389c8",
+      "after": "51b540b142281b913c3b205f85b308a7d604b6c10246dd1d9b37089987320c2f"
+    },
+    "docs/PRODUCTION-SECURITY-CONFIG.md": {
+      "before": "47e656c8dc9ce71ac2909d12eefb602083a800e4209aee96a8f996000f078d60",
+      "after": "9ca23ca63f63b157641a9bd114619dc9a443e06043554931c70a0aba0acb523c"
+    },
+    "docs/SECURITY.md": {
+      "before": "90d48c6425c2e06af2f8856d58171f57e732b497a00d80b566a0bc6eed33fbcc",
+      "after": "d53ddb3d8df1474ba6409f7ba49714f1bfc3a8f68c7188e7296032e8fe0740ab"
+    },
+    "docs/audit-remediation-backlog.csv": {
+      "before": "c933f2c1c55f443941cd56caf177605c217c9861bb5a19608d6dc32750db602c",
+      "after": "b3c8bdb77588b1f3470111db39dd6628e69039f14310d21a6dd94d3120d4ae79"
+    },
+    "includes/class-mcp-core.php": {
+      "before": "49c11204fef7081e168eb24dce73818e1e9cbb77abb780fa5b3c12985957a186",
+      "after": "66985462fb6b7b5eea6bdc3f593ceb733d15d2fd89ddbba42a4cd256fd1814e4"
+    },
+    "includes/class-production-security.php": {
+      "before": "5c81cef4cf5790aaa2c5eda661603f67e92e8adb16e4140148a452ece6cc26f8",
+      "after": "3fd972d31f7d454c5e166fdae1699766ab70f1b4519ce45ac043787661c5c75b"
+    },
+    "interior-design-lead-manager.php": {
+      "before": "0a0c136209a0908e8391b6af5986e9aadf0fcfba724aba1939af541f2f454b2a",
+      "after": "f184a20b84b2184c953388450b9c40cb304969b66ca8d63842ecc2b4f1c0c292"
+    },
+    "mcp-server.php": {
+      "before": "487e0c7b775745aaea0421de0360f425c8c7e41cf37831b31d2b0336cc9f17cc",
+      "after": "c5f463e8c7c3781d74a3cb9fc1f1c243b4c0ca4e395fece4e6a2884b0528c0cc"
+    },
+    "readme.txt": {
+      "before": "36612fd998e7920b5a98d755cfeea026bdc748f102b80ed9ab52ebcb68289679",
+      "after": "3c71b7d42aa1bddcb22594d1ec31268ee5d3a46719b3883e03bf439eabd236b4"
+    },
+    "tests/README.md": {
+      "before": "1163fcff6b548b136614f72ceb20ead44618c37553e2f62feae58f76885557fa",
+      "after": "f8df112c9a7b36fd4c1a3e578301b665bfe882d6f69a242e7633fb1d848e91ef"
+    },
+    "tests/bootstrap.php": {
+      "before": "d7996e1ec8a1f06772e8f74fb879afdc5211099f8ed585a0006a2c1d97d8af13",
+      "after": "6be7e77a5ddb9a7cdf6edea4bc8a5bda0340266abcddb574bca498685e9eda3b"
+    },
+    "tests/integration/http-router.php": {
+      "before": "3f4e3aef34c872bede5199338713ca468f846e868734c931612edde40f5513d7",
+      "after": "541dfdc82f0b7174948fe1f39432a200b6f7171b1a542b907f4f9661396203db"
+    },
+    "tests/integration/quotation-http.php": {
+      "before": "14bb56ae057b5a07cc5eca7a39686ec7f624da390ffefe9b8f25178445c9ad4f",
+      "after": "39b4517cbfef41e420a75b27762c60bda81bfd1aed16c2684a3b1e779f79a3dd"
+    },
+    "tests/integration/run.php": {
+      "before": "bf795b17515d9b207a85a063ff7495a68b437ba4d012c7f3179f983fb5232d02",
+      "after": "b70846fa1a9ff0f04af75ee5dcae6a9aa5764cae054cc9a67f8fc43105814482"
+    },
+    "tests/release-contracts.php": {
+      "before": "5204b54871c9c2aa605582dcce44a8d9331248cbd17973f5c0bfaa0deba025d5",
+      "after": "0303bdf6e731c654456344f8cd38ac10d30f190e15430f137f01241a2e888e73"
+    },
+    "tests/release/class-release-artifact.php": {
+      "before": "305112028b84eedc9fd4e47c67a5af86e1f4d764acab847b9b835cb34d7e2e92",
+      "after": "574b4e351894635ff5438b694db1e04bf2dcb93bf89d1c5a6b031c76fab586af"
+    },
+    "tests/run.php": {
+      "before": "b5c5c0aaaacfab76b1ff0a4f437fba2fd3c3aa55bbd9cf1e2dacaff1106ddbf0",
+      "after": "09f5b6ecdb59435a531a411358d04355495895454a6b5da93f51df7a74f45883"
+    }
+  },
+  "unchanged_starting_files": 616,
+  "missing_files": [],
+  "immutable_historical_files": 115,
+  "immutable_status": "All original audit and both previous slice reports/evidence SHA-256 hashes unchanged",
+  "baseline_manifest_sha256": "e2ef873472d7856f1ca2a9cc0c5e600e893b7e3afbb2a7cda7a3745d8a11177c",
+  "source_snapshot": "/private/tmp/idlm-mcp-slice-baseline/source",
+  "tracked_binary_diff_backup": "/private/tmp/idlm-mcp-slice-baseline/dirty.patch",
+  "scope": "Only listed starting files plus new slice compiler/tests/report/evidence changed. Ignored Graphify navigation output refreshed in scope."
+}

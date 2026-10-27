@@ -1,0 +1,1 @@
+{"scenario":"QUO-S09-forged-new-revision","status":"PASS","evidence":{"victim_revision_after":{"id":50,"quote_id":99,"revision_number":1,"description":"Victim synthetic revision"},"quotes_after":[{"id":99,"lead_id":10,"quote_number":"VICTIM","current_revision_id":50}]}}

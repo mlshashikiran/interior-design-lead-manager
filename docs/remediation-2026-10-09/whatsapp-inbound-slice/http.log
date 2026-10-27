@@ -1,0 +1,8 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T07-H-INT006-signature-disabled-and-malformed-reject-without-writes
+PASS T09-H-INT006-multiple-entries-changes-media-status-and-replay-append-once
+PASS T09-H-INT006-partial-unmatched-delivery-resumes-after-identity-repair
+PASS T07-H-INT006-Interakt-ID-media-replay-and-collision-use-own-receipt
+PASS T09-H-INT006-required-receipt-failure-rolls-back-and-can-retry
+PASS T07-H-INT006-batch-size-bound-and-full-phone-ambiguity
+6 passed, 0 failed

@@ -1,0 +1,8 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+FAIL T08-N-INT009 failed manual upload retains selected work
+  Expected array (
+  0 => 1,
+), got array (
+).
+
+1 passed, 1 failed

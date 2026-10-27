@@ -1,0 +1,2 @@
+Email,"Phone Number","Country Code",Zip,"Hashed first name","Hashed last name"
+Expected 404; actual=CSV emitted

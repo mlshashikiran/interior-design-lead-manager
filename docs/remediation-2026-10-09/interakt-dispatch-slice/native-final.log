@@ -1,0 +1,13 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T09-N-INT004-opaque WP-Cron jobs use current primary credentials and contact traits
+PASS T09-N-INT004-disabled deleted duplicate reversed owner and mapping changes cancel
+PASS T09-N-INT004-reenable revokes old jobs and legacy payload callbacks never send
+PASS T09-N-INT004-required claim and result writes fail without duplicate delivery
+PASS T09-N-INT004-schedule failure and repeated outbox handoff retain one durable identity
+PASS T09-C-INT004-accepted send crash becomes uncertain without resend
+PASS T09-C-INT004-overlapping independent workers send once and defer contention
+PASS T09-T16-T17-N-INT004-runtime claims excluded from backups and erased by recovery and reset
+PASS T09-N-INT004-failed enable epoch and malformed job fail closed
+PASS T09-N-INT004-delayed fallback binds original event and workers refuse caller transactions
+
+11 passed, 0 failed

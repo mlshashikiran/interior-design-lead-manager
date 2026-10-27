@@ -1,0 +1,2 @@
+FAIL INT008 ordinary success remains deduplicated after diagnostic logs disappear
+  Expected 1, got 2.

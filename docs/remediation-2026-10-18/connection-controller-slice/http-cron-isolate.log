@@ -1,0 +1,6 @@
+ENV PHP=8.4.14 WP=6.6 DB=8.4.0 scheduler=WP-Cron cache=off
+FAIL M6-H-connection-nonce-and-administrator-denials-have-no-side-effects: Invalid-nonce request changed snapshot: {"before":{"1792303262":["recovery_mode_clean_expired_keys","wp_privacy_delete_old_export_files"],"1792303562":["idlm_private_file_maintenance"],"1792306861":["wp_version_check"],"1792306862":["idlm_prune_sensitive_data"],"1792308661":["wp_update_plugins"],"1792310461":["wp_update_themes"],"1792389662":["wp_site_health_scheduled_check"]},"after":{"1792303262":["recovery_mode_clean_expired_keys","wp_privacy_delete_old_export_files"],"1792303263":["wp_update_user_counts"],"1792303323":["wp_update_comment_type_batch"],"1792303562":["idlm_private_file_maintenance"],"1792306861":["wp_version_check"],"1792306862":["idlm_prune_sensitive_data"],"1792308661":["wp_update_plugins"],"1792310461":["wp_update_themes"],"1792389662":["wp_site_health_scheduled_check"]}}
+PASS M6-H-connection-local-validation-and-Google-credential-fallback-stay-read-only
+PASS M6-H-connection-provider-success-retains-stored-header-auth-and-messages
+PASS M6-H-connection-provider-errors-retain-shape-and-redact-credential-echoes
+3 passed, 1 failed

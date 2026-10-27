@@ -1,0 +1,129 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS schema installers are idempotent and an old core version restores a missing column
+PASS real REST dispatch enforces webhook and MCP permission callbacks
+PASS authenticated WordPress AJAX dispatch enforces nonce, capability, and lazy log payload context
+PASS admin and frontend renderers preserve critical selectors and access output
+PASS settings save enforces capability and nonce before sanitized mirrored secret-safe writes
+PASS lead lifecycle writes persist coupled state, tasks, activity, and hooks
+PASS MCP PII access succeeds only with the scoped key after real lead persistence
+PASS quotation repository persists and queries catalogue read models
+PASS frontend quotation workspace list route renders with date filters
+PASS quotation number reservation is monotonic under concurrent database workers
+PASS quotation save persists exact totals, revision graph, and uniqueness constraints
+PASS performance dataset command seeds, verifies, and resets only its disposable tagged run
+PASS query-plan capture returns optimizer and index evidence without raw SQL
+PASS dashboard analytics and investigations share role scope and real SQL counts
+PASS pre-sales drawer rejects forged fields and partial saves preserve commercial data
+PASS CRM reset rolls back failed deletes and clears runtime state without recycling lead IDs
+PASS fresh role setup excludes ordinary editorial CRM and catalogue grants
+PASS legacy access migration preserves explicit scopes and dedicated revocations
+PASS failed stored-role migration leaves policy marker behind and retry converges
+PASS newly encountered partial CRM role grants are not reconciled upward on update
+PASS MCP adversarial grammar and authentication fields reject before native SQL with either PII grant
+PASS MCP safe representative projection, literal encoding, PII revocation and real row budgets
+PASS MCP MySQL statement budget terminates expensive aggregate and redacts database errors
+PASS private file installer verifies schema/engine and retries a failed new-table installation
+PASS legacy private migration verifies all original/variant bytes before resumable public-copy cleanup
+PASS private migration rejects missing/shared/traversal inputs and failed chunk writes without losing source
+PASS file erasure rolls back with lead deletion failure and CRM reset removes private and legacy copies
+PASS tagged unsaved legacy uploads migrate without binding and erase with their lead
+PASS cleanup commit failure retains verified bytes and journal for safe retry after public unlink
+PASS managed upload history is excluded from legacy batch limits and deletion erases all journals
+PASS complete same-site backup roundtrips rows, old diagnostics, modern autoload and protected credentials
+PASS restore rejects malformed aggregates, cross-object references, users and serialized objects without writes
+PASS native collation collisions are staged before persistent deletion
+PASS late table, settings and commit failures roll back rows, settings, generation and queues
+PASS restore requires complete physical schema, uniques and transactional options
+PASS old restore retains numbering highwater and discards runtime jobs and autosaves
+PASS active native connection fences restore/reset and stale epochs never execute or retry
+PASS snapshot stays consistent while independent connection commits coupled lead and settings writes
+PASS failed export read returns an error and never substitutes an empty table
+PASS provider callbacks reject stale and legacy generations before logging, retries or HTTP
+PASS lost session lease fails closed before a provider callback can execute
+PASS lease lost during intercepted provider transport prevents result logs and retry writes
+PASS native option-name collisions and protected case aliases reject before deletion
+PASS T17-N-physical core install verifies every declared column, default, index and InnoDB engine
+PASS T17-N-denied ALTER retains the old core marker and retries a partial physical upgrade
+PASS T17-N-absent index cannot pass physical verification or advance the schema marker
+PASS T17-N-wrong index order, uniqueness and prefix lengths are rejected even with matching names
+PASS T17-N-column width, signedness, nullability and defaults must match the declared schema
+PASS T17-N-nontransactional core engine blocks migration without converting or losing rows
+PASS T17-N-real restricted DDL account cannot falsely complete core or routing installation
+PASS T17-N-marker write failure is detected from durable options and retry converges
+PASS T17-N-clock backfill failure prevents core and reporting markers from advancing
+PASS T17-N-historical core rows, immutable events and unrelated commercial rows survive repeated upgrades
+PASS T17-N-identical physical manifest keeps previous core 1.3.5 backups restorable
+PASS T17-N-loss of the session lock prevents durable completion markers
+PASS T17-N-backfill-handoff retains its marker on failure then accepts zero affected rows
+PASS T17-N-backfill-duplicate-quality retains its marker on failure then accepts zero affected rows
+PASS T17-N-backfill-workflow-late-write retains its marker on failure then accepts zero affected rows
+PASS T17-N-backfill-assignment-clock retains its marker on failure then accepts zero affected rows
+PASS T17-N-backfill-conversion-clock retains its marker on failure then accepts zero affected rows
+PASS T17-N-backfill-task-cleanup-second-write retains its marker on failure then accepts zero affected rows
+PASS T17-N-touchpoint interrupted insert retries without duplicates and preserves existing snapshots
+PASS T17-N-touchpoint SELECT failure cannot masquerade as an empty completed backfill
+PASS T17-N-large touchpoint backfill checkpoints bounded batches and resumes after each request
+PASS T17-C-killed installer leaves DDL durable, marker pending and session lock recoverable
+PASS T17-C-competing synchronized processes allow one installer and safely retry the other
+PASS T20-N-activation schema failure stops before scheduling or activation success
+PASS T17-N-zero inserted attribution rows remain pending until a real retry persists the touchpoint
+PASS T04-N-required idlm_leads failure rolls back qualification and retry records one transition
+PASS T04-N-required idlm_lead_activity_log failure rolls back qualification and retry records one transition
+PASS T04-N-required idlm_lead_state_events failure rolls back qualification and retry records one transition
+PASS T04-N-required idlm_tasks failure rolls back qualification and retry records one transition
+PASS T04-N-required idlm_lead_outbox failure rolls back qualification and retry records one transition
+PASS T02-N-new intake idlm_lead_activity_log failure has no partial aggregate or hook
+PASS T02-N-new intake idlm_lead_touchpoints failure has no partial aggregate or hook
+PASS T02-N-new intake idlm_lead_outbox failure has no partial aggregate or hook
+PASS T02-N-matched intake idlm_lead_activity_log failure has no partial aggregate or hook
+PASS T02-N-matched intake idlm_lead_touchpoints failure has no partial aggregate or hook
+PASS T02-N-matched intake idlm_lead_outbox failure has no partial aggregate or hook
+PASS T02-N-matched UPDATE and identity SELECT errors cannot acknowledge or create another lead
+PASS T02-N-external replay verifies the canonical tuple and does not append a touchpoint
+PASS T02-N-zero inserted touchpoint rows roll back rather than masquerade as replay
+PASS T02-N-review activity failure rolls back the retained conflict submission
+PASS T04-N-routing idlm_lead_state_events failure rolls back owner, events and all six tasks
+PASS T04-N-routing idlm_tasks failure rolls back owner, events and all six tasks
+PASS T04-N-qualified reassignment task INSERT failure rolls back owner, history and transferred tasks
+PASS T04-N-foreign transaction owner remains uncommitted and rollbackable after refused lifecycle write
+PASS T04-N-commit failure preserves prior aggregate and emits no pre-commit hook
+PASS T04-N-nontransactional core dependency blocks writes even with a current marker
+PASS T14-N-after-commit callback independently sees the committed lead and history with original arguments
+PASS T14-N-hook exception and acknowledgement failure retain replayable intents without undoing committed lead
+PASS T14-N-CAPI cron enqueue failure leaves intent for retry and successful retry queues once
+PASS T14-N-pending intents are bounded and deleted leads or old recovery epochs never dispatch
+PASS T14-C-process death before commit preserves the correct aggregate and retryable intent
+PASS T14-C-process death after commit preserves the correct aggregate and retryable intent
+PASS T02-C-synchronized inbound repeats produce one canonical lead and one external touchpoint
+PASS T04-C-synchronized updates preserve a serial immutable event chain
+PASS T14-C-two simultaneous outbox workers claim one hook handoff
+PASS T04-N-each of six fresh task insert failures rolls back the complete plan before retry
+PASS T04-N-required Lost remark failure rolls back close state, task archival and reporting
+PASS T04-C-disconnected transaction is never retried as an autocommit dependent write
+PASS T04-N-lost recovery session lock refuses commit and rolls back complete aggregate
+PASS T14-N-lead deletion, complete restore and reset erase pending intent without replay
+PASS T04-N-CORE006-every historical missing cycle converges once and preserves existing history
+PASS T17-N-CORE006-old four-day plans become six cycles without rewriting old rows
+PASS T04-N-CORE006-required adoption, missing insert, activity, intent and commit faults preserve partial plan
+PASS T04-N-CORE006-ambiguous duplicate and unknown legacy labels fail without changing history
+PASS T04-N-CORE006-evidence completion, reopening and overdue working-day progression use stable cycles
+PASS T03-N-CORE006-active reassignment transfers pending cycles and preserves completed owner history
+PASS T03-N-CORE006-automatic assignment repairs partial unassigned work in the checked aggregate
+PASS T04-N-CORE006-closed states and duplicates do not repair or reopen; explicit active reversal resumes slots
+PASS T04-C-CORE006-two synchronized repair workers create each missing slot and repair activity once
+PASS T04-C-CORE006-repair racing Lost closure leaves no pending qualification work
+PASS T17-N-CORE006-additive upgrade preserves old rows and verifies nullable cycle uniqueness
+PASS T14-N-CORE006-checkpointed sweep discovers empty plans and does not starve later pages
+PASS T16-N-CORE006-backup roundtrip retains cycles and complete prior manifests normalize safely
+PASS T01-N-CORE009-effective role capability disabled and mixed-role matrix
+PASS T03-N-CORE009-cached-pool-disabled-before-live-lock-has-no-assignment-side-effects
+PASS T03-N-CORE009-cached-pool-deleted-before-live-lock-has-no-assignment-side-effects
+PASS T03-N-CORE009-cached-pool-role_lost-before-live-lock-has-no-assignment-side-effects
+PASS T03-N-CORE009-cached-pool-direct_denial-before-live-lock-has-no-assignment-side-effects
+PASS T03-N-CORE009-cached-pool-role_revoked-before-live-lock-has-no-assignment-side-effects
+PASS T03-N-CORE009-insert-rejects-disabled-owner-unchanged-history-and-unassignment-remain-valid
+PASS T03-N-CORE009-live-target-read-errors-and-nontransactional-auth-tables-fail-closed
+PASS T03-N-CORE009-all-initial-routing-modes-filter-disabled-targets
+PASS T03-N-CORE009-unassigned-and-qualified-fallback-use-enabled-context-correct-pools
+
+127 passed, 0 failed

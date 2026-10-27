@@ -1,0 +1,35 @@
+{
+  "builder": "Shashi",
+  "classification_is_not_checker_suppression": true,
+  "request_parser_sites": 4,
+  "sites": [
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 56,
+      "file_sha256": "5e40fdf5239100ba3180ed179340a293018ed0913ee73b4f13864d00d3b1b9ad",
+      "source_line": "        $items = self::parse_items(wp_unslash((array) ($_POST['items'] ?? array())), $quote_settings);",
+      "rationale": "Quotation save/autosave authenticate dedicated nonces and operation capabilities, bind quote/revision/lead identities and recheck current authority under their existing write locks. Controller lines 56/256 remove WordPress request slashes once before parse_items; lines 78/268 do the same for parse_sections. The inherited IDLM_Quotations parsers delegate directly to IDLM_Quotation_Calculator. Its item/section loops reject invalid row shape and excessive counts, sanitize all retained text/key fields, normalize IDs and validate finite bounded numeric values before persistence. The domain parser accepts unslashed values and no longer removes literal backslashes itself. Invalid sections still reject rather than being cast into arrays. Real owner/admin HTTP tests cover save, autosave, recovered editor values, historical revision preservation and parsed print/CSV/XLSX text without affected-request diagnostics; the full 433-case HTTP/stdio suite passes. This explains only these four delegated-input alerts and does not justify other controller inputs. No checker suppression is added."
+    },
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 78,
+      "file_sha256": "5e40fdf5239100ba3180ed179340a293018ed0913ee73b4f13864d00d3b1b9ad",
+      "source_line": "        $sections = self::parse_sections(wp_unslash($_POST['sections'] ?? array()));",
+      "rationale": "Quotation save/autosave authenticate dedicated nonces and operation capabilities, bind quote/revision/lead identities and recheck current authority under their existing write locks. Controller lines 56/256 remove WordPress request slashes once before parse_items; lines 78/268 do the same for parse_sections. The inherited IDLM_Quotations parsers delegate directly to IDLM_Quotation_Calculator. Its item/section loops reject invalid row shape and excessive counts, sanitize all retained text/key fields, normalize IDs and validate finite bounded numeric values before persistence. The domain parser accepts unslashed values and no longer removes literal backslashes itself. Invalid sections still reject rather than being cast into arrays. Real owner/admin HTTP tests cover save, autosave, recovered editor values, historical revision preservation and parsed print/CSV/XLSX text without affected-request diagnostics; the full 433-case HTTP/stdio suite passes. This explains only these four delegated-input alerts and does not justify other controller inputs. No checker suppression is added."
+    },
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 256,
+      "file_sha256": "5e40fdf5239100ba3180ed179340a293018ed0913ee73b4f13864d00d3b1b9ad",
+      "source_line": "        $items = self::parse_items(wp_unslash((array) ($_POST['items'] ?? array())), self::settings());",
+      "rationale": "Quotation save/autosave authenticate dedicated nonces and operation capabilities, bind quote/revision/lead identities and recheck current authority under their existing write locks. Controller lines 56/256 remove WordPress request slashes once before parse_items; lines 78/268 do the same for parse_sections. The inherited IDLM_Quotations parsers delegate directly to IDLM_Quotation_Calculator. Its item/section loops reject invalid row shape and excessive counts, sanitize all retained text/key fields, normalize IDs and validate finite bounded numeric values before persistence. The domain parser accepts unslashed values and no longer removes literal backslashes itself. Invalid sections still reject rather than being cast into arrays. Real owner/admin HTTP tests cover save, autosave, recovered editor values, historical revision preservation and parsed print/CSV/XLSX text without affected-request diagnostics; the full 433-case HTTP/stdio suite passes. This explains only these four delegated-input alerts and does not justify other controller inputs. No checker suppression is added."
+    },
+    {
+      "file": "includes/class-quotation-controller.php",
+      "line": 268,
+      "file_sha256": "5e40fdf5239100ba3180ed179340a293018ed0913ee73b4f13864d00d3b1b9ad",
+      "source_line": "        $sections = self::parse_sections(wp_unslash($_POST['sections'] ?? array()));",
+      "rationale": "Quotation save/autosave authenticate dedicated nonces and operation capabilities, bind quote/revision/lead identities and recheck current authority under their existing write locks. Controller lines 56/256 remove WordPress request slashes once before parse_items; lines 78/268 do the same for parse_sections. The inherited IDLM_Quotations parsers delegate directly to IDLM_Quotation_Calculator. Its item/section loops reject invalid row shape and excessive counts, sanitize all retained text/key fields, normalize IDs and validate finite bounded numeric values before persistence. The domain parser accepts unslashed values and no longer removes literal backslashes itself. Invalid sections still reject rather than being cast into arrays. Real owner/admin HTTP tests cover save, autosave, recovered editor values, historical revision preservation and parsed print/CSV/XLSX text without affected-request diagnostics; the full 433-case HTTP/stdio suite passes. This explains only these four delegated-input alerts and does not justify other controller inputs. No checker suppression is added."
+    }
+  ]
+}

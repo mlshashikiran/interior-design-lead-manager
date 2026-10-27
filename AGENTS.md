@@ -46,6 +46,7 @@ All agents must:
 - Avoid unrelated refactoring, cleanup, formatting, modernization, renaming, and architectural changes. Fix the underlying cause of a defect when practical instead of masking its visible symptom.
 - Preserve unrelated working-tree changes. If the requested approach conflicts with the existing architecture or creates meaningful risk, explain the conflict and use the safer compatible approach.
 - For existing UI, preserve the established styling, CSS variables, components, markup conventions, responsive behaviour, and admin/shortcode parity. Avoid duplicate CSS or JavaScript, and check affected desktop and mobile contexts.
+- Keep the quotation editor free of the document-content review panel (removed in 1.102.90 at Shashi’s request). Document defaults belong in Quotation Setup; preserve this omission in future builds and retain revision snapshot behavior.
 
 ## Risk-proportionate verification
 

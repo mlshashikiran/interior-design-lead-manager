@@ -1,0 +1,9 @@
+{
+  "author": "Shashi",
+  "status": "PASS",
+  "owned_mysql_directory": "/private/tmp/idlm-task-repair-mysql",
+  "disposable_databases_remaining": 0,
+  "server_shutdown_verified": true,
+  "owned_mysql_directory_removed": true,
+  "configured_site_database_used": false
+}

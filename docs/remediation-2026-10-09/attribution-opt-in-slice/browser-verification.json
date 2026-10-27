@@ -1,0 +1,51 @@
+{
+  "builder": "Shashi",
+  "browser": "Codex in-app browser via CUA",
+  "fixture": "Owned loopback WordPress test content; configured site untouched",
+  "desktop": {
+    "viewport": [
+      1280,
+      900
+    ],
+    "anonymous_actual_shortcode_sign_in_credit_present": false,
+    "default_checkbox_checked": false,
+    "default_preview_hidden": true,
+    "space_enables_checkbox_and_preview": true,
+    "restore_default_branding_checkbox_checked": false,
+    "restore_default_branding_preview_hidden": true,
+    "horizontal_overflow": false
+  },
+  "mobile": {
+    "viewport": [
+      390,
+      844
+    ],
+    "space_enables_checkbox_and_preview": true,
+    "space_returns_checkbox_off_and_preview_hidden": true,
+    "help_fits": true,
+    "horizontal_overflow": false,
+    "final_checkbox_bounds": {
+      "left": 46,
+      "right": 59,
+      "top": 530.9375,
+      "bottom": 543.9375
+    },
+    "help_bounds": {
+      "left": 27,
+      "right": 357,
+      "top": 571.4375,
+      "bottom": 604.4375
+    },
+    "screenshot": "mobile-default-off.jpg"
+  },
+  "settings_save_via_browser": false,
+  "persistence": "Actual authorized HTTP saves verified independently in SQL",
+  "cleanup": {
+    "owned_tab_closed": true,
+    "viewport_override_reset": true
+  },
+  "limits": [
+    "No separate exhaustive wp-admin browser, assistive-technology or font-network qualification",
+    "Public owner workspace states covered through actual HTTP; anonymous desktop sign-in also observed in browser"
+  ]
+}

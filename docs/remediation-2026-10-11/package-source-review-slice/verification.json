@@ -1,0 +1,136 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-11",
+  "finding": "REL-007",
+  "candidate": "1.102.78",
+  "status": "IN PROGRESS, not IMPLEMENTED or CLOSED",
+  "base_revision": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "runtime_semantics_changed": true,
+  "schema_changed": false,
+  "production_release_approved": false,
+  "environment": {
+    "wordpress": "6.6",
+    "php": "8.4.14",
+    "mysql": "8.4.0",
+    "wp_cli": "2.12.0",
+    "plugin_check": "2.1.0"
+  },
+  "artifact": {
+    "artifact": "interior-design-lead-manager-1.102.78.zip",
+    "manifest": "interior-design-lead-manager-1.102.78.manifest.json",
+    "checksum_file": "interior-design-lead-manager-1.102.78.sha256",
+    "sha256": "5fb3f6242692460d3a7ef2c530354c2823409710b751fde1fa0652cdad721ad3",
+    "size_bytes": 5197083,
+    "file_count": 450,
+    "inspection_valid": true
+  },
+  "checks": [
+    {
+      "id": "REL007-78-fast",
+      "status": "PASS with existing fixture warnings",
+      "actual": "365 passed, 0 failed",
+      "evidence": "fast-contracts.txt",
+      "limits": "Six missing num_rooms and one missing phone fixture warnings; no warning-free fast suite claim"
+    },
+    {
+      "id": "T07-H-REL007-meta",
+      "status": "PASS",
+      "actual": "7 passed, 0 failed",
+      "evidence": "whatsapp-http.txt"
+    },
+    {
+      "id": "T15-H-A-REL007-http-stdio",
+      "status": "PASS",
+      "actual": "430 passed, 0 failed",
+      "evidence": "http-stdio.txt"
+    },
+    {
+      "id": "T22-A-REL007-release",
+      "status": "PASS",
+      "actual": "14 passed, 0 failed",
+      "evidence": "release-contracts.txt"
+    },
+    {
+      "id": "T22-A-REL007-inventory",
+      "status": "PASS",
+      "actual": "450 archived files match source; 5 changed inventory files; other bytes identical to 1.102.77",
+      "evidence": "inventory-comparison.json"
+    },
+    {
+      "id": "T22-A-REL007-unfiltered-static",
+      "status": "FAIL diagnostics retained",
+      "actual": {
+        "WARNING": 2018,
+        "ERROR": 138
+      },
+      "runner_exit_code": 1,
+      "evidence": "final/plugin-check-summary.json"
+    },
+    {
+      "id": "T22-A-REL007-source-review",
+      "status": "INCOMPLETE",
+      "actual": {
+        "REVIEW_REQUIRED": 1484,
+        "JUSTIFICATION_RECORDED": 671,
+        "RELEASE_CHANNEL_LIMITATION": 1
+      },
+      "sql_locations_reviewed": 37,
+      "additional_justified_diagnostics": 97,
+      "evidence": "diagnostic-triage.json"
+    },
+    {
+      "id": "REL007-78-lint",
+      "status": "PASS",
+      "actual": "6 changed PHP inputs",
+      "evidence": "php-lint.json"
+    }
+  ],
+  "graph_refresh": {
+    "builder": "Shashi",
+    "candidate": "1.102.78",
+    "mode": "scoped_structural_extraction_plus_explicit_document_headings",
+    "full_semantic_regeneration": false,
+    "source_files": [
+      "includes/class-interakt.php",
+      "mcp-server.php",
+      "interior-design-lead-manager.php",
+      "tests/whatsapp-inbound-contracts.php",
+      "tests/integration/whatsapp-inbound-http-cases.php",
+      "tests/release-contracts.php"
+    ],
+    "documentation_files": [
+      "docs/AUDIT-REMEDIATION-PACKAGE-SOURCE-SLICE.md",
+      "docs/AUDIT-REMEDIATION-PLAN.md",
+      "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+      "docs/PRODUCTION-SCALABILITY-PLAN.md",
+      "docs/PRODUCTION-RELEASE.md",
+      "docs/INTERFACES.md",
+      "docs/CHANGELOG-DEV.md"
+    ],
+    "replaced_php_nodes": 19,
+    "extracted_php_nodes": 41,
+    "extracted_php_edges": 39,
+    "unrelated_graph_retained": true
+  },
+  "backlog_counts": {
+    "IMPLEMENTED": 42,
+    "IN PROGRESS": 2
+  },
+  "cleanup": {
+    "remaining_disposable_databases": [],
+    "temporary_wp_configuration_removed": true,
+    "owned_content_removed_by_runners": true,
+    "owned_mysql_stopped_and_datadir_removed": true,
+    "configured_site_mutated": false,
+    "provider_or_mail_recipient_contacted": false
+  },
+  "limits": [
+    "1484 diagnostics remain source-review-required; unfiltered static gate fails",
+    "Source tests are not installed final-ZIP behavioral qualification",
+    "No remote CI, PHP7.4/8.1/latest WP, absent-extension host, full native, browser, upgrade or staging run in this slice",
+    "No runtime Plugin Check/full vendor advisories scan",
+    "Dirty uncommitted candidate lacks matching CI/release approval"
+  ],
+  "no_commit_push_tag_deployment": true,
+  "next": "Continue REL-007 remaining query/request constructors; REL-001 prerequisite-blocked"
+}

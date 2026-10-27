@@ -1,0 +1,78 @@
+# Privacy and data lifecycle
+
+Author / Builder: Shashi. Updated: 2026-10-27. Applies to test build 1.102.96.
+
+This document describes the plugin's current behavior. The organization running the WordPress site controls its customer data, integrations, access and retention choices. Adapt the site's privacy notice to its actual use before collecting data or connecting a provider. Configuration does not record customer consent or establish permission to advertise or message someone.
+
+## Data kept on the WordPress site
+
+The CRM stores customer names, email addresses and phone numbers; project, location, property, budget and commercial details; attribution and click identifiers; assignment and staff IDs; notes, calls, tasks, WhatsApp text, activity and state history; inbound identity conflicts; quotation revisions, items, currency, terms and payment milestones. Contact data is not automatically anonymized. Authorized lead/quotation exports and backup downloads contain personal and commercial data; protect their downloaded copies.
+
+Integration diagnostics retain redacted payloads/responses or bounded audience summaries. Redaction does not make every value anonymous. Local telemetry records plugin errors, messages, paths and stack traces, subject to its configured level and a row cap; error text can itself contain sensitive details. This telemetry has no developer collection endpoint. WordPress, hosting, mail, proxy and provider logs have their own policies.
+
+Protected provider, webhook and MCP credentials use encrypted server-side option storage (AES-256-GCM) or supported environment overrides. Settings fields are write-only with explicit clear controls. Keep the original encryption key or matching WordPress salts securely; changing them does not automatically re-encrypt old credentials. Contact/project records themselves are not encrypted by this credential store. Current transport redaction cannot remove secrets from historical backups, browser or hosting/proxy traces; rotate previously exposed credentials separately.
+
+New managed confidential lead uploads are stored in protected database records/chunks and retrieved through authenticated, current-lead-access downloads. Existing public WordPress uploads require verified migration and cleanup. Previously downloaded files, browser/proxy/CDN copies and unmanaged remote files cannot be recalled by this plugin. Branding/media-library artwork is separate from confidential lead storage.
+
+## Attribution cookies and sessions
+
+On frontend pages where its attribution script runs, the plugin automatically sets first-party cookies with a 30-day expiry. Names include `idlm_utm_source`, `idlm_utm_medium`, `idlm_utm_campaign`, `idlm_utm_adgroup`, `idlm_utm_term`, `idlm_utm_content`, `idlm_gclid`, `idlm_gbraid`, `idlm_wbraid`, `idlm_fbclid`, `idlm_li_fat_id` and `idlm_landing_page`. Click/UTM cookies are populated from URL parameters; the landing-page value omits the query string. These support intake attribution. The script does not send a provider request by itself.
+
+There is **no built-in consent gate for this script**. Turning off conversion or audience rules does not stop these cookies. Where consent is required, the site must arrange a consent-aware script policy before using this functionality; this document is not a claim that consent enforcement has been implemented. Browser cookie removal does not erase attribution already stored with a lead. WordPress also uses its own authentication cookies for sign-in.
+
+## External services
+
+Direct Facebook sign-in uses the site’s own Meta app. Its encrypted server-side settings hold the app secret, Page token and short-lived consent state. Meta receives the app identifier, login callback and authorization requests; the CRM receives authorized Page/form names and identifiers and selected Instant Form submissions. Retrieved lead answers and available advertising context are retained in encrypted acquisition snapshots on this site. Consent state expires after 15 minutes; only setup navigation state (the step number and a one-use field-loading flag) is remembered in browser session storage. The form-mapping editor reads selected form names and question keys/labels/types without retrieving respondent answers. Per-form destination mappings are stored as site settings. Choosing not to map an answer does not remove it from the encrypted submission snapshot. Saved values are not returned to credential inputs. Disconnect stops local import but retains saved credentials and the Meta Page subscription; revoke provider access separately when required. Existing hosted connections continue to contact their configured publisher service until disconnected or replaced.
+
+Administrators choose provider credentials, destinations, enabled events and audience rules in Settings. Eligible lead changes and scheduled/manual work can then send data. Connection tests contact the selected provider using credentials/destination IDs. Disabling a rule stops newly eligible work in covered paths, but cannot recall an in-flight request or remove an existing provider copy. Hashes remain matchable identifiers, not anonymous data.
+
+| Service and purpose | Data transferred and when |
+| --- | --- |
+| Meta conversion reporting | Enabled mapped lead events POST to `graph.facebook.com`. Available email, phone and names are SHA-256 hashed. Event identity/time, CRM lead ID, stage, source, property/room details, Meta lead ID or WhatsApp click identifiers and value/currency are sent. A fresh Purchase uses the latest saved quotation total and quotation currency, falling back to the entered Won deal value and CRM currency when no positive saved quotation exists. Retries retain their original value/currency. CRM events omit visitor IP, user agent and a browser event URL because authentic visitor context is unavailable to the worker. |
+| Meta custom/value audiences | Enabled matching audience rules POST hashed email, phone and first/last name to `graph.facebook.com`; value audiences also send deal value or the configured implementation fallback. |
+| Google conversion reporting | Enabled mapped events POST to `www.google-analytics.com/mp/collect` using GA4 Measurement Protocol. Client/click identifiers, CRM lead ID, event/time context, stage, source, property/room details and configured value/currency are sent. This adapter is not a direct Google Ads offline-conversion upload API. The Measurement Protocol URL includes the measurement ID and API secret required by that transport; protect server/proxy tracing. |
+| Google audience pull | After the administrator configures a Google Ads Data Manager HTTPS pull source, a credentialed request to this site's enabled feed receives CSV with **plaintext normalized email and phone**, country `IN`, an empty postcode, and hashed first/last names for matching leads. Credentials are required; disabled/unmatched rules are refused. Previously obtained CSV cannot be recalled. |
+| LinkedIn conversions and contact audiences | Enabled conversions POST hashed email, any LinkedIn click identifier, conversion identity/time and configured value/currency to `api.linkedin.com`. Enabled contact audiences POST hashed email with **plaintext first/last names** to the configured segment. |
+| Interakt / WhatsApp | Enabled ordinary or selected batch automation POSTs plaintext phone/country code, CRM ID, event/time, name, email, project location, budget, property type and source to `api.interakt.ai`. Signed Interakt and Meta WhatsApp webhooks receive provider message IDs, phone and text; matched text is stored in CRM activity. Unsupported message/media types are not a general media inbox. “Open in Interakt” opens `app.interakt.ai` with the phone in the URL, which can enter browser history and provider logs. |
+
+Provider accounts, charges, retention and deletion are controlled separately. Review the relevant policies and terms before enabling a flow:
+
+- Meta: [Privacy Policy](https://www.facebook.com/privacy/policy/), [Business Tools Terms](https://www.facebook.com/legal/terms/businesstools), [Customer List Custom Audiences Terms](https://www.facebook.com/legal/terms/customaudience).
+- Google: [Privacy Policy](https://policies.google.com/privacy), [API Terms](https://developers.google.com/terms), [Customer Match policies](https://support.google.com/adspolicy/answer/6299717).
+- LinkedIn: [Privacy Policy](https://www.linkedin.com/legal/privacy-policy), [API Terms](https://www.linkedin.com/legal/l/api-terms-of-use).
+- Interakt: [Privacy Policy](https://www.interakt.shop/privacy-policy/), [Terms of Service](https://www.interakt.shop/terms-of-service/). Meta's policies also apply to its WhatsApp service.
+
+## Other configured transfers
+
+Optional handoff email uses WordPress mail to send the lead name, assignment message and preferred studio to affected staff addresses. Routing-exception notices can reach the site administrator. Delivery and retention depend on the site's mail service.
+
+Administrators can connect MCP clients to permitted CRM tools. Data returned depends on credentials, capabilities and the separate PII grant; a connected client can retain the results. The plugin has no automatic developer MCP destination. Quotation artwork at administrator-saved remote HTTPS cover/logo URLs can be fetched during PDF generation; print/preview can also load configured artwork in the browser. The image host sees the request metadata. Prefer local artwork when external requests are unnecessary. Bundled Inter fonts are served locally.
+
+## Retention and erasure
+
+Scheduled defaults are 90 days for touchpoints and inbound identity reviews, 180 days for CAPI/audience diagnostic rows, and 14 days for telemetry. Selected integration-summary activity types have a separate seven-day cleanup; this is not a seven-day deletion policy for all CRM history. A server-side retention policy can override the first three periods. Cleanup runs in bounded, restartable jobs and depends on a working scheduler; expiry is not a guarantee of immediate deletion.
+
+Lead records, ordinary notes/activity, tasks, calls, quotations and managed files have no general automatic expiry. Minimal CAPI acceptance/uncertainty receipts survive diagnostic pruning until explicit lead deletion or CRM reset. Audience/Interakt work state follows its cancellation/recovery policy. Minimal WhatsApp replay receipts contain hashed provider/message identity, a keyed phone/text fingerprint, an activity ID and time; they survive lead deletion, reset and same-site JSON restore to prevent replay. They have **no scheduled expiry or user-facing erasure control**. They contain no plaintext phone/message, but are not claimed anonymous or universally erased.
+
+Authorized lead deletion removes linked CRM history, tasks, calls, quotations, related identity-review data, audience work and CAPI receipts, and revokes/removes managed private-file bytes. Legacy disk cleanup occurs after commit and retries where needed; verify completion and cached copies separately. Shared/ambiguous legacy attachments can require operator reconciliation. Aggregate audience/telemetry diagnostics and unrelated WordPress/media records are not all tied to a deletable lead ID.
+
+Administrator CRM reset removes runtime leads, reviews, history, quotations, queues and managed private-file bytes. It preserves catalogue, integration rules/settings/credentials, WordPress accounts, branding media and WhatsApp replay receipts. Reset is **not a full uninstall or universal personal-data erasure**. Neither reset nor local deletion requests provider-side deletion. Handle provider lists, message histories, exported files, backups and other systems separately.
+
+The plugin registers no WordPress personal-data exporter/eraser integration. A WordPress user-account erasure request does not automatically locate and erase CRM contacts. Use the authorized CRM tools and a reviewed operator process; contact the site administrator for data requests.
+
+## Backup, removal and recovery
+
+The CRM JSON backup contains its declared CRM tables and eligible settings, including personal/commercial records. It excludes WordPress users/media, managed private-file bytes, protected credentials, delivery/replay receipts and queued runtime state. Restore validates a complete compatible same-site aggregate with the existing users; active managed private-file records block this partial restore. JSON is not a full WordPress or private-file recovery backup.
+
+Ordinary deactivation clears covered schedules and preserves stored data/settings. Reactivation can resume eligible work; disable provider rules before an intentional pause. Deleting the plugin folder has no plugin uninstall purge routine: tables, options, capability assignments and stored/private or legacy media remain unless separately removed. Background private-file cleanup also cannot run while the plugin is absent. Do not delete tables/options casually to erase individual contacts.
+
+Before updates or recovery, preserve a full WordPress database backup, filesystem/media copies and matching encryption keys/salts. Test restoration and reconcile provider outcomes. A full database restore can resurrect erased contacts and replay state; importing an older plugin ZIP alone cannot reverse schema/data changes. See [Support and managed updates](SUPPORT.txt) for the release process and private reporting contact.
+
+
+## Optional direct lead connector (local unreleased iteration)
+
+Builder: Shashi. When enabled, direct Meta sync retrieves configured Instant Form contacts into this CRM. Optional Interakt intake creates CRM contacts from incoming messages. Pending contact/message data is encrypted in non-autoloaded WordPress options, removed after processing, and expires after seven days when the scheduled worker runs. Encrypted acquisition context, including the returned Meta form answers, disclaimer responses and available advertising identifiers, remains associated with the lead until deletion/reset; a later Instant Form submission can replace the current snapshot. Minimal HMAC replay receipts and identity-erasure markers remain to prevent duplicate delivery or stale recreation. These runtime records and acquisition options are excluded from portable plugin backups; full database backups still contain them. WhatsApp advertising conversion reporting requires separate enablement and original ad-click/Page identifiers. See [connector setup and limitations](docs/META-LEAD-CONNECTOR.md).
+
+## Optional publisher-hosted Facebook connection
+
+Builder: Shashi. When provisioned, the CRM publisher's separate connection service processes Facebook consent, stores encrypted Page access tokens and receives selected Page/form/lead identifiers. It transiently relays retrieved lead answers to the customer's CRM; it does not persist those answers in its queue. The site stores its installation credential in protected server configuration. Pending consent expires after 15 minutes, queued identifier metadata after seven days and deletion receipts after 30 days when service pruning runs. Meta deauthorization/data-deletion callbacks remove the affected hosted grants and pending work. These callbacks do not erase contacts already imported into independent customer CRMs, backups or other providers; use each customer's authorized deletion process. The publisher must disclose its service and operating policies before customer rollout.

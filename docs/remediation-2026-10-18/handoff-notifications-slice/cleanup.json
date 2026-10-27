@@ -1,0 +1,8 @@
+{
+  "builder": "Shashi",
+  "remaining_test_databases": [],
+  "owned_server_shutdown_exit": 0,
+  "owned_socket_pid_and_datadir_removed": true,
+  "temporary_core_configuration_removed": true,
+  "configured_site_or_production_database_touched": false
+}

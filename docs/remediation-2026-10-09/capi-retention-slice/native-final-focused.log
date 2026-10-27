@@ -1,0 +1,16 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T08-T16-N-INT008 all platforms retain sent evidence after configured payload expiry and stage reversal
+PASS T16-N-INT008 configured 180-day policy preserves thirty-day success and failed logs
+PASS T16-T08-N-INT008 bounded legacy adoption preserves duplicate-family dedup without loading payloads
+PASS T16-N-INT008 legacy receipt failure retains log and retries transactionally
+PASS T16-N-INT008 legacy delete failure retains log and retries transactionally
+PASS T16-N-INT008 legacy commit failure retains log and retries transactionally
+PASS T08-N-INT008 claim and outcome failure withhold send or success and fence future attempts
+PASS T08-T14-C-INT008 independent ordinary-worker acceptance interruption cannot resend after log expiry
+PASS T08-T16-N-INT008 attribution refresh still sees pruned successes and receipts survive same-site restore
+PASS T16-N-INT008 explicit lead erasure and CRM reset erase receipts and faults roll back
+PASS T08-N-INT008 malformed receipts and unsupported options engine fail closed before transport
+PASS T08-T16-C-INT008 independent pruning and dispatch never reopen a legacy accepted event
+PASS T16-N-INT008 orphaned legacy diagnostics expire without recreating erased-lead receipts
+
+14 passed, 0 failed

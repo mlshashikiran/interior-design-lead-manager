@@ -1,0 +1,10 @@
+{
+  "owned_test_databases_remaining": 0,
+  "dedicated_socket_only_mysql_shutdown": true,
+  "held_fixture_clean_exit": 0,
+  "final_http_clean_exit": 0,
+  "initial_failed_fixture_exit": 1,
+  "browser_owned_tab_closed": true,
+  "viewport_override_reset": true,
+  "configured_site_touched": false
+}

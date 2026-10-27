@@ -1,0 +1,18 @@
+{
+  "author": "Shashi",
+  "validated_disposable_datadir": "/private/tmp/idlm-audit-20261006/mysql-unsandboxed/",
+  "removed_database": "idlm_test_audit_ui_20261006",
+  "remaining_databases": [
+    "information_schema",
+    "mysql",
+    "performance_schema",
+    "sys"
+  ],
+  "configured_site_database_accessed": false,
+  "retained_evidence": true,
+  "php_server_stopped": true,
+  "mysql_server_stopped": true,
+  "browser_viewport_reset": true,
+  "audit_browser_tabs_remaining": 0,
+  "mysql_socket_remaining": false
+}

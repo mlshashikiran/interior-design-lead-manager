@@ -1,0 +1,272 @@
+ M .distignore
+ M .github/workflows/tests.yml
+ M .gitignore
+ M CHANGELOG.md
+ M assets/css/admin-style.css
+ M assets/js/admin-app.js
+ M assets/js/quotations.js
+ M assets/js/settings.js
+ M docs/ARCHITECTURE.md
+ M docs/CHANGELOG-DEV.md
+ M docs/DATA-MODEL.md
+ M docs/DEVELOPMENT.md
+ M docs/FEATURE-MAP.md
+ M docs/FLOWS.md
+ M docs/INTERFACES.md
+ M docs/LOGICS.md
+ M docs/PRODUCTION-RELEASE.md
+ M docs/PRODUCTION-SCALABILITY-PLAN.md
+ M docs/PRODUCTION-SECURITY-CONFIG.md
+ M docs/PROJECT-MAP.md
+ M docs/SECURITY.md
+ M includes/class-admin-ajax.php
+ M includes/class-admin-assets.php
+ M includes/class-admin-lead-notifications.php
+ M includes/class-admin-lead-reads.php
+ M includes/class-admin-leads-renderer.php
+ M includes/class-admin-settings-controller.php
+ M includes/class-admin-settings-renderer.php
+ M includes/class-admin-users-controller.php
+ M includes/class-admin.php
+ M includes/class-audiences.php
+ M includes/class-backup.php
+ M includes/class-capi.php
+ M includes/class-dashboard-read-model.php
+ M includes/class-dashboard.php
+ M includes/class-data-retention.php
+ M includes/class-db.php
+ M includes/class-integrations.php
+ M includes/class-integrity-command.php
+ M includes/class-interakt-batch.php
+ M includes/class-interakt.php
+ M includes/class-lead-access-policy.php
+ M includes/class-lead-deletion-service.php
+ M includes/class-lead-lifecycle-service.php
+ M includes/class-mcp-core.php
+ M includes/class-operational-health.php
+ M includes/class-production-security.php
+ M includes/class-quotation-calculator.php
+ M includes/class-quotation-controller.php
+ M includes/class-quotation-policy.php
+ M includes/class-quotation-renderer.php
+ M includes/class-quotation-repository.php
+ M includes/class-quotation-schema.php
+ M includes/class-quotations.php
+ M includes/class-read-model-cache.php
+ M includes/class-routing-state.php
+ M includes/class-scheduler.php
+ M includes/class-secret-store.php
+ M includes/class-settings.php
+ M includes/class-state-registry.php
+ M includes/class-task-queue-service.php
+ M includes/class-telemetry.php
+ M interior-design-lead-manager.php
+ M mcp-server.php
+ M readme.txt
+ M templates/admin/leads.php
+ M templates/admin/settings/backup.php
+ M templates/admin/settings/capi.php
+ M templates/admin/settings/shell.php
+ M templates/admin/settings/sync-reminders.php
+ M templates/admin/settings/webhooks.php
+ M templates/admin/settings/white-label.php
+ M tests/README.md
+ M tests/admin-refactor-contracts.php
+ M tests/bootstrap.php
+ M tests/dashboard-contracts.php
+ M tests/high-priority-contracts.php
+ M tests/integration/bootstrap.php
+ M tests/integration/run.php
+ M tests/integration/worker.php
+ M tests/interakt-action-scheduler-contracts.php
+ M tests/performance/class-dataset-generator.php
+ M tests/release-contracts.php
+ M tests/release/class-release-artifact.php
+ M tests/run.php
+ M tests/ui-regression-contracts.php
+?? PRIVACY.md
+?? SUPPORT.md
+?? assets/fonts/NOTICE.txt
+?? assets/fonts/OFL.txt
+?? assets/fonts/inter-provenance.json
+?? docs/AUDIT-REMEDIATION-ASSIGNMENT-ELIGIBILITY-SLICE.md
+?? docs/AUDIT-REMEDIATION-ATTRIBUTION-OPT-IN-SLICE.md
+?? docs/AUDIT-REMEDIATION-AUDIENCE-RETRY-SLICE.md
+?? docs/AUDIT-REMEDIATION-BOUNDED-WORK-SLICE.md
+?? docs/AUDIT-REMEDIATION-CAPACITY-SLICE.md
+?? docs/AUDIT-REMEDIATION-CAPI-RETENTION-SLICE.md
+?? docs/AUDIT-REMEDIATION-CAPI-RETRY-SLICE.md
+?? docs/AUDIT-REMEDIATION-CSV-SLICE.md
+?? docs/AUDIT-REMEDIATION-FONT-NOTICE-SLICE.md
+?? docs/AUDIT-REMEDIATION-GOOGLE-AUDIENCE-SLICE.md
+?? docs/AUDIT-REMEDIATION-IDENTITY-REVIEW-SLICE.md
+?? docs/AUDIT-REMEDIATION-INTERAKT-DISPATCH-SLICE.md
+?? docs/AUDIT-REMEDIATION-LIFECYCLE-SLICE.md
+?? docs/AUDIT-REMEDIATION-MCP-SLICE.md
+?? docs/AUDIT-REMEDIATION-PACKAGE-BOOTSTRAP-REQUEST-SLICE.md
+?? docs/AUDIT-REMEDIATION-PACKAGE-CHECK-SLICE.md
+?? docs/AUDIT-REMEDIATION-PACKAGE-DASHBOARD-SLICE.md
+?? docs/AUDIT-REMEDIATION-PACKAGE-QUOTATION-TEXT-SLICE.md
+?? docs/AUDIT-REMEDIATION-PACKAGE-REQUEST-INPUT-SLICE.md
+?? docs/AUDIT-REMEDIATION-PACKAGE-SOURCE-SLICE.md
+?? docs/AUDIT-REMEDIATION-PLAN.md
+?? docs/AUDIT-REMEDIATION-PRIVATE-FILE-SLICE.md
+?? docs/AUDIT-REMEDIATION-PUBLIC-DISCLOSURES-SLICE.md
+?? docs/AUDIT-REMEDIATION-QUOTATION-CLASSIFICATION-SLICE.md
+?? docs/AUDIT-REMEDIATION-QUOTATION-DOCUMENT-SLICE.md
+?? docs/AUDIT-REMEDIATION-QUOTATION-ENGINE-SLICE.md
+?? docs/AUDIT-REMEDIATION-QUOTATION-HISTORY-SLICE.md
+?? docs/AUDIT-REMEDIATION-QUOTATION-MIGRATION-SLICE.md
+?? docs/AUDIT-REMEDIATION-QUOTATION-NUMERIC-SLICE.md
+?? docs/AUDIT-REMEDIATION-QUOTATION-PAPER-SLICE.md
+?? docs/AUDIT-REMEDIATION-QUOTATION-QUANTITY-SLICE.md
+?? docs/AUDIT-REMEDIATION-QUOTATION-SLICE.md
+?? docs/AUDIT-REMEDIATION-READ-SLICE.md
+?? docs/AUDIT-REMEDIATION-RELEASE-ATTESTATION-SLICE.md
+?? docs/AUDIT-REMEDIATION-RESTORE-SLICE.md
+?? docs/AUDIT-REMEDIATION-RUNTIME-SUPPORT-SLICE.md
+?? docs/AUDIT-REMEDIATION-SCHEMA-SLICE.md
+?? docs/AUDIT-REMEDIATION-SECRET-STORE-SLICE.md
+?? docs/AUDIT-REMEDIATION-STATE-POLICY-SLICE.md
+?? docs/AUDIT-REMEDIATION-TASK-ACCESSIBILITY-SLICE.md
+?? docs/AUDIT-REMEDIATION-TASK-LAYOUT-SLICE.md
+?? docs/AUDIT-REMEDIATION-TASK-PLAN-SLICE.md
+?? docs/AUDIT-REMEDIATION-TEST-MATRIX.md
+?? docs/AUDIT-REMEDIATION-WHATSAPP-INBOUND-SLICE.md
+?? docs/AUDIT-REMEDIATION-ZIP-REPRODUCIBILITY-SLICE.md
+?? docs/META-LEAD-CONNECTOR.md
+?? docs/STATE-POLICY.md
+?? docs/audit-2026-10-06/
+?? docs/audit-remediation-backlog.csv
+?? docs/remediation-2026-10-06/
+?? docs/remediation-2026-10-07/
+?? docs/remediation-2026-10-08/
+?? docs/remediation-2026-10-09/
+?? docs/remediation-2026-10-11/
+?? docs/remediation-2026-10-13/
+?? docs/remediation-2026-10-18/
+?? docs/ui-audit/quotation-builder-redesign.html
+?? includes/class-assignment-capacity.php
+?? includes/class-audience-dispatch.php
+?? includes/class-backup-validator.php
+?? includes/class-capi-delivery.php
+?? includes/class-facebook-connect.php
+?? includes/class-identity-review.php
+?? includes/class-interakt-dispatch.php
+?? includes/class-lead-connector.php
+?? includes/class-lead-outbox.php
+?? includes/class-lead-transaction.php
+?? includes/class-mcp-query-policy.php
+?? includes/class-presales-task-plan.php
+?? includes/class-private-files.php
+?? includes/class-quotation-document.php
+?? includes/class-quotation-exporter.php
+?? includes/class-recovery-guard.php
+?? includes/class-schema-migration.php
+?? includes/class-whatsapp-inbox.php
+?? quote-builder-redesign.html
+?? services/
+?? templates/admin/identity-reviews.php
+?? templates/admin/settings/lead-connector.php
+?? tests/assignment-eligibility-contracts.php
+?? tests/attribution-opt-in-contracts.php
+?? tests/audience-retry-contracts.php
+?? tests/audit-contract-inventory.php
+?? tests/audit-evidence-report.py
+?? tests/audit-integration-security.php
+?? tests/audit-quotation-probes.php
+?? tests/bounded-work-contracts.php
+?? tests/capacity-contracts.php
+?? tests/capi-retention-contracts.php
+?? tests/capi-retry-contracts.php
+?? tests/facebook-connect-runtime.php
+?? tests/facebook-service.php
+?? tests/google-audience-contracts.php
+?? tests/identity-review-contracts.php
+?? tests/integration/assignment-eligibility-contracts.php
+?? tests/integration/assignment-eligibility-http-cases.php
+?? tests/integration/attribution-opt-in-http-cases.php
+?? tests/integration/audience-retry-contracts.php
+?? tests/integration/audience-retry-http-cases.php
+?? tests/integration/backup-contracts.php
+?? tests/integration/backup-http-cases.php
+?? tests/integration/bootstrap-request-http-cases.php
+?? tests/integration/bounded-work-contracts.php
+?? tests/integration/bounded-work-http-cases.php
+?? tests/integration/capacity-contracts.php
+?? tests/integration/capacity-http-cases.php
+?? tests/integration/capi-retention-contracts.php
+?? tests/integration/capi-retention-http-cases.php
+?? tests/integration/capi-retry-contracts.php
+?? tests/integration/capi-retry-http-cases.php
+?? tests/integration/google-audience-contracts.php
+?? tests/integration/google-audience-http-cases.php
+?? tests/integration/http-router.php
+?? tests/integration/identity-review-contracts.php
+?? tests/integration/identity-review-http-cases.php
+?? tests/integration/interakt-dispatch-contracts.php
+?? tests/integration/lead-access-contracts.php
+?? tests/integration/lead-connector-contracts.php
+?? tests/integration/lead-csv-cases.php
+?? tests/integration/lead-read-cases.php
+?? tests/integration/lifecycle-http-cases.php
+?? tests/integration/lifecycle-persistence-contracts.php
+?? tests/integration/mcp-http-cases.php
+?? tests/integration/mcp-query-contracts.php
+?? tests/integration/package-dashboard-contracts.php
+?? tests/integration/private-file-cases.php
+?? tests/integration/private-file-contracts.php
+?? tests/integration/quotation-classification-contracts.php
+?? tests/integration/quotation-classification-http-cases.php
+?? tests/integration/quotation-document-contracts.php
+?? tests/integration/quotation-document-http-cases.php
+?? tests/integration/quotation-engine-contracts.php
+?? tests/integration/quotation-engine-http-cases.php
+?? tests/integration/quotation-history-contracts.php
+?? tests/integration/quotation-history-http-cases.php
+?? tests/integration/quotation-http.php
+?? tests/integration/quotation-migration-contracts.php
+?? tests/integration/quotation-migration-http-cases.php
+?? tests/integration/quotation-numeric-contracts.php
+?? tests/integration/quotation-numeric-http-cases.php
+?? tests/integration/quotation-paper-http-cases.php
+?? tests/integration/quotation-quantity-http-cases.php
+?? tests/integration/quotation-request-input-http-cases.php
+?? tests/integration/quotation-text-http-cases.php
+?? tests/integration/schema-http-cases.php
+?? tests/integration/schema-migration-contracts.php
+?? tests/integration/secret-store-contracts.php
+?? tests/integration/secret-store-http-cases.php
+?? tests/integration/state-policy-contracts.php
+?? tests/integration/task-accessibility-http-cases.php
+?? tests/integration/task-plan-repair-contracts.php
+?? tests/integration/task-plan-repair-http-cases.php
+?? tests/integration/whatsapp-inbound-contracts.php
+?? tests/integration/whatsapp-inbound-http-cases.php
+?? tests/interakt-dispatch-contracts.php
+?? tests/lead-connector-contracts.php
+?? tests/lead-csv-contracts.php
+?? tests/lead-read-authorization-contracts.php
+?? tests/lifecycle-persistence-contracts.php
+?? tests/mcp-query-cases.php
+?? tests/mcp-query-contracts.php
+?? tests/quotation-authorization-contracts.php
+?? tests/quotation-classification-contracts.php
+?? tests/quotation-document-contracts.php
+?? tests/quotation-engine-contracts.php
+?? tests/quotation-history-contracts.php
+?? tests/quotation-migration-contracts.php
+?? tests/quotation-numeric-contracts.php
+?? tests/quotation-numeric-js-contracts.js
+?? tests/quotation-paper-contracts.php
+?? tests/release/check-package.php
+?? tests/runtime-prerequisite-probe.php
+?? tests/runtime-prerequisites.php
+?? tests/runtime-support-contracts.php
+?? tests/schema-migration-contracts.php
+?? tests/secret-store-contracts.php
+?? tests/secret-store-runtime.php
+?? tests/state-policy-contracts.php
+?? tests/task-plan-repair-contracts.php
+?? tests/whatsapp-inbound-contracts.php
+?? vendor/

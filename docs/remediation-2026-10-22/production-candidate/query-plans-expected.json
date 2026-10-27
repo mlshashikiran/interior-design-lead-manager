@@ -1,0 +1,806 @@
+{
+    "schema": "idlm-query-plan-capture/v1",
+    "captured_at_utc": "2026-10-22T17:44:27+00:00",
+    "build": {
+        "revision": "1.102.88",
+        "plugin_version": "1.102.88",
+        "core_schema_version": "1.3.9",
+        "quotation_schema_version": "2.5.4"
+    },
+    "benchmark": {
+        "environment_type": "staging",
+        "dataset": "expected-team-20261022",
+        "date_window": {
+            "start": "2025-09-01",
+            "end": "2026-09-01"
+        },
+        "mysql_version": "8.4.0"
+    },
+    "plans": [
+        {
+            "id": "dashboard-global-period-volume",
+            "scenario": "dashboard-period-refresh",
+            "variant": "global-period-count",
+            "status": "captured",
+            "steps": [
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "idlm_leads",
+                    "access_type": "ALL",
+                    "possible_keys": [
+                        "created_at"
+                    ],
+                    "key": "",
+                    "key_length": 0,
+                    "ref": "",
+                    "estimated_rows": 48650,
+                    "filtered_percent": 5,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "id": "dashboard-restricted-period-volume",
+            "scenario": "dashboard-period-refresh",
+            "variant": "representative-period-count",
+            "status": "captured",
+            "steps": [
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "idlm_leads",
+                    "access_type": "ref",
+                    "possible_keys": [
+                        "assigned_rep_id",
+                        "created_at"
+                    ],
+                    "key": "assigned_rep_id",
+                    "key_length": 9,
+                    "ref": "const",
+                    "estimated_rows": 1000,
+                    "filtered_percent": 5,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "id": "lead-list-global-default-order",
+            "scenario": "lead-list-filter-sort",
+            "variant": "manager-default-queue",
+            "status": "captured",
+            "steps": [
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "idlm_leads",
+                    "access_type": "ALL",
+                    "possible_keys": [],
+                    "key": "",
+                    "key_length": 0,
+                    "ref": "",
+                    "estimated_rows": 48650,
+                    "filtered_percent": 10,
+                    "extra": "Using where; Using filesort"
+                }
+            ]
+        },
+        {
+            "id": "lead-list-restricted-default-order",
+            "scenario": "lead-list-filter-sort",
+            "variant": "representative-default-queue",
+            "status": "captured",
+            "steps": [
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "idlm_leads",
+                    "access_type": "ref",
+                    "possible_keys": [
+                        "assigned_rep_id"
+                    ],
+                    "key": "assigned_rep_id",
+                    "key_length": 9,
+                    "ref": "const",
+                    "estimated_rows": 1000,
+                    "filtered_percent": 10,
+                    "extra": "Using where; Using filesort"
+                }
+            ]
+        },
+        {
+            "id": "qualified-handoff-queue",
+            "scenario": "lead-list-filter-sort",
+            "variant": "awaiting-or-exception",
+            "status": "captured",
+            "steps": [
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "idlm_leads",
+                    "access_type": "range",
+                    "possible_keys": [
+                        "stage",
+                        "lead_quality",
+                        "handoff_status"
+                    ],
+                    "key": "handoff_status",
+                    "key_length": 123,
+                    "ref": "",
+                    "estimated_rows": 2,
+                    "filtered_percent": 3.01,
+                    "extra": "Using index condition; Using where; Using filesort"
+                }
+            ]
+        },
+        {
+            "id": "kanban-active-stage-load",
+            "scenario": "kanban-stage-load",
+            "variant": "active-canonical-leads",
+            "status": "captured",
+            "steps": [
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "idlm_leads",
+                    "access_type": "index",
+                    "possible_keys": [
+                        "stage"
+                    ],
+                    "key": "PRIMARY",
+                    "key_length": 8,
+                    "ref": "",
+                    "estimated_rows": 48650,
+                    "filtered_percent": 6.03,
+                    "extra": "Using where; Backward index scan"
+                }
+            ]
+        },
+        {
+            "id": "representative-task-queue",
+            "scenario": "lead-list-filter-sort",
+            "variant": "pending-tasks-by-owner",
+            "status": "captured",
+            "steps": [
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "idlm_tasks",
+                    "access_type": "ref",
+                    "possible_keys": [
+                        "assigned_rep_id",
+                        "status"
+                    ],
+                    "key": "assigned_rep_id",
+                    "key_length": 9,
+                    "ref": "const",
+                    "estimated_rows": 2000,
+                    "filtered_percent": 50,
+                    "extra": "Using where; Using filesort"
+                }
+            ]
+        },
+        {
+            "id": "lead-activity-timeline",
+            "scenario": "lead-detail-activity",
+            "variant": "latest-first",
+            "status": "captured",
+            "steps": [
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "idlm_lead_activity_log",
+                    "access_type": "ref",
+                    "possible_keys": [
+                        "lead_id",
+                        "lead_activity_id"
+                    ],
+                    "key": "lead_id",
+                    "key_length": 8,
+                    "ref": "const",
+                    "estimated_rows": 1,
+                    "filtered_percent": 100,
+                    "extra": "Backward index scan"
+                }
+            ]
+        },
+        {
+            "id": "capi-failed-retry-queue",
+            "scenario": "capi-retry",
+            "variant": "failed-oldest-first",
+            "status": "captured",
+            "steps": [
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "idlm_capi_logs",
+                    "access_type": "index",
+                    "possible_keys": [],
+                    "key": "created_at",
+                    "key_length": 6,
+                    "ref": "",
+                    "estimated_rows": 100,
+                    "filtered_percent": 10,
+                    "extra": "Using where"
+                }
+            ]
+        },
+        {
+            "id": "quotation-list-default-order",
+            "scenario": "quotation-list",
+            "variant": "global-updated-first",
+            "status": "captured",
+            "steps": [
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "q",
+                    "access_type": "ALL",
+                    "possible_keys": [
+                        "lead_status"
+                    ],
+                    "key": "",
+                    "key_length": 0,
+                    "ref": "",
+                    "estimated_rows": 19737,
+                    "filtered_percent": 100,
+                    "extra": "Using filesort"
+                },
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "r",
+                    "access_type": "eq_ref",
+                    "possible_keys": [
+                        "PRIMARY"
+                    ],
+                    "key": "PRIMARY",
+                    "key_length": 8,
+                    "ref": "q.current_revision_id",
+                    "estimated_rows": 1,
+                    "filtered_percent": 100,
+                    "extra": "Using index"
+                },
+                {
+                    "select_id": 1,
+                    "select_type": "SIMPLE",
+                    "table": "l",
+                    "access_type": "eq_ref",
+                    "possible_keys": [
+                        "PRIMARY"
+                    ],
+                    "key": "PRIMARY",
+                    "key_length": 8,
+                    "ref": "q.lead_id",
+                    "estimated_rows": 1,
+                    "filtered_percent": 100,
+                    "extra": "Using index"
+                }
+            ]
+        }
+    ],
+    "indexes": [
+        {
+            "table": "idlm_capi_logs",
+            "estimated_rows": 65974,
+            "indexes": [
+                {
+                    "name": "PRIMARY",
+                    "sequence": 1,
+                    "column": "id",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_id",
+                    "sequence": 1,
+                    "column": "lead_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "created_at",
+                    "sequence": 1,
+                    "column": "created_at",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                }
+            ]
+        },
+        {
+            "table": "idlm_lead_activity_log",
+            "estimated_rows": 397087,
+            "indexes": [
+                {
+                    "name": "PRIMARY",
+                    "sequence": 1,
+                    "column": "id",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_id",
+                    "sequence": 1,
+                    "column": "lead_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "activity_lead_id",
+                    "sequence": 1,
+                    "column": "activity_type",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "activity_lead_id",
+                    "sequence": 2,
+                    "column": "lead_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "activity_lead_id",
+                    "sequence": 3,
+                    "column": "id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_activity_id",
+                    "sequence": 1,
+                    "column": "lead_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_activity_id",
+                    "sequence": 2,
+                    "column": "activity_type",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_activity_id",
+                    "sequence": 3,
+                    "column": "id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "created_at",
+                    "sequence": 1,
+                    "column": "created_at",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                }
+            ]
+        },
+        {
+            "table": "idlm_leads",
+            "estimated_rows": 48650,
+            "indexes": [
+                {
+                    "name": "PRIMARY",
+                    "sequence": 1,
+                    "column": "id",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "email",
+                    "sequence": 1,
+                    "column": "email",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "phone",
+                    "sequence": 1,
+                    "column": "phone",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "source",
+                    "sequence": 1,
+                    "column": "source",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "original_source",
+                    "sequence": 1,
+                    "column": "original_source",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "latest_source",
+                    "sequence": 1,
+                    "column": "latest_source",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "stage",
+                    "sequence": 1,
+                    "column": "stage",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lost_reason",
+                    "sequence": 1,
+                    "column": "lost_reason",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "call_status",
+                    "sequence": 1,
+                    "column": "call_status",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "assigned_rep_id",
+                    "sequence": 1,
+                    "column": "assigned_rep_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "assigned_at",
+                    "sequence": 1,
+                    "column": "assigned_at",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "created_at",
+                    "sequence": 1,
+                    "column": "created_at",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "conversion_time",
+                    "sequence": 1,
+                    "column": "conversion_time",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_quality",
+                    "sequence": 1,
+                    "column": "lead_quality",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "disqualification_reason",
+                    "sequence": 1,
+                    "column": "disqualification_reason",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "disqualified_at",
+                    "sequence": 1,
+                    "column": "disqualified_at",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "qualified_at",
+                    "sequence": 1,
+                    "column": "qualified_at",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "qualified_by_user_id",
+                    "sequence": 1,
+                    "column": "qualified_by_user_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "intake_owner_id",
+                    "sequence": 1,
+                    "column": "intake_owner_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "handoff_status",
+                    "sequence": 1,
+                    "column": "handoff_status",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "duplicate_of_id",
+                    "sequence": 1,
+                    "column": "duplicate_of_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                }
+            ]
+        },
+        {
+            "table": "idlm_quote_revisions",
+            "estimated_rows": 19422,
+            "indexes": [
+                {
+                    "name": "PRIMARY",
+                    "sequence": 1,
+                    "column": "id",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "quote_revision",
+                    "sequence": 1,
+                    "column": "quote_id",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "quote_revision",
+                    "sequence": 2,
+                    "column": "revision_number",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "save_request_key",
+                    "sequence": 1,
+                    "column": "save_request_key",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "quote_status",
+                    "sequence": 1,
+                    "column": "quote_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "quote_status",
+                    "sequence": 2,
+                    "column": "status",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "created_by",
+                    "sequence": 1,
+                    "column": "created_by",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                }
+            ]
+        },
+        {
+            "table": "idlm_quotes",
+            "estimated_rows": 19737,
+            "indexes": [
+                {
+                    "name": "PRIMARY",
+                    "sequence": 1,
+                    "column": "id",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "quote_number",
+                    "sequence": 1,
+                    "column": "quote_number",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "save_request_key",
+                    "sequence": 1,
+                    "column": "save_request_key",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_status",
+                    "sequence": 1,
+                    "column": "lead_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_status",
+                    "sequence": 2,
+                    "column": "status",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "owner_status",
+                    "sequence": 1,
+                    "column": "owner_user_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "owner_status",
+                    "sequence": 2,
+                    "column": "status",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "current_revision_id",
+                    "sequence": 1,
+                    "column": "current_revision_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                }
+            ]
+        },
+        {
+            "table": "idlm_tasks",
+            "estimated_rows": 99099,
+            "indexes": [
+                {
+                    "name": "PRIMARY",
+                    "sequence": 1,
+                    "column": "id",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_qualification_cycle",
+                    "sequence": 1,
+                    "column": "lead_id",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_qualification_cycle",
+                    "sequence": 2,
+                    "column": "qualification_cycle",
+                    "unique": true,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_id",
+                    "sequence": 1,
+                    "column": "lead_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_status_due",
+                    "sequence": 1,
+                    "column": "lead_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_status_due",
+                    "sequence": 2,
+                    "column": "status",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "lead_status_due",
+                    "sequence": 3,
+                    "column": "due_date",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "assigned_rep_id",
+                    "sequence": 1,
+                    "column": "assigned_rep_id",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "status",
+                    "sequence": 1,
+                    "column": "status",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                },
+                {
+                    "name": "due_date",
+                    "sequence": 1,
+                    "column": "due_date",
+                    "unique": false,
+                    "cardinality": 0,
+                    "index_type": "BTREE"
+                }
+            ]
+        }
+    ],
+    "summary": {
+        "scenario_count": 10,
+        "full_scan_steps": 3,
+        "filesort_steps": 5,
+        "temporary_steps": 0,
+        "decision": "Review with measured endpoint cost and target-profile cardinality before changing indexes."
+    },
+    "privacy": {
+        "aggregate_only": true,
+        "raw_sql_included": false,
+        "parameter_values_included": false,
+        "excluded": [
+            "CRM rows",
+            "contacts",
+            "request payloads",
+            "responses",
+            "credentials",
+            "URLs",
+            "filesystem paths",
+            "database name"
+        ]
+    }
+}

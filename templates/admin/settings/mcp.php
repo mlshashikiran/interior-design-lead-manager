@@ -3,33 +3,33 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
-$saved_api_key = IDLM_Admin_Settings_Renderer::credential_value('mcp_api_key');
-$mcp_script_path = isset($context['mcp_script_path']) ? $context['mcp_script_path'] : '';
-$mcp_rest_url = isset($context['mcp_rest_url']) ? $context['mcp_rest_url'] : '';
-$mcp_local_json = isset($context['mcp_local_json']) ? $context['mcp_local_json'] : '';
-$mcp_remote_json = wp_json_encode(array(
+$idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
+$idlm_saved_api_key = IDLM_Admin_Settings_Renderer::credential_value('mcp_api_key');
+$idlm_mcp_script_path = isset($context['mcp_script_path']) ? $context['mcp_script_path'] : '';
+$idlm_mcp_rest_url = isset($context['mcp_rest_url']) ? $context['mcp_rest_url'] : '';
+$idlm_mcp_local_json = isset($context['mcp_local_json']) ? $context['mcp_local_json'] : '';
+$idlm_mcp_remote_json = wp_json_encode(array(
     'mcpServers' => array(
         'interior-design-crm' => array(
-            'url'     => $mcp_rest_url,
-            'headers' => array('X-IDLM-API-Key' => $saved_api_key),
+            'url'     => $idlm_mcp_rest_url,
+            'headers' => array('X-IDLM-API-Key' => $idlm_saved_api_key),
         ),
     ),
 ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-$mcp_enabled = IDLM_Production_Security::is_mcp_enabled();
-$mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
+$idlm_mcp_enabled = IDLM_Production_Security::is_mcp_enabled();
+$idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
 ?>
             <!-- Tab: AI Agent Access (MCP) -->
-                <section id="settings-mcp" class="idlm-settings-tab-content <?php echo $active_tab === 'mcp' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-mcp" <?php echo $active_tab === 'mcp' ? '' : 'hidden'; ?>>
+                <section id="settings-mcp" class="idlm-settings-tab-content <?php echo $idlm_active_tab === 'mcp' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-mcp" <?php echo $idlm_active_tab === 'mcp' ? '' : 'hidden'; ?>>
                 <div class="idlm-grid-full">
                     <article class="idlm-card">
                         <h3>Model Context Protocol (MCP) Server Configuration</h3>
                         <p class="idlm-card-desc">Expose secure, read-only analytical database access to AI models to perform complex lead and sales representative analysis.</p>
-                        <div class="idlm-alert idlm-mcp-status <?php echo $mcp_enabled ? 'idlm-alert-success' : 'idlm-alert-warning'; ?>">
-                            <strong><?php echo $mcp_enabled ? 'MCP enabled' : 'MCP disabled'; ?></strong>
+                        <div class="idlm-alert idlm-mcp-status <?php echo $idlm_mcp_enabled ? 'idlm-alert-success' : 'idlm-alert-warning'; ?>">
+                            <strong><?php echo $idlm_mcp_enabled ? 'MCP enabled' : 'MCP disabled'; ?></strong>
                             <span> for the <?php echo esc_html(IDLM_Production_Security::environment_type()); ?> environment.</span>
-                            <?php if ($mcp_enabled): ?>
-                                <span> Granted tools: <?php echo esc_html(implode(', ', $mcp_allowed_tools)); ?>.</span>
+                            <?php if ($idlm_mcp_enabled): ?>
+                                <span> Granted tools: <?php echo esc_html(implode(', ', $idlm_mcp_allowed_tools)); ?>.</span>
                             <?php else: ?>
                                 <span> Production is fail-closed until <code>IDLM_MCP_ENABLED</code> is explicitly set.</span>
                             <?php endif; ?>
@@ -45,7 +45,7 @@ $mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                         <div class="idlm-form-group full idlm-mcp-form-block">
                             <label for="idlm-mcp-api-key">Scoped MCP API key</label>
                             <div class="idlm-mcp-key-control" data-idlm-ui="flex">
-                                <input type="password" id="idlm-mcp-api-key" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($saved_api_key); ?>" readonly>
+                                <input type="password" id="idlm-mcp-api-key" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_saved_api_key); ?>" readonly>
                                 <button type="submit" form="idlm-rotate-mcp-form" class="idlm-action-link idlm-action-link-danger" data-idlm-confirm-submit data-idlm-confirm-title="Rotate MCP key?" data-idlm-confirm-message="Rotate the MCP key now? Existing remote MCP clients must be updated immediately." data-idlm-confirm-label="Rotate key" data-idlm-confirm-destructive="true">Rotate Key</button>
                             </div>
                             <p class="description">Remote clients must send this value in the <code>X-IDLM-API-Key</code> header.</p>
@@ -62,14 +62,14 @@ $mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                                     <span class="idlm-card-desc idlm-heading-flush">Exposes secure internet access to your remote site.</span>
                                     <button class="idlm-btn idlm-btn-secondary" type="button" data-idlm-ui="compact-button" onclick="idlmCopyToClipboard(this, document.getElementById('idlm-mcp-claude-remote').textContent);">Copy Remote JSON</button>
                                 </div>
-                                <pre id="idlm-mcp-claude-remote" class="idlm-code-block idlm-mb-4"><?php echo esc_html($mcp_remote_json); ?></pre>
+                                <pre id="idlm-mcp-claude-remote" class="idlm-code-block idlm-mb-4"><?php echo esc_html($idlm_mcp_remote_json); ?></pre>
 
                                 <h5 data-idlm-ui="option-heading-muted">Option B: Local Stdio Command (For Development)</h5>
                                 <div data-idlm-ui="flex-between mb-2">
                                     <span class="idlm-card-desc idlm-heading-flush">Runs a local command line script directly on your computer.</span>
                                     <button class="idlm-btn idlm-btn-secondary" type="button" data-idlm-ui="compact-button" onclick="idlmCopyToClipboard(this, document.getElementById('idlm-mcp-claude-local').textContent);">Copy Local JSON</button>
                                 </div>
-                                <pre id="idlm-mcp-claude-local" class="idlm-code-block"><?php echo esc_html($mcp_local_json); ?></pre>
+                                <pre id="idlm-mcp-claude-local" class="idlm-code-block"><?php echo esc_html($idlm_mcp_local_json); ?></pre>
                             </div>
                         </div>
 
@@ -84,14 +84,14 @@ $mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                                     <span class="idlm-card-desc idlm-heading-flush">Connects the agent directly to your live production data.</span>
                                     <button class="idlm-btn idlm-btn-secondary" type="button" data-idlm-ui="compact-button" onclick="idlmCopyToClipboard(this, document.getElementById('idlm-mcp-antigravity-remote').textContent);">Copy JSON</button>
                                 </div>
-                                <pre id="idlm-mcp-antigravity-remote" class="idlm-code-block idlm-mb-4"><?php echo esc_html($mcp_remote_json); ?></pre>
+                                <pre id="idlm-mcp-antigravity-remote" class="idlm-code-block idlm-mb-4"><?php echo esc_html($idlm_mcp_remote_json); ?></pre>
 
                                 <h5 data-idlm-ui="option-heading-muted">Option B: Local Stdio Command (For Development)</h5>
                                 <div data-idlm-ui="flex-between mb-2">
                                     <span class="idlm-card-desc idlm-heading-flush">Connects the agent to your local environment database.</span>
                                     <button class="idlm-btn idlm-btn-secondary" type="button" data-idlm-ui="compact-button" onclick="idlmCopyToClipboard(this, document.getElementById('idlm-mcp-antigravity-local').textContent);">Copy JSON</button>
                                 </div>
-                                <pre id="idlm-mcp-antigravity-local" class="idlm-code-block"><?php echo esc_html($mcp_local_json); ?></pre>
+                                <pre id="idlm-mcp-antigravity-local" class="idlm-code-block"><?php echo esc_html($idlm_mcp_local_json); ?></pre>
                             </div>
                         </div>
 
@@ -116,14 +116,14 @@ $mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                                             <td><strong>URL</strong></td>
                                             <td>
                                                 <div class="idlm-mcp-copy-row">
-                                                    <code id="cursor-sse-val" data-idlm-ui="code-wrap"><?php echo esc_url($mcp_rest_url); ?></code>
+                                                    <code id="cursor-sse-val" data-idlm-ui="code-wrap"><?php echo esc_url($idlm_mcp_rest_url); ?></code>
                                                     <button class="idlm-btn idlm-btn-secondary" type="button" data-idlm-ui="compact-button" onclick="idlmCopyToClipboard(this, document.getElementById('cursor-sse-val').textContent);">Copy URL</button>
                                                 </div>
                                             </td>
                                         </tr>
                                         <tr>
                                             <td><strong>Header</strong></td>
-                                            <td><code>X-IDLM-API-Key: <?php echo esc_html($saved_api_key); ?></code></td>
+                                            <td><code>X-IDLM-API-Key: <?php echo esc_html($idlm_saved_api_key); ?></code></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -143,7 +143,7 @@ $mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                                             <td><strong>Command</strong></td>
                                             <td>
                                                 <div class="idlm-mcp-copy-row">
-                                                    <code id="cursor-cmd-val" data-idlm-ui="code-wrap">php "<?php echo esc_html($mcp_script_path); ?>"</code>
+                                                    <code id="cursor-cmd-val" data-idlm-ui="code-wrap">php "<?php echo esc_html($idlm_mcp_script_path); ?>"</code>
                                                     <button class="idlm-btn idlm-btn-secondary" type="button" data-idlm-ui="compact-button" onclick="idlmCopyToClipboard(this, document.getElementById('cursor-cmd-val').textContent);">Copy Command</button>
                                                 </div>
                                             </td>
@@ -162,7 +162,7 @@ $mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                                 <h5 data-idlm-ui="option-heading">Option A: Remote HTTPS SSE (Recommended for Production)</h5>
                                 <p class="idlm-card-desc" data-idlm-ui="mb-2">Run this command to register the remote website endpoint:</p>
                                 <div data-idlm-ui="flex-between mb-3">
-                                    <code id="codex-cmd-remote" class="idlm-code-command">codex mcp add-url interior-design-crm "<?php echo esc_url($mcp_rest_url); ?>" --header "X-IDLM-API-Key: <?php echo esc_html($saved_api_key); ?>"</code>
+                                    <code id="codex-cmd-remote" class="idlm-code-command">codex mcp add-url interior-design-crm "<?php echo esc_url($idlm_mcp_rest_url); ?>" --header "X-IDLM-API-Key: <?php echo esc_html($idlm_saved_api_key); ?>"</code>
                                     <button class="idlm-btn idlm-btn-secondary" type="button" data-idlm-ui="compact-button" onclick="idlmCopyToClipboard(this, document.getElementById('codex-cmd-remote').textContent);">Copy</button>
                                 </div>
                                 <p class="idlm-card-desc" data-idlm-ui="mb-2">Or append the following block directly to your configuration file (<code>~/.codex/config.toml</code>):</p>
@@ -171,14 +171,14 @@ $mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                                     <button class="idlm-btn idlm-btn-secondary" type="button" data-idlm-ui="compact-button" onclick="idlmCopyToClipboard(this, document.getElementById('idlm-mcp-codex-toml-remote').textContent);">Copy TOML</button>
                                 </div>
                                 <pre id="idlm-mcp-codex-toml-remote" class="idlm-code-block idlm-mb-4">[mcp_servers.interior-design-crm]
-url = "<?php echo esc_url($mcp_rest_url); ?>"
+url = "<?php echo esc_url($idlm_mcp_rest_url); ?>"
 [mcp_servers.interior-design-crm.http_headers]
-X-IDLM-API-Key = "<?php echo esc_html($saved_api_key); ?>"</pre>
+X-IDLM-API-Key = "<?php echo esc_html($idlm_saved_api_key); ?>"</pre>
 
                                 <h5 data-idlm-ui="option-heading-muted mt-5">Option B: Local Stdio Command (For Development)</h5>
                                 <p class="idlm-card-desc" data-idlm-ui="mb-2">Run this command to register your local server file:</p>
                                 <div data-idlm-ui="flex-between mb-3">
-                                    <code id="codex-cmd-local" class="idlm-code-command">codex mcp add interior-design-crm -- php "<?php echo esc_html($mcp_script_path); ?>"</code>
+                                    <code id="codex-cmd-local" class="idlm-code-command">codex mcp add interior-design-crm -- php "<?php echo esc_html($idlm_mcp_script_path); ?>"</code>
                                     <button class="idlm-btn idlm-btn-secondary" type="button" data-idlm-ui="compact-button" onclick="idlmCopyToClipboard(this, document.getElementById('codex-cmd-local').textContent);">Copy</button>
                                 </div>
                                 <p class="idlm-card-desc" data-idlm-ui="mb-2">Or append the following block directly to your configuration file (<code>~/.codex/config.toml</code>):</p>
@@ -188,7 +188,7 @@ X-IDLM-API-Key = "<?php echo esc_html($saved_api_key); ?>"</pre>
                                 </div>
                                 <pre id="idlm-mcp-codex-toml-local" class="idlm-code-block">[mcp_servers.interior-design-crm]
 command = "php"
-args = ["<?php echo esc_html($mcp_script_path); ?>"]</pre>
+args = ["<?php echo esc_html($idlm_mcp_script_path); ?>"]</pre>
                             </div>
                         </div>
 

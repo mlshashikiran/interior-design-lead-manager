@@ -33,11 +33,9 @@ class IDLM_Admin_Settings_Renderer {
             return '';
         }
 
+        if (IDLM_Secret_Store::is_platform_secret('idlm_' . $credential)) { return ''; }
+
         switch ($credential) {
-            case 'meta_access_token':
-                return get_option('idlm_meta_access_token', '');
-            case 'google_api_secret':
-                return get_option('idlm_google_api_secret', '');
             case 'google_gadm_password':
                 $password = IDLM_Secret_Store::get('idlm_google_gadm_password');
                 if (empty($password)) {
@@ -45,16 +43,6 @@ class IDLM_Admin_Settings_Renderer {
                     IDLM_Secret_Store::set('idlm_google_gadm_password', $password);
                 }
                 return $password;
-            case 'linkedin_access_token':
-                return get_option('idlm_linkedin_access_token', '');
-            case 'interakt_api_key':
-                return get_option('idlm_interakt_api_key', '');
-            case 'interakt_webhook_secret':
-                return get_option('idlm_interakt_webhook_secret', '');
-            case 'meta_webhook_verify_token':
-                return get_option('idlm_meta_webhook_verify_token', '');
-            case 'meta_webhook_app_secret':
-                return get_option('idlm_meta_webhook_app_secret', '');
             case 'webhook_api_key':
                 return IDLM_Secret_Store::get('idlm_webhook_api_key', '');
             case 'mcp_api_key':
@@ -71,7 +59,7 @@ class IDLM_Admin_Settings_Renderer {
         $lead_target = get_option('idlm_monthly_lead_target', 100);
         $conv_target = get_option('idlm_monthly_conversion_target', 10);
         $currency_code = get_option('idlm_currency_code', 'INR');
-        $reps_see_all = get_option('idlm_reps_see_all_leads', '1');
+        $reps_see_all = IDLM_Settings::get('idlm_reps_see_all_leads', '0');
         $assignment_mode = get_option('idlm_assignment_mode', 'manual');
         $active_reps = get_option('idlm_active_assignment_reps', array());
         $source_maps = get_option('idlm_source_assignment_mappings', array());
@@ -88,8 +76,10 @@ class IDLM_Admin_Settings_Renderer {
         $active_pre_sales_reps = get_option('idlm_active_pre_sales_reps', null);
         $fallback_last_completed = get_option('idlm_fallback_last_completed_at', 'Never');
         $fallback_last_status = get_option('idlm_fallback_last_status', 'not_run');
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0443: build_context(): manage_options renderer, fixed prefixed lead/telemetry tables and constant count predicates; current operational context is intentionally live.
         $routing_exception_count = intval($wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_leads WHERE handoff_status = 'exception' AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0"));
         $unassigned_intake_count = intval($wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_leads WHERE assigned_rep_id = 0 AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0"));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         $working_hours_start = get_option('idlm_working_hours_start', '09:00');
         $working_hours_end = get_option('idlm_working_hours_end', '18:00');
         $working_days = get_option('idlm_working_days', array(1, 2, 3, 4, 5, 6));
@@ -226,8 +216,12 @@ class IDLM_Admin_Settings_Renderer {
 
         // Determine active tab
         $active_tab = 'general';
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- REL007-BOUNDARY-0059: build_context(): manage_options render context reads active_tab only to restore the selected presentation tab after settings processing; sanitization/unslashing does not persist settings or grant authority.
         if (isset($_POST['active_tab'])) {
-            $active_tab = sanitize_key($_POST['active_tab']);
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
+            // phpcs:disable WordPress.Security.NonceVerification.Missing -- REL007-BOUNDARY-0060: build_context(): manage_options render context reads active_tab only to restore the selected presentation tab after settings processing; sanitization/unslashing does not persist settings or grant authority.
+            $active_tab = sanitize_key(wp_unslash($_POST['active_tab']));
+            // phpcs:enable WordPress.Security.NonceVerification.Missing
         }
 
         $max_active_leads_per_rep = get_option('idlm_max_active_leads_per_rep', 30);
@@ -253,7 +247,9 @@ class IDLM_Admin_Settings_Renderer {
         $telemetry_level = get_option('idlm_telemetry_level', 'errors');
         $table_telemetry = $wpdb ? $wpdb->prefix . 'idlm_telemetry_logs' : '';
         $telemetry_logs = array();
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0444: build_context(): manage_options renderer, fixed prefixed lead/telemetry tables and constant count predicates; current operational context is intentionally live.
         if ($wpdb && $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_telemetry)) === $table_telemetry) {
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
             $telemetry_logs = $wpdb->get_results("SELECT * FROM {$table_telemetry} ORDER BY id DESC LIMIT 50");
         }
@@ -334,7 +330,9 @@ class IDLM_Admin_Settings_Renderer {
             'reminder_hours' => $reminder_hours,
             'reminder_status' => $reminder_status,
             'reminder_rules' => $reminder_rules,
+            'lead_connector' => IDLM_Lead_Connector::settings_context(),
             'interakt_enabled' => $interakt_enabled,
+            'whatsapp_notifications_enabled' => get_option('idlm_whatsapp_notifications_enabled', '0'),
             'meta_webhook_enabled' => $meta_webhook_enabled,
             'audience_rules' => $audience_rules,
             'reps' => $reps,

@@ -1,0 +1,175 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-09",
+  "finding": "INT-005",
+  "status": "IMPLEMENTED, not CLOSED",
+  "candidate": "1.102.66",
+  "base": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "schemas": {
+    "core": "1.3.9",
+    "routing": "1.0.1",
+    "quotation": "2.5.4",
+    "lifecycle_receipt": "1.1.0"
+  },
+  "backlog": {
+    "OPEN": 12,
+    "IMPLEMENTED": 32,
+    "CLOSED": 0
+  },
+  "environment": {
+    "PHP": "8.4.14",
+    "WordPress": "7.1.3",
+    "MySQL": "8.4.0",
+    "scheduler": "WP-Cron",
+    "persistent_cache": false
+  },
+  "checks": [
+    {
+      "command": "php tests/run.php",
+      "result": "324 passed, 0 failed",
+      "log": "fast-final.log",
+      "stderr": "existing synthetic missing-phone warning"
+    },
+    {
+      "command": "owned MySQL environment; IDLM_TEST_FILTER=INT005 php tests/integration/run.php",
+      "result": "11 passed, 0 failed (fresh schema plus ten focused cases)",
+      "log": "native-initial.log",
+      "stderr": "empty"
+    },
+    {
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD=empty IDLM_TEST_DB_HOST=localhost:/private/tmp/idlm-int005.sock php tests/integration/run.php",
+      "result": "251 passed, 0 failed",
+      "log": "native-full.log",
+      "stderr": "existing deliberate identity-review required-write diagnostics"
+    },
+    {
+      "command": "same owned environment; IDLM_TEST_CAPI_RETRY_EVIDENCE_DIR=owned evidence php tests/integration/quotation-http.php --capi-retry-only --hold",
+      "result": "6 passed, 0 failed",
+      "log": "http.log",
+      "stderr": "empty"
+    },
+    {
+      "command": "same owned environment; php tests/integration/quotation-http.php",
+      "result": "398 passed, 0 failed",
+      "log": "http-full.log",
+      "stderr": "empty"
+    },
+    {
+      "command": "php -l for 15 changed PHP files; git diff --check",
+      "result": "PASS",
+      "log": "lint.log"
+    },
+    {
+      "command": "actual browser UI through CUA on owned synthetic CRM shortcode",
+      "result": "desktop 1 succeeded/1 failed; mobile replay 0 succeeded/1 failed; SQL log9 binds source6; exactly 1 new browser HTTP acceptance",
+      "evidence": [
+        "browser-observations.json",
+        "browser-sql.log",
+        "browser-diagnostics.json",
+        "desktop-retry.jpg",
+        "mobile-replay-refused.jpg"
+      ]
+    }
+  ],
+  "graph": {
+    "query": "INT-005 retry_capi_log process_capi_event",
+    "finding": "Located immutable INT-005 audit and separate manual/worker paths; source confirmed guessed aliases, forced eligibility bypass and historical false success.",
+    "mode": "scoped structural extraction and explicit documentation heading refresh",
+    "evidence": "graph-refresh.json"
+  },
+  "initial_fixture_failure": "Initial fast fixture omitted loading IDLM_CAPI; fixed fixture and all final cases pass. No production fault found by that failure.",
+  "fault_and_concurrency_evidence": [
+    "current duplicate/deleted/reversed/disabled/Google source/LinkedIn identity checks across worker, forced and manual paths",
+    "independent primary credential rotation, fresh contact and original commercial/event values",
+    "claim, result log and acknowledgement write failures",
+    "manual/manual and manual/ordinary independent competing workers",
+    "process exit77 after synthetic acceptance: durable claim becomes uncertain without retry HTTP",
+    "three actual attempts across a root chain; permanent and transport outcome refusal",
+    "real backup exclusion and restore/reset erasure",
+    "active caller transaction and malformed metadata refusal"
+  ],
+  "cleanup": {
+    "builder": "Shashi",
+    "owned_test_schemas_dropped": true,
+    "remaining_databases": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "browser_content_removed": true,
+    "socket_only_server_stopped": true,
+    "owned_mysql_data_removed": true,
+    "configured_site_untouched": true
+  },
+  "no_real_provider_send": true,
+  "commit_package_deployment": false,
+  "remaining_qualification": [
+    "live provider acceptance/idempotency/reconciliation",
+    "live AS, persistent cache and distributed database runtime",
+    "exact artifact/runtime/CI matrix",
+    "ordinary durable CAPI job claims/retention (INT-008)",
+    "minimal manual receipt retention",
+    "platform-secret migration (INT-010)",
+    "legacy historical destination/timing not recoverable"
+  ],
+  "source_hashes": {
+    "includes/class-capi.php": "8ab50f79bfa76a0f78b3c92d29e0727d752bec4a4b25359d80b4aa5d2b152a9b",
+    "includes/class-db.php": "b9e35d2b1b5cb0e7daace12d6ef9bcefbe4d6b7178b605563c67e817a4b13d2a",
+    "includes/class-admin-ajax.php": "07078100d4e63fbd404979266ec099087b600dcc094da124c027ad08ba1f3895",
+    "includes/class-backup.php": "baf9bfd7f0536448efa8e11954ed5b7e0ca9c1c1b18b0473d8d8070fee6c2389",
+    "includes/class-lead-deletion-service.php": "e952cce37a74f5cbca1aea9266b998c438da631d1f1c136cff524c1cbfee7dbf",
+    "interior-design-lead-manager.php": "6f49fba4b1d22123d16455ffa762421acae0b8771671c65374ffcf3603ee99b6",
+    "tests/capi-retry-contracts.php": "21d743d1fd992794bb2a870e43e75e0438657d7816ae36d6fc389136b96c4d82",
+    "tests/run.php": "8175a89fb187ff273d667abb88fb3955333a8d3e76264a290b3dfd8e1d68d53d",
+    "tests/release-contracts.php": "a7db98fdd83503a7f1983d24fb54243859eef357a8925d551e68ade6d929fdc5",
+    "tests/integration/capi-retry-contracts.php": "dc993459466a881290e1c880b9bfcf0203af6f6827e59cf846ee57bc5aebabc0",
+    "tests/integration/capi-retry-http-cases.php": "a0fb45e32d158459a68aee0ed32e8b5c4a13f3bb7f2e036756635b99c1a0c1cb",
+    "tests/integration/quotation-http.php": "7168b9d9b30b8c6e7947402cfefb69e3dc4173aed6c88984cbd3b44721d8eb19",
+    "tests/integration/http-router.php": "8305abc566e8099c31afa7a17d674f1ad0df375e8ce7a6887d906eefa47f4fab",
+    "tests/integration/run.php": "aae51519bc715b984d4277f190b64ad17a9b9789f0dcfa22e32e7e40a70a326e",
+    "tests/integration/worker.php": "c1f86f2f47eb15b0dd4e67b010ea73c123db84b4c554c52a203a4d018adfe434",
+    "docs/AUDIT-REMEDIATION-CAPI-RETRY-SLICE.md": "c64eb9a9fd515b802b4fe51ef85059571115a314d88f8bb615f533cec2c5a1bd",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "61fcbab018e35094e3fccc26ed5839f6b9d631769f7f491f22aeaa0d60607e9f",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "322358100608cd41ae423f992ca4c44666957771a9c9a98b7bb6b794f6ba86ee",
+    "docs/DATA-MODEL.md": "499cfb61c31f6d9a6e043f9918c00cf3d5ee3d7a06f7e4b39f7b9a5dabdf9cc6",
+    "docs/INTERFACES.md": "128b028688c72c745c7d9f191703c3cd00f9ee1ca77e7f41d7ab5c0813c4c328",
+    "docs/FEATURE-MAP.md": "d69cad04a1d5b4460bf4befb7f9cac83033e0a7a2a2259e18b5797ede04bb2a4",
+    "docs/CHANGELOG-DEV.md": "1a57f84a5ac3e5e37b5e69caaadafd3dc58bf7c08e4b33f6b5c3ebf65b131851",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "1137e888750fb4409acf3012259d730038d231aa83d053c82d5120d3d9718913",
+    "tests/README.md": "87a9ac46699cf628607cd811872dd6b3d2d54f68d6df4baca29ba2abb6b7433f",
+    "CHANGELOG.md": "9636b1f2cd6ac6d06ef39ee1f0d5e259660950442ec8ceeb240ff1a341e53f88",
+    "readme.txt": "e4f71b01309654566d4e12a82ebe03abc7829d63c8d53fde60f6144ef32bd8b0",
+    "docs/audit-remediation-backlog.csv": "ffe64798d711de863609ada6230d5f3eb71c225668ee7c95ddb855cd33952ef7"
+  },
+  "evidence_hashes": {
+    "baseline.json": "7f7ecbf8da338ac85176d280a46ffd4c29017264aca1af3bf56a7b9401fe1518",
+    "browser-diagnostics.json": "d5aba51772c044a4792bb68e8fe724e72916daa55a10cf449aac393ec70017e4",
+    "browser-fixture.json": "294a5b721df7f5b04b5977aff30062d20dfa48cff69f87e09bb7ac69bb5ccfb1",
+    "browser-observations.json": "d4282f7fa26c07d888e15adf70bad287188448d9056ef14955a3cd217bdb310d",
+    "browser-provider-calls.jsonl": "89da459dae4ec020a424f639a94c18775052d76fa7a8a8781db4aca7455a5b3d",
+    "browser-sql.log": "b654d67300e53f7de07fbc77a4c3338f3a29f703578eee775d3ac1cd53416753",
+    "changed-php-files.json": "812caec36b73aae3d7993a023015ffe30f4c23b62c625bd9396bdd63fdbe6a8c",
+    "cleanup-databases.log": "bc3dc967a9da6d0145cad70c2e361e4ea42d4e1c3fc5d4598d46925fa05ff318",
+    "cleanup.json": "f964613c1ebed29f533356adb8b47b59860ee11269e24deed39cd83f170d898b",
+    "desktop-retry.jpg": "dcfe966946e3310b7df39da74cc16026365807aabb89266a7c7169dfc834cb44",
+    "fast-final.log": "991cb519f0c4ed6a35f15326e362a924d7d2fb86becda1849c9b0ea0ed8aba62",
+    "fast-final.stderr.log": "50e79ff71c92c4492270cb9df7f3e186992edae602180e34d6d40949a587f739",
+    "fast-initial.log": "618f7f3de9af914a3e63d29134dd17785f59c5c61e879bebe9aee0d4fb56d93b",
+    "fast-initial.stderr.log": "6b37d2c156c40ea07149f3209d56336258ba77f293a91643f47904b1a2760ceb",
+    "fast.log": "991cb519f0c4ed6a35f15326e362a924d7d2fb86becda1849c9b0ea0ed8aba62",
+    "fast.stderr.log": "50e79ff71c92c4492270cb9df7f3e186992edae602180e34d6d40949a587f739",
+    "graph-refresh.json": "4d666d6c68b2f4e5c2b815e594e008520c4ae8543032ffaec5fff4ed071722ca",
+    "graph-refresh.log": "53ed11f4e71f54e3e5fde2a3f89d23ff8c2b2defad378acef852201f544a8dac",
+    "http-full.log": "a27fba949bd317c30c1415c9361aee9e16e23cd48f2642d84d59dd6b1601f00e",
+    "http-full.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "http.log": "70b52f288eafcf69462b489a3e131636b9d36dc8822f798524475ba1d9bd2fdb",
+    "http.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "lint.log": "3516d5823b73c5c766c027148fde8d8b33ccbbf70f276f446800b61ad0b737ca",
+    "mobile-replay-refused.jpg": "d01c6cefcc257b509964962127f62591980e870357c51bfc1aa0c4b028dc19c7",
+    "native-full.log": "b96acfb0a165472836611d9bc540f72a2849d83885b9e5908975953dfd8c3d41",
+    "native-full.stderr.log": "e1b124a301be14de31ae8e6902cba739b9eb5e7e591bac105a79d76845b5604a",
+    "native-initial.log": "7b52e7bda1e1bc01336f22769bde7173f393af6062f89b73891a6b45e5fb1a8a",
+    "native-initial.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

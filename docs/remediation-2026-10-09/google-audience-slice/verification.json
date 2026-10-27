@@ -1,0 +1,133 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-09",
+  "finding": "INT-007",
+  "status": "IMPLEMENTED, not CLOSED",
+  "version": "1.102.68",
+  "base_revision": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "revision": "local uncommitted working tree",
+  "artifact_sha": null,
+  "schema_changes": false,
+  "environment": {
+    "php": "8.4.14",
+    "wordpress": "7.1.3",
+    "mysql": "8.4.0",
+    "scheduler": "WP-Cron",
+    "persistent_cache": false,
+    "database_safety": "new owned idlm_test_* schemas only; dedicated temporary socket-only MySQL",
+    "outbound": "HTTP/mail intercepted",
+    "native_http_env": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD=<empty> IDLM_TEST_DB_HOST=localhost:<owned temporary socket>"
+  },
+  "verification": {
+    "fast": {
+      "command": "php tests/run.php",
+      "passed": 335,
+      "failed": 0,
+      "log": "fast-final.log",
+      "focused_scenarios": [
+        "INT007 disabled pull rule denies before lead query or CSV output",
+        "INT007 disabled duplicates cannot shadow enabled first match and re-enable is live",
+        "INT007 missing option legacy fallback is shared and explicit empty or corrupt rules deny",
+        "INT007 malformed rules and wrong platform are skipped without widening filters",
+        "INT007 malformed list ID returns 400 before rule contact reads"
+      ],
+      "existing_fixture_warnings": {
+        "count": 7,
+        "same_as": "docs/remediation-2026-10-09/whatsapp-inbound-slice/fast-final.log",
+        "new_warnings": 0
+      }
+    },
+    "native": {
+      "command": "IDLM_TEST_FILTER=INT007 php tests/integration/run.php",
+      "passed": 4,
+      "failed": 0,
+      "log": "native.log",
+      "focused_scenarios": [
+        "T07-N-INT007 disabled feed returns 404 before contact query",
+        "T08-N-INT007 manual scheduled sync skips disabled rules and retains pending queue",
+        "T07-N-INT007 explicit rules take precedence over legacy and current toggles"
+      ]
+    },
+    "http": {
+      "command": "php tests/integration/quotation-http.php --google-audience-only",
+      "passed": 7,
+      "failed": 0,
+      "log": "http.log",
+      "focused_scenarios": [
+        "T07-H-INT007-invalid-missing-query-and-rotated-credentials-deny",
+        "T08-H-INT007-enabled-header-basic-ID-aliases-preserve-filtered-CSV",
+        "T07-H-INT007-disable-reenable-and-removal-are-live-on-both-routes",
+        "T08-H-INT007-disabled-duplicate-cannot-shadow-first-enabled-filters",
+        "T07-H-INT007-legacy-only-when-absent-explicit-empty-malformed-and-disabled-deny",
+        "T07-H-INT007-malformed-missing-unknown-and-other-platform-list-deny",
+        "T07-H-INT007-existing-rate-limit-still-denies-before-CSV"
+      ]
+    },
+    "lint": {
+      "passed": 10,
+      "failed": 0,
+      "log": "lint.log"
+    },
+    "diff_check": {
+      "command": "git diff --check",
+      "result": "PASS"
+    }
+  },
+  "initial_observations": [
+    "Disabled rule emitted CSV before fix.",
+    "Fast legacy test compared array order; corrected field equality.",
+    "HTTP children reached existing rate gate; isolated synthetic buckets and added dedicated 429 test.",
+    "Updated fifth version authority in scalability plan after alignment failure.",
+    "Sandbox MySQL initialization crashed; approved escalated temporary server succeeded."
+  ],
+  "cleanup": "cleanup.json",
+  "remaining_qualification": [
+    "Live Google Data Manager/provider polling/cache behavior",
+    "Provider removal/consent and manual audience retry/exclusion policy (INT-009)",
+    "In-flight configuration race and persistent/distributed cache",
+    "Supported runtime/topology/volume matrix",
+    "Exact clean artifact and CI release qualification"
+  ],
+  "no_real_provider_send": true,
+  "commit_package_deployment": false,
+  "source_hashes": {
+    "includes/class-audiences.php": "26b16d3338495e96a2ad105c3674e991761b29d053ff4f17eeeac7a86b73a602",
+    "includes/class-integrations.php": "3e50f91ae6af5cc1c2a600584434376d74c723820a3539ead162032f1b8d4ae2",
+    "tests/run.php": "1130b43c38976143e13884bfdbdda466e3b12706e989ee4d08806372ea9055a8",
+    "tests/integration/run.php": "4b37891ef8e47e6965743ec6e08e795fab11114c454e0a6bb65cdd70d2e103e1",
+    "tests/integration/quotation-http.php": "5a74458ab652da7262c603d6c14692b12c4c0016a866fdaf9be4ead753385674",
+    "interior-design-lead-manager.php": "4f4c5c8c218f4a138e12df7dd5591888a1f39c25b0b7a50f1a3b5c8397cf6eab",
+    "readme.txt": "e7d504292d3f6fe33e0eb25973da8a228102efbe54ebe61e5da981cf50adb145",
+    "CHANGELOG.md": "f292ab02b38ca2763b925ddfcec954acb3cd0fc81e7bd97ab49879866d517f74",
+    "docs/CHANGELOG-DEV.md": "a501ac021d49a51d0e92a427055621621559b397522528c14c273c20ac219ae3",
+    "docs/INTERFACES.md": "a4fb58763636a18c6d30419f24c5c3c75636013ecb30c33e54ad02b338433d86",
+    "docs/SECURITY.md": "7e25f9b1004bc0f56ce51b03dd8dfd0d4a9a743d6114f8329cba02a4e135f1f0",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "b2ce75f5eb574ec64ae8d327727c9a95c5f954d730ac62650081f17236755c13",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "2e95d42440e91ba03904ff8a7df0326c11bc2f043becc33377513a5a69eab6d0",
+    "docs/audit-remediation-backlog.csv": "ecc7566df6609b928d0a16c9a2280cf4668de759ca2abd91b7b9f426124a20bf",
+    "tests/release-contracts.php": "a9c8590eb37b24aa3f72dbc477ea613e3cb4aae39c63aacb9cc8fdd45999cdb2",
+    "tests/google-audience-contracts.php": "192d4545dd2f53637d5090e2e768f8062d0402017138ab83f3dfc7f782c8831f",
+    "tests/integration/google-audience-contracts.php": "9addcd8dcc20ce0b2950e970c8d90862b2a14e0baf1f5f577079a423bfc01907",
+    "tests/integration/google-audience-http-cases.php": "1b100e9fa0c02254f30621cf79e27c65bebd66206d13ba012ac1dec5de15d383",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "977063795e86243e0662d0da31a42e463ba6cce2e77225e7aae97d6554ff92f2",
+    "tests/README.md": "002b7315ee2b1cb7c41cf7cfecf7bc43e613743bdb5c69e51f32669e70aa06ec",
+    "docs/AUDIT-REMEDIATION-GOOGLE-AUDIENCE-SLICE.md": "5df2b4ca62a635161e047988e958ebc3669021a2ac1a99336376ce1be74b4697"
+  },
+  "evidence_hashes": {
+    "fast.stderr.log": "50e79ff71c92c4492270cb9df7f3e186992edae602180e34d6d40949a587f739",
+    "fast.log": "6727bd1bf3dd688ef0284056c4d95029a3b3f92657c7cd1c2741cff4d6a10840",
+    "cleanup-databases.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "graph-refresh.json": "6bf3d1c09fc8a606617a84cffd3650101e51ec752997d0bdde65b6686df3e8e0",
+    "lint.log": "350f7ee2351f5cfc1514e9050bed86505ed098acf4c87e76c93587347de826d6",
+    "http.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fast-final.log": "6727bd1bf3dd688ef0284056c4d95029a3b3f92657c7cd1c2741cff4d6a10840",
+    "cleanup.json": "f1f8f7c9743c0ab8e0f3bf71dbd93fcd6359886389d1e616a91d3d5e47035d15",
+    "reproduction.log": "e7fdef611dd41e79877261f580e7d9c34e48dce8d560e2782c91ff882ccc59c1",
+    "baseline.json": "9e8a860ea5abfb243278c81f7b77e2caa28efc9f891cf6e73829c2663e78f106",
+    "native.log": "4cb66d7600c9dfebd47669d5ec5471c9fd1db275632afde8b9ef5096fb7acb26",
+    "changed-php-files.json": "1602b8c687945dac78f7eff5ef97e3b98097aed7f24bfdd2c47269a9460a2423",
+    "http.log": "cb228bb93462aff930716f9a6bcc4007e0ae35c0b107791b69c797be32d7a440",
+    "native.stderr.log": "e6ad1567caf58533baf800230bc1d7409b7afafe6c4c758597c08f318b9f055b",
+    "fast-final.stderr.log": "50e79ff71c92c4492270cb9df7f3e186992edae602180e34d6d40949a587f739"
+  }
+}

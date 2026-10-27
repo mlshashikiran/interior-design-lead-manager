@@ -1,0 +1,24 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T02-N-CORE008-pending-external-replay-retains-one-review-no-lead-task-or-rerouting
+PASS T02-N-CORE008-matched-is-audited-once-and-external-replay-obeys-decision
+PASS T02-N-CORE008-separate-is-audited-once-and-external-replay-obeys-decision
+PASS T02-N-CORE008-rejected-is-audited-once-and-external-replay-obeys-decision
+PASS T02-N-CORE008-invalid-missing-foreign-and-duplicate-candidates-and-blank-reasons-leave-state-unchanged
+PASS T02-N-CORE008-required-idlm_leads-failure-rolls-back-separate-resolution-and-retries-once
+PASS T02-N-CORE008-required-idlm_lead_touchpoints-failure-rolls-back-separate-resolution-and-retries-once
+PASS T02-N-CORE008-required-idlm_lead_activity_log-failure-rolls-back-separate-resolution-and-retries-once
+PASS T02-N-CORE008-required-idlm_inbound_submission_reviews-failure-rolls-back-separate-resolution-and-retries-once
+PASS T02-N-CORE008-required-idlm_lead_outbox-failure-rolls-back-separate-resolution-and-retries-once
+PASS T02-N-CORE008-commit-denial-rolls-back-decision-and-contact-work
+PASS T16-N-CORE008-lead-erasure-removes-candidate-resolved-contact-and-malformed-reviews-but-keeps-unrelated
+WordPress database error Synthetic required write failure for query DELETE FROM `wp_idlm_inbound_submission_reviews` WHERE `id` = '16' made by {closure:/Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/integration/identity-review-contracts.php:47}, idlm_lifecycle_failure, {closure:{closure:/Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/integration/identity-review-contracts.php:47}:48}, IDLM_Lead_Deletion_Service::delete, IDLM_Lead_Deletion_Service::delete_many, IDLM_Recovery_Guard::run, IDLM_Lead_Deletion_Service::{closure:IDLM_Lead_Deletion_Service::delete_many():166}, IDLM_Lead_Deletion_Service::delete_many_work, IDLM_Identity_Review::erase_leads
+PASS T16-N-CORE008-failed-review-erasure-rolls-back-lead-and-reviews
+WordPress database error Synthetic required write failure for query DELETE FROM wp_idlm_inbound_submission_reviews made by {closure:/Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/integration/identity-review-contracts.php:50}, idlm_lifecycle_failure, {closure:{closure:/Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/integration/identity-review-contracts.php:50}:51}, IDLM_Lead_Deletion_Service::reset_all, IDLM_Lead_Deletion_Service::reset_all_work
+PASS T16-N-CORE008-reset-erases-independent-review-PII-inventory-and-delete-failure-rolls-back
+PASS T16-N-CORE008-retention-is-bounded-checked-retryable-and-preserves-unexpired-review
+PASS T17-N-CORE008-additive-legacy-upgrade-and-complete-prior-backup-preserve-contact-evidence
+PASS T02-C-CORE008-two-synchronized-manager-decisions-commit-only-one-separate-lead
+PASS T02-N-CORE008-lock-refusal-and-manager-revocation-during-wait-cannot-commit-decision
+PASS T16-N-CORE008-decisions-round-trip-and-all-complete-prior-inventories-normalize-without-current-omission
+
+20 passed, 0 failed

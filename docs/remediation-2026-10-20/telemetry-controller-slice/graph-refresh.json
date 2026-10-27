@@ -1,0 +1,40 @@
+{
+  "builder": "Shashi",
+  "updated_at": "2026-10-20T16:54:35.544413+00:00",
+  "method": "Scoped Graphify AST plus three source-verified delegate edges and literal document headings; outside-scope relationships retained. No full semantic/HTML rebuild.",
+  "code_files": [
+    "includes/class-admin-telemetry-controller.php",
+    "includes/class-admin-ajax.php",
+    "interior-design-lead-manager.php",
+    "tests/bootstrap.php",
+    "tests/release-contracts.php",
+    "tests/integration/quotation-http.php",
+    "tests/integration/telemetry-controller-http-cases.php"
+  ],
+  "document_files": [
+    "docs/AUDIT-REMEDIATION-PLAN.md",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md",
+    "docs/CHANGELOG-DEV.md",
+    "docs/ARCHITECTURE.md",
+    "docs/FEATURE-MAP.md",
+    "docs/PROJECT-MAP.md",
+    "docs/DEVELOPMENT.md",
+    "docs/INTERFACES.md",
+    "tests/README.md",
+    "docs/AUDIT-REMEDIATION-TELEMETRY-CONTROLLER-SLICE.md"
+  ],
+  "extracted_nodes": 233,
+  "extracted_edges": 273,
+  "document_headings": 382,
+  "source_sha256": {
+    "includes/class-admin-telemetry-controller.php": "9dca4a9c941ab1ce4851c4df2635330a106674217c4f8824284176dc6ecad02a",
+    "includes/class-admin-ajax.php": "06f6226b968f459c7ad9de6438ac4e7fc39152e86ea2cb85a7e9edd6a8bcc067",
+    "interior-design-lead-manager.php": "15d7031c515a13316e6b98ff04f9fa6e633879bbe393034101ce89519ac800b4",
+    "tests/bootstrap.php": "3cfe102a65c255accdca48b04b7c7175e41645a454f4f389498306b739481c92",
+    "tests/release-contracts.php": "c7b5f5fe1a822be06f0b554e8224941d5a907af15266e10ec27fe32e8cfb28a2",
+    "tests/integration/quotation-http.php": "f3e5af76a348d5300493e4eb2914720b48be377eeb339244585de22d750a26e4",
+    "tests/integration/telemetry-controller-http-cases.php": "8ed285dd1b1497a7015a3803aba964e02f619c28e1958c8777cb37a9e34b77bc"
+  },
+  "semantic_tokens": "Not measured; no token reduction claim"
+}

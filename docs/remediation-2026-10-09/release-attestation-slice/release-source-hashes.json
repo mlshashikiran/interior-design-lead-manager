@@ -1,0 +1,12 @@
+{
+  "tests/release/class-release-artifact.php": "0896504c94429c74385199bcd088c562cbdf8dc4382582db1b34809a72194ac6",
+  "tests/release/class-release-candidate.php": "4b3c0d52523d4e09721e936c4a3db7feb3f37af1676e1b68b67bc8cc212c04fc",
+  "tests/release/build-release.php": "8a96c2774b54f4f89087537f0ef8efb9eaf2526854a06a1a955d110c8ce60f4c",
+  "tests/release/verify-candidate.php": "34fda094e6a8db64c641bcfcab4284a1a5eca6b6a9f14cbcd03ebce4ff021439",
+  "tests/release-contracts.php": "2d0f88d83469ab8c889890f21dab2d7c4d8ff1a9e9ec5ab5c95a674d1a42a299",
+  ".github/workflows/tests.yml": "083d4fc01c6aaa596f9b40252b9a6cf441771be66082621f2cfa3ae23b3deab4",
+  ".distignore": "9498f4f671a4626e538b7003949cc0531be0dfeef0fa9ae917dda482950e1d94",
+  "interior-design-lead-manager.php": "22de0578a776f22f5d833063468807d6f8ded870021196d4d1681d5acf0ffb2d",
+  "readme.txt": "999d17bf795e8dff7cde9a1453d1d0a23c156519fd49c74c1c657527fb683cef",
+  "CHANGELOG.md": "d3f0a5d9d26d63e560a89752eb7b62a5cba96194b1f3414c9f8ab4a072d3b2f2"
+}

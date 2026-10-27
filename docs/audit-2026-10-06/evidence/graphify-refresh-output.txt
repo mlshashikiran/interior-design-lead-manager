@@ -1,0 +1,18 @@
+{
+  "author": "Shashi",
+  "status": "PASS within explicit bounded scope",
+  "code_files": 88,
+  "audit_documents": 13,
+  "structural_nodes": 1065,
+  "structural_edges": 1235,
+  "semantic_nodes": 63,
+  "semantic_edges": 169,
+  "removed_old_nodes": 1124,
+  "final_nodes": 2160,
+  "final_edges": 3821,
+  "communities": 118,
+  "uncached_documents": 13,
+  "scope": "first-party PHP/JS and13 audit documents; bundled vendor/Chart.js and older non-audit docs not refreshed",
+  "token_accounting": "Unknown, not reported by reviewer; no reduction benchmark claimed",
+  "reviewer_status": "Semantic JSON was written and validated before reviewer usage-limit interruption"
+}

@@ -1,0 +1,103 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-08",
+  "finding": "UI-001",
+  "status": "IMPLEMENTED, not CLOSED",
+  "candidate": "1.102.63",
+  "production_change_this_slice": false,
+  "version_bump": false,
+  "schemas": {
+    "core": "1.3.9",
+    "routing": "1.0.1",
+    "quotation": "2.5.4",
+    "lifecycle_receipt": "1.1.0"
+  },
+  "environment": {
+    "PHP": "8.4.14",
+    "WordPress": "7.1.3",
+    "MySQL": "8.4.0",
+    "scheduler": "WP-Cron",
+    "persistent_cache": false
+  },
+  "checks": [
+    {
+      "command": "php tests/run.php",
+      "result": "312 passed, 0 failed",
+      "log": "fast.log",
+      "stderr": "Existing synthetic missing-phone warning retained in fast-stderr.log"
+    },
+    {
+      "command": "node tests/quotation-numeric-js-contracts.js",
+      "result": "28 JavaScript golden vectors PASS",
+      "log": "js-vectors.log"
+    },
+    {
+      "command": "php tests/integration/quotation-http.php --quantity-only",
+      "result": "3 passed, 0 failed",
+      "environment": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD=empty IDLM_TEST_DB_HOST=localhost:/private/tmp/idlm-ui001.sock",
+      "log": "http-final.log",
+      "stderr": "empty"
+    },
+    {
+      "command": "Actual browser admin1280x900 and shortcode390x844",
+      "result": "17 recorded observations; native validity, clone/duplicate/section, save/reopen, invalid recovery, autosave/reload and mobile repeat save",
+      "evidence": "browser-checks.json"
+    },
+    {
+      "command": "Independent read-only SQL after browser R03",
+      "result": "PASS:14 rows across3revisions, original R01 preserved, current pointer R03, exact quantities/prices/dimensions/totals",
+      "evidence": "browser-persistence.json"
+    },
+    {
+      "command": "php -l tests/integration/quotation-http.php; php -l tests/integration/quotation-quantity-http-cases.php; node --check assets/js/quotations.js; git diff --check",
+      "result": "PASS"
+    }
+  ],
+  "initial_test_failure": "http.log retains2pass1fail: wrong second-template-input expectation; actual fresh form has one row; final exact new/edit counts pass.",
+  "cleanup": {
+    "owned_databases_dropped": true,
+    "only_builtin_databases_after_cleanup": [
+      "information_schema",
+      "mysql",
+      "performance_schema",
+      "sys"
+    ],
+    "owned_content_removed": true,
+    "owned_mysql_stopped_and_data_removed": true,
+    "browser_tab_closed": true,
+    "temporary_viewport_reset": true,
+    "configured_site_database_used": false,
+    "outbound_providers_intercepted": true
+  },
+  "qualification_limits": [
+    "No full accumulated HTTP rerun for isolated regression/documentation change",
+    "Exact release artifact/CI, older/minimum runtimes, additional browser engines/locales/devices and full T10/T18/T19/M0 remain open"
+  ],
+  "hashes": {
+    "includes/class-quotation-renderer.php": "8f8cb437a20aa1ee979e3e6f7e00be513ce01d0f40443ed3963d2c6d4257e28c",
+    "assets/js/quotations.js": "edf2bbcb108fccb268eb110811689e93c3c3463d15c6923b00902c46e05212a6",
+    "tests/integration/quotation-http.php": "ad327a13fa110323f8b8062ae27318cbd73928fe142045537ef6e1ef4fac013f",
+    "tests/integration/quotation-quantity-http-cases.php": "8ffd9f87941963536419ea4b2832245fe48ec0fa33724f373b0752ef4ae663be",
+    "docs/AUDIT-REMEDIATION-QUOTATION-QUANTITY-SLICE.md": "9e91d3c531e73f5eb40aef647ed391e68a786ebfdeb32c2ba98c3ca93bb34092",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "a1156d58050e4505f163ffd7554ce69a7d4141a2dd0ccd44ff81618d32ec32a9",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "6e8e5fcb7be3200d754d4b8bb81161e4a8b7cc1a79f3cdd255981d7fbfcd0aba",
+    "docs/CHANGELOG-DEV.md": "c0e6bd25215d2d7b5d16245b31dab3a2a3a7fa545505ad847909935ca8f2aa57",
+    "docs/audit-remediation-backlog.csv": "c5f294de6778cf4ebdd0d7d0b5bd582de6ecb87d0bdc8fca2e819f55198b4504",
+    "tests/README.md": "08d50989fa279cdf13fcb11e4bf6052d102a92d8f0a6d681bba7fe966ac1f615"
+  },
+  "evidence_hashes": {
+    "browser-checks.json": "5373950028bc5bb5ced62420529b27e50019c5b394202a78910c5a44a589c4b1",
+    "fast.log": "7f511d4c702d68a68b45fa72f80e484bbc8ee361291d28ee80d140fc10e41981",
+    "graph-refresh.json": "2b90eac891f43d58fe2b15beed834a425fed8516f32ab01979a205a15cfa6d05",
+    "browser-saved-mobile.jpg": "cd61d1784c0755f5472c34e783fcf359417e73087c60d4373d83f78cb9b761f7",
+    "http-final.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "browser-persistence.json": "dfde61ee9d4ebb02dc7a7a8064921b9cbb37363bb080138f4dd9429685de0ab7",
+    "js-vectors.log": "5c640f088ac0b4ce5e008d2fff7584f7cb6d2fbc00c4b63421864b65c7b0a84b",
+    "http-final.log": "c1516b6e22d903870dd29d90690c4ce323f1f988a0972ffd321647e57f2faddb",
+    "http.log": "42717a5dcd3d8f74882e5346a3cc0ee0f27b83ff02d14c761f274d7347f656b3",
+    "http-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "browser-saved-desktop.jpg": "f25bfeef673fb98efd00bd21eac3160bfd25e9c4e224747c995d526f7c8a629b",
+    "fast-stderr.log": "6b37d2c156c40ea07149f3209d56336258ba77f293a91643f47904b1a2760ceb",
+    "browser-fixture.json": "cd87cd247c696b5b2640d6978edea7c4f3d9209b06d972c1c6229373095edac4"
+  }
+}

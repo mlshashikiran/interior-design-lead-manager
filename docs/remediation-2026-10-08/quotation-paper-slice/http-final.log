@@ -1,0 +1,13 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T12-H-QUO009-settings-print-multipage-PDF-A4
+PASS T12-H-QUO009-settings-print-multipage-PDF-Letter
+PASS T12-H-QUO009-settings-print-multipage-PDF-A3
+PASS T12-H-QUO009-settings-print-multipage-PDF-Legal
+PASS T12-H-QUO009-default-and-legacy-missing
+PASS T12-H-QUO009-default-and-legacy-empty
+PASS T12-H-QUO009-default-and-legacy-null
+PASS T12-H-QUO009-default-and-legacy-malformed
+PASS T12-H-QUO009-default-and-legacy-lowercase
+PASS T12-H-QUO009-default-and-legacy-invalid
+PASS T12-H-QUO009-settings-deny-actor-and-invalid-nonce
+11 passed, 0 failed

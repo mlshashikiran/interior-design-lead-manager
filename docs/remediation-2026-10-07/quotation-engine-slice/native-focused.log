@@ -1,0 +1,8 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T10-N-QUO007-standalone-number-reservation-refuses-MyISAM-without-advancing-sequence
+PASS T10-T20-N-QUO007-every-save-dependency-rejects-post-install-engine-drift-and-rechecks-after-repair
+PASS T10-N-QUO007-failed-pins-metadata-reads-missing-tables-and-foreign-owners-never-acknowledge-writes
+PASS T17-T20-N-QUO007-fresh-declarations-ignore-nontransactional-default-without-converting-existing-tables
+PASS T10-C-QUO007-independent-engine-ALTER-waits-for-verified-transaction-to-finish
+
+6 passed, 0 failed

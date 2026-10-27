@@ -1,0 +1,30 @@
+﻿"Line items"
+Section,"Item code/name",Description,Width,Height,Quantity,Unit,"Unit rate","Line total"
+General,,SYNTHETIC-ITEM-ORIGINAL,0,0,1,Nos,100,100
+
+Summary
+Field,Value
+"Quote number",Q-2026-000121
+Revision,R01
+Customer,"Synthetic commercial history"
+Project,
+Currency,INR
+Created,"2026-10-07 11:08:02"
+Subtotal,100
+"Wooden subtotal",0
+"Wooden discount",0
+Total,100
+"Additional discount",0
+"Taxable total",100
+"GST (18%)",18
+"Grand total",118
+"Document terms","Saved snapshot v1"
+"Cover enabled",1
+"Cover content","<h1>Original contractual cover</h1>"
+"Closing enabled",1
+"Closing content","<p>Original contractual closing</p>[idlm_payment_structure]"
+"Footer terms","Original contractual footer"
+"Payment percentage: Original deposit",50.00%
+"Payment amount: Original deposit",59
+"Payment percentage: Original completion",50.00%
+"Payment amount: Original completion",59

@@ -1,0 +1,1426 @@
+{
+    "author": "Shashi",
+    "environment": "Actual WordPress7.1.2 disposable fixture, extracted exact ZIP; callbacks recorded, request handlers not invoked",
+    "hooks": [
+        {
+            "hook": "admin_init",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::redirect_legacy_admin_page",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 303
+            }
+        },
+        {
+            "hook": "wp_head",
+            "priority": 2,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Settings::render_frontend_favicon",
+                "callable": true,
+                "file": "includes/class-settings.php",
+                "line": 135
+            }
+        },
+        {
+            "hook": "wp_head",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Integrations::inject_utm_tracker_script",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 282
+            }
+        },
+        {
+            "hook": "rest_authentication_errors",
+            "priority": 99999,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Integrations::bypass_rest_auth_for_webhook",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 236
+            }
+        },
+        {
+            "hook": "wp_enqueue_scripts",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::enqueue_frontend_assets",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 232
+            }
+        },
+        {
+            "hook": "plugins_loaded",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "idlm_boot_plugin",
+                "callable": true,
+                "file": "interior-design-lead-manager.php",
+                "line": 225
+            }
+        },
+        {
+            "hook": "rest_api_init",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Integrations::register_webhook_routes",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 344
+            }
+        },
+        {
+            "hook": "rest_api_init",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Interakt::register_webhook_route",
+                "callable": true,
+                "file": "includes/class-interakt.php",
+                "line": 238
+            }
+        },
+        {
+            "hook": "admin_menu",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::register_admin_menus",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 290
+            }
+        },
+        {
+            "hook": "rest_post_dispatch",
+            "priority": 10,
+            "accepted_args": 3,
+            "callback": {
+                "name": "IDLM_Integrations::add_google_feed_auth_challenge",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 23
+            }
+        },
+        {
+            "hook": "activate_interior-design-lead-manager/interior-design-lead-manager.php",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "idlm_activate_plugin",
+                "callable": true,
+                "file": "interior-design-lead-manager.php",
+                "line": 80
+            }
+        },
+        {
+            "hook": "deactivate_interior-design-lead-manager/interior-design-lead-manager.php",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "idlm_deactivate_plugin",
+                "callable": true,
+                "file": "interior-design-lead-manager.php",
+                "line": 217
+            }
+        },
+        {
+            "hook": "admin_post_nopriv_idlm_login",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Auth::handle_login",
+                "callable": true,
+                "file": "includes/class-auth.php",
+                "line": 26
+            }
+        },
+        {
+            "hook": "admin_post_nopriv_idlm_request_password_reset",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Auth::handle_password_reset_request",
+                "callable": true,
+                "file": "includes/class-auth.php",
+                "line": 47
+            }
+        },
+        {
+            "hook": "admin_post_nopriv_idlm_reset_password",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Auth::handle_password_reset",
+                "callable": true,
+                "file": "includes/class-auth.php",
+                "line": 73
+            }
+        },
+        {
+            "hook": "login_enqueue_scripts",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Auth::enqueue_reset_assets",
+                "callable": true,
+                "file": "includes/class-auth.php",
+                "line": 129
+            }
+        },
+        {
+            "hook": "login_headerurl",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Auth::login_header_url",
+                "callable": true,
+                "file": "includes/class-auth.php",
+                "line": 142
+            }
+        },
+        {
+            "hook": "login_headertext",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Auth::login_header_text",
+                "callable": true,
+                "file": "includes/class-auth.php",
+                "line": 146
+            }
+        },
+        {
+            "hook": "added_option",
+            "priority": 10,
+            "accepted_args": 2,
+            "callback": {
+                "name": "IDLM_Read_Model_Cache::invalidate_on_option_change",
+                "callable": true,
+                "file": "includes/class-read-model-cache.php",
+                "line": 99
+            }
+        },
+        {
+            "hook": "updated_option",
+            "priority": 10,
+            "accepted_args": 3,
+            "callback": {
+                "name": "IDLM_Read_Model_Cache::invalidate_on_option_change",
+                "callable": true,
+                "file": "includes/class-read-model-cache.php",
+                "line": 99
+            }
+        },
+        {
+            "hook": "deleted_option",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Read_Model_Cache::invalidate_on_option_change",
+                "callable": true,
+                "file": "includes/class-read-model-cache.php",
+                "line": 99
+            }
+        },
+        {
+            "hook": "idlm_prune_sensitive_data",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Data_Retention::prune",
+                "callable": true,
+                "file": "includes/class-data-retention.php",
+                "line": 67
+            }
+        },
+        {
+            "hook": "idlm_prune_sensitive_data",
+            "priority": 20,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Read_Model_Cache::invalidate_after_retention",
+                "callable": true,
+                "file": "includes/class-read-model-cache.php",
+                "line": 113
+            }
+        },
+        {
+            "hook": "idlm_lead_stage_converted",
+            "priority": 10,
+            "accepted_args": 3,
+            "callback": {
+                "name": "IDLM_CAPI::queue_capi_event",
+                "callable": true,
+                "file": "includes/class-capi.php",
+                "line": 220
+            }
+        },
+        {
+            "hook": "idlm_async_capi_upload_event",
+            "priority": 10,
+            "accepted_args": 2,
+            "callback": {
+                "name": "IDLM_CAPI::process_capi_event",
+                "callable": true,
+                "file": "includes/class-capi.php",
+                "line": 269
+            }
+        },
+        {
+            "hook": "idlm_lead_attribution_merged",
+            "priority": 10,
+            "accepted_args": 2,
+            "callback": {
+                "name": "IDLM_CAPI::handle_attribution_merged",
+                "callable": true,
+                "file": "includes/class-capi.php",
+                "line": 19
+            }
+        },
+        {
+            "hook": "idlm_async_interakt_batch_event",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Interakt_Batch::process",
+                "callable": true,
+                "file": "includes/class-interakt-batch.php",
+                "line": 45
+            }
+        },
+        {
+            "hook": "idlm_lead_call_status_no_answer",
+            "priority": 10,
+            "accepted_args": 2,
+            "callback": {
+                "name": "IDLM_Interakt::trigger_no_answer_automation",
+                "callable": true,
+                "file": "includes/class-interakt.php",
+                "line": 40
+            }
+        },
+        {
+            "hook": "idlm_trigger_interakt_event",
+            "priority": 10,
+            "accepted_args": 3,
+            "callback": {
+                "name": "IDLM_Interakt::trigger_generic_event",
+                "callable": true,
+                "file": "includes/class-interakt.php",
+                "line": 48
+            }
+        },
+        {
+            "hook": "idlm_async_interakt_track_event",
+            "priority": 10,
+            "accepted_args": 3,
+            "callback": {
+                "name": "IDLM_Interakt::process_async_track_event",
+                "callable": true,
+                "file": "includes/class-interakt.php",
+                "line": 130
+            }
+        },
+        {
+            "hook": "wp",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Scheduler::setup_schedules",
+                "callable": true,
+                "file": "includes/class-scheduler.php",
+                "line": 24
+            }
+        },
+        {
+            "hook": "idlm_daily_audience_sync",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Audiences::run_batch_sync",
+                "callable": true,
+                "file": "includes/class-audiences.php",
+                "line": 10
+            }
+        },
+        {
+            "hook": "idlm_daily_audience_sync",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Telemetry::prune_logs",
+                "callable": true,
+                "file": "includes/class-telemetry.php",
+                "line": 204
+            }
+        },
+        {
+            "hook": "idlm_hourly_assignment_fallback",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Integrations::run_assignment_fallback",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 1574
+            }
+        },
+        {
+            "hook": "idlm_hourly_assignment_fallback",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_DB::roll_forward_presales_tasks",
+                "callable": true,
+                "file": "includes/class-db.php",
+                "line": 1024
+            }
+        },
+        {
+            "hook": "idlm_daily_audience_sync_cron",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Audiences::run_batch_sync",
+                "callable": true,
+                "file": "includes/class-audiences.php",
+                "line": 10
+            }
+        },
+        {
+            "hook": "idlm_daily_audience_sync_cron",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Telemetry::prune_logs",
+                "callable": true,
+                "file": "includes/class-telemetry.php",
+                "line": 204
+            }
+        },
+        {
+            "hook": "idlm_hourly_assignment_fallback_cron",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Integrations::run_assignment_fallback",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 1574
+            }
+        },
+        {
+            "hook": "idlm_hourly_assignment_fallback_cron",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_DB::roll_forward_presales_tasks",
+                "callable": true,
+                "file": "includes/class-db.php",
+                "line": 1024
+            }
+        },
+        {
+            "hook": "admin_post_idlm_update_my_account",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::handle_update_my_account",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 277
+            }
+        },
+        {
+            "hook": "admin_post_idlm_rotate_api_credential",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::handle_rotate_api_credential",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 282
+            }
+        },
+        {
+            "hook": "admin_post_idlm_create_user",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::handle_create_user",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 285
+            }
+        },
+        {
+            "hook": "admin_post_idlm_update_user",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::handle_update_user",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 286
+            }
+        },
+        {
+            "hook": "admin_post_idlm_update_role_scopes",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::handle_update_role_scopes",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 287
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_lead_details",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_lead_details",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 423
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_lead_whatsapp",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_lead_whatsapp",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 424
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_mark_whatsapp_messages_read",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_mark_whatsapp_messages_read",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 425
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_lead_activity",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_lead_activity",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 426
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_capi_log_payload",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_capi_log_payload",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 427
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_audience_log_payload",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_audience_log_payload",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 428
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_quick_edit_lead",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_quick_edit_lead",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 429
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_save_activity_comment",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_save_activity_comment",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 432
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_edit_activity_comment",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_edit_activity_comment",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 433
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_delete_activity_comment",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_delete_activity_comment",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 434
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_export_leads",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_export_leads",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 436
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_export_google_conversions",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_export_google_conversions",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 435
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_add_lead_manual",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_add_lead_manual",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 437
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_trigger_manual_audience_sync",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_trigger_manual_audience_sync",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 438
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_bulk_action",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_bulk_action",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 448
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_leads_table",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_leads_table",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 449
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_kanban_leads",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_kanban_leads",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 450
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_dashboard_stats",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_dashboard_stats",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 451
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_save_lead_details",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_save_lead_details",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 452
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_delete_lead",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_delete_lead",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 456
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_import_leads_batch",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_import_leads_batch",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 457
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_upload_lead_file",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_upload_lead_file",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 453
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_total_leads_count",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_total_leads_count",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 454
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_reset_crm_data",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_reset_crm_data",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 455
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_test_api_connection",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_test_api_connection",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 439
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_retry_capi_events",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_retry_capi_events",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 440
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_log_js_error",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_log_js_error",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 441
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_clear_telemetry_logs",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_clear_telemetry_logs",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 442
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_download_diagnostic_report",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_download_diagnostic_report",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 443
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_save_routing_settings",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_save_routing_settings",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 444
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_run_fallback_now",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_run_fallback_now",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 445
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_log_presales_touch",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_log_presales_touch",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 430
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_presales_decision",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_presales_decision",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 431
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_mapped_past_leads",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_mapped_past_leads",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 446
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_sync_mapped_past_batch",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_sync_mapped_past_batch",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 447
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_lead_tasks",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_lead_tasks",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 458
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_add_lead_task",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_add_lead_task",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 459
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_toggle_task_status",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_toggle_task_status",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 460
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_delete_lead_task",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_delete_lead_task",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 461
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_get_rep_tasks",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::ajax_get_rep_tasks",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 462
+            }
+        },
+        {
+            "hook": "admin_post_idlm_export_backup",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Backup::export",
+                "callable": true,
+                "file": "includes/class-backup.php",
+                "line": 45
+            }
+        },
+        {
+            "hook": "admin_post_idlm_restore_backup",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Backup::restore",
+                "callable": true,
+                "file": "includes/class-backup.php",
+                "line": 89
+            }
+        },
+        {
+            "hook": "admin_post_idlm_save_quote",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::handle_save",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 172
+            }
+        },
+        {
+            "hook": "admin_post_idlm_print_quote",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::render_print_view",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 191
+            }
+        },
+        {
+            "hook": "admin_post_idlm_download_quote_pdf",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "closure",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 31
+            }
+        },
+        {
+            "hook": "admin_post_idlm_download_quote_csv",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "closure",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 32
+            }
+        },
+        {
+            "hook": "admin_post_idlm_download_quote_xlsx",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "closure",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 33
+            }
+        },
+        {
+            "hook": "admin_post_idlm_save_quote_settings",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::handle_save_settings",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 187
+            }
+        },
+        {
+            "hook": "admin_post_idlm_save_catalogue_item",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::handle_save_catalogue_item",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 181
+            }
+        },
+        {
+            "hook": "admin_post_idlm_save_catalogue_category",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::handle_save_catalogue_category",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 179
+            }
+        },
+        {
+            "hook": "admin_post_idlm_save_catalogue_unit",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::handle_save_catalogue_unit",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 180
+            }
+        },
+        {
+            "hook": "admin_post_idlm_archive_catalogue_item",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::handle_archive_catalogue_item",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 182
+            }
+        },
+        {
+            "hook": "admin_post_idlm_bulk_catalogue_items",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::handle_bulk_catalogue_items",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 183
+            }
+        },
+        {
+            "hook": "admin_post_idlm_catalogue_category_action",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::handle_catalogue_category_action",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 184
+            }
+        },
+        {
+            "hook": "admin_post_idlm_import_catalogue_csv",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::handle_import_catalogue_csv",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 185
+            }
+        },
+        {
+            "hook": "admin_post_idlm_export_catalogue_csv",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::handle_export_catalogue_csv",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 186
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_search_quote_catalogue",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::ajax_search_catalogue",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 175
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_search_quote_leads",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::ajax_search_leads",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 176
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_filter_quotation_list",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::ajax_filter_quotation_list",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 177
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_filter_catalogue_list",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::ajax_filter_catalogue_list",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 178
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_autosave_quote",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::ajax_autosave_quote",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 173
+            }
+        },
+        {
+            "hook": "wp_ajax_idlm_discard_quote_autosave",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Quotations::ajax_discard_quote_autosave",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 174
+            }
+        },
+        {
+            "hook": "toplevel_page_idlm_utilities",
+            "priority": 10,
+            "accepted_args": 1,
+            "callback": {
+                "name": "IDLM_Admin::render_admin_utility_page",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 353
+            }
+        }
+    ],
+    "routes": [
+        {
+            "route": "/interior-design-lead-manager/v1/webhook",
+            "methods": [
+                "POST"
+            ],
+            "callback": {
+                "name": "IDLM_Integrations::handle_webhook_request",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 578
+            },
+            "permission": {
+                "name": "IDLM_Integrations::permission_webhook",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 139
+            },
+            "permission_name": null
+        },
+        {
+            "route": "/interior-design-lead-manager/v1/google-ads-conversions",
+            "methods": [
+                "GET"
+            ],
+            "callback": {
+                "name": "IDLM_Integrations::handle_google_ads_conversions_feed",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 484
+            },
+            "permission": {
+                "name": "IDLM_Integrations::permission_google_feed",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 150
+            },
+            "permission_name": null
+        },
+        {
+            "route": "/interior-design-lead-manager/v1/google-ads-conversions\\.csv",
+            "methods": [
+                "GET"
+            ],
+            "callback": {
+                "name": "IDLM_Integrations::handle_google_ads_conversions_feed",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 484
+            },
+            "permission": {
+                "name": "IDLM_Integrations::permission_google_feed",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 150
+            },
+            "permission_name": null
+        },
+        {
+            "route": "/interior-design-lead-manager/v1/google-ads-audience",
+            "methods": [
+                "GET"
+            ],
+            "callback": {
+                "name": "IDLM_Integrations::handle_google_ads_audience_feed",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 516
+            },
+            "permission": {
+                "name": "IDLM_Integrations::permission_google_feed",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 150
+            },
+            "permission_name": null
+        },
+        {
+            "route": "/interior-design-lead-manager/v1/google-ads-audience/(?P<list_id>[a-zA-Z0-9_-]+)\\.csv",
+            "methods": [
+                "GET"
+            ],
+            "callback": {
+                "name": "IDLM_Integrations::handle_google_ads_audience_feed",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 516
+            },
+            "permission": {
+                "name": "IDLM_Integrations::permission_google_feed",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 150
+            },
+            "permission_name": null
+        },
+        {
+            "route": "/interior-design-lead-manager/v1/mcp",
+            "methods": [
+                "GET"
+            ],
+            "callback": {
+                "name": "IDLM_Integrations::handle_mcp_get_info",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 1685
+            },
+            "permission": {
+                "name": "IDLM_Integrations::permission_mcp",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 161
+            },
+            "permission_name": null
+        },
+        {
+            "route": "/interior-design-lead-manager/v1/mcp",
+            "methods": [
+                "POST"
+            ],
+            "callback": {
+                "name": "IDLM_Integrations::handle_mcp_post",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 1719
+            },
+            "permission": {
+                "name": "IDLM_Integrations::permission_mcp",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 161
+            },
+            "permission_name": null
+        },
+        {
+            "route": "/interior-design-lead-manager/v1/mcp",
+            "methods": [
+                "DELETE"
+            ],
+            "callback": {
+                "name": "IDLM_Integrations::handle_mcp_delete_session",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 1856
+            },
+            "permission": {
+                "name": "IDLM_Integrations::permission_mcp",
+                "callable": true,
+                "file": "includes/class-integrations.php",
+                "line": 161
+            },
+            "permission_name": null
+        },
+        {
+            "route": "/idlm/v1/interakt-webhook",
+            "methods": [
+                "POST"
+            ],
+            "callback": {
+                "name": "IDLM_Interakt::handle_webhook_request",
+                "callable": true,
+                "file": "includes/class-interakt.php",
+                "line": 262
+            },
+            "permission": null,
+            "permission_name": "__return_true"
+        },
+        {
+            "route": "/idlm/v1/meta-webhook",
+            "methods": [
+                "GET"
+            ],
+            "callback": {
+                "name": "IDLM_Interakt::handle_meta_webhook_verification",
+                "callable": true,
+                "file": "includes/class-interakt.php",
+                "line": 368
+            },
+            "permission": null,
+            "permission_name": "__return_true"
+        },
+        {
+            "route": "/idlm/v1/meta-webhook",
+            "methods": [
+                "POST"
+            ],
+            "callback": {
+                "name": "IDLM_Interakt::handle_meta_webhook_request",
+                "callable": true,
+                "file": "includes/class-interakt.php",
+                "line": 403
+            },
+            "permission": null,
+            "permission_name": "__return_true"
+        }
+    ],
+    "shortcodes": [
+        {
+            "tag": "idlm_leads_list",
+            "callback": {
+                "name": "IDLM_Admin::render_leads_list_shortcode",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 239
+            }
+        },
+        {
+            "tag": "idlm_dashboard",
+            "callback": {
+                "name": "IDLM_Admin::render_dashboard_shortcode",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 246
+            }
+        },
+        {
+            "tag": "idlm_kanban",
+            "callback": {
+                "name": "IDLM_Admin::render_kanban_shortcode",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 253
+            }
+        },
+        {
+            "tag": "idlm_workspace",
+            "callback": {
+                "name": "IDLM_Admin::render_workspace_shortcode",
+                "callable": true,
+                "file": "includes/class-admin.php",
+                "line": 263
+            }
+        },
+        {
+            "tag": "idlm_quotations",
+            "callback": {
+                "name": "IDLM_Quotations::render_shortcode",
+                "callable": true,
+                "file": "includes/class-quotations.php",
+                "line": 117
+            }
+        }
+    ]
+}

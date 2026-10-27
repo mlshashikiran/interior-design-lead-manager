@@ -1,0 +1,11 @@
+{
+  "author_builder": "Shashi",
+  "date": "2026-10-07",
+  "remaining_owned_test_databases": [],
+  "owned_mysql_socket": "/private/tmp/idlm-core008-mysql/mysql.sock",
+  "owned_mysql_pid": 39227,
+  "owned_mysql_shutdown": "mysqladmin via task-owned socket; server log confirms shutdown complete",
+  "browser_fixture": "owned idlm_test_* database and content directory removed; browser tabs closed; viewport reset",
+  "configured_site": "not used for fixture data or erasure",
+  "temporary_datadir_removed": true
+}

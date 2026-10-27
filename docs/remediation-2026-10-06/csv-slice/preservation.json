@@ -1,0 +1,91 @@
+{
+  "author": "Shashi",
+  "recorded_at": "2026-10-06T10:39:30.123391+00:00",
+  "baseline_files": 660,
+  "changed_starting_files": {
+    "CHANGELOG.md": {
+      "before": "92080c57655fbede208475372871c422a0ae65c46badc2fd2584a6b3dfe055b6",
+      "after": "f1cbbb8852c309d5077c1d7ce8c33673ae8d15d61b8b138f00daad24aeb6bc2d"
+    },
+    "docs/AUDIT-REMEDIATION-PLAN.md": {
+      "before": "9da27741bbf3c9ad87a8f1853dc0d3341a385816b3842b85bd180c83fec96083",
+      "after": "7033f97fb65a38878869e8b85c1cd38c1ba8e993835424eb44973741998505d2"
+    },
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": {
+      "before": "05b71e26f2fd8a76acdb584f57a3f5ef8e023071611ebe6fc6d835a38a9596ea",
+      "after": "ae370089cd8cf7c53a66dcafd49282faa61760ea465727ebe4dfa39b233744c7"
+    },
+    "docs/CHANGELOG-DEV.md": {
+      "before": "bd6f527ea6a4ed5122821daf83efaf9cb7be0823cb9edbcd1f302044cbee3211",
+      "after": "06036813422839414771c034cb2d4387b084a53c904f410f408e194fda7a95c7"
+    },
+    "docs/FEATURE-MAP.md": {
+      "before": "c04a06f8ad0063118dac7cc918bafc4d39e52aa7ff07041a8fef4db00903ceab",
+      "after": "5e52231bb42b924a0b00585227e0a92de932e235f6da7d29c94f81b21575164f"
+    },
+    "docs/INTERFACES.md": {
+      "before": "0ac2639aeb0131f1df1d8add7d2c1b4d5654b89c8bd6954a6e5db3a234bc07b4",
+      "after": "78efb243c1e9576a3a9d83341e0fbf90f4f147fc75aaa206fed6f6e2be06aa35"
+    },
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": {
+      "before": "51b540b142281b913c3b205f85b308a7d604b6c10246dd1d9b37089987320c2f",
+      "after": "e29492c2a9be58c2ba4aee0129b53ba04ceccea7514781bd7fd9b70749d6d246"
+    },
+    "docs/PRODUCTION-SECURITY-CONFIG.md": {
+      "before": "9ca23ca63f63b157641a9bd114619dc9a443e06043554931c70a0aba0acb523c",
+      "after": "20339926ab9ee1cc5e2522b6da89b14c25f22d1390912fd48f8afa5a50c96c6f"
+    },
+    "docs/SECURITY.md": {
+      "before": "d53ddb3d8df1474ba6409f7ba49714f1bfc3a8f68c7188e7296032e8fe0740ab",
+      "after": "02aaf3abbd9b3b9d64cc60ba9b0d2846a3128f8bd3a819ed51f8bd1218a107b5"
+    },
+    "docs/audit-remediation-backlog.csv": {
+      "before": "b3c8bdb77588b1f3470111db39dd6628e69039f14310d21a6dd94d3120d4ae79",
+      "after": "7fc748fa1246cc7726acd8800965c94d9ccd2ce8f575551b1bdb19fb91f92fac"
+    },
+    "includes/class-admin-ajax.php": {
+      "before": "f2c3aa2c85fb45d3a12f2ffa33878448e4b688be56341ddb2ee18b53cd18ab4d",
+      "after": "2c53b970907f789c9f687ac48fcab50e32d6ac160147b2d6aee0fa57a1cfb9f7"
+    },
+    "includes/class-quotation-exporter.php": {
+      "before": "e82a566d9a97342fc188e01b5c68e2d973bc50c67cdaa7069e81f2af981d4f53",
+      "after": "6c558a6917bd863a8fe988017b53ba58d1ac468ea58ad15c928a41d647c78bd3"
+    },
+    "interior-design-lead-manager.php": {
+      "before": "f184a20b84b2184c953388450b9c40cb304969b66ca8d63842ecc2b4f1c0c292",
+      "after": "9b2ea3e88b7f764e658685e52ea0f23231b323a9fca31eb027c51e90e60f86b1"
+    },
+    "readme.txt": {
+      "before": "3c71b7d42aa1bddcb22594d1ec31268ee5d3a46719b3883e03bf439eabd236b4",
+      "after": "98c69a5da43c481b39eb84f94cbb2f243266567e0a5f1687310e900a2a3b9e95"
+    },
+    "tests/README.md": {
+      "before": "f8df112c9a7b36fd4c1a3e578301b665bfe882d6f69a242e7633fb1d848e91ef",
+      "after": "ca0455ced0224bf760a26ec4825413a01256f683d517b2687dbf866d6930387b"
+    },
+    "tests/integration/http-router.php": {
+      "before": "541dfdc82f0b7174948fe1f39432a200b6f7171b1a542b907f4f9661396203db",
+      "after": "f88d6b733d5b9713245be74c534d19176184a3a5449eee0ae20c5b8f895da9df"
+    },
+    "tests/integration/quotation-http.php": {
+      "before": "39b4517cbfef41e420a75b27762c60bda81bfd1aed16c2684a3b1e779f79a3dd",
+      "after": "5f18ffbab127396b0e605cbba704c384d4a0a3aaa0ea79e3ed952c335b707381"
+    },
+    "tests/release-contracts.php": {
+      "before": "0303bdf6e731c654456344f8cd38ac10d30f190e15430f137f01241a2e888e73",
+      "after": "e55e6f82fa18d64c7feff785ab4c8097c976f3d57a6f1883e195ead2de1be676"
+    },
+    "tests/run.php": {
+      "before": "09f5b6ecdb59435a531a411358d04355495895454a6b5da93f51df7a74f45883",
+      "after": "a30c55462b6b2cf3bbbf17ad18d311f97843f76bf07ea0783335c4910a7994c4"
+    }
+  },
+  "unchanged_starting_files": 641,
+  "missing_files": [],
+  "immutable_historical_files": 130,
+  "immutable_status": "Original audit and all three earlier slice reports/evidence unchanged",
+  "baseline_manifest_sha256": "053fdaca0bad0a174b28ae4887ed312dac8805dbfc2ef023ed111ffefd633a4f",
+  "baseline_manifest": "/private/tmp/idlm-csv-slice-baseline/source-sha256.json",
+  "tracked_binary_diff_backup": "/private/tmp/idlm-csv-slice-baseline/dirty.patch",
+  "scope": "Only listed starting files plus new CSV tests/report/evidence. Existing dirty/untracked source retained; ignored Graphify navigation refreshed in scope."
+}

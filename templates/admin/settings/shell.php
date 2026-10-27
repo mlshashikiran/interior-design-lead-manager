@@ -2,11 +2,11 @@
 if (!defined('ABSPATH')) {
     exit;
 }
-$active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
-$stages = isset($context['stages']) ? $context['stages'] : array();
-$call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : array();
-$settings_saved = !empty($context['settings_saved']);
-$return_url = remove_query_arg('idlm_credential_rotated');
+$idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
+$idlm_stages = isset($context['stages']) ? $context['stages'] : array();
+$idlm_call_statuses = isset($context['call_statuses']) ? $context['call_statuses'] : array();
+$idlm_settings_saved = !empty($context['settings_saved']);
+$idlm_return_url = remove_query_arg('idlm_credential_rotated');
 ?>
         <div class="wrap idlm-wrap idlm-settings-page">
             <script>
@@ -34,15 +34,15 @@ $return_url = remove_query_arg('idlm_credential_rotated');
                 if (tabInput) {
                     tabInput.value = tabName;
                 }
-                // Hide the global Save Settings buttons if on Danger Zone, Help, System Health, or MCP tab
+                // Hide save actions only on tabs without editable settings.
                 var saveBtns = document.querySelectorAll('.idlm-save-settings-btn');
                 saveBtns.forEach(function(btn) {
-                    btn.hidden = tabName === 'backup' || tabName === 'danger-zone' || tabName === 'help' || tabName === 'health' || tabName === 'mcp';
+                    btn.hidden = tabName === 'backup' || tabName === 'danger-zone' || tabName === 'help' || tabName === 'mcp';
                 });
                 // Also hide the footer actions container on those tabs
                 var footerActions = document.querySelector('.idlm-footer-actions');
                 if (footerActions) {
-                    footerActions.hidden = tabName === 'backup' || tabName === 'danger-zone' || tabName === 'help' || tabName === 'health' || tabName === 'mcp';
+                    footerActions.hidden = tabName === 'backup' || tabName === 'danger-zone' || tabName === 'help' || tabName === 'mcp';
                 }
 
                 // Update the window hash to allow direct linking/bookmarking
@@ -54,7 +54,7 @@ $return_url = remove_query_arg('idlm_credential_rotated');
             }
             </script>
             <div class="idlm-shell">
-                <?php if ($settings_saved): ?>
+                <?php if ($idlm_settings_saved): ?>
                     <div class="notice notice-success is-dismissible idlm-settings-save-notice" role="status" tabindex="-1" data-idlm-settings-saved data-idlm-settings-toast data-idlm-toast-autoclose="4000">
                         <p>Settings saved successfully!</p>
                     </div>
@@ -65,22 +65,22 @@ $return_url = remove_query_arg('idlm_credential_rotated');
                     </div>
                 </header>
                 <nav class="idlm-tabs idlm-settings-tabs" role="tablist" aria-label="System settings tabs">
-                    <button type="button" id="idlm-settings-tab-general" class="idlm-tab-link <?php echo $active_tab === 'general' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'general' ? 'true' : 'false'; ?>" aria-controls="settings-general" tabindex="<?php echo $active_tab === 'general' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-general')">General</button>
-                    <button type="button" id="idlm-settings-tab-white-label" class="idlm-tab-link <?php echo $active_tab === 'white-label' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'white-label' ? 'true' : 'false'; ?>" aria-controls="settings-white-label" tabindex="<?php echo $active_tab === 'white-label' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-white-label')">White label</button>
-                    <button type="button" id="idlm-settings-tab-routing" class="idlm-tab-link <?php echo $active_tab === 'routing' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'routing' ? 'true' : 'false'; ?>" aria-controls="settings-routing" tabindex="<?php echo $active_tab === 'routing' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-routing')">Routing</button>
-                    <button type="button" id="idlm-settings-tab-webhooks" class="idlm-tab-link <?php echo $active_tab === 'webhooks' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'webhooks' ? 'true' : 'false'; ?>" aria-controls="settings-webhooks" tabindex="<?php echo $active_tab === 'webhooks' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-webhooks')">Lead capture</button>
-                    <button type="button" id="idlm-settings-tab-capi" class="idlm-tab-link <?php echo $active_tab === 'capi' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'capi' ? 'true' : 'false'; ?>" aria-controls="settings-capi" tabindex="<?php echo $active_tab === 'capi' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-capi')">Conversion tracking</button>
-                    <button type="button" id="idlm-settings-tab-audience-reminders" class="idlm-tab-link <?php echo $active_tab === 'audience-reminders' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'audience-reminders' ? 'true' : 'false'; ?>" aria-controls="settings-audience-reminders" tabindex="<?php echo $active_tab === 'audience-reminders' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-audience-reminders')">Automation</button>
-                    <button type="button" id="idlm-settings-tab-health" class="idlm-tab-link <?php echo $active_tab === 'health' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'health' ? 'true' : 'false'; ?>" aria-controls="settings-health" tabindex="<?php echo $active_tab === 'health' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-health')">Health</button>
-                    <button type="button" id="idlm-settings-tab-help" class="idlm-tab-link <?php echo $active_tab === 'help' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'help' ? 'true' : 'false'; ?>" aria-controls="settings-help" tabindex="<?php echo $active_tab === 'help' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-help')">Help</button>
-                    <button type="button" id="idlm-settings-tab-mcp" class="idlm-tab-link <?php echo $active_tab === 'mcp' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'mcp' ? 'true' : 'false'; ?>" aria-controls="settings-mcp" tabindex="<?php echo $active_tab === 'mcp' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-mcp')">AI access</button>
-                    <button type="button" id="idlm-settings-tab-backup" class="idlm-tab-link <?php echo $active_tab === 'backup' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'backup' ? 'true' : 'false'; ?>" aria-controls="settings-backup" tabindex="<?php echo $active_tab === 'backup' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-backup')">Backup &amp; restore</button>
-                    <button type="button" id="idlm-settings-tab-danger-zone" class="idlm-tab-link idlm-tab-link-danger <?php echo $active_tab === 'danger-zone' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $active_tab === 'danger-zone' ? 'true' : 'false'; ?>" aria-controls="settings-danger-zone" tabindex="<?php echo $active_tab === 'danger-zone' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-danger-zone')">Danger Zone</button>
+                    <button type="button" id="idlm-settings-tab-general" class="idlm-tab-link <?php echo $idlm_active_tab === 'general' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'general' ? 'true' : 'false'; ?>" aria-controls="settings-general" tabindex="<?php echo $idlm_active_tab === 'general' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-general')">General</button>
+                    <button type="button" id="idlm-settings-tab-white-label" class="idlm-tab-link <?php echo $idlm_active_tab === 'white-label' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'white-label' ? 'true' : 'false'; ?>" aria-controls="settings-white-label" tabindex="<?php echo $idlm_active_tab === 'white-label' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-white-label')">White label</button>
+                    <button type="button" id="idlm-settings-tab-routing" class="idlm-tab-link <?php echo $idlm_active_tab === 'routing' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'routing' ? 'true' : 'false'; ?>" aria-controls="settings-routing" tabindex="<?php echo $idlm_active_tab === 'routing' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-routing')">Routing</button>
+                    <button type="button" id="idlm-settings-tab-webhooks" class="idlm-tab-link <?php echo $idlm_active_tab === 'webhooks' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'webhooks' ? 'true' : 'false'; ?>" aria-controls="settings-webhooks" tabindex="<?php echo $idlm_active_tab === 'webhooks' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-webhooks')">Lead capture</button>
+                    <button type="button" id="idlm-settings-tab-capi" class="idlm-tab-link <?php echo $idlm_active_tab === 'capi' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'capi' ? 'true' : 'false'; ?>" aria-controls="settings-capi" tabindex="<?php echo $idlm_active_tab === 'capi' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-capi')">Conversion tracking</button>
+                    <button type="button" id="idlm-settings-tab-audience-reminders" class="idlm-tab-link <?php echo $idlm_active_tab === 'audience-reminders' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'audience-reminders' ? 'true' : 'false'; ?>" aria-controls="settings-audience-reminders" tabindex="<?php echo $idlm_active_tab === 'audience-reminders' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-audience-reminders')">Automation</button>
+                    <button type="button" id="idlm-settings-tab-health" class="idlm-tab-link <?php echo $idlm_active_tab === 'health' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'health' ? 'true' : 'false'; ?>" aria-controls="settings-health" tabindex="<?php echo $idlm_active_tab === 'health' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-health')">Health</button>
+                    <button type="button" id="idlm-settings-tab-help" class="idlm-tab-link <?php echo $idlm_active_tab === 'help' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'help' ? 'true' : 'false'; ?>" aria-controls="settings-help" tabindex="<?php echo $idlm_active_tab === 'help' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-help')">Help</button>
+                    <button type="button" id="idlm-settings-tab-mcp" class="idlm-tab-link <?php echo $idlm_active_tab === 'mcp' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'mcp' ? 'true' : 'false'; ?>" aria-controls="settings-mcp" tabindex="<?php echo $idlm_active_tab === 'mcp' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-mcp')">AI access</button>
+                    <button type="button" id="idlm-settings-tab-backup" class="idlm-tab-link <?php echo $idlm_active_tab === 'backup' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'backup' ? 'true' : 'false'; ?>" aria-controls="settings-backup" tabindex="<?php echo $idlm_active_tab === 'backup' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-backup')">Backup &amp; restore</button>
+                    <button type="button" id="idlm-settings-tab-danger-zone" class="idlm-tab-link idlm-tab-link-danger <?php echo $idlm_active_tab === 'danger-zone' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'danger-zone' ? 'true' : 'false'; ?>" aria-controls="settings-danger-zone" tabindex="<?php echo $idlm_active_tab === 'danger-zone' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-danger-zone')">Danger Zone</button>
                 </nav>
                 <form method="POST" action="" id="idlm-settings-form" class="idlm-settings-form">
                     <?php wp_nonce_field('idlm_settings_save_action'); ?>
                     <input type="hidden" name="idlm_save_settings" value="1">
-                    <input type="hidden" name="active_tab" id="idlm-active-tab-input" value="<?php echo esc_attr($active_tab); ?>">
+                    <input type="hidden" name="active_tab" id="idlm-active-tab-input" value="<?php echo esc_attr($idlm_active_tab); ?>">
 <?php IDLM_View::display('admin/settings/general.php', $context); ?>
 <?php IDLM_View::display('admin/settings/white-label.php', $context); ?>
 <?php IDLM_View::display('admin/settings/routing.php', $context); ?>
@@ -93,30 +93,30 @@ $return_url = remove_query_arg('idlm_credential_rotated');
 <?php IDLM_View::display('admin/settings/backup.php', $context); ?>
 <?php IDLM_View::display('admin/settings/danger-zone.php', $context); ?>
                     <footer class="idlm-footer-actions idlm-settings-savebar" aria-label="Settings save actions">
-                        <p class="idlm-settings-savebar__status" role="status" aria-live="polite" data-idlm-save-status><?php echo $settings_saved ? 'Settings saved' : 'No unsaved changes'; ?></p>
+                        <p class="idlm-settings-savebar__status" role="status" aria-live="polite" data-idlm-save-status><?php echo $idlm_settings_saved ? 'Settings saved' : 'No unsaved changes'; ?></p>
                         <button type="submit" form="idlm-settings-form" class="idlm-btn idlm-btn-primary idlm-save-settings-btn" aria-busy="false"><span data-idlm-save-label>Save settings</span></button>
                     </footer>
                 </form>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-rotate-webhook-form">
                     <input type="hidden" name="action" value="idlm_rotate_api_credential">
                     <input type="hidden" name="scope" value="webhook">
-                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($return_url); ?>">
+                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($idlm_return_url); ?>">
                     <?php wp_nonce_field('idlm_rotate_api_credential_webhook'); ?>
                 </form>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-rotate-mcp-form">
                     <input type="hidden" name="action" value="idlm_rotate_api_credential">
                     <input type="hidden" name="scope" value="mcp">
-                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($return_url); ?>">
+                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($idlm_return_url); ?>">
                     <?php wp_nonce_field('idlm_rotate_api_credential_mcp'); ?>
                 </form>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-export-backup-form">
                     <input type="hidden" name="action" value="idlm_export_backup">
-                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($return_url); ?>">
+                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($idlm_return_url); ?>">
                     <?php wp_nonce_field('idlm_export_backup'); ?>
                 </form>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-restore-backup-form" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="idlm_restore_backup">
-                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($return_url); ?>">
+                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($idlm_return_url); ?>">
                     <?php wp_nonce_field('idlm_restore_backup'); ?>
                 </form>
         </div>
@@ -225,8 +225,8 @@ $return_url = remove_query_arg('idlm_credential_rotated');
             // Dynamic reminders settings rule builder
             $('#idlm-add-reminder-rule').click(function() {
                 var statusesHtml = '';
-                <?php foreach ($call_statuses as $cs): ?>
-                    statusesHtml += '<option value="<?php echo esc_attr($cs); ?>"><?php echo esc_html($cs); ?></option>';
+                <?php foreach ($idlm_call_statuses as $idlm_cs): ?>
+                    statusesHtml += '<option value="<?php echo esc_attr($idlm_cs); ?>"><?php echo esc_html($idlm_cs); ?></option>';
                 <?php endforeach; ?>
                 
                 var rowHtml = '\
@@ -254,13 +254,13 @@ $return_url = remove_query_arg('idlm_credential_rotated');
             // Dynamic custom audience sync rule builder
             $('#idlm-add-audience-rule').click(function() {
                 var stagesHtml = '<option value="all">All Stages</option>';
-                <?php foreach ($stages as $stage): ?>
-                    stagesHtml += '<option value="<?php echo esc_attr($stage); ?>"><?php echo esc_html($stage); ?></option>';
+                <?php foreach ($idlm_stages as $idlm_stage): ?>
+                    stagesHtml += '<option value="<?php echo esc_attr($idlm_stage); ?>"><?php echo esc_html($idlm_stage); ?></option>';
                 <?php endforeach; ?>
 
                 var callStatusesHtml = '<option value="all">All Statuses</option>';
-                <?php foreach ($call_statuses as $cs): ?>
-                    callStatusesHtml += '<option value="<?php echo esc_attr($cs); ?>"><?php echo esc_html($cs); ?></option>';
+                <?php foreach ($idlm_call_statuses as $idlm_cs): ?>
+                    callStatusesHtml += '<option value="<?php echo esc_attr($idlm_cs); ?>"><?php echo esc_html($idlm_cs); ?></option>';
                 <?php endforeach; ?>
 
                 var rowHtml = '\
@@ -320,13 +320,13 @@ $return_url = remove_query_arg('idlm_credential_rotated');
             // Dynamic Interakt Event mapping row builder
             const interaktOptions = {
                 call_status: [
-                    <?php foreach ($call_statuses as $cs): ?>
-                        '<?php echo esc_js($cs); ?>',
+                    <?php foreach ($idlm_call_statuses as $idlm_cs): ?>
+                        '<?php echo esc_js($idlm_cs); ?>',
                     <?php endforeach; ?>
                 ],
                 stage: [
-                    <?php foreach ($stages as $stage): ?>
-                        '<?php echo esc_js($stage); ?>',
+                    <?php foreach ($idlm_stages as $idlm_stage): ?>
+                        '<?php echo esc_js($idlm_stage); ?>',
                     <?php endforeach; ?>
                 ],
                 lead_quality: [

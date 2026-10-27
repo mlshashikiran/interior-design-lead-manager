@@ -1,0 +1,640 @@
+{
+  "author": "Shashi",
+  "reviewed_date": "2026-10-06",
+  "table_count": 21,
+  "schema": "Declared source contracts; physical deployment schema not asserted",
+  "tables": [
+    {
+      "table_suffix": "idlm_leads",
+      "source": "includes/class-db.php",
+      "line": 367,
+      "source_sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "first_name varchar(100) DEFAULT ''",
+        "last_name varchar(100) DEFAULT ''",
+        "email varchar(100) DEFAULT ''",
+        "phone varchar(50) DEFAULT ''",
+        "project_name varchar(255) DEFAULT ''",
+        "budget varchar(100) DEFAULT ''",
+        "deal_value decimal(12,2) DEFAULT 0.00",
+        "discount_percentage decimal(5,2) DEFAULT 0.00",
+        "project_timeline varchar(100) DEFAULT ''",
+        "possession_date date DEFAULT NULL",
+        "property_location varchar(255) DEFAULT ''",
+        "source varchar(50) DEFAULT ''",
+        "original_source varchar(50) DEFAULT ''",
+        "latest_source varchar(50) DEFAULT ''",
+        "referrer_details text DEFAULT NULL",
+        "property_type varchar(50) DEFAULT ''",
+        "num_rooms varchar(50) DEFAULT ''",
+        "floor_plan_received tinyint(1) DEFAULT 0",
+        "floor_plan_file varchar(255) DEFAULT ''",
+        "floor_plan_files longtext DEFAULT NULL",
+        "quote_shared tinyint(1) DEFAULT 0",
+        "quote_value decimal(12,2) DEFAULT 0.00",
+        "quote_file varchar(255) DEFAULT ''",
+        "preferred_studio varchar(100) DEFAULT ''",
+        "stage varchar(50) DEFAULT ''",
+        "lost_reason varchar(100) DEFAULT ''",
+        "call_status varchar(50) DEFAULT ''",
+        "callback_datetime datetime DEFAULT NULL",
+        "lead_quality varchar(50) DEFAULT ''",
+        "disqualification_reason varchar(50) DEFAULT ''",
+        "disqualification_method varchar(50) DEFAULT ''",
+        "disqualified_at datetime DEFAULT NULL",
+        "disqualified_by_user_id bigint(20) unsigned DEFAULT 0",
+        "assigned_rep_id bigint(20) unsigned DEFAULT 0",
+        "assigned_at datetime DEFAULT NULL",
+        "utm_source varchar(100) DEFAULT ''",
+        "utm_medium varchar(100) DEFAULT ''",
+        "utm_campaign varchar(100) DEFAULT ''",
+        "utm_adgroup varchar(100) DEFAULT ''",
+        "utm_term varchar(100) DEFAULT ''",
+        "utm_content varchar(100) DEFAULT ''",
+        "gclid varchar(255) DEFAULT ''",
+        "gbraid varchar(255) DEFAULT ''",
+        "wbraid varchar(255) DEFAULT ''",
+        "fbclid varchar(255) DEFAULT ''",
+        "li_fat_id varchar(255) DEFAULT ''",
+        "fb_lead_id varchar(100) DEFAULT NULL",
+        "landing_page text DEFAULT NULL",
+        "conversion_time datetime DEFAULT NULL",
+        "qualified_at datetime DEFAULT NULL",
+        "qualified_by_user_id bigint(20) unsigned DEFAULT 0",
+        "intake_owner_id bigint(20) unsigned DEFAULT 0",
+        "handoff_status varchar(30) DEFAULT 'not_ready'",
+        "handoff_at datetime DEFAULT NULL",
+        "handoff_method varchar(50) DEFAULT ''",
+        "handoff_exception_reason varchar(255) DEFAULT ''",
+        "is_duplicate tinyint(1) DEFAULT 0",
+        "duplicate_of_id bigint(20) unsigned DEFAULT 0",
+        "created_at datetime DEFAULT NULL",
+        "updated_at datetime DEFAULT NULL",
+        "time_to_connected bigint(20) DEFAULT NULL",
+        "time_to_won bigint(20) DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (id)",
+        "KEY email (email)",
+        "KEY phone (phone)",
+        "KEY source (source)",
+        "KEY original_source (original_source)",
+        "KEY latest_source (latest_source)",
+        "KEY stage (stage)",
+        "KEY lost_reason (lost_reason)",
+        "KEY call_status (call_status)",
+        "KEY assigned_rep_id (assigned_rep_id)",
+        "KEY assigned_at (assigned_at)",
+        "KEY created_at (created_at)",
+        "KEY conversion_time (conversion_time)",
+        "KEY lead_quality (lead_quality)",
+        "KEY disqualification_reason (disqualification_reason)",
+        "KEY disqualified_at (disqualified_at)",
+        "KEY qualified_at (qualified_at)",
+        "KEY qualified_by_user_id (qualified_by_user_id)",
+        "KEY intake_owner_id (intake_owner_id)",
+        "KEY handoff_status (handoff_status)",
+        "KEY duplicate_of_id (duplicate_of_id)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_lead_activity_log",
+      "source": "includes/class-db.php",
+      "line": 468,
+      "source_sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "lead_id bigint(20) unsigned NOT NULL",
+        "user_id bigint(20) unsigned DEFAULT 0",
+        "activity_type varchar(50) NOT NULL",
+        "details text NOT NULL",
+        "created_at datetime DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (id)",
+        "KEY lead_id (lead_id)",
+        "KEY activity_lead_id (activity_type, lead_id, id)",
+        "KEY lead_activity_id (lead_id, activity_type, id)",
+        "KEY created_at (created_at)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_lead_state_events",
+      "source": "includes/class-db.php",
+      "line": 487,
+      "source_sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "lead_id bigint(20) unsigned NOT NULL",
+        "event_type varchar(50) NOT NULL",
+        "event_origin varchar(50) DEFAULT ''",
+        "from_value varchar(191) DEFAULT ''",
+        "to_value varchar(191) DEFAULT ''",
+        "reason varchar(191) DEFAULT ''",
+        "amount decimal(14,2) DEFAULT NULL",
+        "actor_user_id bigint(20) unsigned DEFAULT 0",
+        "occurred_at datetime DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (id)",
+        "KEY lead_event_time (lead_id, event_type, occurred_at)",
+        "KEY event_time (event_type, occurred_at)",
+        "KEY event_target_time (event_type, to_value, occurred_at)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_capi_logs",
+      "source": "includes/class-db.php",
+      "line": 530,
+      "source_sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "lead_id bigint(20) unsigned NOT NULL",
+        "platform varchar(50) NOT NULL",
+        "event_name varchar(100) NOT NULL",
+        "payload text NOT NULL",
+        "response text NOT NULL",
+        "status varchar(50) NOT NULL",
+        "created_at datetime DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (id)",
+        "KEY lead_id (lead_id)",
+        "KEY created_at (created_at)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_audience_sync_logs",
+      "source": "includes/class-db.php",
+      "line": 548,
+      "source_sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "platform varchar(50) NOT NULL",
+        "audience_id varchar(255) NOT NULL",
+        "lead_count int(11) NOT NULL DEFAULT 0",
+        "payload longtext NOT NULL",
+        "response longtext NOT NULL",
+        "status varchar(50) NOT NULL",
+        "created_at datetime DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (id)",
+        "KEY created_at (created_at)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_telemetry_logs",
+      "source": "includes/class-db.php",
+      "line": 565,
+      "source_sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "log_type varchar(50) NOT NULL",
+        "severity varchar(20) NOT NULL",
+        "message text NOT NULL",
+        "file varchar(255) DEFAULT ''",
+        "line int(11) DEFAULT NULL",
+        "stack_trace text",
+        "created_at datetime DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (id)",
+        "KEY created_at (created_at)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_tasks",
+      "source": "includes/class-db.php",
+      "line": 582,
+      "source_sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "lead_id bigint(20) unsigned NOT NULL",
+        "assigned_rep_id bigint(20) unsigned DEFAULT 0",
+        "title varchar(255) NOT NULL",
+        "task_type varchar(50) DEFAULT 'General'",
+        "priority varchar(20) DEFAULT 'Medium'",
+        "status varchar(50) DEFAULT 'pending'",
+        "due_date datetime DEFAULT NULL",
+        "created_by bigint(20) unsigned DEFAULT 0",
+        "created_at datetime DEFAULT NULL",
+        "completed_at datetime DEFAULT NULL",
+        "updated_at datetime DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (id)",
+        "KEY lead_id (lead_id)",
+        "KEY lead_status_due (lead_id, status, due_date)",
+        "KEY assigned_rep_id (assigned_rep_id)",
+        "KEY status (status)",
+        "KEY due_date (due_date)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_call_logs",
+      "source": "includes/class-db.php",
+      "line": 608,
+      "source_sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "lead_id bigint(20) unsigned NOT NULL",
+        "user_id bigint(20) unsigned DEFAULT 0",
+        "provider varchar(50) DEFAULT 'manual'",
+        "provider_event_id varchar(191) DEFAULT NULL",
+        "direction varchar(20) DEFAULT 'outbound'",
+        "outcome varchar(50) DEFAULT ''",
+        "started_at datetime DEFAULT NULL",
+        "duration_seconds int(11) unsigned DEFAULT 0",
+        "recording_url text DEFAULT NULL",
+        "recording_hash varchar(128) DEFAULT ''",
+        "metadata longtext DEFAULT NULL",
+        "created_at datetime DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (id)",
+        "UNIQUE KEY provider_event (provider, provider_event_id)",
+        "KEY lead_id (lead_id)",
+        "KEY user_id (user_id)",
+        "KEY started_at (started_at)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_lead_touchpoints",
+      "source": "includes/class-db.php",
+      "line": 634,
+      "source_sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "lead_id bigint(20) unsigned NOT NULL",
+        "platform varchar(30) DEFAULT ''",
+        "source varchar(50) DEFAULT ''",
+        "external_id varchar(191) DEFAULT NULL",
+        "utm_source varchar(100) DEFAULT ''",
+        "utm_medium varchar(100) DEFAULT ''",
+        "utm_campaign varchar(100) DEFAULT ''",
+        "utm_adgroup varchar(100) DEFAULT ''",
+        "utm_term varchar(100) DEFAULT ''",
+        "utm_content varchar(100) DEFAULT ''",
+        "gclid varchar(255) DEFAULT ''",
+        "gbraid varchar(255) DEFAULT ''",
+        "wbraid varchar(255) DEFAULT ''",
+        "fbclid varchar(255) DEFAULT ''",
+        "li_fat_id varchar(255) DEFAULT ''",
+        "landing_page text DEFAULT NULL",
+        "payload longtext DEFAULT NULL",
+        "submitted_at datetime DEFAULT NULL",
+        "received_at datetime DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (id)",
+        "UNIQUE KEY platform_external (platform, external_id)",
+        "KEY lead_id (lead_id)",
+        "KEY source (source)",
+        "KEY received_at (received_at)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_inbound_submission_reviews",
+      "source": "includes/class-db.php",
+      "line": 667,
+      "source_sha256": "a027a627468d662ccb7e02526ef2ec5cca9825fa89c5aaa1754d54df5105caf0",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "platform varchar(30) DEFAULT ''",
+        "source varchar(50) DEFAULT ''",
+        "email varchar(100) DEFAULT ''",
+        "phone varchar(50) DEFAULT ''",
+        "candidate_lead_ids longtext DEFAULT NULL",
+        "payload longtext DEFAULT NULL",
+        "submitted_at datetime DEFAULT NULL",
+        "received_at datetime DEFAULT NULL",
+        "status varchar(20) DEFAULT 'pending'"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (id)",
+        "KEY status_received (status, received_at)",
+        "KEY received_at (received_at)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_routing_state",
+      "source": "includes/class-routing-state.php",
+      "line": 11,
+      "source_sha256": "d716d833dad7d7d43cf197076eb9341c2698a65c27969da2350484d327db0ff9",
+      "columns": [
+        "state_key varchar(191) NOT NULL",
+        "state_value bigint(20) unsigned NOT NULL DEFAULT 0",
+        "updated_at datetime DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY  (state_key)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_quotes",
+      "source": "includes/class-quotation-schema.php",
+      "line": 38,
+      "source_sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "lead_id bigint(20) unsigned NOT NULL",
+        "quote_number varchar(50) NOT NULL",
+        "title varchar(255) NOT NULL",
+        "status varchar(30) NOT NULL DEFAULT 'Draft'",
+        "current_revision_id bigint(20) unsigned DEFAULT 0",
+        "owner_user_id bigint(20) unsigned DEFAULT 0",
+        "created_by bigint(20) unsigned NOT NULL",
+        "accepted_revision_id bigint(20) unsigned DEFAULT 0",
+        "shared_at datetime DEFAULT NULL",
+        "accepted_at datetime DEFAULT NULL",
+        "rejected_at datetime DEFAULT NULL",
+        "save_request_key varchar(64) DEFAULT NULL",
+        "created_at datetime NOT NULL",
+        "updated_at datetime NOT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY quote_number (quote_number)",
+        "KEY lead_status (lead_id, status)",
+        "KEY owner_status (owner_user_id, status)",
+        "KEY current_revision_id (current_revision_id)",
+        "UNIQUE KEY save_request_key (save_request_key)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_quote_revisions",
+      "source": "includes/class-quotation-schema.php",
+      "line": 62,
+      "source_sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "quote_id bigint(20) unsigned NOT NULL",
+        "revision_number int(11) unsigned NOT NULL DEFAULT 1",
+        "revision_name varchar(80) NOT NULL",
+        "status varchar(30) NOT NULL DEFAULT 'Draft'",
+        "source_revision_id bigint(20) unsigned DEFAULT 0",
+        "revision_reason varchar(500) DEFAULT ''",
+        "currency_code varchar(10) NOT NULL DEFAULT 'INR'",
+        "valid_until date DEFAULT NULL",
+        "customer_intro text DEFAULT NULL",
+        "customer_name varchar(255) DEFAULT ''",
+        "customer_phone varchar(50) DEFAULT ''",
+        "customer_email varchar(255) DEFAULT ''",
+        "project_name varchar(255) DEFAULT ''",
+        "property_location text DEFAULT NULL",
+        "internal_notes longtext DEFAULT NULL",
+        "subtotal decimal(14,2) NOT NULL DEFAULT 0.00",
+        "wooden_subtotal decimal(14,2) NOT NULL DEFAULT 0.00",
+        "wooden_discount_percent decimal(5,2) NOT NULL DEFAULT 0.00",
+        "wooden_discount_amount decimal(14,2) NOT NULL DEFAULT 0.00",
+        "subtotal_after_wooden_discount decimal(14,2) NOT NULL DEFAULT 0.00",
+        "other_subtotal decimal(14,2) NOT NULL DEFAULT 0.00",
+        "soft_close_enabled tinyint(1) NOT NULL DEFAULT 0",
+        "soft_close_percent decimal(5,2) NOT NULL DEFAULT 0.00",
+        "soft_close_amount decimal(14,2) NOT NULL DEFAULT 0.00",
+        "design_fee_percent decimal(5,2) NOT NULL DEFAULT 0.00",
+        "design_fee_amount decimal(14,2) NOT NULL DEFAULT 0.00",
+        "total_before_additional_discount decimal(14,2) NOT NULL DEFAULT 0.00",
+        "additional_discount_amount decimal(14,2) NOT NULL DEFAULT 0.00",
+        "taxable_total decimal(14,2) NOT NULL DEFAULT 0.00",
+        "cgst_total decimal(14,2) NOT NULL DEFAULT 0.00",
+        "sgst_total decimal(14,2) NOT NULL DEFAULT 0.00",
+        "igst_total decimal(14,2) NOT NULL DEFAULT 0.00",
+        "round_off_amount decimal(14,2) NOT NULL DEFAULT 0.00",
+        "grand_total decimal(14,2) NOT NULL DEFAULT 0.00",
+        "created_by bigint(20) unsigned NOT NULL",
+        "created_at datetime NOT NULL",
+        "updated_by bigint(20) unsigned NOT NULL",
+        "updated_at datetime NOT NULL",
+        "finalized_at datetime DEFAULT NULL",
+        "save_request_key varchar(64) DEFAULT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY quote_revision (quote_id, revision_number)",
+        "KEY quote_status (quote_id, status)",
+        "KEY created_by (created_by)",
+        "UNIQUE KEY save_request_key (save_request_key)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_quote_revision_items",
+      "source": "includes/class-quotation-schema.php",
+      "line": 111,
+      "source_sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "revision_id bigint(20) unsigned NOT NULL",
+        "section_id bigint(20) unsigned DEFAULT 0",
+        "row_type varchar(20) NOT NULL DEFAULT 'item'",
+        "catalogue_item_id bigint(20) unsigned DEFAULT 0",
+        "is_wood tinyint(1) NOT NULL DEFAULT 0",
+        "category varchar(100) DEFAULT ''",
+        "room_area varchar(100) DEFAULT ''",
+        "item_code varchar(100) DEFAULT ''",
+        "item_name varchar(255) DEFAULT ''",
+        "description text NOT NULL",
+        "specification text DEFAULT NULL",
+        "length decimal(12,3) NOT NULL DEFAULT 0.000",
+        "height decimal(12,3) NOT NULL DEFAULT 0.000",
+        "quantity decimal(12,3) NOT NULL DEFAULT 1.000",
+        "unit varchar(30) DEFAULT 'Nos'",
+        "unit_rate decimal(14,2) NOT NULL DEFAULT 0.00",
+        "discount_type varchar(10) NOT NULL DEFAULT 'fixed'",
+        "discount_value decimal(14,2) NOT NULL DEFAULT 0.00",
+        "discount_amount decimal(14,2) NOT NULL DEFAULT 0.00",
+        "line_subtotal decimal(14,2) NOT NULL DEFAULT 0.00",
+        "line_total decimal(14,2) NOT NULL DEFAULT 0.00",
+        "is_optional tinyint(1) NOT NULL DEFAULT 0",
+        "sort_order int(11) unsigned NOT NULL DEFAULT 0"
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "KEY revision_order (revision_id, sort_order)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_quote_revision_sections",
+      "source": "includes/class-quotation-schema.php",
+      "line": 140,
+      "source_sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "revision_id bigint(20) unsigned NOT NULL",
+        "section_name varchar(255) NOT NULL",
+        "section_description text DEFAULT NULL",
+        "sort_order int(11) unsigned NOT NULL DEFAULT 0"
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "KEY revision_order (revision_id, sort_order)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_quote_catalogue_items",
+      "source": "includes/class-quotation-schema.php",
+      "line": 150,
+      "source_sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "item_code varchar(100) NOT NULL",
+        "category varchar(100) DEFAULT ''",
+        "item_name varchar(255) NOT NULL",
+        "description text DEFAULT NULL",
+        "unit varchar(30) DEFAULT 'Nos'",
+        "is_wood tinyint(1) NOT NULL DEFAULT 0",
+        "default_rate decimal(14,2) NOT NULL DEFAULT 0.00",
+        "status varchar(10) NOT NULL DEFAULT 'active'",
+        "created_by bigint(20) unsigned NOT NULL DEFAULT 0",
+        "created_at datetime NOT NULL",
+        "updated_at datetime NOT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY item_code (item_code)",
+        "KEY status_name (status, item_name)",
+        "KEY category (category)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_quote_item_categories",
+      "source": "includes/class-quotation-schema.php",
+      "line": 169,
+      "source_sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "category_name varchar(100) NOT NULL",
+        "status varchar(10) NOT NULL DEFAULT 'active'",
+        "created_by bigint(20) unsigned NOT NULL DEFAULT 0",
+        "created_at datetime NOT NULL",
+        "updated_at datetime NOT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY category_name (category_name)",
+        "KEY status_name (status, category_name)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_quote_item_units",
+      "source": "includes/class-quotation-schema.php",
+      "line": 181,
+      "source_sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "unit_name varchar(30) NOT NULL",
+        "status varchar(10) NOT NULL DEFAULT 'active'",
+        "created_by bigint(20) unsigned NOT NULL DEFAULT 0",
+        "created_at datetime NOT NULL",
+        "updated_at datetime NOT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY unit_name (unit_name)",
+        "KEY status_name (status, unit_name)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_quote_payment_milestones",
+      "source": "includes/class-quotation-schema.php",
+      "line": 198,
+      "source_sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "revision_id bigint(20) unsigned NOT NULL",
+        "milestone_name varchar(255) NOT NULL",
+        "amount_type varchar(10) NOT NULL DEFAULT 'percent'",
+        "amount_value decimal(14,2) NOT NULL DEFAULT 0.00",
+        "calculated_amount decimal(14,2) NOT NULL DEFAULT 0.00",
+        "due_trigger varchar(255) DEFAULT ''",
+        "sort_order int(11) unsigned NOT NULL DEFAULT 0"
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "KEY revision_order (revision_id, sort_order)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_quote_status_history",
+      "source": "includes/class-quotation-schema.php",
+      "line": 211,
+      "source_sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "quote_id bigint(20) unsigned NOT NULL",
+        "revision_id bigint(20) unsigned DEFAULT 0",
+        "from_status varchar(30) DEFAULT ''",
+        "to_status varchar(30) NOT NULL",
+        "note varchar(500) DEFAULT ''",
+        "changed_by bigint(20) unsigned NOT NULL",
+        "changed_at datetime NOT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "KEY quote_history (quote_id, id)",
+        "KEY revision_id (revision_id)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    },
+    {
+      "table_suffix": "idlm_number_sequences",
+      "source": "includes/class-quotation-schema.php",
+      "line": 225,
+      "source_sha256": "420f7612f3f1b8bd1b922bc53648cf6eb411543c2592751ad9660ad62d902ca6",
+      "columns": [
+        "id bigint(20) unsigned NOT NULL AUTO_INCREMENT",
+        "sequence_type varchar(50) NOT NULL",
+        "sequence_year int(11) unsigned NOT NULL",
+        "last_number bigint(20) unsigned NOT NULL DEFAULT 0",
+        "updated_at datetime NOT NULL"
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY sequence_year (sequence_type, sequence_year)"
+      ],
+      "foreign_keys_declared": false,
+      "engine_declared": false
+    }
+  ]
+}

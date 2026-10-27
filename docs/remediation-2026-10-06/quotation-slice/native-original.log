@@ -1,0 +1,19 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS schema installers are idempotent and an old core version restores a missing column
+PASS real REST dispatch enforces webhook and MCP permission callbacks
+PASS authenticated WordPress AJAX dispatch enforces nonce, capability, and lazy log payload context
+PASS admin and frontend renderers preserve critical selectors and access output
+PASS settings save enforces capability and nonce before sanitized mirrored secret-safe writes
+PASS lead lifecycle writes persist coupled state, tasks, activity, and hooks
+PASS MCP PII access succeeds only with the scoped key after real lead persistence
+PASS quotation repository persists and queries catalogue read models
+PASS frontend quotation workspace list route renders with date filters
+PASS quotation number reservation is monotonic under concurrent database workers
+PASS quotation save persists exact totals, revision graph, and uniqueness constraints
+PASS performance dataset command seeds, verifies, and resets only its disposable tagged run
+PASS query-plan capture returns optimizer and index evidence without raw SQL
+PASS dashboard analytics and investigations share role scope and real SQL counts
+PASS pre-sales drawer rejects forged fields and partial saves preserve commercial data
+PASS CRM reset rolls back failed deletes and clears runtime state without recycling lead IDs
+
+17 passed, 0 failed

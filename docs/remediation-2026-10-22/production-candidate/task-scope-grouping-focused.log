@@ -1,0 +1,17 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T16-N-CORE012-retention-100-row-commit-checkpoint-resume-and-configured-CAPI-policy
+PASS T16-N-CORE012-delete-failure-retains-checkpoint-exposes-generic-fault-and-retries
+PASS T16-N-CORE012-checkpoint-failure-rolls-back-deletes-and-advancement
+PASS T16-N-CORE012-commit-failure-rolls-back-deletes-and-advancement
+PASS T16-C-CORE012-independent-session-lock-refuses-overlap-and-releases-for-retry
+PASS T16-C-CORE012-process-death-before-commit-replays-no-skip
+PASS T16-N-CORE012-compaction-does-not-load-large-payload-and-is-bounded-checked
+PASS T05-N-CORE012-task-cards-keysets-collapse-six-slots-count-entire-scope-and-hide-undated
+PASS T05-N-CORE012-task-cursors-bind-actor-view-scope-recovery-and-errors-are-truthful
+PASS T05-N-CORE012-WhatsApp-SQL-count-read-state-legacy-replies-and-live-scope
+PASS T12-N-CORE012-export-keyset-multipage-late-read-fault-row-cap-and-deadline
+PASS T05-N-CORE012-qualification-progress-carries-across-100-date-pages-with-identical-results
+PASS T21-N-CORE012-local-5000-lead-20000-task-25000-message-read-plan-time-memory-sample
+PASS T17-N-CORE012-task-day-counts-use-one-site-timezone-conversion
+
+15 passed, 0 failed

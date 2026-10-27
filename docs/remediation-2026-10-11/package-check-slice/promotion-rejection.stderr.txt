@@ -1,0 +1,6 @@
+{
+    "schema": "idlm-staging-rehearsal/v1",
+    "status": "error",
+    "message": "Release candidate verification failed: git_not_clean, candidate_not_ci_attested, candidate_has_blockers, ci_evidence_invalid, ci_run_invalid",
+    "production_release_approved": false
+}

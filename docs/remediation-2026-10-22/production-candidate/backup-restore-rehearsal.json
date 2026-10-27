@@ -1,0 +1,15 @@
+{
+  "builder": "Shashi",
+  "database_snapshot": "single-transaction mysqldump",
+  "restored_to_separate_disposable_schema": true,
+  "table_checksums_match": 40,
+  "all_table_checksums_match": true,
+  "media_file_count": 0,
+  "media_bytes_match": true,
+  "dump_seconds": 2.698,
+  "restore_and_verification_seconds": 26.449,
+  "backup_bytes": 402367904,
+  "contains_real_customer_data": false,
+  "backup_in_release_or_git": false,
+  "production_restore_tested": false
+}

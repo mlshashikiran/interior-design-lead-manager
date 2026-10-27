@@ -1,0 +1,6 @@
+{
+  "status": "PASS",
+  "six_cells": true,
+  "bash_pipeline_failure_propagation": true,
+  "remote_workflow_executed": false
+}

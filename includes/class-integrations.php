@@ -4,10 +4,13 @@ if (!defined('ABSPATH')) {
 }
 
 class IDLM_Integrations {
-    const API_CREDENTIALS_VERSION = '2.0.0';
+    const API_CREDENTIALS_VERSION = IDLM_Integration_Auth::API_CREDENTIALS_VERSION;
 
     public static function init() {
+        add_action('idlm_qualified_handoff_notification', array(__CLASS__, 'send_handoff_notifications'), 10, 4);
         self::maybe_migrate_api_credentials();
+        IDLM_Secret_Store::migrate_platforms();
+        IDLM_Secret_Store::scrub_legacy_queues();
         add_action('wp_head', array(__CLASS__, 'inject_utm_tracker_script'));
         add_action('rest_api_init', array(__CLASS__, 'register_webhook_routes'));
         add_filter('rest_authentication_errors', array(__CLASS__, 'bypass_rest_auth_for_webhook'), 99999);
@@ -21,158 +24,56 @@ class IDLM_Integrations {
 
     /** Preserve the Basic Auth challenge on permission-callback failures. */
     public static function add_google_feed_auth_challenge($response, $server, $request) {
-        if (
-            $response instanceof WP_REST_Response &&
-            method_exists($request, 'get_route') &&
-            401 === $response->get_status() &&
-            0 === strpos((string) $request->get_route(), '/interior-design-lead-manager/v1/google-ads-')
-        ) {
-            $response->header('WWW-Authenticate', 'Basic realm="Google Ads Data Manager Feed"');
-        }
-        return $response;
+        return IDLM_Google_Feed_Controller::add_google_feed_auth_challenge($response, $server, $request);
     }
 
     /** Migrate scoped credentials into encrypted storage and remove legacy paths. */
     public static function maybe_migrate_api_credentials() {
-        $legacy_key = trim((string) get_option('idlm_api_webhook_key', ''));
-        $migration_pending = self::API_CREDENTIALS_VERSION !== get_option('idlm_api_credentials_version', '');
-
-        $webhook_key = trim((string) IDLM_Secret_Store::get('idlm_webhook_api_key', ''));
-        if ('' === $webhook_key) {
-            $webhook_key = $legacy_key ?: self::generate_api_credential();
-            IDLM_Secret_Store::set('idlm_webhook_api_key', $webhook_key);
-        }
-
-        $mcp_key = trim((string) IDLM_Secret_Store::get('idlm_mcp_api_key', ''));
-        if ('' === $mcp_key) {
-            $mcp_key = self::generate_api_credential($webhook_key);
-            IDLM_Secret_Store::set('idlm_mcp_api_key', $mcp_key);
-        }
-        if (!get_option(IDLM_Production_Security::MCP_METADATA_OPTION, array())) {
-            IDLM_Production_Security::record_mcp_credential($mcp_key);
-        }
-
-        $gadm_password = trim((string) IDLM_Secret_Store::get('idlm_google_gadm_password', ''));
-        if ('' === $gadm_password) {
-            $gadm_password = self::generate_api_credential($webhook_key . $mcp_key);
-            IDLM_Secret_Store::set('idlm_google_gadm_password', $gadm_password);
-        }
-
-        foreach (array('idlm_api_webhook_key', 'idlm_webhook_legacy_query_until', 'idlm_mcp_legacy_key_until', 'idlm_gadm_legacy_key_until') as $legacy_option) {
-            if (null !== get_option($legacy_option, null)) {
-                delete_option($legacy_option);
-            }
-        }
-        if ($migration_pending) {
-            update_option('idlm_api_credentials_version', self::API_CREDENTIALS_VERSION);
-        }
+        return IDLM_Integration_Auth::maybe_migrate_api_credentials();
     }
 
     /** Rotate one scoped API credential and end its legacy compatibility path. */
     public static function rotate_api_credential($scope) {
-        self::maybe_migrate_api_credentials();
-        $scopes = array(
-            'webhook' => 'idlm_webhook_api_key',
-            'mcp' => 'idlm_mcp_api_key',
-        );
-        $scope = sanitize_key($scope);
-        if (!isset($scopes[$scope])) {
-            return new WP_Error('idlm_invalid_credential_scope', 'Invalid API credential scope.');
-        }
-
-        $current = (string) IDLM_Secret_Store::get($scopes[$scope], '');
-        $credential = self::generate_api_credential($current);
-        if (!IDLM_Secret_Store::set($scopes[$scope], $credential)) {
-            return new WP_Error('idlm_environment_managed_credential', 'This credential is managed by the environment and cannot be rotated here.');
-        }
-        if ('mcp' === $scope) {
-            IDLM_Production_Security::record_mcp_credential($credential, $current);
-        }
-        return $credential;
+        return IDLM_Integration_Auth::rotate_api_credential($scope);
     }
 
     /** Generate a URL/header-safe credential distinct from the supplied value. */
     private static function generate_api_credential($different_from = '') {
-        do {
-            $credential = wp_generate_password(48, false, false);
-        } while ('' !== $different_from && false !== strpos((string) $different_from, $credential));
-        return $credential;
+        return IDLM_Integration_Auth::generate_api_credential($different_from);
     }
 
     /** Compare non-empty credentials without exposing timing differences. */
     private static function credential_matches($provided, $expected) {
-        $provided = (string) $provided;
-        $expected = (string) $expected;
-        return '' !== $provided && '' !== $expected && hash_equals($expected, $provided);
+        return IDLM_Integration_Auth::credential_matches($provided, $expected);
     }
 
     /** Validate a scoped header key. Credentials are never accepted in URLs. */
     private static function validate_scoped_api_key(WP_REST_Request $request, $option_name) {
-        self::maybe_migrate_api_credentials();
-        $scoped_key = (string) IDLM_Secret_Store::get($option_name, '');
-        $header_key = trim((string) $request->get_header('X-IDLM-API-Key'));
-        return self::credential_matches($header_key, $scoped_key);
+        return IDLM_Integration_Auth::validate_scoped_api_key($request, $option_name);
     }
 
     /** Apply a fixed-window per-IP request limit before route callbacks run. */
     private static function check_rest_rate_limit($scope, $limit) {
-        $remote_address = IDLM_Production_Security::client_ip();
-        $window = (int) floor(time() / 60);
-        $transient_key = 'idlm_rl_' . md5($scope . '|' . $remote_address . '|' . $window);
-        $count = (int) get_transient($transient_key);
-        if ($count >= absint($limit)) {
-            return new WP_Error(
-                'idlm_rest_rate_limited',
-                'Too many requests. Please retry shortly.',
-                array('status' => 429)
-            );
-        }
-        set_transient($transient_key, $count + 1, 120);
-        return true;
+        return IDLM_Integration_Auth::check_rest_rate_limit($scope, $limit);
     }
 
     private static function rest_permission_error($message = 'Unauthorized: Invalid credentials') {
-        return new WP_Error('idlm_rest_unauthorized', $message, array('status' => 401));
+        return IDLM_Integration_Auth::rest_permission_error($message);
     }
 
     /** REST permission boundary for inbound lead webhooks. */
     public static function permission_webhook(WP_REST_Request $request) {
-        $rate_limit = self::check_rest_rate_limit('webhook', 120);
-        if (is_wp_error($rate_limit)) {
-            return $rate_limit;
-        }
-        return self::validate_scoped_api_key($request, 'idlm_webhook_api_key')
-            ? true
-            : self::rest_permission_error('Unauthorized: Invalid webhook API key');
+        return IDLM_Integration_Auth::permission_webhook($request);
     }
 
     /** REST permission boundary for Google Data Manager feeds. */
     public static function permission_google_feed(WP_REST_Request $request) {
-        $rate_limit = self::check_rest_rate_limit('google-feed', 30);
-        if (is_wp_error($rate_limit)) {
-            return $rate_limit;
-        }
-        return self::validate_gadm_request($request)
-            ? true
-            : self::rest_permission_error('Unauthorized: Invalid Google feed credentials');
+        return IDLM_Integration_Auth::permission_google_feed($request);
     }
 
     /** REST permission boundary for MCP, including PII-returning tools. */
     public static function permission_mcp(WP_REST_Request $request) {
-        if (!IDLM_Production_Security::is_mcp_enabled()) {
-            return new WP_Error(
-                'idlm_mcp_disabled',
-                'MCP access is disabled for this environment.',
-                array('status' => 503)
-            );
-        }
-        $rate_limit = self::check_rest_rate_limit('mcp', 60);
-        if (is_wp_error($rate_limit)) {
-            return $rate_limit;
-        }
-        return self::validate_scoped_api_key($request, 'idlm_mcp_api_key')
-            ? true
-            : self::rest_permission_error('Unauthorized: Invalid MCP API key');
+        return IDLM_Integration_Auth::permission_mcp($request);
     }
 
     /**
@@ -186,12 +87,14 @@ class IDLM_Integrations {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
 
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0430: reconcile_legacy_qualified_handoffs(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $leads = $wpdb->get_results(
             "SELECT id, assigned_rep_id, qualified_at, updated_at, created_at
              FROM {$table_leads}
              WHERE handoff_status = 'not_ready' AND lead_quality = 'Qualified'
                AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0"
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         );
 
         foreach ($leads as $lead) {
@@ -250,7 +153,7 @@ class IDLM_Integrations {
 
         if (!empty($rest_route)) {
             $clean_route = untrailingslashit($rest_route);
-            if ($clean_route === '/interior-design-lead-manager/v1/webhook' || 
+            if ($clean_route === '/idlm/v1/meta-leads' || $clean_route === '/interior-design-lead-manager/v1/webhook' ||
                 $clean_route === '/interior-design-lead-manager/v1/mcp' || 
                 strpos($clean_route, '/interior-design-lead-manager/v1/google-ads-') === 0) {
                 $is_public_route = true;
@@ -261,6 +164,7 @@ class IDLM_Integrations {
         if (!$is_public_route && isset($_SERVER['REQUEST_URI'])) {
             $path = wp_parse_url(urldecode(esc_url_raw(wp_unslash($_SERVER['REQUEST_URI']))), PHP_URL_PATH);
             if ($path && (
+                preg_match('#/wp-json/idlm/v1/meta-leads/?$#', $path) ||
                 preg_match('#/wp-json/interior-design-lead-manager/v1/webhook/?$#', $path) || 
                 preg_match('#/wp-json/interior-design-lead-manager/v1/mcp/?$#', $path) || 
                 preg_match('#/wp-json/interior-design-lead-manager/v1/google-ads-#', $path)
@@ -396,55 +300,7 @@ class IDLM_Integrations {
      * dedicated header token.
      */
     private static function validate_gadm_request(WP_REST_Request $request) {
-        self::maybe_migrate_api_credentials();
-        $gadm_username = get_option('idlm_google_gadm_username', 'google-ads');
-        $gadm_password = IDLM_Secret_Store::get('idlm_google_gadm_password', '');
-
-        // 1. Try HTTP Basic Authentication
-        $auth_header = $request->get_header('Authorization');
-        if (empty($auth_header)) {
-            if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-                $auth_header = wp_unslash($_SERVER['HTTP_AUTHORIZATION']); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-            } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
-                $auth_header = wp_unslash($_SERVER['REDIRECT_HTTP_AUTHORIZATION']); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-            }
-        }
-
-        if (!empty($auth_header) && preg_match('/Basic\s+(.+)$/i', $auth_header, $matches)) {
-            $credentials = base64_decode($matches[1]);
-            if ($credentials !== false && strpos($credentials, ':') !== false) {
-                list($user, $pass) = explode(':', $credentials, 2);
-                if (self::credential_matches(trim($user), trim($gadm_username)) && self::credential_matches(trim($pass), trim($gadm_password))) {
-                    return true;
-                }
-            }
-        }
-
-        // CGI/FastCGI environment variables fallback
-        $server_user = isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : '';
-        $server_pass = isset($_SERVER['PHP_AUTH_PW']) ? $_SERVER['PHP_AUTH_PW'] : '';
-        if (!empty($server_user) && !empty($server_pass)) {
-            if (self::credential_matches(trim($server_user), trim($gadm_username)) && self::credential_matches(trim($server_pass), trim($gadm_password))) {
-                return true;
-            }
-        }
-
-        // 2. Accept the dedicated feed token in a header.
-        $api_key = trim((string) $request->get_header('X-IDLM-API-Key'));
-        if (self::credential_matches($api_key, $gadm_password)) {
-            return true;
-        }
-
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log(sprintf(
-                'IDLM GADM Auth Failed: Header present: %s, PHP_AUTH_USER present: %s, Username matched: %s',
-                !empty($auth_header) ? 'yes' : 'no',
-                !empty($server_user) ? 'yes' : 'no',
-                (isset($user) && trim($user) === trim($gadm_username)) ? 'yes' : 'no'
-            ));
-        }
-
-        return false;
+        return IDLM_Integration_Auth::validate_gadm_request($request);
     }
 
     /**
@@ -452,458 +308,63 @@ class IDLM_Integrations {
      * Google Ads Data Manager requires the standard HTTP auth challenge header.
      */
     private static function send_gadm_401() {
-        header('HTTP/1.1 401 Unauthorized');
-        header('WWW-Authenticate: Basic realm="Google Ads Data Manager Feed"');
-        header('Content-Type: application/json; charset=utf-8');
-        // Remove WordPress REST API headers that confuse GADM
-        header_remove('X-Robots-Tag');
-        header_remove('Link');
-        header_remove('X-Content-Type-Options');
-        header_remove('Access-Control-Expose-Headers');
-        header_remove('Access-Control-Allow-Headers');
-        echo wp_json_encode(array('success' => false, 'message' => 'Unauthorized: Invalid Credentials'));
-        if (!defined('IDLM_TESTING')) {
-            exit;
-        }
+        return IDLM_Google_Feed_Controller::send_gadm_401();
     }
 
     /**
      * Clean WordPress REST API headers so GADM sees a clean static-file response
      */
     private static function clean_rest_headers_for_gadm() {
-        header_remove('X-Robots-Tag');
-        header_remove('Link');
-        header_remove('X-Content-Type-Options');
-        header_remove('Access-Control-Expose-Headers');
-        header_remove('Access-Control-Allow-Headers');
+        return IDLM_Google_Feed_Controller::clean_rest_headers_for_gadm();
     }
 
     /**
      * Expose a secure CSV conversion feed for Google Ads OCI
      */
     public static function handle_google_ads_conversions_feed(WP_REST_Request $request) {
-        if (!self::validate_gadm_request($request)) {
-            self::send_gadm_401();
-            return;
-        }
-
-        self::clean_rest_headers_for_gadm();
-
-        // Buffer the CSV so we can set Content-Length (makes it look like a static file to GADM)
-        ob_start();
-        if (class_exists('IDLM_CAPI')) {
-            IDLM_CAPI::generate_google_ads_conversions_csv_response(false);
-        }
-        $csv_content = ob_get_clean();
-
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=google-ads-offline-conversions-' . gmdate('Y-m-d') . '.csv');
-        header('Content-Length: ' . strlen($csv_content));
-        header('Cache-Control: no-cache, must-revalidate');
-        echo $csv_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        if (!defined('IDLM_TESTING')) {
-            exit;
-        }
+        return IDLM_Google_Feed_Controller::handle_google_ads_conversions_feed($request);
     }
 
     /**
      * Expose a secure CSV audience feed for Google Ads Data Manager Customer Match
      */
     public static function handle_google_ads_audience_feed(WP_REST_Request $request) {
-        if (!self::validate_gadm_request($request)) {
-            self::send_gadm_401();
-            return;
-        }
-
-        $list_id = $request->get_param('list_id');
-        if (empty($list_id)) {
-            return new WP_REST_Response(array('success' => false, 'message' => 'Missing list_id parameter'), 400);
-        }
-
-        $list_id = trim($list_id);
-
-        if (!class_exists('IDLM_Audiences')) {
-            require_once dirname(__FILE__) . '/class-audiences.php';
-        }
-
-        // Find the rule matching the list_id
-        $rules = get_option('idlm_audience_sync_rules', array());
-        $matched_rule = null;
-
-        foreach ($rules as $rule) {
-            if (isset($rule['platform']) && $rule['platform'] === 'google') {
-                $target_id = ltrim(trim($rule['audience_id']), '/');
-                $target_id = preg_replace('/\/userlists\//i', '/userLists/', $target_id);
-
-                if ($target_id === $list_id || basename($target_id) === $list_id || $rule['audience_id'] === $list_id) {
-                    $matched_rule = $rule;
-                    break;
-                }
-            }
-        }
-
-        if (!$matched_rule) {
-            return new WP_REST_Response(array('success' => false, 'message' => 'No active Google Ads audience rule found matching target ID: ' . esc_html($list_id)), 404);
-        }
-
-        self::clean_rest_headers_for_gadm();
-
-        // Buffer the CSV so we can set Content-Length
-        ob_start();
-        $leads = IDLM_Audiences::get_leads_matching_rule($matched_rule);
-        IDLM_Audiences::generate_google_ads_audience_csv_response($leads, $list_id, false);
-        $csv_content = ob_get_clean();
-
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=' . sanitize_file_name($list_id) . '-' . gmdate('Y-m-d') . '.csv');
-        header('Content-Length: ' . strlen($csv_content));
-        header('Cache-Control: no-cache, must-revalidate');
-        echo $csv_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        if (!defined('IDLM_TESTING')) {
-            exit;
-        }
+        return IDLM_Google_Feed_Controller::handle_google_ads_audience_feed($request);
     }
 
     /**
      * Process incoming webhook payloads from Ad Platforms
      */
     public static function handle_webhook_request(WP_REST_Request $request) {
-        if (!self::validate_scoped_api_key($request, 'idlm_webhook_api_key')) {
-            return new WP_REST_Response(array('success' => false, 'message' => 'Unauthorized: Invalid API Key'), 401);
-        }
-
-        $payload = $request->get_json_params();
-        if (empty($payload)) {
-            $payload = $request->get_body_params();
-        }
-
-        if (empty($payload)) {
-            // Read raw body if still empty
-            $raw_body = $request->get_body();
-            $payload = json_decode($raw_body, true);
-        }
-
-        if (empty($payload)) {
-            return new WP_REST_Response(array('success' => false, 'message' => 'Bad Request: Empty Payload'), 400);
-        }
-
-        $platform = sanitize_key($request->get_param('platform')); // meta, google, linkedin, website, walkin
-        if (!in_array($platform, array('meta', 'google', 'linkedin', 'website', 'walkin'), true)) {
-            return new WP_REST_Response(array('success' => false, 'message' => 'Invalid Platform Specified'), 400);
-        }
-
-        // Forminator removes is_test from its sample body and sends X-Hook-Test: true
-        // while saving a webhook. Retain body support for compatible integrations.
-        $flat_payload = self::flatten_array($payload);
-        $hook_test_header = $request->get_header('X-Hook-Test');
-        $is_test_payload = isset($flat_payload['is_test']) && self::is_truthy_webhook_value($flat_payload['is_test']);
-        if (self::is_truthy_webhook_value($hook_test_header) || $is_test_payload) {
-            return new WP_REST_Response(
-                array(
-                    'success' => true,
-                    'message' => 'Webhook connection verified successfully',
-                ),
-                200
-            );
-        }
-
-        // Apply field mappings defined in settings
-        $mapped_data = self::apply_field_mappings($payload, $platform);
-        if (empty($mapped_data['email']) && empty($mapped_data['phone'])) {
-            return new WP_REST_Response(array('success' => false, 'message' => 'Failed to parse required fields (Email or Phone) based on mapping'), 422);
-        }
-
-        // Create one canonical lead or enrich the existing canonical record.
-        // Every submission is retained as an attribution touchpoint.
-        $result = IDLM_DB::upsert_inbound_lead($mapped_data, $platform, $payload);
-        if ($result) {
-            if (!empty($result['requires_duplicate_review'])) {
-                return new WP_REST_Response(array(
-                    'success' => true,
-                    'created' => false,
-                    'matched_existing' => false,
-                    'requires_identity_review' => true,
-                    'review_id' => absint($result['review_id'] ?? 0),
-                    'message' => 'Submission retained for identity review; no lead was created or routed.',
-                ), 202);
-            }
-            $lead_id = absint($result['lead_id']);
-            if (!empty($result['created'])) {
-                self::route_lead_assignment($lead_id, $mapped_data['source']);
-            }
-
-            return new WP_REST_Response(array(
-                'success' => true,
-                'lead_id' => $lead_id,
-                'created' => !empty($result['created']),
-                'matched_existing' => !empty($result['matched']),
-                'message' => !empty($result['created']) ? 'Lead created successfully' : 'Submission matched to existing lead',
-            ), 200);
-        }
-
-        return new WP_REST_Response(array('success' => false, 'message' => 'Server Error: DB Insert Failed'), 500);
+        return IDLM_Webhook_Intake::handle_webhook_request($request);
     }
 
     /**
      * Map webhook payload parameters to DB columns
      */
     private static function apply_field_mappings($payload, $platform) {
-        $mappings = get_option('idlm_field_mappings_' . $platform, array());
-        $lead_data = array(
-            'first_name'         => '',
-            'last_name'          => '',
-            'email'              => '',
-            'phone'              => '',
-            'budget'             => '',
-            'project_timeline'   => '',
-            'property_location'  => '',
-            'source'             => 'walkin' === $platform ? 'Offline/Walk-in' : ucfirst($platform) . ' Ads',
-            'property_type'      => '',
-            'num_rooms'          => '',
-            'preferred_studio'   => '',
-            'utm_source'         => '',
-            'utm_medium'         => '',
-            'utm_campaign'       => '',
-            'utm_adgroup'        => '',
-            'utm_term'           => '',
-            'utm_content'        => '',
-            'gclid'              => '',
-            'gbraid'             => '',
-            'wbraid'             => '',
-            'fbclid'             => '',
-            'li_fat_id'          => '',
-            'fb_lead_id'         => '',
-            'landing_page'       => '',
-            'conversion_time'    => '',
-            'referrer_details'   => ''
-        );
-
-        if ($platform === 'website') {
-            $lead_data['source'] = 'Website';
-        }
-
-        // Flatten payload for easy mapping (dot notation if needed, but simple key lookup first)
-        $flat_payload = self::flatten_array($payload);
-
-        foreach ($mappings as $db_field => $payload_key) {
-            if (empty($payload_key)) {
-                continue;
-            }
-            if (isset($flat_payload[$payload_key])) {
-                $lead_data[$db_field] = sanitize_text_field($flat_payload[$payload_key]);
-            }
-        }
-
-        // Fallback checks for click IDs in webhook payload itself if map was skipped
-        if (empty($lead_data['gclid']) && isset($flat_payload['gclid'])) {
-            $lead_data['gclid'] = sanitize_text_field($flat_payload['gclid']);
-        }
-        if (empty($lead_data['gbraid']) && isset($flat_payload['gbraid'])) {
-            $lead_data['gbraid'] = sanitize_text_field($flat_payload['gbraid']);
-        }
-        if (empty($lead_data['wbraid']) && isset($flat_payload['wbraid'])) {
-            $lead_data['wbraid'] = sanitize_text_field($flat_payload['wbraid']);
-        }
-        if (empty($lead_data['fbclid']) && isset($flat_payload['fbclid'])) {
-            $lead_data['fbclid'] = sanitize_text_field($flat_payload['fbclid']);
-        }
-        if (empty($lead_data['li_fat_id']) && isset($flat_payload['li_fat_id'])) {
-            $lead_data['li_fat_id'] = sanitize_text_field($flat_payload['li_fat_id']);
-        }
-        if (empty($lead_data['fb_lead_id'])) {
-            if (isset($flat_payload['lead_id'])) {
-                $lead_data['fb_lead_id'] = sanitize_text_field($flat_payload['lead_id']);
-            } elseif (isset($flat_payload['fb_lead_id'])) {
-                $lead_data['fb_lead_id'] = sanitize_text_field($flat_payload['fb_lead_id']);
-            }
-        }
-
-        // Merge cookie attribution for website/frontend submissions
-        if ($platform === 'website') {
-            $cookies = self::get_captured_attribution();
-            foreach ($cookies as $ckey => $cval) {
-                if (empty($lead_data[$ckey]) && !empty($cval)) {
-                    $lead_data[$ckey] = $cval;
-                }
-            }
-        }
-
-        // Normalize and dynamically classify lead source based on click IDs and UTMs
-        $lead_data['source'] = self::classify_lead_source($lead_data, $platform);
-
-        // Normalize Property Type & Number of Rooms values dynamically across channels
-        $lead_data['property_type'] = self::normalize_property_type($lead_data['property_type']);
-        $lead_data['num_rooms']     = self::normalize_num_rooms($lead_data['num_rooms']);
-        $lead_data['budget']        = self::normalize_budget($lead_data['budget']);
-
-        return $lead_data;
+        return IDLM_Webhook_Intake::apply_field_mappings($payload, $platform);
     }
 
     /**
      * Dynamically classify lead source based on click IDs and UTM parameter patterns
      */
     private static function classify_lead_source($lead_data, $platform) {
-        // Reception submissions are deliberately isolated from ad and website attribution.
-        if ('walkin' === $platform) {
-            return 'Offline/Walk-in';
-        }
-
-        // If the platform is explicitly passed as 'google', 'meta', or 'linkedin' (e.g. from dedicated webhook), keep that classification.
-        if (in_array($platform, array('google', 'meta', 'linkedin'))) {
-            return ucfirst($platform) . ' Ads';
-        }
-
-        // Initialize / keep existing source if not Website/empty
-        $source = !empty($lead_data['source']) ? $lead_data['source'] : 'Website';
-        if ($source !== 'Website') {
-            return $source;
-        }
-
-        $utm_source = !empty($lead_data['utm_source']) ? strtolower(trim($lead_data['utm_source'])) : '';
-        $utm_medium = !empty($lead_data['utm_medium']) ? strtolower(trim($lead_data['utm_medium'])) : '';
-
-        // 1. Google Ads Attribution Check
-        $has_google_click_id = !empty($lead_data['gclid']) || !empty($lead_data['gbraid']) || !empty($lead_data['wbraid']);
-        $has_google_utms = (strpos($utm_source, 'google') !== false);
-        $is_google = $has_google_click_id || $has_google_utms;
-
-        // 2. Meta Ads Attribution Check
-        $has_meta_click_id = !empty($lead_data['fbclid']) || !empty($lead_data['fb_lead_id']);
-        $has_meta_utms = (
-            strpos($utm_source, 'facebook') !== false || 
-            strpos($utm_source, 'instagram') !== false || 
-            strpos($utm_source, 'meta') !== false || 
-            $utm_source === 'fb' || 
-            strpos($utm_source, 'fb_') !== false || 
-            strpos($utm_source, 'fb-') !== false || 
-            $utm_source === 'ig' || 
-            strpos($utm_source, 'ig_') !== false || 
-            strpos($utm_source, 'ig-') !== false
-        );
-        $is_meta = $has_meta_click_id || $has_meta_utms;
-
-        // 3. Resolve Dual Attribution conflicts using last-touch UTM logic
-        if ($is_google && $is_meta) {
-            if ($has_google_utms && !$has_meta_utms) {
-                return 'Google Ads';
-            } elseif ($has_meta_utms && !$has_google_utms) {
-                return 'Meta Ads';
-            } else {
-                // If both UTMs match or neither has UTMs matching, fall back to Google Ads
-                return 'Google Ads';
-            }
-        }
-
-        if ($is_google) {
-            return 'Google Ads';
-        }
-
-        if ($is_meta) {
-            return 'Meta Ads';
-        }
-
-        return 'Website';
+        return IDLM_Webhook_Intake::classify_lead_source($lead_data, $platform);
     }
 
     /**
      * Standardize Property Types to system options: Apartment, Villa, Independent House, Commercial
      */
     private static function normalize_property_type($val) {
-        $val = strtolower(trim($val));
-        if (empty($val)) {
-            return '';
-        }
-
-        if (in_array($val, array('apt', 'apartment', 'apartments', 'flat', 'flats', 'unit', 'condo', 'condominium'))) {
-            return 'Apartment';
-        }
-        if (in_array($val, array('villa', 'villas', 'row house', 'rowhouse', 'bungalow', 'bungalows'))) {
-            return 'Villa';
-        }
-        if (in_array($val, array('independent house', 'house', 'plot', 'residential', 'builder floor', 'individual house'))) {
-            return 'Independent House';
-        }
-        if (in_array($val, array('commercial', 'office', 'shop', 'retail', 'showroom', 'commercial space'))) {
-            return 'Commercial';
-        }
-
-        return ucfirst($val); // Fallback to capitalized original if no match
+        return IDLM_Webhook_Intake::normalize_property_type($val);
     }
 
     /**
      * Standardize Room count parameters to standard system keys dynamically based on active settings options
      */
     public static function normalize_num_rooms($val) {
-        $val = trim($val);
-        if (empty($val)) {
-            return '';
-        }
-
-        $options = get_option('idlm_custom_num_rooms', array('1 BHK', '2 BHK', '3 BHK', '4 BHK', '4+ BHK'));
-        $val_clean = strtolower($val);
-
-        // Replace word-numbers with digits
-        $word_map = array('one' => '1', 'two' => '2', 'three' => '3', 'four' => '4', 'five' => '5', 'six' => '6');
-        foreach ($word_map as $word => $digit) {
-            if ($val_clean === $word) {
-                $val_clean = $digit;
-                break;
-            }
-        }
-
-        // Cleaned input (lowercase, spaces and hyphens removed)
-        $val_stripped = str_replace(array(' ', '-', '_'), '', $val_clean);
-
-        // 1. First Pass: Exact or stripped exact match
-        foreach ($options as $opt) {
-            $opt_clean = strtolower($opt);
-            if ($val_clean === $opt_clean) {
-                return $opt;
-            }
-            $opt_stripped = str_replace(array(' ', '-', '_'), '', $opt_clean);
-            if ($val_stripped === $opt_stripped) {
-                return $opt;
-            }
-        }
-
-        // 2. Second Pass: Substring match (either option inside input, or input inside option)
-        foreach ($options as $opt) {
-            $opt_clean = strtolower($opt);
-            $opt_stripped = str_replace(array(' ', '-', '_'), '', $opt_clean);
-
-            if (!empty($opt_stripped) && !empty($val_stripped)) {
-                if (stripos($val_stripped, $opt_stripped) !== false || stripos($opt_stripped, $val_stripped) !== false) {
-                    return $opt;
-                }
-            }
-        }
-
-        // 3. Third Pass: Standard patterns fallback (checking largest first)
-        if (preg_match('/(?:5|6|7|8|9|10|4\+)/i', $val_clean) || stripos($val_clean, 'five') !== false || stripos($val_clean, 'more') !== false) {
-            return in_array('4+ BHK', $options) ? '4+ BHK' : (in_array('4 BHK', $options) ? '4 BHK' : $options[0]);
-        }
-        if (preg_match('/4/i', $val_clean) || stripos($val_clean, 'four') !== false) {
-            return in_array('4 BHK', $options) ? '4 BHK' : $options[0];
-        }
-        if (preg_match('/3/i', $val_clean) || stripos($val_clean, 'three') !== false) {
-            return in_array('3 BHK', $options) ? '3 BHK' : $options[0];
-        }
-        if (preg_match('/2/i', $val_clean) || stripos($val_clean, 'two') !== false) {
-            return in_array('2 BHK', $options) ? '2 BHK' : $options[0];
-        }
-        if (preg_match('/1/i', $val_clean) || stripos($val_clean, 'one') !== false) {
-            return in_array('1 BHK', $options) ? '1 BHK' : $options[0];
-        }
-
-        return $val; // Fallback
+        return IDLM_Webhook_Intake::normalize_num_rooms($val);
     }
 
     /**
@@ -911,74 +372,21 @@ class IDLM_Integrations {
      * and isolate standard budget/currency ranges/values.
      */
     public static function normalize_budget($val) {
-        $val = trim($val);
-        if (empty($val)) {
-            return '';
-        }
-
-        $text = trim(preg_replace('/\s+/', ' ', $val));
-
-        // Pattern 1: Sign + digits + optional range + optional suffix (with proper suffix ordering)
-        $regex = '/(?:(?:₹|Rs\.?|Rs|INR|USD|\$|€|£)\s*)[\d,.]+(?:\s*(?:lakhs?|crores?|cr|m|k|l)?\s*(?:-|to|and)\s*(?:(?:₹|Rs\.?|Rs|INR|USD|\$|€|£)\s*)?[\d,.]+)?(?:\s*(?:lakhs?|crores?|cr|m|k|l))?/i';
-        if (preg_match($regex, $text, $matches)) {
-            return trim($matches[0]);
-        }
-
-        // Pattern 2: Digits + optional range + suffix (no leading sign)
-        $regex_suffix = '/[\d,.]+(?:\s*(?:lakhs?|crores?|cr|m|k|l)?\s*(?:-|to|and)\s*[\d,.]+)?\s*(?:lakhs?|crores?|cr|m|k|l)\b/i';
-        if (preg_match($regex_suffix, $text, $matches)) {
-            return trim($matches[0]);
-        }
-
-        // Pattern 3: Standalone sign + digits
-        $regex_fallback = '/(?:(?:₹|Rs\.?|Rs|INR|USD|\$|€|£)\s*)[\d,.]+/i';
-        if (preg_match($regex_fallback, $text, $matches)) {
-            return trim($matches[0]);
-        }
-
-        // Pattern 4: Standalone large numeric group fallback (length >= 4)
-        if (preg_match_all('/\b[\d,.-]+\b/', $text, $num_matches)) {
-            foreach ($num_matches[0] as $num) {
-                $cleaned_num = str_replace(array(',', '-'), '', $num);
-                if (strlen($cleaned_num) >= 4) {
-                    return trim($num);
-                }
-            }
-        }
-
-        return $val;
+        return IDLM_Webhook_Intake::normalize_budget($val);
     }
 
     /**
      * Flatten a multi-dimensional array with dot notation
      */
     private static function flatten_array($array, $prefix = '') {
-        $result = array();
-        foreach ($array as $key => $value) {
-            if (is_array($value)) {
-                $result = array_merge($result, self::flatten_array($value, $prefix . $key . '.'));
-            } else {
-                $result[$prefix . $key] = $value;
-                // Also store raw key for simpler mapping lookups
-                $result[$key] = $value;
-            }
-        }
-        return $result;
+        return IDLM_Webhook_Intake::flatten_array($array, $prefix);
     }
 
     /**
      * Determine whether a webhook control value explicitly represents true.
      */
     private static function is_truthy_webhook_value($value) {
-        if (true === $value || 1 === $value) {
-            return true;
-        }
-
-        if (!is_scalar($value)) {
-            return false;
-        }
-
-        return in_array(strtolower(trim((string) $value)), array('1', 'true', 'yes', 'on'), true);
+        return IDLM_Webhook_Intake::is_truthy_webhook_value($value);
     }
 
     /**
@@ -1006,7 +414,9 @@ class IDLM_Integrations {
      * Available users who receive new Pre-Sales Intake leads.
      */
     private static function get_pre_sales_pool() {
-        $role_pool = self::get_all_pre_sales_pool();
+        $role_pool = array_values(array_filter(self::get_all_pre_sales_pool(), static function($id) {
+            return IDLM_Lead_Access_Policy::is_assignable_rep($id, 'intake');
+        }));
         $available_pool = IDLM_Settings::get('idlm_active_pre_sales_reps', null);
         if (null === $available_pool) {
             return self::filter_pool_by_capacity($role_pool);
@@ -1022,7 +432,7 @@ class IDLM_Integrations {
         $rep_ids = array_values(array_filter(
             self::normalize_rep_pool(IDLM_Settings::get('idlm_active_assignment_reps', array())),
             static function($rep_id) {
-                return (bool) get_userdata($rep_id);
+                return IDLM_Lead_Access_Policy::is_assignable_rep($rep_id);
             }
         ));
         if (!$exclude_pre_sales) {
@@ -1030,8 +440,7 @@ class IDLM_Integrations {
         }
 
         $rep_ids = array_values(array_filter($rep_ids, static function($rep_id) {
-            $user = get_userdata($rep_id);
-            return $user && !in_array('idlm_pre_sales', (array) $user->roles, true);
+            return IDLM_Lead_Access_Policy::is_assignable_rep($rep_id, 'sales');
         }));
         return self::filter_pool_by_capacity($rep_ids);
     }
@@ -1047,8 +456,7 @@ class IDLM_Integrations {
         $rep_ids = array_values(array_filter(
             self::normalize_rep_pool(IDLM_Settings::get('idlm_active_assignment_reps', array())),
             static function($rep_id) {
-                $user = get_userdata($rep_id);
-                return $user && !in_array('idlm_pre_sales', (array) $user->roles, true);
+                return IDLM_Lead_Access_Policy::is_assignable_rep($rep_id, 'sales');
             }
         ));
 
@@ -1068,15 +476,19 @@ class IDLM_Integrations {
         }
         $placeholders = implode(',', array_fill(0, count($rep_ids), '%d'));
         $counts = array();
-        foreach ($wpdb->get_results($wpdb->prepare(
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- REL007-SQL-0431: filter_pool_by_capacity(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
+        $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT assigned_rep_id, COUNT(*) active_count
              FROM {$wpdb->prefix}idlm_leads
              WHERE assigned_rep_id IN ({$placeholders}) AND is_duplicate = 0
                AND COALESCE(stage, '') NOT IN ('Won', 'Lost')
                AND COALESCE(lead_quality, '') != 'Unqualified'
              GROUP BY assigned_rep_id",
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
             $rep_ids
-        )) as $row) {
+        ));
+        if ($wpdb->last_error || !is_array($rows)) { return array(); }
+        foreach ($rows as $row) {
             $counts[absint($row->assigned_rep_id)] = (int) $row->active_count;
         }
         return array_values(array_filter($rep_ids, static function($rep_id) use ($counts, $maximum) {
@@ -1084,7 +496,7 @@ class IDLM_Integrations {
         }));
     }
 
-    /** Public capacity check used to protect manual reassignment as well. */
+    /** Advisory capacity for selection; canonical persistence checks current admission. */
     public static function rep_has_capacity($rep_id) {
         $rep_id = absint($rep_id);
         return 0 === $rep_id || in_array($rep_id, self::filter_pool_by_capacity(array($rep_id)), true);
@@ -1094,17 +506,20 @@ class IDLM_Integrations {
         global $wpdb;
         $rep_id = absint($rep_id);
         $maximum = max(0, absint(IDLM_Settings::get('idlm_max_active_leads_per_rep', 30)));
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0432: get_rep_capacity_status(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
         $active = $rep_id ? (int) $wpdb->get_var($wpdb->prepare(
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             "SELECT COUNT(*) FROM {$wpdb->prefix}idlm_leads
              WHERE assigned_rep_id = %d AND is_duplicate = 0
                AND COALESCE(stage, '') NOT IN ('Won', 'Lost')
                AND COALESCE(lead_quality, '') != 'Unqualified'",
             $rep_id
         )) : 0;
+        $failed = $rep_id && (bool) $wpdb->last_error;
         return array(
             'maximum' => $maximum,
             'active' => $active,
-            'remaining' => 0 === $maximum ? PHP_INT_MAX : max(0, $maximum - $active),
+            'remaining' => $failed ? 0 : (0 === $maximum ? PHP_INT_MAX : max(0, $maximum - $active)),
         );
     }
 
@@ -1150,9 +565,24 @@ class IDLM_Integrations {
      * Assign only when ownership still matches what the router inspected.
      */
     private static function assign_lead_atomically($lead_id, $expected_owner_id, $assigned_rep_id, $activity_message, $qualified_only = false, $assignment_context = '') {
+        $result = IDLM_Lead_Transaction::run(static function() use ($lead_id, $expected_owner_id, $assigned_rep_id, $activity_message, $qualified_only, $assignment_context) {
+            return self::assign_lead_work($lead_id, $expected_owner_id, $assigned_rep_id, $activity_message, $qualified_only, $assignment_context);
+        });
+        return !is_wp_error($result) && $result;
+    }
+
+    private static function assign_lead_work($lead_id, $expected_owner_id, $assigned_rep_id, $activity_message, $qualified_only, $assignment_context) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
         $table_tasks = $wpdb->prefix . 'idlm_tasks';
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0433: assign_lead_work(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
+        $lead = IDLM_Lead_Transaction::read($wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_leads} WHERE id = %d FOR UPDATE", absint($lead_id))));
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        if (!$lead || absint($lead->assigned_rep_id) !== absint($expected_owner_id)) { return false; }
+        $target_context = 'intake' === $assignment_context ? 'intake' : (($qualified_only || 0 === strpos($assignment_context, 'qualified_')) ? 'sales' : 'any');
+        if (!absint($assigned_rep_id) || !IDLM_Lead_Access_Policy::is_assignable_rep($assigned_rep_id, $target_context, true)) { return false; }
+        if (!IDLM_Assignment_Capacity::is_active($lead)) { return false; }
+        IDLM_Lead_Transaction::required(IDLM_Assignment_Capacity::validate_transition($lead, array_merge((array) $lead, array('assigned_rep_id' => absint($assigned_rep_id)))));
         $qualified_sql = $qualified_only
             ? " AND lead_quality = 'Qualified' AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0"
             : '';
@@ -1174,20 +604,22 @@ class IDLM_Integrations {
         $params[] = absint($lead_id);
         $params[] = absint($expected_owner_id);
 
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- REL007-SQL-0434: assign_lead_work(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        $updated = $wpdb->query($wpdb->prepare(
+        $updated = IDLM_Lead_Transaction::required($wpdb->query($wpdb->prepare(
             "UPDATE {$table_leads}
              SET {$set_sql}
              WHERE id = %d AND assigned_rep_id = %d{$qualified_sql}",
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
             $params
-        ));
+        )));
 
         if (1 !== $updated) {
             return false;
         }
 
-        IDLM_DB::log_activity($lead_id, 'assignment', $activity_message, 0);
-        IDLM_DB::record_reporting_event(
+        IDLM_Lead_Transaction::required(IDLM_DB::log_activity($lead_id, 'assignment', $activity_message, 0));
+        IDLM_Lead_Transaction::required(IDLM_DB::record_reporting_event(
             $lead_id,
             'assignment',
             $expected_owner_id,
@@ -1196,39 +628,42 @@ class IDLM_Integrations {
             'automatic_' . sanitize_key($assignment_context),
             0,
             $assignment_time
-        );
-        IDLM_Read_Model_Cache::invalidate('lead_assignment');
+        ));
+        IDLM_Lead_Transaction::invalidate('lead_assignment', $lead_id);
 
         if ('intake' === $assignment_context) {
-            IDLM_DB::create_presales_followup_tasks($lead_id, $assigned_rep_id);
+            IDLM_Lead_Transaction::required(IDLM_DB::create_presales_followup_tasks($lead_id, $assigned_rep_id));
+            IDLM_Lead_Transaction::required(IDLM_DB::sync_presales_task_status($lead_id));
         }
 
         if (0 === strpos($assignment_context, 'qualified_')) {
             $task_policy = IDLM_Settings::get('idlm_handoff_task_policy', 'transfer');
             if ('transfer' === $task_policy) {
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-                $wpdb->update(
+                IDLM_Lead_Transaction::required($wpdb->update(
                     $table_tasks,
                     array('assigned_rep_id' => absint($assigned_rep_id), 'updated_at' => current_time('mysql')),
                     array('lead_id' => absint($lead_id), 'assigned_rep_id' => absint($expected_owner_id), 'status' => 'pending')
-                );
+                ));
             } elseif ('complete_qualification' === $task_policy) {
+                // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0435: assign_lead_work(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-                $reconciled = $wpdb->query($wpdb->prepare(
+                $reconciled = IDLM_Lead_Transaction::required($wpdb->query($wpdb->prepare(
                     "UPDATE {$table_tasks}
                      SET status = 'completed', completed_at = %s, updated_at = %s
                      WHERE lead_id = %d AND assigned_rep_id = %d AND status = 'pending'
                        AND LOWER(task_type) = 'qualification'",
+                // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                     current_time('mysql'),
                     current_time('mysql'),
                     absint($lead_id),
                     absint($expected_owner_id)
-                ));
+                )));
             }
 
-            IDLM_DB::ensure_qualified_handoff_task($lead_id, $assigned_rep_id);
+            IDLM_Lead_Transaction::required(IDLM_DB::ensure_qualified_handoff_task($lead_id, $assigned_rep_id));
 
-            self::send_handoff_notifications($lead_id, $expected_owner_id, $assigned_rep_id, $activity_message);
+            IDLM_Lead_Transaction::defer('idlm_qualified_handoff_notification', $lead_id, $expected_owner_id, $assigned_rep_id, $activity_message);
         }
         return true;
     }
@@ -1236,33 +671,8 @@ class IDLM_Integrations {
     /**
      * Notify handoff participants when explicitly enabled by an administrator.
      */
-    private static function send_handoff_notifications($lead_id, $old_owner_id, $new_owner_id, $activity_message) {
-        if ('1' !== IDLM_Settings::get('idlm_handoff_notifications_enabled', '0')) {
-            return;
-        }
-
-        global $wpdb;
-        $lead = $wpdb->get_row($wpdb->prepare(
-            "SELECT first_name, last_name, preferred_studio FROM {$wpdb->prefix}idlm_leads WHERE id = %d",
-            absint($lead_id)
-        ));
-        $old_owner = get_userdata($old_owner_id);
-        $new_owner = get_userdata($new_owner_id);
-        $recipients = array_filter(array(
-            $old_owner ? $old_owner->user_email : '',
-            $new_owner ? $new_owner->user_email : '',
-        ), 'is_email');
-        if (empty($recipients)) {
-            return;
-        }
-
-        $lead_name = $lead ? trim($lead->first_name . ' ' . $lead->last_name) : 'Lead #' . absint($lead_id);
-        $subject = sprintf('[Lead Manager] Qualified lead assigned: %s', $lead_name);
-        $body = $activity_message . "\n\nLead: " . $lead_name;
-        if ($lead && !empty($lead->preferred_studio)) {
-            $body .= "\nPreferred Studio: " . $lead->preferred_studio;
-        }
-        wp_mail(array_values(array_unique($recipients)), $subject, $body);
+    public static function send_handoff_notifications($lead_id, $old_owner_id, $new_owner_id, $activity_message) {
+        return IDLM_Handoff_Notifications::send($lead_id, $old_owner_id, $new_owner_id, $activity_message);
     }
 
     /**
@@ -1272,6 +682,7 @@ class IDLM_Integrations {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
         $reason = sanitize_text_field($reason);
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0437: mark_handoff_exception(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $updated = $wpdb->query($wpdb->prepare(
             "UPDATE {$table_leads}
@@ -1279,6 +690,7 @@ class IDLM_Integrations {
              WHERE id = %d AND lead_quality = 'Qualified'
                AND handoff_status IN ('awaiting_manager', 'exception')
                AND handoff_exception_reason <> %s",
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $reason,
             current_time('mysql'),
             absint($lead_id),
@@ -1303,7 +715,7 @@ class IDLM_Integrations {
         if (class_exists('IDLM_Telemetry')) {
             IDLM_Telemetry::log('routing_exception', 'warning', $message);
         }
-        if ('1' === IDLM_Settings::get('idlm_routing_exception_notifications_enabled', '0')) {
+        if (IDLM_Settings::notification_enabled('idlm_routing_exception_notifications_enabled')) {
             $admin_email = get_option('admin_email');
             if (is_email($admin_email)) {
                 wp_mail($admin_email, '[Lead Manager] Routing exception requires attention', $message);
@@ -1320,7 +732,7 @@ class IDLM_Integrations {
         $table_leads = $wpdb->prefix . 'idlm_leads';
         $mode = IDLM_Settings::get('idlm_assignment_mode', 'manual');
         if ('manual' === $mode) {
-            return;
+            return true;
         }
 
         $active_reps = self::get_active_rep_pool(false);
@@ -1346,9 +758,11 @@ class IDLM_Integrations {
             $rep = $assigned_rep_id ? get_userdata($assigned_rep_id) : false;
             $message = sprintf('Lead automatically assigned to %s via source routing (%s).', $rep ? $rep->display_name : 'Representative', $source);
         } elseif ('studio_based' === $mode) {
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0438: route_lead_assignment(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $preferred_studio = (string) $wpdb->get_var($wpdb->prepare(
                 "SELECT preferred_studio FROM {$table_leads} WHERE id = %d",
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 absint($lead_id)
             ));
             $studio_reps = self::get_studio_rep_pool($active_reps, $preferred_studio);
@@ -1359,10 +773,11 @@ class IDLM_Integrations {
         }
 
         if ($assigned_rep_id) {
-            self::assign_lead_atomically($lead_id, 0, $assigned_rep_id, $message, false, 'pre_sales' === $mode ? 'intake' : 'initial');
+            return self::assign_lead_atomically($lead_id, 0, $assigned_rep_id, $message, false, 'pre_sales' === $mode ? 'intake' : 'initial');
         } else {
-            self::record_routing_system_exception('A newly captured lead could not be routed because the selected strategy has no eligible representative.');
+            if (!IDLM_Lead_Transaction::active()) { self::record_routing_system_exception('A newly captured lead could not be routed because the selected strategy has no eligible representative.'); }
         }
+        return true;
     }
 
     /**
@@ -1391,13 +806,15 @@ class IDLM_Integrations {
         do {
             // Re-query each batch because successfully assigned rows leave the unassigned set.
             // This drains the complete eligible backlog without loading every lead into memory.
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0439: recover_unassigned_leads(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $leads = $wpdb->get_results(
                 "SELECT id, created_at, preferred_studio
                  FROM {$table_leads}
-                 WHERE assigned_rep_id = 0
-                   AND stage NOT IN ('Won', 'Lost')
+                 WHERE assigned_rep_id = 0 AND is_duplicate = 0
+                   AND COALESCE(stage, '') NOT IN ('Won', 'Lost') AND COALESCE(lead_quality, '') != 'Unqualified'
                  ORDER BY created_at ASC LIMIT 200"
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             );
             $assigned_in_batch = 0;
 
@@ -1406,6 +823,9 @@ class IDLM_Integrations {
                     break;
                 }
 
+                // Refresh after every successful admission; a batch is not a capacity reservation.
+                $rep_pool = 'pre_sales' === $mode ? self::get_pre_sales_pool() : self::get_active_rep_pool(false);
+                if (!$rep_pool) { break; }
                 $studio_reps = 'pre_sales' === $mode ? array() : self::get_studio_rep_pool($rep_pool, $lead->preferred_studio);
                 $used_studio = !empty($studio_reps);
                 $eligible_reps = $used_studio ? $studio_reps : $rep_pool;
@@ -1455,6 +875,7 @@ class IDLM_Integrations {
         if (!empty($legacy_pre_sales_pool)) {
             $legacy_owner_sql = implode(',', array_map('absint', $legacy_pre_sales_pool));
             // Backfill durable handoff state only for qualified leads still owned by a current pre-sales user.
+            // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0440: handoff_qualified_leads(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $backfilled = $wpdb->query(
                 "UPDATE {$table_leads}
@@ -1462,6 +883,7 @@ class IDLM_Integrations {
                  WHERE handoff_status = 'not_ready' AND lead_quality = 'Qualified'
                    AND assigned_rep_id IN ({$legacy_owner_sql})
                    AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0"
+            // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             );
             if ($backfilled > 0) {
                 IDLM_Read_Model_Cache::invalidate('handoff_backfill');
@@ -1470,6 +892,7 @@ class IDLM_Integrations {
         // Reconcile the full unresolved backlog. Normal qualified leads remain
         // manager-controlled; this queue is acted on only after the configured
         // OOO working-hour threshold has elapsed.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0441: handoff_qualified_leads(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $leads = $wpdb->get_results(
             "SELECT id, assigned_rep_id, preferred_studio, qualified_at, handoff_status
@@ -1478,6 +901,7 @@ class IDLM_Integrations {
                AND lead_quality = 'Qualified' AND qualified_at IS NOT NULL
                AND stage NOT IN ('Won', 'Lost') AND is_duplicate = 0
              ORDER BY qualified_at ASC LIMIT 200"
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         );
 
         if (empty($leads)) {
@@ -1495,6 +919,7 @@ class IDLM_Integrations {
             // durable handoff fields existed. Preserve that ownership and repair
             // only the missing state instead of reassigning the lead.
             if (in_array(absint($lead->assigned_rep_id), $configured_sales_pool, true)) {
+                // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0442: handoff_qualified_leads(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
                 $reconciled = $wpdb->query($wpdb->prepare(
                     "UPDATE {$table_leads}
                      SET handoff_status = 'manually_assigned',
@@ -1502,6 +927,7 @@ class IDLM_Integrations {
                          handoff_method = CASE WHEN handoff_method = '' THEN 'legacy_manager_reconciled' ELSE handoff_method END,
                          handoff_exception_reason = ''
                      WHERE id = %d AND handoff_status NOT IN ('auto_assigned', 'manually_assigned')",
+                // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                     absint($lead->id)
                 ));
                 if (1 === $reconciled) {
@@ -1563,7 +989,7 @@ class IDLM_Integrations {
                 true,
                 $used_studio ? 'qualified_studio' : 'qualified_general'
             )) {
-                self::mark_handoff_exception($lead->id, 'Ownership changed while OOO fallback was assigning this lead; manager review is required.');
+                self::mark_handoff_exception($lead->id, 'Ownership, eligibility or capacity changed while OOO fallback was assigning this lead; manager review is required.');
             }
         }
     }
@@ -1572,6 +998,10 @@ class IDLM_Integrations {
      * Run both fallback flows under one overlap lock.
      */
     public static function run_assignment_fallback() {
+        return IDLM_Recovery_Guard::run(static function() { return self::run_assignment_fallback_work(); }, null, false, '', array());
+    }
+
+    private static function run_assignment_fallback_work() {
         if (!IDLM_Routing_State::acquire_lock('assignment_fallback')) {
             return;
         }
@@ -1652,28 +1082,7 @@ class IDLM_Integrations {
 
     /** Validate the scoped MCP header. */
     private static function validate_mcp_api_key(WP_REST_Request $request) {
-        if (!IDLM_Production_Security::is_mcp_enabled()) {
-            return new WP_REST_Response(array(
-                'jsonrpc' => '2.0',
-                'id' => null,
-                'error' => array(
-                    'code' => -32003,
-                    'message' => 'MCP access is disabled for this environment.'
-                )
-            ), 503);
-        }
-        if (!self::validate_scoped_api_key($request, 'idlm_mcp_api_key')) {
-            return new WP_REST_Response(array(
-                'jsonrpc' => '2.0',
-                'id' => null,
-                'error' => array(
-                    'code' => -32001,
-                    'message' => 'Unauthorized: Invalid API Key'
-                )
-            ), 401);
-        }
-
-        return true;
+        return IDLM_Integration_Auth::validate_mcp_api_key($request);
     }
 
     /**

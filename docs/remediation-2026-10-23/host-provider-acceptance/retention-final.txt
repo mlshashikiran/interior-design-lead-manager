@@ -1,0 +1,5 @@
+PASS real AS in-progress continuation, bounded batches, completion and unexpired-row protection
+PASS stalled retention health and pending/running/fallback/fresh checkpoint detection
+PASS pending deduplication and independent-session scheduling fence
+PASS rejected AS enqueue retains WP-Cron fallback
+4 real Action Scheduler acceptance checks passed.

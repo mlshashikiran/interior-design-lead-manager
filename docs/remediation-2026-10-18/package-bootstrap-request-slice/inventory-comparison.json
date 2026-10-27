@@ -1,0 +1,16 @@
+{
+  "builder": "Shashi",
+  "artifact_sha256": "91fdacc6a3cb5ca91a169cf81b26b6bb6753a5b6fc4aba5b377dcb49d525bedf",
+  "file_count": 453,
+  "all_archived_bytes_match_source": true,
+  "inventory_matches_1_102_81": true,
+  "starting_runtime_matches_previous_checked_artifact": true,
+  "starting_artifact_sha256": "939801e027b993693d47a499ca29fce32a83e445fe583b227babdc60f096cec3",
+  "changed_archived_files": [
+    "CHANGELOG.md",
+    "includes/class-recovery-guard.php",
+    "interior-design-lead-manager.php",
+    "readme.txt"
+  ],
+  "all_other_archived_bytes_unchanged": true
+}

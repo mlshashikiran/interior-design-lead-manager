@@ -1,0 +1,28 @@
+{
+  "schema": "idlm-staging-rehearsal/v1",
+  "author_builder": "Shashi",
+  "candidate_verified": true,
+  "candidate": {
+    "version": "1.102.88",
+    "revision": "d2eee4c404b1b662a21b89c88bb3429e44e1f513",
+    "artifact": "interior-design-lead-manager-1.102.88.zip",
+    "sha256": "0c07297b53254e4d03006fac4cf71cfd81953748423d6375c9ec6ca15e276c1a",
+    "ci_run_id": "39907049097"
+  },
+  "gates": {
+    "database_backup_verified": "pending_operator_evidence",
+    "media_backup_verified": "pending_operator_evidence",
+    "restore_readiness_verified": "pending_operator_evidence",
+    "staging_deployment_completed": "pending_operator_evidence",
+    "release_matrix_passed": "pending_operator_evidence",
+    "schema_state_recorded": "pending_operator_evidence",
+    "queue_state_recorded": "pending_operator_evidence",
+    "cron_state_recorded": "pending_operator_evidence",
+    "environment_state_recorded": "pending_operator_evidence",
+    "monitoring_ready": "pending_operator_evidence",
+    "rollback_command_recorded": "pending_operator_evidence",
+    "controlled_smoke_passed": "pending_operator_evidence"
+  },
+  "staging_rehearsal_ready": false,
+  "production_release_approved": false
+}

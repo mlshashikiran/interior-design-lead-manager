@@ -1,0 +1,154 @@
+{
+  "finding": "REL-002",
+  "builder": "Shashi",
+  "date": "2026-10-09",
+  "candidate": "1.102.72",
+  "status": "IMPLEMENTED, not CLOSED",
+  "schemas_changed": false,
+  "font_css_bytes_changed": false,
+  "backlog_counts": {
+    "IMPLEMENTED": 38,
+    "IN PROGRESS": 1,
+    "OPEN": 5
+  },
+  "primary_sources": {
+    "commit": {
+      "url": "https://api.github.com/repos/rsms/inter/commits/66647c0bb",
+      "sha256": "fbeb3fb4e9a8d26f97f208d2e69f583cd1244fc3aaf0d75bcf59b51c1f264e34",
+      "bytes": 4835,
+      "transport": "curl with default TLS certificate verification"
+    },
+    "license": {
+      "url": "https://raw.githubusercontent.com/rsms/inter/66647c0bbbe41a850d79d9c76fb13add3378940f/LICENSE.txt",
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a",
+      "bytes": 4380,
+      "transport": "curl with default TLS certificate verification"
+    },
+    "google_css": {
+      "url": "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap",
+      "sha256": "897245b8c96ef7ba8b2f17c66f41386022c6952b5fb1bcabdf32e9ccd45a9058",
+      "bytes": 12535,
+      "transport": "curl with default TLS certificate verification"
+    },
+    "google_woff2": {
+      "url": "https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2",
+      "sha256": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+      "bytes": 48432,
+      "transport": "curl with default TLS certificate verification"
+    }
+  },
+  "upstream_revision": "66647c0bbbe41a850d79d9c76fb13add3378940f",
+  "font_identity": {
+    "version": "4.001",
+    "copies": 5,
+    "bytes_each": 48432,
+    "sha256": "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+    "all_five_exact_provider_match": true,
+    "weight_axis": [
+      100,
+      900
+    ],
+    "original_download_history": "Not recorded; present matching provider source and embedded upstream revision verified"
+  },
+  "license": {
+    "spdx": "OFL-1.1",
+    "path": "assets/fonts/OFL.txt",
+    "source": "https://raw.githubusercontent.com/rsms/inter/66647c0bbbe41a850d79d9c76fb13add3378940f/LICENSE.txt",
+    "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+  },
+  "changes": [
+    "Complete unmodified pinned OFL, readable source notice and per-file provenance record bundled",
+    "Shared required release inventory includes all five fonts, CSS and three notice/provenance files",
+    "Two ordinary fast-suite release regressions protect font/license hashes and reject each missing resource",
+    "Aligned five version authorities and Shashi changelog attribution; focused docs/backlog updated"
+  ],
+  "checks": [
+    {
+      "id": "T22-F-REL002-baseline",
+      "command": "php <owned focused-runner.php>",
+      "expected": "Missing notice and permissive inventory reproduced",
+      "actual": "10 PASS / 2 expected FAIL",
+      "exit_code": 1,
+      "log": "baseline-release-contracts.log"
+    },
+    {
+      "id": "T22-F-REL002-release-contracts",
+      "command": "php docs/remediation-2026-10-09/font-notice-slice/focused-runner.php",
+      "expected": "Two new children plus ten existing release cases pass",
+      "actual": "12 PASS / 0 FAIL",
+      "exit_code": 0,
+      "log": "release-final.log"
+    },
+    {
+      "id": "T22-A-REL002-package",
+      "command": "php tests/release/build-release.php --build --confirm=build-idlm-release-artifact --allow-dirty --output-dir=<owned rehearsal>",
+      "actual": "453 files; aligned 1.102.72; inspection PASS",
+      "exit_code": 0,
+      "log": "build.json"
+    },
+    {
+      "id": "T22-A-REL002-installed-byte-identity",
+      "command": "Python ZipFile isolated extraction and SHA-256/source comparison",
+      "actual": "453 matches; zero missing/changed/extra; nine font resources verified",
+      "log": "installed-identity.json"
+    },
+    {
+      "id": "T22-A-REL002-promotion-negative",
+      "command": "php tests/release/verify-candidate.php --artifact-dir=<owned rehearsal> --expected-revision=ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+      "expected_exit": 1,
+      "actual_exit": 1,
+      "log": "promotion-negative.json"
+    },
+    {
+      "id": "T22-F-REL002-original-font-css",
+      "actual": "PASS all six original hashes match baseline",
+      "log": "font-metadata.json"
+    },
+    {
+      "id": "T22-F-REL002-syntax",
+      "command": "php -l for three changed PHP inputs and owned runner; git diff --check",
+      "actual": "PASS",
+      "logs": [
+        "php-lint.log",
+        "diff-check.log"
+      ]
+    }
+  ],
+  "environment": {
+    "php": "8.4.14",
+    "zip_extension": true,
+    "Python_FontTools": "Verification only; not a plugin dependency",
+    "no_database_mail_provider_application_calls_or_browser": true
+  },
+  "artifact": {
+    "status": "local_rehearsal_only",
+    "production_release_approved": false,
+    "revision": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+    "git_clean": false,
+    "sha256": "890b5aa4744d19e1cdcf5ee5216d4a52ee215880ba05a59442841cbef7756f7f",
+    "file_count": 453,
+    "source_manifest": "runtime-source-manifest.json"
+  },
+  "failure_provenance": [
+    "Initial Python verified HTTPS fetch failed due to local CA store; curl default certificate verification succeeded. No TLS verification disabled.",
+    "Before-change regression failures are expected audit reproduction, not retained broken tests."
+  ],
+  "evidence": {
+    "baseline_hashes": "baseline-hashes.json",
+    "provider_metadata": "provenance-fetch.json",
+    "binary_metadata": "font-metadata.json",
+    "upstream_license": "upstream-LICENSE.txt",
+    "upstream_css": "google-fonts.css",
+    "upstream_exact_font": "upstream-inter-latin.woff2",
+    "graph_refresh": "graph-refresh.json"
+  },
+  "limits": [
+    "Synthetic verifier acceptance tests are format/logic coverage, not authentic remote CI.",
+    "Fresh extraction proves package bytes only; no WordPress/artifact-native/HTTP/browser/upgrade/restore qualification claimed.",
+    "All other dependency notices/advisories and Plugin Check triage remain outside this Inter slice.",
+    "REL-001 complete reviewed commit/matching CI/final artifact and REL-006 reproducibility remain open.",
+    "No source commit, push, tag or deployment performed."
+  ],
+  "cleanup": "Temporary isolated extraction removed; internal rehearsal ZIP and source evidence retained; no databases/servers created",
+  "next": "REL-003"
+}

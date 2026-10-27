@@ -1,0 +1,3070 @@
+{
+  "builder": "Shashi",
+  "scope": "Individual validated request/stream/CLI sites; no global/checker exclusions",
+  "sites": [
+    {
+      "id": "REL007-BOUNDARY-0001",
+      "file": "includes/class-private-files.php",
+      "source_start": 217,
+      "source_end": 217,
+      "source_sha256": "f69c500bdecedb46b4be4650df0d95eb5511d2ca62063093ea726f7b88f34a0e",
+      "source": "            $stream = fopen($path['source'], 'rb'); if (!$stream) { return 0; } $part = 0;\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fopen"
+      ],
+      "rationale": "store(): download validates decimal attachment IDs before SQL and rechecks live cookie/capability/lead/reference access; store streams only validated uploaded/verified local archive paths in bounded chunks, preserving binary bytes",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 217,
+          "column": 23,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fopen"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0002",
+      "file": "includes/class-private-files.php",
+      "source_start": 220,
+      "source_end": 220,
+      "source_sha256": "f69c500bdecedb46b4be4650df0d95eb5511d2ca62063093ea726f7b88f34a0e",
+      "source": "                    $data = fread($stream, self::CHUNK_BYTES); if ($data === false) { return 0; } if ($data === '') { break; }\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fread"
+      ],
+      "rationale": "store(): download validates decimal attachment IDs before SQL and rechecks live cookie/capability/lead/reference access; store streams only validated uploaded/verified local archive paths in bounded chunks, preserving binary bytes",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 220,
+          "column": 29,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fread"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0003",
+      "file": "includes/class-private-files.php",
+      "source_start": 225,
+      "source_end": 225,
+      "source_sha256": "f69c500bdecedb46b4be4650df0d95eb5511d2ca62063093ea726f7b88f34a0e",
+      "source": "            } finally { fclose($stream); }\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "store(): download validates decimal attachment IDs before SQL and rechecks live cookie/capability/lead/reference access; store streams only validated uploaded/verified local archive paths in bounded chunks, preserving binary bytes",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 225,
+          "column": 25,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0004",
+      "file": "includes/class-private-files.php",
+      "source_start": 250,
+      "source_end": 250,
+      "source_sha256": "f69c500bdecedb46b4be4650df0d95eb5511d2ca62063093ea726f7b88f34a0e",
+      "source": "        $raw = wp_unslash($_GET['attachment_id'] ?? '');\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended",
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "download(): download validates decimal attachment IDs before SQL and rechecks live cookie/capability/lead/reference access; store streams only validated uploaded/verified local archive paths in bounded chunks, preserving binary bytes",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 250,
+          "column": 27,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 250,
+          "column": 27,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0005",
+      "file": "mcp-server.php",
+      "source_start": 16,
+      "source_end": 16,
+      "source_sha256": "d522f5c2ba5c98367a668985bb29f87339ea1d982e297cf9fb717ba225d31694",
+      "source": "set_time_limit(0);\n",
+      "codes": [
+        "Squiz.PHP.DiscouragedFunctions.Discouraged"
+      ],
+      "rationale": "(guarded template): CLI-only dedicated stdio process; server-owned loader/log environment and PHP error settings preserve JSON stdout; native STDERR is not a filesystem document; no HTTP request can select these settings",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 16,
+          "column": 1,
+          "code": "Squiz.PHP.DiscouragedFunctions.Discouraged"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0006",
+      "file": "mcp-server.php",
+      "source_start": 19,
+      "source_end": 19,
+      "source_sha256": "d522f5c2ba5c98367a668985bb29f87339ea1d982e297cf9fb717ba225d31694",
+      "source": "ini_set('display_errors', 0);\n",
+      "codes": [
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors",
+        "Squiz.PHP.DiscouragedFunctions.Discouraged"
+      ],
+      "rationale": "(guarded template): CLI-only dedicated stdio process; server-owned loader/log environment and PHP error settings preserve JSON stdout; native STDERR is not a filesystem document; no HTTP request can select these settings",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 19,
+          "column": 1,
+          "code": "PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors"
+        },
+        {
+          "line": 19,
+          "column": 1,
+          "code": "Squiz.PHP.DiscouragedFunctions.Discouraged"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0007",
+      "file": "mcp-server.php",
+      "source_start": 20,
+      "source_end": 20,
+      "source_sha256": "d522f5c2ba5c98367a668985bb29f87339ea1d982e297cf9fb717ba225d31694",
+      "source": "error_reporting(E_ALL);\n",
+      "codes": [
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall",
+        "WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting"
+      ],
+      "rationale": "(guarded template): CLI-only dedicated stdio process; server-owned loader/log environment and PHP error settings preserve JSON stdout; native STDERR is not a filesystem document; no HTTP request can select these settings",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 20,
+          "column": 1,
+          "code": "PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall"
+        },
+        {
+          "line": 20,
+          "column": 1,
+          "code": "WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0008",
+      "file": "mcp-server.php",
+      "source_start": 21,
+      "source_end": 21,
+      "source_sha256": "d522f5c2ba5c98367a668985bb29f87339ea1d982e297cf9fb717ba225d31694",
+      "source": "ini_set('log_errors', 1);\n",
+      "codes": [
+        "Squiz.PHP.DiscouragedFunctions.Discouraged"
+      ],
+      "rationale": "(guarded template): CLI-only dedicated stdio process; server-owned loader/log environment and PHP error settings preserve JSON stdout; native STDERR is not a filesystem document; no HTTP request can select these settings",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 21,
+          "column": 1,
+          "code": "Squiz.PHP.DiscouragedFunctions.Discouraged"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0009",
+      "file": "mcp-server.php",
+      "source_start": 24,
+      "source_end": 24,
+      "source_sha256": "d522f5c2ba5c98367a668985bb29f87339ea1d982e297cf9fb717ba225d31694",
+      "source": "ini_set('error_log', $idlm_error_log_path);\n",
+      "codes": [
+        "Squiz.PHP.DiscouragedFunctions.Discouraged"
+      ],
+      "rationale": "(guarded template): CLI-only dedicated stdio process; server-owned loader/log environment and PHP error settings preserve JSON stdout; native STDERR is not a filesystem document; no HTTP request can select these settings",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 24,
+          "column": 1,
+          "code": "Squiz.PHP.DiscouragedFunctions.Discouraged"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0010",
+      "file": "mcp-server.php",
+      "source_start": 45,
+      "source_end": 45,
+      "source_sha256": "d522f5c2ba5c98367a668985bb29f87339ea1d982e297cf9fb717ba225d31694",
+      "source": "    fwrite(STDERR, \"Error: The selected WordPress loader did not initialize WordPress.\\n\");\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fwrite"
+      ],
+      "rationale": "(guarded template): CLI-only dedicated stdio process; server-owned loader/log environment and PHP error settings preserve JSON stdout; native STDERR is not a filesystem document; no HTTP request can select these settings",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 45,
+          "column": 5,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fwrite"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0011",
+      "file": "mcp-server.php",
+      "source_start": 69,
+      "source_end": 69,
+      "source_sha256": "d522f5c2ba5c98367a668985bb29f87339ea1d982e297cf9fb717ba225d31694",
+      "source": "error_log(\"Interior Design CRM MCP Server started successfully (Stdio mode).\");\n",
+      "codes": [
+        "WordPress.PHP.DevelopmentFunctions.error_log_error_log"
+      ],
+      "rationale": "(guarded template): CLI-only dedicated stdio process; server-owned loader/log environment and PHP error settings preserve JSON stdout; native STDERR is not a filesystem document; no HTTP request can select these settings",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 69,
+          "column": 1,
+          "code": "WordPress.PHP.DevelopmentFunctions.error_log_error_log"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0012",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 56,
+      "source_end": 56,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $items = self::parse_items(wp_unslash((array) ($_POST['items'] ?? array())), $quote_settings);\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_save(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 56,
+          "column": 56,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0013",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 78,
+      "source_end": 78,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $sections = self::parse_sections(wp_unslash($_POST['sections'] ?? array()));\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_save(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 78,
+          "column": 53,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0014",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 280,
+      "source_end": 280,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $items = self::parse_items(wp_unslash((array) ($_POST['items'] ?? array())), self::settings());\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "ajax_autosave_quote(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 280,
+          "column": 56,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0015",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 296,
+      "source_end": 296,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $sections = self::parse_sections(wp_unslash($_POST['sections'] ?? array()));\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "ajax_autosave_quote(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 296,
+          "column": 53,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0016",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 476,
+      "source_end": 476,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "            'date_from' => self::list_filter_date(wp_unslash($_GET['date_from'] ?? '')),\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "ajax_filter_quotation_list(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 476,
+          "column": 62,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0017",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 477,
+      "source_end": 477,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "            'date_to' => self::list_filter_date(wp_unslash($_GET['date_to'] ?? '')),\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "ajax_filter_quotation_list(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 477,
+          "column": 60,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0018",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 564,
+      "source_end": 564,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $rate = IDLM_Quotation_Calculator::decimal_units(wp_unslash($_POST['default_rate'] ?? 0), 0, IDLM_Quotation_Calculator::MAX_AMOUNT_UNITS, 'Catalogue rate');\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_save_catalogue_item(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 564,
+          "column": 69,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0019",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 566,
+      "source_end": 566,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $is_wood = wp_unslash($_POST['is_wood'] ?? '0');\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_save_catalogue_item(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 566,
+          "column": 31,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0020",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 654,
+      "source_end": 654,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $upload = $_FILES['catalogue_csv'] ?? array();\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 654,
+          "column": 19,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0021",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 672,
+      "source_end": 672,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $handle = fopen($upload['tmp_name'], 'r');\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fopen"
+      ],
+      "rationale": "handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 672,
+          "column": 19,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fopen"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0022",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 679,
+      "source_end": 679,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "            fclose($handle);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 679,
+          "column": 13,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0023",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 689,
+      "source_end": 689,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "            fclose($handle);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 689,
+          "column": 13,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0024",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 698,
+      "source_end": 698,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "                fclose($handle);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 698,
+          "column": 17,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0025",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 725,
+      "source_end": 725,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "                fclose($handle);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 725,
+          "column": 17,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0026",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 739,
+      "source_end": 739,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "                fclose($handle);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 739,
+          "column": 17,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0027",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 744,
+      "source_end": 744,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        fclose($handle);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "handle_import_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 744,
+          "column": 9,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0028",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 779,
+      "source_end": 779,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        fclose($output);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "handle_export_catalogue_csv(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 779,
+          "column": 9,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0029",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 797,
+      "source_end": 797,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $settings['paper_size'] = self::normalize_paper_size(wp_unslash($_POST['paper_size'] ?? 'A4'));\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_save_settings(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 797,
+          "column": 73,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0030",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 802,
+      "source_end": 802,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $soft_close = IDLM_Quotation_Calculator::decimal_units(wp_unslash($_POST['soft_close_percent'] ?? 0), 0, 10000, 'Soft close percentage');\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_save_settings(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 802,
+          "column": 75,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0031",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 804,
+      "source_end": 804,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $payment_rows = wp_unslash($_POST['payment_structure'] ?? array());\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_save_settings(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 804,
+          "column": 36,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0032",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 822,
+      "source_end": 822,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $settings['currency_code'] = self::currency_code(wp_unslash($_POST['currency_code'] ?? $settings['currency_code']));\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_save_settings(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 822,
+          "column": 69,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0033",
+      "file": "includes/class-quotation-controller.php",
+      "source_start": 825,
+      "source_end": 825,
+      "source_sha256": "b59481ff79d208be6a1147fe646de58f5abdd7d293bcbd1e756aa00c4303f660",
+      "source": "        $number_separator = wp_unslash($_POST['number_separator'] ?? '');\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_save_settings(): each mutation checks its quotation capability and dedicated nonce first; item/section arrays delegate to bounded calculator sanitization, decimal/enum settings to strict validators, and uploads to size/extension/MIME/is_uploaded_file checks; native CSV handles require streaming IO",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 825,
+          "column": 40,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0034",
+      "file": "includes/class-quotation-exporter.php",
+      "source_start": 60,
+      "source_end": 60,
+      "source_sha256": "8f82dc8e36b08f4a33bb925fc27818e2d99d11c7996aca8fbabd8e79bdb66f52",
+      "source": "        $bundle = self::authorize(wp_unslash($_GET['quote_id'] ?? 0), wp_unslash($_GET['revision_id'] ?? 0), $format);\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended",
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "download(): authorize checks capabilities, dedicated format nonce, decimal identifier types and revision/lead relationship before output; native CSV/XLSX temporary handles preserve binary bytes, enforce extension availability and remove only owned temporary paths",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 60,
+          "column": 46,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 60,
+          "column": 46,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        },
+        {
+          "line": 60,
+          "column": 82,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 60,
+          "column": 82,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0035",
+      "file": "includes/class-quotation-exporter.php",
+      "source_start": 151,
+      "source_end": 151,
+      "source_sha256": "8f82dc8e36b08f4a33bb925fc27818e2d99d11c7996aca8fbabd8e79bdb66f52",
+      "source": "        fclose($out);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "download_csv(): authorize checks capabilities, dedicated format nonce, decimal identifier types and revision/lead relationship before output; native CSV/XLSX temporary handles preserve binary bytes, enforce extension availability and remove only owned temporary paths",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 151,
+          "column": 9,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0036",
+      "file": "includes/class-quotation-exporter.php",
+      "source_start": 162,
+      "source_end": 162,
+      "source_sha256": "8f82dc8e36b08f4a33bb925fc27818e2d99d11c7996aca8fbabd8e79bdb66f52",
+      "source": "        readfile($path);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_readfile"
+      ],
+      "rationale": "download_xlsx(): authorize checks capabilities, dedicated format nonce, decimal identifier types and revision/lead relationship before output; native CSV/XLSX temporary handles preserve binary bytes, enforce extension availability and remove only owned temporary paths",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 162,
+          "column": 9,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_readfile"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0037",
+      "file": "includes/class-quotation-exporter.php",
+      "source_start": 163,
+      "source_end": 163,
+      "source_sha256": "8f82dc8e36b08f4a33bb925fc27818e2d99d11c7996aca8fbabd8e79bdb66f52",
+      "source": "        @unlink($path);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.unlink_unlink"
+      ],
+      "rationale": "download_xlsx(): authorize checks capabilities, dedicated format nonce, decimal identifier types and revision/lead relationship before output; native CSV/XLSX temporary handles preserve binary bytes, enforce extension availability and remove only owned temporary paths",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 163,
+          "column": 10,
+          "code": "WordPress.WP.AlternativeFunctions.unlink_unlink"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0038",
+      "file": "includes/class-quotation-exporter.php",
+      "source_start": 173,
+      "source_end": 173,
+      "source_sha256": "8f82dc8e36b08f4a33bb925fc27818e2d99d11c7996aca8fbabd8e79bdb66f52",
+      "source": "        if (!is_dir($temp_dir) || !is_writable($temp_dir)) {\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_is_writable"
+      ],
+      "rationale": "build_xlsx(): authorize checks capabilities, dedicated format nonce, decimal identifier types and revision/lead relationship before output; native CSV/XLSX temporary handles preserve binary bytes, enforce extension availability and remove only owned temporary paths",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 173,
+          "column": 36,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_is_writable"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0039",
+      "file": "includes/class-quotation-exporter.php",
+      "source_start": 182,
+      "source_end": 182,
+      "source_sha256": "8f82dc8e36b08f4a33bb925fc27818e2d99d11c7996aca8fbabd8e79bdb66f52",
+      "source": "            @unlink($path);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.unlink_unlink"
+      ],
+      "rationale": "build_xlsx(): authorize checks capabilities, dedicated format nonce, decimal identifier types and revision/lead relationship before output; native CSV/XLSX temporary handles preserve binary bytes, enforce extension availability and remove only owned temporary paths",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 182,
+          "column": 14,
+          "code": "WordPress.WP.AlternativeFunctions.unlink_unlink"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0040",
+      "file": "includes/class-operational-health.php",
+      "source_start": 318,
+      "source_end": 318,
+      "source_sha256": "9d734ae95cfc0b84a49e096115ba75481427a89fadb31368a3ec665c31345097",
+      "source": "            && is_writable($uploads['basedir']);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_is_writable"
+      ],
+      "rationale": "upload_storage_ready(): read-only storage readiness check of the WordPress uploads directory; is_writable tests an existing local directory without initiating a credential-prompting filesystem transport",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 318,
+          "column": 16,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_is_writable"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0041",
+      "file": "includes/class-admin-ajax.php",
+      "source_start": 881,
+      "source_end": 881,
+      "source_sha256": "1e1172a75f0f6046aace0f2db927df670b5696eda271cc116829f3ba9b67251b",
+      "source": "            fclose($output);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "ajax_export_leads(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 881,
+          "column": 13,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0042",
+      "file": "includes/class-admin-ajax.php",
+      "source_start": 887,
+      "source_end": 887,
+      "source_sha256": "1e1172a75f0f6046aace0f2db927df670b5696eda271cc116829f3ba9b67251b",
+      "source": "        rewind($output); fpassthru($output); fclose($output);\n",
+      "codes": [
+        "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+      ],
+      "rationale": "ajax_export_leads(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 887,
+          "column": 46,
+          "code": "WordPress.WP.AlternativeFunctions.file_system_operations_fclose"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0043",
+      "file": "includes/class-admin-ajax.php",
+      "source_start": 1128,
+      "source_end": 1128,
+      "source_sha256": "1e1172a75f0f6046aace0f2db927df670b5696eda271cc116829f3ba9b67251b",
+      "source": "        $raw_ids = isset($_POST['log_ids']) && is_array($_POST['log_ids']) ? wp_unslash($_POST['log_ids']) : array();\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "ajax_retry_capi_events(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 1128,
+          "column": 89,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0044",
+      "file": "includes/class-admin-ajax.php",
+      "source_start": 1328,
+      "source_end": 1328,
+      "source_sha256": "1e1172a75f0f6046aace0f2db927df670b5696eda271cc116829f3ba9b67251b",
+      "source": "        $posted_rep_studios = (!empty($_POST['rep_studios']) && is_array($_POST['rep_studios'])) ? wp_unslash($_POST['rep_studios']) : array();\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "ajax_save_routing_settings(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 1328,
+          "column": 111,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0045",
+      "file": "includes/class-admin-ajax.php",
+      "source_start": 1461,
+      "source_end": 1461,
+      "source_sha256": "1e1172a75f0f6046aace0f2db927df670b5696eda271cc116829f3ba9b67251b",
+      "source": "        $raw_ids = isset($_POST['lead_ids']) ? wp_unslash($_POST['lead_ids']) : array();\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "ajax_sync_mapped_past_batch(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 1461,
+          "column": 59,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0046",
+      "file": "includes/class-admin-ajax.php",
+      "source_start": 2738,
+      "source_end": 2738,
+      "source_sha256": "1e1172a75f0f6046aace0f2db927df670b5696eda271cc116829f3ba9b67251b",
+      "source": "        $stored = IDLM_Private_Files::upload($_FILES['file'], $lead_id, $purpose);\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "ajax_upload_lead_file(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 2738,
+          "column": 46,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0047",
+      "file": "includes/class-admin-ajax.php",
+      "source_start": 3277,
+      "source_end": 3277,
+      "source_sha256": "1e1172a75f0f6046aace0f2db927df670b5696eda271cc116829f3ba9b67251b",
+      "source": "        $cursor = isset($_POST['cursor']) && is_string($_POST['cursor']) ? wp_unslash($_POST['cursor']) : '';\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "ajax_get_rep_tasks(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 3277,
+          "column": 87,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0048",
+      "file": "includes/class-telemetry.php",
+      "source_start": 43,
+      "source_end": 44,
+      "source_sha256": "b328b88b67268c4ec614a8218b8afd8c2143fcf76f38220bd430f76cd6b32d6f",
+      "source": "        // phpcs:ignore WordPress.PHP.DevelopmentFunctions.prevent_path_disclosure_error_reporting\n        if (!(error_reporting() & $errno)) {\n",
+      "codes": [
+        "PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall"
+      ],
+      "rationale": "error_handler(): no-argument error_reporting() reads the current mask to respect suppressed errors; it does not enable error display or change reporting settings",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 44,
+          "column": 15,
+          "code": "PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0049",
+      "file": "includes/class-auth.php",
+      "source_start": 30,
+      "source_end": 30,
+      "source_sha256": "48c363cf4f6860105f51ae1a46ee357409e81624594a324d9bc6c04ebe673077",
+      "source": "        $password = isset($_POST['idlm_password']) && is_string($_POST['idlm_password']) ? wp_unslash($_POST['idlm_password']) : '';\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_login(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 30,
+          "column": 103,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0050",
+      "file": "includes/class-auth.php",
+      "source_start": 78,
+      "source_end": 78,
+      "source_sha256": "48c363cf4f6860105f51ae1a46ee357409e81624594a324d9bc6c04ebe673077",
+      "source": "        $password = isset($_POST['idlm_new_password']) && is_string($_POST['idlm_new_password']) ? wp_unslash($_POST['idlm_new_password']) : '';\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_password_reset(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 78,
+          "column": 111,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0051",
+      "file": "includes/class-auth.php",
+      "source_start": 79,
+      "source_end": 79,
+      "source_sha256": "48c363cf4f6860105f51ae1a46ee357409e81624594a324d9bc6c04ebe673077",
+      "source": "        $confirmation = isset($_POST['idlm_confirm_password']) && is_string($_POST['idlm_confirm_password']) ? wp_unslash($_POST['idlm_confirm_password']) : '';\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_password_reset(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 79,
+          "column": 123,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0052",
+      "file": "includes/class-auth.php",
+      "source_start": 95,
+      "source_end": 95,
+      "source_sha256": "48c363cf4f6860105f51ae1a46ee357409e81624594a324d9bc6c04ebe673077",
+      "source": "        do_action('validate_password_reset', $errors, $user);\n",
+      "codes": [
+        "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound"
+      ],
+      "rationale": "handle_password_reset(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 95,
+          "column": 19,
+          "code": "WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0053",
+      "file": "includes/class-auth.php",
+      "source_start": 156,
+      "source_end": 156,
+      "source_sha256": "48c363cf4f6860105f51ae1a46ee357409e81624594a324d9bc6c04ebe673077",
+      "source": "        $url = isset($_POST['idlm_return_url']) ? esc_url_raw(wp_unslash($_POST['idlm_return_url'])) : $fallback;\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "return_url(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 156,
+          "column": 22,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 156,
+          "column": 74,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0054",
+      "file": "includes/class-auth.php",
+      "source_start": 161,
+      "source_end": 161,
+      "source_sha256": "48c363cf4f6860105f51ae1a46ee357409e81624594a324d9bc6c04ebe673077",
+      "source": "        $action = isset($_REQUEST['action']) ? sanitize_key(wp_unslash($_REQUEST['action'])) : 'login';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "is_password_screen(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 161,
+          "column": 25,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 161,
+          "column": 72,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0055",
+      "file": "includes/class-admin.php",
+      "source_start": 339,
+      "source_end": 339,
+      "source_sha256": "cc6cc19b0859dac6fbdcc1b3199b33649fe1fcdeac5bc6a831254e8e92bb2dbc",
+      "source": "                $query_args[$key] = sanitize_text_field(wp_unslash($_GET[$key]));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "redirect_legacy_admin_page(): legacy-page redirect validates current page capability and forwards only a fixed sanitized query-key allowlist to the local workspace; this is read-only navigation, not a mutation",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 339,
+          "column": 68,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0056",
+      "file": "includes/class-integrations.php",
+      "source_start": 435,
+      "source_end": 435,
+      "source_sha256": "275dc6bd7d51da9df886d48980f1f24b31190d25d9b03eaffce3d64824a3ce5a",
+      "source": "        $server_user = isset($_SERVER['PHP_AUTH_USER']) && is_string($_SERVER['PHP_AUTH_USER']) ? wp_unslash($_SERVER['PHP_AUTH_USER']) : '';\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "validate_gadm_request(): Basic-auth fallback retains exact string credentials after WP unslashing and compares them via credential_matches; provider feeds use scoped credential authority rather than WordPress nonces; debug logging records presence/match booleans only, never credentials",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 435,
+          "column": 110,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0057",
+      "file": "includes/class-integrations.php",
+      "source_start": 436,
+      "source_end": 436,
+      "source_sha256": "275dc6bd7d51da9df886d48980f1f24b31190d25d9b03eaffce3d64824a3ce5a",
+      "source": "        $server_pass = isset($_SERVER['PHP_AUTH_PW']) && is_string($_SERVER['PHP_AUTH_PW']) ? wp_unslash($_SERVER['PHP_AUTH_PW']) : '';\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "validate_gadm_request(): Basic-auth fallback retains exact string credentials after WP unslashing and compares them via credential_matches; provider feeds use scoped credential authority rather than WordPress nonces; debug logging records presence/match booleans only, never credentials",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 436,
+          "column": 106,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0058",
+      "file": "includes/class-integrations.php",
+      "source_start": 450,
+      "source_end": 450,
+      "source_sha256": "275dc6bd7d51da9df886d48980f1f24b31190d25d9b03eaffce3d64824a3ce5a",
+      "source": "            error_log(sprintf(\n",
+      "codes": [
+        "WordPress.PHP.DevelopmentFunctions.error_log_error_log"
+      ],
+      "rationale": "validate_gadm_request(): Basic-auth fallback retains exact string credentials after WP unslashing and compares them via credential_matches; provider feeds use scoped credential authority rather than WordPress nonces; debug logging records presence/match booleans only, never credentials",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 450,
+          "column": 13,
+          "code": "WordPress.PHP.DevelopmentFunctions.error_log_error_log"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0059",
+      "file": "includes/class-admin-settings-renderer.php",
+      "source_start": 219,
+      "source_end": 219,
+      "source_sha256": "e592f16919134dc1671900dfe402cee7ef7152fc2001ad413852360160684d9f",
+      "source": "        if (isset($_POST['active_tab'])) {\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "build_context(): manage_options render context reads active_tab only to restore the selected presentation tab after settings processing; sanitization/unslashing does not persist settings or grant authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 219,
+          "column": 19,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0060",
+      "file": "includes/class-admin-settings-renderer.php",
+      "source_start": 220,
+      "source_end": 220,
+      "source_sha256": "e592f16919134dc1671900dfe402cee7ef7152fc2001ad413852360160684d9f",
+      "source": "            $active_tab = sanitize_key(wp_unslash($_POST['active_tab']));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "build_context(): manage_options render context reads active_tab only to restore the selected presentation tab after settings processing; sanitization/unslashing does not persist settings or grant authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 220,
+          "column": 40,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0061",
+      "file": "includes/class-admin-logs-renderer.php",
+      "source_start": 140,
+      "source_end": 140,
+      "source_sha256": "bfaf69be5d6085ebd6473ee6b757a797a09460a5ef5e42b2b48db4e34c0e6614",
+      "source": "        $status = isset($_GET['log_status']) ? sanitize_key(wp_unslash($_GET['log_status'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 140,
+          "column": 25,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 140,
+          "column": 72,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0062",
+      "file": "includes/class-admin-logs-renderer.php",
+      "source_start": 146,
+      "source_end": 146,
+      "source_sha256": "bfaf69be5d6085ebd6473ee6b757a797a09460a5ef5e42b2b48db4e34c0e6614",
+      "source": "            'search'    => isset($_GET['log_search']) ? sanitize_text_field(wp_unslash($_GET['log_search'])) : '',\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 146,
+          "column": 34,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 146,
+          "column": 88,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0063",
+      "file": "includes/class-admin-logs-renderer.php",
+      "source_start": 148,
+      "source_end": 148,
+      "source_sha256": "bfaf69be5d6085ebd6473ee6b757a797a09460a5ef5e42b2b48db4e34c0e6614",
+      "source": "            'date_from' => self::valid_date(isset($_GET['log_date_from']) ? wp_unslash($_GET['log_date_from']) : ''),\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended",
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 148,
+          "column": 51,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 148,
+          "column": 88,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 148,
+          "column": 88,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0064",
+      "file": "includes/class-admin-logs-renderer.php",
+      "source_start": 149,
+      "source_end": 149,
+      "source_sha256": "bfaf69be5d6085ebd6473ee6b757a797a09460a5ef5e42b2b48db4e34c0e6614",
+      "source": "            'date_to'   => self::valid_date(isset($_GET['log_date_to']) ? wp_unslash($_GET['log_date_to']) : ''),\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended",
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 149,
+          "column": 51,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 149,
+          "column": 86,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 149,
+          "column": 86,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0065",
+      "file": "includes/class-recovery-guard.php",
+      "source_start": 106,
+      "source_end": 106,
+      "source_sha256": "d8e4fde24b4224b6c81409d00525497fa373645ce5a5b749b5efeb5895becc5c",
+      "source": "        $action = isset($_REQUEST['action']) && is_string($_REQUEST['action']) ? sanitize_text_field(wp_unslash($_REQUEST['action'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "begin_boot(): typed sanitized request metadata classifies only worker lease lifetime; it grants no mutation access; public signed-webhook requests cannot require WordPress form nonces at this gate",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 106,
+          "column": 25,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 106,
+          "column": 59,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 106,
+          "column": 113,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0066",
+      "file": "includes/class-recovery-guard.php",
+      "source_start": 108,
+      "source_end": 108,
+      "source_sha256": "d8e4fde24b4224b6c81409d00525497fa373645ce5a5b749b5efeb5895becc5c",
+      "source": "        $rest_route = isset($_GET['rest_route']) && is_string($_GET['rest_route']) ? sanitize_text_field(wp_unslash($_GET['rest_route'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "begin_boot(): typed sanitized request metadata classifies only worker lease lifetime; it grants no mutation access; public signed-webhook requests cannot require WordPress form nonces at this gate",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 108,
+          "column": 29,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 108,
+          "column": 63,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 108,
+          "column": 117,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0067",
+      "file": "includes/class-presales-task-plan.php",
+      "source_start": 181,
+      "source_end": 181,
+      "source_sha256": "8ac585f6e64d22daacac6f5be956563d74a693e8ee5b98cf1dc239c0fe77fb6c",
+      "source": "                    error_log('IDLM qualification task-plan repair failed for lead ' . absint($id) . '.');\n",
+      "codes": [
+        "WordPress.PHP.DevelopmentFunctions.error_log_error_log"
+      ],
+      "rationale": "sweep(): server-side repair failure log contains fixed text plus absint lead ID, with no contact details, credentials or payloads; logging is deliberate operational failure reporting",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 181,
+          "column": 21,
+          "code": "WordPress.PHP.DevelopmentFunctions.error_log_error_log"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0068",
+      "file": "includes/class-task-queue-service.php",
+      "source_start": 87,
+      "source_end": 87,
+      "source_sha256": "13c49f22caaacbe7727ea9829929ffd1f304ca11a76ad9603966677fd35df220",
+      "source": "        $task_id = isset($_POST['task_id']) ? absint(wp_unslash($_POST['task_id'])) : 0;\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "ajax_reschedule(): ajax_reschedule invokes IDLM_Admin::check_nonce before task/date parsing, then requires current live lead mutation access; due dates are domain validated and system qualification tasks refused",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 87,
+          "column": 26,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 87,
+          "column": 65,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0069",
+      "file": "includes/class-task-queue-service.php",
+      "source_start": 88,
+      "source_end": 88,
+      "source_sha256": "13c49f22caaacbe7727ea9829929ffd1f304ca11a76ad9603966677fd35df220",
+      "source": "        $due_date = isset($_POST['due_date']) ? sanitize_text_field(wp_unslash($_POST['due_date'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "ajax_reschedule(): ajax_reschedule invokes IDLM_Admin::check_nonce before task/date parsing, then requires current live lead mutation access; due dates are domain validated and system qualification tasks refused",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 88,
+          "column": 27,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 88,
+          "column": 80,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0070",
+      "file": "includes/class-interakt.php",
+      "source_start": 290,
+      "source_end": 290,
+      "source_sha256": "c892bc879dea06a05374075f2afd2acb9666052209af07674c22477b9b5fedae",
+      "source": "                if (isset($_GET[$key]) && !is_string($_GET[$key])) {\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "handle_meta_webhook_verification(): provider verification validates required string mode/token/challenge and protected token before escaped plain-text output; this public provider GET protocol is authenticated by the verify token, not a WordPress session nonce",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 290,
+          "column": 27,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 290,
+          "column": 54,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0071",
+      "file": "includes/class-interakt.php",
+      "source_start": 293,
+      "source_end": 293,
+      "source_sha256": "c892bc879dea06a05374075f2afd2acb9666052209af07674c22477b9b5fedae",
+      "source": "                $value = isset($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "handle_meta_webhook_verification(): provider verification validates required string mode/token/challenge and protected token before escaped plain-text output; this public provider GET protocol is authenticated by the verify token, not a WordPress session nonce",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 293,
+          "column": 32,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 293,
+          "column": 78,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0072",
+      "file": "includes/class-backup.php",
+      "source_start": 152,
+      "source_end": 152,
+      "source_sha256": "596a29683888e0f2eda3cd797bf9d738eae73197e5d0066d3ca9d8f2b5f51116",
+      "source": "        if (empty($_POST['idlm_restore_confirmation']) || 'RESTORE' !== strtoupper(sanitize_text_field(wp_unslash($_POST['idlm_restore_confirmation'])))) {\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "restore(): restore calls private authorize with manage_options and dedicated action nonce before confirmation/file reads; server upload extension/size/is_uploaded_file and complete JSON/schema/relationship validators precede writes; internal redirect uses wp_validate_redirect",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 152,
+          "column": 19,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 152,
+          "column": 115,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0073",
+      "file": "includes/class-backup.php",
+      "source_start": 155,
+      "source_end": 155,
+      "source_sha256": "596a29683888e0f2eda3cd797bf9d738eae73197e5d0066d3ca9d8f2b5f51116",
+      "source": "        if (empty($_FILES['idlm_backup_file']) || !is_array($_FILES['idlm_backup_file'])) {\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "restore(): restore calls private authorize with manage_options and dedicated action nonce before confirmation/file reads; server upload extension/size/is_uploaded_file and complete JSON/schema/relationship validators precede writes; internal redirect uses wp_validate_redirect",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 155,
+          "column": 19,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 155,
+          "column": 61,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0074",
+      "file": "includes/class-backup.php",
+      "source_start": 158,
+      "source_end": 158,
+      "source_sha256": "596a29683888e0f2eda3cd797bf9d738eae73197e5d0066d3ca9d8f2b5f51116",
+      "source": "        $file = $_FILES['idlm_backup_file'];\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing",
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "restore(): restore calls private authorize with manage_options and dedicated action nonce before confirmation/file reads; server upload extension/size/is_uploaded_file and complete JSON/schema/relationship validators precede writes; internal redirect uses wp_validate_redirect",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 158,
+          "column": 17,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 158,
+          "column": 17,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0075",
+      "file": "includes/class-backup.php",
+      "source_start": 300,
+      "source_end": 300,
+      "source_sha256": "596a29683888e0f2eda3cd797bf9d738eae73197e5d0066d3ca9d8f2b5f51116",
+      "source": "        $posted_return_url = isset($_POST['idlm_return_url']) ? esc_url_raw(wp_unslash($_POST['idlm_return_url'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "redirect(): restore calls private authorize with manage_options and dedicated action nonce before confirmation/file reads; server upload extension/size/is_uploaded_file and complete JSON/schema/relationship validators precede writes; internal redirect uses wp_validate_redirect",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 300,
+          "column": 36,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 300,
+          "column": 88,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0076",
+      "file": "includes/class-identity-review.php",
+      "source_start": 88,
+      "source_end": 88,
+      "source_sha256": "dd12588893f284342897f7f2895353377ec239b6e5ff44dbb0cbe60399746394",
+      "source": "        $after = isset($_GET['after']) && is_scalar($_GET['after']) ? absint($_GET['after']) : 0;\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render(): manager-gated read-only review pagination/status use bounded scalar/enum values; resolution has its separate action nonce and current-manager check; these GET fields cannot resolve or mutate a review",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 88,
+          "column": 24,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 88,
+          "column": 53,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 88,
+          "column": 78,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0077",
+      "file": "includes/class-identity-review.php",
+      "source_start": 89,
+      "source_end": 89,
+      "source_sha256": "dd12588893f284342897f7f2895353377ec239b6e5ff44dbb0cbe60399746394",
+      "source": "        $status = isset($_GET['status']) && is_scalar($_GET['status']) ? sanitize_key($_GET['status']) : 'pending';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render(): manager-gated read-only review pagination/status use bounded scalar/enum values; resolution has its separate action nonce and current-manager check; these GET fields cannot resolve or mutate a review",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 89,
+          "column": 25,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 89,
+          "column": 55,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 89,
+          "column": 87,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0078",
+      "file": "includes/class-admin-account-controller.php",
+      "source_start": 20,
+      "source_end": 20,
+      "source_sha256": "4f413416a08f8d3ef4e71e8fada5e76236abcdb312c7ddd36cbe1b922e20f8b4",
+      "source": "        $notice = isset($_GET['idlm_account_notice']) ? sanitize_key(wp_unslash($_GET['idlm_account_notice'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render(): render requires a logged-in actor and GET enums only select static notices; handle_update verifies the account nonce and always targets get_current_user_id; password strings retain exact bytes after shape checks",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 20,
+          "column": 25,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 20,
+          "column": 81,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0079",
+      "file": "includes/class-admin-account-controller.php",
+      "source_start": 21,
+      "source_end": 21,
+      "source_sha256": "4f413416a08f8d3ef4e71e8fada5e76236abcdb312c7ddd36cbe1b922e20f8b4",
+      "source": "        $error = isset($_GET['idlm_account_error']) ? sanitize_key(wp_unslash($_GET['idlm_account_error'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render(): render requires a logged-in actor and GET enums only select static notices; handle_update verifies the account nonce and always targets get_current_user_id; password strings retain exact bytes after shape checks",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 21,
+          "column": 24,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 21,
+          "column": 79,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0080",
+      "file": "includes/class-admin-account-controller.php",
+      "source_start": 51,
+      "source_end": 51,
+      "source_sha256": "4f413416a08f8d3ef4e71e8fada5e76236abcdb312c7ddd36cbe1b922e20f8b4",
+      "source": "        $password = isset($_POST['new_password']) ? wp_unslash($_POST['new_password']) : '';\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_update(): render requires a logged-in actor and GET enums only select static notices; handle_update verifies the account nonce and always targets get_current_user_id; password strings retain exact bytes after shape checks",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 51,
+          "column": 64,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0081",
+      "file": "includes/class-admin-account-controller.php",
+      "source_start": 52,
+      "source_end": 52,
+      "source_sha256": "4f413416a08f8d3ef4e71e8fada5e76236abcdb312c7ddd36cbe1b922e20f8b4",
+      "source": "        $password_confirm = isset($_POST['confirm_password']) ? wp_unslash($_POST['confirm_password']) : '';\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_update(): render requires a logged-in actor and GET enums only select static notices; handle_update verifies the account nonce and always targets get_current_user_id; password strings retain exact bytes after shape checks",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 52,
+          "column": 76,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0082",
+      "file": "includes/class-admin-shortcodes.php",
+      "source_start": 102,
+      "source_end": 102,
+      "source_sha256": "30898a633fb87c978e9c0ccbe265bc36554f9cdb4392f3db0b4b699127027c6b",
+      "source": "        $requested = isset($_GET['idlm_view']) ? sanitize_key(wp_unslash($_GET['idlm_view'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render_workspace_shortcode(): current CRM access gates workspace routing; idlm_view/quotation query presence select only an allowlisted view, whose handler retains its own capability/object rules; these GETs do not mutate state",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 102,
+          "column": 28,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 102,
+          "column": 74,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0083",
+      "file": "includes/class-admin-shortcodes.php",
+      "source_start": 103,
+      "source_end": 103,
+      "source_sha256": "30898a633fb87c978e9c0ccbe265bc36554f9cdb4392f3db0b4b699127027c6b",
+      "source": "        if (!$requested && (isset($_GET['workspace']) || isset($_GET['quote_id']) || isset($_GET['lead_id']) || isset($_GET['quote_search']))) {\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render_workspace_shortcode(): current CRM access gates workspace routing; idlm_view/quotation query presence select only an allowlisted view, whose handler retains its own capability/object rules; these GETs do not mutate state",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 103,
+          "column": 35,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 103,
+          "column": 64,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 103,
+          "column": 92,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 103,
+          "column": 119,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0084",
+      "file": "includes/class-quotations.php",
+      "source_start": 92,
+      "source_end": 92,
+      "source_sha256": "d8365408bb8b37bfdd6b566c410b40801663c472d506bba9e26ad2641c150717",
+      "source": "        $return_url = isset($_POST['idlm_return_url']) ? esc_url_raw(wp_unslash($_POST['idlm_return_url'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "redirect(): protected redirect helper is called only from the guarded quotation controller paths; its return URL is escaped then constrained with wp_validate_redirect to the local fallback",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 92,
+          "column": 29,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 92,
+          "column": 81,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0085",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 27,
+      "source_end": 27,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "        if (isset($_POST[$array_key]) && is_array($_POST[$array_key])) {\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "posted_vocabulary(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 27,
+          "column": 19,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 27,
+          "column": 51,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0086",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 28,
+      "source_end": 28,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "            $raw_values = wp_unslash($_POST[$array_key]);\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing",
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "posted_vocabulary(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 28,
+          "column": 38,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 28,
+          "column": 38,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0087",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 30,
+      "source_end": 30,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "            $legacy_value = isset($_POST[$legacy_key]) ? sanitize_text_field(wp_unslash($_POST[$legacy_key])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "posted_vocabulary(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 30,
+          "column": 35,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 30,
+          "column": 89,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0088",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 81,
+      "source_end": 81,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "            $raw = wp_unslash($_POST[$field] ?? '');\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 81,
+          "column": 31,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0089",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 94,
+      "source_end": 94,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "        $posted_ui_labels = (isset($_POST['ui_labels']) && is_array($_POST['ui_labels'])) ? wp_unslash($_POST['ui_labels']) : array();\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 94,
+          "column": 104,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0090",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 100,
+      "source_end": 100,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "        $posted_value_labels = (isset($_POST['value_labels']) && is_array($_POST['value_labels'])) ? wp_unslash($_POST['value_labels']) : array();\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 100,
+          "column": 113,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0091",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 112,
+      "source_end": 112,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "        $white_label_raw = (isset($_POST['white_label']) && is_array($_POST['white_label'])) ? wp_unslash($_POST['white_label']) : array();\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 112,
+          "column": 107,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0092",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 185,
+      "source_end": 185,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "        $posted_rep_studios = (!empty($_POST['rep_studios']) && is_array($_POST['rep_studios'])) ? wp_unslash($_POST['rep_studios']) : array();\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 185,
+          "column": 111,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0093",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 218,
+      "source_end": 218,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "        $posted_stage_totals = (isset($_POST['kanban_stage_totals']) && is_array($_POST['kanban_stage_totals'])) ? wp_unslash($_POST['kanban_stage_totals']) : array();\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 218,
+          "column": 127,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0094",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 396,
+      "source_end": 396,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "            $types = wp_unslash($_POST['interakt_mapping_type']);\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 396,
+          "column": 33,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0095",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 397,
+      "source_end": 397,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "            $values = wp_unslash($_POST['interakt_mapping_value']);\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 397,
+          "column": 34,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0096",
+      "file": "includes/class-admin-settings-controller.php",
+      "source_start": 398,
+      "source_end": 398,
+      "source_sha256": "96aeabbf51e248e3e1954168496ac694c064c7264c3f70c6ac7174a4451b3b68",
+      "source": "            $events = wp_unslash($_POST['interakt_mapping_event']);\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 398,
+          "column": 34,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0097",
+      "file": "includes/class-quotation-renderer.php",
+      "source_start": 71,
+      "source_end": 71,
+      "source_sha256": "f26ca10d0b7ff525b7b9ffa6e27747bb653b1ba060b864eaf98260690c19141b",
+      "source": "        $catalogue_page = max(1, absint($_GET['catalogue_page'] ?? 1));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render_catalogue_page(): protected catalogue/list renderers use capability checks and GET values only for bounded paging, fixed sort directions and read-only filters; dates delegate to clean_date sanitization; no GET performs mutations",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 71,
+          "column": 41,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0098",
+      "file": "includes/class-quotation-renderer.php",
+      "source_start": 72,
+      "source_end": 72,
+      "source_sha256": "f26ca10d0b7ff525b7b9ffa6e27747bb653b1ba060b864eaf98260690c19141b",
+      "source": "        $catalogue_sort = sanitize_key(wp_unslash($_GET['catalogue_sort'] ?? 'status'));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render_catalogue_page(): protected catalogue/list renderers use capability checks and GET values only for bounded paging, fixed sort directions and read-only filters; dates delegate to clean_date sanitization; no GET performs mutations",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 72,
+          "column": 51,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0099",
+      "file": "includes/class-quotation-renderer.php",
+      "source_start": 75,
+      "source_end": 75,
+      "source_sha256": "f26ca10d0b7ff525b7b9ffa6e27747bb653b1ba060b864eaf98260690c19141b",
+      "source": "        $catalogue_order = 'desc' === strtolower(sanitize_key(wp_unslash($_GET['catalogue_order'] ?? 'asc'))) ? 'desc' : 'asc';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render_catalogue_page(): protected catalogue/list renderers use capability checks and GET values only for bounded paging, fixed sort directions and read-only filters; dates delegate to clean_date sanitization; no GET performs mutations",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 75,
+          "column": 74,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0100",
+      "file": "includes/class-quotation-renderer.php",
+      "source_start": 165,
+      "source_end": 166,
+      "source_sha256": "f26ca10d0b7ff525b7b9ffa6e27747bb653b1ba060b864eaf98260690c19141b",
+      "source": "        // phpcs:ignore WordPress.Security.NonceVerification.Recommended\n        $date_from = self::clean_date(wp_unslash($_GET['date_from'] ?? ''));\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "render_list(): protected catalogue/list renderers use capability checks and GET values only for bounded paging, fixed sort directions and read-only filters; dates delegate to clean_date sanitization; no GET performs mutations",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 166,
+          "column": 50,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0101",
+      "file": "includes/class-quotation-renderer.php",
+      "source_start": 167,
+      "source_end": 168,
+      "source_sha256": "f26ca10d0b7ff525b7b9ffa6e27747bb653b1ba060b864eaf98260690c19141b",
+      "source": "        // phpcs:ignore WordPress.Security.NonceVerification.Recommended\n        $date_to = self::clean_date(wp_unslash($_GET['date_to'] ?? ''));\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "render_list(): protected catalogue/list renderers use capability checks and GET values only for bounded paging, fixed sort directions and read-only filters; dates delegate to clean_date sanitization; no GET performs mutations",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 168,
+          "column": 48,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0102",
+      "file": "includes/class-quotation-renderer.php",
+      "source_start": 172,
+      "source_end": 172,
+      "source_sha256": "f26ca10d0b7ff525b7b9ffa6e27747bb653b1ba060b864eaf98260690c19141b",
+      "source": "        $quote_page = max(1, absint($_GET['quote_page'] ?? 1));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render_list(): protected catalogue/list renderers use capability checks and GET values only for bounded paging, fixed sort directions and read-only filters; dates delegate to clean_date sanitization; no GET performs mutations",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 172,
+          "column": 37,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0103",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 12,
+      "source_end": 12,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $search = isset($_GET['s']) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 12,
+          "column": 25,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 12,
+          "column": 70,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0104",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 13,
+      "source_end": 13,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $role = isset($_GET['role']) ? sanitize_key(wp_unslash($_GET['role'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 13,
+          "column": 23,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 13,
+          "column": 64,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0105",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 14,
+      "source_end": 14,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $status = isset($_GET['access']) ? sanitize_key(wp_unslash($_GET['access'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 14,
+          "column": 25,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 14,
+          "column": 68,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0106",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 15,
+      "source_end": 15,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $paged = max(1, absint($_GET['paged'] ?? 1));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 15,
+          "column": 32,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0107",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 30,
+      "source_end": 30,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "            'per_page' => 25, 'notice' => sanitize_key(wp_unslash($_GET['idlm_users_notice'] ?? '')),\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 30,
+          "column": 67,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0108",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 31,
+      "source_end": 31,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "            'error' => sanitize_key(wp_unslash($_GET['idlm_users_error'] ?? '')),\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "render(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 31,
+          "column": 48,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0109",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 37,
+      "source_end": 37,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $email = sanitize_email(wp_unslash($_POST['email'] ?? ''));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_create(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 37,
+          "column": 44,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0110",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 38,
+      "source_end": 38,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $login = sanitize_user(wp_unslash($_POST['user_login'] ?? ''), true);\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_create(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 38,
+          "column": 43,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0111",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 39,
+      "source_end": 39,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $role = sanitize_key(wp_unslash($_POST['role'] ?? ''));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_create(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 39,
+          "column": 41,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0112",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 44,
+      "source_end": 44,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "            'user_login' => $login, 'user_email' => $email, 'first_name' => sanitize_text_field(wp_unslash($_POST['first_name'] ?? '')),\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_create(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 44,
+          "column": 108,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0113",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 45,
+      "source_end": 45,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "            'last_name' => sanitize_text_field(wp_unslash($_POST['last_name'] ?? '')), 'role' => $role,\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_create(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 45,
+          "column": 59,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0114",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 57,
+      "source_end": 57,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $user_id = absint($_POST['user_id'] ?? 0);\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_update(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 57,
+          "column": 27,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0115",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 59,
+      "source_end": 59,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $role = sanitize_key(wp_unslash($_POST['role'] ?? ''));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_update(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 59,
+          "column": 41,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0116",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 60,
+      "source_end": 60,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $email = sanitize_email(wp_unslash($_POST['email'] ?? ''));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_update(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 60,
+          "column": 44,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0117",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 64,
+      "source_end": 64,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        self::guard_administrator_change($user_id, $role, !empty($_POST['crm_access_disabled']));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_update(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 64,
+          "column": 66,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0118",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 67,
+      "source_end": 67,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "            'first_name' => sanitize_text_field(wp_unslash($_POST['first_name'] ?? '')),\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_update(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 67,
+          "column": 60,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0119",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 68,
+      "source_end": 68,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "            'last_name' => sanitize_text_field(wp_unslash($_POST['last_name'] ?? '')),\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_update(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 68,
+          "column": 59,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0120",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 69,
+      "source_end": 69,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "            'display_name' => sanitize_text_field(wp_unslash($_POST['display_name'] ?? '')),\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_update(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 69,
+          "column": 62,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0121",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 76,
+      "source_end": 76,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        if (!empty($_POST['send_reset_link'])) { self::send_reset($user_id); }\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_update(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 76,
+          "column": 20,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0122",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 82,
+      "source_end": 82,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $submitted = isset($_POST['role_scopes']) && is_array($_POST['role_scopes'])\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "handle_update_role_scopes(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 82,
+          "column": 28,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 82,
+          "column": 63,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0123",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 83,
+      "source_end": 83,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "            ? wp_unslash($_POST['role_scopes']) : array();\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing",
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "handle_update_role_scopes(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 83,
+          "column": 26,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 83,
+          "column": 26,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0124",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 135,
+      "source_end": 135,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        update_user_meta($user_id, 'idlm_phone', sanitize_text_field(wp_unslash($_POST['phone'] ?? '')));\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "save_phone_and_access(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 135,
+          "column": 81,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0125",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 136,
+      "source_end": 136,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        if (!empty($_POST['crm_access_disabled'])) { update_user_meta($user_id, self::DISABLED_META_KEY, '1'); } else { delete_user_meta($user_id, self::DISABLED_META_KEY); }\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "save_phone_and_access(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 136,
+          "column": 20,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0126",
+      "file": "includes/class-admin-users-controller.php",
+      "source_start": 149,
+      "source_end": 149,
+      "source_sha256": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+      "source": "        $return_url = isset($_POST['idlm_return_url']) ? esc_url_raw(wp_unslash($_POST['idlm_return_url'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "redirect(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 149,
+          "column": 29,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 149,
+          "column": 81,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0127",
+      "file": "interior-design-lead-manager.php",
+      "source_start": 297,
+      "source_end": 297,
+      "source_sha256": "17aeabf1c23be66bb83907490ef676924d8c643c333e7c177940bce3aabce468",
+      "source": "        $action = isset($_REQUEST['action']) && is_string($_REQUEST['action']) ? sanitize_text_field(wp_unslash($_REQUEST['action'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "idlm_boot_plugin(): typed sanitized metadata is read only after a schema WP_Error to choose the generic 503; it never dispatches an operation; both REST namespaces and cron handling remain, and private repair notices separately require manage_options",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 297,
+          "column": 25,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 297,
+          "column": 59,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 297,
+          "column": 113,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0128",
+      "file": "interior-design-lead-manager.php",
+      "source_start": 299,
+      "source_end": 299,
+      "source_sha256": "17aeabf1c23be66bb83907490ef676924d8c643c333e7c177940bce3aabce468",
+      "source": "        $rest_route = isset($_GET['rest_route']) && is_string($_GET['rest_route']) ? sanitize_text_field(wp_unslash($_GET['rest_route'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "idlm_boot_plugin(): typed sanitized metadata is read only after a schema WP_Error to choose the generic 503; it never dispatches an operation; both REST namespaces and cron handling remain, and private repair notices separately require manage_options",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 299,
+          "column": 29,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 299,
+          "column": 63,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 299,
+          "column": 117,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0129",
+      "file": "templates/access-restricted.php",
+      "source_start": 8,
+      "source_end": 8,
+      "source_sha256": "074e3d8d02b85b30fe9e9b62bced0ed350c9cbe4afb712899383faf41fc95b93",
+      "source": "$idlm_auth_view = isset($_GET['idlm_auth']) ? sanitize_key(wp_unslash($_GET['idlm_auth'])) : 'login';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "(guarded template): public authentication presentation reads sanitized mode/notice/reset-key metadata; reset_user delegates key validation to WordPress, actual mutations have dedicated nonces; REQUEST_URI only builds a local home_url return target escaped at output",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 8,
+          "column": 25,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 8,
+          "column": 71,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0130",
+      "file": "templates/access-restricted.php",
+      "source_start": 9,
+      "source_end": 9,
+      "source_sha256": "074e3d8d02b85b30fe9e9b62bced0ed350c9cbe4afb712899383faf41fc95b93",
+      "source": "$idlm_auth_error = isset($_GET['idlm_auth_error']) ? sanitize_key(wp_unslash($_GET['idlm_auth_error'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "(guarded template): public authentication presentation reads sanitized mode/notice/reset-key metadata; reset_user delegates key validation to WordPress, actual mutations have dedicated nonces; REQUEST_URI only builds a local home_url return target escaped at output",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 9,
+          "column": 26,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 9,
+          "column": 78,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0131",
+      "file": "templates/access-restricted.php",
+      "source_start": 10,
+      "source_end": 10,
+      "source_sha256": "074e3d8d02b85b30fe9e9b62bced0ed350c9cbe4afb712899383faf41fc95b93",
+      "source": "$idlm_auth_notice = isset($_GET['idlm_auth_notice']) ? sanitize_key(wp_unslash($_GET['idlm_auth_notice'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "(guarded template): public authentication presentation reads sanitized mode/notice/reset-key metadata; reset_user delegates key validation to WordPress, actual mutations have dedicated nonces; REQUEST_URI only builds a local home_url return target escaped at output",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 10,
+          "column": 27,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 10,
+          "column": 80,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0132",
+      "file": "templates/access-restricted.php",
+      "source_start": 11,
+      "source_end": 11,
+      "source_sha256": "074e3d8d02b85b30fe9e9b62bced0ed350c9cbe4afb712899383faf41fc95b93",
+      "source": "$idlm_request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';\n",
+      "codes": [
+        "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+      ],
+      "rationale": "(guarded template): public authentication presentation reads sanitized mode/notice/reset-key metadata; reset_user delegates key validation to WordPress, actual mutations have dedicated nonces; REQUEST_URI only builds a local home_url return target escaped at output",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 11,
+          "column": 65,
+          "code": "WordPress.Security.ValidatedSanitizedInput.InputNotSanitized"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0133",
+      "file": "templates/access-restricted.php",
+      "source_start": 13,
+      "source_end": 13,
+      "source_sha256": "074e3d8d02b85b30fe9e9b62bced0ed350c9cbe4afb712899383faf41fc95b93",
+      "source": "$idlm_reset_key = isset($_GET['key']) ? sanitize_text_field(wp_unslash($_GET['key'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "(guarded template): public authentication presentation reads sanitized mode/notice/reset-key metadata; reset_user delegates key validation to WordPress, actual mutations have dedicated nonces; REQUEST_URI only builds a local home_url return target escaped at output",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 13,
+          "column": 25,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 13,
+          "column": 72,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0134",
+      "file": "templates/access-restricted.php",
+      "source_start": 14,
+      "source_end": 14,
+      "source_sha256": "074e3d8d02b85b30fe9e9b62bced0ed350c9cbe4afb712899383faf41fc95b93",
+      "source": "$idlm_reset_login = isset($_GET['login']) ? sanitize_user(wp_unslash($_GET['login'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "(guarded template): public authentication presentation reads sanitized mode/notice/reset-key metadata; reset_user delegates key validation to WordPress, actual mutations have dedicated nonces; REQUEST_URI only builds a local home_url return target escaped at output",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 14,
+          "column": 27,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 14,
+          "column": 70,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0135",
+      "file": "templates/admin/identity-reviews.php",
+      "source_start": 9,
+      "source_end": 9,
+      "source_sha256": "fd7803b96b18d3f1b36540fc82c1be0f4d0e3f9e72c56f69f295b700208aa89f",
+      "source": "    <?php if (isset($_GET['resolved']) && '1' === $_GET['resolved']) : ?><div class=\"notice notice-success\" role=\"status\"><p>Review resolved.</p></div><?php endif; ?>\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "(guarded template): the template is rendered only from the manager-gated review controller; resolved is a strict string flag selecting a literal success notice, not authority for a resolution",
+      "mixed_php_html_no_output_comments": true,
+      "diagnostic_locations": [
+        {
+          "line": 9,
+          "column": 21,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 9,
+          "column": 51,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0136",
+      "file": "templates/admin/settings/webhooks.php",
+      "source_start": 9,
+      "source_end": 9,
+      "source_sha256": "1d704350abb4992145139db99a1682fa860889cb4c20dc1b07a889df1ea135e8",
+      "source": "$idlm_capture_tab = isset($_POST['idlm_capture_tab']) && is_string($_POST['idlm_capture_tab']) && 'webhook' === sanitize_key(wp_unslash($_POST['idlm_capture_tab'])) ? 'webhook' : 'meta';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Missing"
+      ],
+      "rationale": "(guarded template): capture_tab is a sanitized fixed UI-tab choice in the authorized settings view; settings writes have already passed the separate process_request capability/nonce guard; choosing a presentation tab has no side effect",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 9,
+          "column": 27,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 9,
+          "column": 68,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        },
+        {
+          "line": 9,
+          "column": 137,
+          "code": "WordPress.Security.NonceVerification.Missing"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0137",
+      "file": "templates/admin/settings/backup.php",
+      "source_start": 5,
+      "source_end": 5,
+      "source_sha256": "6ce8a64edb978780fd007e450cd90e3c187df4702e6616a385e9c63f047f18a9",
+      "source": "$idlm_notice = isset($_GET['idlm_backup_notice']) ? sanitize_key(wp_unslash($_GET['idlm_backup_notice'])) : '';\n",
+      "codes": [
+        "WordPress.Security.NonceVerification.Recommended"
+      ],
+      "rationale": "(guarded template): the authorized settings template reads an allowlisted notice key to display fixed text; restore/export retain their own dedicated nonces and administrator guards",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 5,
+          "column": 22,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        },
+        {
+          "line": 5,
+          "column": 77,
+          "code": "WordPress.Security.NonceVerification.Recommended"
+        }
+      ]
+    },
+    {
+      "id": "REL007-BOUNDARY-0138",
+      "file": "includes/class-lead-outbox.php",
+      "source_start": 93,
+      "source_end": 93,
+      "source_sha256": "4fd8cc7d4de6d7e8c1c888939b575bc325d5f754f95048db9dd9819f79b76be2",
+      "source": "                else { do_action($row->hook, ...$args); }\n",
+      "codes": [
+        "WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound"
+      ],
+      "rationale": "dispatch_work(): dispatch_work rejects every hook outside the fixed hooks() allowlist, validates typed arguments and lead identity, and checks live generation/lease before do_action; this is replay of the existing prefixed internal domain hooks",
+      "mixed_php_html_no_output_comments": false,
+      "diagnostic_locations": [
+        {
+          "line": 93,
+          "column": 34,
+          "code": "WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound"
+        }
+      ]
+    }
+  ]
+}

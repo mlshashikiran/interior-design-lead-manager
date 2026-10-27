@@ -1,0 +1,1776 @@
+diff --git a/.distignore b/.distignore
+index 9f6ad5b..f5ea27a 100644
+--- a/.distignore
++++ b/.distignore
+@@ -11,3 +11,5 @@ tests/
+ design-system/
+ docs/
+ graphify-out/
++.graphify_*
++/.hosting/
+diff --git a/.gitignore b/.gitignore
+index 347138b..08fbc63 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -3,3 +3,4 @@ Thumbs.db
+ build/
+ graphify-out/
+ .graphify_*
++/.hosting/
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index c105daf..56b3e91 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,33 @@
+ # Changelog
+ 
++## [1.102.42] - 2026-10-02
++
++### Fixed
++
++- Made lead details open promptly by loading activity, WhatsApp history, and tasks only when their respective drawer tab is opened. WhatsApp history is bounded to the latest 100 messages and retains scoped access and read-state handling. Builder: Shashi.
++
++## [1.102.41] - 2026-10-02
++
++### Changed
++
++- Enabled Item Catalogue management for WordPress Editors as well as recognized CRM manager roles, without granting quotation-setup or broader manager capabilities. Builder: Shashi.
++
++## [1.102.40] - 2026-10-02
++
++### Added
++
++- Added secure exact-revision quotation downloads: in-memory Dompdf PDF, UTF-8-BOM streamed CSV, and typed OOXML XLSX. All exports require quote-view/download capabilities, nonce, revision ownership, and scoped lead access; tabular downloads exclude internal/autosave/history data and neutralize CSV formulas. Builder: Shashi.
++
++## [1.102.39] - 2026-10-02
++
++### Changed
++
++- Consolidated quotation saving into one locked Draft-to-revision lifecycle. Current Draft revisions create tracked R+1 records with a required change remark, author attribution, history, lead activity, and a superseded source revision; quotation approval/shared/rejected-style states are no longer active. Builder: Shashi.
++
++### Fixed
++
++- Repaired the revision-reason dialog handoff so its resumed submit is not blocked by autosave duplicate-submit protection, aligned editor/autosave/save capabilities, and serialized concurrent revision saves on the quotation row. Builder: Shashi.
++
+ ## [1.102.38] - 2026-09-21
+ 
+ ### Fixed
+diff --git a/assets/js/admin-app.js b/assets/js/admin-app.js
+index b47f5af..02be760 100644
+--- a/assets/js/admin-app.js
++++ b/assets/js/admin-app.js
+@@ -2798,10 +2798,7 @@ function openLeadDrawer(leadId, startTab) {
+                     
+                 }
+ 
+-                // Load once on drawer open so the Tasks tab can surface overdue work immediately.
+-                loadLeadTasks(leadId);
+-                
+-                // Timeline comments are already loaded inline in PHP detail view
++                loadLeadDrawerTabData(activeTab || 'drawer-tab-info', leadId);
+             } else {
+                 $('#idlm-drawer-content-wrapper-inner').html('<div class="idlm-drawer-load-state idlm-drawer-load-state--error" role="alert">' + response.data.message + '</div>');
+             }
+@@ -2885,36 +2882,52 @@ function switchDrawerTab(evt, tabId) {
+     $('#' + tabId).addClass('active');
+     $(evt.currentTarget).addClass('active');
+ 
++    var leadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
++    if (leadId) loadLeadDrawerTabData(tabId, leadId);
++}
++
++function loadLeadDrawerTabData(tabId, leadId) {
+     if (tabId === 'drawer-tab-activity') {
+-        var leadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
+-        if (leadId) {
+-            loadLeadActivityLog(leadId);
+-        }
+-    }
+-    if (tabId === 'drawer-tab-whatsapp') {
+-        var whatsappLeadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
+-        if (whatsappLeadId) {
+-            $.post(idlm_vars.ajax_url, {
+-                action: 'idlm_mark_whatsapp_messages_read',
+-                nonce: idlm_vars.nonce,
+-                lead_id: whatsappLeadId
+-            }).done(function(response) {
+-                if (!response.success) return;
+-                $('.idlm-drawer-whatsapp-count').text('0').prop('hidden', true);
+-                $('.idlm-drawer-whatsapp-message').removeClass('is-unread');
+-                $('.idlm-whatsapp-row-badge[data-lead-id="' + whatsappLeadId + '"]').remove();
+-                if (response.data.hasOwnProperty('unread_whatsapp_count') && typeof window.idlmUpdateUnreadWhatsAppPill === 'function') {
+-                    window.idlmUpdateUnreadWhatsAppPill(response.data.unread_whatsapp_count);
+-                }
+-            });
+-        }
++        loadLeadActivityLog(leadId);
++    } else if (tabId === 'drawer-tab-whatsapp') {
++        loadLeadWhatsApp(leadId);
++    } else if (tabId === 'drawer-tab-tasks') {
++        loadLeadTasks(leadId);
+     }
+-    if (tabId === 'drawer-tab-tasks') {
+-        var leadId = $('#idlm-edit-lead-form input[name="lead_id"]').val();
+-        if (leadId) {
+-            loadLeadTasks(leadId);
++}
++
++function loadLeadWhatsApp(leadId) {
++    var $ = jQuery;
++    var $panel = $('#drawer-tab-whatsapp');
++    if (!$panel.length || $panel.data('loaded') || $panel.data('loading')) return;
++
++    $panel.data('loading', true).html('<div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> Loading WhatsApp history...</div>');
++    $.post(idlm_vars.ajax_url, {
++        action: 'idlm_get_lead_whatsapp',
++        nonce: idlm_vars.nonce,
++        lead_id: leadId
++    }).done(function(response) {
++        if (!response.success) {
++            $panel.html('<div class="idlm-drawer-load-state idlm-drawer-load-state--error" role="alert">' + (response.data.message || 'Unable to load WhatsApp history.') + '</div>');
++            return;
+         }
+-    }
++        $panel.data('loaded', true).html(response.data.html);
++        var unreadCount = response.data.unread_whatsapp_count || 0;
++        $('.idlm-drawer-whatsapp-count').text(unreadCount).attr('aria-label', unreadCount + ' unread WhatsApp messages').prop('hidden', unreadCount === 0);
++        $.post(idlm_vars.ajax_url, { action: 'idlm_mark_whatsapp_messages_read', nonce: idlm_vars.nonce, lead_id: leadId }).done(function(markResponse) {
++            if (!markResponse.success) return;
++            $('.idlm-drawer-whatsapp-count').text('0').prop('hidden', true);
++            $('.idlm-drawer-whatsapp-message').removeClass('is-unread');
++            $('.idlm-whatsapp-row-badge[data-lead-id="' + leadId + '"]').remove();
++            if (markResponse.data.hasOwnProperty('unread_whatsapp_count') && typeof window.idlmUpdateUnreadWhatsAppPill === 'function') {
++                window.idlmUpdateUnreadWhatsAppPill(markResponse.data.unread_whatsapp_count);
++            }
++        });
++    }).fail(function() {
++        $panel.html('<div class="idlm-drawer-load-state idlm-drawer-load-state--error" role="alert">Server connection error.</div>');
++    }).always(function() {
++        $panel.removeData('loading');
++    });
+ }
+ 
+ function loadLeadActivityLog(leadId, forceRefresh) {
+diff --git a/assets/js/quotations.js b/assets/js/quotations.js
+index 0c476bf..7215c9f 100644
+--- a/assets/js/quotations.js
++++ b/assets/js/quotations.js
+@@ -218,6 +218,32 @@
+     var autosaveHasWorkingCopy = !!(autosaveStatus && '1' === autosaveStatus.dataset.hasWorkingCopy);
+     var formDirty = false;
+     var autosaveCancelModal = form.querySelector('[data-autosave-cancel-modal]');
++    var revisionReasonPromptOpen = false;
++    function ensureRevisionReason(event) {
++        if (Number(form.elements.quote_id.value) <= 0) { return true; }
++        var revisionReason = form.elements.revision_reason;
++        if (revisionReason && revisionReason.value.trim()) { return true; }
++        event.preventDefault();
++        if (revisionReasonPromptOpen) { return false; }
++        revisionReasonPromptOpen = true;
++        window.IDLMDialog.prompt({
++            title: 'Save new revision',
++            message: 'Add a revision remark. The previous quotation version will be preserved.',
++            label: 'Revision remark',
++            placeholder: 'Explain what changed and why',
++            confirmLabel: 'Save revision',
++            required: true,
++            requiredMessage: 'Enter a revision remark to save this revision.',
++            trigger: event.submitter || document.activeElement
++        }).then(function(remark) {
++            revisionReasonPromptOpen = false;
++            if (!remark || !revisionReason) { return; }
++            revisionReason.value = remark;
++            form.requestSubmit();
++        });
++        return false;
++    }
++    form.addEventListener('submit', ensureRevisionReason);
+     function setAutosaveStatus(message, state) {
+         if (!autosaveStatus) { return; }
+         autosaveStatus.textContent = message;
+@@ -275,8 +301,8 @@
+             }
+         });
+         form.addEventListener('submit', function (event) {
+-            if (!ensureRevisionReason(event)) { return; }
+             window.clearTimeout(autosaveTimer);
++            if (event.defaultPrevented) { return; }
+             if (finalSubmitStarted) {
+                 event.preventDefault();
+                 return;
+@@ -439,7 +465,10 @@
+             section.querySelectorAll('.idlm-quote-item-row').forEach(function (row) {
+                 if (field(row, 'row_type') && 'header' === field(row, 'row_type').value) { return; }
+                 var quantityField = field(row, 'quantity');
+-                var qty = Math.max(0.01, num(quantityField)), rate = Math.max(0, num(field(row, 'unit_rate'))), base = qty * rate;
++                var width = Math.max(0, num(field(row, 'length'))), height = Math.max(0, num(field(row, 'height')));
++                var qty = width > 0 && height > 0 ? round2(width * height) : Math.max(0.01, num(quantityField));
++                if (width > 0 && height > 0) { quantityField.value = qty.toFixed(2); }
++                var rate = Math.max(0, num(field(row, 'unit_rate'))), base = qty * rate;
+                 var net = base;
+                 var optionalField = field(row, 'is_optional'), optional = 'checkbox' === optionalField.type ? optionalField.checked : '1' === optionalField.value, total = net;
+                 row.querySelector('.idlm-line-total').textContent = optional ? 'Optional' : money(total); row.classList.toggle('is-optional', optional);
+diff --git a/docs/CHANGELOG-DEV.md b/docs/CHANGELOG-DEV.md
+index cecb30d..34b54e0 100644
+--- a/docs/CHANGELOG-DEV.md
++++ b/docs/CHANGELOG-DEV.md
+@@ -1,5 +1,39 @@
+ # Engineering Change Log
+ 
++## 2026-10-02 — Responsive lead drawer
++
++Builder: Shashi.
++
++- Removed activity, WhatsApp, and task payloads from the critical lead-detail request. Each drawer tab now fetches its own bounded payload after the core lead details render.
++- Added an access-scoped, nonce-protected WhatsApp drawer endpoint with a 100-message cap; messages remain marked read only after the WhatsApp tab is opened.
++- Plugin version advanced from `1.102.41` to `1.102.42`; database schema remains unchanged.
++
++## 2026-10-02 — Catalogue editor access
++
++Builder: Shashi.
++
++- Granted WordPress Editors `idlm_manage_quote_items`, matching recognized CRM managers while preserving the separate quotation-setup and lead-manager capability boundaries.
++- Plugin version advanced from `1.102.40` to `1.102.41`; database schema remains unchanged.
++
++## 2026-10-02 — Secure quotation revision exports
++
++Builder: Shashi.
++
++- Added signed PDF, CSV, and XLSX download endpoints to the quotation detail view while retaining Preview / Print as a separate action.
++- Export authorization now combines `idlm_view_quotes`, `idlm_download_quote_pdf`, a format-specific nonce, exact revision ownership, and the existing scoped lead-access policy.
++- PDF generation uses the bundled Dompdf 3.1.6 packaged release, pinned by SHA-256; renderer failures are intentionally generic and fall back to the detail view without persisting a file. CSV is UTF-8-BOM/native `fputcsv` and XLSX is a typed minimal OOXML workbook.
++- Plugin version advanced from `1.102.39` to `1.102.40`; database schema remains unchanged.
++
++## 2026-10-02 — Canonical quotation revisions
++
++Builder: Shashi.
++
++- Consolidated quotation changes into the current-Draft → locked R+1 → superseded-source lifecycle. Each saved revision records its creator, updater, reason, status-history row, and lead activity.
++- Aligned editor, autosave, and save authorization with draft-edit plus revision capability; new quotations retain their separate create capability.
++- Removed the dormant final-state revision route and normalized legacy quotation states to one current Draft revision plus Superseded history, without changing CRM lead stages.
++- Repaired the revision-reason modal/autosave submit handoff and bumped quotation schema from 2.4.0 to 2.5.0.
++- Plugin version advanced from 1.102.38 to 1.102.39.
++
+ ## 2026-09-21 — Canonical inbound lead matching
+ 
+ Builder: Shashi.
+diff --git a/docs/DATA-MODEL.md b/docs/DATA-MODEL.md
+index 59cc6c2..6c2255a 100644
+--- a/docs/DATA-MODEL.md
++++ b/docs/DATA-MODEL.md
+@@ -24,7 +24,7 @@ Created and upgraded by `IDLM_Quotation_Schema::install()` behind `IDLM_Quotatio
+ 
+ | Table | Important data and relationships |
+ |---|---|
+-| `idlm_quotes` | `lead_id -> leads.id`; quote number, title, owner/creator users, current/accepted revision IDs, status/timestamps and idempotent save key. |
++| `idlm_quotes` | `lead_id -> leads.id`; one canonical quotation is created per lead through the application workflow, with further changes represented by revisions. Quote number, title, owner/creator users, current/accepted revision IDs, status/timestamps and idempotent save key are retained. |
+ | `idlm_quote_revisions` | `quote_id -> quotes.id`; revision number/status/source revision, immutable customer/project snapshot, internal/customer notes, currency and calculated totals, author/update IDs and save key. |
+ | `idlm_quote_revision_sections` | `revision_id -> revisions.id`; section name/description/order. |
+ | `idlm_quote_revision_items` | `revision_id`, optional `section_id` and `catalogue_item_id`; description, dimensions, quantity/rate, discounts, line totals, wood/optional flags and ordering. |
+@@ -60,7 +60,7 @@ erDiagram
+ - Handoff: `not_ready`, `awaiting_manager`, `manually_assigned`, `auto_assigned`, `exception`.
+ - Default call statuses: `Not Called`, `No Answer`, `Call Back Requested`, `Connected - Interested`, `Connected - Not Interested`, `Wrong Number`; configurable, with literal dependencies.
+ - Task state: `pending`, `completed`; domain task types include `Qualification`, `Sales Follow-up`, and `General`.
+-- Quote/revision legacy states include `Draft`, `Approved`, `Shared`, `Under Negotiation`, `Rejected`, `Expired`, `Superseded`. The present UI makes current revisions editable/printable and hides most state workflow.
++- Quote/revision lifecycle states are `Draft` for the one current editable revision and `Superseded` for every prior revision. Historical status-history rows are retained as audit evidence when legacy data is normalized.
+ - Catalogue/category/unit state: `active`, `inactive`.
+ 
+ ## WordPress data
+diff --git a/docs/FEATURE-MAP.md b/docs/FEATURE-MAP.md
+index a89a356..73c2641 100644
+--- a/docs/FEATURE-MAP.md
++++ b/docs/FEATURE-MAP.md
+@@ -32,7 +32,7 @@ Use this map to identify the likely blast radius before changing a business feat
+ - **Shortcodes/UI:** `[idlm_quotations]`; internal `[idlm_payment_structure]` expansion inside configured print HTML; quotations section of `[idlm_workspace]`.
+ - **JS/CSS:** `assets/js/quotations.js`, `assets/css/quotations.css`; shared workspace/admin assets.
+ - **Settings/transients:** `idlm_quote_settings`, quotation schema/backfill markers, `idlm_quote_autosave_*` transients.
+-- **High-risk coupling:** totals, item snapshots, numbering, current revision, idempotency keys and multi-table transactions must be reviewed together. Current “PDF” delivery is browser print/save, not server-generated binary PDF.
++- **High-risk coupling:** totals, item snapshots, numbering, current revision, idempotency keys and multi-table transactions must be reviewed together. Direct exports must use only the requested immutable revision and remain capability/nonce/lead-scope protected.
+ 
+ ## WhatsApp and Interakt
+ 
+@@ -58,7 +58,8 @@ Use this map to identify the likely blast radius before changing a business feat
+ 
+ ## PDFs, print and exports
+ 
+-- **Quotation print/PDF:** `IDLM_Quotations::render_print_view()` via `admin-post.php?action=idlm_print_quote`; requires view/download capabilities, nonce and lead visibility. Uses `assets/css/quotations.css` plus inline print markup/JavaScript and browser “Print / Save PDF.”
++- **Quotation Preview / Print:** `IDLM_Quotations::render_print_view()` via `admin-post.php?action=idlm_print_quote`; requires view/download capabilities, nonce and lead visibility. Uses `assets/css/quotations.css` plus inline print markup/JavaScript.
++- **Quotation downloads:** `IDLM_Quotation_Exporter` serves immutable requested-revision PDF (bundled Dompdf), UTF-8-BOM CSV, or typed OOXML XLSX via three authenticated admin-post routes. Every route requires `idlm_view_quotes`, `idlm_download_quote_pdf`, a format-specific nonce, revision ownership, and scoped lead visibility.
+ - **Lead CSV:** `IDLM_Admin::ajax_export_leads()` with user visibility filtering.
+ - **Google conversion CSV:** `IDLM_CAPI::generate_google_ads_conversions_csv_response()` via admin AJAX and authenticated REST feed.
+ - **Google audience CSV:** `IDLM_Audiences::generate_google_ads_audience_csv_response()` via authenticated REST feed.
+diff --git a/docs/FLOWS.md b/docs/FLOWS.md
+index a807aa8..17af5cf 100644
+--- a/docs/FLOWS.md
++++ b/docs/FLOWS.md
+@@ -40,7 +40,11 @@ Interakt and Meta WhatsApp REST callbacks validate configured HMAC signatures, n
+ 
+ ## Quotation lifecycle and print/PDF
+ 
+-**Trigger** quotation form/admin-post or AJAX autosave → **Handler** `IDLM_Quotations::handle_save()` / `ajax_autosave_quote()` → **Validation** `IDLM_Quotation_Policy` capability and object-level lead visibility behind facade delegates, nonce, current-revision/edit authority, validated sections/items/decimals and idempotency key → **Business logic** `IDLM_Quotation_Calculator` deterministically normalizes rows and calculates line, wood discount, design fee, additional discount, taxable and GST totals behind `IDLM_Quotations` compatibility delegates → **Persistence** the facade coordinates the checked transaction while `IDLM_Quotation_Repository` performs idempotency and lead-snapshot reads, quote/revision writes, locked revision sequencing, section/item replacement or copying, history, and lead quote-value projection; autosave uses a seven-day transient → **Side effects** quote activity and autosave cleanup → **Response** redirect or JSON.
++**Trigger** quotation form/admin-post or AJAX autosave → **Handler** `IDLM_Quotations::handle_save()` / `ajax_autosave_quote()` → **Validation** a new quote requires `idlm_create_quotes`; a revision requires both draft-edit and revision capabilities, nonce, object-level lead visibility, a current Draft source revision, validated sections/items/decimals, and idempotency key → **Business logic** the browser autosaves only a temporary per-user working copy; saving a revision collects a required change remark and `IDLM_Quotation_Calculator` deterministically normalizes rows and calculates line, wood discount, design fee, additional discount, taxable and GST totals behind `IDLM_Quotations` compatibility delegates → **Persistence** the facade coordinates the checked transaction while `IDLM_Quotation_Repository` locks the quote before verifying its current Draft source and reserving R+1, then writes the revision, supersedes the source, replaces content, records history, and projects the lead quote value → **Side effects** quote activity and autosave cleanup → **Response** redirect or JSON.
++
++**Trigger** a detail-view Download PDF/CSV/XLSX action → **Handler** `IDLM_Quotation_Exporter` admin-post endpoint → **Validation** `idlm_view_quotes`, `idlm_download_quote_pdf`, format-specific nonce, exact quote/revision ownership, and object-level lead visibility → **Read model** `IDLM_Quotation_Repository::get_quote_bundle()` loads only the requested persisted revision and its persisted item snapshots; autosaves/current lead values, internal notes, and activity are not read → **Response** streamed CSV or OOXML workbook, or an in-memory Dompdf PDF. PDF rendering disables remote resources and uses the plugin chroot; a generic detail-view fallback notice retains Preview / Print and tabular downloads if rendering fails.
++
++Quotes have no approval, shared, rejection, negotiation, or expiry lifecycle. A quote is created as R01 and may be saved as R02, R03, and so on; the current revision is always Draft and prior revisions are Superseded. Each revision carries its creator, update author, required revision remark, status-history entry, and lead activity attribution. Quote creation is serialized per lead and an existing quote redirects users to that quote's revision workflow. Creating or revising a quote updates the lead's projected quote value but never changes its pipeline stage; moving a lead to Quote Shared records the sharing flag and requires the structured quote total to be positive.
+ 
+ Lead picker search, initial editor choices, selected-lead prefilling, and object-access existence checks are read through `IDLM_Quotation_Lead_Read_Model`, which applies unrestricted administrator/assignment-manager scope or current representative ownership scope.
+ 
+diff --git a/docs/INTERFACES.md b/docs/INTERFACES.md
+index c632fc6..b75ecb8 100644
+--- a/docs/INTERFACES.md
++++ b/docs/INTERFACES.md
+@@ -68,9 +68,8 @@ In 1.101.63, `idlm_upload_lead_file` additionally requires `lead_id` and current
+ - `idlm_rotate_api_credential`: `manage_options` plus a scope-specific nonce; rotates the webhook or MCP credential and ends that scope’s legacy grace window.
+ - `idlm_export_backup`: `manage_options` plus `idlm_export_backup` nonce; streams a JSON export of IDLM custom tables and non-secret settings.
+ - `idlm_restore_backup`: `manage_options` plus `idlm_restore_backup` nonce, a validated JSON upload smaller than 100 MB, and an exact `RESTORE` confirmation; atomically replaces IDLM custom-table data and non-secret settings, preserves current credentials, and clears queued outbound jobs.
+-- `idlm_save_quote`, `idlm_print_quote`, `idlm_save_quote_settings`: quotation-specific nonce and capabilities; transactional save, print HTML, or settings update.
++- `idlm_save_quote`, `idlm_print_quote`, `idlm_download_quote_pdf`, `idlm_download_quote_csv`, `idlm_download_quote_xlsx`, `idlm_save_quote_settings`: quotation-specific nonce and capabilities; transactional save, print HTML, exact-revision PDF/CSV/XLSX download, or settings update. Every download requires `idlm_view_quotes`, `idlm_download_quote_pdf`, nonce validation, revision-to-quote ownership, and scoped lead visibility. Existing quotes use this single revision path and require draft-edit plus revision capability; no separate create-revision action is registered.
+ - `idlm_save_catalogue_item`, `idlm_save_catalogue_category`, `idlm_save_catalogue_unit`, `idlm_archive_catalogue_item`, `idlm_bulk_catalogue_items`, `idlm_catalogue_category_action`, `idlm_import_catalogue_csv`, `idlm_export_catalogue_csv`: `idlm_manage_quote_items`, action nonce, validated form/CSV; mutate or export catalogue.
+-- `IDLM_Quotations::handle_create_revision()` exists as a public PHP method but is not registered by `init()` in the inspected version; treat as dormant/legacy.
+ 
+ ## Hooks and schedules
+ 
+diff --git a/docs/PRODUCTION-SCALABILITY-PLAN.md b/docs/PRODUCTION-SCALABILITY-PLAN.md
+index 9f021ee..65f6024 100644
+--- a/docs/PRODUCTION-SCALABILITY-PLAN.md
++++ b/docs/PRODUCTION-SCALABILITY-PLAN.md
+@@ -4,7 +4,7 @@ Author / Builder: Shashi
+ Status: Approved staged plan; Phases 0 through 9 are in progress  
+ Prepared: 2026-08-30  
+ Planning release: 1.98.2  
+-Current implementation release: 1.102.38
++Current implementation release: 1.102.42
+ Baseline implementation: 1.98.1
+ 
+ ## Objective
+diff --git a/docs/SECURITY.md b/docs/SECURITY.md
+index d2318a3..2e85577 100644
+--- a/docs/SECURITY.md
++++ b/docs/SECURITY.md
+@@ -7,7 +7,7 @@ Activation/update reconciliation creates `idlm_pre_sales` and adds CRM capabilit
+ - General CRM: `idlm_access_leads`, `idlm_qualify_leads`.
+ - Assignment managers: `idlm_assign_leads` (administrator and recognized manager roles).
+ - Quotes: `idlm_view_quotes`, `idlm_create_quotes`, `idlm_edit_quote_drafts`, `idlm_submit_quotes`, `idlm_mark_quotes_shared`, `idlm_accept_reject_quotes`, `idlm_create_quote_revisions`, `idlm_download_quote_pdf`.
+-- Quote managers: `idlm_approve_quotes`, `idlm_cancel_quotes`, `idlm_manage_quote_settings`, `idlm_manage_quote_items`.
++- Quote managers: `idlm_approve_quotes`, `idlm_cancel_quotes`, `idlm_manage_quote_settings`, `idlm_manage_quote_items`. WordPress Editors also receive `idlm_manage_quote_items` only, for Item Catalogue management.
+ - `manage_options` gates settings, diagnostics, imports, resets/deletes, routing controls, CAPI/audience logs, and several exports.
+ - `manage_options` exclusively gates Users & Access. Its user and role-scope handlers use action-specific nonces, an allowlist of managed CRM roles/scopes, duplicate account validation, and protections against self-lockout and removal of the final administrator.
+ 
+diff --git a/includes/class-admin-ajax.php b/includes/class-admin-ajax.php
+index 86ee915..cefc974 100644
+--- a/includes/class-admin-ajax.php
++++ b/includes/class-admin-ajax.php
+@@ -212,18 +212,19 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
+             $data['property_location'] = $property_location;
+         }
+ 
+-        // Quote value is mandatory when the quote is shared.
+         if ('stage' === $field && 'Quote Shared' === $value) {
+-            $quote_value_raw = isset($_POST['quote_value']) ? sanitize_text_field(wp_unslash($_POST['quote_value'])) : '';
+-            $quote_file = isset($_POST['quote_file']) ? esc_url_raw(wp_unslash($_POST['quote_file'])) : '';
+-
+-            if (!is_numeric($quote_value_raw) || floatval($quote_value_raw) <= 0) {
+-                wp_send_json_error(array('message' => 'A valid quote value greater than zero is required before moving the lead to Quote Shared.'));
++            $has_structured_quotes = class_exists('IDLM_Quotations') && IDLM_Quotations::lead_has_quotes($lead_id);
++            if ($has_structured_quotes && IDLM_Quotation_Repository::get_lead_quote_value($lead_id) <= 0) { wp_send_json_error(array('message' => 'The structured quotation total must be greater than zero before moving the lead to Quote Shared.')); }
++            if (!$has_structured_quotes) {
++                $quote_value_raw = isset($_POST['quote_value']) ? sanitize_text_field(wp_unslash($_POST['quote_value'])) : '';
++                $quote_file = isset($_POST['quote_file']) ? esc_url_raw(wp_unslash($_POST['quote_file'])) : '';
++                if (!is_numeric($quote_value_raw) || floatval($quote_value_raw) <= 0) {
++                    wp_send_json_error(array('message' => 'A valid quote value greater than zero is required before moving the lead to Quote Shared.'));
++                }
++                $data['quote_value'] = round(floatval($quote_value_raw), 2);
++                $data['quote_file'] = $quote_file;
+             }
+-
+-            $data['quote_value'] = round(floatval($quote_value_raw), 2);
+             $data['quote_shared'] = 1;
+-            $data['quote_file'] = $quote_file;
+         }
+ 
+         $updated = IDLM_DB::update_lead($lead_id, $data);
+diff --git a/includes/class-admin-lead-reads.php b/includes/class-admin-lead-reads.php
+index 756364e..f7e6ec0 100644
+--- a/includes/class-admin-lead-reads.php
++++ b/includes/class-admin-lead-reads.php
+@@ -39,6 +39,64 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
+             'unread_whatsapp_count' => self::get_unread_whatsapp_count(),
+         ));
+     }
++
++    /** Return WhatsApp history only when its drawer tab is opened. */
++    public static function ajax_get_lead_whatsapp() {
++        check_ajax_referer('idlm_admin_nonce', 'nonce');
++        if (!self::current_user_has_rep_access()) {
++            wp_send_json_error(array('message' => 'Permission denied.'));
++        }
++        $lead_id = isset($_POST['lead_id']) ? absint(wp_unslash($_POST['lead_id'])) : 0;
++        if (!$lead_id) {
++            wp_send_json_error(array('message' => 'Invalid Lead ID'));
++        }
++        if (!self::current_user_can_view_lead($lead_id)) {
++            wp_send_json_error(array('message' => 'You can access only leads assigned to you.'));
++        }
++
++        global $wpdb;
++        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
++        $phone = $wpdb->get_var($wpdb->prepare("SELECT phone FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id));
++        $whatsapp_reply_pattern = $wpdb->esc_like('[WhatsApp Reply]:') . '%';
++        $direct_reply_pattern = $wpdb->esc_like('[Direct WA Reply]:') . '%';
++        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
++        $messages = $wpdb->get_results($wpdb->prepare(
++            "SELECT a.id, a.details, a.created_at FROM {$wpdb->prefix}idlm_lead_activity_log a
++             WHERE a.lead_id = %d AND (a.activity_type = 'whatsapp_reply' OR (a.activity_type = 'comment' AND (a.details LIKE %s OR a.details LIKE %s)))
++             ORDER BY a.id DESC LIMIT 100",
++            $lead_id, $whatsapp_reply_pattern, $direct_reply_pattern
++        ));
++        $read_ids = self::get_whatsapp_read_activity_ids();
++        $last_read_id = isset($read_ids[$lead_id]) ? absint($read_ids[$lead_id]) : 0;
++        $unread_count = 0;
++        foreach ($messages as $message) {
++            if (absint($message->id) > $last_read_id) {
++                $unread_count++;
++            }
++        }
++        $inbox_url = IDLM_Interakt::inbox_url($phone);
++        $can_open_interakt = '1' === get_option('idlm_interakt_enabled', '0') && !empty($messages) && $inbox_url;
++        ob_start();
++        ?>
++        <section class="idlm-drawer-panel idlm-drawer-whatsapp-panel">
++            <div class="idlm-drawer-panel-head">
++                <h3 class="idlm-drawer-panel-title">WhatsApp messages</h3>
++                <?php if ($can_open_interakt): ?><a class="idlm-btn idlm-btn-secondary idlm-drawer-open-interakt" href="<?php echo esc_url($inbox_url); ?>" target="_blank" rel="noopener noreferrer" title="Open Interakt's WhatsApp Inbox">Open in Interakt <span class="dashicons dashicons-external" aria-hidden="true"></span></a><?php endif; ?>
++            </div>
++            <div class="idlm-drawer-whatsapp-list">
++                <?php if (empty($messages)): ?>
++                    <p class="idlm-drawer-whatsapp-empty">No WhatsApp messages have been received from this lead.</p>
++                <?php else: foreach ($messages as $message): ?>
++                    <article class="idlm-drawer-whatsapp-message<?php echo absint($message->id) > $last_read_id ? ' is-unread' : ''; ?>">
++                        <div class="idlm-drawer-whatsapp-message-meta"><strong>Customer</strong><time datetime="<?php echo esc_attr($message->created_at); ?>"><?php echo esc_html(self::format_datetime($message->created_at)); ?></time></div>
++                        <div class="idlm-drawer-whatsapp-message-body"><?php echo wp_kses_post(self::render_activity_details(preg_replace('/^\[(?:WhatsApp Reply|Direct WA Reply)\]:\s*/', '', $message->details))); ?></div>
++                    </article>
++                <?php endforeach; endif; ?>
++            </div>
++        </section>
++        <?php
++        wp_send_json_success(array('html' => ob_get_clean(), 'unread_whatsapp_count' => $unread_count));
++    }
+     public static function ajax_get_lead_details() {
+         check_ajax_referer('idlm_admin_nonce', 'nonce');
+         if (!self::current_user_has_rep_access()) {
+@@ -114,50 +172,20 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
+             ));
+         }
+ 
+-        // Fetch activity logs inline to speed up perceived load time
++        // The sidebar is visible with the default Details tab, so load its
++        // bounded preview here without restoring the full activity-log query.
+         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+-        $logs = $wpdb->get_results($wpdb->prepare(
++        $recent_comments = $wpdb->get_results($wpdb->prepare(
+             "SELECT a.*, u.display_name
+              FROM {$wpdb->prefix}idlm_lead_activity_log a
+              LEFT JOIN {$wpdb->users} u ON a.user_id = u.ID
+-             WHERE a.lead_id = %d ORDER BY a.id DESC LIMIT 100",
+-            $lead_id
+-        ));
+-
+-        $whatsapp_reply_pattern = $wpdb->esc_like('[WhatsApp Reply]:') . '%';
+-        $direct_reply_pattern = $wpdb->esc_like('[Direct WA Reply]:') . '%';
+-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+-        $whatsapp_messages = $wpdb->get_results($wpdb->prepare(
+-            "SELECT a.*
+-             FROM {$wpdb->prefix}idlm_lead_activity_log a
+              WHERE a.lead_id = %d
+-               AND (a.activity_type = 'whatsapp_reply' OR (a.activity_type = 'comment' AND (a.details LIKE %s OR a.details LIKE %s)))
+-             ORDER BY a.id DESC",
+-            $lead_id,
+-            $whatsapp_reply_pattern,
+-            $direct_reply_pattern
++               AND a.activity_type IN ('comment', 'lost_remark', 'whatsapp_reply')
++             ORDER BY a.id DESC
++             LIMIT 5",
++            $lead_id
+         ));
+ 
+-        // Include comments and protected Lost remarks in the Details tab sidebar.
+-        $comments = array();
+-        if (!empty($logs)) {
+-            foreach ($logs as $log) {
+-                if (in_array($log->activity_type, array('comment', 'lost_remark', 'whatsapp_reply', 'qualification_handoff_remark'), true)) {
+-                    $comments[] = $log;
+-                }
+-            }
+-        }
+-        $recent_comments = array_slice($comments, 0, 5);
+-
+-        $whatsapp_read_ids = self::get_whatsapp_read_activity_ids();
+-        $last_read_whatsapp_id = isset($whatsapp_read_ids[$lead_id]) ? absint($whatsapp_read_ids[$lead_id]) : 0;
+-        $unread_whatsapp_count = 0;
+-        foreach ($whatsapp_messages as $whatsapp_message) {
+-            if (absint($whatsapp_message->id) > $last_read_whatsapp_id) {
+-                $unread_whatsapp_count++;
+-            }
+-        }
+-        $interakt_inbox_url = IDLM_Interakt::inbox_url($lead->phone); $can_open_interakt = '1' === get_option('idlm_interakt_enabled', '0') && !empty($whatsapp_messages) && $interakt_inbox_url;
+         $show_presales_compliance = self::current_user_is_pre_sales();
+         $followup = $show_presales_compliance ? IDLM_DB::get_followup_compliance($lead_id) : null;
+         $qualification_fields = array(
+@@ -247,7 +275,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
+         <nav class="idlm-drawer-tabs" aria-label="Lead sections">
+             <button class="idlm-drawer-tab active" type="button" onclick="switchDrawerTab(event, 'drawer-tab-info')">Details</button>
+             <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-activity')">Activity Log & Comments</button>
+-            <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-whatsapp')">WhatsApp <span class="idlm-drawer-tab-notification idlm-drawer-whatsapp-count" aria-label="<?php echo esc_attr($unread_whatsapp_count); ?> unread WhatsApp messages"<?php echo $unread_whatsapp_count ? '' : ' hidden'; ?>><?php echo esc_html($unread_whatsapp_count); ?></span></button>
++            <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-whatsapp')">WhatsApp <span class="idlm-drawer-tab-notification idlm-drawer-whatsapp-count" aria-label="Unread WhatsApp messages" hidden>0</span></button>
+             <button class="idlm-drawer-tab" type="button" onclick="switchDrawerTab(event, 'drawer-tab-tasks')">Tasks <span class="idlm-drawer-tab-notification" id="idlm-drawer-overdue-task-count" aria-label="No overdue tasks" hidden>0</span></button>
+         </nav>
+ 
+@@ -593,30 +621,30 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
+ 
+                                 <div>
+                                     <h4 class="idlm-drawer-activity-title">Recent Comments</h4>
+-                                    <div class="idlm-timeline-container-details loaded" id="idlm-timeline-container-details-inner">
++                                    <div class="idlm-timeline-container-details" id="idlm-timeline-container-details-inner">
+                                         <div class="idlm-timeline" style="margin-top:0;">
+                                             <?php if (empty($recent_comments)): ?>
+                                                 <div style="text-align: center; color: #64748b; padding: 20px 0;">No comments found for this lead.</div>
+                                             <?php else: ?>
+-                                                <?php foreach ($recent_comments as $log):
+-                                                    $author = $log->display_name ? $log->display_name : 'System Pipeline';
++                                                <?php foreach ($recent_comments as $comment):
++                                                    $author = $comment->display_name ? $comment->display_name : 'System Pipeline';
+                                                 ?>
+                                                     <div class="idlm-timeline-item">
+                                                         <div class="idlm-timeline-meta" style="display: flex; justify-content: space-between; align-items: center;">
+                                                             <div>
+                                                                 <strong><?php echo esc_html($author); ?></strong>
+-                                                                <span><?php echo esc_html(self::format_datetime($log->created_at)); ?></span>
++                                                                <span><?php echo esc_html(self::format_datetime($comment->created_at)); ?></span>
+                                                             </div>
+-                                                            <?php if ($log->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $log->user_id)): ?>
++                                                            <?php if ($comment->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $comment->user_id)): ?>
+                                                                 <div class="idlm-timeline-actions" style="font-size: 11px;">
+-                                                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
+-                                                                    <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
++                                                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($comment->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
++                                                                    <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($comment->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
+                                                                 </div>
+                                                             <?php endif; ?>
+                                                         </div>
+                                                         <div class="idlm-timeline-details">
+                                                             <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Safely escaped and constructed by render_activity_details().
+-                                                            echo self::render_activity_details($log->details); ?>
++                                                            echo self::render_activity_details($comment->details); ?>
+                                                         </div>
+                                                     </div>
+                                                 <?php endforeach; ?>
+@@ -652,35 +680,8 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
+                             <h3 class="idlm-drawer-panel-title">Activity History</h3>
+                         </div>
+                         <div class="idlm-drawer-activity-body">
+-                            <div class="idlm-timeline-container loaded" id="idlm-timeline-container-inner">
+-                                <div class="idlm-timeline" style="margin-top:0;">
+-                                    <?php if (empty($logs)): ?>
+-                                        <div style="text-align: center; color: #64748b; padding: 20px 0;">No activity logs found for this lead.</div>
+-                                    <?php else: ?>
+-                                        <?php foreach ($logs as $log):
+-                                            $author = $log->display_name ? $log->display_name : 'System Pipeline';
+-                                        ?>
+-                                            <div class="idlm-timeline-item">
+-                                                <div class="idlm-timeline-meta" style="display: flex; justify-content: space-between; align-items: center;">
+-                                                    <div>
+-                                                        <strong><?php echo esc_html($author); ?></strong>
+-                                                        <span><?php echo esc_html(self::format_datetime($log->created_at)); ?></span>
+-                                                    </div>
+-                                                    <?php if ($log->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $log->user_id)): ?>
+-                                                        <div class="idlm-timeline-actions" style="font-size: 11px;">
+-                                                            <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
+-                                                            <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
+-                                                        </div>
+-                                                    <?php endif; ?>
+-                                                </div>
+-                                                <div class="idlm-timeline-details">
+-                                                    <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Safely escaped and constructed by render_activity_details().
+-                                                    echo self::render_activity_details($log->details); ?>
+-                                                </div>
+-                                            </div>
+-                                        <?php endforeach; ?>
+-                                    <?php endif; ?>
+-                                </div>
++                            <div class="idlm-timeline-container" id="idlm-timeline-container-inner">
++                                <div style="text-align: center; color: #64748b; padding: 20px 0;">Activity loads when this tab is opened.</div>
+                             </div>
+                         </div>
+                     </section>
+@@ -688,29 +689,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
+             </div>
+ 
+             <div id="drawer-tab-whatsapp" class="idlm-drawer-tab-content">
+-                <section class="idlm-drawer-panel idlm-drawer-whatsapp-panel">
+-                    <div class="idlm-drawer-panel-head">
+-                        <h3 class="idlm-drawer-panel-title">WhatsApp messages</h3>
+-                        <?php if ($can_open_interakt): ?>
+-                            <a class="idlm-btn idlm-btn-secondary idlm-drawer-open-interakt" href="<?php echo esc_url($interakt_inbox_url); ?>" target="_blank" rel="noopener noreferrer" title="Open Interakt's WhatsApp Inbox">Open in Interakt <span class="dashicons dashicons-external" aria-hidden="true"></span></a>
+-                        <?php endif; ?>
+-                    </div>
+-                    <div class="idlm-drawer-whatsapp-list">
+-                        <?php if (empty($whatsapp_messages)): ?>
+-                            <p class="idlm-drawer-whatsapp-empty">No WhatsApp messages have been received from this lead.</p>
+-                        <?php else: ?>
+-                            <?php foreach ($whatsapp_messages as $whatsapp_message): ?>
+-                                <article class="idlm-drawer-whatsapp-message<?php echo absint($whatsapp_message->id) > $last_read_whatsapp_id ? ' is-unread' : ''; ?>">
+-                                    <div class="idlm-drawer-whatsapp-message-meta">
+-                                        <strong>Customer</strong>
+-                                        <time datetime="<?php echo esc_attr($whatsapp_message->created_at); ?>"><?php echo esc_html(self::format_datetime($whatsapp_message->created_at)); ?></time>
+-                                    </div>
+-                                    <div class="idlm-drawer-whatsapp-message-body"><?php echo wp_kses_post(self::render_activity_details(preg_replace('/^\[(?:WhatsApp Reply|Direct WA Reply)\]:\s*/', '', $whatsapp_message->details))); ?></div>
+-                                </article>
+-                            <?php endforeach; ?>
+-                        <?php endif; ?>
+-                    </div>
+-                </section>
++                <div class="idlm-drawer-load-state" role="status">Open this tab to load WhatsApp history.</div>
+             </div>
+ 
+             <div id="drawer-tab-tasks" class="idlm-drawer-tab-content">
+diff --git a/includes/class-admin.php b/includes/class-admin.php
+index fed842e..91e43df 100644
+--- a/includes/class-admin.php
++++ b/includes/class-admin.php
+@@ -22,6 +22,7 @@ class IDLM_Admin {
+ 
+         // AJAX endpoints
+         add_action('wp_ajax_idlm_get_lead_details', array(__CLASS__, 'ajax_get_lead_details'));
++        add_action('wp_ajax_idlm_get_lead_whatsapp', array(__CLASS__, 'ajax_get_lead_whatsapp'));
+         add_action('wp_ajax_idlm_mark_whatsapp_messages_read', array(__CLASS__, 'ajax_mark_whatsapp_messages_read'));
+         add_action('wp_ajax_idlm_get_lead_activity', array(__CLASS__, 'ajax_get_lead_activity'));
+         add_action('wp_ajax_idlm_get_capi_log_payload', array(__CLASS__, 'ajax_get_capi_log_payload'));
+@@ -420,6 +421,7 @@ class IDLM_Admin {
+         return IDLM_Admin_Settings_Renderer::render();
+     }
+     public static function ajax_get_lead_details() { return IDLM_Admin_Ajax::ajax_get_lead_details(); }
++    public static function ajax_get_lead_whatsapp() { return IDLM_Admin_Lead_Reads::ajax_get_lead_whatsapp(); }
+     public static function ajax_mark_whatsapp_messages_read() { return IDLM_Admin_Lead_Reads::ajax_mark_whatsapp_messages_read(); }
+     public static function ajax_get_lead_activity() { return IDLM_Admin_Ajax::ajax_get_lead_activity(); }
+     public static function ajax_get_capi_log_payload() { return IDLM_Admin_Logs_Renderer::ajax_get_capi_log_payload(); }
+diff --git a/includes/class-quotation-calculator.php b/includes/class-quotation-calculator.php
+index 0c383a2..2d1ba42 100644
+--- a/includes/class-quotation-calculator.php
++++ b/includes/class-quotation-calculator.php
+@@ -54,12 +54,13 @@ final class IDLM_Quotation_Calculator {
+                 );
+                 continue;
+             }
+-            // The editor requires a positive, two-decimal quantity. Keep the
+-            // server normalization identical so the saved value cannot differ
+-            // from the amount shown to the user.
+-            $quantity = self::clean_decimal($raw['quantity'] ?? 1, 0.01);
+             $length = self::clean_decimal($raw['length'] ?? 0);
+             $height = self::clean_decimal($raw['height'] ?? 0);
++            // Width and height define the billable area when both are entered;
++            // otherwise retain the manually entered item quantity.
++            $quantity = $length > 0 && $height > 0
++                ? round($length * $height, 2)
++                : self::clean_decimal($raw['quantity'] ?? 1, 0.01);
+             $unit_rate = self::clean_decimal($raw['unit_rate'] ?? 0);
+             $subtotal = round($quantity * $unit_rate, 2);
+             $items[] = array(
+@@ -75,7 +76,7 @@ final class IDLM_Quotation_Calculator {
+                 'specification' => sanitize_textarea_field($raw['specification'] ?? ''),
+                 'length' => round($length, 2),
+                 'height' => round($height, 2),
+-                'quantity' => round($quantity, 2),
++                'quantity' => max(0.01, round($quantity, 2)),
+                 'unit' => sanitize_text_field($raw['unit'] ?? 'Nos'),
+                 'unit_rate' => $unit_rate,
+                 'discount_type' => 'fixed',
+diff --git a/includes/class-quotation-controller.php b/includes/class-quotation-controller.php
+index a4aa3c1..eea2e86 100644
+--- a/includes/class-quotation-controller.php
++++ b/includes/class-quotation-controller.php
+@@ -11,18 +11,19 @@ if (!defined('ABSPATH')) {
+ 
+ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+     public static function handle_save() {
+-        if (!self::can('idlm_create_quotes')) {
+-            wp_die('You do not have permission to save quotations.', 403);
+-        }
+         check_admin_referer('idlm_save_quote');
+         global $wpdb;
+         $quote_id = absint($_POST['quote_id'] ?? 0);
+         $creating_quote = !$quote_id;
+         $revision_id = absint($_POST['revision_id'] ?? 0);
+         $lead_id = absint($_POST['lead_id'] ?? 0);
++        if (($creating_quote && !self::can('idlm_create_quotes')) || (!$creating_quote && (!self::can('idlm_edit_quote_drafts') || !self::can('idlm_create_quote_revisions')))) {
++            wp_die('You do not have permission to save quotations.', 403);
++        }
+         if (!self::can_view_lead($lead_id)) {
+             wp_die('You cannot create a quotation for this lead.', 403);
+         }
++        $revision_reason = sanitize_text_field(wp_unslash($_POST['revision_reason'] ?? ''));
+         $save_request_key = sanitize_text_field(wp_unslash($_POST['save_request_key'] ?? ''));
+         if (!preg_match('/^[a-f0-9-]{36}$/i', $save_request_key)) {
+             $save_request_key = wp_generate_uuid4();
+@@ -34,6 +35,19 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+                 self::redirect(array('action' => 'view', 'quote_id' => absint($existing_request_quote->id), 'idlm_notice' => 'This quotation save was already completed.'));
+             }
+         }
++        if ($quote_id && '' === $revision_reason) {
++            self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'idlm_error' => 'Enter a revision remark explaining why the quotation was changed.'));
++        }
++        if ($creating_quote) {
++            if (!IDLM_Quotation_Repository::acquire_lead_quote_lock($lead_id)) {
++                self::redirect(array('action' => 'edit', 'lead_id' => $lead_id, 'idlm_error' => 'Another quotation is being created for this lead. Please try again.'));
++            }
++            $existing_quote = IDLM_Quotation_Repository::get_quote_for_lead($lead_id);
++            if ($existing_quote) {
++                IDLM_Quotation_Repository::release_lead_quote_lock($lead_id);
++                self::redirect(array('action' => 'view', 'quote_id' => absint($existing_quote->id), 'idlm_notice' => 'A quotation already exists for this lead. Create a revision from that quotation.'));
++            }
++        }
+         $quote_settings = self::settings();
+         $items = self::parse_items(wp_unslash((array) ($_POST['items'] ?? array())), $quote_settings);
+         $line_items = array_filter($items, static function($item) {
+@@ -47,13 +61,16 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+         $now = current_time('mysql');
+         $user_id = get_current_user_id();
+         $number = null;
++        $source_revision_id = 0;
+         if (!$quote_id) {
+             $number = self::next_quote_number();
+             if (is_wp_error($number)) {
++                IDLM_Quotation_Repository::release_lead_quote_lock($lead_id);
+                 self::redirect(array('idlm_error' => $number->get_error_message()));
+             }
+         }
+         if (false === $wpdb->query('START TRANSACTION')) {
++            if ($creating_quote) { IDLM_Quotation_Repository::release_lead_quote_lock($lead_id); }
+             self::rollback_save('Unable to start the quotation save.', array('action' => 'edit', 'quote_id' => $quote_id, 'lead_id' => $lead_id), 'Quotation transaction start failed');
+         }
+ 
+@@ -72,24 +89,31 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+             ), array('%d', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s'));
+             if (!$quote_id) {
+                 $wpdb->query('ROLLBACK');
++                IDLM_Quotation_Repository::release_lead_quote_lock($lead_id);
+                 self::redirect(array('idlm_error' => 'Unable to create the quotation.'));
+             }
+             $revision_number = 1;
+             $revision_name = $number . '-R01';
+         } else {
+-            $quote = self::get_quote($quote_id);
++            $quote = IDLM_Quotation_Repository::lock_quote($quote_id);
+             if (!$quote || absint($quote->lead_id) !== $lead_id || !self::can_view_lead($lead_id)) {
+                 $wpdb->query('ROLLBACK');
+                 wp_die('Quotation not found.', 404);
+             }
++            $existing_request_revision = IDLM_Quotation_Repository::get_revision_by_save_request_key($save_request_key);
++            if ($existing_request_revision && absint($existing_request_revision->quote_id) === $quote_id) {
++                $wpdb->query('ROLLBACK');
++                self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_notice' => 'This quotation save was already completed.'));
++            }
+             $revision = self::get_revision($revision_id);
+-            if (!$revision || absint($revision->quote_id) !== $quote_id || absint($quote->current_revision_id) !== $revision_id || !self::can('idlm_edit_quote_drafts')) {
++            if (!$revision || absint($revision->quote_id) !== $quote_id || absint($quote->current_revision_id) !== $revision_id || 'Draft' !== $quote->status || 'Draft' !== $revision->status) {
+                 $wpdb->query('ROLLBACK');
+-                self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'Only the current quotation revision can be edited.'));
++                self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'Only the current draft quotation revision can be edited.'));
+             }
+-            $source_revision_id = absint($revision->source_revision_id ?? 0);
+-            $revision_number = absint($revision->revision_number);
+-            $revision_name = $revision->revision_name;
++            $source_revision_id = absint($revision->id);
++            $revision_number = IDLM_Quotation_Repository::next_revision_number($quote_id);
++            $revision_name = $quote->quote_number . '-R' . str_pad((string) $revision_number, 2, '0', STR_PAD_LEFT);
++            $revision_id = 0;
+         }
+ 
+         if (empty($lead)) {
+@@ -102,7 +126,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+             'revision_name' => $revision_name,
+             'status' => 'Draft',
+             'source_revision_id' => absint($source_revision_id ?? 0),
+-            'revision_reason' => $revision->revision_reason ?? 'Initial proposal',
++            'revision_reason' => $revision_reason ?: 'Initial proposal',
+             'currency_code' => self::currency_code($quote_settings['currency_code']),
+             'customer_name' => sanitize_text_field(wp_unslash($_POST['customer_name'] ?? trim(($lead->first_name ?? '') . ' ' . ($lead->last_name ?? '')))),
+             'customer_phone' => sanitize_text_field(wp_unslash($_POST['customer_phone'] ?? ($lead->phone ?? ''))),
+@@ -131,6 +155,12 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+             $wpdb->query('ROLLBACK');
+             self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'idlm_error' => 'Unable to save the quotation revision.'));
+         }
++        if (!empty($source_revision_id)) {
++            $superseded = IDLM_Quotation_Repository::supersede_revision($source_revision_id, $now);
++            if (false === $superseded) {
++                self::rollback_save('Unable to finalize the previous quotation revision.', array('action' => 'edit', 'quote_id' => $quote_id), 'Previous revision supersede failed');
++            }
++        }
+         $contents_saved = IDLM_Quotation_Repository::replace_revision_contents($revision_id, $sections, $items);
+         if (is_wp_error($contents_saved)) {
+             self::rollback_save($contents_saved->get_error_message(), array('action' => 'edit', 'quote_id' => $quote_id), $contents_saved->get_error_data());
+@@ -142,6 +172,8 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+         }
+         if ($creating_quote) {
+             $history_saved = self::insert_history($quote_id, $revision_id, '', 'Draft', 'Initial quotation created.');
++        } elseif (!empty($source_revision_id)) {
++            $history_saved = self::insert_history($quote_id, $revision_id, 'Draft', 'Draft', $revision_reason);
+         } else {
+             $history_saved = true;
+         }
+@@ -151,15 +183,18 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+         if (false === $wpdb->query('COMMIT')) {
+             self::rollback_save('Unable to commit the quotation changes.', array('action' => 'edit', 'quote_id' => $quote_id), 'Quotation transaction commit failed');
+         }
++        if ($creating_quote) {
++            IDLM_Quotation_Repository::release_lead_quote_lock($lead_id);
++        }
+         IDLM_Read_Model_Cache::invalidate('quotation_value');
+-        delete_transient(self::autosave_key($revision_id));
++        delete_transient(self::autosave_key(!empty($source_revision_id) ? $source_revision_id : $revision_id));
+         self::log_quote_activity($quote_id, $revision_id, 'Quotation ' . $revision_name . ' saved.');
+-        self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_notice' => $creating_quote ? 'Quotation saved.' : 'Draft saved.'));
++        self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_notice' => $creating_quote ? 'Quotation saved.' : 'New revision saved.'));
+     }
+ 
+     public static function ajax_autosave_quote() {
+         check_ajax_referer('idlm_quote_autosave', 'nonce');
+-        if (!self::can('idlm_edit_quote_drafts')) {
++        if (!self::can('idlm_edit_quote_drafts') || !self::can('idlm_create_quote_revisions')) {
+             wp_send_json_error(array('message' => 'You do not have permission to autosave quotation drafts.'), 403);
+         }
+         $quote_id = absint($_POST['quote_id'] ?? 0);
+@@ -167,7 +202,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+         $lead_id = absint($_POST['lead_id'] ?? 0);
+         $quote = self::get_quote($quote_id);
+         $revision = self::get_revision($revision_id);
+-        if (!$quote || !$revision || absint($quote->lead_id) !== $lead_id || absint($quote->current_revision_id) !== $revision_id || absint($revision->quote_id) !== $quote_id || !self::can_view_lead($lead_id)) {
++        if (!$quote || !$revision || absint($quote->lead_id) !== $lead_id || absint($quote->current_revision_id) !== $revision_id || absint($revision->quote_id) !== $quote_id || 'Draft' !== $quote->status || 'Draft' !== $revision->status || !self::can_view_lead($lead_id)) {
+             wp_send_json_error(array('message' => 'Only the current quotation revision can be autosaved.'), 409);
+         }
+         $items = self::parse_items(wp_unslash((array) ($_POST['items'] ?? array())), self::settings());
+@@ -205,14 +240,14 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+ 
+     public static function ajax_discard_quote_autosave() {
+         check_ajax_referer('idlm_quote_autosave', 'nonce');
+-        if (!self::can('idlm_edit_quote_drafts')) {
++        if (!self::can('idlm_edit_quote_drafts') || !self::can('idlm_create_quote_revisions')) {
+             wp_send_json_error(array('message' => 'You do not have permission to discard quotation working copies.'), 403);
+         }
+         $quote_id = absint($_POST['quote_id'] ?? 0);
+         $revision_id = absint($_POST['revision_id'] ?? 0);
+         $quote = self::get_quote($quote_id);
+         $revision = self::get_revision($revision_id);
+-        if (!$quote || !$revision || absint($quote->current_revision_id) !== $revision_id || absint($revision->quote_id) !== $quote_id || !self::can_view_lead($quote->lead_id)) {
++        if (!$quote || !$revision || absint($quote->current_revision_id) !== $revision_id || absint($revision->quote_id) !== $quote_id || 'Draft' !== $quote->status || 'Draft' !== $revision->status || !self::can_view_lead($quote->lead_id)) {
+             wp_send_json_error(array('message' => 'Quotation working copy not found.'), 404);
+         }
+         delete_transient(self::autosave_key($revision_id));
+@@ -225,83 +260,10 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
+         return $date && $date->format('Y-m-d') === $value ? $value : null;
+     }
+ 
+-    public static function handle_create_revision() {
+-        if (!self::can('idlm_create_quote_revisions')) {
+-            wp_die('You do not have permission to create quotation revisions.', 403);
+-        }
+-        check_admin_referer('idlm_create_quote_revision');
+-        global $wpdb;
+-        $quote_id = absint($_POST['quote_id'] ?? 0);
+-        $quote = self::get_quote($quote_id);
+-        if (!$quote || !self::can_view_lead($quote->lead_id)) {
+-            wp_die('Quotation not found.', 404);
+-        }
+-        $source = self::get_revision($quote->current_revision_id);
+-        if (!$source) {
+-            self::redirect(array('quote_id' => $quote_id, 'idlm_error' => 'Current revision not found.'));
+-        }
+-        $revisable_statuses = array('Approved', 'Shared', 'Under Negotiation', 'Rejected', 'Expired');
+-        if (!in_array($quote->status, $revisable_statuses, true) || $source->status !== $quote->status) {
+-            self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'A new revision cannot be created from the current quotation state.'));
+-        }
+-        $reason = sanitize_text_field(wp_unslash($_POST['revision_reason'] ?? ''));
+-        $save_request_key = sanitize_text_field(wp_unslash($_POST['save_request_key'] ?? ''));
+-        if (!preg_match('/^[a-f0-9-]{36}$/i', $save_request_key)) {
+-            $save_request_key = wp_generate_uuid4();
+-        }
+-        $existing_request_revision = IDLM_Quotation_Repository::get_revision_by_save_request_key($save_request_key);
+-        if ($existing_request_revision && absint($existing_request_revision->quote_id) === $quote_id) {
+-            self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_notice' => 'This revision request was already completed.'));
+-        }
+-        if ('' === $reason) {
+-            self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'A revision reason is required.'));
+-        }
+-        $now = current_time('mysql');
+-        $user_id = get_current_user_id();
+-        if (false === $wpdb->query('START TRANSACTION')) {
+-            self::rollback_save('Unable to start creating the quotation revision.', array('action' => 'view', 'quote_id' => $quote_id), 'Revision transaction start failed');
+-        }
+-        $locked_quote = IDLM_Quotation_Repository::lock_quote($quote_id);
+-        $locked_source = $locked_quote ? self::get_revision($locked_quote->current_revision_id) : null;
+-        if (!$locked_quote || !$locked_source || absint($locked_source->id) !== absint($source->id) || !in_array($locked_quote->status, $revisable_statuses, true) || $locked_source->status !== $locked_quote->status) {
+-            $wpdb->query('ROLLBACK');
+-            self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'The quotation changed before the revision could be created. Please try again.'));
+-        }
+-        $quote = $locked_quote;
+-        $source = $locked_source;
+-        $next = IDLM_Quotation_Repository::next_revision_number($quote_id);
+-        $data = (array) $source;
+-        unset($data['id']);
+-        $data['revision_number'] = $next;
+-        $data['revision_name'] = $quote->quote_number . '-R' . str_pad((string) $next, 2, '0', STR_PAD_LEFT);
+-        $data['status'] = 'Draft';
+-        $data['source_revision_id'] = absint($source->id);
+-        $data['revision_reason'] = $reason;
+-        $data['created_by'] = $user_id;
+-        $data['created_at'] = $now;
+-        $data['updated_by'] = $user_id;
+-        $data['updated_at'] = $now;
+-        $data['finalized_at'] = null;
+-        $data['save_request_key'] = $save_request_key;
+-        $new_id = IDLM_Quotation_Repository::insert_revision($data);
+-        if (!$new_id) {
+-            $wpdb->query('ROLLBACK');
+-            self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'Unable to create the revision.'));
+-        }
+-        $contents_copied = IDLM_Quotation_Repository::copy_revision_contents($source->id, $new_id);
+-        if (is_wp_error($contents_copied)) {
+-            self::rollback_save($contents_copied->get_error_message(), array('action' => 'view', 'quote_id' => $quote_id), $contents_copied->get_error_data());
+-        }
+-        $source_updated = IDLM_Quotation_Repository::supersede_revision($source->id, $now);
+-        $quote_updated = IDLM_Quotation_Repository::set_current_revision($quote_id, $new_id, 'Draft', $now);
+-        $history_saved = self::insert_history($quote_id, $new_id, $quote->status, 'Draft', $reason);
+-        if (false === $source_updated || false === $quote_updated || false === $history_saved || false === $wpdb->query('COMMIT')) {
+-            self::rollback_save('Unable to finish creating the quotation revision.', array('action' => 'view', 'quote_id' => $quote_id), 'Revision finalization failed');
+-        }
+-        self::log_quote_activity($quote_id, $new_id, 'Created revision ' . $data['revision_name'] . '. Reason: ' . $reason);
+-        self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'idlm_notice' => 'New revision created.'));
+-    }
+-
++    /*
++     * Legacy final-state revision entry points intentionally have no handler.
++     * Revisions are created exclusively by handle_save() from the current draft.
++     */
+     private static function insert_history($quote_id, $revision_id, $from, $to, $note) {
+         return IDLM_Quotation_Repository::insert_history($quote_id, $revision_id, $from, $to, $note);
+     }
+diff --git a/includes/class-quotation-renderer.php b/includes/class-quotation-renderer.php
+index 16a22b7..31ed8b9 100644
+--- a/includes/class-quotation-renderer.php
++++ b/includes/class-quotation-renderer.php
+@@ -213,7 +213,7 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
+         $has_working_copy = false;
+         $working_copy_saved_at = '';
+         if ($bundle) {
+-            if (!self::can_view_lead($bundle->lead_id) || !self::can('idlm_edit_quote_drafts')) {
++            if (!self::can_view_lead($bundle->lead_id) || !self::can('idlm_edit_quote_drafts') || !self::can('idlm_create_quote_revisions') || 'Draft' !== $bundle->status || 'Draft' !== $bundle->revision->status) {
+                 self::redirect(array('action' => 'view', 'quote_id' => $quote_id, 'idlm_error' => 'This revision is read-only.'));
+             }
+             $lead_id = absint($bundle->lead_id);
+@@ -276,15 +276,15 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
+         ?>
+         <div class="wrap idlm-wrap idlm-quotes-wrap"><header class="idlm-header"><div><h1><?php echo $bundle ? esc_html('Edit ' . $bundle->quote_number . ' · ' . $revision->revision_name) : 'Create Quotation'; ?></h1></div></header><?php self::render_workspace_nav('quotes'); self::render_notice(); ?>
+         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-quote-form">
+-            <input type="hidden" name="action" value="idlm_save_quote"><input type="hidden" name="quote_id" value="<?php echo esc_attr($quote_id); ?>"><input type="hidden" name="revision_id" value="<?php echo esc_attr($revision->id ?? 0); ?>"><input type="hidden" name="save_request_key" value="<?php echo esc_attr(wp_generate_uuid4()); ?>"><input type="hidden" name="idlm_return_url" value="<?php echo esc_attr(self::return_url()); ?>"><?php wp_nonce_field('idlm_save_quote'); ?>
++            <input type="hidden" name="action" value="idlm_save_quote"><input type="hidden" name="quote_id" value="<?php echo esc_attr($quote_id); ?>"><input type="hidden" name="revision_id" value="<?php echo esc_attr($revision->id ?? 0); ?>"><input type="hidden" name="save_request_key" value="<?php echo esc_attr(wp_generate_uuid4()); ?>"><input type="hidden" name="idlm_return_url" value="<?php echo esc_attr(self::return_url()); ?>"><?php if ($bundle): ?><input type="hidden" name="revision_reason" value=""><?php endif; ?><?php wp_nonce_field('idlm_save_quote'); ?>
+             <input type="hidden" id="idlm-quote-created-by" value="<?php echo esc_attr($created_by_user ? $created_by_user->display_name : 'Unknown'); ?>">
+             <section class="idlm-quote-panel idlm-quote-identity"><div class="idlm-quote-identity-side"><h2>Customer</h2><label>Search lead<input type="search" id="idlm-lead-search" value="<?php echo esc_attr($selected_lead ? trim($selected_lead->first_name . ' ' . $selected_lead->last_name) . ($selected_lead->project_name ? ' — ' . $selected_lead->project_name : '') : ''); ?>" placeholder="Search name, phone, email or property" <?php disabled((bool) $bundle); ?>></label><input type="hidden" id="idlm-quote-lead" name="lead_id" value="<?php echo esc_attr($lead_id); ?>" required><label>Customer name<input name="customer_name" value="<?php echo esc_attr($revision->customer_name ?? ''); ?>"></label><div class="idlm-identity-inline"><label>Email<input type="email" name="customer_email" value="<?php echo esc_attr($revision->customer_email ?? ''); ?>"></label><label>Phone number<input name="customer_phone" value="<?php echo esc_attr($revision->customer_phone ?? ''); ?>"></label></div><div class="idlm-identity-inline"><label>Property name<input name="project_name" value="<?php echo esc_attr($revision->project_name ?? ''); ?>"></label><label>Location<input name="property_location" value="<?php echo esc_attr($revision->property_location ?? ''); ?>"></label></div></div>
+             <div class="idlm-quote-identity-side idlm-quote-meta"><h2>Quotation</h2><dl><div><dt>Full quote number</dt><dd><?php echo esc_html($bundle ? $bundle->quote_number . ' · ' . $revision->revision_name : 'Assigned when saved'); ?></dd></div><div><dt>Company name</dt><dd><?php echo esc_html($company_name); ?></dd></div><div><dt>Branch / Studio</dt><dd id="idlm-quote-studio"><?php echo esc_html($selected_lead && $selected_lead->preferred_studio ? $selected_lead->preferred_studio : '—'); ?></dd></div><div><dt>Sales rep name</dt><dd id="idlm-quote-sales-rep"><?php echo esc_html($sales_rep ? $sales_rep->display_name : 'Unassigned'); ?></dd></div><div><dt>Created / Modified on</dt><dd><?php echo esc_html($bundle ? $bundle->created_at . ' / ' . $bundle->updated_at : wp_date('d M Y, H:i')); ?></dd></div></dl></div></section>
+-            <section class="idlm-quote-panel"><div class="idlm-panel-heading"><h2>Sections and line items</h2></div><p class="description">Search the item catalogue or enter a custom item. Length and height are descriptive measurements; quantity controls pricing.</p><div id="idlm-quote-sections"><?php foreach ($sections as $section_index => $section) { self::render_section($section, $section_index, $items, $currency_code); } ?></div><div class="idlm-add-section-row"><button type="button" class="button idlm-add-section-item">Add Line</button><button type="button" class="button" id="idlm-add-section">Add Section</button><button type="button" class="button" id="idlm-open-bulk-items" aria-haspopup="dialog" aria-controls="idlm-bulk-items-modal">Bulk Items</button></div><div class="idlm-subtotals-layout"><section class="idlm-section-summary"><h3>Section-wise summary</h3><div id="idlm-section-totals"></div></section><section class="idlm-wood-summary"><h3>Wood and Others summary</h3><div id="idlm-wood-totals"></div></section><section class="idlm-quote-panel idlm-quote-totals"><h2>Totals</h2><dl id="idlm-live-totals" data-soft-close-percent="<?php echo esc_attr($soft_close_percent); ?>" data-currency-symbol="<?php echo esc_attr($currency_symbol); ?>"><div><dt>Subtotal</dt><dd data-total="subtotal"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div><dt>Wooden Subtotal</dt><dd data-total="wooden-subtotal"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div class="idlm-editable-total"><dt>Wooden Discount</dt><dd><span><input aria-label="Wooden discount percentage" type="number" min="0" max="100" step="0.01" name="wooden_discount_percent" value="<?php echo esc_attr($revision->wooden_discount_percent ?? 0); ?>">%</span><output data-total="wooden-discount"><?php echo esc_html($currency_symbol); ?>0.00</output></dd></div><div><dt>Subtotal after wooden discount</dt><dd data-total="after-wooden-discount"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div><dt>Other Subtotal</dt><dd data-total="other-subtotal"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div class="idlm-editable-total"><dt>Soft Close Addition</dt><dd><label><input type="checkbox" name="soft_close_enabled" value="1" <?php checked($soft_close_enabled); ?>> Enable (<?php echo esc_html(number_format_i18n($soft_close_percent, 2)); ?>%)</label><output data-total="soft-close"><?php echo esc_html($currency_symbol); ?>0.00</output></dd></div><div><dt>Total</dt><dd data-total="total"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><?php $has_additional_discount = (float) ($revision->additional_discount_amount ?? 0) > 0; ?><div class="idlm-editable-total" data-additional-discount-row <?php echo $has_additional_discount ? '' : 'hidden'; ?>><dt>Additional Discount on Total</dt><dd><span><?php echo esc_html($currency_symbol); ?><input aria-label="Additional discount amount" type="number" min="0" step="0.01" name="additional_discount_amount" value="<?php echo esc_attr($revision->additional_discount_amount ?? 0); ?>"></span></dd></div><div data-after-additional-discount-row <?php echo $has_additional_discount ? '' : 'hidden'; ?>><dt>Total after additional discount</dt><dd data-total="after-additional-discount"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div><dt>GST (18%)</dt><dd data-total="tax"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div class="idlm-grand-total"><dt>Grand Total</dt><dd data-total="grand"><?php echo esc_html($currency_symbol); ?>0.00</dd></div></dl><button type="button" class="button idlm-add-additional-discount" data-add-additional-discount <?php echo $has_additional_discount ? 'hidden' : ''; ?>>Add additional discount</button></section></div></section>
++            <section class="idlm-quote-panel"><div class="idlm-panel-heading"><h2>Sections and line items</h2></div><p class="description">Search the item catalogue or enter a custom item. Width × height automatically calculates the billable area; use Area / Qty when no dimensions apply.</p><div id="idlm-quote-sections"><?php foreach ($sections as $section_index => $section) { self::render_section($section, $section_index, $items, $currency_code); } ?></div><div class="idlm-add-section-row"><button type="button" class="button idlm-add-section-item">Add Line</button><button type="button" class="button" id="idlm-add-section">Add Section</button><button type="button" class="button" id="idlm-open-bulk-items" aria-haspopup="dialog" aria-controls="idlm-bulk-items-modal">Bulk Items</button></div><div class="idlm-subtotals-layout"><section class="idlm-section-summary"><h3>Section-wise summary</h3><div id="idlm-section-totals"></div></section><section class="idlm-wood-summary"><h3>Wood and Others summary</h3><div id="idlm-wood-totals"></div></section><section class="idlm-quote-panel idlm-quote-totals"><h2>Totals</h2><dl id="idlm-live-totals" data-soft-close-percent="<?php echo esc_attr($soft_close_percent); ?>" data-currency-symbol="<?php echo esc_attr($currency_symbol); ?>"><div><dt>Subtotal</dt><dd data-total="subtotal"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div><dt>Wooden Subtotal</dt><dd data-total="wooden-subtotal"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div class="idlm-editable-total"><dt>Wooden Discount</dt><dd><span><input aria-label="Wooden discount percentage" type="number" min="0" max="100" step="0.10" name="wooden_discount_percent" value="<?php echo esc_attr($revision->wooden_discount_percent ?? 0); ?>">%</span><output data-total="wooden-discount"><?php echo esc_html($currency_symbol); ?>0.00</output></dd></div><div><dt>Subtotal after wooden discount</dt><dd data-total="after-wooden-discount"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div><dt>Other Subtotal</dt><dd data-total="other-subtotal"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div class="idlm-editable-total"><dt>Soft Close Addition</dt><dd><label><input type="checkbox" name="soft_close_enabled" value="1" <?php checked($soft_close_enabled); ?>> Enable (<?php echo esc_html(number_format_i18n($soft_close_percent, 2)); ?>%)</label><output data-total="soft-close"><?php echo esc_html($currency_symbol); ?>0.00</output></dd></div><div><dt>Total</dt><dd data-total="total"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><?php $has_additional_discount = (float) ($revision->additional_discount_amount ?? 0) > 0; ?><div class="idlm-editable-total" data-additional-discount-row <?php echo $has_additional_discount ? '' : 'hidden'; ?>><dt>Additional Discount on Total</dt><dd><span><?php echo esc_html($currency_symbol); ?><input aria-label="Additional discount amount" type="number" min="0" step="0.10" name="additional_discount_amount" value="<?php echo esc_attr($revision->additional_discount_amount ?? 0); ?>"></span></dd></div><div data-after-additional-discount-row <?php echo $has_additional_discount ? '' : 'hidden'; ?>><dt>Total after additional discount</dt><dd data-total="after-additional-discount"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div><dt>GST (18%)</dt><dd data-total="tax"><?php echo esc_html($currency_symbol); ?>0.00</dd></div><div class="idlm-grand-total"><dt>Grand Total</dt><dd data-total="grand"><?php echo esc_html($currency_symbol); ?>0.00</dd></div></dl><button type="button" class="button idlm-add-additional-discount" data-add-additional-discount <?php echo $has_additional_discount ? 'hidden' : ''; ?>>Add additional discount</button></section></div></section>
+             <section class="idlm-quote-panel idlm-additional-notes"><h2>Internal Notes</h2><p class="description">Visible only inside the CRM. Internal notes are never included in customer print or PDF output.</p><textarea name="internal_notes" rows="5" placeholder="Add an internal note for this quotation..."><?php echo esc_textarea($revision->internal_notes ?? ''); ?></textarea></section>
+             <div class="idlm-bulk-items-modal" id="idlm-bulk-items-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-bulk-items-title" hidden><div class="idlm-bulk-items-dialog"><header><div><h2 id="idlm-bulk-items-title">Add catalogue items</h2><p>Select multiple items to add to the final section.</p></div><button type="button" class="idlm-bulk-items-close" aria-label="Close bulk items">&times;</button></header><div class="idlm-bulk-items-columns"><section><label for="idlm-bulk-items-search">Search catalogue</label><input type="search" id="idlm-bulk-items-search" placeholder="Search item, code or category"><div class="idlm-bulk-items-list" id="idlm-bulk-items-available" aria-live="polite"><p class="idlm-bulk-items-empty">Loading catalogue…</p></div></section><section><h3>Selected <span id="idlm-bulk-items-count">0</span></h3><div class="idlm-bulk-items-list" id="idlm-bulk-items-selected" aria-live="polite"><p class="idlm-bulk-items-empty">No items selected.</p></div></section></div><footer><button type="button" class="button idlm-bulk-items-cancel">Cancel</button><button type="button" class="button button-primary" id="idlm-add-bulk-items" disabled>Add Selected</button></footer></div></div>
+-            <?php if ($bundle): ?><div class="idlm-modal idlm-dialog idlm-autosave-cancel-modal" data-autosave-cancel-modal data-idlm-dialog data-idlm-use-hidden="true" data-idlm-initial-focus="[data-autosave-save]" role="dialog" aria-modal="true" aria-labelledby="idlm-autosave-cancel-title" aria-describedby="idlm-autosave-cancel-description" aria-hidden="true" hidden><div class="idlm-modal-content idlm-dialog__panel"><header class="idlm-dialog__header"><div><h2 class="idlm-dialog__title" id="idlm-autosave-cancel-title">Save or discard your changes?</h2><p class="idlm-dialog__description" id="idlm-autosave-cancel-description">Your autosaved edits are a temporary working copy and have not changed the saved draft.</p></div><button type="button" class="idlm-dialog__close" data-autosave-continue data-idlm-dialog-close aria-label="Close unsaved quote changes dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button></header><div class="idlm-dialog__body"><p>Choose whether to continue editing, discard the working copy, or save the draft.</p></div><footer class="idlm-dialog__footer"><button type="button" class="button" data-autosave-continue data-idlm-dialog-close>Continue editing</button><button type="button" class="button button-link-delete" data-autosave-discard>Discard changes</button><button type="button" class="button button-primary" data-autosave-save>Save draft</button></footer></div></div><?php endif; ?>
+-            <div class="idlm-quote-actions"><?php if ($bundle && self::can('idlm_edit_quote_drafts')): ?><span class="idlm-autosave-status" data-autosave-status data-has-working-copy="<?php echo $has_working_copy ? '1' : '0'; ?>" role="status" aria-live="polite"><?php echo esc_html($has_working_copy ? 'Working copy restored' . ($working_copy_saved_at ? ' · ' . $working_copy_saved_at : '') : 'Autosave on'); ?></span><?php endif; ?><?php if ($bundle): ?><button type="button" class="idlm-btn idlm-btn-secondary" data-quote-cancel data-cancel-url="<?php echo esc_url(self::view_url()); ?>">Cancel</button><?php else: ?><a class="idlm-btn idlm-btn-secondary" href="<?php echo esc_url(self::view_url()); ?>">Cancel</a><?php endif; ?><button type="submit" class="idlm-btn idlm-btn-primary"><?php echo $bundle ? 'Save Draft' : 'Save Quote'; ?></button></div>
++            <?php if ($bundle): ?><div class="idlm-modal idlm-dialog idlm-autosave-cancel-modal" data-autosave-cancel-modal data-idlm-dialog data-idlm-use-hidden="true" data-idlm-initial-focus="[data-autosave-save]" role="dialog" aria-modal="true" aria-labelledby="idlm-autosave-cancel-title" aria-describedby="idlm-autosave-cancel-description" aria-hidden="true" hidden><div class="idlm-modal-content idlm-dialog__panel"><header class="idlm-dialog__header"><div><h2 class="idlm-dialog__title" id="idlm-autosave-cancel-title">Save or discard your changes?</h2><p class="idlm-dialog__description" id="idlm-autosave-cancel-description">Your autosaved edits are a temporary working copy and have not changed the saved revision.</p></div><button type="button" class="idlm-dialog__close" data-autosave-continue data-idlm-dialog-close aria-label="Close unsaved quote changes dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button></header><div class="idlm-dialog__body"><p>Choose whether to continue editing, discard the working copy, or save it as a revision.</p></div><footer class="idlm-dialog__footer"><button type="button" class="button" data-autosave-continue data-idlm-dialog-close>Continue editing</button><button type="button" class="button button-link-delete" data-autosave-discard>Discard changes</button><button type="button" class="button button-primary" data-autosave-save>Save as revision</button></footer></div></div><?php endif; ?>
++            <div class="idlm-quote-actions"><?php if ($bundle && self::can('idlm_edit_quote_drafts') && self::can('idlm_create_quote_revisions')): ?><span class="idlm-autosave-status" data-autosave-status data-has-working-copy="<?php echo $has_working_copy ? '1' : '0'; ?>" role="status" aria-live="polite"><?php echo esc_html($has_working_copy ? 'Working copy restored' . ($working_copy_saved_at ? ' · ' . $working_copy_saved_at : '') : 'Autosave on'); ?></span><?php endif; ?><?php if ($bundle): ?><button type="button" class="idlm-btn idlm-btn-secondary" data-quote-cancel data-cancel-url="<?php echo esc_url(self::view_url()); ?>">Cancel</button><?php else: ?><a class="idlm-btn idlm-btn-secondary" href="<?php echo esc_url(self::view_url()); ?>">Cancel</a><?php endif; ?><button type="submit" class="idlm-btn idlm-btn-primary"><?php echo $bundle ? 'Save Revision' : 'Save Quote'; ?></button></div>
+         </form></div><?php
+     }
+ 
+@@ -300,11 +300,11 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
+         $is_catalogue_item = !empty($item->catalogue_item_id);
+         ?><tr class="idlm-quote-item-row idlm-quote-item-card <?php echo $is_catalogue_item ? 'is-catalogue-item' : ''; ?>">
+             <td class="idlm-item-cell" data-label="Item"><input type="hidden" name="<?php echo esc_attr($name); ?>[section_key]" value=""><input type="hidden" name="<?php echo esc_attr($name); ?>[row_type]" value="item"><input type="hidden" name="<?php echo esc_attr($name); ?>[catalogue_item_id]" value="<?php echo esc_attr($item->catalogue_item_id ?? 0); ?>"><input type="hidden" name="<?php echo esc_attr($name); ?>[is_wood]" value="<?php echo esc_attr(!empty($item->is_wood) ? 1 : 0); ?>"><input type="hidden" name="<?php echo esc_attr($name); ?>[room_area]" value="<?php echo esc_attr($item->room_area ?? ''); ?>"><input type="hidden" name="<?php echo esc_attr($name); ?>[specification]" value="<?php echo esc_attr($item->specification ?? ''); ?>"><input type="hidden" name="<?php echo esc_attr($name); ?>[is_optional]" value="<?php echo esc_attr(!empty($item->is_optional) ? 1 : 0); ?>"><div class="idlm-catalogue-search-wrap"><input class="idlm-catalogue-search" aria-label="Item name or catalogue search" name="<?php echo esc_attr($name); ?>[item_name]" value="<?php echo esc_attr($item->item_name ?? ''); ?>" autocomplete="off" placeholder="Search catalogue or enter item"><div class="idlm-catalogue-results"></div></div><textarea class="idlm-item-description idlm-catalogue-locked" aria-label="Item description" required placeholder="Item description" name="<?php echo esc_attr($name); ?>[description]"<?php echo $is_catalogue_item ? ' readonly="readonly"' : ''; ?>><?php echo esc_textarea($item->description ?? ''); ?></textarea><div class="idlm-item-meta"><input class="idlm-catalogue-locked" placeholder="Item code" aria-label="Item code" name="<?php echo esc_attr($name); ?>[item_code]" value="<?php echo esc_attr($item->item_code ?? ''); ?>"<?php echo $is_catalogue_item ? ' readonly="readonly"' : ''; ?>><input class="idlm-catalogue-locked" placeholder="Category" aria-label="Category" name="<?php echo esc_attr($name); ?>[category]" value="<?php echo esc_attr($item->category ?? ''); ?>"<?php echo $is_catalogue_item ? ' readonly="readonly"' : ''; ?>></div></td>
+-            <td data-label="Length"><input class="idlm-calc idlm-measurement-input idlm-item-length" aria-label="Length" type="number" min="0" step="0.01" name="<?php echo esc_attr($name); ?>[length]" value="<?php echo esc_attr(number_format((float) ($item->length ?? 0), 2, '.', '')); ?>"></td>
+-            <td data-label="Height"><input class="idlm-calc idlm-measurement-input idlm-item-height" aria-label="Height" type="number" min="0" step="0.01" name="<?php echo esc_attr($name); ?>[height]" value="<?php echo esc_attr(number_format((float) ($item->height ?? 0), 2, '.', '')); ?>"></td>
+-            <td data-label="Quantity"><input class="idlm-calc idlm-measurement-input idlm-item-quantity" aria-label="Quantity" type="number" min="0.01" step="0.01" name="<?php echo esc_attr($name); ?>[quantity]" value="<?php echo esc_attr(number_format((float) ($item->quantity ?? 1), 2, '.', '')); ?>"></td>
++            <td data-label="Width"><input class="idlm-calc idlm-measurement-input idlm-item-length" aria-label="Width" type="number" min="0" step="0.10" name="<?php echo esc_attr($name); ?>[length]" value="<?php echo esc_attr(number_format((float) ($item->length ?? 0), 2, '.', '')); ?>"></td>
++            <td data-label="Height"><input class="idlm-calc idlm-measurement-input idlm-item-height" aria-label="Height" type="number" min="0" step="0.10" name="<?php echo esc_attr($name); ?>[height]" value="<?php echo esc_attr(number_format((float) ($item->height ?? 0), 2, '.', '')); ?>"></td>
++            <td data-label="Quantity"><input class="idlm-calc idlm-measurement-input idlm-item-quantity" aria-label="Quantity" type="number" min="0.01" step="0.10" name="<?php echo esc_attr($name); ?>[quantity]" value="<?php echo esc_attr(number_format((float) ($item->quantity ?? 1), 2, '.', '')); ?>"></td>
+             <td data-label="Unit"><input class="idlm-unit-value" aria-label="Unit" readonly name="<?php echo esc_attr($name); ?>[unit]" value="<?php echo esc_attr($item->unit ?? 'Nos'); ?>"></td>
+-            <td class="idlm-currency-input" data-label="Rate"><span aria-hidden="true"><?php echo esc_html(self::currency_symbol($currency_code)); ?></span><input class="idlm-calc idlm-spinnerless-input" aria-label="Unit rate" inputmode="decimal" type="number" min="0" step="0.01" name="<?php echo esc_attr($name); ?>[unit_rate]" value="<?php echo esc_attr($item->unit_rate ?? 0); ?>"></td>
++            <td class="idlm-currency-input" data-label="Rate"><span aria-hidden="true"><?php echo esc_html(self::currency_symbol($currency_code)); ?></span><input class="idlm-calc idlm-spinnerless-input" aria-label="Unit rate" inputmode="decimal" type="number" min="0" step="0.10" name="<?php echo esc_attr($name); ?>[unit_rate]" value="<?php echo esc_attr($item->unit_rate ?? 0); ?>"></td>
+             <td class="idlm-line-total" data-label="Total">0.00</td><td class="idlm-line-actions" data-label="Item actions"><button type="button" class="button-link idlm-line-action idlm-move-row-up" title="Move up" aria-label="Move item up">↑</button><button type="button" class="button-link idlm-line-action idlm-move-row-down" title="Move down" aria-label="Move item down">↓</button><button type="button" class="button-link idlm-line-action idlm-duplicate-row" title="Duplicate" aria-label="Duplicate item">⧉</button><button type="button" class="button-link-delete idlm-line-action idlm-remove-row" title="Remove" aria-label="Remove item">×</button></td>
+         </tr><?php
+     }
+@@ -322,7 +322,7 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
+         if (!$has_line_item) {
+             $section_items[] = (object) array('description' => '', 'length' => 0, 'height' => 0, 'quantity' => 1, 'unit' => 'Nos', 'unit_rate' => 0);
+         }
+-        ?><article class="idlm-quote-section" data-section-key="<?php echo esc_attr($key); ?>"><header><span class="dashicons dashicons-move idlm-section-handle" aria-hidden="true"></span><input type="hidden" class="idlm-section-key" name="sections[<?php echo esc_attr($index); ?>][key]" value="<?php echo esc_attr($key); ?>"><input class="idlm-section-name" aria-label="Section name" name="sections[<?php echo esc_attr($index); ?>][section_name]" value="<?php echo esc_attr($section->section_name ?? 'General'); ?>" placeholder="Room / section name"><button type="button" class="button-link idlm-move-section-up" title="Move section up" aria-label="Move section up">↑</button><button type="button" class="button-link idlm-move-section-down" title="Move section down" aria-label="Move section down">↓</button><button type="button" class="button idlm-add-section-header">Add Header</button><button type="button" class="button-link-delete idlm-remove-section">Remove Section</button></header><div class="idlm-quote-items-wrap"><table class="idlm-quote-items"><caption class="screen-reader-text">Editable quotation line items</caption><thead><tr><th>Items</th><th>Length</th><th>Height</th><th>Quantity</th><th>Unit</th><th>Rate</th><th>Total</th><th>Buttons</th></tr></thead><tbody class="idlm-section-items"><?php foreach ($section_items as $item) { self::render_item_row($item, 0, $currency_code); } ?></tbody><tfoot><tr><th class="idlm-section-subtotal-label" colspan="6"><?php echo esc_html(($section->section_name ?? 'General') . ' Subtotal'); ?></th><th class="idlm-section-subtotal">0.00</th><th></th></tr></tfoot></table></div></article><?php
++        ?><article class="idlm-quote-section" data-section-key="<?php echo esc_attr($key); ?>"><header><span class="dashicons dashicons-move idlm-section-handle" aria-hidden="true"></span><input type="hidden" class="idlm-section-key" name="sections[<?php echo esc_attr($index); ?>][key]" value="<?php echo esc_attr($key); ?>"><input class="idlm-section-name" aria-label="Section name" name="sections[<?php echo esc_attr($index); ?>][section_name]" value="<?php echo esc_attr($section->section_name ?? 'General'); ?>" placeholder="Room / section name"><button type="button" class="button-link idlm-move-section-up" title="Move section up" aria-label="Move section up">↑</button><button type="button" class="button-link idlm-move-section-down" title="Move section down" aria-label="Move section down">↓</button><button type="button" class="button idlm-add-section-header">Add Header</button><button type="button" class="button-link-delete idlm-remove-section">Remove Section</button></header><div class="idlm-quote-items-wrap"><table class="idlm-quote-items"><caption class="screen-reader-text">Editable quotation line items</caption><thead><tr><th>Items</th><th>Width</th><th>Height</th><th>Area / Qty</th><th>Unit</th><th>Rate</th><th>Total</th><th>Buttons</th></tr></thead><tbody class="idlm-section-items"><?php foreach ($section_items as $item) { self::render_item_row($item, 0, $currency_code); } ?></tbody><tfoot><tr><th class="idlm-section-subtotal-label" colspan="6"><?php echo esc_html(($section->section_name ?? 'General') . ' Subtotal'); ?></th><th class="idlm-section-subtotal">0.00</th><th></th></tr></tfoot></table></div></article><?php
+     }
+ 
+     private static function render_detail($quote_id, $revision_id = 0) {
+@@ -335,7 +335,7 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
+         $revision->revision_name = self::revision_label($revision);
+         $creator = get_userdata($revision->created_by);
+         ?>
+-        <div class="wrap idlm-wrap idlm-quotes-wrap"><?php self::render_notice(); ?><header class="idlm-header"><div><h1><?php echo esc_html($bundle->quote_number); ?> · <?php echo esc_html($bundle->title); ?></h1><p class="idlm-header-subtitle"><?php echo esc_html($revision->revision_name); ?> · Created by <?php echo esc_html($creator ? $creator->display_name : 'Unknown'); ?> on <?php echo esc_html($revision->created_at); ?></p></div><div class="idlm-header-actions"><?php if (self::can('idlm_download_quote_pdf')): ?><a class="idlm-btn idlm-btn-secondary" target="_blank" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=idlm_print_quote&quote_id=' . $quote_id . '&revision_id=' . absint($revision->id)), 'idlm_print_quote')); ?>">Preview / Save PDF</a><?php endif; ?><?php if (absint($revision->id) === absint($bundle->current_revision_id) && self::can('idlm_edit_quote_drafts')): ?><a class="idlm-btn idlm-btn-primary" href="<?php echo esc_url(self::view_url(array('action' => 'edit', 'quote_id' => $quote_id))); ?>">Edit Quotation</a><?php endif; ?></div></header><?php self::render_workspace_nav('quotes'); ?>
++        <div class="wrap idlm-wrap idlm-quotes-wrap"><?php self::render_notice(); ?><header class="idlm-header"><div><h1><?php echo esc_html($bundle->quote_number); ?> · <?php echo esc_html($bundle->title); ?></h1><p class="idlm-header-subtitle"><?php echo esc_html($revision->revision_name); ?> · Created by <?php echo esc_html($creator ? $creator->display_name : 'Unknown'); ?> on <?php echo esc_html($revision->created_at); ?></p></div><div class="idlm-header-actions"><?php if (self::can('idlm_download_quote_pdf')): ?><a class="idlm-btn idlm-btn-secondary" target="_blank" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=idlm_print_quote&quote_id=' . $quote_id . '&revision_id=' . absint($revision->id)), 'idlm_print_quote')); ?>">Preview / Print</a><a class="idlm-btn idlm-btn-secondary" href="<?php echo esc_url(IDLM_Quotation_Exporter::export_url($quote_id, $revision->id, 'pdf')); ?>">Download PDF</a><a class="idlm-btn idlm-btn-secondary" href="<?php echo esc_url(IDLM_Quotation_Exporter::export_url($quote_id, $revision->id, 'csv')); ?>">Download CSV</a><a class="idlm-btn idlm-btn-secondary" href="<?php echo esc_url(IDLM_Quotation_Exporter::export_url($quote_id, $revision->id, 'xlsx')); ?>">Download XLSX</a><?php endif; ?><?php if (absint($revision->id) === absint($bundle->current_revision_id) && 'Draft' === $bundle->status && 'Draft' === $revision->status && self::can('idlm_edit_quote_drafts') && self::can('idlm_create_quote_revisions')): ?><a class="idlm-btn idlm-btn-primary" href="<?php echo esc_url(self::view_url(array('action' => 'edit', 'quote_id' => $quote_id))); ?>">Edit Quotation</a><?php endif; ?></div></header><?php self::render_workspace_nav('quotes'); ?>
+         <div class="idlm-quote-summary"><div><span>Customer snapshot</span><strong><?php echo esc_html($revision->customer_name ?: '—'); ?></strong></div><div><span>Grand total</span><strong><?php echo esc_html(self::money($revision->grand_total)); ?></strong></div></div>
+         <section class="idlm-quote-panel"><div class="idlm-panel-heading"><h2>Sections and line items</h2></div><p class="description">Section-wise quotation breakdown for this revision.</p><?php self::render_readonly_items($bundle, false); ?></section>
+         <?php if (!empty($revision->internal_notes)): ?><section class="idlm-quote-panel idlm-additional-notes"><h2>Internal Notes</h2><div class="idlm-quote-copy"><?php echo nl2br(esc_html($revision->internal_notes)); ?></div></section><?php endif; ?>
+@@ -363,13 +363,9 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
+                     <div><dt>Subtotal</dt><dd><?php echo esc_html(self::money($bundle->revision->subtotal, $bundle->revision->currency_code)); ?></dd></div>
+                     <div><dt>Wooden Subtotal</dt><dd><?php echo esc_html(self::money($bundle->revision->wooden_subtotal ?? 0, $bundle->revision->currency_code)); ?></dd></div>
+                     <div><dt>Wooden Discount (<?php echo esc_html(number_format_i18n((float) ($bundle->revision->wooden_discount_percent ?? 0), 2)); ?>%)</dt><dd><?php echo esc_html(self::money($bundle->revision->wooden_discount_amount ?? 0, $bundle->revision->currency_code)); ?></dd></div>
+-                    <div><dt>Subtotal after wooden discount</dt><dd><?php echo esc_html(self::money($bundle->revision->subtotal_after_wooden_discount ?? $bundle->revision->subtotal, $bundle->revision->currency_code)); ?></dd></div>
+-                    <div><dt>Other Subtotal</dt><dd><?php echo esc_html(self::money($bundle->revision->other_subtotal ?? 0, $bundle->revision->currency_code)); ?></dd></div>
+-                    <?php if (!empty($bundle->revision->soft_close_enabled)): ?><div><dt>Soft Close Addition (<?php echo esc_html(number_format_i18n((float) ($bundle->revision->soft_close_percent ?? 0), 2)); ?>%)</dt><dd><?php echo esc_html(self::money($bundle->revision->soft_close_amount ?? 0, $bundle->revision->currency_code)); ?></dd></div><?php endif; ?>
+                     <div><dt>Total</dt><dd><?php echo esc_html(self::money($bundle->revision->total_before_additional_discount ?? $bundle->revision->subtotal, $bundle->revision->currency_code)); ?></dd></div>
+                     <?php if ($additional_discount > 0): ?><div><dt>Additional Discount on Total</dt><dd><?php echo esc_html(self::money($additional_discount, $bundle->revision->currency_code)); ?></dd></div><div><dt>Total after additional discount</dt><dd><?php echo esc_html(self::money($bundle->revision->taxable_total, $bundle->revision->currency_code)); ?></dd></div><?php endif; ?>
+                     <div><dt>GST (18%)</dt><dd><?php echo esc_html(self::money($tax_total, $bundle->revision->currency_code)); ?></dd></div>
+-                    <div><dt>Round Off</dt><dd><?php echo esc_html(self::money($bundle->revision->round_off_amount ?? 0, $bundle->revision->currency_code)); ?></dd></div>
+                     <div class="idlm-grand-total"><dt>Grand Total</dt><dd><?php echo esc_html(self::money($bundle->revision->grand_total, $bundle->revision->currency_code)); ?></dd></div>
+                 </dl>
+             </section>
+@@ -377,7 +373,7 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
+         <section class="idlm-print-breakdown"><?php if ($include_summary): ?><h2>Section &amp; Item Breakdown</h2><?php endif; ?><?php
+         foreach ($bundle->sections as $section): $section_total = 0; ?>
+             <article class="idlm-quote-section idlm-readonly-section"><header><strong><?php echo esc_html($section->section_name); ?></strong></header>
+-            <div class="idlm-quote-items-wrap"><table class="idlm-quote-items"><thead><tr><th>S.No</th><th>Item</th><th>Description</th><th>Length</th><th>Height</th><th>Area / Qty</th><th>Unit</th><th>Rate</th><th>Subtotal</th></tr></thead><tbody><?php $serial = 0; foreach ($bundle->items as $item): if (absint($item->section_id) !== absint($section->id)) { continue; } if ('header' === ($item->row_type ?? 'item')): ?><tr class="idlm-readonly-header-row"><th colspan="9"><?php echo esc_html($item->description); ?></th></tr><?php continue; endif; $serial++; if (!$item->is_optional) { $section_total += (float) $item->line_subtotal; } ?><tr class="<?php echo $item->is_optional ? 'is-optional' : ''; ?>"><td><?php echo esc_html($serial); ?></td><td><?php echo esc_html($item->item_name ?: $item->item_code); ?><small><?php echo esc_html(trim(($item->category ?: 'Uncategorised') . ($item->item_code ? ' · ' . $item->item_code : ''))); ?></small></td><td><?php echo esc_html($item->description); ?><small><?php echo esc_html($item->specification); ?></small></td><td><?php echo esc_html(number_format_i18n((float) ($item->length ?? 0), 2)); ?></td><td><?php echo esc_html(number_format_i18n((float) ($item->height ?? 0), 2)); ?></td><td><?php echo esc_html(number_format_i18n((float) ($item->quantity ?? 0), 2)); ?></td><td><?php echo esc_html($item->unit); ?></td><td><?php echo esc_html(self::money($item->unit_rate, $bundle->revision->currency_code)); ?></td><td><?php echo esc_html($item->is_optional ? 'Optional' : self::money($item->line_subtotal, $bundle->revision->currency_code)); ?></td></tr><?php endforeach; ?></tbody><tfoot><tr><th colspan="8"><?php echo esc_html($section->section_name); ?> Subtotal</th><th><?php echo esc_html(self::money($section_total, $bundle->revision->currency_code)); ?></th></tr></tfoot></table></div>
++            <div class="idlm-quote-items-wrap"><table class="idlm-quote-items"><thead><tr><th>S.No</th><th>Item</th><th>Description</th><th>Width</th><th>Height</th><th>Area / Qty</th><th>Unit</th><th>Rate</th><th>Subtotal</th></tr></thead><tbody><?php $serial = 0; foreach ($bundle->items as $item): if (absint($item->section_id) !== absint($section->id)) { continue; } if ('header' === ($item->row_type ?? 'item')): ?><tr class="idlm-readonly-header-row"><th colspan="9"><?php echo esc_html($item->description); ?></th></tr><?php continue; endif; $serial++; if (!$item->is_optional) { $section_total += (float) $item->line_subtotal; } ?><tr class="<?php echo $item->is_optional ? 'is-optional' : ''; ?>"><td><?php echo esc_html($serial); ?></td><td><?php echo esc_html($item->item_name ?: $item->item_code); ?><small><?php echo esc_html(trim(($item->category ?: 'Uncategorised') . ($item->item_code ? ' · ' . $item->item_code : ''))); ?></small></td><td><?php echo esc_html($item->description); ?><small><?php echo esc_html($item->specification); ?></small></td><td><?php echo esc_html(number_format_i18n((float) ($item->length ?? 0), 2)); ?></td><td><?php echo esc_html(number_format_i18n((float) ($item->height ?? 0), 2)); ?></td><td><?php echo esc_html(number_format_i18n((float) ($item->quantity ?? 0), 2)); ?></td><td><?php echo esc_html($item->unit); ?></td><td><?php echo esc_html(self::money($item->unit_rate, $bundle->revision->currency_code)); ?></td><td><?php echo esc_html($item->is_optional ? 'Optional' : self::money($item->line_subtotal, $bundle->revision->currency_code)); ?></td></tr><?php endforeach; ?></tbody><tfoot><tr><th colspan="8"><?php echo esc_html($section->section_name); ?> Subtotal</th><th><?php echo esc_html(self::money($section_total, $bundle->revision->currency_code)); ?></th></tr></tfoot></table></div>
+             </article><?php endforeach; ?></section><?php
+     }
+ 
+@@ -469,7 +465,39 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
+                 .idlm-print .idlm-readonly-section > header {
+                     border-bottom: 1px solid #94a3b8;
+                 }
+-            </style>
++                section.idlm-print-customer-details {
++                    width: 100%;
++                    margin-bottom: 24px;
++                    border: 1px solid #94a3b8;
++                    border-radius: 8px;
++                    overflow: hidden;
++                    break-inside: avoid;
++                }
++                section.idlm-print-customer-details > h2 {
++                    margin: 0;
++                    padding: 10px 16px;
++                    border-bottom: 1px solid #94a3b8;
++                    background: #f8fafc;
++                    color: #1f2937 !important;
++                    font-size: 16px;
++                }
++                .idlm-print-customer-details table {
++                    width: 100%;
++                    table-layout: fixed;
++                }
++                .idlm-print-customer-details th,
++                .idlm-print-customer-details td {
++                    padding: 8px 10px;
++                    overflow-wrap: anywhere;
++                    vertical-align: top;
++                }
++                .idlm-print-customer-details th {
++                    background: #f8fafc;
++                    color: #475569;
++                    font-size: 10px;
++                    text-transform: uppercase;
++                }
++                </style>
+         </head>
+         <body>
+             <button class="button no-print" onclick="window.print()">Print / Save PDF</button>
+@@ -484,10 +512,7 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
+                         <div><dt>Created / Updated Date:</dt><dd><?php echo esc_html($created_at_display . ' / ' . $updated_at_display); ?></dd></div>
+                     </dl>
+                 </header>
+-                <div class="idlm-print-party-grid">
+-                    <section class="idlm-print-party-card"><h2>Customer Details</h2><dl><div><dt>Client Name:</dt><dd><?php echo esc_html($revision->customer_name ?: '—'); ?></dd></div><div><dt>Phone Number:</dt><dd><?php echo esc_html($revision->customer_phone ?: '—'); ?></dd></div><div><dt>Email ID:</dt><dd><?php echo esc_html($revision->customer_email ?: '—'); ?></dd></div><div><dt>Property Name:</dt><dd><?php echo esc_html($revision->project_name ?: '—'); ?></dd></div><div><dt>Location:</dt><dd><?php echo esc_html($revision->property_location ?: '—'); ?></dd></div></dl></section>
+-                    <section class="idlm-print-party-card"><h2><?php echo esc_html($settings['company_name']); ?></h2><p>Company contact information can be added in the quotation cover page or footer settings.</p></section>
+-                </div>
++                <section class="idlm-print-customer-details"><h2>Customer Details</h2><table><thead><tr><th>Client Name</th><th>Phone Number</th><th>Email ID</th><th>Property Name</th><th>Location</th></tr></thead><tbody><tr><td><?php echo esc_html($revision->customer_name ?: '—'); ?></td><td><?php echo esc_html($revision->customer_phone ?: '—'); ?></td><td><?php echo esc_html($revision->customer_email ?: '—'); ?></td><td><?php echo esc_html($revision->project_name ?: '—'); ?></td><td><?php echo esc_html($revision->property_location ?: '—'); ?></td></tr></tbody></table></section>
+                 <?php self::render_readonly_items($bundle); ?>
+                 <?php if (!empty($settings['after_quote_enabled']) && !empty($after_quote_html)): ?><div class="idlm-print-custom idlm-print-after"><?php echo wp_kses_post($after_quote_html); ?></div><?php endif; ?>
+                 <?php if ($settings['pdf_footer']): ?><footer class="idlm-print-footer"><?php echo nl2br(esc_html($settings['pdf_footer'])); ?></footer><?php endif; ?>
+diff --git a/includes/class-quotation-repository.php b/includes/class-quotation-repository.php
+index 7d5794b..2af7d5f 100644
+--- a/includes/class-quotation-repository.php
++++ b/includes/class-quotation-repository.php
+@@ -76,6 +76,38 @@ final class IDLM_Quotation_Repository {
+         return $wpdb->get_row($wpdb->prepare("SELECT * FROM " . self::table('quotes') . " WHERE id = %d", absint($quote_id)));
+     }
+ 
++    /**
++     * Return the canonical quotation for a lead. Revisions, rather than
++     * additional quotation rows, represent changes to a lead's proposal.
++     *
++     * @return object|null
++     */
++    public static function get_quote_for_lead($lead_id) {
++        global $wpdb;
++        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
++        return $wpdb->get_row($wpdb->prepare("SELECT * FROM " . self::table('quotes') . " WHERE lead_id = %d ORDER BY id ASC LIMIT 1", absint($lead_id)));
++    }
++
++    /** Return the lead-level quotation projection used by pipeline validation. */
++    public static function get_lead_quote_value($lead_id) {
++        global $wpdb;
++        return (float) $wpdb->get_var($wpdb->prepare("SELECT quote_value FROM {$wpdb->prefix}idlm_leads WHERE id = %d", absint($lead_id)));
++    }
++
++    /** Serialize new quotation creation for one lead across concurrent requests. */
++    public static function acquire_lead_quote_lock($lead_id, $timeout = 5) {
++        global $wpdb;
++        $lock_name = 'idlm_quote_lead_' . absint($lead_id);
++        return 1 === (int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, %d)', $lock_name, min(15, max(1, absint($timeout)))));
++    }
++
++    /** Release a quotation-creation lock when the request completed normally. */
++    public static function release_lead_quote_lock($lead_id) {
++        global $wpdb;
++        $lock_name = 'idlm_quote_lead_' . absint($lead_id);
++        $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock_name));
++    }
++
+     /**
+      * Fetch a quotation revision row.
+      *
+diff --git a/includes/class-quotation-schema.php b/includes/class-quotation-schema.php
+index 28ea4d4..c752cc0 100644
+--- a/includes/class-quotation-schema.php
++++ b/includes/class-quotation-schema.php
+@@ -10,9 +10,10 @@ if (!defined('ABSPATH')) {
+ }
+ 
+ final class IDLM_Quotation_Schema {
+-    const VERSION = '2.4.0';
++    const VERSION = '2.5.0';
+     const LEGACY_MIGRATION_VERSION = '1.1.0';
+     const SNAPSHOT_MIGRATION_VERSION = '1.1.0';
++    const REVISION_LIFECYCLE_MIGRATION_VERSION = '1.0.0';
+ 
+     /**
+      * Install or upgrade the quotation tables and run idempotent backfills.
+@@ -238,6 +239,30 @@ final class IDLM_Quotation_Schema {
+         update_option('idlm_quotation_schema_version', self::VERSION);
+         self::migrate_legacy_quotes();
+         self::backfill_revision_snapshots_and_sections();
++        self::normalize_revision_lifecycle();
++    }
++
++    /**
++     * Normalize historical quotation records to the draft/revision lifecycle.
++     *
++     * Historical state changes remain in the audit table, but a live quotation
++     * has exactly one editable Draft revision and every prior revision is
++     * Superseded.
++     *
++     * @return void
++     */
++    public static function normalize_revision_lifecycle() {
++        if (self::REVISION_LIFECYCLE_MIGRATION_VERSION === get_option('idlm_quotation_revision_lifecycle_migration_version', '')) {
++            return;
++        }
++        global $wpdb;
++        $quotes = IDLM_Quotation_Repository::table('quotes');
++        $revisions = IDLM_Quotation_Repository::table('quote_revisions');
++        $now = current_time('mysql');
++
++        $wpdb->query("UPDATE {$quotes} SET status = 'Draft', accepted_revision_id = 0, shared_at = NULL, accepted_at = NULL, rejected_at = NULL WHERE status <> 'Draft' OR accepted_revision_id <> 0 OR shared_at IS NOT NULL OR accepted_at IS NOT NULL OR rejected_at IS NOT NULL");
++        $wpdb->query($wpdb->prepare("UPDATE {$revisions} AS revision_row INNER JOIN {$quotes} AS quote_row ON quote_row.id = revision_row.quote_id SET revision_row.status = CASE WHEN revision_row.id = quote_row.current_revision_id THEN 'Draft' ELSE 'Superseded' END, revision_row.finalized_at = CASE WHEN revision_row.id = quote_row.current_revision_id THEN NULL ELSE COALESCE(revision_row.finalized_at, %s) END WHERE revision_row.status <> CASE WHEN revision_row.id = quote_row.current_revision_id THEN 'Draft' ELSE 'Superseded' END OR (revision_row.id = quote_row.current_revision_id AND revision_row.finalized_at IS NOT NULL)", $now));
++        update_option('idlm_quotation_revision_lifecycle_migration_version', self::REVISION_LIFECYCLE_MIGRATION_VERSION, false);
+     }
+ 
+     /**
+@@ -301,7 +326,7 @@ final class IDLM_Quotation_Schema {
+                 continue;
+             }
+             $now = $lead->updated_at ?: ($lead->created_at ?: current_time('mysql'));
+-            $status = $lead->quote_shared ? 'Shared' : 'Draft';
++            $status = 'Draft';
+             if (false === $wpdb->query('START TRANSACTION')) {
+                 $migration_complete = false;
+                 error_log('[IDLM Quotations] Legacy migration transaction could not start for lead ' . absint($lead->id)); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+@@ -311,7 +336,7 @@ final class IDLM_Quotation_Schema {
+                 $quote_id = absint($existing->id);
+                 $quote_saved = $wpdb->update(IDLM_Quotation_Repository::table('quotes'), array('status' => $status, 'updated_at' => $now), array('id' => $quote_id), array('%s', '%s'), array('%d'));
+             } else {
+-                $quote_saved = $wpdb->insert(IDLM_Quotation_Repository::table('quotes'), array('lead_id' => $lead->id, 'quote_number' => $number, 'title' => ($lead->project_name ?: trim($lead->first_name . ' ' . $lead->last_name)) . ' Proposal', 'status' => $status, 'owner_user_id' => $lead->assigned_rep_id, 'created_by' => 0, 'shared_at' => $lead->quote_shared ? $now : null, 'created_at' => $now, 'updated_at' => $now));
++                $quote_saved = $wpdb->insert(IDLM_Quotation_Repository::table('quotes'), array('lead_id' => $lead->id, 'quote_number' => $number, 'title' => ($lead->project_name ?: trim($lead->first_name . ' ' . $lead->last_name)) . ' Proposal', 'status' => $status, 'owner_user_id' => $lead->assigned_rep_id, 'created_by' => 0, 'created_at' => $now, 'updated_at' => $now));
+                 $quote_id = absint($wpdb->insert_id);
+             }
+             if (false === $quote_saved || !$quote_id) {
+@@ -320,7 +345,7 @@ final class IDLM_Quotation_Schema {
+                 error_log('[IDLM Quotations] Legacy quote row migration failed for lead ' . absint($lead->id)); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+                 continue;
+             }
+-            $revision_saved = $wpdb->insert(IDLM_Quotation_Repository::table('quote_revisions'), array('quote_id' => $quote_id, 'revision_number' => 1, 'revision_name' => $number . '-R01', 'status' => $status, 'revision_reason' => 'Legacy quote migration', 'currency_code' => get_option('idlm_currency_code', 'INR'), 'customer_name' => trim($lead->first_name . ' ' . $lead->last_name), 'customer_phone' => $lead->phone, 'customer_email' => $lead->email, 'project_name' => $lead->project_name, 'property_location' => $lead->property_location, 'subtotal' => (float) $lead->quote_value, 'taxable_total' => (float) $lead->quote_value, 'grand_total' => (float) $lead->quote_value, 'internal_notes' => $lead->quote_file ? 'Legacy quote file: ' . esc_url_raw($lead->quote_file) : '', 'created_by' => 0, 'created_at' => $now, 'updated_by' => 0, 'updated_at' => $now, 'finalized_at' => $lead->quote_shared ? $now : null));
++            $revision_saved = $wpdb->insert(IDLM_Quotation_Repository::table('quote_revisions'), array('quote_id' => $quote_id, 'revision_number' => 1, 'revision_name' => $number . '-R01', 'status' => $status, 'revision_reason' => 'Legacy quote migration', 'currency_code' => get_option('idlm_currency_code', 'INR'), 'customer_name' => trim($lead->first_name . ' ' . $lead->last_name), 'customer_phone' => $lead->phone, 'customer_email' => $lead->email, 'project_name' => $lead->project_name, 'property_location' => $lead->property_location, 'subtotal' => (float) $lead->quote_value, 'taxable_total' => (float) $lead->quote_value, 'grand_total' => (float) $lead->quote_value, 'internal_notes' => $lead->quote_file ? 'Legacy quote file: ' . esc_url_raw($lead->quote_file) : '', 'created_by' => 0, 'created_at' => $now, 'updated_by' => 0, 'updated_at' => $now));
+             $revision_id = absint($wpdb->insert_id);
+             $pointer_saved = $revision_saved && $revision_id ? $wpdb->update(IDLM_Quotation_Repository::table('quotes'), array('current_revision_id' => $revision_id), array('id' => $quote_id), array('%d'), array('%d')) : false;
+             $history_saved = false !== $pointer_saved ? IDLM_Quotation_Repository::insert_history($quote_id, $revision_id, '', $status, 'Migrated from legacy lead quote fields.') : false;
+diff --git a/includes/class-quotations.php b/includes/class-quotations.php
+index b8f91b9..93f2bb4 100644
+--- a/includes/class-quotations.php
++++ b/includes/class-quotations.php
+@@ -28,6 +28,9 @@ class IDLM_Quotations {
+ 
+         add_action('admin_post_idlm_save_quote', array(__CLASS__, 'handle_save'));
+         add_action('admin_post_idlm_print_quote', array(__CLASS__, 'render_print_view'));
++        add_action('admin_post_idlm_download_quote_pdf', static function() { IDLM_Quotation_Exporter::download('pdf'); });
++        add_action('admin_post_idlm_download_quote_csv', static function() { IDLM_Quotation_Exporter::download('csv'); });
++        add_action('admin_post_idlm_download_quote_xlsx', static function() { IDLM_Quotation_Exporter::download('xlsx'); });
+         add_action('admin_post_idlm_save_quote_settings', array(__CLASS__, 'handle_save_settings'));
+         add_action('admin_post_idlm_save_catalogue_item', array(__CLASS__, 'handle_save_catalogue_item'));
+         add_action('admin_post_idlm_save_catalogue_category', array(__CLASS__, 'handle_save_catalogue_category'));
+@@ -94,7 +97,7 @@ class IDLM_Quotations {
+         exit;
+     }
+ 
+-    protected static function view_url($args = array()) {
++    public static function view_url($args = array()) {
+         $base = is_admin() ? admin_url('admin.php?page=idlm_quotations') : remove_query_arg(array('action', 'quote_id', 'lead_id', 'status', 'revision_id', 'idlm_notice', 'idlm_error'));
+         return add_query_arg($args, $base);
+     }
+@@ -169,7 +172,6 @@ class IDLM_Quotations {
+     public static function handle_save() { return IDLM_Quotation_Controller::handle_save(); }
+     public static function ajax_autosave_quote() { return IDLM_Quotation_Controller::ajax_autosave_quote(); }
+     public static function ajax_discard_quote_autosave() { return IDLM_Quotation_Controller::ajax_discard_quote_autosave(); }
+-    public static function handle_create_revision() { return IDLM_Quotation_Controller::handle_create_revision(); }
+     public static function ajax_search_catalogue() { return IDLM_Quotation_Controller::ajax_search_catalogue(); }
+     public static function ajax_search_leads() { return IDLM_Quotation_Controller::ajax_search_leads(); }
+     public static function ajax_filter_quotation_list() { return IDLM_Quotation_Controller::ajax_filter_quotation_list(); }
+diff --git a/interior-design-lead-manager.php b/interior-design-lead-manager.php
+index c17e92f..1f3390d 100644
+--- a/interior-design-lead-manager.php
++++ b/interior-design-lead-manager.php
+@@ -3,7 +3,7 @@
+  * Plugin Name:       Interior Design Lead Manager
+  * Plugin URI:        https://github.com/shashi-protecto/interior-design-lead-manager
+  * Description:       A premium lead management system to replace Google Sheets and Pabbly for interior design firms. Captures leads from ad webhooks, manages routing, schedules custom audience batch uploads, triggers conversions server-side using Action Scheduler, and includes a full analytics workspace.
+- * Version:           1.102.38
++ * Version:           1.102.42
+  * Requires PHP:      7.4
+  * Author:            Shashi
+  * License:           GPL-2.0+
+@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
+ }
+ 
+ // Define Plugin Constants
+-define('IDLM_VERSION', '1.102.38');
++define('IDLM_VERSION', '1.102.42');
+ define('IDLM_DB_VERSION', '1.3.4');
+ define('IDLM_PATH', plugin_dir_path(__FILE__));
+ define('IDLM_URL', plugin_dir_url(__FILE__));
+@@ -70,6 +70,7 @@ require_once IDLM_PATH . 'includes/class-quotation-policy.php';
+ require_once IDLM_PATH . 'includes/class-quotation-repository.php';
+ require_once IDLM_PATH . 'includes/class-quotation-schema.php';
+ require_once IDLM_PATH . 'includes/class-quotation-calculator.php';
++require_once IDLM_PATH . 'includes/class-quotation-exporter.php';
+ require_once IDLM_PATH . 'includes/class-quotations.php';
+ require_once IDLM_PATH . 'includes/class-quotation-controller.php';
+ require_once IDLM_PATH . 'includes/class-quotation-renderer.php';
+@@ -153,6 +154,13 @@ function idlm_register_crm_roles_and_capabilities() {
+         }
+     }
+ 
++    // Editors maintain the reusable item catalogue, but do not receive
++    // quotation-setup or broader CRM manager capabilities.
++    $editor_role = get_role('editor');
++    if ($editor_role) {
++        $editor_role->add_cap('idlm_manage_quote_items');
++    }
++
+     foreach (idlm_get_crm_role_slugs('manager') as $role_name) {
+         $role = get_role($role_name);
+         if ($role) {
+diff --git a/readme.txt b/readme.txt
+index 2ad1e56..d291167 100644
+--- a/readme.txt
++++ b/readme.txt
+@@ -3,7 +3,7 @@ Contributors: shashi-protecto
+ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
+ Requires at least: 5.8
+ Tested up to: 7.0
+-Stable tag: 1.102.38
++Stable tag: 1.102.42
+ License: GPLv2 or later
+ License URI: http://www.gnu.org/licenses/gpl-2.0.html
+ 
+@@ -21,7 +21,7 @@ Features:
+ * Analytics dashboard, pipeline board, lead workspace, and audit logs.
+ * Meta/Google/LinkedIn conversion and audience integrations.
+ * Interakt WhatsApp event and reply handling.
+-* Lead-linked, versioned quotations with catalogue items and semantic printable output.
++* Lead-linked, versioned quotations with catalogue items, semantic Preview / Print, and secure exact-revision PDF/CSV/XLSX downloads.
+ * Unified `[idlm_workspace]` frontend CRM with role-aware navigation.
+ 
+ == Installation ==
+@@ -42,6 +42,18 @@ No. Action Scheduler is used when available; WordPress Cron is the fallback.
+ 
+ == Changelog ==
+ 
++= 1.102.42 =
++* Lead details now load activity, WhatsApp history, and tasks only when their respective drawer tab is opened.
++
++= 1.102.41 =
++* Enabled Item Catalogue management for WordPress Editors and recognized CRM manager roles.
++
++= 1.102.40 =
++* Added capability-, nonce-, revision-, and lead-scope-protected quotation PDF, CSV, and XLSX downloads. CSV is formula-safe; XLSX preserves numeric/currency values; PDF is rendered server-side without persistent files.
++
++= 1.102.39 =
++* Consolidated quotations into a locked draft-revision lifecycle with tracked R+1 history, author attribution, required change remarks, and safe autosave handoff.
++
+ = 1.102.38 =
+ * Fixed inbound repeat submissions so they update the existing email/phone-matched lead and retain attribution history without creating duplicate lead records, assignments, or pre-sales tasks. Conflicting identities are retained for review outside the lead queue.
+ 
+diff --git a/tests/admin-refactor-contracts.php b/tests/admin-refactor-contracts.php
+index e780cdc..e6e3acc 100644
+--- a/tests/admin-refactor-contracts.php
++++ b/tests/admin-refactor-contracts.php
+@@ -44,7 +44,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
+         'redirect_legacy_admin_page', 'admin_utility_url', 'render_admin_utility_page',
+         'render_dashboard_page', 'render_users_access_page', 'render_leads_list_page', 'render_common_overlays', 'render_kanban_page',
+         'render_capi_logs_page', 'render_audience_sync_logs_page', 'render_settings_page',
+-        'ajax_get_lead_details', 'ajax_mark_whatsapp_messages_read', 'ajax_get_lead_activity', 'ajax_get_capi_log_payload', 'ajax_get_audience_log_payload', 'ajax_quick_edit_lead',
++        'ajax_get_lead_details', 'ajax_get_lead_whatsapp', 'ajax_mark_whatsapp_messages_read', 'ajax_get_lead_activity', 'ajax_get_capi_log_payload', 'ajax_get_audience_log_payload', 'ajax_quick_edit_lead',
+         'ajax_log_presales_touch', 'ajax_presales_decision', 'ajax_save_activity_comment',
+         'ajax_edit_activity_comment', 'ajax_delete_activity_comment', 'ajax_export_google_conversions',
+         'ajax_export_leads', 'ajax_add_lead_manual', 'ajax_trigger_manual_audience_sync',
+@@ -65,7 +65,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
+     })));
+ 
+     assert_same($expected, $actual, 'The IDLM_Admin public compatibility surface changed.');
+-    assert_same(85, count($actual));
++    assert_same(86, count($actual));
+     assert_true(count(file(dirname(__DIR__) . '/includes/class-admin.php')) <= 3240, 'The Phase 2 admin facade exceeded its 3,240-line size contract.');
+ });
+ 
+@@ -217,7 +217,8 @@ idlm_test('lead drawer Tasks tab shows a live overdue-task notification count',
+     assert_contains('idlm-drawer-tab-notification', $drawer_source);
+     assert_contains('tasks.filter(function(task) { return Boolean(task.is_overdue); }).length', $script_source);
+     assert_contains(".prop('hidden', overdueCount === 0)", $script_source);
+-    assert_contains('// Load once on drawer open so the Tasks tab can surface overdue work immediately.', $script_source);
++    assert_contains("tabId === 'drawer-tab-tasks'", $script_source);
++    assert_false(false !== strpos($script_source, '// Load once on drawer open so the Tasks tab can surface overdue work immediately.'));
+     assert_contains('.idlm-drawer-tab-notification', $styles);
+ });
+ 
+@@ -231,12 +232,14 @@ idlm_test('lead drawer WhatsApp tab lists recorded messages and marks them read
+     assert_contains('idlm-drawer-whatsapp-count', $drawer_source);
+     assert_contains("get_option('idlm_interakt_enabled', '0')", $drawer_source);
+     assert_contains('idlm-drawer-open-interakt', $drawer_source);
+-    assert_contains('IDLM_Interakt::inbox_url($lead->phone)', $drawer_source);
++    assert_contains('IDLM_Interakt::inbox_url($phone)', $drawer_source);
+     assert_contains('https://app.interakt.ai/inbox?channelPhoneNumber=', (string) file_get_contents($root . '/includes/class-interakt.php'));
+     assert_contains('channelPhoneNumber=', (string) file_get_contents($root . '/includes/class-interakt.php'));
+     assert_contains('&chatType=All', (string) file_get_contents($root . '/includes/class-interakt.php'));
+     assert_false(false !== strpos($drawer_source, 'idlm-whatsapp-reply-alert'));
+     assert_contains("action: 'idlm_mark_whatsapp_messages_read'", $script_source);
++    assert_contains("action: 'idlm_get_lead_whatsapp'", $script_source);
++    assert_contains('loadLeadWhatsApp(leadId)', $script_source);
+     assert_contains("tabId === 'drawer-tab-whatsapp'", $script_source);
+ });
+ 
+@@ -289,7 +292,7 @@ idlm_test('admin hooks, AJAX actions, shortcodes, and menu callbacks remain regi
+     $expected_actions = array(
+         'admin_menu', 'admin_init', 'wp_enqueue_scripts',
+         'admin_post_idlm_update_my_account', 'admin_post_idlm_rotate_api_credential', 'admin_post_idlm_create_user', 'admin_post_idlm_update_user', 'admin_post_idlm_update_role_scopes',
+-        'wp_ajax_idlm_get_lead_details', 'wp_ajax_idlm_mark_whatsapp_messages_read', 'wp_ajax_idlm_get_lead_activity', 'wp_ajax_idlm_get_capi_log_payload', 'wp_ajax_idlm_get_audience_log_payload',
++        'wp_ajax_idlm_get_lead_details', 'wp_ajax_idlm_get_lead_whatsapp', 'wp_ajax_idlm_mark_whatsapp_messages_read', 'wp_ajax_idlm_get_lead_activity', 'wp_ajax_idlm_get_capi_log_payload', 'wp_ajax_idlm_get_audience_log_payload',
+         'wp_ajax_idlm_quick_edit_lead', 'wp_ajax_idlm_save_activity_comment',
+         'wp_ajax_idlm_edit_activity_comment', 'wp_ajax_idlm_delete_activity_comment',
+         'wp_ajax_idlm_export_leads', 'wp_ajax_idlm_export_google_conversions',
+diff --git a/tests/bootstrap.php b/tests/bootstrap.php
+index 5ee136c..9b96fa9 100644
+--- a/tests/bootstrap.php
++++ b/tests/bootstrap.php
+@@ -375,6 +375,15 @@ final class IDLM_Test_WPDB {
+             return null;
+         }
+ 
++        if (preg_match('/FROM (wp_idlm_quotes) WHERE lead_id = ([0-9]+) ORDER BY id ASC LIMIT 1/i', $query, $matches)) {
++            foreach ($this->tables[$matches[1]] as $row) {
++                if ((int) ($row['lead_id'] ?? 0) === (int) $matches[2]) {
++                    return $this->format_row($row, $output);
++                }
++            }
++            return null;
++        }
++
+         if (preg_match('/FROM (wp_idlm_[a-z_]+)(?: [a-z]+)? WHERE (?:[a-z]+\.)?id = ([0-9]+)/i', $query, $matches)) {
+             foreach ($this->tables[$matches[1]] ?? array() as $row) {
+                 if ((int) ($row['id'] ?? 0) === (int) $matches[2]) {
+@@ -403,6 +412,11 @@ final class IDLM_Test_WPDB {
+             return $row ? ($row['assigned_rep_id'] ?? 0) : null;
+         }
+ 
++        if (preg_match('/SELECT quote_value FROM (wp_idlm_leads) WHERE id = ([0-9]+)/i', $query, $matches)) {
++            $row = $this->find_by_id($matches[1], (int) $matches[2]);
++            return $row ? ($row['quote_value'] ?? 0) : null;
++        }
++
+         if (preg_match('/SELECT (?:id|1) FROM (wp_idlm_leads) WHERE id = ([0-9]+)(.*)$/i', $query, $matches)) {
+             $row = $this->find_by_id($matches[1], (int) $matches[2]);
+             if (!$row) {
+@@ -456,6 +470,15 @@ final class IDLM_Test_WPDB {
+             return $numbers ? max($numbers) : null;
+         }
+ 
++        if (preg_match('/SELECT id FROM (wp_idlm_quotes) WHERE lead_id = ([0-9]+) LIMIT 1/i', $query, $matches)) {
++            foreach ($this->tables[$matches[1]] as $row) {
++                if ((int) ($row['lead_id'] ?? 0) === (int) $matches[2]) {
++                    return $row['id'];
++                }
++            }
++            return null;
++        }
++
+         if (preg_match("/SELECT id FROM (wp_idlm_quote_item_categories) WHERE category_name = '([^']*)' AND status = 'active'/i", $query, $matches)) {
+             foreach ($this->tables[$matches[1]] as $row) {
+                 if ((string) ($row['category_name'] ?? '') === stripslashes($matches[2]) && 'active' === ($row['status'] ?? '')) {
+@@ -690,6 +713,7 @@ $GLOBALS['idlm_test_use_object_cache'] = false;
+ $GLOBALS['idlm_test_password_counter'] = 0;
+ $GLOBALS['idlm_test_asset_calls'] = array();
+ $GLOBALS['idlm_test_menu_calls'] = array();
++$GLOBALS['idlm_test_remote_response'] = null;
+ 
+ function idlm_test_reset_environment(): void {
+     $GLOBALS['wpdb']->reset();
+@@ -880,6 +904,14 @@ function get_bloginfo(string $show = ''): string {
+     return 'Test Site';
+ }
+ 
++function bloginfo(string $show = ''): void {
++    echo get_bloginfo($show);
++}
++
++function number_format_i18n($number, int $decimals = 0): string {
++    return number_format((float) $number, $decimals, '.', ',');
++}
++
+ function get_current_user_id(): int {
+     return (int) $GLOBALS['idlm_test_current_user_id'];
+ }
+@@ -1095,6 +1127,14 @@ function wp_parse_url(string $url, int $component = -1) {
+     return parse_url($url, $component);
+ }
+ 
++function wp_safe_remote_get(string $url, array $args = array()) {
++    return $GLOBALS['idlm_test_remote_response'] ?? new WP_Error('remote_unavailable', 'No test response configured.');
++}
++
++function wp_remote_retrieve_header($response, string $header): string {
++    return (string) ($response['headers'][strtolower($header)] ?? '');
++}
++
+ function is_wp_error($value): bool {
+     return $value instanceof WP_Error;
+ }
+@@ -1127,6 +1167,10 @@ function wp_create_nonce(string $action): string {
+     return 'test-nonce';
+ }
+ 
++function wp_nonce_url(string $actionurl, string $action = '-1', string $name = '_wpnonce'): string {
++    return add_query_arg(array($name => wp_create_nonce($action)), $actionurl);
++}
++
+ function wp_nonce_field(string $action, string $name = '_wpnonce'): void {
+     echo '<input type="hidden" name="' . esc_attr($name) . '" value="test-nonce">';
+ }
+@@ -1204,6 +1248,7 @@ require_once dirname(__DIR__) . '/includes/class-quotation-policy.php';
+ require_once dirname(__DIR__) . '/includes/class-quotation-repository.php';
+ require_once dirname(__DIR__) . '/includes/class-quotation-schema.php';
+ require_once dirname(__DIR__) . '/includes/class-quotation-calculator.php';
++require_once dirname(__DIR__) . '/includes/class-quotation-exporter.php';
+ require_once dirname(__DIR__) . '/includes/class-quotations.php';
+ require_once dirname(__DIR__) . '/includes/class-quotation-controller.php';
+ require_once dirname(__DIR__) . '/includes/class-quotation-renderer.php';
+diff --git a/tests/performance/class-dataset-generator.php b/tests/performance/class-dataset-generator.php
+index c1314ef..b286255 100644
+--- a/tests/performance/class-dataset-generator.php
++++ b/tests/performance/class-dataset-generator.php
+@@ -225,7 +225,7 @@ final class IDLM_Performance_Dataset_Generator {
+             'lead_id' => $lead_id,
+             'quote_number' => sprintf('PERF-%s-%06d', $run_id, $ordinal),
+             'title' => self::marker($run_id) . ' Proposal ' . $ordinal,
+-            'status' => 0 === $ordinal % 4 ? 'Shared' : 'Draft',
++            'status' => 'Draft',
+             'current_revision_id' => 0,
+             'owner_user_id' => $user_id,
+             'created_by' => $user_id,
+@@ -244,7 +244,7 @@ final class IDLM_Performance_Dataset_Generator {
+             'quote_id' => $quote_id,
+             'revision_number' => 1,
+             'revision_name' => sprintf('PERF-%s-%06d-R01', $run_id, $ordinal),
+-            'status' => 0 === $ordinal % 4 ? 'Shared' : 'Draft',
++            'status' => 'Draft',
+             'currency_code' => 'INR',
+             'customer_name' => 'Synthetic Customer ' . $ordinal,
+             'customer_phone' => '',
+diff --git a/tests/release-contracts.php b/tests/release-contracts.php
+index ebf305e..243ff0c 100644
+--- a/tests/release-contracts.php
++++ b/tests/release-contracts.php
+@@ -27,7 +27,7 @@ idlm_test('Phase 9 distribution inventory includes runtime files and excludes de
+ idlm_test('Phase 9 release metadata authorities remain aligned', static function(): void {
+     $evidence = IDLM_Release_Artifact::version_evidence(dirname(__DIR__));
+     assert_true($evidence['aligned']);
+-    assert_same('1.102.38', $evidence['version']);
++    assert_same('1.102.42', $evidence['version']);
+     assert_count_value(5, $evidence['sources']);
+     assert_count_value(1, array_unique(array_values($evidence['sources'])));
+ });
+diff --git a/tests/run.php b/tests/run.php
+index 2c7cafd..ccdcf38 100644
+--- a/tests/run.php
++++ b/tests/run.php
+@@ -412,6 +412,41 @@ idlm_test('quick edit enforces object ownership for restricted representatives',
+     assert_same('New', $GLOBALS['wpdb']->rows('idlm_leads')[0]['stage']);
+ });
+ 
++idlm_test('quick stage edit preserves the structured quotation total', static function(): void {
++    idlm_test_login(5, array('sales_executive'), array('idlm_access_leads'));
++    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array(
++        'assigned_rep_id' => 5,
++        'quote_value' => 125000,
++        'quote_file' => 'https://example.test/original-quote.pdf',
++    ))));
++    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 8, 'lead_id' => 1, 'quote_number' => 'Q-2026-000008')));
++    $_POST = array(
++        'lead_id' => 1,
++        'field' => 'stage',
++        'value' => 'Quote Shared',
++        'quote_value' => '1',
++        'quote_file' => 'https://example.test/legacy-upload.pdf',
++    );
++
++    expect_json_response(static fn() => IDLM_Admin::ajax_quick_edit_lead(), true);
++    $lead = $GLOBALS['wpdb']->rows('idlm_leads')[0];
++    assert_same('Quote Shared', $lead['stage']);
++    assert_same(1, $lead['quote_shared']);
++    assert_same(125000, $lead['quote_value']);
++    assert_same('https://example.test/original-quote.pdf', $lead['quote_file']);
++});
++
++idlm_test('structured zero-total quotations cannot move a lead to Quote Shared', static function(): void {
++    idlm_test_login(5, array('sales_executive'), array('idlm_access_leads'));
++    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 5, 'quote_value' => 0))));
++    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 8, 'lead_id' => 1, 'quote_number' => 'Q-2026-000008')));
++    $_POST = array('lead_id' => 1, 'field' => 'stage', 'value' => 'Quote Shared');
++
++    $response = expect_json_response(static fn() => IDLM_Admin::ajax_quick_edit_lead(), false);
++    assert_contains('structured quotation total', (string) $response->data['message']);
++    assert_same('New', $GLOBALS['wpdb']->rows('idlm_leads')[0]['stage']);
++});
++
+ idlm_test('pre-sales cannot change stage from the lead drawer header', static function(): void {
+     idlm_test_login(5, array('idlm_pre_sales'), array('idlm_access_leads', 'idlm_qualify_leads'));
+     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 5))));
+@@ -718,6 +753,13 @@ idlm_test('quotation policy and handler deny users without quotation capabilitie
+     assert_contains('Permission denied', (string) $response->data['message']);
+ });
+ 
++idlm_test('editors receive only the catalogue-management quotation capability', static function(): void {
++    $bootstrap = file_get_contents(dirname(__DIR__) . '/interior-design-lead-manager.php');
++    assert_contains("\$editor_role = get_role('editor');", $bootstrap);
++    assert_contains("\$editor_role->add_cap('idlm_manage_quote_items');", $bootstrap);
++    assert_false(false !== strpos($bootstrap, "\$editor_role->add_cap('idlm_manage_quote_settings');"));
++});
++
+ idlm_test('quotation line items calculate quantity multiplied by rate and sanitize optional/header rows', static function(): void {
+     $items = invoke_private('IDLM_Quotations', 'parse_items', array(array(
+         array('description' => 'Woodwork', 'quantity' => '2.50', 'unit_rate' => '1200.40', 'is_wood' => '1'),
+@@ -733,6 +775,15 @@ idlm_test('quotation line items calculate quantity multiplied by rate and saniti
+     assert_same(0, $items[2]['line_total']);
+ });
+ 
++idlm_test('quotation line items calculate billable area from width and height', static function(): void {
++    $items = IDLM_Quotation_Calculator::parse_items(array(
++        array('description' => 'Wall panelling', 'length' => '4.5', 'height' => '2.4', 'quantity' => '1', 'unit_rate' => '1000'),
++    ));
++
++    assert_same(10.8, $items[0]['quantity']);
++    assert_same(10800.0, $items[0]['line_subtotal']);
++});
++
+ idlm_test('quotation quantities use the same positive two-decimal minimum as the editor', static function(): void {
+     $items = IDLM_Quotation_Calculator::parse_items(array(
+         array('description' => 'Zero quantity', 'quantity' => '0', 'unit_rate' => '100'),
+@@ -804,6 +855,90 @@ idlm_test('quotation calculator is deterministic and the legacy quotation API de
+     assert_same($sections, invoke_private('IDLM_Quotations', 'parse_sections', array(array(array('key' => 'living', 'section_name' => 'Living Room')))));
+ });
+ 
++idlm_test('quotation exports are revision-only, formula-safe, typed, and capability guarded', static function(): void {
++    idlm_test_login(7, array('sales_executive'), array('idlm_view_quotes'));
++    $denied = IDLM_Quotation_Exporter::authorize(1, 1, 'csv', false);
++    assert_true(is_wp_error($denied), 'Downloads require the dedicated quotation download capability.');
++    idlm_test_login(7, array('sales_executive'), array('idlm_view_quotes', 'idlm_download_quote_pdf'));
++    assert_true(is_wp_error(IDLM_Quotation_Exporter::authorize(1, 0, 'csv', false)), 'Downloads require an explicit revision ID.');
++
++    $bundle = (object) array(
++        'id' => 41,
++        'lead_id' => 9,
++        'quote_number' => 'Q/2026:000041',
++        'revision' => (object) array(
++            'id' => 71, 'quote_id' => 41, 'revision_number' => 2, 'customer_name' => 'Asha Rao',
++            'project_name' => '=Hidden current-lead value', 'currency_code' => 'INR', 'created_at' => '2026-10-02 10:00:00',
++            'subtotal' => 1200.0, 'wooden_subtotal' => 800.0, 'wooden_discount_amount' => 80.0,
++            'total_before_additional_discount' => 1120.0, 'additional_discount_amount' => 20.0,
++            'taxable_total' => 1100.0, 'cgst_total' => 99.0, 'sgst_total' => 99.0, 'igst_total' => 0.0, 'grand_total' => 1298.0,
++        ),
++        'items' => array(
++            (object) array('section_name' => 'Living', 'item_code' => '=CMD', 'item_name' => 'Cabinet', 'description' => '@unsafe', 'length' => 8.5, 'height' => 7.0, 'quantity' => 2, 'unit' => 'Nos', 'unit_rate' => 600, 'line_subtotal' => 1200, 'row_type' => 'item', 'is_optional' => 0),
++            (object) array('section_name' => 'Living', 'description' => 'Do not export', 'row_type' => 'header', 'is_optional' => 0),
++            (object) array('section_name' => 'Living', 'description' => 'Optional item', 'row_type' => 'item', 'is_optional' => 1),
++        ),
++    );
++    $data = IDLM_Quotation_Exporter::export_data($bundle);
++    assert_count_value(1, $data['line_items']);
++    assert_same('=CMD — Cabinet', $data['line_items'][0]['item_code_name']);
++    assert_same(1200.0, $data['line_items'][0]['line_total']);
++    assert_same(1298.0, $data['summary'][13][1]);
++    assert_same("'=1+1", IDLM_Quotation_Exporter::csv_text('=1+1'));
++    assert_same("' @SUM(A1)", IDLM_Quotation_Exporter::csv_text(' @SUM(A1)'));
++    assert_same('Q-2026-000041-R02-Asha-Rao', IDLM_Quotation_Exporter::filename_stem($bundle));
++    assert_contains('idlm_download_quote_xlsx', IDLM_Quotation_Exporter::export_url(41, 71, 'xlsx'));
++
++    $xlsx = IDLM_Quotation_Exporter::build_xlsx($bundle);
++    assert_false(is_wp_error($xlsx), 'XLSX writer should produce a real OOXML archive.');
++    $zip = new ZipArchive();
++    assert_same(true, $zip->open($xlsx));
++    assert_contains('Line items', (string) $zip->getFromName('xl/workbook.xml'));
++    assert_contains('t="n"><v>1200', (string) $zip->getFromName('xl/worksheets/sheet2.xml'));
++    assert_contains('&apos;=CMD', (string) $zip->getFromName('xl/worksheets/sheet2.xml'));
++    $zip->close();
++    @unlink($xlsx);
++
++    $exporter = file_get_contents(dirname(__DIR__) . '/includes/class-quotation-exporter.php');
++    assert_contains("check_admin_referer('idlm_download_quote_' . \$format", $exporter);
++    assert_contains('absint($bundle->revision->quote_id) !== absint($quote_id)', $exporter);
++    assert_contains('Content-Disposition: attachment;', $exporter);
++    assert_contains('PDF download could not be generated.', $exporter);
++    assert_contains("defaultMediaType', 'print'", $exporter);
++    assert_contains('id="idlm-dompdf-layout"', $exporter);
++    assert_contains('id="idlm-dompdf-columns"', $exporter);
++    assert_contains('@page{size:A4;margin:10mm}', $exporter);
++    assert_contains('body,body *{font-family:DejaVu Sans,sans-serif!important}', $exporter);
++    assert_contains('display:table!important', $exporter);
++    assert_contains('.idlm-print-cover>.idlm-quotation-cover>table', $exporter);
++    assert_contains('page-break-inside:auto!important', $exporter);
++    assert_contains('img[width="42"]{width:34px!important;height:34px!important', $exporter);
++    assert_contains('td[style*="padding:14px 10px"]{padding:5px 6px!important}', $exporter);
++    assert_contains('.idlm-print-after p,.idlm-print-after li,.idlm-print-after td', $exporter);
++    assert_contains('font-size:9px!important;line-height:1.35!important', $exporter);
++    assert_contains('inline_customer_document_images', $exporter);
++    assert_contains("'/wp-content/uploads/'", $exporter);
++    assert_contains('wp_safe_remote_get', $exporter);
++    assert_contains("'redirection' => 0", $exporter);
++    assert_contains("'reject_unsafe_urls' => true", $exporter);
++    assert_false(false !== strpos($exporter, '$exception->getMessage()'), 'Renderer details must never be exposed.');
++
++    $GLOBALS['idlm_test_remote_response'] = array('response' => array('code' => 200), 'headers' => array('content-type' => 'image/png'), 'body' => 'safe image bytes');
++    $asset_url = 'https://crm.qoakinteriors.com/wp-content/uploads/2026/05/Q-OAK-INTERIORS-Logo.png';
++    $data_uri = invoke_private('IDLM_Quotation_Exporter', 'remote_customer_image_data_uri', array($asset_url, array($asset_url)));
++    assert_same('data:image/png;base64,' . base64_encode('safe image bytes'), $data_uri);
++    assert_same('', invoke_private('IDLM_Quotation_Exporter', 'remote_customer_image_data_uri', array('https://example.test/not-configured.png', array($asset_url))));
++});
++
++idlm_test('quotation bundle rejects a revision owned by a different quote', static function(): void {
++    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 1, 'lead_id' => 7, 'quote_number' => 'Q-1', 'current_revision_id' => 1)));
++    $GLOBALS['wpdb']->seed('idlm_quote_revisions', array(
++        array('id' => 1, 'quote_id' => 1, 'revision_number' => 1),
++        array('id' => 2, 'quote_id' => 2, 'revision_number' => 1),
++    ));
++    assert_same(null, IDLM_Quotation_Repository::get_quote_bundle(1, 2));
++});
++
+ idlm_test('quotation repository owns table mapping and legacy aggregate read delegates', static function(): void {
+     $GLOBALS['wpdb']->seed('idlm_quotes', array(array(
+         'id' => 11,
+@@ -992,9 +1127,11 @@ idlm_test('quotation repository prepares scoped quotation list filters and propa
+ idlm_test('quotation migration compatibility delegates preserve version markers', static function(): void {
+     invoke_private('IDLM_Quotations', 'migrate_legacy_quotes');
+     invoke_private('IDLM_Quotations', 'backfill_revision_snapshots_and_sections');
++    IDLM_Quotation_Schema::normalize_revision_lifecycle();
+ 
+     assert_same(IDLM_Quotation_Schema::LEGACY_MIGRATION_VERSION, get_option('idlm_legacy_quote_migration_version'));
+     assert_same(IDLM_Quotation_Schema::SNAPSHOT_MIGRATION_VERSION, get_option('idlm_quotation_snapshot_migration_version'));
++    assert_same(IDLM_Quotation_Schema::REVISION_LIFECYCLE_MIGRATION_VERSION, get_option('idlm_quotation_revision_lifecycle_migration_version'));
+ });
+ 
+ idlm_test('quotation numbering is yearly, formatted, and monotonically increments', static function(): void {
+@@ -1011,19 +1148,19 @@ idlm_test('quotation autosave rejects missing capability and object-access misma
+     $response = expect_json_response(static fn() => IDLM_Quotations::ajax_autosave_quote(), false, 403);
+     assert_contains('permission', (string) $response->data['message']);
+ 
+-    idlm_test_login(5, array('sales_executive'), array('idlm_view_quotes', 'idlm_edit_quote_drafts'));
++    idlm_test_login(5, array('sales_executive'), array('idlm_view_quotes', 'idlm_edit_quote_drafts', 'idlm_create_quote_revisions'));
+     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 9))));
+-    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 1, 'lead_id' => 1, 'current_revision_id' => 1)));
+-    $GLOBALS['wpdb']->seed('idlm_quote_revisions', array(array('id' => 1, 'quote_id' => 1, 'currency_code' => 'INR')));
++    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 1, 'lead_id' => 1, 'current_revision_id' => 1, 'status' => 'Draft')));
++    $GLOBALS['wpdb']->seed('idlm_quote_revisions', array(array('id' => 1, 'quote_id' => 1, 'currency_code' => 'INR', 'status' => 'Draft')));
+     $response = expect_json_response(static fn() => IDLM_Quotations::ajax_autosave_quote(), false, 409);
+     assert_contains('current quotation revision', (string) $response->data['message']);
+ });
+ 
+ idlm_test('quotation autosave stores a scoped working copy with server-calculated totals', static function(): void {
+-    idlm_test_login(5, array('sales_executive'), array('idlm_view_quotes', 'idlm_edit_quote_drafts'));
++    idlm_test_login(5, array('sales_executive'), array('idlm_view_quotes', 'idlm_edit_quote_drafts', 'idlm_create_quote_revisions'));
+     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 5))));
+-    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 1, 'lead_id' => 1, 'current_revision_id' => 1)));
+-    $GLOBALS['wpdb']->seed('idlm_quote_revisions', array(array('id' => 1, 'quote_id' => 1, 'currency_code' => 'INR', 'customer_intro' => '')));
++    $GLOBALS['wpdb']->seed('idlm_quotes', array(array('id' => 1, 'lead_id' => 1, 'current_revision_id' => 1, 'status' => 'Draft')));
++    $GLOBALS['wpdb']->seed('idlm_quote_revisions', array(array('id' => 1, 'quote_id' => 1, 'currency_code' => 'INR', 'customer_intro' => '', 'status' => 'Draft')));
+     $_POST = array(
+         'quote_id' => 1,
+         'revision_id' => 1,
+@@ -1038,6 +1175,31 @@ idlm_test('quotation autosave stores a scoped working copy with server-calculate
+     assert_false(isset($copy['title']));
+ });
+ 
++idlm_test('quotation editor retains revision remarks and exposes Width throughout the quotation UI', static function(): void {
++    $root = dirname(__DIR__) . '/';
++    $controller = (string) file_get_contents($root . 'includes/class-quotation-controller.php');
++    $renderer = (string) file_get_contents($root . 'includes/class-quotation-renderer.php');
++    $script = (string) file_get_contents($root . 'assets/js/quotations.js');
++
++    assert_contains("\$revision_reason = sanitize_text_field", $controller);
++    assert_contains("IDLM_Quotation_Repository::next_revision_number(\$quote_id)", $controller);
++    assert_contains("IDLM_Quotation_Repository::lock_quote(\$quote_id)", $controller);
++    assert_contains("'Draft' !== \$quote->status", $controller);
++    assert_contains("'revision_reason' => \$revision_reason ?: 'Initial proposal'", $controller);
++    assert_contains('type="hidden" name="revision_reason"', $renderer);
++    assert_contains('<th>Width</th><th>Height</th>', $renderer);
++    assert_contains('data-label="Width"', $renderer);
++    assert_contains('step="0.10" name="<?php echo esc_attr($name); ?>[length]"', $renderer);
++    assert_contains('step="0.10" name="<?php echo esc_attr($name); ?>[height]"', $renderer);
++    assert_contains('step="0.10" name="<?php echo esc_attr($name); ?>[quantity]"', $renderer);
++    assert_contains('step="0.10" name="<?php echo esc_attr($name); ?>[unit_rate]"', $renderer);
++    assert_contains('function ensureRevisionReason(event)', $script);
++    assert_contains("window.IDLMDialog.prompt({", $script);
++    assert_contains('if (event.defaultPrevented) { return; }', $script);
++    assert_false(false !== strpos($controller, 'handle_create_revision()'));
++    assert_contains('normalize_revision_lifecycle', (string) file_get_contents($root . 'includes/class-quotation-schema.php'));
++});
++
+ idlm_test('core schema baseline declares required lifecycle columns, defaults, and indexes', static function(): void {
+     IDLM_DB::create_tables();
+     assert_count_value(10, $GLOBALS['wpdb']->dbdelta);
+@@ -1296,6 +1458,9 @@ idlm_test('transactional deletion removes a lead and every core dependent row',
+ idlm_test('quotation print source is semantic and has no DOM rewrite script', static function(): void {
+     $source = file_get_contents(dirname(__DIR__) . '/includes/class-quotation-renderer.php');
+     assert_contains('idlm-print-document-head', $source);
++    assert_contains('<section class="idlm-print-customer-details"><h2>Customer Details</h2><table>', $source);
++    assert_contains('<th>Client Name</th><th>Phone Number</th><th>Email ID</th><th>Property Name</th><th>Location</th>', $source);
++    assert_false(false !== strpos($source, 'Company contact information can be added in the quotation cover page or footer settings.'));
+     assert_contains('Section-wise subtotal before discount', $source);
+     assert_false(false !== strpos($source, 'idlm-print-additional-notes'));
+     assert_false(false !== strpos($source, 'document.querySelector'));

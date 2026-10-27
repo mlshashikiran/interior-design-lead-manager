@@ -1,0 +1,539 @@
+{
+    "templates/access-restricted.php": {
+        "before_sha256": "12c981761292f3548e9e26e6cf41d9fef6185c42c79aa788c03ecebac2f20453",
+        "after_sha256": "074e3d8d02b85b30fe9e9b62bced0ed350c9cbe4afb712899383faf41fc95b93",
+        "renamed_variables": {
+            "$wrapper_class": "$idlm_wrapper_class",
+            "$is_logged_in": "$idlm_is_logged_in",
+            "$auth_view": "$idlm_auth_view",
+            "$auth_error": "$idlm_auth_error",
+            "$auth_notice": "$idlm_auth_notice",
+            "$request_uri": "$idlm_request_uri",
+            "$return_url": "$idlm_return_url",
+            "$reset_key": "$idlm_reset_key",
+            "$reset_login": "$idlm_reset_login",
+            "$reset_user": "$idlm_reset_user",
+            "$white_label": "$idlm_white_label",
+            "$brand_logo": "$idlm_brand_logo"
+        }
+    },
+    "templates/admin/identity-reviews.php": {
+        "before_sha256": "dac3f852f98a20330e6efed97d14e2feb5201377f802c512c211362e969790fb",
+        "after_sha256": "fd7803b96b18d3f1b36540fc82c1be0f4d0e3f9e72c56f69f295b700208aa89f",
+        "renamed_variables": {
+            "$rows": "$idlm_rows",
+            "$status": "$idlm_status",
+            "$filter": "$idlm_filter",
+            "$review": "$idlm_review",
+            "$field": "$idlm_field",
+            "$value": "$idlm_value",
+            "$id": "$idlm_id",
+            "$lead": "$idlm_lead",
+            "$last": "$idlm_last"
+        }
+    },
+    "templates/admin/settings/webhooks.php": {
+        "before_sha256": "c14ad0601b8f4c7508709a0842b84d20a5d7ac03bc6352ebe0f911b97e4ff930",
+        "after_sha256": "1d704350abb4992145139db99a1682fa860889cb4c20dc1b07a889df1ea135e8",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab",
+            "$webhook_key": "$idlm_webhook_key",
+            "$field_mappings": "$idlm_field_mappings",
+            "$capture_tab": "$idlm_capture_tab",
+            "$platforms": "$idlm_platforms",
+            "$field_groups": "$idlm_field_groups",
+            "$fields": "$idlm_fields",
+            "$idx": "$idlm_idx",
+            "$plat": "$idlm_plat",
+            "$mappings": "$idlm_mappings",
+            "$active_class": "$idlm_active_class",
+            "$platform_fields": "$idlm_platform_fields",
+            "$walkin_field_keys": "$idlm_walkin_field_keys",
+            "$plat_badge_label": "$idlm_plat_badge_label",
+            "$plat_badge_class": "$idlm_plat_badge_class",
+            "$mapped_count": "$idlm_mapped_count",
+            "$value": "$idlm_value",
+            "$contact_ready": "$idlm_contact_ready",
+            "$group_key": "$idlm_group_key",
+            "$group": "$idlm_group",
+            "$group_fields": "$idlm_group_fields",
+            "$collapsed_group": "$idlm_collapsed_group",
+            "$key": "$idlm_key",
+            "$lbl": "$idlm_lbl",
+            "$val": "$idlm_val"
+        }
+    },
+    "templates/admin/settings/backup.php": {
+        "before_sha256": "152568a919cd43d71b2600106830d6b13ff109606e2ca3e1f074a088fcaaf59a",
+        "after_sha256": "6ce8a64edb978780fd007e450cd90e3c187df4702e6616a385e9c63f047f18a9",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab",
+            "$can_manage_options": "$idlm_can_manage_options",
+            "$notice": "$idlm_notice",
+            "$messages": "$idlm_messages"
+        }
+    },
+    "templates/admin/settings/capi.php": {
+        "before_sha256": "00050440610c2020e6883bb64a08fd2cacd4cdb2665b0a31366fc0668823f599",
+        "after_sha256": "478bc15d18f7d824dc910117286c077abd30a8ed767cc6a175f26a6630a24b4e",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab",
+            "$stages": "$idlm_stages",
+            "$meta_capi_enabled": "$idlm_meta_capi_enabled",
+            "$meta_pixel_id": "$idlm_meta_pixel_id",
+            "$meta_access_token": "$idlm_meta_access_token",
+            "$meta_event_mappings": "$idlm_meta_event_mappings",
+            "$google_capi_enabled": "$idlm_google_capi_enabled",
+            "$google_measurement_id": "$idlm_google_measurement_id",
+            "$google_api_secret": "$idlm_google_api_secret",
+            "$google_event_mappings": "$idlm_google_event_mappings",
+            "$linkedin_capi_enabled": "$idlm_linkedin_capi_enabled",
+            "$linkedin_conversion_id": "$idlm_linkedin_conversion_id",
+            "$linkedin_access_token": "$idlm_linkedin_access_token",
+            "$linkedin_event_mappings": "$idlm_linkedin_event_mappings",
+            "$stage": "$idlm_stage",
+            "$mapped_val": "$idlm_mapped_val",
+            "$feed_url": "$idlm_feed_url"
+        }
+    },
+    "templates/admin/settings/health.php": {
+        "before_sha256": "76f92172d507e31c97bbf755c0e7a229e58ffd1c2530d2f936e3f70502762ce9",
+        "after_sha256": "7267ce35fe8624c8be885836baf3c837bef2688b2dbcb88dac692c788b78fd58",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab",
+            "$telemetry_level": "$idlm_telemetry_level",
+            "$logs": "$idlm_logs",
+            "$php_version": "$idlm_php_version",
+            "$wordpress_version": "$idlm_wordpress_version",
+            "$memory_limit": "$idlm_memory_limit",
+            "$action_scheduler_version": "$idlm_action_scheduler_version",
+            "$db_prefix": "$idlm_db_prefix",
+            "$operational_health": "$idlm_operational_health",
+            "$horizontal_readiness": "$idlm_horizontal_readiness",
+            "$diagnostic_url": "$idlm_diagnostic_url",
+            "$health_status": "$idlm_health_status",
+            "$health_label": "$idlm_health_label",
+            "$health_class": "$idlm_health_class",
+            "$check": "$idlm_check",
+            "$check_status": "$idlm_check_status",
+            "$status_class": "$idlm_status_class",
+            "$status_label": "$idlm_status_label",
+            "$log": "$idlm_log"
+        }
+    },
+    "templates/admin/settings/shell.php": {
+        "before_sha256": "1b5345889c2bb820672253df213ebc848f86af8882864d8d769f64b7f8356d69",
+        "after_sha256": "9063cb750b7c9a597ba015600e6f90c3da20c01d1ba7890a993638755c8d9faa",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab",
+            "$stages": "$idlm_stages",
+            "$call_statuses": "$idlm_call_statuses",
+            "$settings_saved": "$idlm_settings_saved",
+            "$return_url": "$idlm_return_url",
+            "$cs": "$idlm_cs",
+            "$stage": "$idlm_stage"
+        }
+    },
+    "templates/admin/settings/lead-connector.php": {
+        "before_sha256": "7dad661c1b25399e22c08950e48a9b0c74407b8349f1ffba0daf7ba377d36eac",
+        "after_sha256": "c169c0410079c0a90ccb271227722bfcfa72b4803ff04fb76941de757f5cded0",
+        "renamed_variables": {
+            "$connector": "$idlm_connector",
+            "$config": "$idlm_config",
+            "$status": "$idlm_status",
+            "$facebook": "$idlm_facebook",
+            "$name": "$idlm_name",
+            "$credentials": "$idlm_credentials",
+            "$source_ready": "$idlm_source_ready",
+            "$credentials_ready": "$idlm_credentials_ready",
+            "$manual_step": "$idlm_manual_step",
+            "$key": "$idlm_key",
+            "$label": "$idlm_label",
+            "$option": "$idlm_option",
+            "$managed": "$idlm_managed",
+            "$default": "$idlm_default",
+            "$stage": "$idlm_stage"
+        }
+    },
+    "templates/admin/settings/danger-zone.php": {
+        "before_sha256": "66c5608202a093c5a38b5c50cf4562a37e7e917f87629adae281b783caaff3b7",
+        "after_sha256": "01a5597c1cad6b2b6c5c04fdeb65e07607f0c77557ba06f0d05648f6c6332389",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab",
+            "$can_manage_options": "$idlm_can_manage_options"
+        }
+    },
+    "templates/admin/settings/mcp.php": {
+        "before_sha256": "a88d166638a5cd1dc282a634d9b5bd08f0c343deb3bba57a93364e425eb263cf",
+        "after_sha256": "279a9b88712fe20499ee182db03b93a49282dd3681a276676b9c2cc2574018b3",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab",
+            "$saved_api_key": "$idlm_saved_api_key",
+            "$mcp_script_path": "$idlm_mcp_script_path",
+            "$mcp_rest_url": "$idlm_mcp_rest_url",
+            "$mcp_local_json": "$idlm_mcp_local_json",
+            "$mcp_remote_json": "$idlm_mcp_remote_json",
+            "$mcp_enabled": "$idlm_mcp_enabled",
+            "$mcp_allowed_tools": "$idlm_mcp_allowed_tools"
+        }
+    },
+    "templates/admin/settings/routing.php": {
+        "before_sha256": "83e7af77010b5421e3b0fdeabb093d92b6069938c4f9ac2bb14daea25a4dae59",
+        "after_sha256": "67ed1eaa1681cf4b8f84258c1f3db09bcaf666c1795a7d18008c1d9ddd7b8781",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab",
+            "$assignment_mode": "$idlm_assignment_mode",
+            "$active_reps": "$idlm_active_reps",
+            "$active_pre_sales_reps": "$idlm_active_pre_sales_reps",
+            "$reps": "$idlm_reps",
+            "$pre_sales_reps": "$idlm_pre_sales_reps",
+            "$source_maps": "$idlm_source_maps",
+            "$rep_studios": "$idlm_rep_studios",
+            "$studios": "$idlm_studios",
+            "$fallback_enabled": "$idlm_fallback_enabled",
+            "$fallback_hours": "$idlm_fallback_hours",
+            "$qualified_fallback_enabled": "$idlm_qualified_fallback_enabled",
+            "$qualified_fallback_hours": "$idlm_qualified_fallback_hours",
+            "$qualified_fallback_end_at": "$idlm_qualified_fallback_end_at",
+            "$qualified_fallback_include_existing": "$idlm_qualified_fallback_include_existing",
+            "$studio_mismatch_behavior": "$idlm_studio_mismatch_behavior",
+            "$handoff_task_policy": "$idlm_handoff_task_policy",
+            "$handoff_notifications_enabled": "$idlm_handoff_notifications_enabled",
+            "$fallback_last_completed": "$idlm_fallback_last_completed",
+            "$fallback_last_status": "$idlm_fallback_last_status",
+            "$routing_exception_count": "$idlm_routing_exception_count",
+            "$unassigned_intake_count": "$idlm_unassigned_intake_count",
+            "$working_hours_start": "$idlm_working_hours_start",
+            "$working_hours_end": "$idlm_working_hours_end",
+            "$working_days": "$idlm_working_days",
+            "$presales_targets": "$idlm_presales_targets",
+            "$max_active_leads_per_rep": "$idlm_max_active_leads_per_rep",
+            "$routing_exception_notifications_enabled": "$idlm_routing_exception_notifications_enabled",
+            "$role_labels": "$idlm_role_labels",
+            "$rep": "$idlm_rep",
+            "$rep_role_names": "$idlm_rep_role_names",
+            "$role": "$idlm_role",
+            "$studio": "$idlm_studio",
+            "$src": "$idlm_src",
+            "$field_name": "$idlm_field_name",
+            "$val": "$idlm_val",
+            "$settings_active_pre_sales_count": "$idlm_settings_active_pre_sales_count",
+            "$settings_assignment_labels": "$idlm_settings_assignment_labels",
+            "$pre_sales_rep": "$idlm_pre_sales_rep",
+            "$days_map": "$idlm_days_map",
+            "$label": "$idlm_label"
+        }
+    },
+    "templates/admin/settings/white-label.php": {
+        "before_sha256": "8a5049932bb7ec30b935713471a307600906f3f37572a2744f49393ad63e7742",
+        "after_sha256": "4a6ac33396c2d4ef87aec224cd61228bc09906f8491ada95086028cd61a5527d",
+        "renamed_variables": {
+            "$white_label": "$idlm_white_label",
+            "$active_tab": "$idlm_active_tab",
+            "$assets": "$idlm_assets",
+            "$errors": "$idlm_errors",
+            "$asset_fields": "$idlm_asset_fields",
+            "$field": "$idlm_field",
+            "$message": "$idlm_message",
+            "$copy": "$idlm_copy",
+            "$asset": "$idlm_asset",
+            "$field_slug": "$idlm_field_slug",
+            "$colour_fields": "$idlm_colour_fields"
+        }
+    },
+    "templates/admin/settings/help.php": {
+        "before_sha256": "2e5ab9ff6d0f51752ed25b0e40ea1150c396ea6b3a6d36960389c43dcb60f99d",
+        "after_sha256": "10c5ab371bff3e0a4210256cbfe8fe112db57497315ca3680c746dd8616402c9",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab"
+        }
+    },
+    "templates/admin/settings/token-editor.php": {
+        "before_sha256": "eba671bef676d60d589083577767c88b02be56b07d3423a0d52b54098dbaf2a2",
+        "after_sha256": "201c805bb71b9d2e37e63578a17b05008e0d958f73c62c3e89d528529e3b5fcf",
+        "renamed_variables": {
+            "$editor_id": "$idlm_editor_id",
+            "$field_name": "$idlm_field_name",
+            "$label": "$idlm_label",
+            "$help": "$idlm_help",
+            "$values": "$idlm_values",
+            "$required": "$idlm_required",
+            "$pipeline": "$idlm_pipeline",
+            "$stage_totals": "$idlm_stage_totals",
+            "$aliases": "$idlm_aliases",
+            "$entry_id": "$idlm_entry_id",
+            "$help_id": "$idlm_help_id",
+            "$error_id": "$idlm_error_id",
+            "$status_id": "$idlm_status_id",
+            "$value": "$idlm_value",
+            "$total_source": "$idlm_total_source"
+        }
+    },
+    "templates/admin/settings/general.php": {
+        "before_sha256": "b1069156e8d45bc0827071c9b0bb792188e08a31250c8b68179d9bf082effd22",
+        "after_sha256": "02d71a1c43761194f7916804ddf9368ce4093488459ede5e2e969310776b4964",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab",
+            "$lead_target": "$idlm_lead_target",
+            "$conv_target": "$idlm_conv_target",
+            "$currency_code": "$idlm_currency_code",
+            "$reps_see_all": "$idlm_reps_see_all",
+            "$presales_targets": "$idlm_presales_targets",
+            "$stages": "$idlm_stages",
+            "$kanban_stage_totals": "$idlm_kanban_stage_totals",
+            "$call_statuses": "$idlm_call_statuses",
+            "$lost_reasons": "$idlm_lost_reasons",
+            "$studios": "$idlm_studios",
+            "$num_rooms_options": "$idlm_num_rooms_options",
+            "$ui_labels": "$idlm_ui_labels",
+            "$value_labels": "$idlm_value_labels",
+            "$key": "$idlm_key",
+            "$default": "$idlm_default"
+        }
+    },
+    "templates/admin/settings/sync-reminders.php": {
+        "before_sha256": "40e55be6e1b1b54a9c679d7fafe2fe1f199e5e74ce27863b90b961a0db10e9e1",
+        "after_sha256": "cc3429506b5d815620a4717e06bd6f528ece506cb6b41496c23c6df7f6bd26d2",
+        "renamed_variables": {
+            "$active_tab": "$idlm_active_tab",
+            "$audience_rules": "$idlm_audience_rules",
+            "$stages": "$idlm_stages",
+            "$call_statuses": "$idlm_call_statuses",
+            "$google_gadm_username": "$idlm_google_gadm_username",
+            "$google_gadm_password": "$idlm_google_gadm_password",
+            "$reminder_rules": "$idlm_reminder_rules",
+            "$interakt_enabled": "$idlm_interakt_enabled",
+            "$interakt_api_key": "$idlm_interakt_api_key",
+            "$interakt_webhook_secret": "$idlm_interakt_webhook_secret",
+            "$meta_webhook_enabled": "$idlm_meta_webhook_enabled",
+            "$meta_webhook_verify_token": "$idlm_meta_webhook_verify_token",
+            "$meta_webhook_app_secret": "$idlm_meta_webhook_app_secret",
+            "$interakt_mappings": "$idlm_interakt_mappings",
+            "$rule_idx": "$idlm_rule_idx",
+            "$rule": "$idlm_rule",
+            "$stage": "$idlm_stage",
+            "$cs": "$idlm_cs",
+            "$mapping": "$idlm_mapping"
+        }
+    },
+    "templates/admin/dashboard.php": {
+        "before_sha256": "94517eb01ca9ba36cb04efd387be4a510b14ec8c672357171a89698f63d4c73a",
+        "after_sha256": "9ad2f4efe09b7af22cbbcaa42783ff14ecb92f57b2f6a505ad39c4c9012421e9",
+        "renamed_variables": {
+            "$access": "$idlm_access",
+            "$first_tab": "$idlm_first_tab",
+            "$dashboard_title": "$idlm_dashboard_title",
+            "$dashboard_description": "$idlm_dashboard_description",
+            "$reps": "$idlm_reps",
+            "$studios": "$idlm_studios",
+            "$key": "$idlm_key",
+            "$label": "$idlm_label",
+            "$selected": "$idlm_selected",
+            "$rep": "$idlm_rep",
+            "$studio": "$idlm_studio"
+        }
+    },
+    "templates/admin/kanban.php": {
+        "before_sha256": "370a0147d01d11b3929bc7631727a0cb61216b084fce00f226f6820447a361fd",
+        "after_sha256": "98cd8efa1c979ebaa6918eb60fe909a9e958e2a66341d9c36b4b1293c19a8e54",
+        "renamed_variables": {
+            "$stages": "$idlm_stages",
+            "$kanban_stage_totals": "$idlm_kanban_stage_totals",
+            "$call_statuses": "$idlm_call_statuses",
+            "$lost_reasons": "$idlm_lost_reasons",
+            "$reps": "$idlm_reps",
+            "$currency_symbol": "$idlm_currency_symbol",
+            "$can_assign_leads": "$idlm_can_assign_leads",
+            "$stale_lead_count": "$idlm_stale_lead_count",
+            "$ajax_url": "$idlm_ajax_url",
+            "$nonce": "$idlm_nonce",
+            "$rep": "$idlm_rep",
+            "$cs": "$idlm_cs",
+            "$stage_index": "$idlm_stage_index",
+            "$stage": "$idlm_stage",
+            "$stage_slug": "$idlm_stage_slug",
+            "$stage_panel_id": "$idlm_stage_panel_id",
+            "$total_source": "$idlm_total_source",
+            "$total_label": "$idlm_total_label",
+            "$stage_heading_id": "$idlm_stage_heading_id",
+            "$lost_reason": "$idlm_lost_reason"
+        }
+    },
+    "templates/admin/common-overlays.php": {
+        "before_sha256": "ea9b4f993e8e1df3238b54e6b8348d97dc92e16547667cb828302aedf64cc83b",
+        "after_sha256": "664b9da3accac31b64c40e5b991afce23c5b124c179ae3e59724335967ab8f83",
+        "renamed_variables": {
+            "$currency_code": "$idlm_currency_code",
+            "$stages": "$idlm_stages",
+            "$lost_reasons": "$idlm_lost_reasons",
+            "$reps": "$idlm_reps",
+            "$can_assign_leads": "$idlm_can_assign_leads",
+            "$can_manage_options": "$idlm_can_manage_options",
+            "$lost_reason": "$idlm_lost_reason"
+        }
+    },
+    "templates/admin/users.php": {
+        "before_sha256": "200bd3311df2e40f2a48a1c0363a6326dd3a3ff3bc4c1096ca51ad308019f1ed",
+        "after_sha256": "bb2a94e6a28146b2db7d35945ad9c33904242e6beb1fd219a31cf505ece9dd90",
+        "renamed_variables": {
+            "$users": "$idlm_users",
+            "$roles": "$idlm_roles",
+            "$role_scopes": "$idlm_role_scopes",
+            "$notice": "$idlm_notice",
+            "$error": "$idlm_error",
+            "$notice_messages": "$idlm_notice_messages",
+            "$error_messages": "$idlm_error_messages",
+            "$clear_url": "$idlm_clear_url",
+            "$has_filters": "$idlm_has_filters",
+            "$return_url": "$idlm_return_url",
+            "$slug": "$idlm_slug",
+            "$data": "$idlm_data",
+            "$is_administrator": "$idlm_is_administrator",
+            "$selected_scope": "$idlm_selected_scope",
+            "$user": "$idlm_user",
+            "$disabled": "$idlm_disabled",
+            "$role_names": "$idlm_role_names",
+            "$role": "$idlm_role",
+            "$all_roles": "$idlm_all_roles",
+            "$safeguard_id": "$idlm_safeguard_id"
+        }
+    },
+    "templates/admin/logs/audience.php": {
+        "before_sha256": "7f0dfb31bd3becc16e3270768555bbcbb6d4a65f5f093b220a2ab3fc1d97017f",
+        "after_sha256": "1fc75eb992b0d91caa1ff6022fbc96044937ceb571e749d27ac5762fc98f9960",
+        "renamed_variables": {
+            "$logs": "$idlm_logs",
+            "$filters": "$idlm_filters",
+            "$filter_keys": "$idlm_filter_keys",
+            "$clear_url": "$idlm_clear_url",
+            "$has_filters": "$idlm_has_filters",
+            "$log": "$idlm_log",
+            "$entry_label": "$idlm_entry_label"
+        }
+    },
+    "templates/admin/logs/capi.php": {
+        "before_sha256": "7661b50280f1738520fa0aa9c163f54dd2701cea38416b03d29ee41087a32738",
+        "after_sha256": "ca660cae2eec91d1dd0e9f3ef22690cd10ed1094343267bbfbe3ca676e195a98",
+        "renamed_variables": {
+            "$logs": "$idlm_logs",
+            "$filters": "$idlm_filters",
+            "$retry_nonce": "$idlm_retry_nonce",
+            "$filter_keys": "$idlm_filter_keys",
+            "$clear_url": "$idlm_clear_url",
+            "$has_filters": "$idlm_has_filters",
+            "$log": "$idlm_log",
+            "$lead_label": "$idlm_lead_label",
+            "$entry_label": "$idlm_entry_label"
+        }
+    },
+    "templates/admin/logs/payload-dialog.php": {
+        "before_sha256": "20fdad3de2c622f84bf0b3c4f33d11ec7edc2c974da4653786e9048e4a135f14",
+        "after_sha256": "7be25af7c0c0f0e7c60512cd3d26c42886f5fc1479c34e3781fad1e347477ff4",
+        "renamed_variables": {
+            "$dialog_id": "$idlm_dialog_id"
+        }
+    },
+    "templates/admin/leads.php": {
+        "before_sha256": "0fa1fbae38d03518edde71eb9adc5b2952421505ce5a1d1d240dfa89f836881f",
+        "after_sha256": "215ab3e19ce80d338ba5f5c6f4de44af350684cd88620b6b8df0b486c5df3146",
+        "renamed_variables": {
+            "$stages": "$idlm_stages",
+            "$call_statuses": "$idlm_call_statuses",
+            "$studios": "$idlm_studios",
+            "$num_rooms_options": "$idlm_num_rooms_options",
+            "$reps": "$idlm_reps",
+            "$pre_sales_reps": "$idlm_pre_sales_reps",
+            "$active_rep_ids": "$idlm_active_rep_ids",
+            "$is_pre_sales": "$idlm_is_pre_sales",
+            "$can_assign_leads": "$idlm_can_assign_leads",
+            "$can_manage_options": "$idlm_can_manage_options",
+            "$reps_see_all": "$idlm_reps_see_all",
+            "$pending_calls_count": "$idlm_pending_calls_count",
+            "$unread_whatsapp_count": "$idlm_unread_whatsapp_count",
+            "$stale_lead_count": "$idlm_stale_lead_count",
+            "$new_leads_count": "$idlm_new_leads_count",
+            "$not_called_count": "$idlm_not_called_count",
+            "$followup_count": "$idlm_followup_count",
+            "$unassigned_count": "$idlm_unassigned_count",
+            "$qualified_count": "$idlm_qualified_count",
+            "$pending_quality_count": "$idlm_pending_quality_count",
+            "$qualified_handoff_count": "$idlm_qualified_handoff_count",
+            "$overdue_handoff_count": "$idlm_overdue_handoff_count",
+            "$handoff_exception_count": "$idlm_handoff_exception_count",
+            "$qualified_yesterday_count": "$idlm_qualified_yesterday_count",
+            "$delivered_yesterday_count": "$idlm_delivered_yesterday_count",
+            "$qualified_fallback_enabled": "$idlm_qualified_fallback_enabled",
+            "$qualified_fallback_hours": "$idlm_qualified_fallback_hours",
+            "$qualified_fallback_end_at": "$idlm_qualified_fallback_end_at",
+            "$qualified_fallback_end_formatted": "$idlm_qualified_fallback_end_formatted",
+            "$assignment_mode": "$idlm_assignment_mode",
+            "$active_reps": "$idlm_active_reps",
+            "$rep_studios": "$idlm_rep_studios",
+            "$source_maps": "$idlm_source_maps",
+            "$fallback_enabled": "$idlm_fallback_enabled",
+            "$fallback_hours": "$idlm_fallback_hours",
+            "$qualified_fallback_include_existing": "$idlm_qualified_fallback_include_existing",
+            "$studio_mismatch_behavior": "$idlm_studio_mismatch_behavior",
+            "$handoff_task_policy": "$idlm_handoff_task_policy",
+            "$handoff_notifications_enabled": "$idlm_handoff_notifications_enabled",
+            "$active_pre_sales_reps": "$idlm_active_pre_sales_reps",
+            "$fallback_last_completed": "$idlm_fallback_last_completed",
+            "$fallback_last_status": "$idlm_fallback_last_status",
+            "$routing_exception_count": "$idlm_routing_exception_count",
+            "$unassigned_intake_count": "$idlm_unassigned_intake_count",
+            "$active_pre_sales_count": "$idlm_active_pre_sales_count",
+            "$assignment_mode_label": "$idlm_assignment_mode_label",
+            "$working_hours_start": "$idlm_working_hours_start",
+            "$working_hours_end": "$idlm_working_hours_end",
+            "$presales_targets": "$idlm_presales_targets",
+            "$max_active_leads_per_rep": "$idlm_max_active_leads_per_rep",
+            "$working_days": "$idlm_working_days",
+            "$routing_exception_notifications_enabled": "$idlm_routing_exception_notifications_enabled",
+            "$days_map": "$idlm_days_map",
+            "$common_overlays_html": "$idlm_common_overlays_html",
+            "$stage": "$idlm_stage",
+            "$cs": "$idlm_cs",
+            "$rep": "$idlm_rep",
+            "$opt": "$idlm_opt",
+            "$studio": "$idlm_studio",
+            "$src": "$idlm_src",
+            "$field_name": "$idlm_field_name",
+            "$field_id": "$idlm_field_id",
+            "$val": "$idlm_val",
+            "$pre_sales_rep": "$idlm_pre_sales_rep",
+            "$label": "$idlm_label"
+        }
+    },
+    "templates/workspace.php": {
+        "before_sha256": "faee6dc624c589c238ff243c97aaf3803190fe34196b9c09c10317ce428e3dfa",
+        "after_sha256": "64dbe490aab9a5799708ec025c8dff2a2104773f159f60813e2fa5f3520294d3",
+        "renamed_variables": {
+            "$sections": "$idlm_sections",
+            "$active": "$idlm_active",
+            "$base_url": "$idlm_base_url",
+            "$role_variant": "$idlm_role_variant",
+            "$white_label": "$idlm_white_label",
+            "$compact_logo": "$idlm_compact_logo",
+            "$brand_name": "$idlm_brand_name",
+            "$workspace_title": "$idlm_workspace_title",
+            "$brand_mark": "$idlm_brand_mark",
+            "$key": "$idlm_key",
+            "$section": "$idlm_section",
+            "$result": "$idlm_result"
+        }
+    },
+    "templates/my-account.php": {
+        "before_sha256": "c4d10dc17c066315a7c6a2ce25b62cc8c3f17ad1f6dbd9c87c44b8ed84f64a72",
+        "after_sha256": "4e984ca513e3fa778588833d3d63c2b8193b55e6e1037881d1b761efcd773121",
+        "renamed_variables": {
+            "$user": "$idlm_user",
+            "$phone": "$idlm_phone",
+            "$notice": "$idlm_notice",
+            "$error": "$idlm_error",
+            "$logout_url": "$idlm_logout_url",
+            "$white_label": "$idlm_white_label",
+            "$brand_logo": "$idlm_brand_logo",
+            "$role": "$idlm_role"
+        }
+    }
+}

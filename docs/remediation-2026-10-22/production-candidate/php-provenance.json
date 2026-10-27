@@ -1,0 +1,8 @@
+{
+  "builder": "Shashi",
+  "version": "8.5.12",
+  "source": "https://www.php.net/distributions/php-8.5.12.tar.xz",
+  "verified_source_sha256": "08bc2eba2a588654ade1357174aa646b761556c862dda0678345ee29ed481209",
+  "system_runtime_replaced": false,
+  "build": "Isolated temporary CLI/FPM build; mysqli/OpenSSL/Zip/GD/DOM/mbstring/iconv/XML/OPcache; no cURL extension"
+}

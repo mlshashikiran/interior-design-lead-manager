@@ -1,0 +1,227 @@
+{
+  "builder": "Shashi",
+  "date": "2026-10-09",
+  "finding": "REL-005",
+  "candidate": "1.102.75",
+  "base_revision": "ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "status": "IMPLEMENTED, not CLOSED",
+  "schemas_changed": false,
+  "support_decision": "Direct user instruction: Raise WP minimum to 6.6; retain PHP 7.4",
+  "environment": {
+    "php": "8.4.14",
+    "wordpress": {
+      "floor": "6.6",
+      "available_upper_branch": "7.1.2",
+      "latest_official_review": "7.1.3 (NOT RUN locally)"
+    },
+    "mysql": "8.4.0 InnoDB, owned socket only",
+    "dependencies": {
+      "dompdf/dompdf": "v3.1.6",
+      "dompdf/php-font-lib": "1.0.2",
+      "dompdf/php-svg-lib": "1.0.2",
+      "masterminds/html5": "2.10.1",
+      "sabberworm/php-css-parser": "v8.9.0"
+    },
+    "php_extensions": [
+      "Core",
+      "date",
+      "libxml",
+      "openssl",
+      "pcre",
+      "sqlite3",
+      "zlib",
+      "bcmath",
+      "bz2",
+      "calendar",
+      "ctype",
+      "curl",
+      "dba",
+      "dom",
+      "json",
+      "FFI",
+      "fileinfo",
+      "filter",
+      "ftp",
+      "gd",
+      "gettext",
+      "gmp",
+      "hash",
+      "iconv",
+      "SPL",
+      "ldap",
+      "mbstring",
+      "session",
+      "standard",
+      "mysqlnd",
+      "mysqli",
+      "odbc",
+      "pcntl",
+      "PDO",
+      "pdo_dblib",
+      "pdo_mysql",
+      "PDO_ODBC",
+      "pdo_pgsql",
+      "pdo_sqlite",
+      "pgsql",
+      "Phar",
+      "posix",
+      "random",
+      "readline",
+      "Reflection",
+      "exif",
+      "shmop",
+      "SimpleXML",
+      "snmp",
+      "soap",
+      "sockets",
+      "sodium",
+      "sysvmsg",
+      "sysvsem",
+      "sysvshm",
+      "tidy",
+      "tokenizer",
+      "xml",
+      "xmlreader",
+      "xmlwriter",
+      "xsl",
+      "zip",
+      "Zend OPcache"
+    ],
+    "wp66_tar_sha256": "a5f838479dd146f9173a70363515b3dc34a2e752ccf6dc544dea0b343ef25909",
+    "database_policy": "Fresh idlm_test_* schemas only; configured site database refused; intercepted outbound HTTP/mail",
+    "php74_php81": "NOT RUN: no local binaries; configured CI only",
+    "absent_extension_hosts": "NOT RUN: namespaced simulations for modules/ZIP/renderer; actual disabled OpenSSL function and absent temp-dir process conditions"
+  },
+  "checks": [
+    {
+      "scenario": "T20-F-REL005-fast",
+      "finding": "REL-005",
+      "level": "F",
+      "command": "php tests/run.php",
+      "expected": "361 pass, 0 fail",
+      "actual": "361 pass, 0 fail",
+      "status": "PASS",
+      "evidence": "fast-results.txt"
+    },
+    {
+      "scenario": "T12-T20-F-REL005-prerequisites",
+      "finding": "REL-005",
+      "level": "F + isolated process",
+      "command": "php tests/runtime-prerequisites.php",
+      "expected": "5 pass, 0 fail",
+      "actual": "5 pass, 0 fail",
+      "status": "PASS",
+      "evidence": "prerequisite-results.txt"
+    },
+    {
+      "scenario": "T20-N-REL005-WP66",
+      "finding": "REL-005",
+      "level": "N/C",
+      "command": "IDLM_TEST_* disposable environment + WP 6.6: php tests/integration/run.php",
+      "expected": "306 pass, 0 fail",
+      "actual": "306 pass, 0 fail",
+      "status": "PASS",
+      "evidence": "wp66-native-results.txt"
+    },
+    {
+      "scenario": "T20-H-REL005-WP66",
+      "finding": "REL-005",
+      "level": "H/C/stdio",
+      "command": "IDLM_TEST_* disposable environment + WP 6.6: php tests/integration/quotation-http.php",
+      "expected": "429 pass, 0 fail",
+      "actual": "429 pass, 0 fail",
+      "status": "PASS",
+      "evidence": "wp66-full-http-results.txt"
+    },
+    {
+      "scenario": "T12-H-REL005-WP66",
+      "finding": "REL-005",
+      "level": "H parsed exports",
+      "command": "IDLM_TEST_* disposable environment + WP 6.6: php tests/integration/quotation-http.php --paper-only",
+      "expected": "11 pass, 0 fail",
+      "actual": "11 pass, 0 fail",
+      "status": "PASS",
+      "evidence": "wp66-export-http-results.txt"
+    },
+    {
+      "scenario": "T12-H-REL005-WP71",
+      "finding": "REL-005",
+      "level": "H parsed exports",
+      "command": "IDLM_TEST_* disposable environment + WP 7.1.2: php tests/integration/quotation-http.php --paper-only",
+      "expected": "11 pass, 0 fail",
+      "actual": "11 pass, 0 fail",
+      "status": "PASS",
+      "evidence": "wp71-export-http-results.txt"
+    },
+    {
+      "scenario": "T22-A-REL005-inventory",
+      "level": "A archive/source comparison only",
+      "status": "PASS",
+      "file_count": 455,
+      "evidence": "archive-identity.json"
+    },
+    {
+      "scenario": "T22-F-REL005-workflow",
+      "status": "PASS",
+      "remote_workflow_executed": false,
+      "evidence": "workflow-check.json"
+    },
+    {
+      "scenario": "REL005-PHP-lint",
+      "status": "PASS",
+      "file_count": 8,
+      "evidence": "changed-php-files.json"
+    }
+  ],
+  "backlog_counts": {
+    "IMPLEMENTED": 41,
+    "IN PROGRESS": 1,
+    "OPEN": 2
+  },
+  "simulated_pdf_missing": [
+    "dom",
+    "mbstring",
+    "iconv",
+    "gd",
+    "renderer"
+  ],
+  "simulated_xlsx_missing": [
+    "ZipArchive"
+  ],
+  "real_failure_conditions": [
+    "nonexistent temporary directory",
+    "disabled openssl_encrypt and openssl_decrypt; preserves plaintext/encrypted bytes"
+  ],
+  "diagnostics": {
+    "fast": "Seven pre-existing test-double property warnings; retained in fast-diagnostics.txt",
+    "native": "Three deliberate database fault diagnostics; retained in wp66-native-diagnostics.txt",
+    "http": "All three HTTP stderr logs empty"
+  },
+  "primary_sources": {
+    "wordpress": "https://wordpress.org/download/releases/",
+    "dompdf": "https://github.com/dompdf/dompdf/wiki/Requirements"
+  },
+  "graph": {
+    "query": "REL-005 runtime compatibility prerequisites quotation exporter secret store",
+    "material_finding": "Release checklist and secret store link qualification with prerequisite failure handling; current source established renderer/crypto dependencies.",
+    "evidence": "graph-refresh.json"
+  },
+  "limitations": [
+    "PHP 7.4/8.1, resolved latest 7.1.3 and full matching remote CI NOT RUN",
+    "Actual absent-extension hosts and complete image/codec/temp/font-cache/resource failure behavior NOT RUN",
+    "Local MySQL 8.4 does not certify MySQL 8.0 CI/MariaDB or alternative topologies",
+    "Final installed artifact, full-site recovery and production qualification pending",
+    "REL-006 reproducibility and REL-007 inventory/static triage remain open"
+  ],
+  "next": "REL-006",
+  "production_release_approved": false,
+  "no_commit_push_tag_deployment": true,
+  "cleanup": {
+    "owned_server_stopped": true,
+    "owned_socket_removed": true,
+    "remaining_test_databases": 0,
+    "owned_mysql_data_removed": true,
+    "fixture_cleanup": "Existing native/HTTP runners removed their owned database/content/server fixtures",
+    "retained": "Official downloaded WP 6.6 core, core archive, rehearsal ZIP and evidence retained locally"
+  }
+}

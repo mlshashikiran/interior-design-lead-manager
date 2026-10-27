@@ -1,0 +1,158 @@
+[
+    {
+        "file": "templates/access-restricted.php",
+        "expected_php_and_literal_markup_sha256": "10a01538d74205c79f4cf1e6d5c7ebc731fe3795a73f1a763fb23e7cad7d0361",
+        "actual_php_and_literal_markup_sha256": "10a01538d74205c79f4cf1e6d5c7ebc731fe3795a73f1a763fb23e7cad7d0361",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/identity-reviews.php",
+        "expected_php_and_literal_markup_sha256": "d45422d77694f405e7b7fe7539483fa55ed09e896b29195e1daea3db090e9807",
+        "actual_php_and_literal_markup_sha256": "d45422d77694f405e7b7fe7539483fa55ed09e896b29195e1daea3db090e9807",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/webhooks.php",
+        "expected_php_and_literal_markup_sha256": "36dfc183ab248014e2a0630d06dbb92e837244bdaf15c91b3deb4774baf1c671",
+        "actual_php_and_literal_markup_sha256": "36dfc183ab248014e2a0630d06dbb92e837244bdaf15c91b3deb4774baf1c671",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/backup.php",
+        "expected_php_and_literal_markup_sha256": "1fd86d18c31b9c0504c54f73f8e474f2f59c1022c96be40e9cce34d426d38f28",
+        "actual_php_and_literal_markup_sha256": "1fd86d18c31b9c0504c54f73f8e474f2f59c1022c96be40e9cce34d426d38f28",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/capi.php",
+        "expected_php_and_literal_markup_sha256": "c8bed6f7ebeb9a33af866d103edaba54bc34fffca2bac63601e55430f1fc0dd0",
+        "actual_php_and_literal_markup_sha256": "c8bed6f7ebeb9a33af866d103edaba54bc34fffca2bac63601e55430f1fc0dd0",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/health.php",
+        "expected_php_and_literal_markup_sha256": "40d05c3b73930e9f7938dcd5b3dd6919ead9ced097cadf20b2e6b7f9c4c714a7",
+        "actual_php_and_literal_markup_sha256": "40d05c3b73930e9f7938dcd5b3dd6919ead9ced097cadf20b2e6b7f9c4c714a7",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/shell.php",
+        "expected_php_and_literal_markup_sha256": "59cc9bc332cdfff22fa7156446e4c133c8ae7be23f5a3d2e2adda53203d27336",
+        "actual_php_and_literal_markup_sha256": "59cc9bc332cdfff22fa7156446e4c133c8ae7be23f5a3d2e2adda53203d27336",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/lead-connector.php",
+        "expected_php_and_literal_markup_sha256": "80cbb8559969da755440954cc4996f93fc389961f334d122af0b13e0b54b7e92",
+        "actual_php_and_literal_markup_sha256": "80cbb8559969da755440954cc4996f93fc389961f334d122af0b13e0b54b7e92",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/danger-zone.php",
+        "expected_php_and_literal_markup_sha256": "e25d48061537429c6362df7bc875fd2edcca6ae6879cf9773137800db0994b40",
+        "actual_php_and_literal_markup_sha256": "e25d48061537429c6362df7bc875fd2edcca6ae6879cf9773137800db0994b40",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/mcp.php",
+        "expected_php_and_literal_markup_sha256": "340ae16f619e5a8a8cbc9ae66731aa9d411c4fcf8ece4c73ded2efcac249f3c3",
+        "actual_php_and_literal_markup_sha256": "340ae16f619e5a8a8cbc9ae66731aa9d411c4fcf8ece4c73ded2efcac249f3c3",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/routing.php",
+        "expected_php_and_literal_markup_sha256": "2a66817ee1a587a7a0f985d3410acefe906d58d2e4d3b7f6ba7ccff8c6a13772",
+        "actual_php_and_literal_markup_sha256": "2a66817ee1a587a7a0f985d3410acefe906d58d2e4d3b7f6ba7ccff8c6a13772",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/white-label.php",
+        "expected_php_and_literal_markup_sha256": "bbb450b319d6b80b4eb6cbf066056352a238afe090732088f263aec8a5046ba8",
+        "actual_php_and_literal_markup_sha256": "bbb450b319d6b80b4eb6cbf066056352a238afe090732088f263aec8a5046ba8",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/help.php",
+        "expected_php_and_literal_markup_sha256": "1a34d4b5cca93ff74c016f9bc85da88c65131bcaa01d25e69b49fdbf535e76aa",
+        "actual_php_and_literal_markup_sha256": "1a34d4b5cca93ff74c016f9bc85da88c65131bcaa01d25e69b49fdbf535e76aa",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/token-editor.php",
+        "expected_php_and_literal_markup_sha256": "6d468d4a0a13d0052cb01bd83f49c3a1cd58a89a7f116bd88a10b5195cdf0888",
+        "actual_php_and_literal_markup_sha256": "6d468d4a0a13d0052cb01bd83f49c3a1cd58a89a7f116bd88a10b5195cdf0888",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/general.php",
+        "expected_php_and_literal_markup_sha256": "fd4fbf4f94ae26a778e4648d6ba663ad9eec44e55f408aaa90af8a3c5c9d6537",
+        "actual_php_and_literal_markup_sha256": "fd4fbf4f94ae26a778e4648d6ba663ad9eec44e55f408aaa90af8a3c5c9d6537",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/settings/sync-reminders.php",
+        "expected_php_and_literal_markup_sha256": "004b891bf09c7f8207cfb8fe7db8838deb1263367f513f4a3ee0299f230ba263",
+        "actual_php_and_literal_markup_sha256": "004b891bf09c7f8207cfb8fe7db8838deb1263367f513f4a3ee0299f230ba263",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/dashboard.php",
+        "expected_php_and_literal_markup_sha256": "353d4e87874570de0aca333d27efc1a75dff01459930dd977c31320cf8b86ac3",
+        "actual_php_and_literal_markup_sha256": "353d4e87874570de0aca333d27efc1a75dff01459930dd977c31320cf8b86ac3",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/kanban.php",
+        "expected_php_and_literal_markup_sha256": "a6629b0800021969d675391edd74f87c9a305f1a966d0b31d96612141bf422c0",
+        "actual_php_and_literal_markup_sha256": "a6629b0800021969d675391edd74f87c9a305f1a966d0b31d96612141bf422c0",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/common-overlays.php",
+        "expected_php_and_literal_markup_sha256": "306a610a12ec2feaf1cf525d6f16c85ad89a723cf9efe7052ca20ff0a9fbdb07",
+        "actual_php_and_literal_markup_sha256": "306a610a12ec2feaf1cf525d6f16c85ad89a723cf9efe7052ca20ff0a9fbdb07",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/users.php",
+        "expected_php_and_literal_markup_sha256": "adab1fbf707ec93eda0d0573cc91e2d2d22f6475fb9d723ee68a349c67c4e04a",
+        "actual_php_and_literal_markup_sha256": "adab1fbf707ec93eda0d0573cc91e2d2d22f6475fb9d723ee68a349c67c4e04a",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/logs/audience.php",
+        "expected_php_and_literal_markup_sha256": "4b7fe5b400b7d2c99353829d3ae72ca5c8c7156671ea1d0c9d818e08551af674",
+        "actual_php_and_literal_markup_sha256": "4b7fe5b400b7d2c99353829d3ae72ca5c8c7156671ea1d0c9d818e08551af674",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/logs/capi.php",
+        "expected_php_and_literal_markup_sha256": "44c0c039b492ade2a16297f2d09f80f97e43d7890bf1399c5a8a3065224b4db9",
+        "actual_php_and_literal_markup_sha256": "44c0c039b492ade2a16297f2d09f80f97e43d7890bf1399c5a8a3065224b4db9",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/logs/payload-dialog.php",
+        "expected_php_and_literal_markup_sha256": "e4e5d7a0700da9640c21f64be95d85a264daa0300ece66506b3c17e32a87cd59",
+        "actual_php_and_literal_markup_sha256": "e4e5d7a0700da9640c21f64be95d85a264daa0300ece66506b3c17e32a87cd59",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/admin/leads.php",
+        "expected_php_and_literal_markup_sha256": "154aa32a99459aa73a556cfd4575601a9634bf79dcb593ece2d1ffac04ed6d56",
+        "actual_php_and_literal_markup_sha256": "154aa32a99459aa73a556cfd4575601a9634bf79dcb593ece2d1ffac04ed6d56",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/workspace.php",
+        "expected_php_and_literal_markup_sha256": "23d11187d958bbcf612d20e909621714c18b6e8e9477774e7e76917982c333df",
+        "actual_php_and_literal_markup_sha256": "23d11187d958bbcf612d20e909621714c18b6e8e9477774e7e76917982c333df",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    },
+    {
+        "file": "templates/my-account.php",
+        "expected_php_and_literal_markup_sha256": "1b2fa52b05574a99dc103b1aea5e519cd3cb25502f8c34f0b4782f7d7fa81058",
+        "actual_php_and_literal_markup_sha256": "1b2fa52b05574a99dc103b1aea5e519cd3cb25502f8c34f0b4782f7d7fa81058",
+        "only_local_variable_renames_and_nonrendering_comments": true
+    }
+]

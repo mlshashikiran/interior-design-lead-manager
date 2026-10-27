@@ -1,0 +1,32 @@
+[
+  {
+    "file": "includes/class-interakt.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/includes/class-interakt.php"
+  },
+  {
+    "file": "mcp-server.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/mcp-server.php"
+  },
+  {
+    "file": "interior-design-lead-manager.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/interior-design-lead-manager.php"
+  },
+  {
+    "file": "tests/whatsapp-inbound-contracts.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/whatsapp-inbound-contracts.php"
+  },
+  {
+    "file": "tests/integration/whatsapp-inbound-http-cases.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/integration/whatsapp-inbound-http-cases.php"
+  },
+  {
+    "file": "tests/release-contracts.php",
+    "status": "PASS",
+    "output": "No syntax errors detected in /Users/shashi_protecto/Local Sites/testing/app/public/wp-content/plugins/interior-design-lead-manager/tests/release-contracts.php"
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "builder": "Shashi",
+  "status": "PASS",
+  "file_count": 455,
+  "archive_sha256": "c8aa0d21a2c19e7c7e5c207c068d30cb0113b196499cdf29f7de6b3ebc4902a3",
+  "mismatches": [],
+  "approval": "local_rehearsal_only",
+  "installed_or_executed": false,
+  "scoped_packaged_hashes": {
+    "readme.txt": "323ee4955328bf0fe4ed8ff9de66a4ddeec65ce4d2ca2a8b2bc55953a84c0361",
+    "SUPPORT.md": "1eae2b2df13d42da9994e21d9ed5be34c940817a4b77aea58e05acaf2178d773",
+    "interior-design-lead-manager.php": "a9dae43233dd680525dff3ff90bb61414bb180907544a793207853ebd1ae627c",
+    "includes/class-quotation-exporter.php": "b79d7142312708a9d300ccd1f8af80e6fd9b19fd805082cb6060d740209fd7ac",
+    "includes/class-secret-store.php": "78a6215c4af9243137f04a8102a3eebe8fed26874958493c6c7609ec9fca7282"
+  }
+}

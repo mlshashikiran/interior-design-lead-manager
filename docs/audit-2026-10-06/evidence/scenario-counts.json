@@ -1,0 +1,12 @@
+{
+  "author": "Shashi",
+  "row_count": 409,
+  "statuses": {
+    "PASS": 243,
+    "FAIL": 36,
+    "BLOCKED": 2,
+    "NOT RUN": 127,
+    "NOT APPLICABLE": 1
+  },
+  "warning": "Assertion rows plus explicit broad gap rows; counts are not code coverage or unique end-to-end workflows. 17 artifact-native rows repeat native cases."
+}

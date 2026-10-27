@@ -1,0 +1,11 @@
+PASS fresh schema installation creates required tables, columns, defaults, and indexes
+PASS T20-N-INT010 all platform legacy values migrate without autoload or plaintext
+PASS T20-N-INT010 failed write retains plaintext and blocks use until retry
+PASS T20-N-INT010 damaged ciphertext does not overwrite credentials or advance scoped migration
+PASS T14-C-INT010 competing rotation wins plaintext compare and swap
+PASS T14-N-INT010 current primary credential overrides warmed cache then revocation
+PASS T08-N-INT010 Meta Google LinkedIn requests use current auth and scrub provider echoes
+PASS T08-T09-N-INT010 audience Interakt request echoes and backups contain no token
+PASS T20-N-INT010 settings blank retains replace clears and failed save is explicit
+
+9 passed, 0 failed

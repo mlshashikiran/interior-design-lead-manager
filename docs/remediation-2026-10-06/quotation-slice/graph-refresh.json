@@ -1,0 +1,36 @@
+{
+  "author": "Shashi",
+  "status": "PASS within bounded scope",
+  "structural_nodes": 140,
+  "structural_edges": 139,
+  "semantic_nodes": 17,
+  "semantic_edges": 23,
+  "removed_old_nodes": 157,
+  "final_nodes": 2243,
+  "final_edges": 3850,
+  "uncached_documents": 5,
+  "scope": "Quotation remediation: 10 code files and 5 documents; outside-scope graph retained, immutable audit untouched",
+  "semantic_reviewer": "Luna, low effort, bounded Graphify extraction only; all references validated",
+  "source_hashes": {
+    "includes/class-quotation-policy.php": "4ac6a734eb7abd82aab5ee93aac1bc13a7eb34db7436e014cd678fa23dabdafc",
+    "includes/class-quotation-controller.php": "b368d05acf789911d1530aafcb54a4bf1034355b42566df56c99f64a22865d13",
+    "includes/class-quotation-repository.php": "899c33459e19d4b55ba3de2d2b18c26f069f781cd644d74c24bd557ef7b2fa88",
+    "includes/class-quotation-renderer.php": "164050218e5e15f6b47cd5ce080c5f3886bc8c9fe84c41cb727cc8f622e0df0e",
+    "interior-design-lead-manager.php": "06dbf6f443b84e4882f947706b1d61099c6de8c1959099122aca60cf6abcc5e3",
+    "tests/integration/bootstrap.php": "9c2e49ef1dab2ecfc0008846a7b114d8d7df6d776e073ce591c895850159c99c",
+    "tests/integration/http-router.php": "5d5e5409d348b8a36015446a35cf2f8699768762b6efe964560525af9dcc975d",
+    "tests/integration/quotation-http.php": "85ea37a5443bea0e5e5f179ceebb1b3ac6c9f37ecb7185a69bb2faedc3907dd7",
+    "tests/quotation-authorization-contracts.php": "23a79b072e1f24ba374eff983fb47d1318f0a745dc1492f6fba28d08df81fd20",
+    "tests/audit-quotation-probes.php": "5bb4f8ac2e9f2488f743f90a2be8e5b34d3b575334f5f07e39c5d885fd4e82ef",
+    "docs/AUDIT-REMEDIATION-QUOTATION-SLICE.md": "cf2088510ecc6ad9058bd92a2369427bea5e1cd133887bc778fcbf9152b84097",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "14358fcf23835f1000ce5d103f5d04404c03bdf624ca8e35802d9a24b16cf3d1",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "6d8ce33e04118fbe4f0ada0bc87b902b8111c2753b97f99915754d9540ed76fb",
+    "docs/SECURITY.md": "88b3a51bd836199b0b878c4dd81bfd8661776350f0aa1771e54406d30f9f05f4",
+    "docs/CHANGELOG-DEV.md": "650abd74aa4e6360f6e2d9b2f8aca881bc89002c1445603f572e232ed7c76f9c"
+  },
+  "post_refresh_query": {
+    "command": "graphify query 'Quotation mutation authorization revision request key' --budget 800",
+    "status": "PASS",
+    "evidence": "graph-query-final.log"
+  }
+}

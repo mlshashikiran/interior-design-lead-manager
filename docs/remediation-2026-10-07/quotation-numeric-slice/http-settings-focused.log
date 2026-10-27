@@ -1,0 +1,9 @@
+ENV PHP=8.4.14 WP=7.1.3 DB=8.4.0 scheduler=WP-Cron cache=off
+PASS T10-H-authorized-create-owner-0
+PASS T10-H-authorized-create-other-1
+PASS T10-H-authorized-create-readall-2
+PASS T10-H-authorized-create-manager-3
+PASS T10-H-authorized-create-owner-4
+PASS T11-H-QUO008-settings-reject-invalid-and-sum-milestones-in-integer-hundredths
+PASS T11-H-QUO008-catalogue-rejects-invalid-rates-before-item-or-term-writes
+7 passed, 0 failed

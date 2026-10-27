@@ -1,0 +1,1044 @@
+{
+  "author": "Shashi",
+  "recorded_at": "2026-10-06T06:30:02.585214+00:00",
+  "candidate_version": "1.102.44",
+  "source_revision": "dirty working tree on ff148ba62ec710a622d9b1af7e8f511b7e0b7385",
+  "artifact_sha256": null,
+  "artifact_status": "NOT RUN: exact artifact not built/installed",
+  "findings": {
+    "CORE-001": "IMPLEMENTED",
+    "QUO-002": "IMPLEMENTED",
+    "CORE-011": "IMPLEMENTED"
+  },
+  "approved_migration": "Remove automatic editorial-role grants and move legacy global visibility to assigned-only; preserve explicit per-role scopes and dedicated CRM/manager grants",
+  "environment": {
+    "PHP": "8.4.14",
+    "WordPress": "7.1.2",
+    "MySQL": "8.4.0",
+    "engine": "InnoDB",
+    "jobs": "WP-Cron",
+    "persistent_object_cache": false,
+    "database": "owned disposable idlm_test_* only; configured wp-config.php never loaded",
+    "outbound": "MU-plugin pre_http_request and pre_wp_mail interception; cron spawning disabled"
+  },
+  "checks": [
+    {
+      "command": "php tests/run.php",
+      "result": "182 passed, 0 failed",
+      "evidence": "fast-final.log"
+    },
+    {
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD='' IDLM_TEST_DB_HOST='localhost:/private/tmp/idlm-read-slice-mysql/mysql.sock' php tests/integration/run.php",
+      "result": "21 passed, 0 failed",
+      "evidence": "native-final.log"
+    },
+    {
+      "command": "IDLM_TEST_DB_USER=root IDLM_TEST_DB_PASSWORD='' IDLM_TEST_DB_HOST='localhost:/private/tmp/idlm-read-slice-mysql/mysql.sock' php tests/integration/quotation-http.php",
+      "result": "142 passed, 0 failed",
+      "evidence": "http-verified.log"
+    },
+    {
+      "command": "php -l every changed and new first-party PHP file",
+      "result": "27 PASS",
+      "evidence": "php-lint.log"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS",
+      "evidence": "whitespace.log"
+    },
+    {
+      "command": "Focused current-source audit probes",
+      "result": "CORE-S01/02 and QUO-S01/02/S09 PASS; unrelated failures retained",
+      "evidence": [
+        "core-synthetic-after.json",
+        "quotation-probes-after.log",
+        "forged-after.log"
+      ]
+    },
+    {
+      "command": "Parse machine evidence and resolve focused documentation links",
+      "result": "PASS"
+    }
+  ],
+  "baseline": {
+    "candidate_version": "1.102.43",
+    "files": 619,
+    "same_final_http_harness": "102 PASS / 40 FAIL; sequential baseline failures can affect later cases, not 40 independent defects",
+    "evidence": "http-original-final.log",
+    "reconstructed_runtime": "/private/tmp/idlm-read-slice-original",
+    "fast": "177 PASS / 0 FAIL from unchanged first-slice verification"
+  },
+  "http_cases": [
+    {
+      "id": "T10-H-authorized-create-owner-0",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-authorized-create-other-1",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-authorized-create-readall-2",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-authorized-create-manager-3",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-authorized-create-owner-4",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-deny-foreign-autosave-owner",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-deny-foreign-discard-owner",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-deny-foreign-save-owner",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-deny-foreign-autosave-other",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-deny-foreign-discard-other",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-deny-foreign-save-other",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-deny-foreign-autosave-readall",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-deny-foreign-discard-readall",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-deny-foreign-save-readall",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-foreign-revision-new",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-owned-revision-new",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-foreign-quote",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-foreign-revision",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-autosave-substitute-lead",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-autosave-substitute-quote",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-autosave-substitute-revision",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-discard-substitute-quote",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-discard-substitute-revision",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-anonymous-save",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-missing-lead",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-missing-save-nonce",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-cross-user-autosave-nonce",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-foreign-key",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-owned-other-lead-key",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-different-actor-key",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-repeat-initial-request",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-foreign-new-lead-other",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-foreign-new-lead-readall",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-readall-owner-autosave-revision",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-owner-autosave-and-discard",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-owner-revision-and-repeat",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-request-key-source-substitution",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-stale-revision-no-write",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T12-H-exact-old-revision-export-owner",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T12-H-exact-old-revision-export-readall",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T12-H-exact-old-revision-export-manager",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T12-H-deny-foreign-revision",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T12-H-deny-non-owner",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-readall-read-without-editor",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-save",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-autosave",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-discard",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-reassigned-former-owner-export",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-reassigned-new-owner-autosave-and-save",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-manager-assigned-read-scope-save-autosave",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-manager-grant-revoked",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-revoked-session-save",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-revoked-session-autosave",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-revoked-session-export",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-disabled-user-save",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-disabled-user-autosave",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-disabled-user-discard",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-disabled-user-export",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-C-before-write-lock-create-reassignment",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-C-before-write-lock-create-revocation",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-C-before-write-lock-create-role-revocation",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-C-before-write-lock-autosave-reassignment",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-C-before-write-lock-autosave-revocation",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-C-before-write-lock-autosave-role-revocation",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-C-before-write-lock-discard-reassignment",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-C-before-write-lock-discard-revocation",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-C-before-write-lock-discard-role-revocation",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-quote-owner-list-count-before-reassignment",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-task-owner-attention-before-reassignment",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-task-owner-completed-before-reassignment",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T06-H-warm-dashboard-reassignment-invalidates-generation",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-live-quote-list-count-owner",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-live-task-attention-owner",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-live-task-completed-owner",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-live-quote-list-count-other",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-live-task-attention-other",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-live-task-completed-other",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-live-quote-list-count-readall",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-live-task-attention-readall",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-live-task-completed-readall",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-live-quote-list-count-manager",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-live-task-attention-manager",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-live-task-completed-manager",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-reassigned-deny-idlm_get_lead_details",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-reassigned-deny-idlm_get_lead_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-assigned-manager-quote-and-task-read-scope",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-mixed-assigned-role-wins-over-all",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T04-H-presales-historical-association-pending-completed",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-presales-quote-exclusion-presales",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-presales-quote-exclusion-mixedpresales",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-authorized-cursor-next-page",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-capability-invalidates-warmed-cache",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_get_leads_table",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_get_rep_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_get_dashboard_stats",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_get_lead_details",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_get_lead_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_filter_quotation_list",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-capability-deny-idlm_search_quote_leads",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-capability-deny-owner-save-autosave",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-role-capability-invalidates-warmed-cache",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_get_leads_table",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_get_rep_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_get_dashboard_stats",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_get_lead_details",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_get_lead_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_filter_quotation_list",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-role-capability-deny-idlm_search_quote_leads",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-role-capability-deny-owner-save-autosave",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-suspension-invalidates-warmed-cache",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_get_leads_table",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_get_rep_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_get_dashboard_stats",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_get_lead_details",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_get_lead_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_filter_quotation_list",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-suspension-deny-idlm_search_quote_leads",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-suspension-deny-owner-save-autosave",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-H-role-scope-revokes-captured-cursor-and-global-cache",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-C-live-read-during-reassignment-tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-C-live-read-during-reassignment-quotes",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T05-C-live-read-during-reassignment-dashboard",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-editor-deny-idlm_get_leads_table",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-editor-deny-idlm_get_rep_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-editor-deny-idlm_get_dashboard_stats",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-editor-deny-idlm_filter_quotation_list",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-author-deny-idlm_get_leads_table",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-author-deny-idlm_get_rep_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-author-deny-idlm_get_dashboard_stats",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-author-deny-idlm_filter_quotation_list",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-contributor-deny-idlm_get_leads_table",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-contributor-deny-idlm_get_rep_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-contributor-deny-idlm_get_dashboard_stats",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-contributor-deny-idlm_filter_quotation_list",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-subscriber-deny-idlm_get_leads_table",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-subscriber-deny-idlm_get_rep_tasks",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-subscriber-deny-idlm_get_dashboard_stats",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-default-subscriber-deny-idlm_filter_quotation_list",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-explicit-catalogue-only-editor-keeps-non-customer-workflow",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-administrator-explicit-editorial-user-enrollment",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T01-H-manager-access-revocation-denies-despite-assignment-grant",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    },
+    {
+      "id": "T10-H-warning-free-affected-requests",
+      "status": "PASS",
+      "evidence": "http-verified.log",
+      "actual": "Synthetic runner assertions passed; authorized response or denial oracle checks applicable to case"
+    }
+  ],
+  "browser": {
+    "transport": "Real Chromium IAB browser with synthetic cookies/login in held HTTP fixture",
+    "checks": [
+      "owner quotation discovery",
+      "canonical reassignment then former-owner empty list",
+      "new owner discovers quote while creator attribution retained",
+      "actual AJAX search",
+      "admin utility list parity",
+      "sampled 390px width with existing horizontal table scroll",
+      "ordinary author denial without customer data"
+    ],
+    "console_warnings_errors": [],
+    "evidence": [
+      "new-owner-list.png",
+      "new-owner-mobile.png",
+      "ordinary-author-denied.png"
+    ]
+  },
+  "coverage_boundaries": {
+    "groups": [
+      "T01",
+      "T04",
+      "T05",
+      "T06",
+      "T10",
+      "GAP-03 reassignment",
+      "GAP-10 quotation regressions"
+    ],
+    "mutation_barriers": 9,
+    "read_barriers": 3,
+    "denial_oracle": "All actual IDLM tables, working copies, cron/jobs and intercepted outbound attempts unchanged; synthetic PII absent. Fast direct dashboard denial also asserts no SQL/cache work."
+  },
+  "not_run": [
+    "Full global M0 / all unresolved test-matrix groups",
+    "CI and supported PHP/WordPress matrix including WP 5.8",
+    "Exact release artifact qualification",
+    "Persistent-cache/multi-node native behavior",
+    "Action Scheduler actual HTTP mode",
+    "Non-InnoDB failure behavior",
+    "In-flight permission revocation after response starts",
+    "Full task UI, keyboard/accessibility/layout qualification"
+  ],
+  "remaining_risks": [
+    "CORE-009/010 background routing eligibility/capacity remains open; review routing pools after migration",
+    "Editorial role-level manual grants are removed once too; explicit individual enrollment required",
+    "Older ZIP does not undo migrated role/option state; diagnostic migration metadata is not recovery backup"
+  ],
+  "source_sha256": {
+    ".github/workflows/tests.yml": "17d69e4d80801184cdddaec5a9d110131db83f0722558b214a8e91a3ca6d38ad",
+    "CHANGELOG.md": "2ceba7459dc8f82718df27e1fcdec136bd9e83f9186129b486556674d87b38f9",
+    "docs/ARCHITECTURE.md": "b647cf9127c2dbeae1a77440a62c19dbb82f02c3f6e5efeb1b5471a1034c4a6f",
+    "docs/AUDIT-REMEDIATION-PLAN.md": "df8e43267a29e03012d750cbea1556328948ea8d0b20bba59cf4893a9823f8a8",
+    "docs/AUDIT-REMEDIATION-TEST-MATRIX.md": "b7cf6cef4f1b469edfad641ca0f209fc5f66534d9fb0458296ef4da37491ae60",
+    "docs/CHANGELOG-DEV.md": "5cc49e4f05365d5eec4f1ffc10181c9b6b26bf3701324e4c1a100c26415afc97",
+    "docs/FEATURE-MAP.md": "769eaceee9b98f1161b19874189d81f1ab81af7516a9053e61ae5aed1c662fb5",
+    "docs/FLOWS.md": "ee4381481d91cf057354d58a2ddb05c1fd1135bde513a6edea1602f77dfdefe7",
+    "docs/INTERFACES.md": "7662ba69103d8acb4d7d2a926d743fb361335e0bcfd396d167e0178095d69f27",
+    "docs/PRODUCTION-SCALABILITY-PLAN.md": "d5d46f28ab7af419e1a10c344d958ff879ac8e703e9cdd8e740d5f65277389c8",
+    "docs/SECURITY.md": "90d48c6425c2e06af2f8856d58171f57e732b497a00d80b566a0bc6eed33fbcc",
+    "docs/audit-remediation-backlog.csv": "c933f2c1c55f443941cd56caf177605c217c9861bb5a19608d6dc32750db602c",
+    "includes/class-admin-ajax.php": "f2c3aa2c85fb45d3a12f2ffa33878448e4b688be56341ddb2ee18b53cd18ab4d",
+    "includes/class-admin-leads-renderer.php": "2130956ba7f6df398d4366dddc5101f6a629c9821dac9c79f4eb1a189cdca753",
+    "includes/class-admin-settings-renderer.php": "d9a3c374ab78f7ef2c0068dc4fccf7b26c9a878c7b5aefb31508dbb8f61b482d",
+    "includes/class-admin-users-controller.php": "a97b89e443191964d9199a875d67eb58a9049800201a3a73571978abac14669a",
+    "includes/class-dashboard-read-model.php": "10269614857525995d0e42b74284f4f6edf8eaddb79b3c33634cfd7b62c6dacd",
+    "includes/class-lead-access-policy.php": "456cb20ce719d7ceb596ed61a977438fd33a17d41758f0f81a1b67ff3d810ff0",
+    "includes/class-quotation-controller.php": "573f5af9e5443e72df5d561f60791d5ee0b7551eb5e66f8ae100f9797bb73b70",
+    "includes/class-quotation-policy.php": "5d2001e4e97502abfe71f7f30dfb7834c2ac6340711fdaf17b0a421f9a506571",
+    "includes/class-quotation-renderer.php": "217250105f2458d14f2f3ea280a1e153e2f2ebea4f8d5754268294a8115f77ca",
+    "includes/class-quotation-repository.php": "eb06133083010e820efd886e9e8e456d7756f21707c075092525bea48c06ec78",
+    "includes/class-read-model-cache.php": "6a27bff82b2ee6ef0f4a2f31f20179eee6469b449cb414d9a3d7aec986522a3f",
+    "includes/class-settings.php": "ba084b66d0f58bab64cd567efb4949b6f844ef9d4d0ef69e326de758220b3402",
+    "interior-design-lead-manager.php": "0a0c136209a0908e8391b6af5986e9aadf0fcfba724aba1939af541f2f454b2a",
+    "readme.txt": "36612fd998e7920b5a98d755cfeea026bdc748f102b80ed9ab52ebcb68289679",
+    "tests/README.md": "1163fcff6b548b136614f72ceb20ead44618c37553e2f62feae58f76885557fa",
+    "tests/admin-refactor-contracts.php": "b8a1ef634298fd9c9c9c06be4b41fc86126584d96d3ec89db6fb0e0856be1987",
+    "tests/audit-quotation-probes.php": "0e6bd8a1a8c5aaf275cc6be17ea49fcab2ed348ec55e6173691e59b610c11b20",
+    "tests/bootstrap.php": "d7996e1ec8a1f06772e8f74fb879afdc5211099f8ed585a0006a2c1d97d8af13",
+    "tests/dashboard-contracts.php": "75fcab2b654c65286849e4552d411482f66a9d19cf50ba007d7cde3a660ab9b0",
+    "tests/high-priority-contracts.php": "d9440cdf614448d97565b614d0494baf8d12005e4f6623d455bdca09c72968cf",
+    "tests/integration/http-router.php": "3f4e3aef34c872bede5199338713ca468f846e868734c931612edde40f5513d7",
+    "tests/integration/quotation-http.php": "14bb56ae057b5a07cc5eca7a39686ec7f624da390ffefe9b8f25178445c9ad4f",
+    "tests/integration/run.php": "bf795b17515d9b207a85a063ff7495a68b437ba4d012c7f3179f983fb5232d02",
+    "tests/quotation-authorization-contracts.php": "a640691bdc7aa249b7270883bddf5789f638de7ef059649da5c8c9561fce808f",
+    "tests/release-contracts.php": "5204b54871c9c2aa605582dcce44a8d9331248cbd17973f5c0bfaa0deba025d5",
+    "tests/run.php": "b5c5c0aaaacfab76b1ff0a4f437fba2fd3c3aa55bbd9cf1e2dacaff1106ddbf0",
+    "docs/AUDIT-REMEDIATION-READ-SLICE.md": "a1310300bbd43a0428527d661df61cc8d0835888b4dc91a87995397e55595794",
+    "tests/integration/lead-access-contracts.php": "d9506a4b50f7c431d4c0aee52d47bbd8ab3b44c05ca6af81b9b10eec8ed5b538",
+    "tests/integration/lead-read-cases.php": "aedaa2abba903819a86efdb4e2b55023019f709e49c0cfe6c4ac573cc0419d30",
+    "tests/lead-read-authorization-contracts.php": "01010192a500f4ffaa791ba17bcde801a01b52c4bd2a73067e1860fcf18f58de"
+  },
+  "next_slice": [
+    "INT-001",
+    "INT-002"
+  ],
+  "cleanup": {
+    "status": "PASS",
+    "evidence": "cleanup.json",
+    "scope": "Owned disposable databases, MySQL server and temporary datadir only; configured site untouched"
+  },
+  "evidence_sha256": {
+    "cleanup.json": "e1a268233e2021e3e6125a375f07f52cb4cee1e8532bea379c11140db8c8be8b",
+    "core-synthetic-after.json": "26d1590ce2a77f2324df9ac2f05519917d6724c1106824af32676be001773c40",
+    "fast-final.log": "fec81f828d62f91474b130f9eb809618b2027b72549e4f041b0a59822f61a7e9",
+    "forged-after.log": "e84742f449875592d27b6f500b5689afec995170ed1a8ae3acf01a0ba34ea12e",
+    "graph-query-after.log": "d79dde434389730d250a0ea159825cca757fc2362bd08ea4a439ce7bc76e2134",
+    "graph-refresh.json": "128959d6e7f9f2555d4ce43cfa32e6e8a124abae0ec21a5ba422ef06d738b585",
+    "http-original-final.log": "432658033fed95414ae055c071ec324365ea89ed01fe54dbeeb3ab4a28383ee2",
+    "http-verified.log": "f6acd5392fb2196a41051857530321373a017ba5d306d73b7f5478d7a5de2385",
+    "native-final.log": "63ec18a7439c55f2cdc6d7eb6c0c0a562bd34e48abac9e595befe1fa418d02cc",
+    "new-owner-list.png": "67a54cf1f398adb067dfb46c07e2d4a01ff40891c28359dd153c7f60dcf8a6e3",
+    "new-owner-mobile.png": "05c0e7f476f1d2ba8d9298bb6a8f7374fa706feb8c3cfc56b7b111d89f6a17f0",
+    "ordinary-author-denied.png": "2818ff4be614c916067519b59f6d433244d814b7aac09105e832f834f9e6c6a4",
+    "php-lint.log": "e2391f7f72f4eae3df3330b7698a7d6e69da0f5cbe9c5b442a2e72642c5bb133",
+    "preservation.json": "5aaa0afad89d08e23ba100bd97ac2af0732a9f04f8a6b923bef4183433af07f2",
+    "quotation-probes-after.log": "81c853863d2d7e24e224e159538e971dedd709a14b5bb5e772b6ec8ab3fda24a",
+    "whitespace.log": "75ebccfc18cc5b1a8b32589edccfa2e9f53d9f4dcde857010b3235519655e37f"
+  }
+}

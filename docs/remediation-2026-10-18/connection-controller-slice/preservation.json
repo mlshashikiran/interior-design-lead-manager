@@ -1,0 +1,108 @@
+{
+  "builder": "Shashi",
+  "baseline_file_count": 1783,
+  "unchanged_file_count": 1764,
+  "scoped_changes": [
+    {
+      "file": "CHANGELOG.md",
+      "before_sha256": "dbd61d7ea300e4f6ba3e281677307a701a0627c2793d5660be6ca431fde070aa",
+      "after_sha256": "03050ef12e5cc016948e868b76ebcffce7980a828c659129dc87d9f4bc17033e"
+    },
+    {
+      "file": "interior-design-lead-manager.php",
+      "before_sha256": "ac9bf2e7e4cf0334091f1d7d6fc98b1f7fb55b53fe26bfced8f75d8fc5a638a6",
+      "after_sha256": "60bf692c8e50f383d82c4926aec17d61251662f1df0f55a1f3d180abf2e16a5b"
+    },
+    {
+      "file": "readme.txt",
+      "before_sha256": "5b1e11b877cc4da81c104167501bc2450fafdd5b5886208131589edab475e702",
+      "after_sha256": "a0e42eb8ae71b5ab1f3c03ef3d6c6b9d83a7deea34bbbc3c9cfc536063f4c1e7"
+    },
+    {
+      "file": "tests/bootstrap.php",
+      "before_sha256": "a446f2f06a8b32561106173038408dfa6fc1672a345c0a38664654c893aea668",
+      "after_sha256": "50c2bc062fd6f3f4c01c226e11956957c57d0dc1e18b56ecf7a87e02a23d84da"
+    },
+    {
+      "file": "tests/README.md",
+      "before_sha256": "c0a16ae6bb9beef700266e4d38bc7c8379fbebbc8b2507758d52559be7c90077",
+      "after_sha256": "a68638806de3a7d883c42058828e07b22d99dab9b76e508914b54c81d538560b"
+    },
+    {
+      "file": "tests/release-contracts.php",
+      "before_sha256": "d62146420ff9013d517f56e5172b2673c8e9d3935259450ddc5d7c6439ab6dab",
+      "after_sha256": "d2aacc673f4c7147d1feeb98545645994c52b37cae86ea6bfcbd3a8bee55b15a"
+    },
+    {
+      "file": "includes/class-admin-ajax.php",
+      "before_sha256": "3d9a5d153be3430a87c06385ab1492c2074b61ae2f00b88c18c3e77a85169e2f",
+      "after_sha256": "4c2992780fc3035f381f9b40b980bc8e3e093fabfede1b68086b94c94e443a4a"
+    },
+    {
+      "file": "docs/audit-remediation-backlog.csv",
+      "before_sha256": "217ccc9e865e028ba0a04fa6c92f0ebcb473314cc746c8488bff42acb24420cf",
+      "after_sha256": "ba1c462a4312e224a362e7eab6057f01f89855cd35b0f90b2be4ccfcfac23dab"
+    },
+    {
+      "file": "docs/ARCHITECTURE.md",
+      "before_sha256": "446b8ec299819102a245223149a59560eef722a8981d8793929cc895c6b432f0",
+      "after_sha256": "211ff133b780ae6d0d6d29d0eda332cddebf355d9f280030b6c208a1ce0ced8b"
+    },
+    {
+      "file": "docs/CHANGELOG-DEV.md",
+      "before_sha256": "124e65afab8f07a9906a0454696d2e8d53e82fc201ed6acbe51bc387129a1381",
+      "after_sha256": "851789f63abea71445f946948d989f272953c67929139a502b4544e1c84bb22e"
+    },
+    {
+      "file": "docs/PRODUCTION-SCALABILITY-PLAN.md",
+      "before_sha256": "622e50e9a2fd52be5e2893a51c752dde354f8d4ac69a45c4fa71ce60356915e8",
+      "after_sha256": "06781d31d64918576e4504b5caf5305765a49aaa9e08c1b5b56aada57014a4ea"
+    },
+    {
+      "file": "docs/INTERFACES.md",
+      "before_sha256": "9807757695e1141a38309eed6102136c11c179869d3abd2e9dfcc87597dc194e",
+      "after_sha256": "1154fd3744da87433af0c0663161618ff0155969432a281f4c864f7bd1facd24"
+    },
+    {
+      "file": "docs/FEATURE-MAP.md",
+      "before_sha256": "cf1ac904dc9e6c3c45ad8cee0676d96d3e72408dbde68b4b5a163abe3e156f45",
+      "after_sha256": "eed69a3009f7bfa25095fedac2b687686fb14cd3cfedd3f98e3c35d92802167d"
+    },
+    {
+      "file": "docs/PROJECT-MAP.md",
+      "before_sha256": "9bf2f34e7749bcf4721100c0e4f14b7926d94219c6b1f11c8234974b6eae884c",
+      "after_sha256": "33c4acce2368668beed23993b2808f96318ed0a20d2d773c4afd15f1c80217d8"
+    },
+    {
+      "file": "docs/AUDIT-REMEDIATION-TEST-MATRIX.md",
+      "before_sha256": "d7fb2db58104d6f499473fa207b94db131bd8c3817f9a1f2e532c8e17eca86a3",
+      "after_sha256": "1cd0300cdbc9d9b35af46e170ad342c40315a2b454cbcb177038dd0ca70000c4"
+    },
+    {
+      "file": "docs/DEVELOPMENT.md",
+      "before_sha256": "a51e89c3f707cf2370f59b538c6691435152649ca45a903b3cb0204a83820d39",
+      "after_sha256": "79abea0b2ef9eab1d55ba82aa56de0a679cf3e0baacb4020ac8638e96f010eea"
+    },
+    {
+      "file": "docs/AUDIT-REMEDIATION-PLAN.md",
+      "before_sha256": "ad9bfd2b7139cf448c37086e5e494413db54e8f86734d62255b6cb7057225b32",
+      "after_sha256": "9840ac1f1249f37ab13291ce5cf8710026d3c5dc46f2300fc57841dc2bd95cc4"
+    },
+    {
+      "file": "tests/integration/http-router.php",
+      "before_sha256": "f4d1fba056324bd1ed8cea5722472eb0d1de3009ccb34080d3b53750c0744ca1",
+      "after_sha256": "c8e63592d7ae6a2db02bd5e891acb2bd574fe6781dc73e7118230a7514f3b38e"
+    },
+    {
+      "file": "tests/integration/quotation-http.php",
+      "before_sha256": "83d5d1f597ecf476a73794d72f82c8ffadaaa130f4e2207f7bd7e05e62868b8e",
+      "after_sha256": "8e89a0a72d2695cd0e7a224fb44453076edddf4ffd4913e61052d28ac95096ac"
+    }
+  ],
+  "unexpected_changes": [],
+  "unrelated_working_tree_edits_preserved": true,
+  "historical_sample_and_fault_log_byte_identical": true,
+  "native_sample_not_overwritten": true,
+  "HTTP_fault_log_appended_bytes_retained_in_new_slice": true,
+  "no_reset_commit_push_tag_deploy": true
+}
