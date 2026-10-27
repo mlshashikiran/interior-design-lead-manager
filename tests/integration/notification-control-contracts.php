@@ -7,6 +7,23 @@ idlm_integration_test('NOTIFY outgoing default off preserves authenticated incom
     $calls=idlm_interakt_native_capture(static function()use($body){idlm_integration_assert_same(200,idlm_wa_native_call($body,'interakt')->get_status());idlm_integration_assert_same(false,IDLM_Interakt::send_track_event_to_interakt(array('synthetic'=>true),'synthetic-key'));});
     idlm_integration_assert_same(1,idlm_wa_native_count($lead));idlm_integration_assert_same(0,count($calls));
 });
+idlm_integration_test('NOTIFY outgoing default off also preserves queued connector WhatsApp intake',static function():void {
+    delete_option('idlm_whatsapp_notifications_enabled');
+    $lead=idlm_wa_native_fixture('919999900087');
+    update_option('idlm_interakt_lead_capture','1');
+    $body=array('type'=>'message_received','data'=>array('customer'=>array('channel_phone_number'=>'919999900087'),'message'=>array('id'=>'notification-off-queued-inbound','message_content_type'=>'Text','message'=>'Synthetic queued incoming reply')));
+    try {
+        $calls=idlm_interakt_native_capture(static function()use($body,$lead){
+            idlm_integration_assert_same(200,idlm_wa_native_call($body,'interakt')->get_status());
+            idlm_integration_assert_same(0,idlm_wa_native_count($lead));
+            $key=idlm_connector_native_key('interakt','notification-off-queued-inbound');
+            idlm_integration_assert_true((bool)get_option($key),'Signed message was not durably queued');
+            idlm_integration_assert_same(true,IDLM_Lead_Connector::process($key));
+        });
+        idlm_integration_assert_same(1,idlm_wa_native_count($lead));
+        idlm_integration_assert_same(0,count($calls));
+    } finally { update_option('idlm_interakt_lead_capture','0'); }
+});
 idlm_integration_test('NOTIFY committed disable overrides warm caches for ordinary and batch jobs',static function():void {
     global $wpdb;[$lead,$job]=idlm_interakt_native_fixture();idlm_integration_assert_same('queued',IDLM_Interakt_Batch::enqueue($lead,'lead_no_answer','notify-disable-batch'));
     $batch='idlm_interakt_batch_'.hash('sha256','notify-disable-batch|'.$lead.'|lead_no_answer');get_option('idlm_whatsapp_notifications_enabled');

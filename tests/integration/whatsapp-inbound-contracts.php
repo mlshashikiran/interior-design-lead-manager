@@ -2,6 +2,8 @@
 /** INT-006 native atomic receipts, canonical matching and replay. Builder: Shashi. */
 if (!defined('ABSPATH') || strpos(DB_NAME,'idlm_test_')!==0) { exit(1); }
 function idlm_wa_native_fixture($phone='919999900001') {
+    // These inbox contracts exercise immediate existing-contact receipt, independent of connector tests.
+    update_option('idlm_interakt_lead_capture','0');
     wp_cache_delete('idlm_meta_webhook_app_secret','options');wp_cache_delete('alloptions','options');
     update_option('idlm_meta_webhook_enabled','1');update_option('idlm_meta_webhook_app_secret','synthetic-inbox-secret');update_option('idlm_interakt_enabled','1');update_option('idlm_interakt_webhook_secret','synthetic-inbox-secret');
     return idlm_lifecycle_fixture(array('phone'=>$phone));
