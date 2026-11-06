@@ -230,7 +230,10 @@ jQuery(function($) {
             return '<div class="idlm-dashboard-bar"><span>' + text(row.reason) + '</span><span class="idlm-dashboard-track" aria-hidden="true"><span style="width:' + (num(row.count) / reasonMax * 100) + '%"></span></span><strong>' + count(row.count) + '</strong></div>';
         }).join('') : '<p class="idlm-dashboard-empty">No Lost leads are recorded for this period.</p>');
         $('#idlm-lost-reasons-note').text(num(s.lost_reasons_legacy_count) ? 'Includes ' + count(s.lost_reasons_legacy_count) + ' legacy Lost records.' : 'Recorded Lost transitions in the selected period.');
-        var mixes = s.business_mix || {};
+        renderBusinessMix(s.business_mix || {}, s);
+    }
+    /** Business mix table and its segment switch, shared by both dashboards. */
+    function renderBusinessMix(mixes, s) {
         function renderMix(kind) {
             var rows = mixes[kind] || [];
             $('#idlm-business-mix').html(rows.length ? rows.map(function(row) {
@@ -277,16 +280,7 @@ jQuery(function($) {
         $('#idlm-pre-sales-activity-rows').html(preSalesTeam.length ? preSalesTeam.map(function(row) {
             return '<tr><th scope="row">' + text(row.name) + '</th><td>' + count(row.leads_touched) + '</td><td>' + count(row.calls) + '</td><td>' + count(row.whatsapp_outbound) + '</td><td>' + count(row.whatsapp_replies) + '</td><td>' + count(row.status_updates) + '</td><td>' + count(row.tasks) + '</td><td>' + count(row.qualified) + '</td><td>' + count(row.handed_off) + '</td><td>' + text(row.avg_time_to_qualify || '—') + '</td></tr>';
         }).join('') : empty(10, 'No users have the Pre-sales CRM role. Assign that role to attribute activity here.'));
-        var mixes = s.business_mix || marketing.business_mix || {};
-        function renderMix(kind) {
-            var rows = mixes[kind] || [], total = rows.reduce(function(sum, row) { return sum + num(row.count); }, 0);
-            $('#idlm-business-mix').html(rows.length ? rows.map(function(row) {
-                return '<tr><th scope="row">' + text(row.segment) + '</th><td>' + count(row.count) + '</td><td>' + count(row.opportunities) + '</td><td>' + count(row.won) + '</td><td>' + money(row.revenue, s.currency_symbol) + '</td></tr>';
-            }).join('') : empty(5, 'No ' + kind + ' segment data is available for this period.'));
-        }
-        renderMix('rooms');
-        $root.find('[data-segment]').prop('disabled', false);
-        $root.off('click.idlmMix').on('click.idlmMix', '[data-segment]', function() { $root.find('[data-segment]').removeClass('active'); $(this).addClass('active'); renderMix($(this).data('segment')); });
+        renderBusinessMix(s.business_mix || marketing.business_mix || {}, s);
         $('#idlm-sales-period-note').text(formatRange(ranges.curr_start, ranges.curr_end));
         if (access.pre_sales) {
             $('#idlm-sales-summary').html(summary('Qualified leads', count(s.qualified_total), 'Currently qualified, created in the period') + summary('Plans collected', count(s.qualified_with_plan), rate(s.qualified_with_plan, s.qualified_total) + ' of qualified leads in the cohort') + summary('Average time to connect', s.avg_time_connected, 'Recorded timing for leads created in the period'));
