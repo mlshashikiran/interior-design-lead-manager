@@ -1377,38 +1377,9 @@ select.idlm-table-select {
 .idlm-users-table .idlm-users-form { min-width: 180px; }
 
 /* Keep directory controls on a dedicated full-width row. */
-.idlm-users-directory-top { display: grid; align-items: start; }
 .idlm-users-filter { display: inline-flex; width: auto; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; }
-.idlm-users-filter .idlm-input:first-of-type { min-width: 260px; }
-@media (max-width: 782px) { .idlm-users-filter .idlm-input:first-of-type { min-width: 0; } }
 
 /* Keep CRM overlay states authoritative after legacy module declarations. */
-.idlm-global-sidebar .idlm-global-sidebar-header { display: flex; align-items: center; justify-content: space-between; gap: var(--idlm-space-3); min-height: 60px; padding: var(--idlm-space-3) var(--idlm-space-5); border-bottom: 1px solid var(--idlm-border); background: var(--idlm-surface-soft); box-sizing: border-box; }
-.idlm-global-sidebar .idlm-global-sidebar-title { min-width: 0; margin: 0; color: var(--idlm-text); font-size: var(--idlm-type-card); font-weight: 700; line-height: 1.4; }
-.idlm-global-sidebar .idlm-global-sidebar-actions { display: flex; flex: 0 0 auto; align-items: center; gap: var(--idlm-space-2); }
-.idlm-global-sidebar .idlm-global-sidebar-filter-btn { min-height: 28px; padding: 2px 8px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius-compact); background: var(--idlm-surface); color: var(--idlm-text-muted); font: inherit; font-size: var(--idlm-type-meta); line-height: 1.2; cursor: pointer; }
-.idlm-global-sidebar .idlm-global-sidebar-filter-btn:hover, .idlm-global-sidebar .idlm-global-sidebar-filter-btn:focus-visible { border-color: var(--idlm-action); color: var(--idlm-action); outline: 0; box-shadow: 0 0 0 3px color-mix(in srgb, var(--idlm-action) 16%, transparent); }
-.idlm-global-sidebar .idlm-global-sidebar-filter-btn.active { border-color: var(--idlm-action); background: var(--idlm-action); color: var(--idlm-surface); }
-.idlm-global-sidebar #idlm-global-tasks-sidebar-close { display: grid; width: var(--idlm-target-size); height: var(--idlm-target-size); margin-left: var(--idlm-space-1); padding: 0; place-items: center; border: 0; border-radius: var(--idlm-radius-compact); background: transparent; color: var(--idlm-text-muted); font-size: 20px; line-height: 1; cursor: pointer; }
-.idlm-global-sidebar #idlm-global-tasks-sidebar-close:hover, .idlm-global-sidebar #idlm-global-tasks-sidebar-close:focus-visible { background: var(--idlm-danger-soft); color: var(--idlm-danger); outline: 2px solid var(--idlm-action); outline-offset: 1px; }
-.idlm-global-sidebar .idlm-global-sidebar-body { height: calc(100% - 60px); padding: var(--idlm-space-4); overflow: auto; overscroll-behavior: contain; box-sizing: border-box; }
-.idlm-global-sidebar .idlm-global-sidebar-load-state, .idlm-drawer .idlm-drawer-load-state { display: grid; min-width: 0; min-height: 112px; padding: var(--idlm-space-6) var(--idlm-space-4); place-content: center; gap: var(--idlm-space-2); overflow-wrap: anywhere; color: var(--idlm-text-muted); text-align: center; }
-.idlm-drawer .idlm-drawer-load-state--error { margin: var(--idlm-space-4); min-height: auto; border: 1px solid var(--idlm-danger); border-radius: var(--idlm-radius); background: var(--idlm-danger-soft); color: var(--idlm-danger); }
-.idlm-spinner-inline { float: none; margin: 0 auto; }
-.idlm-floating-tasks-btn .idlm-floating-tasks-icon { display: block; width: 20px; height: 20px; margin: auto; font-size: 20px; line-height: 20px; }
-.idlm-floating-tasks-btn .idlm-floating-tasks-badge { display: none; }
-.idlm-dialog .idlm-dialog__body { scrollbar-gutter: stable; }
-.idlm-dialog .idlm-dialog__body .idlm-form-group, .idlm-log-payload-dialog .idlm-log-payload-section, .idlm-log-payload-dialog .idlm-code-block { min-width: 0; }
-.idlm-dialog .idlm-dialog__body :where(input, select, textarea) { max-width: 100%; }
-.idlm-dialog .idlm-dialog__actions { margin-top: var(--idlm-space-5); }
-.idlm-dialog .idlm-dialog__actions .idlm-btn, .idlm-dialog .idlm-dialog__footer .idlm-btn { min-width: 0; white-space: normal; }
-.idlm-log-payload-dialog .idlm-log-dialog-panel { min-width: 0; width: min(920px, calc(100vw - var(--idlm-space-8))); }
-.idlm-log-payload-dialog .idlm-dialog__body { min-width: 0; overflow-x: hidden; }
-.idlm-log-payload-dialog .idlm-code-block { max-width: 100%; overflow: auto; overflow-wrap: anywhere; word-break: break-word; white-space: pre-wrap; overscroll-behavior: contain; }
-#idlm-routing-modal .idlm-modal-content { min-height: 0; overflow: hidden; }
-#idlm-routing-modal .idlm-routing-modal-body { min-width: 0; scrollbar-gutter: stable; }
-#idlm-routing-modal .idlm-routing-modal-footer { min-width: 0; flex-wrap: wrap; }
-#idlm-routing-modal .idlm-routing-modal-footer .idlm-routing-form-error { min-width: min(100%, 18rem); overflow-wrap: anywhere; }
 
 /* Final density contract: shared controls use the 34px desktop rhythm.
    Forms retain their natural full width; utility controls must not expand just
@@ -1454,16 +1425,6 @@ select.idlm-table-select {
     }
 }
 
-@media (max-width: 600px) {
-    .idlm-global-sidebar .idlm-global-sidebar-header { align-items: flex-start; padding: var(--idlm-space-3) var(--idlm-space-4); }
-    .idlm-global-sidebar .idlm-global-sidebar-actions { gap: var(--idlm-space-1); }
-    .idlm-global-sidebar .idlm-global-sidebar-filter-btn { padding-inline: 6px; }
-    .idlm-dialog .idlm-dialog__panel { width: min(100%, calc(100vw - var(--idlm-space-4))); max-height: calc(100dvh - var(--idlm-space-4)); }
-    .idlm-dialog .idlm-dialog__header, .idlm-dialog .idlm-dialog__body, .idlm-dialog .idlm-dialog__footer { padding-right: var(--idlm-space-4); padding-left: var(--idlm-space-4); }
-    .idlm-dialog .idlm-dialog__footer, .idlm-dialog .idlm-dialog__actions, #idlm-routing-modal .idlm-routing-modal-footer { align-items: stretch; flex-direction: column-reverse; }
-    .idlm-dialog .idlm-dialog__footer .idlm-btn, .idlm-dialog .idlm-dialog__actions .idlm-btn, #idlm-routing-modal .idlm-routing-modal-footer .idlm-btn, #idlm-routing-modal .idlm-routing-form-error { width: 100%; }
-    .idlm-log-payload-dialog .idlm-code-block { max-height: 220px; font-size: 11px; }
-}
 
 /* Role-level lead visibility controls on Users & Access. */
 .idlm-role-scopes-form { display: grid; gap: 14px; }
@@ -1513,132 +1474,19 @@ select.idlm-table-select {
 }
 
 /* Theme-isolated overlay hardening: all presentation remains inside CRM-owned components. */
-.idlm-global-sidebar .idlm-global-sidebar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--idlm-space-3);
-    min-height: 60px;
-    padding: var(--idlm-space-3) var(--idlm-space-5);
-    border-bottom: 1px solid var(--idlm-border);
-    background: var(--idlm-surface-soft);
-    box-sizing: border-box;
-}
 
-.idlm-global-sidebar .idlm-global-sidebar-title {
-    min-width: 0;
-    margin: 0;
-    color: var(--idlm-text);
-    font-size: var(--idlm-type-card);
-    font-weight: 700;
-    line-height: 1.4;
-}
 
-.idlm-global-sidebar .idlm-global-sidebar-actions {
-    display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    gap: var(--idlm-space-2);
-}
 
-.idlm-global-sidebar .idlm-global-sidebar-filter-btn {
-    min-height: 28px;
-    padding: 2px 8px;
-    border: 1px solid var(--idlm-border);
-    border-radius: var(--idlm-radius-compact);
-    background: var(--idlm-surface);
-    color: var(--idlm-text-muted);
-    font: inherit;
-    font-size: var(--idlm-type-meta);
-    line-height: 1.2;
-    cursor: pointer;
-}
 
-.idlm-global-sidebar .idlm-global-sidebar-filter-btn:hover,
-.idlm-global-sidebar .idlm-global-sidebar-filter-btn:focus-visible {
-    border-color: var(--idlm-action);
-    color: var(--idlm-action);
-    outline: 0;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--idlm-action) 16%, transparent);
-}
 
-.idlm-global-sidebar .idlm-global-sidebar-filter-btn.active {
-    border-color: var(--idlm-action);
-    background: var(--idlm-action);
-    color: var(--idlm-surface);
-}
 
-.idlm-global-sidebar #idlm-global-tasks-sidebar-close {
-    display: grid;
-    width: var(--idlm-target-size);
-    height: var(--idlm-target-size);
-    margin-left: var(--idlm-space-1);
-    padding: 0;
-    place-items: center;
-    border: 0;
-    border-radius: var(--idlm-radius-compact);
-    background: transparent;
-    color: var(--idlm-text-muted);
-    font-size: 20px;
-    line-height: 1;
-    cursor: pointer;
-}
 
-.idlm-global-sidebar #idlm-global-tasks-sidebar-close:hover,
-.idlm-global-sidebar #idlm-global-tasks-sidebar-close:focus-visible {
-    background: var(--idlm-danger-soft);
-    color: var(--idlm-danger);
-    outline: 2px solid var(--idlm-action);
-    outline-offset: 1px;
-}
 
-.idlm-global-sidebar .idlm-global-sidebar-body {
-    height: calc(100% - 60px);
-    padding: var(--idlm-space-4);
-    overflow: auto;
-    overscroll-behavior: contain;
-    box-sizing: border-box;
-}
 
-.idlm-global-sidebar .idlm-global-sidebar-load-state,
-.idlm-drawer .idlm-drawer-load-state {
-    display: grid;
-    min-width: 0;
-    min-height: 112px;
-    padding: var(--idlm-space-6) var(--idlm-space-4);
-    place-content: center;
-    gap: var(--idlm-space-2);
-    overflow-wrap: anywhere;
-    color: var(--idlm-text-muted);
-    text-align: center;
-}
 
-.idlm-drawer .idlm-drawer-load-state--error {
-    margin: var(--idlm-space-4);
-    min-height: auto;
-    border: 1px solid var(--idlm-danger);
-    border-radius: var(--idlm-radius);
-    background: var(--idlm-danger-soft);
-    color: var(--idlm-danger);
-}
 
-.idlm-spinner-inline {
-    float: none;
-    margin: 0 auto;
-}
 
-.idlm-floating-tasks-btn .idlm-floating-tasks-icon {
-    display: block;
-    width: 20px;
-    height: 20px;
-    margin: auto;
-    font-size: 20px;
-    line-height: 20px;
-}
 
-.idlm-floating-tasks-btn .idlm-floating-tasks-badge {
-    display: none;
-}
 
 .idlm-dialog .idlm-dialog__body :where(input, select, textarea, button),
 .idlm-dialog .idlm-dialog__footer .idlm-btn,
@@ -1646,97 +1494,31 @@ select.idlm-table-select {
     font-family: inherit;
 }
 
-.idlm-dialog .idlm-dialog__body {
-    scrollbar-gutter: stable;
-}
 
 .idlm-dialog .idlm-dialog__body .idlm-form-group {
     min-width: 0;
 }
 
-.idlm-dialog .idlm-dialog__body :where(input, select, textarea) {
-    max-width: 100%;
-}
 
-.idlm-dialog .idlm-dialog__actions {
-    margin-top: var(--idlm-space-5);
-}
 
-.idlm-dialog .idlm-dialog__actions .idlm-btn,
-.idlm-dialog .idlm-dialog__footer .idlm-btn {
-    min-width: 0;
-    white-space: normal;
-}
 
-.idlm-log-payload-dialog .idlm-log-dialog-panel {
-    min-width: 0;
-    width: min(920px, calc(100vw - var(--idlm-space-8)));
-}
 
-.idlm-log-payload-dialog .idlm-dialog__body {
-    min-width: 0;
-    overflow-x: hidden;
-}
 
 .idlm-log-payload-dialog .idlm-log-payload-section,
 .idlm-log-payload-dialog .idlm-code-block {
     min-width: 0;
 }
 
-.idlm-log-payload-dialog .idlm-code-block {
-    max-width: 100%;
-    overflow: auto;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    white-space: pre-wrap;
-    overscroll-behavior: contain;
-}
 
-#idlm-routing-modal .idlm-modal-content {
-    min-height: 0;
-    overflow: hidden;
-}
 
-#idlm-routing-modal .idlm-routing-modal-body {
-    min-width: 0;
-    scrollbar-gutter: stable;
-}
 
-#idlm-routing-modal .idlm-routing-modal-footer {
-    min-width: 0;
-    flex-wrap: wrap;
-}
 
-#idlm-routing-modal .idlm-routing-modal-footer .idlm-routing-form-error {
-    min-width: min(100%, 18rem);
-    overflow-wrap: anywhere;
-}
 
 @media (max-width: 600px) {
-    .idlm-global-sidebar .idlm-global-sidebar-header {
-        align-items: flex-start;
-        padding: var(--idlm-space-3) var(--idlm-space-4);
-    }
 
-    .idlm-global-sidebar .idlm-global-sidebar-actions {
-        gap: var(--idlm-space-1);
-    }
 
-    .idlm-global-sidebar .idlm-global-sidebar-filter-btn {
-        padding-inline: 6px;
-    }
 
-    .idlm-dialog .idlm-dialog__panel {
-        width: min(100%, calc(100vw - var(--idlm-space-4)));
-        max-height: calc(100dvh - var(--idlm-space-4));
-    }
 
-    .idlm-dialog .idlm-dialog__header,
-    .idlm-dialog .idlm-dialog__body,
-    .idlm-dialog .idlm-dialog__footer {
-        padding-right: var(--idlm-space-4);
-        padding-left: var(--idlm-space-4);
-    }
 
     .idlm-dialog .idlm-dialog__footer,
     .idlm-dialog .idlm-dialog__actions {
@@ -1749,10 +1531,6 @@ select.idlm-table-select {
         width: 100%;
     }
 
-    .idlm-log-payload-dialog .idlm-code-block {
-        max-height: 220px;
-        font-size: 11px;
-    }
 
     #idlm-routing-modal .idlm-routing-modal-footer {
         align-items: stretch;
@@ -1815,7 +1593,6 @@ select.idlm-table-select {
 
 @media (max-width: 1120px) {
     .idlm-drawer-header { grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1fr) auto; gap: 16px; }
-    .idlm-drawer-workspace { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 700px) {
@@ -3499,9 +3276,6 @@ body.idlm-filters-open {
     line-height: 1.4;
 }
 
-.idlm-field-error[hidden] {
-    display: none;
-}
 
 .idlm-input[aria-invalid="true"] {
     border-color: var(--idlm-danger);

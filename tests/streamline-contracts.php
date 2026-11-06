@@ -192,3 +192,15 @@ idlm_test('STREAMLINE Meta and Interakt webhooks verify signatures with one chec
         assert_same($case[3], IDLM_Interakt::verify_meta_webhook_signature($case[0], $case[1], $case[2]), 'Meta case ' . $index);
     }
 });
+
+idlm_test('STREAMLINE no stylesheet keeps a rule that an identical later rule always overrides', static function (): void {
+    require_once __DIR__ . '/support/css-duplicates.php';
+    $sample = ".a{color:red}\n@media (max-width:600px){.b{margin:0}}\n.c{x:1}\n.a { color: red; }\n@media (max-width: 600px){ .b{ margin:0 } }\n@media print{.a{color:red}}";
+    $dead = idlm_css_dead_duplicates($sample);
+    assert_same(2, count($dead), 'The parser finds duplicates across whitespace and repeated media blocks.');
+    assert_same(".a{color:red}", substr($sample, $dead[0]['start'], $dead[0]['end'] - $dead[0]['start']));
+    foreach (glob(dirname(__DIR__) . '/assets/css/*.css') as $file) {
+        $dead = idlm_css_dead_duplicates((string) file_get_contents($file));
+        assert_same(array(), array_map(static function ($rule) { return strtok($rule['key'], "\n") . ' ' . substr($rule['key'], strpos($rule['key'], "\n") + 1, 80); }, $dead), basename($file));
+    }
+});
