@@ -66,6 +66,16 @@ final class IDLM_Schema_Migration {
         return $values;
     }
 
+    /**
+     * maybe_unserialize() for raw rows the plugin stores itself, without ever building objects.
+     * The plugin only stores scalars and arrays, so the result is the same for every value it writes.
+     */
+    public static function decode($raw) {
+        if (!is_serialized($raw)) { return $raw; }
+        // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged,WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize -- Same silenced decode as maybe_unserialize(), with object creation disabled.
+        return @unserialize(trim($raw), array('allowed_classes' => false));
+    }
+
     public static function publish($option, $version) {
         global $wpdb;
         // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0389: publish(): installer declarations supply identifiers validated by the CREATE TABLE identifier regexp; metadata option values bound; physical schema/version checks must be live.

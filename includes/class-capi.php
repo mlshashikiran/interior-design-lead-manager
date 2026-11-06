@@ -261,7 +261,7 @@ class IDLM_CAPI {
         $value = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $name));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         if ($wpdb->last_error) { throw new RuntimeException('CAPI settings read failed.'); }
-        return null === $value ? $default : maybe_unserialize($value);
+        return null === $value ? $default : IDLM_Schema_Migration::decode($value);
     }
 
     private static function event_mappings($platform) {

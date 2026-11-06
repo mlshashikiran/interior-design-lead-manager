@@ -32,7 +32,7 @@ final class IDLM_Interakt_Dispatch {
         $raw = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $name));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         if ($wpdb->last_error) { throw new RuntimeException('Interakt settings read failed.'); }
-        return null === $raw ? $default : maybe_unserialize($raw);
+        return null === $raw ? $default : IDLM_Schema_Migration::decode($raw);
     }
 
     public static function inspect($key) {

@@ -1165,6 +1165,34 @@ function user_can($user, string $cap): bool {
     $caps=array_merge($caps,(array)($user->caps ?? array()));return !empty($caps[$cap]);
 }
 function maybe_unserialize($value) { $decoded=is_string($value)?@unserialize($value):false;return false === $decoded ? $value : $decoded; }
+/** WordPress core is_serialized(), strict mode, copied so decode() behaves as it does in production. */
+function is_serialized($data, $strict = true) {
+    if (!is_string($data)) { return false; }
+    $data = trim($data);
+    if ('N;' === $data) { return true; }
+    if (strlen($data) < 4 || ':' !== $data[1]) { return false; }
+    if ($strict) {
+        $last = substr($data, -1);
+        if (';' !== $last && '}' !== $last) { return false; }
+    } else {
+        $semicolon = strpos($data, ';'); $brace = strpos($data, '}');
+        if (false === $semicolon && false === $brace) { return false; }
+        if ((false !== $semicolon && $semicolon < 3) || (false !== $brace && $brace < 4)) { return false; }
+    }
+    $token = $data[0];
+    switch ($token) {
+        case 's':
+            if ($strict) { if ('"' !== substr($data, -2, 1)) { return false; } }
+            elseif (false === strpos($data, '"')) { return false; }
+            // Fall through.
+        case 'a': case 'O': case 'E':
+            return (bool) preg_match("/^{$token}:[0-9]+:/s", $data);
+        case 'b': case 'i': case 'd':
+            $end = $strict ? '$' : '';
+            return (bool) preg_match("/^{$token}:[0-9.E+-]+;$end/", $data);
+    }
+    return false;
+}
 
 function current_user_can(string $capability, ...$args): bool {
     return !empty($GLOBALS['idlm_test_caps'][$capability]);

@@ -158,3 +158,25 @@ idlm_test('STREAMLINE every plugin asset version comes from one helper with unch
         assert_false(strpos((string) file_get_contents($file), 'filemtime('), basename($file) . ' versions assets through IDLM_Admin_Assets::version().');
     }
 });
+
+/** Records whether PHP ever built this class from stored data. */
+final class IDLM_Streamline_Wakeup_Probe {
+    public function __wakeup() { $GLOBALS['idlm_streamline_wakeups'] = ($GLOBALS['idlm_streamline_wakeups'] ?? 0) + 1; }
+}
+
+idlm_test('STREAMLINE stored values decode like maybe_unserialize but never build objects', static function (): void {
+    $core = static function ($value) { return is_serialized($value) ? @unserialize(trim($value)) : $value; }; // phpcs:ignore
+    $inputs = array(null, '', '0', 'plain text', 'N;', 'b:0;', 'b:1;', 'i:42;', 'd:1.5;', 's:3:"abc";', serialize(array('a' => array(1, '2', true))),
+        ' ' . serialize(array('padded')) . "\n", 'a:1:{', 's:9:"short";', serialize(serialize(array('double'))), array('already' => 'decoded'), 7, false);
+    foreach ($inputs as $input) {
+        assert_same($core($input), IDLM_Schema_Migration::decode($input), var_export($input, true));
+    }
+    $GLOBALS['idlm_streamline_wakeups'] = 0;
+    $decoded = IDLM_Schema_Migration::decode(serialize(array('probe' => new IDLM_Streamline_Wakeup_Probe())));
+    assert_same(0, $GLOBALS['idlm_streamline_wakeups'], 'No stored object is ever woken.');
+    assert_true($decoded['probe'] instanceof __PHP_Incomplete_Class);
+    foreach (glob(dirname(__DIR__) . '/includes/*.php') as $file) {
+        if ('class-schema-migration.php' === basename($file)) { continue; }
+        assert_false(strpos((string) file_get_contents($file), 'maybe_unserialize('), basename($file) . ' decodes stored rows through IDLM_Schema_Migration::decode().');
+    }
+});

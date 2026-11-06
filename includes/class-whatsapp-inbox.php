@@ -12,7 +12,7 @@ final class IDLM_WhatsApp_Inbox {
         // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0269: setting(): fixed lead aliases/tables; phone expression nests prepare(REPLACE) over a literal character list; phone IN parameters/IDs prepared; live canonical matching and receipt writes are transactional.
         $value=$wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s",$name));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-        return $wpdb->last_error ? new WP_Error('idlm_whatsapp_settings','Unable to verify current webhook settings.') : (null === $value ? $default : maybe_unserialize($value));
+        return $wpdb->last_error ? new WP_Error('idlm_whatsapp_settings','Unable to verify current webhook settings.') : (null === $value ? $default : IDLM_Schema_Migration::decode($value));
     }
 
     public static function message($provider, $id, $phone, $text) {

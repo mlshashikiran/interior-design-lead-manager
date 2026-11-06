@@ -197,7 +197,7 @@ class IDLM_Admin_Logs_Renderer {
 
     /** Format a serialized scalar or structure for the read-only payload viewer. */
     private static function format_payload($value) {
-        $value = maybe_unserialize($value);
+        $value = IDLM_Schema_Migration::decode($value);
         if (is_scalar($value) || null === $value) {
             $string = (string) $value;
             $decoded = json_decode($string, true);
