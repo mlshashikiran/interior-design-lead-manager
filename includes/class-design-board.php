@@ -117,7 +117,7 @@ final class IDLM_Design_Board {
         if (!$result['rows']) { self::empty_state($filters); return; }
         $contexts = IDLM_Design_Stages::contexts($result['rows']); $columns = array();
         foreach ($result['rows'] as $row) { $columns[IDLM_Design_Stages::stage_of($row)][] = $row; }
-        wp_enqueue_script('idlm-design-board', IDLM_URL . 'assets/js/design-board.js', array('idlm-dialog'), (string) filemtime(IDLM_PATH . 'assets/js/design-board.js'), true);
+        wp_enqueue_script('idlm-design-board', IDLM_URL . 'assets/js/design-board.js', array('idlm-dialog'), IDLM_Admin_Assets::version('js/design-board.js'), true);
         if ($result['total'] > self::BOARD_LIMIT) { echo '<p class="idlm-design-note">Showing the ' . esc_html(self::BOARD_LIMIT) . ' earliest due of ' . esc_html($result['total']) . ' projects. Use a filter or the Projects table to see the rest.</p>'; }
         echo '<div class="idlm-design-board" role="region" aria-label="Design projects by stage" tabindex="0" data-ajax-url="' . esc_url(admin_url('admin-ajax.php')) . '" data-nonce="' . esc_attr(wp_create_nonce('idlm_design_stage_action')) . '">';
         // Removed stages show only while a project still sits in one.

@@ -25,10 +25,10 @@ final class IDLM_Lead_Payment_Controller {
     /** Direct shortcode/admin renders need the same gated design as ordinary page renders. */
     private static function enqueue_payment_assets() {
         wp_enqueue_style('idlm-quotations', IDLM_URL . 'assets/css/quotations.css', array('idlm-admin-styles'), IDLM_VERSION);
-        wp_enqueue_style('idlm-payments', IDLM_URL . 'assets/css/payments.css', array('idlm-quotations'), (string) filemtime(IDLM_PATH . 'assets/css/payments.css'));
+        wp_enqueue_style('idlm-payments', IDLM_URL . 'assets/css/payments.css', array('idlm-quotations'), IDLM_Admin_Assets::version('css/payments.css'));
         if (self::design_active()) {
-            wp_enqueue_style('idlm-crm-design', IDLM_URL . 'assets/css/crm-design.css', array('idlm-payments'), (string) filemtime(IDLM_PATH . 'assets/css/crm-design.css'));
-            wp_enqueue_script('idlm-payments', IDLM_URL . 'assets/js/payments.js', array(), (string) filemtime(IDLM_PATH . 'assets/js/payments.js'), true);
+            wp_enqueue_style('idlm-crm-design', IDLM_URL . 'assets/css/crm-design.css', array('idlm-payments'), IDLM_Admin_Assets::version('css/crm-design.css'));
+            wp_enqueue_script('idlm-payments', IDLM_URL . 'assets/js/payments.js', array(), IDLM_Admin_Assets::version('js/payments.js'), true);
             add_filter('body_class', array('IDLM_Admin_Assets', 'add_design_body_class'));
         }
     }
@@ -406,7 +406,7 @@ final class IDLM_Lead_Payment_Controller {
         return '<span class="idlm-badge ' . esc_attr($badge[0]) . '">' . esc_html($badge[1]) . '</span>';
     }
     private static function dialog_open($id, $title, $description, $operation, $lead_id, $version, $return_url, $multipart = false, $attributes = '') {
-        wp_enqueue_script('idlm-design-detail', IDLM_URL . 'assets/js/design-detail.js', array('idlm-dialog'), (string) filemtime(IDLM_PATH . 'assets/js/design-detail.js'), true);
+        wp_enqueue_script('idlm-design-detail', IDLM_URL . 'assets/js/design-detail.js', array('idlm-dialog'), IDLM_Admin_Assets::version('js/design-detail.js'), true);
         echo '<div class="idlm-modal idlm-dialog idlm-design-dialog" id="' . esc_attr($id) . '" role="dialog" aria-modal="true" aria-labelledby="' . esc_attr($id . '-title') . '"' . ($description ? ' aria-describedby="' . esc_attr($id . '-description') . '"' : '') . ' aria-hidden="true" hidden data-idlm-dialog data-idlm-initial-focus=".idlm-dialog__body :is(textarea, select, input:not([type=hidden]))"><div class="idlm-modal-content idlm-dialog__panel"><header class="idlm-modal-header idlm-dialog__header"><div><h2 class="idlm-dialog__title" id="' . esc_attr($id . '-title') . '">' . esc_html($title) . '</h2>' . ($description ? '<p class="idlm-dialog__description" id="' . esc_attr($id . '-description') . '">' . esc_html($description) . '</p>' : '') . '</div><button type="button" class="idlm-dialog__close" data-idlm-dialog-close aria-label="Close dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button></header>';
         if (null === $operation) { echo '<div class="idlm-dialog__body">'; return; }
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.

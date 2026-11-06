@@ -23,6 +23,11 @@ final class IDLM_Admin_Assets {
         return is_file($path) ? (string) filemtime($path) : IDLM_VERSION;
     }
 
+    /** Cache-busting version for any plugin asset, relative to assets/: its modification time. */
+    public static function version($relative_path) {
+        return self::asset_version($relative_path);
+    }
+
     /** Apply saved brand tokens only to plugin-owned CRM roots and dialogs. */
     private static function add_white_label_style() {
         if (self::$white_label_style_added || !function_exists('wp_add_inline_style')) {

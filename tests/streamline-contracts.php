@@ -145,3 +145,16 @@ idlm_test('STREAMLINE quotation list dates use the shared check with the same re
     }
     assert_false(strpos((string) file_get_contents(dirname(__DIR__) . '/includes/class-quotation-controller.php'), 'function clean_date('), 'The unused controller copy stays removed.');
 });
+
+idlm_test('STREAMLINE every plugin asset version comes from one helper with unchanged values', static function (): void {
+    $root = dirname(__DIR__) . '/';
+    foreach (array_merge(glob($root . 'assets/js/*.js'), glob($root . 'assets/css/*.css')) as $file) {
+        $relative = substr($file, strlen($root . 'assets/'));
+        assert_same((string) filemtime($file), IDLM_Admin_Assets::version($relative), $relative);
+    }
+    assert_same(IDLM_VERSION, IDLM_Admin_Assets::version('js/absent-asset.js'));
+    foreach (glob($root . 'includes/*.php') as $file) {
+        if ('class-admin-assets.php' === basename($file)) { continue; }
+        assert_false(strpos((string) file_get_contents($file), 'filemtime('), basename($file) . ' versions assets through IDLM_Admin_Assets::version().');
+    }
+});

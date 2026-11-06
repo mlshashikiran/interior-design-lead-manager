@@ -14,8 +14,7 @@ class IDLM_Quotations {
 
     /** Use local asset timestamps so quotation UI changes cannot remain cached. */
     private static function asset_version($relative_path) {
-        $path = dirname(__DIR__) . '/assets/' . ltrim((string) $relative_path, '/');
-        return is_file($path) ? (string) filemtime($path) : IDLM_VERSION;
+        return IDLM_Admin_Assets::version($relative_path);
     }
 
     public static function init() {
