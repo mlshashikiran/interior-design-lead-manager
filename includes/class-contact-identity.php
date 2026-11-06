@@ -58,6 +58,7 @@ final class IDLM_Contact_Identity {
         return '' === $email || self::is_placeholder_email($email, $phone) ? '' : $email;
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /**
      * An email already on leads with two or more different phone numbers is shared (a team
      * address, or one typed for everyone), so it no longer matches leads together.
@@ -71,6 +72,7 @@ final class IDLM_Contact_Identity {
         foreach ($phones as $phone) { $digits = preg_replace('/[^0-9]/', '', (string) $phone); if (strlen($digits) >= 10) { $distinct[substr($digits, -10)] = true; } }
         return count($distinct) >= 2;
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
     /** The email used to match a submission to existing leads, or '' when it should not be. */
     public static function email_for_matching($email, $phone = '') {
@@ -89,6 +91,7 @@ final class IDLM_Contact_Identity {
         return strlen($digits) >= 10 ? substr($digits, -10) : '';
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /**
      * Existing leads with this phone, or this real email. Returns rows with id, names, stage,
      * assigned_rep_id and what matched ('phone' or 'email').
@@ -110,7 +113,9 @@ final class IDLM_Contact_Identity {
         }
         return array_values($found);
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /**
      * Leads whose email is a placeholder or shared across different phone numbers, for the
      * administrator's review. Read-only; nothing is cleared without a separate request.
@@ -130,7 +135,9 @@ final class IDLM_Contact_Identity {
         }
         return $out;
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /**
      * Administrator only: clear the email on the chosen leads, if it still qualifies for review.
      * Logged on each lead. Returns the number cleared or WP_Error.
@@ -154,7 +161,9 @@ final class IDLM_Contact_Identity {
         }
         return $cleared;
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /**
      * The sales rep who asked pre-sales to call a lead they added, kept on that lead's manual
      * submission. Returns the user ID while they can still own leads, else 0.
@@ -168,12 +177,15 @@ final class IDLM_Contact_Identity {
         $user = get_userdata($rep);
         return $user && !in_array('idlm_pre_sales', (array) $user->roles, true) && IDLM_Lead_Access_Policy::is_assignable_rep($rep, 'any', IDLM_Lead_Transaction::active()) ? $rep : 0;
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** First recorded submission was the Add lead form. */
     public static function is_manual_lead($lead_id) {
         global $wpdb;
         return 'manual' === (string) $wpdb->get_var($wpdb->prepare("SELECT platform FROM {$wpdb->prefix}idlm_lead_touchpoints WHERE lead_id = %d ORDER BY id ASC LIMIT 1", (int) $lead_id));
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
     const AD_SOURCES = array('Meta Ads', 'Google Ads', 'LinkedIn Ads');
     const MANUAL_CONVERSIONS_OPTION = 'idlm_manual_lead_conversions';

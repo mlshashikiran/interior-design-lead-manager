@@ -292,7 +292,7 @@ if ($idlm_design_layer) {
                     </div>
                     <div class="idlm-filter-group">
                         <label for="filter-date-range">Date range</label>
-                        <select data-idlm-date-range id="filter-date-range" class="idlm-input"><?php echo IDLM_Date_Ranges::options_html('', 'All time'); ?></select>
+                        <select data-idlm-date-range id="filter-date-range" class="idlm-input"><?php IDLM_Date_Ranges::print_options('', 'All time'); ?></select>
                         <div class="idlm-date-custom" data-idlm-date-custom-for="filter-date-range" hidden><label for="filter-date-start">From</label><input type="date" id="filter-date-start" class="idlm-input"><label for="filter-date-end">To</label><input type="date" id="filter-date-end" class="idlm-input"></div>
                     </div>
                     <?php if ($idlm_design_layer): ?><h3 class="idlm-filters-group-title">Lifecycle</h3><?php endif; ?>
@@ -315,7 +315,7 @@ if ($idlm_design_layer) {
                         </select>
                     </div>
                     <?php if ($idlm_design_layer): // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Guarded template fragments.
-                        echo $idlm_filter_quality_html; ?><h3 class="idlm-filters-group-title">Source and owner</h3><?php echo $idlm_filter_source_html;
+                        echo $idlm_filter_quality_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Filter markup buffered above from escaped template output. ?><h3 class="idlm-filters-group-title">Source and owner</h3><?php echo $idlm_filter_source_html;
                     endif; ?>
                     <?php if ($idlm_can_assign_leads || (!$idlm_is_pre_sales && $idlm_reps_see_all)): ?>
                     <div class="idlm-filter-group">
@@ -1101,7 +1101,7 @@ if ($idlm_design_layer) {
                         </div>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">
                             <label for="export-filter-date-range" style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--idlm-text-muted);">Date Range</label>
-                            <select data-idlm-date-range id="export-filter-date-range" class="idlm-input idlm-control-full"><?php echo IDLM_Date_Ranges::options_html('', 'All time'); ?></select>
+                            <select data-idlm-date-range id="export-filter-date-range" class="idlm-input idlm-control-full"><?php IDLM_Date_Ranges::print_options('', 'All time'); ?></select>
                             <div class="idlm-date-custom" data-idlm-date-custom-for="export-filter-date-range" hidden><label for="export-filter-date-start">From</label><input type="date" id="export-filter-date-start" class="idlm-input"><label for="export-filter-date-end">To</label><input type="date" id="export-filter-date-end" class="idlm-input"></div>
                         </div>
                         <div class="idlm-filter-group" style="margin-bottom: 0;">

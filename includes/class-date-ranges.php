@@ -132,6 +132,15 @@ final class IDLM_Date_Ranges {
         // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
     }
 
+    /** Prints the <option> list in the standard order, escaping each value and label. */
+    public static function print_options($selected = '', $all_label = '') {
+        $selected = self::normalize($selected);
+        if ('' !== $all_label) { echo '<option value=""' . ('' === $selected ? ' selected' : '') . '>' . esc_html($all_label) . '</option>'; }
+        foreach (self::OPTIONS as $value => $label) {
+            echo '<option value="' . esc_attr($value) . '"' . ($value === $selected ? ' selected' : '') . '>' . esc_html($label) . '</option>';
+        }
+    }
+
     /** Escaped <option> list in the standard order, with an optional "All time" first. */
     public static function options_html($selected = '', $all_label = '') {
         $selected = self::normalize($selected);

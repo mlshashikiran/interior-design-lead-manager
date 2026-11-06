@@ -60,8 +60,8 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
         $date_column = $date_columns[$post_date_basis] ?? 'l.assigned_at';
         $post_date_range = isset($_POST['date_range']) ? sanitize_key(wp_unslash($_POST['date_range'])) : '';
         $post_date_range = IDLM_Date_Ranges::normalize($post_date_range);
-        $post_date_start = IDLM_Date_Ranges::clean_date(isset($_POST['date_start']) ? wp_unslash($_POST['date_start']) : '');
-        $post_date_end = IDLM_Date_Ranges::clean_date(isset($_POST['date_end']) ? wp_unslash($_POST['date_end']) : '');
+        $post_date_start = IDLM_Date_Ranges::clean_date(isset($_POST['date_start']) ? sanitize_text_field(wp_unslash($_POST['date_start'])) : '');
+        $post_date_end = IDLM_Date_Ranges::clean_date(isset($_POST['date_end']) ? sanitize_text_field(wp_unslash($_POST['date_end'])) : '');
         $cursor_date_anchor = '';
         $date_condition = IDLM_Date_Ranges::where($date_column, $post_date_range, $post_date_start, $post_date_end);
         if ('' !== $date_condition) {
@@ -693,7 +693,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
         $date_column = $date_columns[$post_date_basis] ?? 'assigned_at';
         $post_date_range = isset($_POST['date_range']) ? sanitize_key(wp_unslash($_POST['date_range'])) : '';
         $date_conditions = array();
-        $date_condition = IDLM_Date_Ranges::where($date_column, $post_date_range, IDLM_Date_Ranges::clean_date(isset($_POST['date_start']) ? wp_unslash($_POST['date_start']) : ''), IDLM_Date_Ranges::clean_date(isset($_POST['date_end']) ? wp_unslash($_POST['date_end']) : ''));
+        $date_condition = IDLM_Date_Ranges::where($date_column, $post_date_range, IDLM_Date_Ranges::clean_date(isset($_POST['date_start']) ? sanitize_text_field(wp_unslash($_POST['date_start'])) : ''), IDLM_Date_Ranges::clean_date(isset($_POST['date_end']) ? sanitize_text_field(wp_unslash($_POST['date_end'])) : ''));
         if ('' !== $date_condition) { $date_conditions[] = $date_condition; }
 
         $post_source      = isset($_POST['source']) ? sanitize_text_field(wp_unslash($_POST['source'])) : '';

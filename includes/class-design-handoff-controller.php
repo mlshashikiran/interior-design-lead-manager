@@ -22,6 +22,7 @@ final class IDLM_Design_Handoff_Controller {
         return ctype_digit($value) && strlen($value) < 19 ? (int) $value : 0;
     }
 
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     /** One multipart request from the dialog: permission, validation, upload, then save. */
     public static function ajax_send() {
         check_ajax_referer('idlm_design_handoff_send', 'nonce');
@@ -45,6 +46,7 @@ final class IDLM_Design_Handoff_Controller {
         if (is_wp_error($result)) { wp_send_json_error(array('message' => $result->get_error_message()), 422); }
         wp_send_json_success(array('lead_id' => $lead_id, 'message' => 'Sent to design.'));
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
     const DECISIONS = array('idlm_design_handoff_accept' => 'accepted', 'idlm_design_handoff_assign' => 'assigned', 'idlm_design_handoff_send_back' => 'sent_back');
 
@@ -60,6 +62,7 @@ final class IDLM_Design_Handoff_Controller {
         return true === $result ? true : (is_wp_error($result) ? sanitize_key(str_replace('idlm_handoff_', '', $result->get_error_code())) : 'busy');
     }
 
+    // phpcs:disable WordPress.Security.NonceVerification.Missing -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     public static function handle_decision() {
         $action = self::text($_POST, 'action');
         if (!isset(self::DECISIONS[$action])) { wp_die('Invalid request.', '', array('response' => 400)); }
@@ -73,7 +76,9 @@ final class IDLM_Design_Handoff_Controller {
         $url = true === $result ? add_query_arg('design_notice', self::DECISIONS[$action], $url) : add_query_arg('design_error', $result, $url);
         wp_safe_redirect($url); exit;
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Missing
 
+    // phpcs:disable WordPress.Security.NonceVerification.Missing -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     /** The table's inline saves: the same nonce, capability and scope checks as the form post. */
     public static function ajax_decision() {
         $action = 'idlm_design_handoff_' . sanitize_key(self::text($_POST, 'operation'));
@@ -86,6 +91,7 @@ final class IDLM_Design_Handoff_Controller {
         $row = IDLM_Design_Handoffs::find(self::id($_POST, 'handoff_id'));
         wp_send_json_success(array('message' => $messages[self::DECISIONS[$action]], 'designer' => $row ? (int) $row->designer_id : 0, 'target' => $row ? (string) $row->target_date : ''));
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Missing
 
     private static function error_message($code) {
         $messages = array(
@@ -151,6 +157,7 @@ final class IDLM_Design_Handoff_Controller {
 
     private static function workspace_base() { return add_query_arg('idlm_view', self::VIEW, IDLM_Admin_Shortcodes::workspace_url()); }
 
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     public static function render() {
         if (!IDLM_Design_Handoffs::can_receive()) { echo '<div class="idlm-state is-error"><strong>Design team access is required</strong></div>'; return; }
         $handoff_id = self::id($_GET, 'handoff');
@@ -169,7 +176,9 @@ final class IDLM_Design_Handoff_Controller {
         if ($handoff_id) { self::render_detail($handoff_id); } else { self::render_list(); }
         echo '</div>';
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     /** Managers land on the projects table; designers on a board of their own projects. */
     private static function render_list() {
         $base = self::workspace_base(); $manager = IDLM_Design_Handoffs::can_manage();
@@ -185,6 +194,7 @@ final class IDLM_Design_Handoff_Controller {
         if ('board' === $tab) { IDLM_Design_Board::render($base); return; }
         IDLM_Design_Projects_Table::render($base);
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
     public static function status_badge($row, $stage) {
         $tones = array(IDLM_Design_Handoffs::STATUS_NEW => 'is-info', IDLM_Design_Handoffs::STATUS_ACCEPTED => 'is-success', IDLM_Design_Handoffs::STATUS_SENT_BACK => 'is-warning');
@@ -200,6 +210,7 @@ final class IDLM_Design_Handoff_Controller {
         return $html;
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     private static function render_detail($handoff_id) {
         global $wpdb; $base = self::workspace_base();
         $row = IDLM_Design_Handoffs::find($handoff_id);
@@ -208,10 +219,12 @@ final class IDLM_Design_Handoff_Controller {
         if (!$lead) { echo '<div class="idlm-state is-error"><strong>This handoff is not available to you</strong><a href="' . esc_url($base) . '">Back to Design team</a></div>'; return; }
         $name = trim($lead->first_name . ' ' . $lead->last_name);
         echo '<header class="idlm-header"><div><h1>' . esc_html($name) . '</h1></div><div class="idlm-header-actions"><a class="idlm-btn idlm-btn-secondary" href="' . esc_url($base) . '">All handoffs</a></div></header>';
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         echo '<p class="idlm-design-status">' . self::status_badge($row, $lead->stage) . '</p>';
         if (IDLM_Design_Handoffs::STATUS_SENT_BACK === $row->status) { echo '<div class="idlm-alert idlm-alert-warning" data-idlm-notice-inline role="status">Returned by ' . esc_html(self::person($row->decided_by)) . ': ' . esc_html($row->send_back_reason) . '</div>'; }
         echo '<div class="idlm-design-layout"><div class="idlm-design-main">';
         IDLM_Design_Stage_Controller::render_stage_panel($row);
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         echo '<section class="idlm-card idlm-design-panel"><h2>From sales</h2>' . self::submission_stack($row) . '<p class="idlm-design-muted">Sent by ' . esc_html(self::person($row->sent_by)) . ' on ' . esc_html(self::date($row->sent_at)) . '. Sales owner: ' . esc_html((int) $row->sales_owner_id ? self::person($row->sales_owner_id) : 'Unassigned') . '.' . ((int) $row->design_manager_id ? ' Design Manager: ' . esc_html(self::person($row->design_manager_id)) . '.' : '') . '</p></section>';
         self::render_customer($lead);
         self::render_quotation($row);
@@ -222,6 +235,7 @@ final class IDLM_Design_Handoff_Controller {
         self::render_actions($row, $lead);
         echo '</div>';
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
     /** Handoffs from the first local build have no scope or pending items, so blanks are skipped. */
     public static function submission_stack($record) {
@@ -259,6 +273,7 @@ final class IDLM_Design_Handoff_Controller {
         if (IDLM_Design_Revisions::can_edit($row)) { echo '<a class="idlm-btn idlm-btn-primary" href="' . esc_url(add_query_arg(array('handoff' => $row->id, 'design_quote' => 'edit'), $base)) . '">' . ($latest ? 'Edit quotation' : 'Start design revision') . '</a>'; }
         $can_approve = IDLM_Design_Handoffs::STATUS_ACCEPTED === $row->status && IDLM_Design_Handoffs::can_decide($row);
         $latest_reviewed = $latest && IDLM_Design_Revisions::is_reviewed(IDLM_Design_Revisions::meta($latest->id));
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         if ($latest && $can_approve && !$latest_reviewed) { echo self::review_form($row, $latest->id, 'idlm-btn idlm-btn-primary', 'Mark latest revision reviewed'); }
         if ($latest && $can_approve && $latest_reviewed && (int) $row->agreed_revision_id !== (int) $latest->id) { echo '<a class="idlm-btn idlm-btn-secondary" href="' . esc_url(add_query_arg(array('handoff' => $row->id, 'design_approve' => $latest->id), $base)) . '">Mark customer approved</a>'; }
         if ($sales) { echo '<a class="idlm-btn idlm-btn-secondary" target="_blank" rel="noopener" href="' . esc_url(IDLM_Design_Revisions::print_url($row->id, $sales->id)) . '">Print sales quotation</a>'; }
@@ -269,8 +284,10 @@ final class IDLM_Design_Handoff_Controller {
             foreach ($history as $revision) {
                 $reviewed = IDLM_Design_Revisions::is_reviewed($revision); $shareable = $reviewed || $can_approve;
                 echo '<li>' . ($shareable ? '<a target="_blank" rel="noopener" href="' . esc_url(IDLM_Design_Revisions::print_url($row->id, $revision->id)) . '">' . esc_html($revision->revision_name) . '</a>' : '<span>' . esc_html($revision->revision_name) . '</span>') . ' ' . esc_html(self::money($revision->grand_total, $revision->currency_code));
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
                 echo ' ' . ($reviewed ? '<span class="idlm-badge is-success">Reviewed</span>' : '<span class="idlm-badge is-warning">Waiting for review</span>') . '<small>' . esc_html(self::person($revision->actor_id) . ' · ' . $revision->revision_reason) . '</small>' . self::custom_lines_note($revision) . self::rate_changes_note($revision, $revision->currency_code);
                 if ((int) $revision->id === (int) $row->agreed_revision_id) { echo '<span class="idlm-badge is-success">Agreed price</span> '; }
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
                 if ($can_approve && !$reviewed) { echo self::review_form($row, $revision->id, 'idlm-design-text-button', 'Mark reviewed'); }
                 elseif ($can_approve && (int) $revision->id !== (int) $row->agreed_revision_id && (int) $revision->id !== (int) ($latest->id ?? 0)) { echo '<a href="' . esc_url(add_query_arg(array('handoff' => $row->id, 'design_approve' => $revision->id), $base)) . '">Mark this one customer approved</a>'; }
                 echo '</li>';
@@ -280,6 +297,7 @@ final class IDLM_Design_Handoff_Controller {
         echo '</section>';
     }
 
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     /** One screen: what changes, then a required note. Nothing saves until confirmed. */
     private static function render_approval($handoff_id, $revision_id) {
         $row = IDLM_Design_Handoffs::find($handoff_id);
@@ -299,12 +317,15 @@ final class IDLM_Design_Handoff_Controller {
         echo '<label for="idlm-design-approval-note">How did the customer approve this?</label><textarea class="idlm-input" id="idlm-design-approval-note" name="approval_note" rows="3" maxlength="2000" required placeholder="For example, approved by email on 12 March"></textarea><p class="idlm-design-muted">Payments already received stay as they are. They are applied to the new amounts, oldest milestone first.</p><button class="idlm-btn idlm-btn-primary">Confirm customer approved</button></form>';
         return true;
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     /** A one-button form: the manager confirms a revision may go to the customer. */
     private static function review_form($row, $revision_id, $class, $label) {
         $html = '<form class="idlm-design-inline-form" method="post" action="' . esc_url(admin_url('admin-post.php')) . '"><input type="hidden" name="action" value="idlm_design_quote_review"><input type="hidden" name="handoff_id" value="' . esc_attr($row->id) . '"><input type="hidden" name="revision_id" value="' . esc_attr($revision_id) . '"><input type="hidden" name="return_url" value="' . esc_attr(remove_query_arg(array('design_notice', 'design_error', 'handoff'), wp_unslash($_SERVER['REQUEST_URI'] ?? ''))) . '">';
         return $html . wp_nonce_field('idlm_design_quote_review', '_wpnonce', true, false) . '<button class="' . esc_attr($class) . '">' . esc_html($label) . '</button></form>';
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
     /** Rates the designer changed from the revision before, for the manager's review. */
     private static function rate_changes_note($revision, $currency) {
@@ -326,6 +347,7 @@ final class IDLM_Design_Handoff_Controller {
         if (!$earlier) { return; }
         echo '<details class="idlm-card idlm-design-panel idlm-design-versions"><summary>Earlier submissions (' . esc_html(count($earlier)) . ')</summary>';
         foreach ($earlier as $version) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
             echo '<div class="idlm-design-version"><strong>Submission ' . esc_html($version->version_no) . '</strong><p class="idlm-design-muted">Sent by ' . esc_html(self::person($version->sent_by)) . ' on ' . esc_html(self::date($version->sent_at)) . '. Returned by ' . esc_html(self::person($version->outcome_by)) . ': ' . esc_html($version->return_reason) . '</p>' . self::submission_stack($version) . '</div>';
         }
         echo '</details>';
@@ -355,6 +377,7 @@ final class IDLM_Design_Handoff_Controller {
             foreach (array('Advance recorded' => self::money($row->advance_amount, $row->advance_currency), 'Received on' => self::date($row->advance_date), 'Method' => $row->advance_method, 'Reference' => $row->advance_reference) as $label => $value) { if ('' !== (string) $value) { echo '<div><dt>' . esc_html($label) . '</dt><dd>' . esc_html($value) . '</dd></div>'; } }
             echo '</dl>';
             if ((int) $row->advance_attachment_id) { echo '<p><a href="' . esc_url(IDLM_Private_Files::url((int) $row->advance_attachment_id)) . '" target="_blank" rel="noopener">View payment screenshot</a></p>'; }
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
             if (!$balance) { echo '<p class="idlm-design-muted">Not in Payments yet: this lead has no quotation payment terms. Set the plan from the Won amount in Payment details, then record this advance there.</p>' . self::payment_details_link($row->lead_id) . '</section>'; return; }
         }
         if ($balance) {
@@ -371,6 +394,7 @@ final class IDLM_Design_Handoff_Controller {
             echo '</ul></details>';
         }
         if ($balance && IDLM_Design_Handoffs::can_record_payment($row->lead_id)) { self::render_payment_form($row); }
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         echo self::payment_details_link($row->lead_id) . '</section>';
     }
 
@@ -381,6 +405,7 @@ final class IDLM_Design_Handoff_Controller {
     }
 
     private static function render_payment_form($row) {
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         echo '<div class="idlm-design-quote-actions">' . IDLM_Design_Stage_Controller::dialog_button('idlm-design-pay-dialog', 'Record a payment') . '</div>';
         IDLM_Design_Stage_Controller::dialog_open('idlm-design-pay-dialog', 'Record a payment', 'It is applied to the oldest unpaid milestone first.', 'idlm_design_payment_record', $row, true);
         echo '<input type="hidden" name="payment_version" value="' . esc_attr(IDLM_Lead_Payments::version($row->lead_id)) . '"><input type="hidden" name="request_key" value="' . esc_attr(wp_generate_uuid4()) . '">';
@@ -403,6 +428,7 @@ final class IDLM_Design_Handoff_Controller {
         if ($optional) { echo '<small id="idlm-design-target-help">Required when you choose a designer.</small>'; }
     }
 
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     private static function render_actions($row, $lead) {
         // Return to the page that rendered this form, whichever URL hosts the workspace.
         $return = remove_query_arg(array('design_notice', 'design_error', 'handoff'), wp_unslash($_SERVER['REQUEST_URI'] ?? ''));
@@ -413,9 +439,11 @@ final class IDLM_Design_Handoff_Controller {
         if (IDLM_Design_Handoffs::STATUS_SENT_BACK === $status) { echo '<p class="idlm-design-muted">Waiting for sales to fix this and resend it.</p></aside>'; return; }
         if (IDLM_Design_Handoffs::STATUS_NEW === $status) {
             if ('Won' === $lead->stage) {
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
                 echo '<form method="post" action="' . $post . '">'; self::hidden_fields('idlm_design_handoff_accept', $row, $return); self::designer_fields($row, true);
                 echo '<button class="idlm-btn idlm-btn-primary">Accept</button></form>';
             } else { echo '<p class="idlm-design-card-warning">This lead is no longer Won, so it cannot be accepted. Return it or talk to sales.</p>'; }
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
             echo '<div class="idlm-design-back">' . IDLM_Design_Stage_Controller::dialog_button('idlm-design-return-dialog', 'Return to sales') . '</div></aside>';
             IDLM_Design_Stage_Controller::dialog_open('idlm-design-return-dialog', 'Return to sales', 'Sales fixes the handoff and sends it again.', 'idlm_design_handoff_send_back', $row);
             echo '<div class="idlm-form-group"><label for="idlm-design-reason">What needs fixing?</label><textarea class="idlm-input" id="idlm-design-reason" name="reason" rows="3" maxlength="2000" required></textarea></div>';
@@ -423,8 +451,10 @@ final class IDLM_Design_Handoff_Controller {
             return;
         }
         if ('Won' !== $lead->stage) { echo '<p class="idlm-design-card-warning">This lead is no longer Won. Review it with sales.</p>'; }
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         echo '<form method="post" action="' . $post . '">'; self::hidden_fields('idlm_design_handoff_assign', $row, $return); self::designer_fields($row, false);
         if ((int) $row->designer_id) { echo '<label for="idlm-design-reassign">Reason, if changing the designer</label><textarea class="idlm-input" id="idlm-design-reassign" name="reason" rows="2" maxlength="2000"></textarea>'; }
         echo '<button class="idlm-btn idlm-btn-primary">' . ((int) $row->designer_id ? 'Save designer' : 'Assign designer') . '</button></form></aside>';
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 }

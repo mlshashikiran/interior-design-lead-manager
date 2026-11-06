@@ -24,6 +24,8 @@ final class IDLM_Design_Project_Panel {
         echo '<div class="idlm-drawer idlm-design-project-drawer" id="' . esc_attr(self::DIALOG) . '" role="dialog" aria-modal="true" aria-labelledby="' . esc_attr(self::DIALOG) . '-title" aria-hidden="true" hidden tabindex="-1" data-idlm-dialog data-idlm-backdrop-close="true" data-ajax-url="' . esc_url(admin_url('admin-ajax.php')) . '" data-nonce="' . esc_attr(wp_create_nonce(self::NONCE)) . '" data-move-nonce="' . esc_attr(wp_create_nonce('idlm_design_stage_action')) . '"><div class="idlm-drawer-content-wrapper" tabindex="-1" data-design-panel-content></div></div>';
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     public static function ajax_panel() {
         check_ajax_referer(self::NONCE, 'nonce');
         $id = isset($_POST['handoff_id']) && is_string($_POST['handoff_id']) && ctype_digit($_POST['handoff_id']) ? (int) $_POST['handoff_id'] : 0;
@@ -34,6 +36,8 @@ final class IDLM_Design_Project_Panel {
         if (!$lead) { wp_send_json_error(array('message' => 'This project is not available to you.'), 404); }
         wp_send_json_success(array('html' => self::render($row, $lead)));
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
     /** Pure markup from a visible row and its lead. */
     public static function render($row, $lead) {

@@ -94,7 +94,7 @@ $idlm_design = class_exists('IDLM_Admin_Assets') && method_exists('IDLM_Admin_As
                 </div>
                 <div class="idlm-filter-group">
                     <label for="idlm-kanban-filter-date-range">Date range</label>
-                    <select data-idlm-date-range id="idlm-kanban-filter-date-range" class="idlm-input"><?php echo IDLM_Date_Ranges::options_html('', 'All time'); ?></select>
+                    <select data-idlm-date-range id="idlm-kanban-filter-date-range" class="idlm-input"><?php IDLM_Date_Ranges::print_options('', 'All time'); ?></select>
                     <div class="idlm-date-custom" data-idlm-date-custom-for="idlm-kanban-filter-date-range" hidden><label for="idlm-kanban-filter-date-start">From</label><input type="date" id="idlm-kanban-filter-date-start" class="idlm-input"><label for="idlm-kanban-filter-date-end">To</label><input type="date" id="idlm-kanban-filter-date-end" class="idlm-input"></div>
                 </div>
                 <div class="idlm-filter-group">

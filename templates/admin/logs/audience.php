@@ -50,7 +50,7 @@ $idlm_status_tabs = array('' => 'All', 'failed' => 'Failed', 'success' => 'Succe
         </div>
         <div class="idlm-form-group">
             <label for="idlm-audience-log-date-range">Date range</label>
-            <select class="idlm-input" id="idlm-audience-log-date-range" name="log_date_range" data-idlm-date-range data-idlm-filter-field><?php echo IDLM_Date_Ranges::options_html($idlm_filters['range'] ?? '', 'All time'); ?></select>
+            <select class="idlm-input" id="idlm-audience-log-date-range" name="log_date_range" data-idlm-date-range data-idlm-filter-field><?php IDLM_Date_Ranges::print_options($idlm_filters['range'] ?? '', 'All time'); ?></select>
         </div>
         <div class="idlm-form-group" data-idlm-date-custom-for="idlm-audience-log-date-range"<?php echo 'custom' === ($idlm_filters['range'] ?? '') ? '' : ' hidden'; ?>>
             <label for="idlm-audience-log-date-from">From date</label>

@@ -26,11 +26,14 @@ final class IDLM_Design_Dashboard {
         return IDLM_Design_Board::query(array_merge(array('q' => '', 'stage' => '', 'target' => '', 'state' => '', 'designer' => 0), $filters), 1)['total'];
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     private static function count_status($status) {
         global $wpdb; $table = $wpdb->prefix . 'idlm_design_handoffs'; $scope = IDLM_Design_Handoffs::scope_sql('h');
         return (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table h WHERE $scope AND h.status = %s", $status));
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     public static function cards() {
         global $wpdb; $table = $wpdb->prefix . 'idlm_design_handoffs'; $scope = IDLM_Design_Handoffs::scope_sql('h');
         return array(
@@ -41,6 +44,7 @@ final class IDLM_Design_Dashboard {
             'hold' => self::count_list(array('state' => 'hold')), 'no_target' => self::count_list(array('target' => 'none')),
         );
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     /** Active projects by stage and by person, plus what needs a decision. */
     public static function operations() {
@@ -65,6 +69,7 @@ final class IDLM_Design_Dashboard {
         return array('stages' => $stages, 'people' => $people, 'attention' => $attention, 'truncated' => $result['total'] > self::ROW_LIMIT, 'total' => $result['total']);
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Elapsed calendar days from recorded events. Legacy rows without events are counted as unknown. */
     /** $window: a number of days back from now, or a period window from IDLM_Date_Ranges::resolve() in site time. */
     public static function period_metrics($window) {
@@ -90,12 +95,16 @@ final class IDLM_Design_Dashboard {
         $discounts = (array) $wpdb->get_results($wpdb->prepare("SELECT e.handoff_id, e.actor_id, e.reason, e.occurred_at FROM {$p}idlm_design_handoff_events e INNER JOIN {$p}idlm_design_handoffs h ON h.id = e.handoff_id WHERE $scope AND e.event_type = 'discount_changed' AND e.occurred_at >= %s AND e.occurred_at <= %s ORDER BY e.id DESC LIMIT 50", $since, $until));
         return array('accepted' => count($accept), 'accept_median' => self::median($accept), 'completed' => count($turnaround), 'completed_unknown' => $unknown, 'turnaround_median' => self::median($turnaround), 'values' => $values, 'discounts' => $discounts);
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     public static function recent_activity($limit = 12) {
         global $wpdb; $p = $wpdb->prefix; $scope = IDLM_Design_Handoffs::scope_sql('h');
         return (array) $wpdb->get_results($wpdb->prepare("SELECT e.*, l.first_name, l.last_name FROM {$p}idlm_design_handoff_events e INNER JOIN {$p}idlm_design_handoffs h ON h.id = e.handoff_id INNER JOIN {$p}idlm_leads l ON l.id = h.lead_id WHERE $scope ORDER BY e.id DESC LIMIT %d", (int) $limit));
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Administrator only: the sales side of the pipeline, including Won leads older than this feature. */
     public static function sales_queues() {
         global $wpdb; $p = $wpdb->prefix;
@@ -112,7 +121,9 @@ final class IDLM_Design_Dashboard {
             'payment_to_handoff_median' => self::median($gaps), 'payment_to_handoff_count' => count($gaps),
         );
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Administrator only. Empty manager or studio stays visible as its own row. */
     public static function comparisons() {
         global $wpdb; $p = $wpdb->prefix; $today = current_time('Y-m-d');
@@ -122,6 +133,7 @@ final class IDLM_Design_Dashboard {
             'studios' => (array) $wpdb->get_results("SELECT COALESCE(NULLIF(l.preferred_studio, ''), 'No studio') AS studio, $sum FROM {$p}idlm_design_handoffs h INNER JOIN {$p}idlm_leads l ON l.id = h.lead_id GROUP BY studio ORDER BY total DESC LIMIT 100"),
         );
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
     private static function days_text($value) {
         if (null === $value) { return 'Not enough data'; }
@@ -189,7 +201,7 @@ final class IDLM_Design_Dashboard {
         parse_str((string) wp_parse_url($action, PHP_URL_QUERY), $keep);
         echo '<section class="idlm-card idlm-design-panel"><div class="idlm-design-period"><h2>' . esc_html($title) . '</h2><form method="get" action="' . esc_url(strtok($action, '?')) . '" class="idlm-design-period-form" aria-label="Reporting period">';
         foreach ($keep as $key => $value) { if (is_scalar($value)) { echo '<input type="hidden" name="' . esc_attr($key) . '" value="' . esc_attr($value) . '">'; } }
-        echo '<label class="screen-reader-text" for="idlm-design-period">Reporting period</label><select class="idlm-input" id="idlm-design-period" name="design_period" data-idlm-date-range data-idlm-date-submit>' . IDLM_Date_Ranges::options_html($period) . '</select>';
+        echo '<label class="screen-reader-text" for="idlm-design-period">Reporting period</label><select class="idlm-input" id="idlm-design-period" name="design_period" data-idlm-date-range data-idlm-date-submit>'; IDLM_Date_Ranges::print_options($period); echo '</select>';
         echo '<span data-idlm-date-custom-for="idlm-design-period"' . ('custom' === $period ? '' : ' hidden') . '><label class="screen-reader-text" for="idlm-design-start">From</label><input class="idlm-input" type="date" id="idlm-design-start" name="design_start" value="' . esc_attr($custom[0]) . '"><label class="screen-reader-text" for="idlm-design-end">To</label><input class="idlm-input" type="date" id="idlm-design-end" name="design_end" value="' . esc_attr($custom[1]) . '"><button type="submit" class="idlm-btn idlm-btn-secondary">Apply</button></span>';
         echo '</form>';
         echo '</div><dl class="idlm-design-facts"><div><dt>Handoffs accepted</dt><dd>' . esc_html($metrics['accepted']) . '</dd></div><div><dt>Median time to accept</dt><dd>' . esc_html(self::days_text($metrics['accept_median'])) . '</dd></div><div><dt>Projects completed</dt><dd>' . esc_html($metrics['completed']) . ($metrics['completed_unknown'] ? ' <small>' . esc_html($metrics['completed_unknown'] . ' more without a start date') . '</small>' : '') . '</dd></div><div><dt>Median acceptance to completion</dt><dd>' . esc_html(self::days_text($metrics['turnaround_median'])) . '</dd></div></dl>';

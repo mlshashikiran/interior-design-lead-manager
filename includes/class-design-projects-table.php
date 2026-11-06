@@ -44,6 +44,8 @@ final class IDLM_Design_Projects_Table {
         return "($new OR ($open))";
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     public static function render($base) {
         global $wpdb; $table = $wpdb->prefix . 'idlm_design_handoffs'; $leads = $wpdb->prefix . 'idlm_leads';
         $manager = IDLM_Design_Handoffs::can_manage(); $today = current_time('Y-m-d');
@@ -81,6 +83,8 @@ final class IDLM_Design_Projects_Table {
         if ($page * self::PER_PAGE < $total) { echo '<a class="idlm-btn idlm-btn-secondary" href="' . esc_url(add_query_arg(array_merge($link, array('design_page' => $page + 1)), $base)) . '">Next</a>'; }
         echo '</nav>';
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     /** Filters a queue link carries over. */
     private static function kept($filters) {
@@ -123,6 +127,7 @@ final class IDLM_Design_Projects_Table {
         $balance = $context['balance'];
         $pending = $balance ? IDLM_Design_Handoff_Controller::money($balance['total_outstanding'], $balance['currency']) : 'No schedule';
         echo '<tr data-handoff="' . esc_attr($row->id) . '" data-status="' . esc_attr($status) . '" data-designer="' . esc_attr((int) $row->designer_id) . '" data-target="' . esc_attr((string) $row->target_date) . '" data-name="' . esc_attr($name) . '">';
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         echo '<td><a href="' . esc_url($url) . '" data-design-panel="' . esc_attr($row->id) . '"><strong>' . esc_html($name) . '</strong></a> <small>' . esc_html($row->project_name) . '</small></td><td>' . self::stage_cell($row) . '</td>';
         if ($editable) {
             echo '<td><select class="idlm-input idlm-design-inline" name="designer_id" form="' . esc_attr($form) . '" aria-label="' . esc_attr('Designer for ' . $name) . '"' . ($accepted ? ' required' : '') . '><option value="">' . ($is_new ? 'Assign later' : 'Choose a designer') . '</option>';

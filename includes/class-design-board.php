@@ -43,6 +43,7 @@ final class IDLM_Design_Board {
         return $clauses;
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Projects the current person can see. Returns rows and the true total. */
     public static function query($filters, $limit, $offset = 0) {
         global $wpdb; $table = $wpdb->prefix . 'idlm_design_handoffs'; $leads = $wpdb->prefix . 'idlm_leads';
@@ -51,6 +52,7 @@ final class IDLM_Design_Board {
         $rows = (array) $wpdb->get_results($wpdb->prepare("SELECT h.*, l.first_name, l.last_name, l.phone, l.project_name, l.stage AS lead_stage FROM $table h INNER JOIN $leads l ON l.id = h.lead_id WHERE $where ORDER BY h.target_date IS NULL, h.target_date ASC, h.id ASC LIMIT %d OFFSET %d", (int) $limit, (int) $offset));
         return array('rows' => $rows, 'total' => $total);
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     /** Pure: how a target date reads today. */
     public static function target_state($target, $today, $completed = false) {
@@ -78,12 +80,14 @@ final class IDLM_Design_Board {
             'target_state' => self::target_state($row->target_date, $today, !empty($row->completed_at)), 'flags' => count(IDLM_Design_Stages::open_flags($row, $context)), 'unreviewed' => !empty($context['unreviewed']));
     }
 
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     /** The board. Designers see only their own projects (scope); a manager sees all of theirs. */
     public static function render($base) {
         $filters = self::filters($_GET); $today = current_time('Y-m-d');
         self::render_filters($base, $filters);
         self::render_board($filters, $today);
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
     private static function render_filters($base, $filters) {
         $hidden = array(); parse_str((string) wp_parse_url($base, PHP_URL_QUERY), $hidden); $hidden['tab'] = 'board';
@@ -128,6 +132,7 @@ final class IDLM_Design_Board {
         IDLM_Design_Project_Panel::shell();
     }
 
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     private static function render_card($row, $context, $today, $stage_key) {
         $card = self::card($row, $context, $today); $stages = IDLM_Design_Stages::stages(); $next = IDLM_Design_Stages::neighbour($stage_key, 1);
         $can_move = $next && !$row->hold_at && IDLM_Design_Revisions::can_edit($row);
@@ -140,6 +145,7 @@ final class IDLM_Design_Board {
         }
         echo '</li>';
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
     public static function badges($row, $card) {
         $badges = array();

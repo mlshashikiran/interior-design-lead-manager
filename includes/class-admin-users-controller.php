@@ -253,6 +253,7 @@ final class IDLM_Admin_Users_Controller {
         return $extra;
     }
 
+    // phpcs:disable WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Open lead count per person in one prepared query: not Won or Lost, not duplicates. */
     public static function open_lead_counts($user_ids) {
         global $wpdb;
@@ -266,6 +267,7 @@ final class IDLM_Admin_Users_Controller {
         foreach ((array) $rows as $row) { $counts[(int) $row->assigned_rep_id] = (int) $row->open_leads; }
         return $counts;
     }
+    // phpcs:enable WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
     public static function render() {
         if (!current_user_can('manage_options')) { wp_die('You do not have permission to manage CRM users.', 403); }
@@ -309,6 +311,7 @@ final class IDLM_Admin_Users_Controller {
         ));
     }
 
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     public static function handle_create() {
         self::authorize('idlm_create_user');
         // phpcs:disable WordPress.Security.NonceVerification.Missing -- REL007-BOUNDARY-0109: handle_create(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain.
@@ -341,6 +344,7 @@ final class IDLM_Admin_Users_Controller {
         self::send_reset((int) $user_id);
         self::redirect('notice', 'created');
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
     public static function handle_update() {
         self::authorize('idlm_update_user');

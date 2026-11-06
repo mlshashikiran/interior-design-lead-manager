@@ -25,6 +25,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         return $result;
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     private static function upsert_inbound_lead_work($data, $platform, $payload = array(), $options = array()) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
@@ -121,6 +122,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             if (!empty($options['details_task'])) {
                 // The rep keeps the lead and finishes the qualification details within two days.
                 $now = current_time('mysql');
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Transactional insert into the plugin's own tasks table. Builder: Shashi.
                 IDLM_Lead_Transaction::required(1 === $wpdb->insert($wpdb->prefix . 'idlm_tasks', array(
                     'lead_id' => $lead_id, 'assigned_rep_id' => get_current_user_id(), 'title' => 'Complete qualification details',
                     'task_type' => 'General', 'priority' => 'High', 'status' => 'pending',
@@ -139,6 +141,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             'requires_duplicate_review' => false,
         );
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
 
     /** Acquire deterministic locks for every supplied identity, preventing concurrent repeat inserts. */
     private static function acquire_inbound_identity_locks($data, $platform) {

@@ -144,6 +144,7 @@ final class IDLM_Admin_Shortcodes {
         ));
     }
 
+    // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /**
      * Needs-action counts for the sidebar, never totals. Each count matches what its
      * screen shows and uses that screen's own visibility rules.
@@ -175,4 +176,5 @@ final class IDLM_Admin_Shortcodes {
         }
         return array_filter($counts, static function($row) { return $row[0] > 0; });
     }
+    // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 }

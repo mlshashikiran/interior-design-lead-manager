@@ -438,7 +438,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             $get_date_basis = isset($_GET['date_basis']) ? sanitize_key(wp_unslash($_GET['date_basis'])) : 'assigned_at';
             $date_column = $date_columns[$get_date_basis] ?? 'assigned_at';
             $get_date_range = isset($_GET['date_range']) ? sanitize_key(wp_unslash($_GET['date_range'])) : '';
-            $get_range = IDLM_Date_Ranges::resolve($get_date_range, isset($_GET['date_start']) ? wp_unslash($_GET['date_start']) : '', isset($_GET['date_end']) ? wp_unslash($_GET['date_end']) : '');
+            $get_range = IDLM_Date_Ranges::resolve($get_date_range, isset($_GET['date_start']) ? sanitize_text_field(wp_unslash($_GET['date_start'])) : '', isset($_GET['date_end']) ? sanitize_text_field(wp_unslash($_GET['date_end'])) : '');
             if ($get_range) {
                 $where[] = "{$date_column} >= %s AND {$date_column} <= %s";
                 $params[] = $get_range['curr_start'];

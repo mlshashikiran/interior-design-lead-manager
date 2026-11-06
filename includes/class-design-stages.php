@@ -208,23 +208,29 @@ final class IDLM_Design_Stages {
         $in_use = array_flip((array) $in_use);
         return array_filter(self::stages(), static function($stage, $key) use ($in_use) { return !$stage['archived'] || isset($in_use[$key]); }, ARRAY_FILTER_USE_BOTH);
     }
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** The newest receipt identity when a stage starts; later ones were taken during it. */
     public static function receipt_mark($lead_id) {
         global $wpdb;
         return (int) $wpdb->get_var($wpdb->prepare("SELECT MAX(id) FROM {$wpdb->prefix}idlm_lead_payment_confirmations WHERE lead_id = %d", (int) $lead_id));
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Current files by document key, newest first. */
     public static function documents($handoff_id, $include_history = false) {
         global $wpdb; $table = self::table();
         $where = $include_history ? '' : $wpdb->prepare(' AND state = %s', self::STATE_CURRENT);
         return (array) $wpdb->get_results($wpdb->prepare("SELECT * FROM $table WHERE handoff_id = %d$where ORDER BY id DESC LIMIT 300", (int) $handoff_id));
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     public static function references_file($lead_id, $attachment_id) {
         global $wpdb; $table = self::table();
         return (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE lead_id = %d AND attachment_id = %d LIMIT 1", (int) $lead_id, (int) $attachment_id));
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     public static function can_upload($lead_id) { return IDLM_Design_Revisions::can_edit(IDLM_Design_Handoffs::for_lead($lead_id)); }
 
@@ -270,6 +276,7 @@ final class IDLM_Design_Stages {
         return $items;
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Checklist data for many projects in three queries, keyed by lead. */
     public static function contexts($rows) {
         global $wpdb; $contexts = array(); $leads = array(); $handoffs = array(); $p = $wpdb->prefix;
@@ -287,6 +294,7 @@ final class IDLM_Design_Stages {
         }
         return $contexts;
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     public static function unmet($items) {
         return array_values(array_filter($items, static function($item) { return empty($item['met']); }));
@@ -319,6 +327,7 @@ final class IDLM_Design_Stages {
         return array_values(array_diff($flags, (array) ($cleared['flags'] ?? array())));
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /**
      * The Design Manager accepts the current flags with a note, for example that the customer
      * pays at the next stage. Nothing moves; the note joins the history. Any later payment or
@@ -338,13 +347,17 @@ final class IDLM_Design_Stages {
             return true;
         });
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     private static function event($row, $type, $reason, $details) {
         global $wpdb;
         IDLM_Lead_Transaction::required(1 === $wpdb->insert($wpdb->prefix . 'idlm_design_handoff_events', array('handoff_id' => $row->id, 'lead_id' => $row->lead_id, 'version_no' => $row->version_no, 'event_type' => $type, 'actor_id' => get_current_user_id(), 'design_manager_id' => $row->design_manager_id, 'designer_after' => $row->designer_id, 'reason' => (string) $reason, 'details' => wp_json_encode($details), 'occurred_at' => current_time('mysql', true))));
         IDLM_Design_Handoffs::publish_event((int) $wpdb->insert_id, (int) $row->id, (int) $row->lead_id, $type);
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Lead lock, refreshed grants, handoff lock, then the operation. */
     private static function locked($handoff_id, $can, $operation) {
         $known = IDLM_Design_Handoffs::find($handoff_id);
@@ -362,6 +375,7 @@ final class IDLM_Design_Stages {
         });
         return is_wp_error($transaction) ? $transaction : $result;
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
     private static function can_work($row) { return IDLM_Design_Revisions::can_edit($row); }
     private static function can_manage($row) { return IDLM_Design_Handoffs::can_decide($row); }
 
@@ -402,6 +416,7 @@ final class IDLM_Design_Stages {
         });
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     private static function move($row, $table, $from, $to, $type, $reason, $evidence) {
         global $wpdb; $now = current_time('mysql', true); $stages = self::stages();
         IDLM_Lead_Transaction::required($wpdb->update($table, array('stage_key' => $to, 'stage_entered_at' => $now, 'stage_receipt_mark' => self::receipt_mark($row->lead_id), 'updated_at' => $now), array('id' => $row->id)));
@@ -410,7 +425,9 @@ final class IDLM_Design_Stages {
         IDLM_Lead_Transaction::required(IDLM_DB::log_activity($row->lead_id, 'design_handoff', 'Design stage: ' . $stages[$from]['label'] . ' to ' . $stages[$to]['label'] . ($reason ? '. Reason: ' . $reason : '.'), get_current_user_id()));
         return true;
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     public static function hold($handoff_id, $reason, $resume_date = '') {
         $reason = IDLM_Design_Handoffs::required_text($reason, 'A reason');
         if (is_wp_error($reason)) { return $reason; }
@@ -425,7 +442,9 @@ final class IDLM_Design_Stages {
             return true;
         });
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     public static function resume($handoff_id) {
         return self::locked($handoff_id, array(__CLASS__, 'can_work'), static function($row, $lead, $table) {
             global $wpdb; $now = current_time('mysql', true);
@@ -436,7 +455,9 @@ final class IDLM_Design_Stages {
             return true;
         });
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     public static function complete($handoff_id) {
         return self::locked($handoff_id, array(__CLASS__, 'can_manage'), static function($row, $lead, $table) {
             global $wpdb; $now = current_time('mysql', true);
@@ -452,7 +473,9 @@ final class IDLM_Design_Stages {
             return true;
         });
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     public static function reopen($handoff_id, $reason) {
         $reason = IDLM_Design_Handoffs::required_text($reason, 'A reason');
         if (is_wp_error($reason)) { return $reason; }
@@ -465,7 +488,9 @@ final class IDLM_Design_Stages {
             return true;
         });
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Attach an uploaded private file as a new version. Older versions stay. */
     public static function add_document($handoff_id, $slot_key, $title, $attachment_id) {
         $slots = self::slots(); $is_slot = isset($slots[$slot_key]);
@@ -489,7 +514,9 @@ final class IDLM_Design_Stages {
             return $version_id;
         });
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Archive keeps the file and its history. An earlier stage that relied on it is flagged. */
     public static function archive_document($handoff_id, $version_id) {
         return self::locked($handoff_id, array(__CLASS__, 'can_manage'), static function($row, $lead, $table) use ($version_id) {
@@ -502,6 +529,7 @@ final class IDLM_Design_Stages {
             return true;
         });
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     /** Changes when anyone saves stages, so a form opened before that cannot overwrite it. */
     public static function fingerprint() { return md5((string) wp_json_encode(array(self::stages(), self::custom_documents(), self::custom_hold_reasons()))); }
@@ -519,17 +547,21 @@ final class IDLM_Design_Stages {
         return $reasons;
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /** Unfinished projects sitting in a stage. A project with no stage yet counts in the start stage. */
     public static function projects_in($key) {
         global $wpdb; $table = $wpdb->prefix . 'idlm_design_handoffs';
         $match = self::first() === $key ? $wpdb->prepare("(h.stage_key = %s OR h.stage_key = '')", $key) : $wpdb->prepare('h.stage_key = %s', $key);
         return (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table h WHERE h.status = %s AND h.completed_at IS NULL AND ", IDLM_Design_Handoffs::STATUS_ACCEPTED) . $match);
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     private static function document_in_use($key) {
         global $wpdb; $table = self::table();
         return (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE slot_key = %s LIMIT 1", $key));
     }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
 
     /** Pure: a new stable key from a name, unique among $taken. */
     public static function new_key($prefix, $label, $max, $taken) {

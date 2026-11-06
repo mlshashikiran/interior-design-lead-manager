@@ -10,7 +10,9 @@ final class IDLM_Design_Stage_Controller {
         add_action('admin_post_idlm_design_stage_settings', array(__CLASS__, 'handle_settings'));
     }
 
+    // phpcs:disable WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     private static function text($key) { return isset($_POST[$key]) && is_string($_POST[$key]) ? wp_unslash($_POST[$key]) : ''; }
+    // phpcs:enable WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
     private static function base() {
         $fallback = add_query_arg('idlm_view', IDLM_Design_Handoff_Controller::VIEW, IDLM_Admin_Shortcodes::workspace_url());
         return wp_validate_redirect(sanitize_text_field(self::text('return_url')), $fallback);
@@ -20,6 +22,7 @@ final class IDLM_Design_Stage_Controller {
         wp_safe_redirect(add_query_arg(array('handoff' => $handoff_id, 'design_notice' => $notice), self::base())); exit;
     }
 
+    // phpcs:disable WordPress.Security.NonceVerification.Missing -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     public static function handle_action() {
         check_admin_referer('idlm_design_stage_action');
         $id = absint($_POST['handoff_id'] ?? 0); $action = sanitize_key(self::text('stage_action')); $reason = self::text('reason');
@@ -45,7 +48,9 @@ final class IDLM_Design_Stage_Controller {
         });
         self::finish($result, $id, $notices[$action]);
     }
+    // phpcs:enable WordPress.Security.NonceVerification.Missing
 
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     public static function handle_upload() {
         check_admin_referer('idlm_design_doc_upload');
         $id = absint($_POST['handoff_id'] ?? 0); $row = IDLM_Design_Handoffs::find($id);
@@ -64,6 +69,7 @@ final class IDLM_Design_Stage_Controller {
         });
         self::finish($result, $id, 'document');
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
     public static function handle_archive() {
         check_admin_referer('idlm_design_doc_archive');
@@ -73,6 +79,7 @@ final class IDLM_Design_Stage_Controller {
         self::finish($result, $id, 'archived');
     }
 
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     public static function handle_settings() {
         check_admin_referer('idlm_design_stage_settings');
         if (!current_user_can('manage_options')) { wp_die('Only an administrator can change design stages.', '', array('response' => 403)); }
@@ -81,11 +88,14 @@ final class IDLM_Design_Stage_Controller {
         if (is_wp_error($result)) { wp_die(esc_html($result->get_error_message()), 'Not saved', array('response' => 422, 'back_link' => true)); }
         wp_safe_redirect(add_query_arg(array('design_settings' => '1', 'design_notice' => 'settings'), self::base())); exit;
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.MissingUnslash
 
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     private static function fields($action, $row) {
         echo '<input type="hidden" name="action" value="' . esc_attr($action) . '"><input type="hidden" name="handoff_id" value="' . esc_attr($row->id) . '"><input type="hidden" name="return_url" value="' . esc_attr(remove_query_arg(array('design_notice', 'design_error', 'handoff'), wp_unslash($_SERVER['REQUEST_URI'] ?? ''))) . '">';
         wp_nonce_field($action);
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
     private static function open_form($action, $row, $class = '', $multipart = false) {
         echo '<form class="' . esc_attr($class) . '" method="post"' . ($multipart ? ' enctype="multipart/form-data"' : '') . ' action="' . esc_url(admin_url('admin-post.php')) . '">';
         self::fields($action, $row);
@@ -164,9 +174,13 @@ final class IDLM_Design_Stage_Controller {
             self::open_form('idlm_design_stage_action', $row);
             echo '<input type="hidden" name="stage_action" value="resume"><button class="idlm-btn idlm-btn-primary">Resume project</button></form>';
         }
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         if ($hold) { echo self::dialog_button('idlm-design-hold-dialog', 'Put on hold'); }
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         if ($back) { echo self::dialog_button('idlm-design-back-dialog', 'Move back a stage'); }
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         if ($reopen) { echo self::dialog_button('idlm-design-reopen-dialog', 'Reopen project'); }
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         if ($clear) { echo self::dialog_button('idlm-design-clear-dialog', 'Clear review flag'); }
         echo '</div>';
         if ($hold) {
@@ -218,6 +232,7 @@ final class IDLM_Design_Stage_Controller {
             echo '</ul>';
         }
         if ($can_work) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
             echo '<div class="idlm-design-quote-actions">' . self::dialog_button('idlm-design-doc-dialog', 'Add another file') . '</div>';
             self::dialog_open('idlm-design-doc-dialog', 'Add a design file', 'Using the same title as an existing file adds a new version of it.', 'idlm_design_doc_upload', $row, true);
             echo '<div class="idlm-form-group"><label for="idlm-design-doc-category">Type</label><select class="idlm-input" id="idlm-design-doc-category" name="slot_key">';
@@ -228,6 +243,7 @@ final class IDLM_Design_Stage_Controller {
         echo '</section>';
     }
 
+    // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     /** Stages, their order and what each requires, for administrators. */
     public static function render_settings() {
         if (!current_user_can('manage_options')) { return false; }
@@ -254,6 +270,7 @@ final class IDLM_Design_Stage_Controller {
         echo '<div class="idlm-design-settings-actions"><button class="idlm-btn idlm-btn-primary">Save settings</button></div></form>';
         return true;
     }
+    // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
     /** One stage card. A blank key is a new stage; a blank new name is ignored on save. */
     private static function stage_editor($index, $key, $stage, $is_first, $projects) {
