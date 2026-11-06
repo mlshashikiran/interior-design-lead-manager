@@ -4146,11 +4146,11 @@ function updateFloatingTasksCount() {
                     var label = queueCount(attention.due_today) + ' today · ' + queueCount(attention.overdue) + ' overdue';
                     $badge.text(label).show();
                     $('#idlm-floating-tasks-btn').attr('aria-label', label + '. Open today’s work.').attr('title', label);
-                    $('#idlm-floating-tasks-btn').css('box-shadow', '0 6px 20px rgba(239, 68, 68, 0.35)');
                 } else {
                     $badge.hide();
-                    $('#idlm-floating-tasks-btn').css('box-shadow', '0 6px 20px color-mix(in srgb, var(--idlm-action) 35%, transparent)');
                 }
+                // The floating button glows; the workspace navigation entry stays flat.
+                $('#idlm-floating-tasks-btn').not('.idlm-workspace-today').css('box-shadow', count > 0 ? '0 6px 20px rgba(239, 68, 68, 0.35)' : '0 6px 20px color-mix(in srgb, var(--idlm-action) 35%, transparent)');
             }
         }
     });

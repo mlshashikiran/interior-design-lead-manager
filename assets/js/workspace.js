@@ -198,13 +198,12 @@
                     } else {
                         button.removeAttribute('data-idlm-today-count');
                     }
-                    // admin-app.js paints a coloured glow on this button; the entry stays flat.
+                    // A glow painted before this entry existed is cleared; admin-app.js skips it from now on.
                     button.style.removeProperty('box-shadow');
                 }
                 if (badge) {
                     new MutationObserver(syncCount).observe(badge, {attributes: true, attributeFilter: ['style'], childList: true, characterData: true, subtree: true});
                 }
-                new MutationObserver(syncCount).observe(button, {attributes: true, attributeFilter: ['style']});
                 syncCount();
 
                 if (!panel) {
