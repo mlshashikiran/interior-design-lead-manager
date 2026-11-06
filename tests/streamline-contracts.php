@@ -129,3 +129,19 @@ idlm_test('STREAMLINE both quotation editor entry points enqueue the same bundle
     assert_same(array('ajaxUrl', 'nonce', 'autosaveNonce', 'currencyCode', 'numericLimits'), array_keys($settings));
     assert_same(array('maxAmount', 'maxMeasure', 'maxRows', 'maxSections'), array_keys($settings['numericLimits']));
 });
+
+idlm_test('STREAMLINE quotation list dates use the shared check with the same results', static function (): void {
+    $legacy = static function ($value) {
+        $value = sanitize_text_field($value);
+        $date = DateTime::createFromFormat('Y-m-d', $value, wp_timezone());
+        return $date && $date->format('Y-m-d') === $value ? $value : null;
+    };
+    $method = new ReflectionMethod('IDLM_Quotation_Renderer', 'clean_date');
+    $method->setAccessible(true);
+    $inputs = array('2026-11-06', ' 2026-11-06 ', '2026-02-29', '2028-02-29', '2026-02-30', '2026-13-01', '26-11-06', '2026-1-6',
+        '2026-11-06 10:00', '', '0', '0000-00-00', '<b>2026-11-06</b>', "2026-11-06\n", 'not a date', array('2026-11-06'));
+    foreach ($inputs as $input) {
+        assert_same($legacy($input), $method->invoke(null, $input), var_export($input, true));
+    }
+    assert_false(strpos((string) file_get_contents(dirname(__DIR__) . '/includes/class-quotation-controller.php'), 'function clean_date('), 'The unused controller copy stays removed.');
+});

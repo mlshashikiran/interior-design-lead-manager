@@ -327,9 +327,8 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
      * the controller validates dates used by quotation mutations separately.
      */
     private static function clean_date($value) {
-        $value = sanitize_text_field($value);
-        $date = DateTime::createFromFormat('Y-m-d', $value, wp_timezone());
-        return $date && $date->format('Y-m-d') === $value ? $value : null;
+        // The shared Y-m-d check; list filters keep null for an absent or invalid date.
+        return IDLM_Date_Ranges::clean_date(sanitize_text_field($value)) ?: null;
     }
 
     private static function render_list() {
