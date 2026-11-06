@@ -180,3 +180,15 @@ idlm_test('STREAMLINE stored values decode like maybe_unserialize but never buil
         assert_false(strpos((string) file_get_contents($file), 'maybe_unserialize('), basename($file) . ' decodes stored rows through IDLM_Schema_Migration::decode().');
     }
 });
+
+idlm_test('STREAMLINE Meta and Interakt webhooks verify signatures with one check', static function (): void {
+    $body = '{"synthetic":true}';
+    $good = hash_hmac('sha256', $body, 'synthetic-secret');
+    $cases = array(array($body, 'sha256=' . $good, 'synthetic-secret', true), array($body, $good, 'synthetic-secret', true),
+        array($body, 'sha256=' . $good, 'wrong-secret', false), array($body . ' ', 'sha256=' . $good, 'synthetic-secret', false),
+        array($body, 'sha256=' . strtoupper($good), 'synthetic-secret', false), array($body, 'sha1=' . $good, 'synthetic-secret', false));
+    foreach ($cases as $index => $case) {
+        assert_same($case[3], IDLM_Interakt::verify_webhook_signature($case[0], $case[1], $case[2]), 'Interakt case ' . $index);
+        assert_same($case[3], IDLM_Interakt::verify_meta_webhook_signature($case[0], $case[1], $case[2]), 'Meta case ' . $index);
+    }
+});

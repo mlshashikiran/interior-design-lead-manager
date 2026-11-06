@@ -370,12 +370,8 @@ class IDLM_Interakt {
      * Verify Meta SHA256 HMAC Signature
      */
     public static function verify_meta_webhook_signature($payload, $signature, $secret) {
-        if (strpos($signature, 'sha256=') === 0) {
-            $signature = substr($signature, 7);
-        }
-        
-        $computed = hash_hmac('sha256', $payload, $secret);
-        return hash_equals($signature, $computed);
+        // Meta and Interakt sign the raw body the same way.
+        return self::verify_webhook_signature($payload, $signature, $secret);
     }
 
     /**
