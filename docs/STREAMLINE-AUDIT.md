@@ -74,8 +74,15 @@ Each item is one commit. Each was verified with the fast suite, runtime prerequi
 | S6 | db97d21 | A quotation date check duplicated `IDLM_Date_Ranges::clean_date()`, and a third copy was unused | `includes/class-quotation-renderer.php:329`, `includes/class-quotation-controller.php:418` | Maintainability | None: equivalence contract over 16 inputs | Renderer delegates; unused copy removed |
 | S7 | 6e4acfd | `getCurrentDateTimeString()` had no callers | `assets/js/admin-app.js:1746` | Size: −421 bytes | None: private to the closure | Removed |
 | S8 | 43a45a1 | Nine inline `filemtime()` versions and a private copy of the version helper | design, payment and quotation classes | Maintainability | None: same values for shipped files | `IDLM_Admin_Assets::version()`; contract checks every asset |
+| S9 | 2a66739 | Eight reads of plugin-owned option and log rows used `maybe_unserialize()`, which builds any object named in the stored string | `class-admin-logs-renderer.php:200`, `class-capi.php:264`, `class-assignment-capacity.php:44`, `class-data-retention.php:128,225`, `class-whatsapp-inbox.php:15`, `class-interakt-dispatch.php:35`, `class-lead-access-policy.php:161` | Security: no PHP object can be created from stored data (object-injection hardening) | None: the plugin only stores scalars and arrays; contract compares with core `maybe_unserialize()` and proves no object is woken | `IDLM_Schema_Migration::decode()` with `allowed_classes => false` |
+| S10 | 2006452 | Meta and Interakt webhook HMAC checks were identical copies | `includes/class-interakt.php:261,372` | Maintainability | None: both public methods kept; contract runs the same accept/reject cases through both | Meta check delegates to the shared one |
+| S11 | 50a089f | 84 CSS rules (12 KB) were exact copies of a later rule in the same file and media context, left by layered fixes | `assets/css/admin-style.css`, `assets/css/quotations.css` | Size: −12 KB CSS; clarity | None: the later copy always wins; computed styles of every element on 14 screens, CRM and legacy, 1440 and 390 px, identical | Earlier copies removed; contract keeps every stylesheet free of dead duplicates |
+| S12 | 117dc9f | `admin-app.js` painted a glow on the Today's work button and `workspace.js` watched the button's style to strip it | `assets/js/admin-app.js:4149`, `assets/js/workspace.js:207` | One MutationObserver less; no paint-then-undo | None: computed styles identical; legacy button still glows | `admin-app.js` skips the glow on the workspace entry |
+| S13 | 7524060 | The dashboard's business-mix table and segment switch were copied in the pre-sales and sales renderers | `assets/js/dashboard.js:233,280` | Maintainability | None: rendered dashboards identical | One `renderBusinessMix()` |
 
-`tests/streamline-contracts.php` holds the drift guards for S2 to S8 and runs in the fast suite.
+`tests/streamline-contracts.php` holds the drift guards for S2 to S13 and runs in the fast suite.
+
+S11 to S13 change front-end files, so each was also checked in headless Chrome against a disposable HTTP fixture: computed styles of every element and `::before`/`::after` on 14 screens (six workspace views, the tasks, leads, settings and quotation fixtures, and four legacy-design views), at 1440 and 390 px, before and after. All 36,899 element views matched, with no script errors. A deliberate 1px change was caught on 331 elements, so the comparison is sensitive.
 
 ---
 
@@ -126,6 +133,14 @@ Ordered by value. None of these was started.
 - `tests/integration/quotation-engine-http-cases.php:26` appends to `docs/remediation-2026-10-07/quotation-engine-slice/expected-http-fault-diagnostics.log` on every HTTP-suite run, which dirties the tree.
 - **Proposed.** Write to `IDLM_TEST_*_EVIDENCE_DIR` like the document cases do.
 
+### D10. Google conversions export has no nonce
+- `idlm_export_google_conversions` (`includes/class-admin-ajax.php:380`) checks `manage_options` but not a nonce. It only reads and streams a CSV, so a forged request cannot change data or read the file cross-site. Nothing in the plugin UI links to it.
+- **Proposed.** Either add a nonce (any saved link or script that calls it would then need one) or remove the endpoint if nothing outside the plugin uses it. It changes an AJAX action's contract, so it needs your call.
+
+### D11. Three-hop delegation for AJAX handlers
+- Many hooks go `IDLM_Admin::ajax_x()` → `IDLM_Admin_Ajax::ajax_x()` → `IDLM_Admin_*_Controller::ajax_x()`. The middle hop adds nothing. All guards are in the final controller and every handler checks a nonce and a capability (D10 aside).
+- **Risk.** These are public static methods kept as compatibility contracts (`tests/admin-refactor-contracts.php`). Pointing the hooks straight at the controllers is safe for the plugin, but outside code calling the middle methods would still need them.
+
 ---
 
 ## Leave alone (reviewed, intentionally unchanged)
@@ -135,14 +150,25 @@ Ordered by value. None of these was started.
 - **Dashboard SQL** (`IDLM_Dashboard::calculate_stats`, 52 queries cold). It is already cached per actor and scope by `IDLM_Dashboard_Read_Model` (138 → 72 queries warm before this branch, 101 → 35 after). The Won basis is shared through one set definition. Splitting the 1,345-line method is a maintainability task with high regression surface and no speed gain.
 - **`IDLM_Date_Ranges`.** No screen bypasses it for reporting periods. The remaining `new DateTime('yesterday'/'today')` uses are fixed metric definitions ("yesterday's deliveries", task due dates), not user-chosen periods: `class-admin-collection-reads.php:190`, `class-admin-leads-renderer.php:119`, `class-mcp-core.php:387`, `class-db.php:894`, `class-presales-task-plan.php:132`.
 - **JS helpers.** `escapeHtml` exists four times with different edge behaviour. The global in `admin-app.js:4176` returns `''` for `0` and is reachable from inline handlers. `debounce` exists twice. Merging them changes edge output; low value.
-- **MutationObservers.** `dialog.js:520` (body subtree, promotes inline notices to toasts in the design layer) and `workspace.js:205-213` (badge sync) are scoped and cheap. The 15-minute leads refresh (`admin-app.js:1835`) skips hidden tabs.
+- **MutationObservers.** `dialog.js:520` (body subtree, promotes inline notices to toasts in the design layer) and `workspace.js` (badge count and panel state sync) are scoped and cheap. The button-style observer was removed in S12. The 15-minute leads refresh (`admin-app.js:1835`) skips hidden tabs.
 - **Toasts vs inline notices.** Quotation and payment screens still use `?idlm_notice=` server notices, which `dialog.js` promotes to toasts in the design layer. They are consistent in CRM mode, and changing it is part of D2.
 - **`IDLM_Admin` facade** delegates (class-admin.php:430-469). They are compatibility contracts per AGENTS.md.
 - **CSS pruning.** A class-name scan flags 71 of 1,064 `.idlm-*` selectors as unreferenced, but many are built dynamically (`idlm-badge-<source>`, `idlm-col-<n>`). Prune only with D1/D2 and a browser pass.
 
 ## Plugin Check
 
-Plugin Check 2.1.0 and WP-CLI are not installed on this machine, so the release-gate sniff run could not be repeated locally. The CI release gate runs it on push. New code follows the existing annotated-SQL conventions; one new `phpcs:disable` block (in `IDLM_Schema_Migration::versions()`) reuses the existing `REL007-SQL-0388` justification.
+Official Plugin Check 2.1.0 (ZIP SHA-256 `6ff4bd21…3fc4`, the CI pin) with WP-CLI 2.12.0 (SHA-512 checked against the release) ran the default static checks, with no exclusions, on release ZIPs built by `tests/release/build-release.php`:
+
+| Revision | Diagnostics | Exit |
+|---|---:|---:|
+| 13d741d (S1–S8) | 0 | 0 |
+| 7524060 (S1–S13) | 0 | 0 |
+
+The release ZIP contains no test files. Local runs used WordPress 7.1.4; CI uses 6.6.
+
+## Live update safety
+
+Across the whole branch (`release/1.103.0..streamline/plugin`) there is no change to hooks, filters, REST routes, AJAX action names, shortcodes, option names or writes, tables, schedules, roles, capabilities or the plugin and schema versions. The only removed method is a private, unused one. Updating a live site runs no migration and changes no stored data. Asset version strings are the same file modification times as before, so browsers refetch only the files that changed.
 
 ## Verification environment
 
