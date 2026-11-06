@@ -10,7 +10,9 @@ function idlm_payment_http_form($html, $operation): array {
     $data['return_url']='/crm-workspace?idlm_view=payments'; return $data;
 }
 function idlm_payment_http_page($lead, $extra=array(), $actor='owner'): array {
-    return idlm_http_request('/crm-workspace',array_merge(array('idlm_view'=>'payments','payment_lead_id'=>$lead),$extra),$actor,false);
+    // These cases read the full payment page (schedule, upload, legacy recovery and balance text).
+    // The CRM design layer shows a simpler page, so pin the previous design; the server rules are the same.
+    return idlm_http_request('/crm-workspace',array_merge(array('idlm_view'=>'payments','payment_lead_id'=>$lead,'idlm_design'=>'legacy'),$extra),$actor,false);
 }
 function idlm_payment_http_multipart($form, $file, $actor='owner'): array {
     global $config; $body=tempnam($config['content_dir'],'payment-proof-');$head=$body.'.headers';
