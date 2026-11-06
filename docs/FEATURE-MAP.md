@@ -216,3 +216,63 @@ Builder: Shashi. General settings expose independent existing handoff/routing em
 ## Form-level Meta mapping — 1.102.94
 
 Builder: Shashi. `IDLM_Lead_Connector` owns administrator/nonce-protected question discovery, Page/form identity validation, source-scoped mapping persistence and effective mapping resolution in canonical import. The shared lead-connector template and settings.js render one independent editor per selected form. Existing generic/default mappings, import enablement and encrypted snapshots remain independent. See META-LEAD-CONNECTOR.md.
+
+## Local sales payment foundation
+
+Builder: Shashi. `IDLM_Lead_Payment_Controller` renders the Payments workspace/forms; `IDLM_Lead_Payments` coordinates checked operations and object access; `IDLM_Lead_Payment_Ledger` owns saved terms, evidence validation and integer allocations; `IDLM_Lead_Payment_Schema` declares core-owned tables. Private purposes, lead outbox, erasure and partial recovery have explicit extensions. No project lifecycle is wired yet. [Scope and tests](DESIGN-PROJECTS-PAYMENT-FOUNDATION.md).
+
+**Payments tab retired (unreleased, 2026-11-06).** In the design layer the workspace no longer lists Payments in the menu or shows its Won-lead list; `IDLM_Lead_Payment_Controller::tab_shown()` is false. Each lead's payment page (`?idlm_view=payments&payment_lead_id=ID`) still opens, with the same checks, from a Payments panel in the lead drawer (`drawer_summary()`) and from "Payment details and corrections" on the Design project. The legacy design keeps the tab; the filter `idlm_show_payments_tab` returning true restores it. The admin-only wp-admin submenu `idlm-payments` is unchanged. No table, capability, handler or stored payment changes.
+
+**Simple payment page (unreleased, 2026-11-06).** In the design layer `IDLM_Lead_Payment_Controller::render_simple()` replaces the per-lead page: header with the advance badge and one **Record payment** button; Total / Received / Outstanding; a milestone table (credit and unscheduled amounts only when not zero); a payments table with **Correct**, **Revoke** (correction grant) and **Changes (n)** dialogs. With no plan, one **Set payment plan** button uses `IDLM_Design_Handoffs::basis()` (latest agreed quotation, first payable milestone as advance); other quotations and old-terms recovery are dialogs. Receipts take the screenshot in the same form: the handler checks the fields and grant before storing the file. `assets/js/payments.js` shows the repeated-reference field only on a match, posts only the chosen quotation's advance milestones and adds legacy rows. The legacy page and wp-admin submenu are unchanged.
+
+## Design handoff — 2026-11-05
+
+Builder: Shashi. `IDLM_Design_Handoffs` holds the rules and `IDLM_Design_Handoff_Controller` the requests and screens. A Won lead's drawer shows **Send to design**; the dialog (`templates/admin/common-overlays.php`, handler in `assets/js/admin-app.js`) asks for the Design Manager, remarks, scope, pending items and, when no receipt is on file, the advance. The advance goes through `IDLM_Lead_Payments`: the first send publishes a schedule from the accepted (otherwise current) quotation revision with its first payable milestone as the advance. A quotation with no saved terms keeps the advance on the handoff only. The addressed Design Manager (or an administrator) uses the **Design team** workspace tab (`?idlm_view=design-team`) to return with a reason, or accept and assign in one step; assignment can also follow later, and reassigning needs a reason. Reps see only assigned handoffs. This is slice 1 of the build order in the release plan, section 0; design revisions, Customer approved, stages and documents follow. It is separate from Qualified handoffs (`handoff_status`).
+
+## Design quotation revisions — 2026-11-05
+
+Builder: Shashi. Slice 2 of the release plan. `IDLM_Design_Revisions` is a separate save path behind the Design team screen. It keeps the quote number and revision sequence (`Q-…-R05-DES`) and copies content, percentages and the soft-close percentage from the source revision, never from Quotation Setup. It does not touch `current_revision_id`, sales revisions, the lead's quote value or the payment schedule. The working pointer is `idlm_design_handoffs.design_revision_id`. Sales cannot edit its quotation while a handoff is new or accepted; a return reopens it. Payment schedules refuse design revisions until Customer approved (slice 3).
+
+## Customer approved and schedule versions — 2026-11-05
+
+Builder: Shashi. Slice 3 of the release plan. A Design Manager or administrator previews a design revision (`?idlm_view=design-team&handoff=ID&design_approve=REV`), then confirms with a required note. `IDLM_Lead_Payments::publish_customer_approved()` writes one new schedule version, the recalculated allocation set, the handoff's agreed price and the audit event in one lead transaction. Percentages and the advance mapping come from the current schedule; receipts are not touched. After acceptance this is the only way to replace a schedule. Design Managers can record later payments from the handoff; corrections keep `idlm_correct_lead_payments`.
+
+## Design stages and documents — 2026-11-05
+
+Builder: Shashi. Slice 4 of the release plan. `IDLM_Design_Stages` holds six fixed stage keys with editable names and required documents (`idlm_design_stage_settings`, administrators only, at `?idlm_view=design-team&design_settings=1`). A stage's checklist gates leaving it. Payment needs a payment with evidence on the mapped milestone or recorded during the stage; a shortfall only shows. Tentative quote is the latest design revision and final quote is the customer-approved one. Moves save the exact evidence. Earlier stages whose evidence no longer holds show a review flag. P2P stays active until a manager marks the project complete.
+
+**Managed stages (2026-11-06, unreleased).** Administrators manage stages on Design stages: add, rename, reorder and remove them, and choose what each requires before a project leaves it (designer assigned, a payment check on the advance, next or final milestone, tentative quote, final quote, any document). They can also add their own document types with a file type. `idlm_design_stage_settings` version 2 stores the ordered list (`key`, `label`, `slots`, `requires`, `archived`) and the added documents. Older saved settings (names and documents keyed by the six stages) read exactly as before until the first save, so updating changes nothing on its own. Keys never change; new ones are `stage_*` and `doc_*`. Removing archives a stage: it is never entered again, and history and finished projects keep its name. A stage with unfinished projects cannot be removed. A project left in a removed stage by a concurrent move still shows in its own column and moves on to the next active stage. Saves are refused when the form is out of date (a fingerprint of the stored list), when any stored stage or document is missing from the form, and when a document with uploaded files is removed. The first active stage is where accepted projects start. Not built: versioned workflows; every project follows the current list.
+
+**Owner decisions of 2026-11-06 (unreleased, core 1.3.17).** Designers may change line rates; discounts stay with managers. Each changed rate and new custom line is listed on the revision. A design revision is printed, exported (PDF, CSV, XLSX) or marked Customer approved only after the Design Manager or an administrator marks it reviewed; the reviewing manager may preview it first, and the Quotations screen shows "Waiting for design review" instead of the print and download buttons. Hold reasons come from a list: five standard reasons, the administrator's own (Design stages screen, one per line, up to 20) and Other, which needs a note; dates use the WordPress site timezone. A review flag (a passed stage's payment or document check no longer holding, for example after a payment is revoked) shows on the project page, board, table, quick panel and Overview; the Design Manager can clear it with a note, which nothing else changes, and it returns on any later payment or document change. Sales do not see design documents.
+
+## Design board and list — 2026-11-06
+
+Builder: Shashi. Slice 5 of the release plan. `IDLM_Design_Board` renders the Design team tab's default Board and its List from one scoped query and one bulk read (`IDLM_Design_Stages::contexts()`). New, Needs a designer and Returned stay as manager queues; pending and returned handoffs stay off the board. Cards move one stage forward by button or drag through `idlm_design_stage_move`, which runs the same `IDLM_Design_Stages::advance()` check as the project page. A refused move leaves the card and offers its checklist. Priority is not built: the streamlined project has no priority field.
+
+## Design overview — 2026-11-06
+
+Builder: Shashi. Slice 6 of the release plan. `IDLM_Design_Dashboard` adds the Overview tab for Design Managers and administrators. Current cards use the board's scoped query, so each matches the list it opens. Period figures use recorded events and elapsed calendar days, and unknown legacy data is counted separately. Administrators also see sales-to-design queues and comparisons by manager and studio, with empty values as their own row. Designer performance scores are deliberately absent.
+
+**Payment plan from the Won amount (unreleased, 2026-11-06).** For legacy Won leads with no quotation milestones, `IDLM_Lead_Payments::publish_won_amount()` saves a plan from the lead's `deal_value` and entered percentages (`IDLM_Lead_Payment_Ledger::won_schedule()`, reusing old-quotation recovery rounding). The plan row has `quote_id` and `revision_id` 0 and `snapshot.resolution.type = won_amount`. First plan: record grant; change: correction grant, refused once design accepts; refused when an agreed quotation with milestones exists. Currency is the site currency. The simple payment page offers it as **Set payment plan** (operation `won_plan`), and offers to record an advance that Send to design held on the handoff. No schema change.
+
+## Add lead qualification and contact identity — 2026-11-06 (unreleased)
+
+Builder: Shashi. No schema change. **Add lead** (`IDLM_Admin_Ajax::ajax_add_lead_manual`, `prepare_manual_lead`):
+- Pre-sales add leads for their own intake as before.
+- Everyone else picks one of three options:
+  - **Qualified now:** project name, location, project type, budget of at least ₹4,00,000, possession date, timeline and floor plan received. With no floor plan, a remark is required; it is logged on the lead. The lead starts Qualified, assigned to the creator, with handoff `direct_sales_qualified`.
+  - **Save, I'll add details later:** the lead stays with the creator, with a "Complete qualification details" task due in 2 days.
+  - **Ask pre-sales to call:** the lead goes to the next pre-sales person in the intake rotation. The creator is kept as `return_to_rep_id` on the manual touchpoint. When pre-sales qualifies it, the lead returns to that rep (`handoff_method = returned_to_requesting_rep`) with the qualified-lead task. If no one in pre-sales is available, this option is refused.
+- Studio defaults to the creator's routing studio.
+- The Lead quality picker is gone, and email is optional.
+
+**Contact identity** (`IDLM_Contact_Identity`):
+- Duplicates: a phone (last 10 digits) or real email already on a lead refuses the save, and nothing changes. Lead details are shown only if the rep may see that lead.
+- Placeholder emails (na@, noemail@, test@, one-letter, short digits, the phone number, test domains) are refused on Add lead.
+- Placeholder emails, and emails already on different phone numbers, never lock, match or merge leads on any intake, and are never hashed to Meta, Google or audiences.
+- Settings > System health lists such leads; an administrator clears chosen emails, each logged on the lead.
+
+**Conversions for hand-added leads:** Settings > Conversions, `idlm_manual_lead_conversions`:
+- `ad_sources` (default): only Meta, Google or LinkedIn Ads sources, or a captured ad click.
+- `all` or `none`.
+- The rule applies in the shared worker and retry check (`IDLM_CAPI::lead_matches_event`), so on update existing walk-in and referral leads stop reporting later stages.

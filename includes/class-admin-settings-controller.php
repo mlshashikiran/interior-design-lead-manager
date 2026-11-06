@@ -278,6 +278,11 @@ class IDLM_Admin_Settings_Controller {
         );
         update_option('idlm_custom_num_rooms', $num_rooms);
 
+        // A form without the field keeps the current choice.
+        if (isset($_POST['manual_lead_conversions']) && in_array(sanitize_key(wp_unslash($_POST['manual_lead_conversions'])), array('ad_sources', 'all', 'none'), true)) {
+            update_option(IDLM_Contact_Identity::MANUAL_CONVERSIONS_OPTION, sanitize_key(wp_unslash($_POST['manual_lead_conversions'])), false);
+        }
+
         // Save CAPI configurations
         update_option('idlm_meta_capi_enabled', isset($_POST['meta_capi_enabled']) ? '1' : '0');
         update_option('idlm_meta_pixel_id', isset($_POST['meta_pixel_id']) ? sanitize_text_field(wp_unslash($_POST['meta_pixel_id'])) : '');

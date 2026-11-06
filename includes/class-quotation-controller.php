@@ -112,7 +112,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         }
         if ($creating_quote) {
             $existing_quote = IDLM_Quotation_Repository::get_quote_for_lead($lead_id);
-            if ($existing_quote) {
+            if ($existing_quote && !IDLM_Quotation_Policy::allows_new_quote($existing_quote)) {
                 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0051: handle_save(): literal transaction control in guarded quotation save/autosave/catalogue handlers; row writes are escaped by wpdb CRUD and checked under the owning transaction; no per-query cache is appropriate.
                 $wpdb->query('ROLLBACK');
                 // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -212,7 +212,8 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             self::redirect(array('action' => 'edit', 'quote_id' => $quote_id, 'idlm_error' => 'Unable to save the quotation revision.'));
         }
-        if (!empty($source_revision_id)) {
+        // A revision imported as Shared keeps its status; only Draft sources are superseded.
+        if (!empty($source_revision_id) && 'Draft' === $revision->status) {
             $superseded = IDLM_Quotation_Repository::supersede_revision($source_revision_id, $now);
             if (false === $superseded) {
                 self::rollback_save('Unable to finalize the previous quotation revision.', array('action' => 'edit', 'quote_id' => $quote_id), 'Previous revision supersede failed');
@@ -232,7 +233,10 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         if ($creating_quote) {
             $history_saved = self::insert_history($quote_id, $revision_id, '', 'Draft', 'Initial quotation created.');
         } elseif (!empty($source_revision_id)) {
-            $history_saved = self::insert_history($quote_id, $revision_id, 'Draft', 'Draft', $revision_reason);
+            // A Shared source must not read as a transition this revision made commercial.
+            $history_saved = 'Draft' === $revision->status
+                ? self::insert_history($quote_id, $revision_id, 'Draft', 'Draft', $revision_reason)
+                : self::insert_history($quote_id, $revision_id, '', 'Draft', 'Revised from legacy ' . $revision->revision_name . ': ' . $revision_reason);
         } else {
             $history_saved = true;
         }
@@ -446,7 +450,7 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
 
     public static function ajax_search_catalogue() {
         check_ajax_referer('idlm_quote_catalogue_search', 'nonce');
-        if (!self::can('idlm_create_quotes')) {
+        if (!self::can('idlm_create_quotes') && !IDLM_Design_Handoffs::can_receive()) {
             wp_send_json_error(array('message' => 'Permission denied.'), 403);
         }
         $term = sanitize_text_field(wp_unslash($_GET['term'] ?? ''));
@@ -489,6 +493,8 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
             // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
             'lead_id' => $lead_id && self::can_view_lead($lead_id) ? $lead_id : 0,
         );
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Normalized to the shared period list.
+        list(, $filters['date_from'], $filters['date_to']) = IDLM_Date_Ranges::date_bounds(wp_unslash($_GET['date_range'] ?? ''), $filters['date_from'], $filters['date_to']);
         $page = max(1, absint(wp_unslash($_GET['quote_page'] ?? 1)));
         $per_page = 50;
         wp_send_json_success(array(

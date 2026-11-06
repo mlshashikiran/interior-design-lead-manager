@@ -155,7 +155,8 @@ idlm_http_case('M6-H-activity-timeline-keeps-hundred-row-five-comment-html-contr
     $table = $wpdb->prefix.'idlm_lead_activity_log';
     $wpdb->delete($table, array('lead_id'=>$idlm_activity_leads[0]));
     $empty = json_decode(idlm_activity_http('get_lead_activity', array('lead_id'=>$idlm_activity_leads[0]))['body'], true);
-    idlm_http_check($empty['success'] && strpos($empty['data']['html'], 'No activity logs found for this lead.') !== false && strpos($empty['data']['comments_html'], 'No comments found for this lead.') !== false, 'Empty timeline changed');
+    // Either design's wording; the CRM design is the default when the request names none.
+    idlm_http_check($empty['success'] && 1 === preg_match('/No activity logs found for this lead\.|No activity recorded yet\./', $empty['data']['html']) && 1 === preg_match('/No comments found for this lead\.|No comments yet\./', $empty['data']['comments_html']), 'Empty timeline changed');
     $ids = array();
     for ($i = 1; $i <= 105; $i++) {
         $ids[$i] = idlm_activity_seed($i === 105 ? 'lost_remark' : ($i === 104 ? 'whatsapp_reply' : 'comment'), $i === 103 ? 'activity_other' : 'activity_owner', sprintf('M6 timeline %03d', $i).($i === 105 ? " <script>alert(1)</script>\nMedia URL: https://example.test/private" : ''));

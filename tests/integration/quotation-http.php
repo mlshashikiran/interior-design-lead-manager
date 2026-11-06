@@ -119,6 +119,32 @@ try {
         idlm_http_check(!empty($sessions[$actor]['save']), 'Cookie-authenticated session missing');
     }
     echo 'ENV PHP=' . PHP_VERSION . ' WP=' . $wp_version . ' DB=' . $wpdb->db_version() . ' memory_limit=' . ini_get('memory_limit') . ' scheduler=' . (function_exists('as_schedule_single_action') ? 'ActionScheduler' : 'WP-Cron') . ' cache=' . (wp_using_ext_object_cache() ? 'on' : 'off') . ' opcache_cli=' . ini_get('opcache.enable_cli') . "\n";
+    if (in_array('--design-handoff-only', $argv, true)) {
+        require __DIR__ . '/design-handoff-http-cases.php';
+        $errors = is_file($config['content_dir'].'/php-errors.log') ? file_get_contents($config['content_dir'].'/php-errors.log') : '';
+        idlm_http_case('HANDOFF HTTP warning-free requests', static function() use ($errors): void { idlm_http_check(trim($errors)==='', 'PHP diagnostics: '.$errors); });
+        echo "$passed passed, $failed failed\n";
+        if (in_array('--hold', $argv, true)) {
+            // A second untouched synthetic lead lets a person walk through the dialog.
+            $wpdb->insert($wpdb->prefix.'idlm_leads',array('first_name'=>'Browser Handoff','phone'=>'+15550009002','project_name'=>'Browser Residence','stage'=>'Won','deal_value'=>'1000000','assigned_rep_id'=>$users['owner'],'created_at'=>current_time('mysql'))); $browser_lead=(int)$wpdb->insert_id;
+            $wpdb->insert($wpdb->prefix.'idlm_quotes',array('lead_id'=>$browser_lead,'quote_number'=>'HB-'.wp_generate_uuid4(),'title'=>'Browser quote','created_by'=>$users['owner'],'created_at'=>current_time('mysql'),'updated_at'=>current_time('mysql'))); $browser_quote=(int)$wpdb->insert_id;
+            $wpdb->insert($wpdb->prefix.'idlm_quote_revisions',array('quote_id'=>$browser_quote,'revision_name'=>'Browser R01','document_terms'=>IDLM_Quotation_Document::capture(array('payment_structure'=>'[{"name":"Booking advance","percentage":10},{"name":"Final","percentage":90}]'),'1000000'),'grand_total'=>'1000000','currency_code'=>'INR','created_by'=>$users['owner'],'created_at'=>current_time('mysql'))); $wpdb->update($wpdb->prefix.'idlm_quotes',array('current_revision_id'=>(int)$wpdb->insert_id),array('id'=>$browser_quote));
+            echo 'BROWSER URL='.$config['http_url'].' LEAD='.$browser_lead.' STOP='.$config['content_dir']."/stop\n";
+            $deadline=microtime(true)+900; while (!is_file($config['content_dir'].'/stop') && microtime(true)<$deadline) { usleep(100000); }
+        }
+        idlm_http_cleanup(); exit($failed?1:0);
+    }
+    if (in_array('--payments-only', $argv, true)) {
+        require __DIR__ . '/lead-payment-http-cases.php';
+        $errors = is_file($config['content_dir'].'/php-errors.log') ? file_get_contents($config['content_dir'].'/php-errors.log') : '';
+        idlm_http_case('PAYMENT HTTP warning-free requests', static function() use ($errors): void { idlm_http_check(trim($errors)==='', 'PHP diagnostics: '.$errors); });
+        echo "$passed passed, $failed failed\n";
+        if (in_array('--hold', $argv, true)) {
+            echo 'BROWSER URL='.$config['http_url'].' LEAD='.$payment_lead.' STOP='.$config['content_dir']."/stop\n";
+            $deadline=microtime(true)+900; while (!is_file($config['content_dir'].'/stop') && microtime(true)<$deadline) { usleep(100000); }
+        }
+        idlm_http_cleanup(); exit($failed?1:0);
+    }
     if (in_array('--notifications-only', $argv, true)) {
         idlm_http_check(idlm_http_request('/login',array('user_login'=>'idlm_admin','user_password'=>'idlm-integration-password'),'admin')['status']===302,'Administrator login failed');
         require __DIR__ . '/notification-control-http-cases.php';
@@ -338,7 +364,7 @@ try {
     }
     foreach (array('foreign-revision'=>array('owner',$revisions[1]),'non-owner'=>array('other',$revisions[0])) as $id=>$v) { idlm_http_case('T12-H-deny-' . $id,static function() use($quotes,$sessions,$v): void { idlm_http_denied(static function() use($quotes,$sessions,$v) { return idlm_http_request('/wp-admin/admin-post.php',array('action'=>'idlm_download_quote_csv','quote_id'=>$quotes[0],'revision_id'=>$v[1],'_wpnonce'=>$sessions[$v[0]]['csv']),$v[0],false); }); }); }
     // Read-all visibility survives, edit controls and direct editor access do not.
-    idlm_http_case('T10-H-readall-read-without-editor',static function() use($quotes): void { $r=idlm_http_request('/workspace',array('action'=>'view','quote_id'=>$quotes[1]),'readall',false); idlm_http_check($r['status']===200 && strpos($r['body'],'PII-SYNTHETIC')!==false && strpos($r['body'],'Edit Quotation')===false,'Read/edit UI separation failed'); $r=idlm_http_request('/workspace',array('action'=>'edit','quote_id'=>$quotes[1]),'readall',false); idlm_http_check($r['status']===302 && strpos($r['headers'],'read-only')!==false,'Editor not denied'); });
+    idlm_http_case('T10-H-readall-read-without-editor',static function() use($quotes): void { $r=idlm_http_request('/workspace',array('action'=>'view','quote_id'=>$quotes[1]),'readall',false); idlm_http_check($r['status']===200 && strpos($r['body'],'PII-SYNTHETIC')!==false && stripos($r['body'],'Edit Quotation')===false,'Read/edit UI separation failed'); $r=idlm_http_request('/workspace',array('action'=>'edit','quote_id'=>$quotes[1]),'readall',false); idlm_http_check($r['status']===302 && strpos($r['headers'],'read-only')!==false,'Editor not denied'); });
     $live_payload=idlm_http_payload($leads[0],$quotes[0],$current);
     // Reassignment after obtaining a nonce and working-copy URL.
     $wpdb->update($wpdb->prefix.'idlm_leads',array('assigned_rep_id'=>$users['other']),array('id'=>$leads[0]));
@@ -445,6 +471,8 @@ try {
     require __DIR__ . '/role-permissions-http-cases.php';
     require __DIR__ . '/attribution-opt-in-http-cases.php';
     require __DIR__ . '/notification-control-http-cases.php';
+    require __DIR__ . '/lead-payment-http-cases.php';
+    require __DIR__ . '/design-handoff-http-cases.php';
     { $errors=is_file($config['content_dir'].'/php-errors.log') ? file_get_contents($config['content_dir'].'/php-errors.log') : ''; idlm_http_case('T10-H-warning-free-affected-requests',static function() use($errors): void { idlm_http_check(trim($errors)==='', 'PHP diagnostics: ' . $errors); }); }
     echo "$passed passed, $failed failed\n";
     if (in_array('--hold', $argv,true)) { if (getenv('IDLM_TEST_DOCUMENT_EVIDENCE_DIR') && function_exists('idlm_document_http_settings')) { update_option('idlm_quote_settings', idlm_document_http_settings('Changed live', 'USD'), false); } echo 'BROWSER URL='.$config['http_url'].' LEAD='.$leads[4].' QUOTE='.$quotes[4].' STOP='.$config['content_dir']."/stop\n"; $deadline=microtime(true)+900; while (!is_file($config['content_dir'].'/stop') && microtime(true)<$deadline) { usleep(100000); } }

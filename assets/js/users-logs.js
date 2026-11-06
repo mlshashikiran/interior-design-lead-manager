@@ -113,6 +113,27 @@
         }
     }
 
+    function designLayerActive() {
+        return document.body.classList.contains('idlm-crm-design');
+    }
+
+    function selectFailed(button) {
+        var page = button.closest('[data-idlm-log-page="capi"]');
+        if (!page) {
+            return;
+        }
+        var count = 0;
+        page.querySelectorAll('tbody tr').forEach(function (row) {
+            var box = row.querySelector('.idlm-capi-log-selector');
+            if (box) {
+                box.checked = row.classList.contains('is-failed');
+                count += box.checked ? 1 : 0;
+            }
+        });
+        updateCapiSelection(page);
+        setPageStatus(page, count + ' failed event' + (1 === count ? '' : 's') + ' selected. Review them, then choose Retry selected events.', false);
+    }
+
     function retrySelected(button) {
         var page = button.closest('[data-idlm-log-page="capi"]');
         var selected = page ? Array.prototype.map.call(page.querySelectorAll('.idlm-capi-log-selector:checked'), function (checkbox) {
@@ -124,6 +145,22 @@
             }
             return;
         }
+
+        if (designLayerActive() && window.IDLMDialog && window.IDLMDialog.confirm && !button.dataset.idlmRetryConfirmed) {
+            window.IDLMDialog.confirm({
+                title: 'Retry ' + selected.length + ' conversion event' + (1 === selected.length ? '' : 's') + '?',
+                message: 'Each selected event is sent to its ad platform again. Events that already reached the platform may be counted twice.',
+                confirmLabel: 'Retry ' + selected.length + ' event' + (1 === selected.length ? '' : 's'),
+                trigger: button
+            }).then(function (confirmed) {
+                if (confirmed) {
+                    button.dataset.idlmRetryConfirmed = '1';
+                    retrySelected(button);
+                }
+            });
+            return;
+        }
+        delete button.dataset.idlmRetryConfirmed;
 
         var original = button.textContent;
         button.disabled = true;
@@ -144,8 +181,14 @@
                 checkbox.checked = false;
             });
             updateCapiSelection(page);
+            if (designLayerActive() && window.IDLMDialog && window.IDLMDialog.notify) {
+                window.IDLMDialog.notify(response.data.message || 'Retry complete.', 'success');
+            }
         }).catch(function (error) {
             setPageStatus(page, error.message, true);
+            if (designLayerActive() && window.IDLMDialog && window.IDLMDialog.notify) {
+                window.IDLMDialog.notify(error.message, 'error');
+            }
         }).finally(function () {
             button.disabled = false;
             button.removeAttribute('aria-busy');
@@ -153,7 +196,59 @@
         });
     }
 
+    function openLeadsSentence(form) {
+        var open = Number(form.dataset.idlmOpenLeads || 0);
+        if (open < 1) { return ''; }
+        return ' ' + open + ' open lead' + (1 === open ? '' : 's') + ' stay' + (1 === open ? 's' : '') + ' assigned to them until you reassign ' + (1 === open ? 'it' : 'them') + ' on Leads.';
+    }
+
     function enhancePendingForm(form) {
+        if (designLayerActive() && form.matches('.idlm-role-editor-form')) {
+            form.addEventListener('submit', function (event) {
+                var access = form.querySelector('[data-idlm-capability="idlm_access_leads"]');
+                var people = Number(form.dataset.idlmRolePeople || 0);
+                if (form.dataset.idlmAccessConfirmed || !access || access.checked || !access.defaultChecked || people < 1 || !window.IDLMDialog || !window.IDLMDialog.confirm) {
+                    return;
+                }
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                var who = people + (1 === people ? ' person' : ' people');
+                window.IDLMDialog.confirm({
+                    title: 'Remove CRM leads access from ' + (form.dataset.idlmRoleName || 'this role') + '?',
+                    message: who + ' with this role will lose access to CRM leads when you save, unless another role or a grant on their own account gives it to them.',
+                    confirmLabel: 'Remove access for ' + who,
+                    destructive: true,
+                    trigger: form.querySelector('button[type="submit"]')
+                }).then(function (confirmed) {
+                    if (confirmed) {
+                        form.dataset.idlmAccessConfirmed = '1';
+                        form.requestSubmit();
+                    }
+                });
+            });
+        }
+        if (designLayerActive() && form.matches('.idlm-user-edit-form')) {
+            form.addEventListener('submit', function (event) {
+                var suspend = form.querySelector('input[name="crm_access_disabled"]');
+                if (form.dataset.idlmSuspendConfirmed || !suspend || !suspend.checked || suspend.defaultChecked || !window.IDLMDialog || !window.IDLMDialog.confirm) {
+                    return;
+                }
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                window.IDLMDialog.confirm({
+                    title: 'Suspend CRM access?',
+                    message: (form.dataset.idlmUserName || 'This person') + ' will lose access to CRM leads and quotations from their next page load. Their account and lead history stay as they are, and you can restore access later.' + (form.dataset.idlmUserManagesSite ? ' This account can manage the site, so it keeps settings, users and backups.' : '') + openLeadsSentence(form),
+                    confirmLabel: 'Suspend access',
+                    destructive: true,
+                    trigger: form.querySelector('button[type="submit"]')
+                }).then(function (confirmed) {
+                    if (confirmed) {
+                        form.dataset.idlmSuspendConfirmed = '1';
+                        form.requestSubmit();
+                    }
+                });
+            });
+        }
         form.addEventListener('submit', function () {
             if (!form.checkValidity()) {
                 return;
@@ -274,6 +369,42 @@
             copyPayload(copy);
             return;
         }
+        var failedSelect = event.target.closest('[data-idlm-select-failed]');
+        if (failedSelect) {
+            selectFailed(failedSelect);
+            return;
+        }
+        var permissionToggle = event.target.closest('[data-idlm-permission-all]');
+        if (permissionToggle && designLayerActive()) {
+            var group = permissionToggle.closest('.idlm-permission-group');
+            var turnOn = '1' === permissionToggle.getAttribute('data-idlm-permission-all');
+            group.querySelectorAll('input[type="checkbox"]').forEach(function (box) { box.checked = turnOn; });
+            refreshPermissionForm(permissionToggle.closest('.idlm-permission-form'));
+            return;
+        }
+        var showWebsite = event.target.closest('[data-idlm-show-website-roles]');
+        if (showWebsite && designLayerActive()) {
+            var websiteWrap = showWebsite.closest('[data-idlm-website-roles]');
+            var websiteSelect = document.getElementById(showWebsite.getAttribute('aria-controls'));
+            var websiteOptions = websiteWrap.querySelector('[data-idlm-website-role-options]');
+            if (websiteSelect && websiteOptions && !websiteSelect.querySelector('optgroup')) {
+                websiteSelect.appendChild(websiteOptions.content.cloneNode(true));
+            }
+            showWebsite.hidden = true;
+            if (websiteSelect) { websiteSelect.focus(); }
+            return;
+        }
+        var foldOpener = event.target.closest('[data-idlm-open-fold]');
+        if (foldOpener) {
+            var fold = document.getElementById(foldOpener.dataset.idlmOpenFold);
+            var details = fold ? fold.querySelector('details') : null;
+            if (details) {
+                details.open = true;
+                var firstField = details.querySelector('input, select');
+                window.setTimeout(function () { if (firstField) { firstField.focus(); } }, 30);
+            }
+            return;
+        }
         var retry = event.target.closest('#idlm-retry-capi-btn');
         if (retry) {
             retrySelected(retry);
@@ -303,10 +434,119 @@
         document.querySelectorAll('[data-idlm-pending-form]').forEach(enhancePendingForm);
         document.querySelectorAll('[data-idlm-log-page="capi"]').forEach(updateCapiSelection);
         document.querySelectorAll('[data-idlm-filter-drawer]').forEach(updateFilterDrawerCount);
+        if (designLayerActive()) { document.querySelectorAll('.idlm-role-editor-form').forEach(refreshPermissionForm); }
         var notice = document.querySelector('[data-idlm-users-notice]');
         if (notice) {
             notice.focus({preventScroll: false});
         }
     });
     document.addEventListener('keydown', trapFilterDrawerFocus);
+
+    // Role editor: warnings never block saving. The server accepts what it always accepted.
+    function refreshRoleEditor(form) {
+        if (!form.matches('.idlm-role-editor-form')) { return; }
+        var byCapability = {};
+        form.querySelectorAll('[data-idlm-capability]').forEach(function (box) { byCapability[box.dataset.idlmCapability] = box; });
+        var access = byCapability.idlm_access_leads;
+        var assign = byCapability.idlm_assign_leads;
+        var scope = form.querySelector('[data-idlm-role-scope]:checked');
+        var isDefault = !!scope && 'default' === scope.value;
+
+        var outcome = form.querySelector('[data-idlm-default-outcome]');
+        if (outcome && access) {
+            var state = !access.checked ? 'None' : (assign && assign.checked ? 'Assign' : 'Base');
+            outcome.textContent = outcome.getAttribute('data-idlm-text-' + state.toLowerCase());
+            var settingLink = form.querySelector('[data-idlm-default-link]');
+            if (settingLink) { settingLink.hidden = !('Base' === state && '1' === outcome.dataset.idlmBaseDepends); }
+        }
+
+        var warnings = form.querySelector('[data-idlm-permission-warnings]');
+        if (!warnings) { return; }
+        var messages = [];
+        var unmet = {};
+        Object.keys(byCapability).forEach(function (capability) {
+            var box = byCapability[capability];
+            var needed = box.dataset.idlmNeeds ? byCapability[box.dataset.idlmNeeds] : null;
+            if (box.checked && needed && !needed.checked) {
+                (unmet[box.dataset.idlmNeeds] = unmet[box.dataset.idlmNeeds] || []).push(box.dataset.idlmCapabilityLabel);
+            }
+        });
+        Object.keys(unmet).forEach(function (capability) {
+            messages.push(unmet[capability].join(', ') + (1 === unmet[capability].length ? ' needs ' : ' need ') + byCapability[capability].dataset.idlmCapabilityLabel + ' to work. You can still save this.');
+        });
+        if (assign && assign.checked && !assign.defaultChecked && isDefault && (!access || access.checked)) {
+            messages.push('With default lead visibility, Assign leads also shows this role all leads. Choose Only assigned leads to keep their view narrow.');
+        }
+        warnings.textContent = '';
+        messages.forEach(function (message) {
+            var line = document.createElement('p');
+            line.className = 'idlm-alert idlm-alert-warning';
+            line.setAttribute('data-idlm-notice-inline', '');
+            line.textContent = message;
+            warnings.appendChild(line);
+        });
+    }
+
+    // Permission editing: nothing changes until Save, and leaving with unsaved ticks asks first.
+    function refreshPermissionForm(form) {
+        if (!form) { return; }
+        var boxes = form.querySelectorAll('.idlm-permission-option input[type="checkbox"]');
+        var on = 0;
+        var dirty = false;
+        boxes.forEach(function (box) {
+            if (box.checked) { on += 1; }
+            if (box.checked !== box.defaultChecked) { dirty = true; }
+        });
+        form.querySelectorAll('[data-idlm-role-scope]').forEach(function (radio) {
+            if (radio.checked !== radio.defaultChecked) { dirty = true; }
+        });
+        refreshRoleEditor(form);
+        form.classList.toggle('is-dirty', dirty);
+        var status = form.querySelector('[data-idlm-permission-status]');
+        if (status) { status.textContent = status.getAttribute(dirty ? 'data-idlm-dirty-text' : 'data-idlm-saved-text'); }
+        var role = form.closest('.idlm-permission-role');
+        var count = role ? role.querySelector('[data-idlm-permission-count]') : null;
+        if (count) { count.textContent = on + ' of ' + boxes.length + ' permissions on' + (dirty ? ' (unsaved)' : ''); }
+    }
+
+    if (designLayerActive()) {
+        var submitting = false;
+        document.addEventListener('change', function (event) {
+            if (event.target.closest('.idlm-permission-option') || event.target.matches('[data-idlm-role-scope]')) { refreshPermissionForm(event.target.closest('.idlm-permission-form')); }
+            if (event.target.matches('.idlm-user-edit-form input[name="crm_access_disabled"]')) {
+                var suspendNote = event.target.closest('.idlm-user-edit-form').querySelector('[data-idlm-suspend-note]');
+                if (suspendNote) { suspendNote.hidden = !event.target.checked; }
+            }
+        });
+        document.addEventListener('submit', function () { submitting = true; }, true);
+        // A rejected invite returns to an empty page, so keep what was typed for this tab, once.
+        var inviteDraftKey = 'idlm_invite_draft';
+        var inviteFields = ['first_name', 'last_name', 'user_login', 'email', 'phone'];
+        var inviteForm = document.querySelector('[data-idlm-invite-form]');
+        if (inviteForm) {
+            try {
+                var draft = inviteForm.hasAttribute('data-idlm-invite-restore') ? JSON.parse(window.sessionStorage.getItem(inviteDraftKey) || 'null') : null;
+                window.sessionStorage.removeItem(inviteDraftKey);
+                if (draft) {
+                    inviteFields.forEach(function (name) {
+                        if (draft[name] && inviteForm.elements[name]) { inviteForm.elements[name].value = draft[name]; }
+                    });
+                    if (draft.user_login && inviteForm.querySelector('[data-idlm-login-fold]')) { inviteForm.querySelector('[data-idlm-login-fold]').open = true; }
+                }
+            } catch (ignore) {}
+            inviteForm.addEventListener('submit', function () {
+                try {
+                    var saved = {};
+                    inviteFields.forEach(function (name) { if (inviteForm.elements[name]) { saved[name] = inviteForm.elements[name].value; } });
+                    window.sessionStorage.setItem(inviteDraftKey, JSON.stringify(saved));
+                } catch (ignore) {}
+            });
+        }
+        window.addEventListener('beforeunload', function (event) {
+            if (!submitting && document.querySelector('.idlm-permission-form.is-dirty')) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        });
+    }
 }());

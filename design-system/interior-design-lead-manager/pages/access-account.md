@@ -7,3 +7,4 @@ Phase 5 is implemented: sign-in, reset, and account password controls expose lab
 - Password fields offer a labelled reveal control and expose requirements before submission.
 - My Account separates identity summary from profile/security tasks. Success moves focus to the status message after navigation.
 - Add a skip link before workspace navigation and restore the active page heading as the main landmark target.
+- Design layer (Shashi): on phones, sign-in shows the brand bar and the form first, and marketing copy is desktop only. My Account leads with the person because the sidebar already carries the brand. Buttons use sentence case. Shared rules are in `pages/shared-foundation.md`.

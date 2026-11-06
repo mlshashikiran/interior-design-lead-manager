@@ -109,7 +109,24 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         }
         if ('manual' === $platform) {
             $creator = wp_get_current_user();
-            IDLM_Lead_Transaction::required(self::log_activity($lead_id, 'assignment', sprintf('Lead manually created and assigned to %s.', $creator->display_name), get_current_user_id()));
+            if (!empty($options['route_pre_sales'])) {
+                // The rep stays named on the manual submission, and the lead returns to them once qualified.
+                IDLM_Lead_Transaction::required(IDLM_Integrations::assign_to_pre_sales($lead_id, $creator->display_name));
+            } else {
+                IDLM_Lead_Transaction::required(self::log_activity($lead_id, 'assignment', sprintf('Lead manually created and assigned to %s.', $creator->display_name), get_current_user_id()));
+            }
+            if (!empty($options['manual_note'])) {
+                IDLM_Lead_Transaction::required(self::log_activity($lead_id, 'note', (string) $options['manual_note'], get_current_user_id()));
+            }
+            if (!empty($options['details_task'])) {
+                // The rep keeps the lead and finishes the qualification details within two days.
+                $now = current_time('mysql');
+                IDLM_Lead_Transaction::required(1 === $wpdb->insert($wpdb->prefix . 'idlm_tasks', array(
+                    'lead_id' => $lead_id, 'assigned_rep_id' => get_current_user_id(), 'title' => 'Complete qualification details',
+                    'task_type' => 'General', 'priority' => 'High', 'status' => 'pending',
+                    'due_date' => wp_date('Y-m-d H:i:s', current_time('timestamp', true) + 2 * DAY_IN_SECONDS), 'created_by' => get_current_user_id(), 'created_at' => $now, 'updated_at' => $now,
+                )));
+            }
         }
         if (!empty($options['capi']) && (in_array($data['stage'] ?? '', array('Qualified','Quote Shared','Won'), true) || 'Qualified' === ($data['lead_quality'] ?? ''))) {
             $stage = in_array($data['stage'] ?? '', array('Qualified','Quote Shared','Won'), true) ? $data['stage'] : 'Qualified';
@@ -155,7 +172,8 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         if (strlen($phone) >= 10) {
             $identities[] = 'phone:' . self::normalize_identity_phone($phone);
         }
-        $email = strtolower(trim((string) ($data['email'] ?? '')));
+        // A placeholder email (na@gmail.com) is no identity, so it neither locks nor matches.
+        $email = IDLM_Contact_Identity::matchable_email($data['email'] ?? '', $data['phone'] ?? '');
         if ($email) {
             $identities[] = 'email:' . $email;
         }
@@ -216,7 +234,8 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             }
         }
 
-        $email = strtolower(trim((string) ($data['email'] ?? '')));
+        // Placeholder and shared emails do not identify a customer; the phone still does.
+        $email = IDLM_Contact_Identity::email_for_matching($data['email'] ?? '', $data['phone'] ?? '');
         $phone = preg_replace('/[^0-9]/', '', (string) ($data['phone'] ?? ''));
         $conditions = array();
         $params = array();
@@ -583,13 +602,14 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         $is_duplicate = 0;
         $duplicate_of_id = 0;
 
-        if (!$skip_duplicate_detection && (!empty($data['email']) || !empty($data['phone']))) {
+        $duplicate_email = IDLM_Contact_Identity::email_for_matching($data['email'] ?? '', $data['phone'] ?? '');
+        if (!$skip_duplicate_detection && ('' !== $duplicate_email || !empty($data['phone']))) {
             $conditions = array();
             $params = array();
 
-            if (!empty($data['email'])) {
+            if ('' !== $duplicate_email) {
                 $conditions[] = "email = %s";
-                $params[] = sanitize_email($data['email']);
+                $params[] = $duplicate_email;
             }
 
             if (!empty($data['phone'])) {
@@ -614,7 +634,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                 $matching_ids = array();
                 foreach ($candidates as $cand) {
                     // 1. If email matches exactly
-                    if (!empty($data['email']) && !empty($cand->email) && strtolower(trim($data['email'])) === strtolower(trim($cand->email))) {
+                    if ('' !== $duplicate_email && !empty($cand->email) && $duplicate_email === strtolower(trim($cand->email))) {
                         $matching_ids[] = absint($cand->id);
                         continue;
                     }
@@ -814,7 +834,17 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             $data['qualified_at'] = current_time('mysql');
             $data['qualified_by_user_id'] = get_current_user_id();
             $assigned_user = !empty($old_lead->assigned_rep_id) ? get_userdata(absint($old_lead->assigned_rep_id)) : false;
-            if ($assigned_user && in_array('idlm_pre_sales', (array) $assigned_user->roles, true)) {
+            $requested_rep = $assigned_user && in_array('idlm_pre_sales', (array) $assigned_user->roles, true) && !isset($data['assigned_rep_id']) ? IDLM_Contact_Identity::requested_rep($lead_id) : 0;
+            if ($requested_rep) {
+                // A rep asked pre-sales to call a lead they added: it goes back to that rep, not into routing.
+                $data['assigned_rep_id'] = $requested_rep;
+                $data['assigned_at'] = current_time('mysql');
+                $data['handoff_status'] = 'manually_assigned';
+                $data['handoff_at'] = current_time('mysql');
+                $data['handoff_method'] = 'returned_to_requesting_rep';
+                $data['handoff_exception_reason'] = '';
+                $data['intake_owner_id'] = absint($old_lead->assigned_rep_id);
+            } elseif ($assigned_user && in_array('idlm_pre_sales', (array) $assigned_user->roles, true)) {
                 $data['handoff_status'] = 'awaiting_manager';
                 $data['handoff_at'] = null;
                 $data['handoff_method'] = '';
@@ -1034,6 +1064,11 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                         absint($old_lead->assigned_rep_id)
                     )));
                 }
+                IDLM_Lead_Transaction::required(self::ensure_qualified_handoff_task($lead_id, absint($data['assigned_rep_id'])));
+            }
+
+            if ('returned_to_requesting_rep' === ($data['handoff_method'] ?? '')) {
+                IDLM_Lead_Transaction::required(self::log_activity($lead_id, 'assignment', 'Qualified by pre-sales and returned to ' . (get_userdata(absint($data['assigned_rep_id'])) ? get_userdata(absint($data['assigned_rep_id']))->display_name : 'the rep') . ', who added it.', get_current_user_id()));
                 IDLM_Lead_Transaction::required(self::ensure_qualified_handoff_task($lead_id, absint($data['assigned_rep_id'])));
             }
 

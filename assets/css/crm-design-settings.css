@@ -1,0 +1,380 @@
+/* IDLM CRM design layer: Settings. Builder: Shashi.
+   Contract: design-system/interior-design-lead-manager/STANDARD.md. Every selector starts
+   with body.idlm-crm-design. Tokens only: no hex colours, no important overrides. */
+
+/* --- Page and navigation ------------------------------------------------- */
+body.idlm-crm-design .idlm-settings-page .idlm-header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* One horizontal bar. Groups are separated by a rule; the bar scrolls inside itself on narrow screens. */
+body.idlm-crm-design .idlm-settings-page .idlm-settings-tabs {
+    position: sticky;
+    top: var(--idlm-sticky-top);
+    z-index: var(--idlm-layer-sticky);
+    flex-wrap: nowrap;
+    align-items: stretch;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    background: var(--idlm-canvas);
+}
+
+@media (min-width: 783px) {
+    /* The page header is sticky on desktop, so the tab bar stops beneath it. */
+    body.idlm-crm-design .idlm-settings-page .idlm-settings-tabs {
+        top: calc(var(--idlm-sticky-top) + var(--idlm-page-header));
+    }
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-settings-tabs .idlm-tab-link {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding-inline: var(--idlm-space-3);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-settings-tabs .idlm-settings-tab--group-start:not(:first-child) {
+    margin-left: var(--idlm-space-2);
+    padding-left: calc(var(--idlm-space-3) + var(--idlm-space-2));
+    border-left: 1px solid var(--idlm-border-strong);
+}
+
+/* The destructive tab sits apart from everything else, at the far end. */
+body.idlm-crm-design .idlm-settings-page .idlm-settings-tabs .idlm-settings-tab--danger {
+    margin-left: auto;
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-settings-tabs .idlm-settings-tab--danger.active {
+    box-shadow: inset 0 -2px 0 var(--idlm-danger);
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-settings-form {
+    margin-top: var(--idlm-space-5);
+    /* Keeps the last field clear of the sticky save bar (STD-LAY-5). */
+    padding-bottom: var(--idlm-space-12);
+}
+
+/* --- Cards: outcome, fields, help, status --------------------------------- */
+body.idlm-crm-design .idlm-settings-page .idlm-settings-tab-content .idlm-card {
+    padding: var(--idlm-space-5);
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-card > h3,
+body.idlm-crm-design .idlm-settings-page .idlm-settings-card-head h3 {
+    margin: 0;
+    color: var(--idlm-text);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-card-desc {
+    margin: var(--idlm-space-1) 0 var(--idlm-space-4);
+    color: var(--idlm-text-muted);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.5;
+    max-width: 72ch;
+}
+
+/* Labels outrank help text: label 13px/600 in text colour, help 12px/400 muted. */
+body.idlm-crm-design .idlm-settings-page .idlm-form-group > label,
+body.idlm-crm-design .idlm-settings-page .idlm-form-group > .idlm-form-label,
+body.idlm-crm-design .idlm-settings-page .idlm-settings-label {
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design .idlm-settings-page :is(.description, .idlm-settings-help, .idlm-settings-description) {
+    margin: var(--idlm-space-1) 0 0;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--idlm-space-2);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+/* Consistent field widths: fields fill their column, columns never drop below a readable width. */
+body.idlm-crm-design .idlm-settings-page .idlm-form-grid,
+body.idlm-crm-design .idlm-settings-page .idlm-form-grid.two,
+body.idlm-crm-design .idlm-settings-page .idlm-form-grid.three {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-form-group.full {
+    grid-column: 1 / -1;
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-form-group > :is(.idlm-input, .idlm-select) {
+    width: 100%;
+    min-height: 34px;
+    box-sizing: border-box;
+}
+
+/* --- General: pair the two short cards instead of leaving half-empty rows -- */
+body.idlm-crm-design #settings-general .idlm-grid-charts {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
+    align-items: start;
+}
+
+body.idlm-crm-design #settings-general .idlm-grid-charts > .idlm-card:first-child,
+body.idlm-crm-design #settings-general .idlm-grid-charts > .idlm-settings-general-metrics {
+    grid-column: auto;
+}
+
+/* The two vocabulary editors need width for their alias and total fields. */
+body.idlm-crm-design #settings-general .idlm-lead-fields-card,
+body.idlm-crm-design #settings-general .idlm-grid-charts > .idlm-card:nth-child(3) {
+    grid-column: 1 / -1;
+}
+
+body.idlm-crm-design #idlm-notification-settings .idlm-form-group + .idlm-form-group {
+    margin-top: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #settings-general .idlm-settings-general-metrics .idlm-form-grid {
+    margin-top: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-shortcode-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-shortcode-card h4 {
+    font-size: 0.875rem;
+}
+
+/* --- Health: status tiles fill rows evenly -------------------------------- */
+body.idlm-crm-design #settings-health .idlm-health-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #settings-health .idlm-health-item span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: none;
+}
+
+body.idlm-crm-design #settings-health .idlm-health-item strong {
+    font-size: 0.875rem;
+}
+
+/* --- Legacy text below the 11px floor ----------------------------------- */
+body.idlm-crm-design #settings-routing .idlm-settings-routing-overview span,
+body.idlm-crm-design #settings-routing thead th,
+body.idlm-crm-design #settings-white-label .idlm-white-label-preview :is(.idlm-white-label-preview__sidebar > span, .idlm-white-label-preview__content p) {
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design #settings-routing thead th,
+body.idlm-crm-design #settings-routing .idlm-routing-rep-table th {
+    font-size: 0.6875rem;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+/* --- Save bar -------------------------------------------------------------- */
+body.idlm-crm-design .idlm-settings-page .idlm-settings-savebar {
+    bottom: var(--idlm-space-3);
+    border-radius: var(--idlm-radius);
+    box-shadow: var(--idlm-shadow-lg);
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-settings-savebar__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-settings-savebar__actions [data-idlm-discard-settings][hidden] {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-settings-savebar__status {
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-settings-savebar.is-error .idlm-settings-savebar__status {
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-settings-savebar.is-error .idlm-settings-savebar__status::before {
+    background: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-settings-savebar.is-error {
+    border-color: var(--idlm-danger-line);
+}
+
+/* --- Danger Zone and restore: isolated, never brand-gold ------------------- */
+body.idlm-crm-design #settings-danger-zone .idlm-card-danger {
+    max-width: 44rem;
+    border: 1px solid var(--idlm-danger-line);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design #settings-danger-zone .idlm-card-danger > h3 {
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design #settings-danger-zone .idlm-danger-copy {
+    margin: var(--idlm-space-2) 0 var(--idlm-space-4);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    line-height: 1.55;
+}
+
+body.idlm-crm-design #settings-backup .idlm-card-danger {
+    border-color: var(--idlm-danger-line);
+}
+
+body.idlm-crm-design #settings-backup .idlm-card {
+    max-width: 44rem;
+}
+
+/* --- Phones ---------------------------------------------------------------- */
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-settings-page {
+        padding-inline: var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design .idlm-settings-page .idlm-settings-tabs .idlm-tab-link {
+        min-height: 44px;
+    }
+
+    body.idlm-crm-design .idlm-settings-page .idlm-settings-tab-content .idlm-card {
+        padding: var(--idlm-space-4);
+    }
+
+    body.idlm-crm-design .idlm-settings-page :is(.idlm-input, .idlm-select) {
+        min-height: 44px;
+    }
+
+    body.idlm-crm-design .idlm-settings-page .idlm-settings-savebar {
+        flex-wrap: wrap;
+    }
+
+    body.idlm-crm-design .idlm-settings-page .idlm-settings-savebar .idlm-save-settings-btn {
+        min-height: 44px;
+    }
+
+    /* Routing rows and the brand colour pickers keep a 44px hit area. */
+    body.idlm-crm-design #settings-routing .idlm-routing-rep-row input[type="checkbox"] {
+        width: var(--idlm-target-size);
+        height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-settings-page .idlm-brand-colour-inputs {
+        grid-template-columns: var(--idlm-target-size) minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design .idlm-settings-page .idlm-brand-colour-inputs input[type="color"] {
+        width: var(--idlm-target-size);
+        min-width: var(--idlm-target-size);
+        height: var(--idlm-target-size);
+    }
+}
+
+/* --- Automation tables: controls keep readable widths; the table scrolls inside its card --- */
+body.idlm-crm-design #settings-audience-reminders .idlm-card > table.idlm-table,
+body.idlm-crm-design #settings-audience-reminders .idlm-card table.idlm-table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+body.idlm-crm-design #settings-audience-reminders table.idlm-table :is(select, input.idlm-input) {
+    min-width: 8rem;
+}
+
+/* --- Lead capture: nested method and source tabs are quieter than the page tabs --- */
+body.idlm-crm-design #settings-webhooks .idlm-nested-tabs {
+    flex-wrap: wrap;
+    gap: var(--idlm-space-1);
+    margin-block: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #settings-webhooks .idlm-mapping-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+}
+
+body.idlm-crm-design #settings-webhooks .idlm-mapping-tabs .idlm-tab-link {
+    flex: 0 0 auto;
+}
+
+/* --- AI access and Help --------------------------------------------------- */
+body.idlm-crm-design #settings-mcp .idlm-code,
+body.idlm-crm-design #settings-mcp pre,
+body.idlm-crm-design #settings-webhooks .idlm-code {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-wrap: anywhere;
+}
+
+body.idlm-crm-design #settings-help .idlm-help-list {
+    max-width: 72ch;
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+}
+
+body.idlm-crm-design #settings-help .idlm-help-step-title {
+    margin: var(--idlm-space-4) 0 var(--idlm-space-1);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #settings-help .idlm-faq-item p {
+    max-width: 72ch;
+    font-size: 0.8125rem;
+}
+
+/* --- Backup & restore spacing --------------------------------------------- */
+body.idlm-crm-design #settings-backup .idlm-card > .idlm-card-desc,
+body.idlm-crm-design #settings-backup .idlm-card > .idlm-danger-copy {
+    margin: var(--idlm-space-1) 0 var(--idlm-space-3);
+}
+
+body.idlm-crm-design #settings-backup .idlm-card > .description {
+    margin: 0 0 var(--idlm-space-4);
+}
+
+body.idlm-crm-design #settings-backup .idlm-backup-restore-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: var(--idlm-space-3);
+    margin-bottom: var(--idlm-space-3);
+}
+
+/* --- Stack trace dialog ---------------------------------------------------- */
+body.idlm-crm-design #idlm-trace-modal .idlm-dialog__title {
+    overflow-wrap: anywhere;
+}
+
+body.idlm-crm-design #idlm-trace-modal #idlm-trace-content {
+    max-height: 60vh;
+    margin: 0;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 0.75rem;
+    line-height: 1.5;
+}

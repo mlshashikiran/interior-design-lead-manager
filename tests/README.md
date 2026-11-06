@@ -232,3 +232,8 @@ Meta form mapping (Shashi, 1.102.94): `php tests/facebook-connect-runtime.php` e
 Facebook selection UI (Shashi, 1.102.96): `node tests/facebook-connect-ui.js` runs five dependency-free tests against the actual client handler: confirmed save at the same settings anchor must reload, provider/JSON/unconfirmed failures stay visible and editable, and empty selections never send a request. Browser regression qualification additionally verifies server-persisted form names appear in refreshed Review, first-form questions autoload and unsaved selection cannot advance.
 
 Catalogue import preview (Shashi, local unreleased): `php tests/run.php` covers CSV-specific grouped decimal parsing, per-record errors, duplicates, BOM, limits and item/term write rollback. With the disposable `IDLM_TEST_DB_*` environment above, `php tests/integration/quotation-http.php --catalogue-import-only` checks actual multipart previews/imports, capability/nonce/mode/missing-file denials, COMMIT rollback and persisted rate/status/code values; add `--hold` for synthetic browser inspection. All new HTTP groups also run in the full HTTP suite. Preview creates no items/terms; import remains within the existing quotation engine gate.
+
+
+## Design Projects
+
+Builder: Shashi. Fast contracts are in `tests/design-handoff-contracts.php`. Native cases use the filters `HANDOFF`, `DESIGNREV`, `APPROVED`, `STAGES`, `BOARD`, `OVERVIEW` and `RELEASE`. `php tests/integration/quotation-http.php --design-handoff-only` runs the real-request cases; add `--hold` to keep a synthetic site for a browser for up to fifteen minutes.

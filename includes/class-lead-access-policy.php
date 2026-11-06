@@ -39,6 +39,49 @@ final class IDLM_Lead_Access_Policy {
         return in_array('idlm_pre_sales', (array) wp_get_current_user()->roles, true);
     }
 
+    /**
+     * Describe any user's lead access without touching the current user or any stored value.
+     * Must mirror has_rep_access(), can_assign() and restriction_user_id(); a test proves parity.
+     *
+     * @return array{suspended:bool,has_access:bool,can_assign:bool,restriction_user_id:int,sees:string}
+     */
+    public static function describe_user_access($user, $respect_global_visibility = true) {
+        $user_id = absint($user->ID);
+        $roles = (array) $user->roles;
+        $suspended = class_exists('IDLM_Admin_Users_Controller') && IDLM_Admin_Users_Controller::is_crm_access_disabled($user_id);
+        $has_access = !$suspended && self::user_has_rep_access($user);
+        $can_assign = $has_access && (user_can($user, 'manage_options') || user_can($user, 'idlm_assign_leads'));
+        $scope = class_exists('IDLM_Admin_Users_Controller') ? IDLM_Admin_Users_Controller::role_scope($roles) : 'default';
+        if ('assigned' === $scope) {
+            $restriction = $user_id;
+        } elseif ('all' === $scope || $can_assign) {
+            $restriction = 0;
+        } elseif (!$respect_global_visibility || '1' !== get_option('idlm_crm_access_policy_version', '')) {
+            $restriction = $user_id;
+        } else {
+            $restriction = in_array('idlm_pre_sales', $roles, true) || '1' !== IDLM_Settings::get('idlm_reps_see_all_leads', '0') ? $user_id : 0;
+        }
+        return array(
+            'suspended' => $suspended, 'has_access' => $has_access, 'can_assign' => $can_assign, 'restriction_user_id' => $restriction,
+            'sees' => !$has_access ? 'none' : ($restriction ? 'assigned' : 'all'),
+        );
+    }
+
+    private static function user_has_rep_access($user) {
+        if (user_can($user, 'manage_options')) { return true; }
+        if (!user_can($user, 'idlm_access_leads')) { return false; }
+        $editorial = array('editor', 'author', 'contributor');
+        if ('1' !== get_option('idlm_crm_access_policy_version', '') && array_intersect((array) $user->roles, $editorial)) {
+            if (!empty($user->caps['idlm_access_leads'])) { return true; }
+            foreach (array_diff((array) $user->roles, $editorial) as $role_name) {
+                $role = get_role($role_name);
+                if ($role && $role->has_cap('idlm_access_leads')) { return true; }
+            }
+            return false;
+        }
+        return true;
+    }
+
     /** Validate drawer fields before persistence; return the role-protected fields. */
     public static function validate_detail_fields($fields, $existing) {
         $protected = self::is_pre_sales()

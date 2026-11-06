@@ -781,6 +781,22 @@ class IDLM_Integrations {
     }
 
     /**
+     * A lead a sales rep added without the qualification details: the next pre-sales person in
+     * the intake rotation calls the customer. Runs inside the creating transaction.
+     */
+    public static function assign_to_pre_sales($lead_id, $requested_by) {
+        $pre_sales = self::select_round_robin_rep(self::get_pre_sales_pool(), 'idlm_last_pre_sales_rep_index');
+        if (!$pre_sales) { return false; }
+        $person = get_userdata($pre_sales);
+        return self::assign_lead_atomically($lead_id, 0, $pre_sales, sprintf('Lead added by %s and sent to %s (pre-sales) to collect qualification details. It returns to %s once qualified.', $requested_by, $person ? $person->display_name : 'pre-sales', $requested_by), false, 'intake');
+    }
+
+    /** Is anyone in pre-sales available for intake right now? */
+    public static function pre_sales_available() {
+        return (bool) self::get_pre_sales_pool();
+    }
+
+    /**
      * Recover open leads that remain completely unassigned.
      */
     private static function recover_unassigned_leads() {

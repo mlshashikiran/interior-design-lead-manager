@@ -45,7 +45,7 @@ foreach(array('new','matched') as $kind){
 }
 
 idlm_http_case('T04-H-manual-intake-required-activity-failure-returns-error-without-created-lead',static function():void {
-    global $sessions;$before=idlm_http_snapshot();$form=http_build_query(array('first_name'=>'Synthetic manual','email'=>wp_generate_uuid4().'@example.test','phone'=>'+15550123456'));
+    global $sessions;$before=idlm_http_snapshot();$form=http_build_query(array('first_name'=>'Synthetic manual','email'=>wp_generate_uuid4().'@example.test','phone'=>'+15550123456','qualification_choice'=>'later'));
     $request=static function()use($sessions,$form){return idlm_http_request('/wp-admin/admin-ajax.php',array('action'=>'idlm_add_lead_manual','nonce'=>$sessions['owner']['admin'],'form_data'=>$form));};
     $r=idlm_atomic_http_trigger('idlm_lead_activity_log','INSERT',$request);$json=json_decode($r['body'],true);idlm_http_check($json['success']===false,'Manual intake acknowledged failed activity');idlm_http_check($before===idlm_http_snapshot(),'Failed manual intake changed aggregate');
     $r=$request();$json=json_decode($r['body'],true);idlm_http_check($json['success']===true,'Manual retry failed: '.$r['body']);

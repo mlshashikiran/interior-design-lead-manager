@@ -61,9 +61,28 @@ $idlm_return_url = remove_query_arg('idlm_credential_rotated');
                 <?php endif; ?>
                 <header class="idlm-header">
                     <div class="idlm-header-meta">
-                        <h1>System settings and mappings</h1>
+                        <h1><?php echo IDLM_Admin_Assets::design_layer_enabled() ? 'Settings' : 'System settings and mappings'; ?></h1>
                     </div>
                 </header>
+                <?php if (IDLM_Admin_Assets::design_layer_enabled()): ?>
+                <?php
+                // Grouped order: workspace setup, connections, upkeep, then the isolated destructive tab.
+                $idlm_settings_tab_groups = array(
+                    'setup' => array('general' => 'General', 'white-label' => 'White label', 'routing' => 'Routing'),
+                    'connections' => array('webhooks' => 'Lead capture', 'capi' => 'Conversion tracking', 'audience-reminders' => 'Automation', 'mcp' => 'AI access'),
+                    'upkeep' => array('health' => 'Health', 'help' => 'Help', 'backup' => 'Backup & restore'),
+                    'danger' => array('danger-zone' => 'Danger zone'),
+                );
+                ?>
+                <nav class="idlm-tabs idlm-settings-tabs" role="tablist" aria-label="System settings tabs">
+                    <?php foreach ($idlm_settings_tab_groups as $idlm_group => $idlm_group_tabs): $idlm_first_in_group = true; ?>
+                        <?php foreach ($idlm_group_tabs as $idlm_tab_key => $idlm_tab_label): ?>
+                    <button type="button" id="idlm-settings-tab-<?php echo esc_attr($idlm_tab_key); ?>" class="idlm-tab-link idlm-settings-tab--<?php echo esc_attr($idlm_group); ?><?php echo $idlm_first_in_group ? ' idlm-settings-tab--group-start' : ''; ?><?php echo 'danger-zone' === $idlm_tab_key ? ' idlm-tab-link-danger' : ''; ?> <?php echo $idlm_active_tab === $idlm_tab_key ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === $idlm_tab_key ? 'true' : 'false'; ?>" aria-controls="settings-<?php echo esc_attr($idlm_tab_key); ?>" tabindex="<?php echo $idlm_active_tab === $idlm_tab_key ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-<?php echo esc_attr($idlm_tab_key); ?>')"><?php echo esc_html($idlm_tab_label); ?></button>
+                            <?php $idlm_first_in_group = false; ?>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </nav>
+                <?php else: ?>
                 <nav class="idlm-tabs idlm-settings-tabs" role="tablist" aria-label="System settings tabs">
                     <button type="button" id="idlm-settings-tab-general" class="idlm-tab-link <?php echo $idlm_active_tab === 'general' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'general' ? 'true' : 'false'; ?>" aria-controls="settings-general" tabindex="<?php echo $idlm_active_tab === 'general' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-general')">General</button>
                     <button type="button" id="idlm-settings-tab-white-label" class="idlm-tab-link <?php echo $idlm_active_tab === 'white-label' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'white-label' ? 'true' : 'false'; ?>" aria-controls="settings-white-label" tabindex="<?php echo $idlm_active_tab === 'white-label' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-white-label')">White label</button>
@@ -77,10 +96,12 @@ $idlm_return_url = remove_query_arg('idlm_credential_rotated');
                     <button type="button" id="idlm-settings-tab-backup" class="idlm-tab-link <?php echo $idlm_active_tab === 'backup' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'backup' ? 'true' : 'false'; ?>" aria-controls="settings-backup" tabindex="<?php echo $idlm_active_tab === 'backup' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-backup')">Backup &amp; restore</button>
                     <button type="button" id="idlm-settings-tab-danger-zone" class="idlm-tab-link idlm-tab-link-danger <?php echo $idlm_active_tab === 'danger-zone' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'danger-zone' ? 'true' : 'false'; ?>" aria-controls="settings-danger-zone" tabindex="<?php echo $idlm_active_tab === 'danger-zone' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-danger-zone')">Danger Zone</button>
                 </nav>
+                <?php endif; ?>
                 <form method="POST" action="" id="idlm-settings-form" class="idlm-settings-form">
                     <?php wp_nonce_field('idlm_settings_save_action'); ?>
                     <input type="hidden" name="idlm_save_settings" value="1">
                     <input type="hidden" name="active_tab" id="idlm-active-tab-input" value="<?php echo esc_attr($idlm_active_tab); ?>">
+<?php $idlm_settings_design = IDLM_Admin_Assets::design_layer_enabled(); if ($idlm_settings_design) { ob_start(); } ?>
 <?php IDLM_View::display('admin/settings/general.php', $context); ?>
 <?php IDLM_View::display('admin/settings/white-label.php', $context); ?>
 <?php IDLM_View::display('admin/settings/routing.php', $context); ?>
@@ -92,9 +113,34 @@ $idlm_return_url = remove_query_arg('idlm_credential_rotated');
 <?php IDLM_View::display('admin/settings/mcp.php', $context); ?>
 <?php IDLM_View::display('admin/settings/backup.php', $context); ?>
 <?php IDLM_View::display('admin/settings/danger-zone.php', $context); ?>
+<?php
+if ($idlm_settings_design) {
+    // Card titles are sentence case in the design layer. Display only: only these fixed headings are reworded.
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Guarded template output; only fixed headings are rewritten.
+    echo strtr((string) ob_get_clean(), array(
+        '>Danger Zone: Reset CRM Leads &amp; Analytics<' => '>Danger zone: reset CRM leads and analytics<',
+        '>Firm Metrics & Targets<' => '>Firm metrics and targets<', '>Frontend Shortcode Integrations<' => '>Frontend shortcode integrations<',
+        '>Complete CRM Workspace<' => '>Complete CRM workspace<', '>Leads Database Workspace<' => '>Leads database workspace<',
+        '>Analytics Dashboard Widgets<' => '>Analytics dashboard widgets<', '>Kanban Board Workspace<' => '>Kanban board workspace<',
+        '>Platform Conversion APIs (CAPI) Settings<' => '>Platform conversion APIs (CAPI) settings<', '>Google Ads Offline Conversions<' => '>Google Ads offline conversions<',
+        '>Custom Audience Batch Sync Rules<' => '>Custom audience batch sync rules<', '>Google Ads Data Manager (HTTPS Pull Feeds)<' => '>Google Ads Data Manager (HTTPS pull feeds)<',
+        '>Followup Reminder Settings<' => '>Follow-up reminder settings<', '>WhatsApp Automation (Interakt) Integration<' => '>WhatsApp automation (Interakt) integration<',
+        '>Bulk Sync Progress<' => '>Bulk sync progress<', '>Meta Direct WhatsApp Webhook Configuration<' => '>Meta direct WhatsApp webhook configuration<',
+        '>Telemetry & Logging Configuration<' => '>Telemetry and logging configuration<', '>System Diagnostics Overview<' => '>System diagnostics overview<',
+        '>Horizontal Deployment Readiness<' => '>Horizontal deployment readiness<', '>Recent Telemetry & Bug Logs<' => '>Recent telemetry and bug logs<',
+        '>Cloudflare "Under Attack" Mode & Security Blocks Guidance<' => '>Cloudflare “Under Attack” mode and security blocks guidance<',
+        '>Obtaining Google Ads Data Manager Credentials<' => '>Obtaining Google Ads Data Manager credentials<', '>Frequently Asked Questions (FAQs)<' => '>Frequently asked questions (FAQs)<',
+        '>Model Context Protocol (MCP) Server Configuration<' => '>Model Context Protocol (MCP) server configuration<', '>Claude Desktop Settings<' => '>Claude Desktop settings<',
+        '>Antigravity / Gemini Code Assist Setup<' => '>Antigravity / Gemini Code Assist setup<', '>Cursor Editor Setup<' => '>Cursor editor setup<',
+        '>Security &amp; Access Sandbox<' => '>Security and access sandbox<',
+    ));
+}
+?>
                     <footer class="idlm-footer-actions idlm-settings-savebar" aria-label="Settings save actions">
                         <p class="idlm-settings-savebar__status" role="status" aria-live="polite" data-idlm-save-status><?php echo $idlm_settings_saved ? 'Settings saved' : 'No unsaved changes'; ?></p>
+                        <?php if ($idlm_settings_design): ?><span class="idlm-settings-savebar__actions"><button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-quiet" data-idlm-discard-settings hidden>Discard changes</button><?php endif; ?>
                         <button type="submit" form="idlm-settings-form" class="idlm-btn idlm-btn-primary idlm-save-settings-btn" aria-busy="false"><span data-idlm-save-label>Save settings</span></button>
+                        <?php if ($idlm_settings_design): ?></span><?php endif; ?>
                     </footer>
                 </form>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-rotate-webhook-form">
@@ -113,6 +159,11 @@ $idlm_return_url = remove_query_arg('idlm_credential_rotated');
                     <input type="hidden" name="action" value="idlm_export_backup">
                     <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($idlm_return_url); ?>">
                     <?php wp_nonce_field('idlm_export_backup'); ?>
+                </form>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-clear-emails-form">
+                    <input type="hidden" name="action" value="idlm_clear_placeholder_emails">
+                    <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($idlm_return_url); ?>">
+                    <?php wp_nonce_field('idlm_clear_placeholder_emails'); ?>
                 </form>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-restore-backup-form" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="idlm_restore_backup">
@@ -170,26 +221,37 @@ $idlm_return_url = remove_query_arg('idlm_credential_rotated');
             // Clear Telemetry Logs
             $('#idlm-clear-telemetry-btn').on('click', function(e) {
                 e.preventDefault();
-                if (!window.IDLMDialog || !window.IDLMDialog.confirm('Are you sure you want to permanently delete all error telemetry logs?')) {
+                var btn = $(this);
+                if (!window.IDLMDialog) {
                     return;
                 }
-                var btn = $(this);
-                btn.prop('disabled', true).text('Clearing...');
-                
-                $.post(idlm_vars.ajax_url, {
-                    action: 'idlm_clear_telemetry_logs',
-                    nonce: idlm_vars.nonce
-                }, function(response) {
-                    btn.prop('disabled', false).text('Clear Telemetry Logs');
-                    if (response.success) {
-                        window.IDLMDialog.notify(response.data.message, 'success');
-                        location.reload();
-                    } else {
-                        window.IDLMDialog.notify(response.data.message || 'Error occurred', 'error');
+                window.IDLMDialog.confirm({
+                    title: 'Clear telemetry logs?',
+                    message: 'This permanently deletes every error telemetry log shown on this tab. CRM records and settings are not affected.',
+                    confirmLabel: 'Clear logs',
+                    destructive: true,
+                    trigger: btn.get(0)
+                }).then(function(confirmed) {
+                    if (!confirmed) {
+                        return;
                     }
-                }).fail(function() {
-                    btn.prop('disabled', false).text('Clear Telemetry Logs');
-                    window.IDLMDialog.notify('Network error occurred.', 'error');
+                    btn.prop('disabled', true).text('Clearing...');
+
+                    $.post(idlm_vars.ajax_url, {
+                        action: 'idlm_clear_telemetry_logs',
+                        nonce: idlm_vars.nonce
+                    }, function(response) {
+                        btn.prop('disabled', false).text('Clear Telemetry Logs');
+                        if (response.success) {
+                            window.IDLMDialog.notify(response.data.message, 'success');
+                            location.reload();
+                        } else {
+                            window.IDLMDialog.notify(response.data.message || 'Error occurred', 'error');
+                        }
+                    }).fail(function() {
+                        btn.prop('disabled', false).text('Clear Telemetry Logs');
+                        window.IDLMDialog.notify('Network error occurred.', 'error');
+                    });
                 });
             });
             // View Stack Trace Modal
@@ -199,7 +261,7 @@ $idlm_return_url = remove_query_arg('idlm_credential_rotated');
                 var trace = btn.attr('data-trace');
                 var msg = btn.attr('data-message');
                 
-                $('#idlm-trace-modal-title').text('Stack Trace: ' + msg);
+                $('#idlm-trace-modal-title').text('<?php echo IDLM_Admin_Assets::design_layer_enabled() ? 'Stack trace: ' : 'Stack Trace: '; ?>' + msg);
                 $('#idlm-trace-content').text(trace);
                 if (window.IDLMDialog) {
                     window.IDLMDialog.open(document.getElementById('idlm-trace-modal'), {trigger: btn.get(0)});
@@ -389,108 +451,6 @@ $idlm_return_url = remove_query_arg('idlm_credential_rotated');
                 $(this).closest('tr').remove();
             });
 
-            // Bulk sync existing leads matching a specific mapping
-            $(document).on('click', '.idlm-sync-past-interakt-mapping', function(e) {
-                e.preventDefault();
-                
-                var $btn = $(this);
-                var triggerType = $btn.attr('data-type');
-                var triggerValue = $btn.attr('data-value');
-                var eventName = $btn.attr('data-event');
-                
-                var $progressContainer = $('#idlm-bulk-sync-progress-container');
-                var $progressBar = $('#idlm-bulk-sync-progress-bar');
-                var $statusText = $('#idlm-bulk-sync-status-text');
-                
-                var confirmMsg = 'Are you sure you want to sync all past leads where "' + triggerType + '" is "' + triggerValue + '" to Interakt for event "' + eventName + '"?';
-                if (!window.IDLMDialog || !window.IDLMDialog.confirm(confirmMsg)) {
-                    return;
-                }
-                
-                $btn.prop('disabled', true).text('Syncing...');
-                $progressContainer.show();
-                $progressBar.css('width', '0%');
-                $statusText.text('Fetching matching leads...');
-                
-                $.post(ajaxurl, {
-                    action: 'idlm_get_mapped_past_leads',
-                    trigger_type: triggerType,
-                    trigger_value: triggerValue,
-                    nonce: '<?php echo esc_js(wp_create_nonce("idlm_admin_nonce")); ?>'
-                }, function(res) {
-                    if (!res.success) {
-                        window.IDLMDialog.notify(res.data || 'Failed to fetch leads', 'error');
-                        resetSyncBtn();
-                        return;
-                    }
-                    
-                    var leadIds = res.data.lead_ids || [];
-                    if (leadIds.length === 0) {
-                        $statusText.text('No matching leads found to sync.');
-                        resetSyncBtn();
-                        return;
-                    }
-                    
-                    $statusText.text('Found ' + leadIds.length + ' leads. Starting sync...');
-                    
-                    var total = leadIds.length;
-                    var processed = 0;
-                    var successCount = 0;
-                    var existingCount = 0;
-                    var requestId = 'sync_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-                    var failureCount = 0;
-                    var batchSize = 10;
-                    
-                    function processNextBatch() {
-                        if (leadIds.length === 0) {
-                            $statusText.text('Queue complete: ' + successCount + ' queued, ' + existingCount + ' already submitted, ' + failureCount + ' failed to queue. Delivery results appear in each lead’s activity.');
-                            resetSyncBtn();
-                            return;
-                        }
-                        
-                        var currentBatch = leadIds.splice(0, batchSize);
-                        $statusText.text('Syncing batch of ' + currentBatch.length + ' leads (' + (processed + 1) + '-' + Math.min(processed + batchSize, total) + ' of ' + total + ')...');
-                        
-                        $.post(ajaxurl, {
-                            action: 'idlm_sync_mapped_past_batch',
-                            lead_ids: currentBatch,
-                            event_name: eventName,
-                            request_id: requestId,
-                            nonce: '<?php echo esc_js(wp_create_nonce("idlm_admin_nonce")); ?>'
-                        }, function(batchRes) {
-                            if (batchRes.success) {
-                                successCount += batchRes.data.queued_count || 0;
-                                existingCount += batchRes.data.existing_count || 0;
-                                failureCount += batchRes.data.failure_count || 0;
-                            } else {
-                                failureCount += currentBatch.length;
-                            }
-                            
-                            processed += currentBatch.length;
-                            var pct = Math.round((processed / total) * 100);
-                            $progressBar.css('width', pct + '%');
-                            
-                            // HTTP requests only queue delivery; background jobs send the events.
-                            processNextBatch();
-                        }).fail(function() {
-                            failureCount += currentBatch.length;
-                            processed += currentBatch.length;
-                            var pct = Math.round((processed / total) * 100);
-                            $progressBar.css('width', pct + '%');
-                            processNextBatch();
-                        });
-                    }
-                    
-                    processNextBatch();
-                    
-                }).fail(function() {
-                    window.IDLMDialog.notify('An error occurred during sync initialization.', 'error');
-                    resetSyncBtn();
-                });
-                
-                function resetSyncBtn() {
-                    $btn.prop('disabled', false).text('Sync Past');
-                }
-            });
+<?php IDLM_View::display('admin/settings-sync-past-script.php', $context); ?>
         });
         </script>

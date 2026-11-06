@@ -7947,3 +7947,9 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 
 .idlm-wrap .idlm-meta-field-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 12px; font-size: 12px; font-weight: 600; }
 @media (max-width: 600px) { .idlm-wrap .idlm-meta-field-head { display: none; } }
+
+/* Add lead: sections the chosen save option does not need. The ID outranks grid display rules. */
+#idlm-add-lead-form [hidden] { display: none; }
+#idlm-add-lead-form .idlm-add-lead-qualification { margin: 16px 0 0; }
+#idlm-add-lead-form .idlm-add-lead-choice { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 8px; }
+#idlm-add-lead-form .idlm-add-lead-choice span { display: flex; flex-direction: column; }

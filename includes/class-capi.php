@@ -246,6 +246,8 @@ class IDLM_CAPI {
     /** Worker and retry share this predicate; New remains the initial contact event. */
     private static function lead_matches_event($lead, $stage) {
         if (!$lead || !empty($lead->is_duplicate) || !in_array($stage, array_merge(array_values(IDLM_State_Registry::stages()), (array)self::runtime_option('idlm_custom_stages',array())), true)) { return false; }
+        // A lead typed in by the team reports only when it came from an ad (or as the administrator chose).
+        if (IDLM_Contact_Identity::is_manual_lead($lead->id) && !IDLM_Contact_Identity::manual_conversion_allowed($lead, (string) self::runtime_option(IDLM_Contact_Identity::MANUAL_CONVERSIONS_OPTION, 'ad_sources'))) { return false; }
         if ('Qualified' === $stage) { return 'Qualified' === $lead->lead_quality || in_array($lead->stage, array('Qualified','Quote Shared','Won'), true); }
         if ('Quote Shared' === $stage) { return in_array($lead->stage, array('Quote Shared','Won'), true); }
         if ('New' === $stage) { return true; }

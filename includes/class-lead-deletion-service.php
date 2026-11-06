@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_Lead_Deletion_Service {
     private static function dependent_tables() {
-        return array('idlm_lead_activity_log', 'idlm_lead_state_events', 'idlm_capi_logs', 'idlm_tasks', 'idlm_lead_touchpoints', 'idlm_call_logs', 'idlm_lead_outbox');
+        return array_merge(IDLM_Lead_Payment_Schema::tables(), IDLM_Design_Handoffs::tables(), array('idlm_lead_activity_log', 'idlm_lead_state_events', 'idlm_capi_logs', 'idlm_tasks', 'idlm_lead_touchpoints', 'idlm_call_logs', 'idlm_lead_outbox'));
     }
 
     public static function delete($lead_id) { return self::delete_many(array($lead_id)); }
@@ -29,11 +29,12 @@ final class IDLM_Lead_Deletion_Service {
                 'idlm_quotes',
                 'idlm_number_sequences',
             ),
+            'payments' => IDLM_Lead_Payment_Schema::tables(),
             'call' => array('idlm_call_logs'),
             'log' => array('idlm_lead_activity_log', 'idlm_lead_state_events', 'idlm_capi_logs', 'idlm_audience_sync_logs'),
             'telemetry' => array('idlm_telemetry_logs'),
             'routing' => array('idlm_routing_state'),
-            'lead' => array('idlm_inbound_submission_reviews', 'idlm_tasks', 'idlm_lead_touchpoints', 'idlm_lead_outbox', 'idlm_leads'),
+            'lead' => array('idlm_design_document_versions', 'idlm_design_revisions', 'idlm_design_handoff_events', 'idlm_design_handoff_versions', 'idlm_design_handoffs', 'idlm_inbound_submission_reviews', 'idlm_tasks', 'idlm_lead_touchpoints', 'idlm_lead_outbox', 'idlm_leads'),
         );
     }
 

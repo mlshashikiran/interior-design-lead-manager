@@ -133,7 +133,7 @@ if ('/login' === $path) {
 }
 if ('/session' === $path) {
     if (!is_user_logged_in()) { wp_send_json_error(null, 403); }
-    wp_send_json(array('pdf' => wp_create_nonce('idlm_download_quote_pdf'), 'catalogue_save' => wp_create_nonce('idlm_save_catalogue_item'), 'quote_settings' => wp_create_nonce('idlm_save_quote_settings'), 'catalogue_import' => wp_create_nonce('idlm_import_catalogue_csv'), 'backup' => wp_create_nonce('idlm_export_backup'), 'restore_backup' => wp_create_nonce('idlm_restore_backup'), 'create_user' => wp_create_nonce('idlm_create_user'), 'role_permissions' => wp_create_nonce('idlm_update_role_permissions'), 'admin' => wp_create_nonce('idlm_admin_nonce'), 'search' => wp_create_nonce('idlm_quote_catalogue_search'), 'save' => wp_create_nonce('idlm_save_quote'), 'autosave' => wp_create_nonce('idlm_quote_autosave'), 'csv' => wp_create_nonce('idlm_download_quote_csv'), 'xlsx' => wp_create_nonce('idlm_download_quote_xlsx'), 'print' => wp_create_nonce('idlm_print_quote')));
+    wp_send_json(array('stage_action' => wp_create_nonce('idlm_design_stage_action'), 'design_send' => wp_create_nonce('idlm_design_handoff_send'), 'design_assign' => wp_create_nonce('idlm_design_handoff_assign'), 'design_panel' => wp_create_nonce('idlm_design_project_panel'), 'admin_nonce' => wp_create_nonce('idlm_admin_nonce'), 'payment_schedule' => wp_create_nonce('idlm_payment_schedule'), 'payment_record' => wp_create_nonce('idlm_payment_record'), 'payment_correct' => wp_create_nonce('idlm_payment_correct'), 'payment_resolve_legacy' => wp_create_nonce('idlm_payment_resolve_legacy'), 'pdf' => wp_create_nonce('idlm_download_quote_pdf'), 'catalogue_save' => wp_create_nonce('idlm_save_catalogue_item'), 'quote_settings' => wp_create_nonce('idlm_save_quote_settings'), 'catalogue_import' => wp_create_nonce('idlm_import_catalogue_csv'), 'backup' => wp_create_nonce('idlm_export_backup'), 'restore_backup' => wp_create_nonce('idlm_restore_backup'), 'create_user' => wp_create_nonce('idlm_create_user'), 'role_permissions' => wp_create_nonce('idlm_update_role_permissions'), 'admin' => wp_create_nonce('idlm_admin_nonce'), 'search' => wp_create_nonce('idlm_quote_catalogue_search'), 'save' => wp_create_nonce('idlm_save_quote'), 'autosave' => wp_create_nonce('idlm_quote_autosave'), 'csv' => wp_create_nonce('idlm_download_quote_csv'), 'xlsx' => wp_create_nonce('idlm_download_quote_xlsx'), 'print' => wp_create_nonce('idlm_print_quote')));
 }
 // Optional synthetic provider response is confined to this owned fixture directory.
 if (is_file(WP_CONTENT_DIR.'/capi-provider-response.json')) {
@@ -194,7 +194,7 @@ if ('/tasks-workspace' === $path || '/crm-workspace' === $path) {
     }
     $html = '/crm-workspace' === $path ? IDLM_Admin_Shortcodes::render_workspace_shortcode() : IDLM_Admin_Shortcodes::render_leads_list_shortcode();
     echo '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">';
-    wp_head(); echo '</head><body>' . $html; wp_print_footer_scripts(); echo '</body></html>'; exit;
+    wp_head(); echo '</head><body class="' . esc_attr(implode(' ', get_body_class())) . '">' . $html; wp_print_footer_scripts(); echo '</body></html>'; exit;
 }
 if ('/settings-workspace' === $path) {
     foreach (array('script_loader_src', 'style_loader_src') as $filter) {

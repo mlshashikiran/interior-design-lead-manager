@@ -26,6 +26,17 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                             <p class="idlm-card-desc">Configure the real-time Conversions API settings to transmit server-side conversion signals to Meta, Google Ads, and LinkedIn upon pipeline stage changes.</p>
                         </article>
 
+                        <article class="idlm-card">
+                            <h3><label for="idlm-manual-lead-conversions">Leads added by your team</label></h3>
+                            <p class="idlm-card-desc" id="idlm-manual-lead-conversions-help">Leads typed in with Add lead did not always come from an ad. Choose when their stage changes are reported to the ad platforms. Placeholder emails (such as na@gmail.com) are never sent.</p>
+                            <?php $idlm_manual_conversions = isset($context['manual_lead_conversions']) ? $context['manual_lead_conversions'] : 'ad_sources'; ?>
+                            <select id="idlm-manual-lead-conversions" name="manual_lead_conversions" class="idlm-input" aria-describedby="idlm-manual-lead-conversions-help">
+                                <option value="ad_sources" <?php selected($idlm_manual_conversions, 'ad_sources'); ?>>Only when the source is an ad (Meta, Google or LinkedIn) or an ad click was captured</option>
+                                <option value="all" <?php selected($idlm_manual_conversions, 'all'); ?>>Always, like leads from forms and ads</option>
+                                <option value="none" <?php selected($idlm_manual_conversions, 'none'); ?>>Never</option>
+                            </select>
+                        </article>
+
                         <div class="idlm-detail-grid">
                             <!-- Meta CAPI Card -->
                             <article class="idlm-card">

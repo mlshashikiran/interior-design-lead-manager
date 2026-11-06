@@ -126,6 +126,8 @@ final class IDLM_Private_Files {
         $lead = $wpdb->get_row($wpdb->prepare("SELECT floor_plan_file,floor_plan_files,quote_file FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $file->lead_id));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         if (!$lead) { return false; }
+        if ('design' === $file->purpose) { return IDLM_Design_Stages::references_file((int) $file->lead_id, (int) $file->attachment_id) || (in_array($file->state, array('uploaded', 'pending_upload'), true) && strtotime($file->created_at) >= strtotime(current_time('mysql')) - 7 * DAY_IN_SECONDS); }
+        if ('payment' === $file->purpose && (IDLM_Lead_Payments::references_file((int) $file->lead_id, (int) $file->attachment_id) || IDLM_Design_Handoffs::references_file((int) $file->lead_id, (int) $file->attachment_id))) { return true; }
         $urls = 'quote' === $file->purpose ? array($lead->quote_file) : IDLM_Admin_Presenter::normalize_floor_plan_files($lead->floor_plan_files, $lead->floor_plan_file);
         foreach ($urls as $url) { if (self::attachment_id($url) === (int) $file->attachment_id) { return true; } }
         return in_array($file->state, array('uploaded', 'pending_upload'), true) && strtotime($file->created_at) >= strtotime(current_time('mysql')) - 7 * DAY_IN_SECONDS;
@@ -172,14 +174,19 @@ final class IDLM_Private_Files {
         $valid = IDLM_Production_Security::validate_upload($file, $purpose);
         if (is_wp_error($valid)) { return $valid; }
         $name = sanitize_file_name(wp_unslash($file['name']));
-        $type = wp_check_filetype_and_ext($file['tmp_name'], $name);
+        // WordPress does not list DWG; validate_upload() has already checked its signature.
+        $type = 'design' === $purpose && 'dwg' === strtolower((string) pathinfo($name, PATHINFO_EXTENSION)) ? array('ext' => 'dwg', 'type' => 'application/acad') : wp_check_filetype_and_ext($file['tmp_name'], $name);
         if (!$type['ext'] || !$type['type'] || filesize($file['tmp_name']) !== (int) $file['size']) { return new WP_Error('idlm_file_type', 'The file contents or size are invalid.'); }
         // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0010: upload(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
         if (!self::transactional() || false === $wpdb->query('START TRANSACTION')) { return new WP_Error('idlm_file_storage', 'Private file storage is unavailable.'); }
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
         $attachment = 0; $suppressed = $wpdb->suppress_errors(true);
         try {
-            if (!self::allowed($lead_id, true, true) || ('quote' === $purpose && IDLM_Lead_Access_Policy::is_pre_sales())) { throw new RuntimeException('authority'); }
+            // A Design Manager can attach payment proof to their project without lead access.
+            $design_payment = 'payment' === $purpose && IDLM_Design_Handoffs::can_record_payment((int) $lead_id);
+            $design_document = 'design' === $purpose && IDLM_Design_Stages::can_upload((int) $lead_id);
+            $lead_access = 'design' !== $purpose && self::allowed($lead_id, true, true);
+            if (('design' === $purpose && !$design_document) || ('design' !== $purpose && !$lead_access && !$design_payment) || ('payment' === $purpose && !IDLM_Lead_Payments::permitted((int) $lead_id)) || ('quote' === $purpose && IDLM_Lead_Access_Policy::is_pre_sales())) { throw new RuntimeException('authority'); }
             $attachment = wp_insert_attachment(array('post_title' => 'Protected lead file', 'post_status' => 'private', 'post_mime_type' => $type['type'], 'guid' => ''), '', 0, true, false);
             if (is_wp_error($attachment) || !$attachment) { $attachment = 0; throw new RuntimeException('attachment'); }
             $id = self::store($lead_id, $attachment, $purpose, $name, $type['type'], array(array('source' => $file['tmp_name'], 'path' => '')), 'uploaded');
@@ -256,16 +263,16 @@ final class IDLM_Private_Files {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0004: download(): download validates decimal attachment IDs before SQL and rechecks live cookie/capability/lead/reference access; store streams only validated uploaded/verified local archive paths in bounded chunks, preserving binary bytes.
         $raw = wp_unslash($_GET['attachment_id'] ?? '');
         // phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        if (!is_user_logged_in() || !IDLM_Lead_Access_Policy::has_rep_access()) { self::deny(403); }
+        if (!is_user_logged_in() || (!IDLM_Lead_Access_Policy::has_rep_access() && !IDLM_Design_Handoffs::can_receive())) { self::deny(403); }
         if (!is_scalar($raw) || !ctype_digit((string) $raw) || !absint($raw) || !self::ready()) { self::deny(404); }
         global $wpdb; $table = self::table();
         // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0016: download(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
         $file = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE attachment_id = %d AND state IN ('uploaded','active','pending','pending_upload')", absint($raw)));
         // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-        if (!$file || !self::allowed($file->lead_id) || !self::referenced_or_temporary($file) || (int) $file->byte_size > self::MAX_BYTES) { self::deny(404); }
+        if (!$file || !self::readable($file) || !self::referenced_or_temporary($file) || (int) $file->byte_size > self::MAX_BYTES) { self::deny(404); }
         $data = self::bytes($file->id, array('variant' => 0, 'size' => $file->byte_size, 'sha256' => $file->sha256));
         self::refresh_actor();
-        if (false === $data || !self::allowed($file->lead_id) || !self::referenced_or_temporary($file)) { self::deny(404); }
+        if (false === $data || !self::readable($file) || !self::referenced_or_temporary($file)) { self::deny(404); }
         while (ob_get_level()) { ob_end_clean(); }
         nocache_headers(); header('Cache-Control: private, no-store, max-age=0'); header('X-Content-Type-Options: nosniff'); header('X-Frame-Options: SAMEORIGIN'); header('Referrer-Policy: no-referrer'); header("Content-Security-Policy: sandbox; default-src 'none'");
         header('Content-Type: ' . sanitize_mime_type($file->mime)); header('Content-Length: ' . strlen($data));
@@ -273,6 +280,12 @@ final class IDLM_Private_Files {
         header('Content-Disposition: ' . $disposition . '; filename="' . str_replace(array('"',"\r","\n"), '', sanitize_file_name($file->filename)) . '"');
         echo $data; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Verified binary download.
         exit;
+    }
+
+    /** Lead access, or design access to that lead. Internal design files need design access. */
+    private static function readable($file) {
+        if ('design' === $file->purpose) { return IDLM_Design_Handoffs::may_read_file($file->lead_id); }
+        return self::allowed($file->lead_id) || IDLM_Design_Handoffs::may_read_file($file->lead_id);
     }
 
     private static function deny($status) {

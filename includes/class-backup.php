@@ -42,7 +42,7 @@ final class IDLM_Backup {
     private static function backup_option($option_name) {
         $option_name = strtolower($option_name); // Match protected names under native case-insensitive option collation.
         if (0 !== strpos($option_name, 'idlm_') || self::core_migration_option($option_name) || 'idlm_duplicate_touchpoint_backfill_cursor_v2' === $option_name) { return false; }
-        if (in_array($option_name, array('idlm_retention_progress', 'idlm_quotation_migration_status', 'idlm_crm_access_policy_version', 'idlm_read_cache_generation', 'idlm_private_file_schema_version', 'idlm_private_file_migration_cursor', 'idlm_private_file_migration_status', 'idlm_schema_version', 'idlm_quotation_schema_version', 'idlm_plugin_activated_at', 'idlm_roles_version', 'idlm_legacy_quote_migration_version', 'idlm_quotation_snapshot_migration_version'), true)) { return false; }
+        if (in_array($option_name, array('idlm_access_change_log', 'idlm_retention_progress', 'idlm_quotation_migration_status', 'idlm_crm_access_policy_version', 'idlm_read_cache_generation', 'idlm_private_file_schema_version', 'idlm_private_file_migration_cursor', 'idlm_private_file_migration_status', 'idlm_schema_version', 'idlm_quotation_schema_version', 'idlm_plugin_activated_at', 'idlm_roles_version', 'idlm_legacy_quote_migration_version', 'idlm_quotation_snapshot_migration_version'), true)) { return false; }
         if (preg_match('/^idlm_(?:facebook_pending_|connector_|recovery_|rc_|fallback_last_|interakt_batch_|interakt_dispatch_|capi_retry_|capi_delivery_|audience_work_|audience_scan$|whatsapp_receipt_|audience_sync_queue$|.*(?:migration|schema|retention|payload).*version$|.*_lock_|.*rate_limit)/', $option_name)) { return false; }
         return !preg_match('/(?:_api_key|_access_token|_password|_secret|_verify_token|credential)/i', $option_name);
     }
@@ -110,6 +110,7 @@ final class IDLM_Backup {
         if (false === $wpdb->query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ') || false === $wpdb->query('START TRANSACTION WITH CONSISTENT SNAPSHOT, READ ONLY')) { return self::failure(); }
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         try {
+            if (!IDLM_Lead_Payments::partial_recovery_safe()) { return new WP_Error('idlm_payment_full_backup_required', 'Payment history requires a full WordPress database backup. Partial JSON backup is unavailable.'); }
             $tables = array();
             foreach (self::table_suffixes() as $suffix) {
                 $table = self::table_name($suffix);
@@ -183,6 +184,7 @@ final class IDLM_Backup {
     /** Temporary staging enforces native collation/unique constraints before deletion. */
     private static function restore_payload($payload) {
         global $wpdb;
+        if (!IDLM_Lead_Payments::partial_recovery_safe()) { return new WP_Error('idlm_payment_full_backup_required', 'Payment history requires full database recovery. No data was replaced.'); }
         if (!IDLM_Private_Files::restore_safe($payload)) { return self::failure(); }
         $schema = self::physical_schema(); $identities = self::identities();
         if (is_wp_error($schema) || is_wp_error($identities)) { return self::failure(); }
@@ -201,7 +203,7 @@ final class IDLM_Backup {
         $previous_errors = $wpdb->suppress_errors(true); // Never log uploaded rows in native constraint errors.
         try {
             // Uploads and workers cannot enter between this check and commit.
-            if (!IDLM_Private_Files::restore_safe($payload) || self::physical_schema() !== $schema || self::identities() !== $identities) { return self::failure(); }
+            if (!IDLM_Lead_Payments::partial_recovery_safe() || !IDLM_Private_Files::restore_safe($payload) || self::physical_schema() !== $schema || self::identities() !== $identities) { return self::failure(); }
             foreach (self::table_suffixes() as $suffix) {
                 $table = self::table_name($suffix); $temp = 'idlm_restore_' . bin2hex(random_bytes(8));
                 // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0288: restore_payload(): table_suffixes()/validator manifest fixes identifiers; staging names are random hex, key columns are fixed; values use wpdb insert/prepare; consistent snapshots and range locks cannot use cached rows.

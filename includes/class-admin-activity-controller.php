@@ -116,6 +116,18 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
         <?php
         $comments_html = ob_get_clean();
 
+        if (isset($_POST['idlm_design']) ? 'crm' === sanitize_key(wp_unslash($_POST['idlm_design'])) : IDLM_Admin_Assets::design_layer_enabled()) {
+            // Timeline presentation lives in crm-design-leads.css.
+            $strip_and_label = static function ($markup) {
+                return strtr((string) preg_replace('/\sstyle="[^"]*"/i', '', $markup), array(
+                    '>No activity logs found for this lead.<' => '>No activity recorded yet.<',
+                    '>No comments found for this lead.<' => '>No comments yet.<',
+                ));
+            };
+            $full_html = $strip_and_label($full_html);
+            $comments_html = $strip_and_label($comments_html);
+        }
+
         wp_send_json_success(array(
             'html' => $full_html,
             'comments_html' => $comments_html

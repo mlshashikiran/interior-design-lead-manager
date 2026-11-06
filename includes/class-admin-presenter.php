@@ -41,19 +41,28 @@ final class IDLM_Admin_Presenter {
         $quality = is_object($lead) ? ($lead->lead_quality ?? '') : ($lead['lead_quality'] ?? '');
         $has_floor_plan = is_object($lead) ? !empty($lead->floor_plan_received) : !empty($lead['floor_plan_received']);
 
+        // Display only: the design layer writes these labels in sentence case.
+        $sentence = class_exists('IDLM_Admin_Assets') && IDLM_Admin_Assets::design_layer_enabled();
         if ('Qualified' === $quality) {
+            if ($sentence) {
+                return $has_floor_plan ? 'Qualified · plan received' : 'Qualified · plan pending';
+            }
             return $has_floor_plan ? 'Qualified · Plan Received' : 'Qualified · Plan Pending';
         }
         if ('Unqualified' === $quality) {
             return 'Unqualified';
         }
-        return 'Pending Qualification';
+        return $sentence ? 'Pending qualification' : 'Pending Qualification';
     }
 
     /** Format a database datetime string using the WordPress timezone settings. */
     public static function format_datetime($mysql_date, $format = 'M d, Y h:i A') {
         if (empty($mysql_date)) {
             return '';
+        }
+        // Display only: the design layer shows one date style (Sep 10, 2026, 6:33 PM) on every screen.
+        if ('M d, Y h:i A' === $format && class_exists('IDLM_Admin_Assets') && IDLM_Admin_Assets::design_layer_enabled()) {
+            $format = 'M j, Y, g:i A';
         }
         try {
             $dt = new DateTime($mysql_date, wp_timezone());

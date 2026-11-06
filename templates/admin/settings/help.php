@@ -26,7 +26,7 @@ $idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'gen
                         <div class="idlm-help-steps" data-idlm-ui="mt-4">
                             <h4 class="idlm-help-step-title">1. View HTTPS source credentials</h4>
                             <ul class="idlm-help-list" data-idlm-ui="help-list">
-                                <li>Navigate to the <strong>Sync &amp; Reminders</strong> tab.</li>
+                                <li>Navigate to the <strong>Automation</strong> tab.</li>
                                 <li>Under the <strong>Google Ads Data Manager (HTTPS Pull Feeds)</strong> section, configure and save your custom <strong>HTTPS Source Username</strong> and <strong>HTTPS Source Password</strong>. Keep these credentials safe as they secure your endpoints.</li>
                             </ul>
 
@@ -58,7 +58,7 @@ $idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'gen
                             </div>
                             <div class="idlm-faq-item">
                                 <h4>Q: Can I map custom stages to multiple platforms differently?</h4>
-                                <p>Yes. Each platform CAPI setting has a unique stage-to-event configuration table under the Conversion APIs (CAPI) tab. Leaving any stage mapping value blank excludes it from synchronizing to that specific platform.</p>
+                                <p>Yes. Each platform CAPI setting has a unique stage-to-event configuration table under the Conversion tracking tab. Leaving any stage mapping value blank excludes it from synchronizing to that specific platform.</p>
                             </div>
                             <div class="idlm-faq-item">
                                 <h4>Q: What happens if a lead is mapped to a stage with no click ID?</h4>

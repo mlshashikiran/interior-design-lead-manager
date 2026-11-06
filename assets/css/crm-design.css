@@ -1,0 +1,2525 @@
+/* ==========================================================================
+   IDLM CRM design layer. Builder: Shashi.
+
+   Contract: design-system/interior-design-lead-manager/STANDARD.md.
+   This file owns tokens, the shell and shared components. Screen rules live in
+   the crm-design-<area>.css files, which load after this one.
+   Everything here is gated by body.idlm-crm-design, so switching the layer off
+   restores the previous design exactly. Do not add ungated selectors, hard-coded
+   colours outside the neutral token block, or important overrides.
+   ========================================================================== */
+
+/* --- 1. Tokens ----------------------------------------------------------- */
+/* Brand, action and sidebar tokens stay owned by white-label settings. */
+body.idlm-crm-design {
+    --idlm-canvas: #f5f3ef;
+    --idlm-surface-soft: #faf8f5;
+    --idlm-surface-tint: #f8f5ef;
+    --idlm-readonly: #f0ede7;
+    --idlm-text: #1e1b16;
+    --idlm-text-muted: #5e584d;
+    --idlm-border: #e4e0d8;
+    --idlm-border-strong: #c9c3b6;
+    /* The plugin red is 4.3:1 on its own tint; this one clears 4.5:1 on tint, canvas and white. */
+    --idlm-danger: #b83c2c;
+
+    --idlm-shadow: 0 1px 2px color-mix(in srgb, var(--idlm-text) 6%, transparent);
+    --idlm-shadow-lg: 0 16px 48px color-mix(in srgb, var(--idlm-text) 18%, transparent);
+
+    /* 11px is the smallest text the CRM may render. */
+    --idlm-type-label: 0.6875rem;
+    --idlm-type-meta: 0.6875rem;
+    --idlm-type-metric: 1.25rem;
+
+    /* Shared overlay, feedback and shell tokens. Screen stylesheets reuse these. */
+    --idlm-scrim: color-mix(in srgb, var(--idlm-text) 42%, transparent);
+    --idlm-hover-tint: color-mix(in srgb, var(--idlm-text) 6%, transparent);
+    --idlm-control-line: color-mix(in srgb, var(--idlm-text) 45%, var(--idlm-surface));
+    --idlm-success-line: color-mix(in srgb, var(--idlm-success) 35%, var(--idlm-surface));
+    --idlm-warning-line: color-mix(in srgb, var(--idlm-warning) 35%, var(--idlm-surface));
+    --idlm-danger-line: color-mix(in srgb, var(--idlm-danger) 35%, var(--idlm-surface));
+    --idlm-info-line: color-mix(in srgb, var(--idlm-info) 35%, var(--idlm-surface));
+    --idlm-sidebar-text: color-mix(in srgb, var(--idlm-text-inverse) 80%, transparent);
+    --idlm-sidebar-line: color-mix(in srgb, var(--idlm-text-inverse) 14%, transparent);
+    --idlm-sidebar-hover: color-mix(in srgb, var(--idlm-text-inverse) 10%, transparent);
+    --idlm-sidebar-active: color-mix(in srgb, var(--idlm-text-inverse) 14%, transparent);
+    --idlm-workspace-topbar: 52px;
+    /* Desktop page header height; sticky bars below it start at this offset. */
+    --idlm-page-header: 64px;
+    /* Add this to the top offset of anything sticky, so it clears the phone top bar. */
+    --idlm-sticky-top: 0px;
+
+    /* Aliases resolve at :root, so they must follow the neutrals here. */
+    --idlm-bg-main: var(--idlm-canvas);
+    --idlm-bg: var(--idlm-canvas);
+    --idlm-card-bg: var(--idlm-surface);
+    --idlm-text-main: var(--idlm-text);
+    --idlm-muted: var(--idlm-text-muted);
+}
+
+/* --- 2. Foundations ------------------------------------------------------ */
+body.idlm-crm-design .idlm-workspace-content {
+    padding-bottom: var(--idlm-space-12);
+}
+
+/* Inter's tnum also widens hyphens, so never apply it to mixed text such as quote numbers. */
+body.idlm-crm-design .idlm-wrap :is(.idlm-metric-value, .idlm-kanban-column-count, .idlm-kanban-column-pipeline-value) {
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-workspace :is(a, button, input, select, textarea, summary):focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: var(--idlm-focus-offset);
+}
+
+/* --- 3. Page header ------------------------------------------------------ */
+body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header {
+    flex-wrap: wrap;
+    row-gap: var(--idlm-space-2);
+    padding-block: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header > :first-child {
+    flex: 0 0 auto;
+    min-width: 0;
+    max-width: 100%;
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header h1 {
+    overflow: visible;
+    max-width: none;
+    font-size: 1.25rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    text-overflow: clip;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header-actions {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    min-width: 0;
+    overflow: visible;
+}
+
+@media (min-width: 783px) {
+    /* One header height on every screen; a subtitle sits beside the title instead of stacking. */
+    body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header {
+        align-items: center;
+        min-height: var(--idlm-page-header);
+        margin-bottom: var(--idlm-space-4);
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header-meta:has(> h1 + p) {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        column-gap: var(--idlm-space-3);
+    }
+}
+
+@media (min-width: 783px) {
+    /* The count line only exists where the overlays do; reserving it keeps the nav from jumping between screens. */
+    body.idlm-crm-design .idlm-workspace-sidebar :is(.idlm-workspace-today, #idlm-today-slot-height) {
+        min-height: 56px;
+    }
+}
+
+/* --- 4. Buttons ---------------------------------------------------------- */
+body.idlm-crm-design .idlm-wrap .idlm-btn,
+body.idlm-crm-design .idlm-workspace .idlm-btn {
+    box-shadow: none;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-btn:hover,
+body.idlm-crm-design .idlm-workspace .idlm-btn:hover {
+    box-shadow: none;
+    transform: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-btn:active,
+body.idlm-crm-design .idlm-workspace .idlm-btn:active {
+    transform: translateY(1px);
+}
+
+/* Host themes underline links; a link styled as a button must not inherit that. */
+body.idlm-crm-design .idlm-workspace a.idlm-btn,
+body.idlm-crm-design .idlm-wrap a.idlm-btn {
+    text-decoration: none;
+}
+
+@media (min-width: 783px) {
+    /* A button repeated down a table is a row action: smaller than a page action, so rows stay quiet. */
+    body.idlm-crm-design .idlm-wrap .idlm-table tbody td > :is(a, button).idlm-btn:not(.idlm-btn-icon) {
+        min-height: 28px;
+        padding-block: 0;
+        padding-inline: var(--idlm-space-3);
+        font-size: 0.75rem;
+    }
+}
+
+/* --- 5. Cards and panels: border first, no accent stripes ---------------- */
+body.idlm-crm-design .idlm-wrap .idlm-card {
+    border-radius: var(--idlm-radius);
+    box-shadow: none;
+}
+
+/* A table is already a surface: no frame inside a frame. */
+body.idlm-crm-design .idlm-wrap .idlm-card:has(> .idlm-table-wrapper:only-child) {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+/* --- 6. Metrics ---------------------------------------------------------- */
+body.idlm-crm-design .idlm-wrap .idlm-metric {
+    border-color: var(--idlm-border);
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-metric-label {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-metric-value {
+    flex-wrap: wrap;
+    font-weight: 650;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-metric-hint {
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+/* The delivery metric reads as one ratio, with its explanation underneath. */
+body.idlm-crm-design .idlm-wrap div.idlm-metric .idlm-metric-value {
+    justify-content: flex-start;
+    gap: 2px;
+}
+
+body.idlm-crm-design .idlm-wrap div.idlm-metric .idlm-metric-hint {
+    flex-basis: 100%;
+}
+
+/* --- 7. Tables ----------------------------------------------------------- */
+body.idlm-crm-design .idlm-wrap .idlm-table th {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-table td {
+    border-color: var(--idlm-border);
+    vertical-align: middle;
+}
+
+/* --- 8. Badges: one shape, semantic colour, always with text ------------- */
+body.idlm-crm-design .idlm-workspace .idlm-drawer-chip,
+body.idlm-crm-design .idlm-workspace .idlm-badge,
+body.idlm-crm-design .idlm-wrap .idlm-badge {
+    border-radius: var(--idlm-radius-compact);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-badge.idlm-badge-failed {
+    background-color: var(--idlm-danger-soft);
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-badge.idlm-badge-success {
+    background-color: var(--idlm-success-soft);
+    color: var(--idlm-success);
+}
+
+/* A lead source is an identity, not a status: neutral, so green, amber and red only ever mean
+   succeeded, needs attention and failed (STD-CRM-4). */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) :is(.idlm-badge, .idlm-drawer-chip):is(.idlm-badge-meta, .idlm-badge-metaads, .idlm-badge-google, .idlm-badge-googleads, .idlm-badge-linkedin, .idlm-badge-linkedinads, .idlm-badge-website, .idlm-badge-referral, .idlm-badge-offlinewalk-in, .idlm-badge-offline-walk-in, .idlm-badge-csvimport) {
+    background-color: var(--idlm-readonly);
+    color: var(--idlm-text);
+}
+
+/* --- 9. Tabs: every peer view uses the same underline tab ---------------- */
+body.idlm-crm-design .idlm-wrap .idlm-tabs {
+    gap: var(--idlm-space-1);
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--idlm-border);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-tabs .idlm-tab-link {
+    border-radius: 0;
+    background: transparent;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-tabs .idlm-tab-link::after {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-tabs .idlm-tab-link.active {
+    background: transparent;
+    color: var(--idlm-action);
+}
+
+/* The underline is its own layer, so the pointer-focus reset (which clears box-shadow
+   after a click) cannot hide it while the tab still has focus. */
+body.idlm-crm-design .idlm-wrap .idlm-tabs .idlm-tab-link.active::after {
+    content: "";
+    display: block;
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    border-radius: 0;
+    background: var(--idlm-action);
+}
+
+/* --- 10. Legacy fixed sizes below the 11px floor ------------------------- */
+body.idlm-crm-design .idlm-workspace :is(.idlm-handoff-alert-pill, .idlm-handoff-alert-pill em, .idlm-pending-text strong, .idlm-whatsapp-unread-text strong, .idlm-filter-group label, .idlm-row-handoff-location, .idlm-whatsapp-row-badge, .idlm-floating-tasks-badge, .idlm-pending-calls-pill, .idlm-whatsapp-unread-pill) {
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-table small {
+    font-size: 0.6875rem;
+}
+
+/* --- 11. Workspace shell ------------------------------------------------- */
+body.idlm-crm-design .idlm-workspace-nav {
+    gap: 2px;
+}
+
+body.idlm-crm-design .idlm-workspace-nav-item {
+    min-height: 38px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-workspace-nav-item:hover,
+body.idlm-crm-design .idlm-workspace-nav-item:focus-visible {
+    background: var(--idlm-sidebar-hover);
+}
+
+/* Active is a calm fill with a gold icon, not an edge stripe. */
+body.idlm-crm-design .idlm-workspace-nav-item.is-active {
+    background: var(--idlm-sidebar-active);
+    box-shadow: none;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-workspace-nav-item.is-active .dashicons {
+    color: var(--idlm-brand-gold);
+}
+
+body.idlm-crm-design .idlm-workspace-nav-item:focus-visible,
+body.idlm-crm-design .idlm-workspace-toggle:focus-visible,
+body.idlm-crm-design .idlm-workspace-drawer-close:focus-visible,
+body.idlm-crm-design .idlm-workspace-account-menu a:focus-visible {
+    outline: 2px solid var(--idlm-brand-gold);
+    outline-offset: -2px;
+    box-shadow: none;
+}
+
+/* The account row inherited 16px text and did not line up with the navigation. */
+body.idlm-crm-design .idlm-workspace-account-trigger {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+body.idlm-crm-design .idlm-workspace-account-menu {
+    background: var(--idlm-sidebar);
+    box-shadow: var(--idlm-shadow-lg);
+}
+
+body.idlm-crm-design .idlm-workspace-account-menu a {
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-workspace-footer,
+body.idlm-crm-design .idlm-workspace-footer small {
+    font-size: 0.6875rem;
+}
+
+/* Icon rail: names stay available to assistive technology, and nothing overflows 64px. */
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-brand,
+body.idlm-crm-design:is(.idlm-workspace-sidebar-precollapsed *) .idlm-workspace-brand {
+    flex-direction: column;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-nav-label,
+body.idlm-crm-design:is(.idlm-workspace-sidebar-precollapsed *) .idlm-workspace-nav-label {
+    position: absolute;
+    display: block;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-workspace-drawer-close {
+    display: none;
+}
+
+/* --- 11a. Sidebar: groups, counts, quick actions, tooltips, account ------- */
+body.idlm-crm-design .idlm-workspace-nav-heading {
+    margin: var(--idlm-space-3) 0 var(--idlm-space-1);
+    padding: 0 12px;
+    color: color-mix(in srgb, var(--idlm-text-inverse) 55%, transparent);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+body.idlm-crm-design .idlm-workspace-nav-heading:first-child {
+    margin-top: 0;
+}
+
+body.idlm-crm-design .idlm-workspace-nav-heading--admin {
+    padding-top: var(--idlm-space-3);
+    border-top: 1px solid var(--idlm-sidebar-line);
+}
+
+/* Needs-action counts only. Amber waits on someone; red failed. */
+body.idlm-crm-design .idlm-workspace-nav-count {
+    min-width: 20px;
+    margin-left: auto;
+    padding: 0 6px;
+    box-sizing: border-box;
+    border-radius: var(--idlm-radius-pill);
+    background: color-mix(in srgb, var(--idlm-warning) 32%, transparent);
+    color: var(--idlm-text-inverse);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 18px;
+    text-align: center;
+}
+
+body.idlm-crm-design .idlm-workspace-nav-count.is-danger {
+    background: var(--idlm-danger);
+}
+
+/* Rail: counts become a corner badge, headings become dividers. */
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-nav-heading {
+    height: 0;
+    margin: var(--idlm-space-2) 8px;
+    padding: 0;
+    overflow: hidden;
+    color: transparent;
+}
+
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-nav-heading:first-child {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-nav-heading--admin {
+    padding-top: 0;
+}
+
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-nav-count {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    min-width: 16px;
+    padding: 0 4px;
+    line-height: 16px;
+}
+
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-nav-count.is-warning {
+    background: var(--idlm-warning);
+}
+
+body.idlm-crm-design .idlm-nav-tip {
+    position: fixed;
+    z-index: var(--idlm-layer-dropdown);
+    max-width: 260px;
+    padding: 5px 9px;
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-text);
+    box-shadow: var(--idlm-shadow-lg);
+    color: var(--idlm-text-inverse);
+    /* The tip lives on body, outside the workspace font scope. */
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.35;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-4px, -50%);
+    transition: opacity var(--idlm-motion-fast) var(--idlm-ease), transform var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+body.idlm-crm-design .idlm-nav-tip.is-visible {
+    opacity: 1;
+    transform: translate(0, -50%);
+}
+
+/* The signed-in person, so a shared computer shows whose session it is. */
+body.idlm-crm-design .idlm-workspace-account-name {
+    display: grid;
+    min-width: 0;
+    text-align: left;
+}
+
+body.idlm-crm-design .idlm-workspace-account-name strong {
+    overflow: hidden;
+    color: var(--idlm-text-inverse);
+    font-weight: 600;
+    text-overflow: ellipsis;
+}
+
+body.idlm-crm-design .idlm-workspace-account-name small {
+    overflow: hidden;
+    color: var(--idlm-sidebar-text);
+    font-size: 0.6875rem;
+    text-overflow: ellipsis;
+}
+
+body.idlm-crm-design .idlm-workspace-account-trigger {
+    min-height: 48px;
+}
+
+/* --- 12. Today's work entry ----------------------------------------------- */
+/* Until workspace.js moves it into the navigation, the button must not float over records. */
+body.idlm-crm-design .idlm-workspace-content .idlm-floating-tasks-btn {
+    visibility: hidden;
+}
+
+body.idlm-crm-design .idlm-floating-tasks-btn {
+    box-shadow: var(--idlm-shadow);
+}
+
+body.idlm-crm-design .idlm-workspace-today-slot:empty {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-workspace-today-slot[data-idlm-today-slot="nav"] {
+    margin-bottom: var(--idlm-space-2);
+    padding-bottom: var(--idlm-space-2);
+    border-bottom: 1px solid var(--idlm-sidebar-line);
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-workspace-today {
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr);
+    align-content: center;
+    align-items: center;
+    column-gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 5px 12px;
+    border: 1px solid transparent;
+    border-radius: var(--idlm-button-radius);
+    background: transparent;
+    box-shadow: none;
+    color: var(--idlm-sidebar-text);
+    font: inherit;
+    text-align: left;
+    transition: background-color var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-workspace-today:hover {
+    background: var(--idlm-sidebar-hover);
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-workspace-today.is-active {
+    background: var(--idlm-sidebar-active);
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-workspace-today .idlm-floating-tasks-icon,
+body.idlm-crm-design .idlm-workspace #idlm-floating-tasks-btn.idlm-workspace-today .idlm-floating-tasks-icon {
+    grid-row: 1 / span 2;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    color: var(--idlm-brand-gold);
+    font-size: 20px;
+    line-height: 20px;
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-workspace-today .idlm-floating-tasks-label {
+    grid-column: 2;
+    color: var(--idlm-text-inverse);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-workspace-today .idlm-floating-tasks-badge {
+    grid-column: 2;
+    justify-self: start;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: color-mix(in srgb, var(--idlm-danger) 28%, var(--idlm-text-inverse));
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.35;
+    text-align: left;
+    transform: none;
+}
+
+/* Rail: the icon carries a compact count. The label stays readable to assistive technology. */
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-today {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding-inline: 0;
+}
+
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-today .idlm-floating-tasks-label,
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-today .idlm-floating-tasks-badge {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-workspace.is-collapsed .idlm-workspace-today[data-idlm-today-count]::after {
+    content: attr(data-idlm-today-count);
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 16px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border-radius: var(--idlm-radius-pill);
+    background: var(--idlm-danger);
+    color: var(--idlm-text-inverse);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 16px;
+    text-align: center;
+}
+
+/* --- 13. Today's work panel ----------------------------------------------- */
+body.idlm-crm-design .idlm-global-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: min(420px, 100%);
+    height: 100dvh;
+    box-shadow: var(--idlm-shadow-lg);
+    visibility: hidden;
+    transition: transform var(--idlm-motion-slow) var(--idlm-ease), visibility var(--idlm-motion-slow);
+}
+
+body.idlm-crm-design .idlm-global-sidebar.active {
+    visibility: visible;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-global-sidebar-header {
+    position: relative;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: var(--idlm-space-2);
+    min-height: 0;
+    padding: var(--idlm-space-4) var(--idlm-space-4) 0;
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-global-sidebar-title {
+    flex: 1 0 100%;
+    padding-right: var(--idlm-space-10);
+    font-size: 1rem;
+    font-weight: 650;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-global-sidebar-title:focus {
+    outline: 0;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-global-sidebar-actions {
+    flex: 1 1 100%;
+    gap: var(--idlm-space-1);
+}
+
+/* Needs attention and Completed are peer views, so they use the underline tab. */
+body.idlm-crm-design .idlm-global-sidebar .idlm-global-sidebar-filter-btn {
+    min-height: 34px;
+    padding: 0 var(--idlm-space-2);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-global-sidebar-filter-btn:hover {
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-global-sidebar-filter-btn:focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: -2px;
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-global-sidebar-filter-btn.active {
+    background: transparent;
+    box-shadow: inset 0 -2px 0 var(--idlm-action);
+    color: var(--idlm-action);
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-global-sidebar-filter-btn.idlm-global-sidebar-cleanup {
+    margin-left: auto;
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-global-sidebar-body {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    padding: 0 0 var(--idlm-space-4);
+    overflow-x: hidden;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-task-content {
+    min-width: 0;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-summary {
+    justify-content: flex-start;
+    gap: var(--idlm-space-3);
+    margin: 0;
+    padding: var(--idlm-space-3) var(--idlm-space-4);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-summary span {
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-group {
+    margin: 0;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-group > h3 {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0;
+    padding: var(--idlm-space-2) var(--idlm-space-4);
+    border-block: 1px solid var(--idlm-border);
+    background: var(--idlm-surface-soft);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-group > h3 span {
+    display: inline;
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-task-list {
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Priority colour stripes read as decoration; the due text states the urgency. */
+body.idlm-crm-design .idlm-workspace .idlm-task-item:is(.priority-high, .priority-medium, .priority-low) {
+    border-left-width: 1px;
+    border-left-color: var(--idlm-border);
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-task-item:is(.priority-high, .priority-medium, .priority-low),
+body.idlm-crm-design .idlm-global-sidebar .idlm-task-item {
+    gap: var(--idlm-space-3);
+    padding: 10px var(--idlm-space-4);
+    border: 0;
+    border-bottom: 1px solid var(--idlm-border);
+    border-radius: 0;
+    background: transparent;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-task-item:hover {
+    background: var(--idlm-surface-soft);
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-task-item.completed {
+    opacity: 1;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-task-text {
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-lead {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    text-align: left;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-lead:hover {
+    color: var(--idlm-action);
+    text-decoration: underline;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-task-due,
+body.idlm-crm-design .idlm-global-sidebar .idlm-qualification-summary-progress {
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-task-due.overdue {
+    color: var(--idlm-danger);
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-action {
+    min-height: 28px;
+    padding: 0 var(--idlm-space-2);
+    border-color: var(--idlm-border);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface);
+    color: var(--idlm-text);
+    font-size: 0.6875rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-action:hover {
+    border-color: var(--idlm-border-strong);
+    background: var(--idlm-surface-soft);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--idlm-space-2);
+    padding: var(--idlm-space-3) var(--idlm-space-4) 0;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-global-sidebar .idlm-queue-empty {
+    padding: var(--idlm-space-10) var(--idlm-space-6);
+}
+
+/* Row actions rest quietly on desktop and appear on hover or keyboard focus. */
+@media (min-width: 783px) {
+    body.idlm-crm-design .idlm-global-sidebar .idlm-queue-task .idlm-task-actions {
+        opacity: 0;
+        transition: opacity var(--idlm-motion-fast) var(--idlm-ease);
+    }
+
+    body.idlm-crm-design .idlm-global-sidebar .idlm-queue-task:is(:hover, :focus-within) .idlm-task-actions {
+        opacity: 1;
+    }
+}
+
+/* --- 14. Buttons: primary, secondary, quiet, icon, danger, loading, disabled --- */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn {
+    min-height: var(--idlm-control-height);
+    padding: 0 var(--idlm-space-3);
+    gap: 6px;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    transition: background-color var(--idlm-motion-fast) var(--idlm-ease), border-color var(--idlm-motion-fast) var(--idlm-ease), color var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline):hover {
+    border-color: var(--idlm-border-strong);
+    background: var(--idlm-surface-soft);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn-primary:is(:hover, :focus-visible) {
+    box-shadow: none;
+}
+
+/* Quiet: low-priority row and toolbar actions. Add alongside idlm-btn. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-quiet:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline) {
+    border-color: transparent;
+    background: transparent;
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-quiet:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline):hover {
+    background: var(--idlm-hover-tint);
+    color: var(--idlm-text);
+}
+
+/* Icon: 34px on desktop and 44px at phone width. Always needs an accessible name. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-icon {
+    width: var(--idlm-control-height);
+    min-width: var(--idlm-control-height);
+    padding: 0;
+}
+
+/* Danger: outline prepares, filled completes inside the final confirmation only. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn-danger-outline {
+    border: 1px solid var(--idlm-danger-line);
+    background: var(--idlm-surface);
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn-danger-outline:is(:hover, :focus-visible) {
+    border-color: var(--idlm-danger);
+    background: var(--idlm-danger-soft);
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-btn-danger {
+    border: 1px solid var(--idlm-danger-line);
+    background: var(--idlm-danger-soft);
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-dialog .idlm-btn.idlm-btn-danger,
+body.idlm-crm-design .idlm-dialog .idlm-btn-primary.idlm-btn-danger {
+    border-color: var(--idlm-danger);
+    background: var(--idlm-danger);
+    color: var(--idlm-text-inverse);
+}
+
+body.idlm-crm-design .idlm-dialog .idlm-btn-primary.idlm-btn-danger:is(:hover, :focus-visible) {
+    border-color: color-mix(in srgb, var(--idlm-danger) 82%, var(--idlm-text));
+    background: color-mix(in srgb, var(--idlm-danger) 82%, var(--idlm-text));
+    color: var(--idlm-text-inverse);
+}
+
+/* A destructive escape route that sits beside routine actions without shouting. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-danger-quiet:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline) {
+    border-color: transparent;
+    background: transparent;
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-danger-quiet:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline):hover {
+    border-color: transparent;
+    background: var(--idlm-danger-soft);
+    color: var(--idlm-danger);
+}
+
+/* Disabled stays readable: text and fill change, not opacity. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn:not(.idlm-btn-danger-quiet):is(:disabled, [aria-disabled="true"]),
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline):is(:disabled, [aria-disabled="true"]) {
+    border-color: var(--idlm-border);
+    background: var(--idlm-readonly);
+    color: var(--idlm-text-muted);
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+/* Loading keeps the button's width. Add is-loading, or set aria-busy="true". */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn:is(.is-loading, [aria-busy="true"]) {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline):is(.is-loading, [aria-busy="true"]) {
+    color: transparent;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn:is(.is-loading, [aria-busy="true"])::after {
+    content: "";
+    position: absolute;
+    top: calc(50% - 8px);
+    left: calc(50% - 8px);
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+    border: 2px solid color-mix(in srgb, var(--idlm-text) 22%, transparent);
+    border-top-color: var(--idlm-text);
+    border-radius: var(--idlm-radius-pill);
+    animation: idlm-state-spin 800ms linear infinite;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn-primary:is(.is-loading, [aria-busy="true"])::after {
+    border-color: color-mix(in srgb, var(--idlm-action-contrast) 35%, transparent);
+    border-top-color: var(--idlm-action-contrast);
+}
+
+/* --- 15. Fields -------------------------------------------------------------- */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-input, .idlm-select) {
+    border-color: var(--idlm-control-line);
+    border-radius: var(--idlm-button-radius);
+    background-color: var(--idlm-surface);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-input, .idlm-select):hover {
+    border-color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-input, .idlm-select):focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: 0;
+    border-color: var(--idlm-focus-ring);
+    box-shadow: none;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-input, .idlm-select):is(:disabled, [readonly]) {
+    border-color: var(--idlm-border);
+    background-color: var(--idlm-readonly);
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-input, .idlm-select)::placeholder {
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-input, .idlm-select)[aria-invalid="true"] {
+    border-color: var(--idlm-danger);
+    box-shadow: none;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(input[type="checkbox"], input[type="radio"]) {
+    accent-color: var(--idlm-action);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-form-group label, .idlm-form-label, .idlm-filter-group label, .idlm-dialog__field) {
+    color: var(--idlm-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-required {
+    color: var(--idlm-text-muted);
+    font-weight: 400;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-field-help {
+    margin-top: var(--idlm-space-1);
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.45;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-field-error {
+    margin-top: var(--idlm-space-1);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* STD-TYPE-1: legacy module rules still uppercase some labels inside overlays. */
+body.idlm-crm-design :is(.idlm-dialog, .idlm-filters-panel, .idlm-modal) label {
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-checkbox-row {
+    min-height: var(--idlm-control-height);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 400;
+}
+
+/* --- 16. Badges, chips and pills ---------------------------------------------- */
+/* Status is a 6px badge with a written label. idlm-pill is for filter counts only. */
+body.idlm-crm-design .idlm-wrap .idlm-chip {
+    min-height: 22px;
+    border-color: var(--idlm-border);
+    border-radius: var(--idlm-radius-compact);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-pill {
+    border-color: var(--idlm-border);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge.is-success {
+    background-color: var(--idlm-success-soft);
+    color: var(--idlm-success);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge.is-warning {
+    background-color: var(--idlm-warning-soft);
+    color: var(--idlm-warning);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge.is-danger {
+    background-color: var(--idlm-danger-soft);
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge.is-info {
+    background-color: var(--idlm-info-soft);
+    color: var(--idlm-info);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge.is-neutral {
+    background-color: var(--idlm-readonly);
+    color: var(--idlm-text-muted);
+}
+
+/* --- 17. Pagination and generic tables ---------------------------------------- */
+body.idlm-crm-design .idlm-pagination {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--idlm-space-2);
+    margin-block: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-pagination-btn {
+    padding: 0 var(--idlm-space-3);
+    box-shadow: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: background-color var(--idlm-motion-fast) var(--idlm-ease), border-color var(--idlm-motion-fast) var(--idlm-ease), color var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+body.idlm-crm-design .idlm-pagination-btn:hover:not(:disabled) {
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-pagination-btn:disabled {
+    background: var(--idlm-readonly);
+    color: var(--idlm-text-muted);
+    opacity: 1;
+}
+
+body.idlm-crm-design :is(.idlm-pagination-info, .idlm-per-page-label) {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-table tbody tr:hover > td {
+    background-color: var(--idlm-surface-soft);
+}
+
+/* --- 18. Notices: one inline system ------------------------------------------- */
+/* Say what happened and what to do next. Toasts confirm background work; anything the
+   user must correct stays inline. Variant classes only change these local values. */
+body.idlm-crm-design :is(.idlm-alert, .idlm-auth-message, .idlm-account-success),
+body.idlm-crm-design .idlm-wrap .notice {
+    --idlm-notice-fill: var(--idlm-info-soft);
+    --idlm-notice-line: var(--idlm-info-line);
+    --idlm-notice-ink: var(--idlm-info);
+    --idlm-notice-icon: "\f348";
+    position: relative;
+    display: block;
+    margin: 0 0 var(--idlm-space-3);
+    padding: var(--idlm-space-2) var(--idlm-space-3) var(--idlm-space-2) 36px;
+    border: 1px solid var(--idlm-notice-line);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-notice-fill);
+    box-shadow: none;
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+body.idlm-crm-design :is(.idlm-alert, .idlm-auth-message, .idlm-account-success)::before,
+body.idlm-crm-design .idlm-wrap .notice::before {
+    content: var(--idlm-notice-icon);
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    width: 18px;
+    height: 18px;
+    color: var(--idlm-notice-ink);
+    font-family: dashicons;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1;
+}
+
+body.idlm-crm-design :is(.idlm-alert, .idlm-auth-message, .idlm-account-success) a,
+body.idlm-crm-design .idlm-wrap .notice a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+body.idlm-crm-design .idlm-wrap .notice p {
+    margin: 0;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+}
+
+body.idlm-crm-design :is(.idlm-auth-message:not(.is-error), .idlm-alert-success, .idlm-account-success, .idlm-wrap .notice-success) {
+    --idlm-notice-fill: var(--idlm-success-soft);
+    --idlm-notice-line: var(--idlm-success-line);
+    --idlm-notice-ink: var(--idlm-success);
+    --idlm-notice-icon: "\f12a";
+}
+
+body.idlm-crm-design :is(.idlm-alert-warning, .idlm-wrap .notice-warning) {
+    --idlm-notice-fill: var(--idlm-warning-soft);
+    --idlm-notice-line: var(--idlm-warning-line);
+    --idlm-notice-ink: var(--idlm-warning);
+    --idlm-notice-icon: "\f534";
+}
+
+body.idlm-crm-design :is(.idlm-alert-danger, .idlm-alert-error, .idlm-auth-message.is-error, .idlm-wrap .notice-error) {
+    --idlm-notice-fill: var(--idlm-danger-soft);
+    --idlm-notice-line: var(--idlm-danger-line);
+    --idlm-notice-ink: var(--idlm-danger);
+    --idlm-notice-icon: "\f153";
+}
+
+/* --- 19. Toasts --------------------------------------------------------------- */
+body.idlm-crm-design .idlm-toast-stack {
+    position: fixed;
+    right: var(--idlm-space-4);
+    bottom: var(--idlm-space-4);
+    z-index: var(--idlm-layer-toast);
+    display: flex;
+    flex-direction: column;
+    gap: var(--idlm-space-2);
+    width: min(380px, calc(100vw - (var(--idlm-space-4) * 2)));
+    pointer-events: none;
+}
+
+/* Toasts sit in the bottom right corner, newest lowest. Screens with a sticky save bar lift them clear of it. */
+body.idlm-crm-design:has(.idlm-settings-savebar, .idlm-quote-actions) .idlm-toast-stack {
+    bottom: calc(var(--idlm-space-5) * 4);
+}
+
+body.idlm-crm-design .idlm-toast {
+    --idlm-toast-ink: var(--idlm-info);
+    position: static;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--idlm-space-2);
+    max-width: none;
+    padding: 10px var(--idlm-space-2) 10px var(--idlm-space-3);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    box-shadow: var(--idlm-shadow-lg);
+    color: var(--idlm-text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.4;
+    pointer-events: auto;
+}
+
+body.idlm-crm-design .idlm-toast.success {
+    --idlm-toast-ink: var(--idlm-success);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-toast.error {
+    --idlm-toast-ink: var(--idlm-danger);
+    border-color: var(--idlm-danger-line);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-toast.warning {
+    --idlm-toast-ink: var(--idlm-warning);
+    border-color: var(--idlm-warning-line);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-toast.info {
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-toast__icon {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--idlm-toast-ink);
+    font-size: 18px;
+    line-height: 18px;
+}
+
+body.idlm-crm-design .idlm-toast__message {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+body.idlm-crm-design .idlm-toast__action {
+    flex: 0 0 auto;
+    padding: 0 var(--idlm-space-1);
+    border: 0;
+    background: transparent;
+    color: var(--idlm-action);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+body.idlm-crm-design .idlm-toast__dismiss {
+    display: grid;
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: var(--idlm-radius-compact);
+    background: transparent;
+    color: var(--idlm-text-muted);
+    cursor: pointer;
+}
+
+body.idlm-crm-design .idlm-toast__dismiss:hover {
+    background: var(--idlm-hover-tint);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-toast__dismiss .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+}
+
+body.idlm-crm-design :is(.idlm-toast__action, .idlm-toast__dismiss):focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: 1px;
+}
+
+/* Settings promotes saved notices into its own stack; it takes the same position and look. */
+body.idlm-crm-design .idlm-settings-toast-stack {
+    top: auto;
+    right: var(--idlm-space-4);
+    bottom: var(--idlm-space-4);
+    left: auto;
+    align-items: flex-end;
+    transform: none;
+}
+
+body.idlm-crm-design .idlm-settings-toast-stack .notice.idlm-settings-toast:is(.notice-success, .notice-info, .notice-error, .notice-warning) {
+    --idlm-notice-fill: var(--idlm-surface);
+    border-color: var(--idlm-border);
+    background: var(--idlm-surface);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-settings-toast-stack .notice.idlm-settings-toast p {
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-settings-toast-stack .notice.idlm-settings-toast .notice-dismiss:is(:hover, :focus-visible) {
+    background: var(--idlm-hover-tint);
+}
+
+/* --- 20. States: empty, loading, error, success ------------------------------- */
+body.idlm-crm-design .idlm-state {
+    align-content: center;
+    gap: var(--idlm-space-2);
+    min-height: 120px;
+    padding: var(--idlm-space-6);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    color: var(--idlm-text-muted);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-state strong {
+    color: var(--idlm-text);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-state.is-error {
+    border-color: var(--idlm-danger-line);
+    background: var(--idlm-danger-soft);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-state.is-success {
+    border-color: var(--idlm-success-line);
+    background: var(--idlm-success-soft);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-state__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--idlm-space-2);
+    margin-top: var(--idlm-space-1);
+}
+
+/* Spinner: idlm-spinner, plus the WordPress .spinner markup the front end never styled. */
+body.idlm-crm-design :is(.idlm-spinner, .spinner.is-active, .idlm-state__spinner) {
+    display: inline-block;
+    float: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    box-sizing: border-box;
+    border: 2px solid var(--idlm-border-strong);
+    border-top-color: var(--idlm-action);
+    border-radius: var(--idlm-radius-pill);
+    background: none;
+    opacity: 1;
+    visibility: visible;
+    vertical-align: -3px;
+    animation: idlm-state-spin 800ms linear infinite;
+}
+
+body.idlm-crm-design .idlm-state__spinner {
+    width: 20px;
+    height: 20px;
+}
+
+/* Skeleton: set the size with width and height, or use the row and text helpers. */
+body.idlm-crm-design .idlm-skeleton {
+    display: block;
+    min-height: 12px;
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-readonly);
+}
+
+body.idlm-crm-design .idlm-skeleton-text {
+    display: block;
+    height: 12px;
+    margin-block: var(--idlm-space-2);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-readonly);
+}
+
+body.idlm-crm-design .idlm-skeleton-row {
+    display: block;
+    height: 44px;
+    border-bottom: 1px solid var(--idlm-border);
+    background: var(--idlm-surface-soft);
+}
+
+/* --- 21. Overlays: shared scrim, close control and footer order --------------- */
+body.idlm-crm-design .idlm-modal {
+    background-color: var(--idlm-scrim);
+}
+
+/* No glass: STD-VIS-3. */
+body.idlm-crm-design .idlm-drawer {
+    background: var(--idlm-scrim);
+    backdrop-filter: none;
+}
+
+body.idlm-crm-design .idlm-filters-backdrop {
+    background: var(--idlm-scrim);
+    backdrop-filter: none;
+}
+
+body.idlm-crm-design .idlm-workspace-backdrop {
+    background: var(--idlm-scrim);
+}
+
+body.idlm-crm-design .idlm-modal-content {
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius-panel);
+    box-shadow: var(--idlm-shadow-lg);
+}
+
+body.idlm-crm-design .idlm-modal-header h2,
+body.idlm-crm-design .idlm-dialog .idlm-dialog__title {
+    color: var(--idlm-text);
+    font-size: 1rem;
+    font-weight: 650;
+    letter-spacing: -0.005em;
+    line-height: 1.35;
+}
+
+/* One close control: 32px on desktop, 44px at phone width, never red on hover. */
+body.idlm-crm-design .idlm-dialog .idlm-dialog__close,
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-close,
+body.idlm-crm-design .idlm-wrap .idlm-close,
+body.idlm-crm-design .idlm-modal .idlm-close,
+body.idlm-crm-design .idlm-global-sidebar #idlm-global-tasks-sidebar-close {
+    display: inline-grid;
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: var(--idlm-radius);
+    background: transparent;
+    color: var(--idlm-text-muted);
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+    cursor: pointer;
+}
+
+body.idlm-crm-design .idlm-dialog .idlm-dialog__close:hover,
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-close:hover,
+body.idlm-crm-design .idlm-wrap .idlm-close:hover,
+body.idlm-crm-design .idlm-modal .idlm-close:hover,
+body.idlm-crm-design .idlm-global-sidebar #idlm-global-tasks-sidebar-close:hover {
+    border: 0;
+    background: var(--idlm-hover-tint);
+    color: var(--idlm-text);
+    outline: 0;
+}
+
+body.idlm-crm-design .idlm-dialog .idlm-dialog__close:focus-visible,
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-close:focus-visible,
+body.idlm-crm-design .idlm-wrap .idlm-close:focus-visible,
+body.idlm-crm-design .idlm-modal .idlm-close:focus-visible,
+body.idlm-crm-design .idlm-global-sidebar #idlm-global-tasks-sidebar-close:focus-visible {
+    background: var(--idlm-hover-tint);
+    color: var(--idlm-text);
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: 0;
+}
+
+body.idlm-crm-design .idlm-dialog .idlm-dialog__close {
+    margin: -4px -6px 0 0;
+}
+
+body.idlm-crm-design .idlm-global-sidebar #idlm-global-tasks-sidebar-close {
+    position: absolute;
+    top: var(--idlm-space-3);
+    right: var(--idlm-space-3);
+    margin: 0;
+}
+
+/* Dialog */
+body.idlm-crm-design .idlm-dialog .idlm-dialog__header {
+    padding: var(--idlm-space-4) var(--idlm-space-5);
+}
+
+body.idlm-crm-design .idlm-dialog .idlm-dialog__description {
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-dialog .idlm-dialog__body {
+    padding: var(--idlm-space-4) var(--idlm-space-5);
+    scrollbar-gutter: auto;
+}
+
+body.idlm-crm-design .idlm-dialog .idlm-dialog__body[hidden] {
+    display: none;
+}
+
+/* Footer order everywhere: secondary, then primary last and right. Phones reverse it. */
+body.idlm-crm-design .idlm-dialog :is(.idlm-dialog__footer, .idlm-dialog__actions) {
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--idlm-space-2);
+    margin: 0;
+    padding: var(--idlm-space-3) var(--idlm-space-5);
+    border-top: 1px solid var(--idlm-border);
+    background: var(--idlm-surface-soft);
+}
+
+body.idlm-crm-design .idlm-dialog .idlm-dialog__body > .idlm-dialog__actions {
+    margin: var(--idlm-space-4) calc(var(--idlm-space-5) * -1) calc(var(--idlm-space-4) * -1);
+}
+
+/* A confirmation reads as a sentence and two buttons, without a dividing rule. */
+body.idlm-crm-design #idlm-action-dialog .idlm-dialog__panel {
+    width: min(440px, calc(100vw - 48px));
+}
+
+body.idlm-crm-design #idlm-action-dialog .idlm-dialog__header:has(+ .idlm-dialog__body[hidden]) {
+    border-bottom: 0;
+    padding-bottom: var(--idlm-space-2);
+}
+
+/* Unsaved changes: three choices on one row, the destructive one set apart. */
+body.idlm-crm-design .idlm-dialog--stacked-actions .idlm-dialog__footer {
+    flex-direction: row;
+}
+
+body.idlm-crm-design .idlm-dialog--stacked-actions .idlm-dialog__footer .idlm-btn {
+    width: auto;
+}
+
+body.idlm-crm-design .idlm-dialog--stacked-actions .idlm-dialog__footer .idlm-btn-danger-quiet {
+    margin-right: auto;
+}
+
+body.idlm-crm-design #idlm-unsaved-changes-modal .idlm-dialog__body:has(#idlm-unsaved-fields-list:empty):has(.idlm-field-error[hidden]) {
+    display: none;
+}
+
+body.idlm-crm-design #idlm-unsaved-changes-modal .idlm-dialog__header:has(+ .idlm-dialog__body #idlm-unsaved-fields-list:empty) {
+    border-bottom: 0;
+}
+
+/* Filter drawer */
+body.idlm-crm-design .idlm-filters-panel {
+    display: flex;
+    flex-direction: column;
+    width: min(400px, 100%);
+    border-width: 0 0 0 1px;
+    border-radius: 0;
+    box-shadow: var(--idlm-shadow-lg);
+}
+
+body.idlm-crm-design .idlm-filters-panel-header {
+    flex: 0 0 auto;
+    align-items: flex-start;
+    padding: var(--idlm-space-4) var(--idlm-space-5);
+}
+
+body.idlm-crm-design .idlm-filters-panel-header h2 {
+    margin: 0 0 2px;
+    font-size: 1rem;
+    font-weight: 650;
+}
+
+body.idlm-crm-design .idlm-filters-panel-header p {
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-panel-body {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    padding: var(--idlm-space-4) var(--idlm-space-5);
+}
+
+/* The log and user panels inherit align-items: end from their old inline toolbar. */
+body.idlm-crm-design .idlm-filters-panel {
+    align-items: stretch;
+}
+
+/* A panel whose fields sit straight in the body (Pipeline, logs) gets the same two-column rhythm as Leads. */
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-panel-body:has(> .idlm-filter-group) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-panel-body > .idlm-filter-group {
+    width: auto;
+    min-width: 0;
+    margin: 0;
+}
+
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-panel-body > .idlm-filter-group .idlm-input {
+    width: 100%;
+}
+
+@media (max-width: 480px) {
+    body.idlm-crm-design .idlm-filters-panel .idlm-filters-panel-body:has(> .idlm-filter-group) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Put Clear and Apply here. Secondary first, primary last. */
+body.idlm-crm-design .idlm-filters-panel-footer {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    gap: var(--idlm-space-2);
+    padding: var(--idlm-space-3) var(--idlm-space-5);
+    border-top: 1px solid var(--idlm-border);
+    background: var(--idlm-surface-soft);
+}
+
+/* --- 22. Sign-in, password reset and access ----------------------------------- */
+body.idlm-crm-design:has(.idlm-login-shell) {
+    background: var(--idlm-canvas);
+}
+
+body.idlm-crm-design .idlm-login-shell.idlm-login-shell {
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-login-panel-heading h2 {
+    font-size: 1.5rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+}
+
+body.idlm-crm-design .idlm-login-panel-heading p {
+    font-size: 0.875rem;
+}
+
+body.idlm-crm-design .idlm-login-context h1 {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+body.idlm-crm-design .idlm-login-form .idlm-form-group {
+    margin: 0 0 var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-login-form label,
+body.idlm-crm-design .idlm-login-form .idlm-form-group label {
+    margin-bottom: 6px;
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-login-form .idlm-required {
+    color: var(--idlm-text-muted);
+    font-weight: 400;
+}
+
+body.idlm-crm-design .idlm-login-form .input {
+    min-height: var(--idlm-target-size);
+    border-color: var(--idlm-control-line);
+}
+
+body.idlm-crm-design .idlm-login-form .input:focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: 0;
+    border-color: var(--idlm-focus-ring);
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-login-form .login-remember {
+    margin: 0;
+}
+
+body.idlm-crm-design .idlm-login-form .login-remember label {
+    min-height: 24px;
+    margin: 0;
+    font-weight: 400;
+}
+
+body.idlm-crm-design .idlm-login-form .login-submit {
+    margin-top: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-login-form .button-primary {
+    min-height: var(--idlm-target-size);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-login-form .button-primary:is(:hover, :focus-visible) {
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-login-form .button-primary:focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: 2px;
+}
+
+body.idlm-crm-design .idlm-login-reset {
+    margin-top: var(--idlm-space-3);
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-login-help {
+    margin-top: var(--idlm-space-5);
+    padding-top: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-login-attribution {
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design .idlm-auth-message {
+    margin: var(--idlm-space-4) 0 0;
+}
+
+body.idlm-crm-design .idlm-card.idlm-access-restricted h3 {
+    color: var(--idlm-text);
+}
+
+/* --- 23. My Account ------------------------------------------------------------ */
+/* The sidebar already carries the brand, so the summary leads with the person. */
+body.idlm-crm-design .idlm-account-brand {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-account-layout {
+    grid-template-columns: minmax(220px, 260px) minmax(0, 760px);
+    gap: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-account-layout > .idlm-card {
+    margin: 0;
+}
+
+body.idlm-crm-design .idlm-account-summary {
+    text-align: left;
+}
+
+body.idlm-crm-design .idlm-account-avatar {
+    width: 56px;
+    height: 56px;
+    border: 0;
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-account-summary h2 {
+    margin: var(--idlm-space-3) 0 2px;
+    font-size: 1rem;
+    font-weight: 650;
+}
+
+body.idlm-crm-design .idlm-account-summary p {
+    font-size: 0.8125rem;
+    overflow-wrap: anywhere;
+}
+
+body.idlm-crm-design .idlm-account-roles {
+    justify-content: flex-start;
+    margin-top: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-account-signout {
+    width: 100%;
+    margin-top: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-account-form h2 {
+    margin-bottom: var(--idlm-space-3);
+    font-size: 0.875rem;
+    font-weight: 650;
+}
+
+body.idlm-crm-design .idlm-account-form > section + section {
+    margin-top: var(--idlm-space-5);
+    padding-top: var(--idlm-space-5);
+}
+
+body.idlm-crm-design .idlm-account-form .idlm-card-desc {
+    margin: -6px 0 var(--idlm-space-3);
+    font-size: 0.8125rem;
+}
+
+/* The password toggle overlaps its field, so it must stay inside the 34px control. */
+body.idlm-crm-design .idlm-account-form .idlm-password-toggle {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    min-height: 30px;
+    right: 2px;
+}
+
+body.idlm-crm-design .idlm-account-actions {
+    margin-top: var(--idlm-space-4);
+}
+
+/* --- 24. Phone: navigation, page header and overlays ------------------------- */
+body.idlm-crm-design .idlm-workspace-topbar {
+    display: none;
+}
+
+@media (max-width: 782px) {
+    body.idlm-crm-design {
+        --idlm-sticky-top: var(--idlm-workspace-topbar);
+    }
+
+    body.idlm-crm-design .idlm-workspace {
+        grid-template-rows: auto 1fr;
+    }
+
+    body.idlm-crm-design .idlm-workspace-topbar {
+        position: sticky;
+        top: 0;
+        z-index: var(--idlm-layer-sticky);
+        display: flex;
+        align-items: center;
+        gap: var(--idlm-space-1);
+        min-height: var(--idlm-workspace-topbar);
+        padding: 3px var(--idlm-space-2) 3px 4px;
+        box-sizing: border-box;
+        border-bottom: 1px solid var(--idlm-border);
+        background: var(--idlm-surface);
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-mobile-toggle {
+        position: static;
+        flex: 0 0 var(--idlm-target-size);
+        width: var(--idlm-target-size);
+        height: var(--idlm-target-size);
+        border: 0;
+        background: transparent;
+        color: var(--idlm-text);
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-mobile-toggle:hover {
+        border: 0;
+        background: var(--idlm-hover-tint);
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-mobile-toggle:focus-visible {
+        outline: 2px solid var(--idlm-focus-ring);
+        outline-offset: -2px;
+        background: var(--idlm-hover-tint);
+    }
+
+    body.idlm-crm-design .idlm-workspace-topbar-title {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        color: var(--idlm-text);
+        font-size: 1rem;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    body.idlm-crm-design .idlm-workspace-today-slot[data-idlm-today-slot="topbar"] {
+        flex: 0 0 auto;
+    }
+
+    /* Top-bar version of Today's work: icon and count, with the name kept for screen readers. */
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-topbar .idlm-workspace-today {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: auto;
+        min-height: var(--idlm-target-size);
+        padding: 0 var(--idlm-space-2);
+        color: var(--idlm-text);
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-topbar .idlm-workspace-today:is(:hover, .is-active) {
+        background: var(--idlm-hover-tint);
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-topbar .idlm-workspace-today:focus-visible {
+        outline: 2px solid var(--idlm-focus-ring);
+        outline-offset: -2px;
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-topbar .idlm-floating-tasks-icon,
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-topbar #idlm-floating-tasks-btn.idlm-workspace-today .idlm-floating-tasks-icon {
+        color: var(--idlm-action);
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-topbar .idlm-floating-tasks-label {
+        color: var(--idlm-text);
+        font-size: 0.8125rem;
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-topbar .idlm-workspace-today[data-idlm-today-count] .idlm-floating-tasks-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-workspace-topbar .idlm-floating-tasks-badge {
+        color: var(--idlm-danger);
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* Drawer */
+    body.idlm-crm-design .idlm-workspace-sidebar {
+        box-shadow: var(--idlm-shadow-lg);
+    }
+
+    body.idlm-crm-design .idlm-workspace-drawer-close {
+        display: grid;
+        flex: 0 0 var(--idlm-target-size);
+        width: var(--idlm-target-size);
+        height: var(--idlm-target-size);
+        margin-right: -4px;
+        padding: 0;
+        place-items: center;
+        border: 0;
+        border-radius: var(--idlm-button-radius);
+        background: transparent;
+        color: var(--idlm-text-inverse);
+        cursor: pointer;
+    }
+
+    body.idlm-crm-design .idlm-workspace-drawer-close:hover {
+        background: var(--idlm-sidebar-hover);
+    }
+
+    body.idlm-crm-design .idlm-workspace-nav-item {
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-workspace-account-menu a {
+        min-height: var(--idlm-target-size);
+    }
+
+    /* Page header: the top bar names the page and stays put. The header scrolls away, so it
+       can no longer take a fifth of the screen. The h1 stays in the outline for screen readers. */
+    body.idlm-crm-design .idlm-workspace-content {
+        padding-top: 0;
+    }
+
+    body.idlm-crm-design .idlm-workspace-content > .idlm-wrap.idlm-wrap {
+        padding-top: var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header {
+        position: static;
+        min-height: 0;
+        margin: calc(var(--idlm-space-3) * -1) -12px var(--idlm-space-3);
+        padding: var(--idlm-space-2) 12px;
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header > :first-child:has(h1),
+    body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header > h1 {
+        position: absolute;
+        display: block;
+        flex: none;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header:not(:has(> :nth-child(2))) {
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header-actions {
+        justify-content: flex-start;
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-bulk-capi-bar {
+        top: calc(var(--idlm-sticky-top) + var(--idlm-space-2));
+    }
+
+    /* Touch sizes: 44px targets, and 16px text so iOS does not zoom a focused field. */
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn,
+    body.idlm-crm-design .idlm-pagination-btn {
+        min-height: var(--idlm-target-size);
+        font-size: 0.8125rem;
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-icon {
+        width: var(--idlm-target-size);
+        min-width: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-input, .idlm-select) {
+        min-height: var(--idlm-target-size);
+        font-size: 1rem;
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(input[type="checkbox"], input[type="radio"]) {
+        width: 20px;
+        height: 20px;
+    }
+
+    body.idlm-crm-design .idlm-account-form .idlm-password-toggle {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
+    }
+
+    body.idlm-crm-design .idlm-dialog .idlm-dialog__close,
+    body.idlm-crm-design .idlm-filters-panel .idlm-filters-close,
+    body.idlm-crm-design .idlm-wrap .idlm-close,
+    body.idlm-crm-design .idlm-modal .idlm-close,
+    body.idlm-crm-design .idlm-global-sidebar #idlm-global-tasks-sidebar-close {
+        flex-basis: var(--idlm-target-size);
+        width: var(--idlm-target-size);
+        height: var(--idlm-target-size);
+        min-width: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-global-sidebar #idlm-global-tasks-sidebar-close {
+        top: 6px;
+        right: 6px;
+    }
+
+    /* Today's work takes the whole screen. */
+    body.idlm-crm-design .idlm-global-sidebar {
+        width: 100%;
+        border-left: 0;
+    }
+
+    body.idlm-crm-design .idlm-global-sidebar .idlm-queue-action {
+        min-height: 36px;
+    }
+
+    body.idlm-crm-design .idlm-global-sidebar .idlm-task-actions {
+        flex-wrap: nowrap;
+    }
+
+    /* Dialogs rise from the bottom edge, within thumb reach. Long forms fill the height. */
+    body.idlm-crm-design .idlm-dialog.idlm-dialog {
+        align-items: flex-end;
+        padding: 0;
+    }
+
+    body.idlm-crm-design .idlm-dialog .idlm-dialog__panel,
+    body.idlm-crm-design #idlm-action-dialog .idlm-dialog__panel {
+        width: 100%;
+        max-width: none;
+        max-height: calc(100dvh - var(--idlm-space-6));
+        border-width: 1px 0 0;
+        border-radius: var(--idlm-radius-panel) var(--idlm-radius-panel) 0 0;
+    }
+
+    body.idlm-crm-design .idlm-dialog .idlm-dialog__panel:is(.idlm-import-dialog-panel, .idlm-export-dialog-panel, .idlm-log-dialog-panel, .idlm-trace-dialog) {
+        height: 100dvh;
+        max-height: none;
+        border-radius: 0;
+    }
+
+    body.idlm-crm-design .idlm-dialog .idlm-dialog__header,
+    body.idlm-crm-design .idlm-dialog .idlm-dialog__body {
+        padding-inline: var(--idlm-space-4);
+    }
+
+    /* Primary sits on top, nearest the thumb. Source order stays secondary then primary. */
+    body.idlm-crm-design .idlm-dialog :is(.idlm-dialog__footer, .idlm-dialog__actions),
+    body.idlm-crm-design .idlm-dialog--stacked-actions .idlm-dialog__footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        padding: var(--idlm-space-3) var(--idlm-space-4) max(var(--idlm-space-3), env(safe-area-inset-bottom));
+    }
+
+    body.idlm-crm-design .idlm-dialog :is(.idlm-dialog__footer, .idlm-dialog__actions) .idlm-btn,
+    body.idlm-crm-design .idlm-dialog--stacked-actions .idlm-dialog__footer .idlm-btn {
+        width: 100%;
+        margin: 0;
+    }
+
+    /* Plain modals and the filter drawer become full-screen workspaces. */
+    body.idlm-crm-design .idlm-modal:not(.idlm-dialog) {
+        padding: 0;
+    }
+
+    body.idlm-crm-design .idlm-modal:not(.idlm-dialog) .idlm-modal-content {
+        width: 100%;
+        max-width: none;
+        height: 100dvh;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+    }
+
+    body.idlm-crm-design .idlm-filters-panel {
+        top: 0;
+        width: 100%;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+    }
+
+    body.idlm-crm-design .idlm-filters-panel .idlm-filters-panel-body {
+        max-height: none;
+    }
+
+    /* The legacy phone rule floated this close button below its own title row. */
+    body.idlm-crm-design .idlm-modal .idlm-modal-header {
+        padding-right: 0;
+    }
+
+    body.idlm-crm-design .idlm-modal .idlm-modal-header .idlm-close {
+        position: static;
+    }
+
+    body.idlm-crm-design .idlm-filters-panel-footer > .idlm-btn {
+        flex: 1 1 0;
+    }
+
+    /* Phones keep the bottom edge and use the full width between the gutters. */
+    body.idlm-crm-design .idlm-toast-stack {
+        right: var(--idlm-space-3);
+        left: var(--idlm-space-3);
+        width: auto;
+        max-width: none;
+    }
+
+    body.idlm-crm-design .idlm-toast__dismiss {
+        flex-basis: 32px;
+        width: 32px;
+        height: 32px;
+        margin-block: -6px;
+    }
+
+    /* My Account: identity on one compact row, so the form starts sooner. */
+    body.idlm-crm-design .idlm-account-layout {
+        grid-template-columns: 1fr;
+        gap: var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design .idlm-wrap .idlm-account-summary {
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+        column-gap: var(--idlm-space-3);
+        align-items: center;
+    }
+
+    body.idlm-crm-design .idlm-account-avatar {
+        grid-row: 1 / span 2;
+    }
+
+    body.idlm-crm-design .idlm-account-summary h2 {
+        align-self: end;
+        margin: 0;
+    }
+
+    body.idlm-crm-design .idlm-account-summary p {
+        align-self: start;
+    }
+
+    body.idlm-crm-design .idlm-account-roles,
+    body.idlm-crm-design .idlm-wrap .idlm-account-signout {
+        grid-column: 1 / -1;
+    }
+
+    /* Sign-in: the form comes first. The marketing copy would push it below the fold. */
+    body.idlm-crm-design .idlm-wrap:has(> .idlm-login-shell) {
+        margin: 0;
+        padding: 0;
+    }
+
+    body.idlm-crm-design .idlm-login-shell.idlm-login-shell {
+        width: 100%;
+        min-height: 100dvh;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        grid-template-rows: auto 1fr;
+    }
+
+    body.idlm-crm-design .idlm-login-context {
+        padding: var(--idlm-space-3) var(--idlm-space-5);
+    }
+
+    body.idlm-crm-design .idlm-login-context-copy,
+    body.idlm-crm-design .idlm-login-access-note {
+        display: none;
+    }
+
+    body.idlm-crm-design .idlm-login-panel {
+        justify-content: flex-start;
+        padding: var(--idlm-space-6) var(--idlm-space-5);
+    }
+
+    body.idlm-crm-design .idlm-login-form .input {
+        font-size: 1rem;
+    }
+}
+
+/* --- 25. Reduced motion ------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    body.idlm-crm-design .idlm-wrap .idlm-btn:active,
+    body.idlm-crm-design .idlm-workspace .idlm-btn:active {
+        transform: none;
+    }
+
+    body.idlm-crm-design :is(.idlm-global-sidebar, .idlm-filters-panel, .idlm-toast) {
+        transition: none;
+    }
+
+    body.idlm-crm-design :is(.idlm-spinner, .spinner.is-active, .idlm-state__spinner) {
+        animation-duration: 2400ms;
+    }
+}
+
+/* --- 15. Stage and quality tones ----------------------------------------- */
+/* Green is good, blue is in progress, amber needs attention, red is bad. The label
+   always remains, and the tone follows the live selection with no script. Custom
+   stage names stay neutral until added here. */
+body.idlm-crm-design {
+    --idlm-danger-ink: color-mix(in srgb, var(--idlm-danger) 85%, var(--idlm-text));
+}
+
+body.idlm-crm-design #idlm-leads-table tbody select[data-field="stage"]:has(option:is([value="Won"]):checked),
+body.idlm-crm-design #idlm-lead-drawer select[data-field="stage"]:has(option:is([value="Won"]):checked),
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="Won"] {
+    border-color: var(--idlm-success);
+    background-color: var(--idlm-success-soft);
+    color: var(--idlm-success);
+    font-weight: 700;
+}
+
+body.idlm-crm-design .idlm-kanban-column[data-stage="Won"] .idlm-kanban-column-title::before {
+    background: var(--idlm-success);
+}
+
+body.idlm-crm-design #idlm-leads-table tbody select[data-field="stage"]:has(option:is([value="Quote Shared"],[value="Negotiation"]):checked),
+body.idlm-crm-design #idlm-lead-drawer select[data-field="stage"]:has(option:is([value="Quote Shared"],[value="Negotiation"]):checked),
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="Quote Shared"],
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="Negotiation"] {
+    border-color: var(--idlm-success-line);
+    background-color: var(--idlm-success-soft);
+    color: var(--idlm-success);
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-kanban-column[data-stage="Quote Shared"] .idlm-kanban-column-title::before,
+body.idlm-crm-design .idlm-kanban-column[data-stage="Negotiation"] .idlm-kanban-column-title::before {
+    background: var(--idlm-success);
+}
+
+body.idlm-crm-design #idlm-leads-table tbody select[data-field="stage"]:has(option:is([value="Qualified"],[value="Sales Connected"],[value="Studio Visit Scheduled"],[value="QS - Visit Pending"],[value="Visit Completed"]):checked),
+body.idlm-crm-design #idlm-lead-drawer select[data-field="stage"]:has(option:is([value="Qualified"],[value="Sales Connected"],[value="Studio Visit Scheduled"],[value="QS - Visit Pending"],[value="Visit Completed"]):checked),
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="Qualified"],
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="Sales Connected"],
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="Studio Visit Scheduled"],
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="QS - Visit Pending"],
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="Visit Completed"] {
+    border-color: var(--idlm-info-line);
+    background-color: var(--idlm-info-soft);
+    color: var(--idlm-info);
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-kanban-column[data-stage="Qualified"] .idlm-kanban-column-title::before,
+body.idlm-crm-design .idlm-kanban-column[data-stage="Sales Connected"] .idlm-kanban-column-title::before,
+body.idlm-crm-design .idlm-kanban-column[data-stage="Studio Visit Scheduled"] .idlm-kanban-column-title::before,
+body.idlm-crm-design .idlm-kanban-column[data-stage="QS - Visit Pending"] .idlm-kanban-column-title::before,
+body.idlm-crm-design .idlm-kanban-column[data-stage="Visit Completed"] .idlm-kanban-column-title::before {
+    background: var(--idlm-info);
+}
+
+body.idlm-crm-design #idlm-leads-table tbody select[data-field="stage"]:has(option:is([value="RNR"],[value="On Hold"]):checked),
+body.idlm-crm-design #idlm-lead-drawer select[data-field="stage"]:has(option:is([value="RNR"],[value="On Hold"]):checked),
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="RNR"],
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="On Hold"] {
+    border-color: var(--idlm-warning-line);
+    background-color: var(--idlm-warning-soft);
+    color: var(--idlm-warning);
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-kanban-column[data-stage="RNR"] .idlm-kanban-column-title::before,
+body.idlm-crm-design .idlm-kanban-column[data-stage="On Hold"] .idlm-kanban-column-title::before {
+    background: var(--idlm-warning);
+}
+
+body.idlm-crm-design #idlm-leads-table tbody select[data-field="stage"]:has(option:is([value="Lost"]):checked),
+body.idlm-crm-design #idlm-lead-drawer select[data-field="stage"]:has(option:is([value="Lost"]):checked),
+body.idlm-crm-design .idlm-drawer-status-value[data-idlm-stage="Lost"] {
+    border-color: var(--idlm-danger-line);
+    background-color: var(--idlm-danger-soft);
+    color: var(--idlm-danger-ink);
+    font-weight: 700;
+}
+
+body.idlm-crm-design .idlm-kanban-column[data-stage="Lost"] .idlm-kanban-column-title::before {
+    background: var(--idlm-danger);
+}
+
+body.idlm-crm-design #idlm-leads-table tbody select[data-field="lead_quality"]:has(option[value="Qualified"]:checked):not([data-idlm-plan-pending]),
+body.idlm-crm-design #idlm-lead-drawer select#idlm-edit-lead-quality:has(option[value="Qualified"]:checked):not([data-idlm-plan-pending]),
+body.idlm-crm-design #idlm-lead-drawer [data-idlm-quality="Qualified"] {
+    border-color: var(--idlm-success-line);
+    background-color: var(--idlm-success-soft);
+    color: var(--idlm-success);
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-leads-table tbody select[data-field="lead_quality"]:has(option[value="Qualified"]:checked)[data-idlm-plan-pending],
+body.idlm-crm-design #idlm-lead-drawer select#idlm-edit-lead-quality:has(option[value="Qualified"]:checked)[data-idlm-plan-pending],
+body.idlm-crm-design #idlm-lead-drawer [data-idlm-quality="plan-pending"] {
+    border-color: var(--idlm-warning-line);
+    background-color: var(--idlm-warning-soft);
+    color: var(--idlm-warning);
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-leads-table tbody select[data-field="lead_quality"]:has(option[value="Unqualified"]:checked),
+body.idlm-crm-design #idlm-lead-drawer select#idlm-edit-lead-quality:has(option[value="Unqualified"]:checked),
+body.idlm-crm-design #idlm-lead-drawer [data-idlm-quality="Unqualified"] {
+    border-color: var(--idlm-danger-line);
+    background-color: var(--idlm-danger-soft);
+    color: var(--idlm-danger-ink);
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-value:is([data-idlm-stage], [data-idlm-quality]) {
+    display: inline-block;
+    padding: 2px var(--idlm-space-2);
+    border-width: 1px;
+    border-style: solid;
+    border-radius: var(--idlm-radius-compact);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-value[data-idlm-stage="New"],
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-value[data-idlm-stage="Contacted"],
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-value[data-idlm-quality=""] {
+    border-color: var(--idlm-border);
+    background-color: var(--idlm-surface-soft);
+}
+
+/* The open list stays plain so every choice is readable, whichever tone is selected. */
+body.idlm-crm-design .idlm-workspace select:is([data-field="stage"], [data-field="lead_quality"], #idlm-edit-lead-quality) option {
+    background-color: var(--idlm-surface);
+    color: var(--idlm-text);
+    font-weight: 400;
+}
+
+/* --- 16. Pointer focus ---------------------------------------------------- */
+/* After a mouse or touch click, a control returns to its resting look. The class is
+   removed on Tab, so the keyboard ring is untouched. The unused ID raises specificity
+   above the ID-scoped screen rules without resorting to an override flag. */
+body.idlm-crm-design.idlm-pointer-input :is(a, button, select, summary, input, textarea, [tabindex], #idlm-pointer-focus):is(:focus, :focus-visible) {
+    outline: none;
+}
+
+/* Selected tabs draw their underline with box-shadow, so they keep it after a click. */
+body.idlm-crm-design.idlm-pointer-input :is(a, button, select, summary, input, textarea, [tabindex], #idlm-pointer-focus):not(.active, .is-active, [aria-selected="true"], [aria-current]):is(:focus, :focus-visible) {
+    box-shadow: none;
+}
+
+body.idlm-crm-design.idlm-pointer-input :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, #idlm-pointer-focus):focus {
+    border-color: var(--idlm-control-line);
+}
+
+body.idlm-crm-design.idlm-pointer-input :is(select.idlm-input, select.idlm-select, select.idlm-drawer-control, #idlm-pointer-focus):focus {
+    border-color: var(--idlm-border-strong);
+}
+
+body.idlm-crm-design.idlm-pointer-input .idlm-permission-option:focus-within {
+    outline: none;
+}
+
+/* A row does not stay lit after the pointer has left it. */
+@media (min-width: 783px) {
+    body.idlm-crm-design.idlm-pointer-input #idlm-leads-table tbody tr:not(:hover) select {
+        border-color: transparent;
+        background-color: transparent;
+        background-size: 0 0;
+    }
+}
+
+/* --- 17. Phone touch targets ----------------------------------------------- */
+/* Final audit: every control a thumb can reach is 44px on phones. The unused ID raises
+   specificity above the screen rules that set dense desktop heights. */
+@media (max-width: 782px) {
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel, #idlm-phone-targets) :is(.idlm-btn, .idlm-input, .idlm-select, .idlm-pagination-btn, select.idlm-per-page-select, .idlm-tab-link, .idlm-log-tab, .idlm-dashboard-chip, .idlm-dashboard-bar, .idlm-dashboard-quality-row, .idlm-dashboard-link, .idlm-pending-calls-pill, .idlm-handoff-alert-pill, .idlm-whatsapp-unread-pill, .idlm-quotation-workspace-nav a, .idlm-users-tabs a, .idlm-quote-identity-link, .idlm-payment-row-link, .idlm-lead-row-open, .idlm-lead-row-phone, .idlm-dashboard-more > summary, .idlm-dashboard-data > summary, .idlm-settings-page summary, .idlm-secret-control__button, .idlm-action-link, .idlm-text-link, .idlm-account-form .idlm-password-toggle) {
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, #idlm-phone-targets) :is(.idlm-tab-link, .idlm-log-tab, .idlm-dashboard-chip, .idlm-dashboard-link, .idlm-pending-calls-pill, .idlm-quotation-workspace-nav a, .idlm-users-tabs a, .idlm-quote-identity-link, .idlm-payment-row-link, .idlm-lead-row-open, .idlm-lead-row-phone, .idlm-dashboard-more > summary, .idlm-dashboard-data > summary, .idlm-secret-control__button, .idlm-action-link, .idlm-text-link) {
+        display: inline-flex;
+        align-items: center;
+        min-width: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, #idlm-phone-targets) :is(.idlm-account-form .idlm-password-toggle, select.idlm-quick-edit) {
+        min-width: var(--idlm-target-size);
+    }
+
+    /* Checkboxes and radios keep a 20px mark inside a 44px hit area. */
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel, #idlm-phone-targets) input:is([type="checkbox"], [type="radio"]) {
+        position: relative;
+        flex: 0 0 var(--idlm-target-size);
+        width: var(--idlm-target-size);
+        height: var(--idlm-target-size);
+        margin: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        appearance: none;
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel, #idlm-phone-targets) input:is([type="checkbox"], [type="radio"])::before {
+        content: "";
+        position: absolute;
+        inset: 12px;
+        box-sizing: border-box;
+        border: 1.5px solid var(--idlm-control-line);
+        border-radius: 4px;
+        background: var(--idlm-surface);
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel, #idlm-phone-targets) input[type="radio"]::before {
+        border-radius: 50%;
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel, #idlm-phone-targets) input:is(:checked, :indeterminate)::before {
+        border-color: var(--idlm-action);
+        background: var(--idlm-action);
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel, #idlm-phone-targets) input[type="checkbox"]:checked::after {
+        content: "";
+        position: absolute;
+        top: 15px;
+        left: 19px;
+        width: 5px;
+        height: 10px;
+        border: solid var(--idlm-action-contrast);
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel, #idlm-phone-targets) input[type="checkbox"]:indeterminate::after {
+        content: "";
+        position: absolute;
+        top: 21px;
+        left: 17px;
+        width: 10px;
+        height: 2px;
+        background: var(--idlm-action-contrast);
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel, #idlm-phone-targets) input[type="radio"]:checked::after {
+        content: "";
+        position: absolute;
+        inset: 17px;
+        border-radius: 50%;
+        background: var(--idlm-action-contrast);
+    }
+
+    body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel, #idlm-phone-targets) input:is([type="checkbox"], [type="radio"]):disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+}
+
+/* Notices and landmarks take focus from a script to be announced. They aren't controls,
+   so they get no ring. */
+body.idlm-crm-design [tabindex="-1"]:focus {
+    outline: none;
+}

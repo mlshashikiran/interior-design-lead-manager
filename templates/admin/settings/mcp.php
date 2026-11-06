@@ -25,7 +25,7 @@ $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                     <article class="idlm-card">
                         <h3>Model Context Protocol (MCP) Server Configuration</h3>
                         <p class="idlm-card-desc">Expose secure, read-only analytical database access to AI models to perform complex lead and sales representative analysis.</p>
-                        <div class="idlm-alert idlm-mcp-status <?php echo $idlm_mcp_enabled ? 'idlm-alert-success' : 'idlm-alert-warning'; ?>">
+                        <div class="idlm-alert idlm-mcp-status <?php echo $idlm_mcp_enabled ? 'idlm-alert-success' : 'idlm-alert-warning'; ?>" data-idlm-notice-inline>
                             <strong><?php echo $idlm_mcp_enabled ? 'MCP enabled' : 'MCP disabled'; ?></strong>
                             <span> for the <?php echo esc_html(IDLM_Production_Security::environment_type()); ?> environment.</span>
                             <?php if ($idlm_mcp_enabled): ?>

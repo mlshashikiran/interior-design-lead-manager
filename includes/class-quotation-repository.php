@@ -10,6 +10,10 @@ if (!defined('ABSPATH')) {
 }
 
 final class IDLM_Quotation_Repository {
+    /** Exact values written by IDLM_Quotation_Schema::migrate_legacy_quotes(). */
+    const LEGACY_REVISION_REASON = 'Legacy quote migration';
+    const LEGACY_HISTORY_NOTE = 'Migrated from legacy lead quote fields; original dates and acceptance are not inferred.';
+
     /**
      * Resolve a quotation table name from the active WordPress prefix.
      *
@@ -161,22 +165,36 @@ final class IDLM_Quotation_Repository {
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
     }
 
-    /** Unknown/commercial history or a failed read prevents reopening a legacy quote. */
+    /**
+     * Unknown/commercial history or a failed read keeps a quote read-only. The
+     * exact rows written when a legacy lead quote was imported as Shared are not
+     * customer evidence of their own; anything else on the quote still counts.
+     */
     public static function has_commercial_history($quote_id) {
         global $wpdb;
         // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0099: has_commercial_history(): table() prefixes fixed suffixes; term/column and sort maps are closed allowlists; filters carry live lead scope, values/ID lists are prepared; current revision and transaction state must remain live.
-        $count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM " . self::table('quote_status_history') . " WHERE quote_id = %d AND (LOWER(TRIM(from_status)) NOT IN ('', 'draft', 'superseded') OR LOWER(TRIM(to_status)) NOT IN ('', 'draft', 'superseded'))", absint($quote_id)));
+        $count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM " . self::table('quote_status_history') . " WHERE quote_id = %d AND (LOWER(TRIM(from_status)) NOT IN ('', 'draft', 'superseded') OR LOWER(TRIM(to_status)) NOT IN ('', 'draft', 'superseded')) AND NOT (from_status = '' AND to_status = 'Shared' AND note = %s)", absint($quote_id), self::LEGACY_HISTORY_NOTE));
         // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
         if ('' !== (string) $wpdb->last_error || null === $count || (int) $count > 0) { return true; }
         // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0100: has_commercial_history(): table() prefixes fixed suffixes; term/column and sort maps are closed allowlists; filters carry live lead scope, values/ID lists are prepared; current revision and transaction state must remain live.
-        $count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM " . self::table('quote_revisions') . " WHERE quote_id = %d AND LOWER(TRIM(status)) NOT IN ('draft', 'superseded')", absint($quote_id)));
+        $count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM " . self::table('quote_revisions') . " WHERE quote_id = %d AND LOWER(TRIM(status)) NOT IN ('draft', 'superseded') AND NOT (status = 'Shared' AND revision_number = 1 AND created_by = 0 AND finalized_at IS NULL AND revision_reason = %s)", absint($quote_id), self::LEGACY_REVISION_REASON));
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+        return '' !== (string) $wpdb->last_error || null === $count || (int) $count > 0;
+    }
+
+    /** Whether a later quotation row exists for this lead. A failed read counts as yes. */
+    public static function has_newer_quote($quote) {
+        global $wpdb;
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- has_newer_quote(): table() prefixes a fixed suffix; values are prepared; quotation state must remain live.
+        $count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM " . self::table('quotes') . " WHERE lead_id = %d AND id > %d", absint($quote->lead_id ?? 0), absint($quote->id ?? 0)));
         // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
         return '' !== (string) $wpdb->last_error || null === $count || (int) $count > 0;
     }
 
     /**
-     * Return the canonical quotation for a lead. Revisions, rather than
-     * additional quotation rows, represent changes to a lead's proposal.
+     * Return the lead's working quotation. Revisions, rather than additional
+     * quotation rows, represent changes to a lead's proposal; a lead has a second
+     * row only when a new quotation followed a legacy quote, so the newest wins.
      *
      * @return object|null
      */
@@ -184,7 +202,7 @@ final class IDLM_Quotation_Repository {
         global $wpdb;
         // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0101: get_quote_for_lead(): table() prefixes fixed suffixes; term/column and sort maps are closed allowlists; filters carry live lead scope, values/ID lists are prepared; current revision and transaction state must remain live.
         // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
-        return $wpdb->get_row($wpdb->prepare("SELECT * FROM " . self::table('quotes') . " WHERE lead_id = %d ORDER BY id ASC LIMIT 1", absint($lead_id)));
+        return $wpdb->get_row($wpdb->prepare("SELECT * FROM " . self::table('quotes') . " WHERE lead_id = %d ORDER BY id DESC LIMIT 1", absint($lead_id)));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
     }
 

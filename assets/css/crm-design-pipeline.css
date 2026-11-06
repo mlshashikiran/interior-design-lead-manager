@@ -1,0 +1,759 @@
+/* IDLM CRM design layer: Pipeline board. Builder: Shashi.
+   Contract: design-system/interior-design-lead-manager/STANDARD.md. Every selector starts
+   with body.idlm-crm-design. Tokens only: no hex colours, no important overrides.
+   Page rules: design-system/interior-design-lead-manager/pages/kanban.md */
+
+/* --- 10.1 Page rhythm: header, summary strip, board fill the viewport ------ */
+body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header:has(+ .idlm-kanban-stats) {
+    margin-bottom: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-workspace-content:has(.idlm-kanban-board) {
+    padding-bottom: var(--idlm-space-3);
+}
+
+/* Needs update filter: amber because it asks for attention, with a clear pressed state. */
+body.idlm-crm-design #idlm-kanban-stale-leads-pill {
+    border-color: var(--idlm-warning-line);
+    background: var(--idlm-warning-soft);
+    color: var(--idlm-text);
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+body.idlm-crm-design #idlm-kanban-stale-leads-pill .dashicons {
+    color: var(--idlm-warning);
+}
+
+body.idlm-crm-design #idlm-kanban-stale-leads-pill:hover {
+    border-color: var(--idlm-warning);
+    transform: none;
+}
+
+body.idlm-crm-design #idlm-kanban-stale-leads-pill[aria-pressed="true"] {
+    border-color: var(--idlm-warning);
+    background: color-mix(in srgb, var(--idlm-warning) 16%, var(--idlm-surface));
+    box-shadow: inset 0 0 0 1px var(--idlm-warning);
+}
+
+/* --- 10.2 Summary strip: one surface, five facts ---------------------------- */
+body.idlm-crm-design .idlm-wrap .idlm-kanban-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+    margin: 0 0 var(--idlm-space-3);
+    overflow: hidden;
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-border);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-kanban-stats .idlm-metric {
+    flex: 1 1 8.5rem;
+    min-width: 0;
+    gap: 0;
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+    border: 0;
+    border-radius: 0;
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-kanban-stats .idlm-metric-label {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-kanban-stats .idlm-metric-value {
+    font-size: 1.125rem;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-kanban-stats .idlm-kanban-stat-attention.has-value {
+    background: var(--idlm-warning-soft);
+}
+
+/* --- 10.3 Board: one horizontal region, columns scroll inside it ------------ */
+body.idlm-crm-design .idlm-kanban-board-shell {
+    position: relative;
+}
+
+body.idlm-crm-design .idlm-kanban-board-shell::before,
+body.idlm-crm-design .idlm-kanban-board-shell::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: var(--idlm-space-3);
+    z-index: 2;
+    width: var(--idlm-space-4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 150ms ease;
+}
+
+body.idlm-crm-design .idlm-kanban-board-shell::before {
+    left: 0;
+    box-shadow: inset var(--idlm-space-2) 0 var(--idlm-space-2) calc(var(--idlm-space-2) * -1) var(--idlm-control-line);
+}
+
+body.idlm-crm-design .idlm-kanban-board-shell::after {
+    right: 0;
+    box-shadow: inset calc(var(--idlm-space-2) * -1) 0 var(--idlm-space-2) calc(var(--idlm-space-2) * -1) var(--idlm-control-line);
+}
+
+body.idlm-crm-design .idlm-kanban-board-shell.has-more-start::before,
+body.idlm-crm-design .idlm-kanban-board-shell.has-more-end::after {
+    opacity: 1;
+}
+
+body.idlm-crm-design .idlm-kanban-board-shell.is-empty .idlm-kanban-board,
+body.idlm-crm-design .idlm-kanban-board-shell.is-failed .idlm-kanban-board,
+body.idlm-crm-design .idlm-wrap:has(.idlm-kanban-board-shell.is-empty) .idlm-kanban-stage-tabs,
+body.idlm-crm-design .idlm-wrap:has(.idlm-kanban-board-shell.is-failed) .idlm-kanban-stage-tabs {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-kanban-board-status {
+    margin-bottom: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-kanban-board-status[hidden] {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-kanban-board-status .idlm-state {
+    justify-items: center;
+    text-align: center;
+}
+
+body.idlm-crm-design .idlm-kanban-board {
+    gap: var(--idlm-space-3);
+    height: max(24rem, calc(100dvh - 10rem));
+    min-height: 24rem;
+    padding: 0 0 var(--idlm-space-3);
+    scroll-padding-inline: var(--idlm-space-1);
+    scrollbar-width: thin;
+    scrollbar-color: var(--idlm-border-strong) transparent;
+}
+
+body.idlm-crm-design .idlm-kanban-board:focus-visible,
+body.idlm-crm-design .idlm-kanban-column-body:focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: -2px;
+}
+
+body.idlm-crm-design .idlm-kanban-column {
+    position: relative;
+    flex: 0 0 18rem;
+    width: 18rem;
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface-soft);
+    box-shadow: none;
+    transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+/* Column header: stage, count, then the money line when the stage has one. */
+body.idlm-crm-design .idlm-kanban-column-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--idlm-space-2);
+    row-gap: 2px;
+    padding: var(--idlm-space-3) var(--idlm-space-3) var(--idlm-space-2);
+    border: 0;
+    border-radius: var(--idlm-radius) var(--idlm-radius) 0 0;
+    background: transparent;
+}
+
+body.idlm-crm-design .idlm-kanban-column-header::before {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-kanban-column-title {
+    gap: var(--idlm-space-2);
+    min-width: 0;
+    font-size: 0.8125rem;
+    font-weight: 650;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design .idlm-kanban-column-title::before {
+    content: "";
+    flex: 0 0 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--idlm-radius-pill);
+    background: var(--idlm-control-line);
+}
+
+body.idlm-crm-design .idlm-kanban-column[data-stage="Won"] .idlm-kanban-column-title::before {
+    background: var(--idlm-success);
+}
+
+body.idlm-crm-design .idlm-kanban-column[data-stage="Lost"] .idlm-kanban-column-title::before {
+    background: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-kanban-column-metrics {
+    display: contents;
+}
+
+body.idlm-crm-design .idlm-kanban-column-count {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-kanban-column-pipeline-value {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-kanban-column-body {
+    gap: var(--idlm-space-2);
+    padding: 0 var(--idlm-space-2) var(--idlm-space-2);
+    scrollbar-width: thin;
+    scrollbar-color: var(--idlm-border-strong) transparent;
+}
+
+/* Empty stages are full-height drop zones, not a floating note. */
+body.idlm-crm-design .idlm-kanban-column-empty {
+    display: grid;
+    flex: 1 1 auto;
+    align-content: center;
+    justify-items: center;
+    gap: var(--idlm-space-1);
+    margin: 0;
+    padding: var(--idlm-space-4) var(--idlm-space-3);
+    border: 1px dashed var(--idlm-control-line);
+    border-radius: var(--idlm-radius);
+    background: transparent;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+body.idlm-crm-design .idlm-kanban-column-empty strong {
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+/* Load more and per-column errors stay small. */
+body.idlm-crm-design .idlm-kanban-column-loader {
+    padding: var(--idlm-space-1) 0 0;
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-kanban-column-loader p {
+    margin: 0 0 var(--idlm-space-1);
+}
+
+/* Loading skeleton keeps the column shape until the first cards arrive. */
+body.idlm-crm-design .idlm-kanban-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-kanban-skeleton-card {
+    display: grid;
+    gap: var(--idlm-space-2);
+    padding: var(--idlm-space-3);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-kanban-skeleton-line {
+    width: 85%;
+    height: 10px;
+}
+
+body.idlm-crm-design .idlm-kanban-skeleton-line.is-title {
+    width: 60%;
+    height: 12px;
+}
+
+body.idlm-crm-design .idlm-kanban-skeleton-line.is-short {
+    width: 35%;
+}
+
+/* --- 10.4 Cards: name and value, next step, owner ----------------------------- */
+body.idlm-crm-design .idlm-kanban-card {
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    box-shadow: none;
+    transition: border-color 150ms ease, opacity 150ms ease;
+}
+
+body.idlm-crm-design .idlm-kanban-card:hover {
+    border-color: var(--idlm-border-strong);
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-kanban-card:has(.idlm-kanban-card-open:focus-visible) {
+    border-color: var(--idlm-focus-ring);
+}
+
+body.idlm-crm-design .idlm-kanban-card.dragging {
+    border-style: dashed;
+    border-color: var(--idlm-control-line);
+    opacity: 0.5;
+}
+
+body.idlm-crm-design .idlm-kanban-card-open {
+    display: flex;
+    flex-direction: column;
+    gap: var(--idlm-space-1);
+    padding: var(--idlm-space-2) var(--idlm-space-3) 0;
+}
+
+body.idlm-crm-design .idlm-kanban-card-open:focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: -2px;
+}
+
+body.idlm-crm-design .idlm-kanban-card-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--idlm-space-2);
+    min-width: 0;
+}
+
+body.idlm-crm-design .idlm-kanban-card-title {
+    overflow: hidden;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-kanban-card-value {
+    overflow: hidden;
+    flex: 0 1 auto;
+    max-width: 50%;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-kanban-card-value.is-strong {
+    flex-shrink: 0;
+    max-width: 55%;
+    color: var(--idlm-text);
+    font-weight: 650;
+}
+
+body.idlm-crm-design .idlm-kanban-card-next {
+    display: flex;
+    align-items: center;
+    gap: var(--idlm-space-1);
+    min-width: 0;
+    min-height: 1.25rem;
+    overflow: hidden;
+}
+
+body.idlm-crm-design .idlm-kanban-card-status {
+    overflow: hidden;
+    min-width: 0;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-kanban-card-status.is-empty {
+    font-style: normal;
+    color: var(--idlm-text-muted);
+}
+
+/* Task and freshness states: text stays dark, colour sits in the icon, border and fill. */
+body.idlm-crm-design .idlm-kanban-task-pill {
+    flex: 0 0 auto;
+    gap: 2px;
+    padding: 1px 5px;
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface-soft);
+    color: var(--idlm-text);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    animation: none;
+}
+
+body.idlm-crm-design .idlm-kanban-task-pill .dashicons {
+    width: 12px;
+    height: 12px;
+    font-size: 12px;
+    line-height: 12px;
+}
+
+body.idlm-crm-design .idlm-kanban-task-pill.overdue {
+    border-color: var(--idlm-danger-line);
+    background: var(--idlm-danger-soft);
+}
+
+body.idlm-crm-design .idlm-kanban-task-pill.overdue .dashicons {
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-kanban-task-pill.needs-update {
+    border-color: var(--idlm-warning-line);
+    background: var(--idlm-warning-soft);
+}
+
+body.idlm-crm-design .idlm-kanban-task-pill.needs-update .dashicons {
+    color: var(--idlm-warning);
+}
+
+body.idlm-crm-design .idlm-kanban-task-pill.pending {
+    border-color: var(--idlm-info-line);
+    background: var(--idlm-info-soft);
+}
+
+body.idlm-crm-design .idlm-kanban-task-pill.pending .dashicons {
+    color: var(--idlm-info);
+}
+
+/* Footer: owner on the left, quiet controls on the right. */
+body.idlm-crm-design .idlm-kanban-card-actions {
+    gap: 2px;
+    min-height: 0;
+    padding: 2px var(--idlm-space-2) var(--idlm-space-2) var(--idlm-space-3);
+    border: 0;
+    background: transparent;
+}
+
+body.idlm-crm-design .idlm-kanban-card-footer-meta {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    margin: 0;
+    min-width: 0;
+}
+
+body.idlm-crm-design .idlm-kanban-card-rep {
+    min-width: 0;
+    gap: var(--idlm-space-1);
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-kanban-card-rep-icon {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    background: var(--idlm-readonly);
+    color: var(--idlm-text);
+    font-size: 0.6875rem;
+    font-weight: 650;
+}
+
+body.idlm-crm-design .idlm-kanban-card-rep-icon-unassigned {
+    border: 1px dashed var(--idlm-control-line);
+    background: transparent;
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-kanban-card-rep-icon-unassigned .dashicons {
+    width: 12px;
+    height: 12px;
+    font-size: 12px;
+    line-height: 12px;
+}
+
+body.idlm-crm-design .idlm-kanban-card-rep-name {
+    overflow: hidden;
+    max-width: 8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-kanban-card-rep.is-unassigned .idlm-kanban-card-rep-name {
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-kanban-card-drag-handle,
+body.idlm-crm-design .idlm-kanban-card-move {
+    flex: 0 0 28px;
+    width: 28px;
+    min-height: 28px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--idlm-text-muted);
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+body.idlm-crm-design .idlm-kanban-card-drag-handle:hover,
+body.idlm-crm-design .idlm-kanban-card-move:hover {
+    border-color: var(--idlm-border);
+    background: var(--idlm-hover-tint);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-kanban-card-drag-handle:focus-visible,
+body.idlm-crm-design .idlm-kanban-card-move:focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: 0;
+}
+
+/* --- 10.5 Drag states: dashed targets, one strong destination ----------------- */
+body.idlm-crm-design .idlm-kanban-board.is-dragging .idlm-kanban-column {
+    outline: 1px dashed var(--idlm-control-line);
+    outline-offset: -1px;
+}
+
+body.idlm-crm-design .idlm-kanban-board.is-dragging .idlm-kanban-column.is-drag-source {
+    outline-style: solid;
+    outline-color: var(--idlm-border);
+}
+
+body.idlm-crm-design .idlm-kanban-column.is-drop-target {
+    background: var(--idlm-info-soft);
+    outline: 2px solid var(--idlm-info);
+    outline-offset: -2px;
+}
+
+body.idlm-crm-design .idlm-kanban-column.is-drop-target::after {
+    content: "Move to " attr(data-stage);
+    position: absolute;
+    right: var(--idlm-space-2);
+    bottom: var(--idlm-space-2);
+    left: var(--idlm-space-2);
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-info);
+    color: var(--idlm-text-inverse);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* --- 10.6 Pipeline dialogs ----------------------------------------------------- */
+body.idlm-crm-design .idlm-kanban-file-link {
+    color: var(--idlm-action);
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+body.idlm-crm-design .idlm-kanban-file-remove {
+    padding: 0 0 0 var(--idlm-space-2);
+    border: 0;
+    background: none;
+    color: var(--idlm-danger);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+body.idlm-crm-design #idlm-kanban-quote-modal .idlm-drawer-file-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-kanban-quote-modal .idlm-drawer-btn-file {
+    min-height: 34px;
+    padding: 0 var(--idlm-space-3);
+    border: 1px solid var(--idlm-control-line);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+body.idlm-crm-design #idlm-kanban-quote-modal .idlm-drawer-btn-file:hover {
+    background: var(--idlm-hover-tint);
+}
+
+body.idlm-crm-design #idlm-kanban-quote-modal .idlm-drawer-file-note {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+/* --- 10.7 Tablet and phone: stage tabs and one list ------------------------------ */
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-wrap .idlm-kanban-stats {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+    }
+
+    body.idlm-crm-design .idlm-wrap .idlm-kanban-stats .idlm-metric {
+        flex: 0 0 9.5rem;
+        scroll-snap-align: start;
+    }
+
+    /* Underline tabs, like every other peer view. They stay under the top bar while the list scrolls. */
+    body.idlm-crm-design .idlm-kanban-stage-tabs {
+        position: sticky;
+        top: var(--idlm-sticky-top);
+        z-index: 20;
+        gap: 0;
+        margin: 0 0 var(--idlm-space-3);
+        padding: 0;
+        border-bottom: 1px solid var(--idlm-border);
+        background: var(--idlm-canvas);
+        scrollbar-width: none;
+    }
+
+    body.idlm-crm-design .idlm-kanban-stage-tab {
+        gap: var(--idlm-space-1);
+        padding: 0 var(--idlm-space-3);
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: inset 0 -2px 0 transparent;
+        color: var(--idlm-text-muted);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    body.idlm-crm-design .idlm-kanban-stage-tab:hover {
+        background: var(--idlm-hover-tint);
+        color: var(--idlm-text);
+    }
+
+    body.idlm-crm-design .idlm-kanban-stage-tab.is-active {
+        background: transparent;
+        box-shadow: inset 0 -2px 0 var(--idlm-action);
+        color: var(--idlm-action);
+    }
+
+    body.idlm-crm-design .idlm-kanban-stage-tab:focus-visible {
+        outline: 2px solid var(--idlm-focus-ring);
+        outline-offset: -2px;
+    }
+
+    body.idlm-crm-design .idlm-kanban-stage-tab-count {
+        min-width: 0;
+        min-height: 0;
+        padding: 0;
+        background: transparent;
+        color: var(--idlm-text-muted);
+        font-size: 0.75rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* The list flows with the page, so there is no second scroll area to get lost in. */
+    body.idlm-crm-design .idlm-kanban-board {
+        display: block;
+        height: auto;
+        min-height: 0;
+        padding: 0;
+        overflow: visible;
+    }
+
+    body.idlm-crm-design .idlm-kanban-column,
+    body.idlm-crm-design .idlm-kanban-column.is-mobile-active {
+        width: auto;
+        height: auto;
+        border: 0;
+        background: transparent;
+    }
+
+    /* The tab already names the stage and its count, so the header keeps only the money line. */
+    body.idlm-crm-design .idlm-kanban-column-header {
+        display: block;
+        padding: 0 0 var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design .idlm-kanban-column-header:not(:has(.idlm-kanban-column-pipeline-value:not([style*="none"]))) {
+        display: none;
+    }
+
+    body.idlm-crm-design .idlm-kanban-column-title,
+    body.idlm-crm-design .idlm-kanban-column-count {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    /* Tablets show the list in two columns of cards; phones drop back to one below. */
+    body.idlm-crm-design .idlm-kanban-column-body {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-content: start;
+        overflow: visible;
+        padding: 0;
+    }
+
+    body.idlm-crm-design .idlm-kanban-column-body > :is(.idlm-kanban-column-empty, .idlm-kanban-column-loader, .idlm-kanban-skeleton) {
+        grid-column: 1 / -1;
+    }
+
+    body.idlm-crm-design .idlm-kanban-column-empty {
+        flex: 0 0 auto;
+        min-height: 10rem;
+    }
+
+    body.idlm-crm-design .idlm-kanban-card-open {
+        padding-top: var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design .idlm-kanban-card-move {
+        flex: 0 0 auto;
+        width: auto;
+        min-height: var(--idlm-target-size);
+        padding: 0 var(--idlm-space-2);
+        border-color: transparent;
+        color: var(--idlm-text);
+        font-size: 0.8125rem;
+    }
+
+    body.idlm-crm-design .idlm-kanban-card-footer-meta {
+        flex-basis: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    body.idlm-crm-design .idlm-kanban-column-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design .idlm-kanban-card-rep-name {
+        max-width: 6rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.idlm-crm-design .idlm-kanban-column,
+    body.idlm-crm-design .idlm-kanban-card,
+    body.idlm-crm-design .idlm-kanban-board-shell::before,
+    body.idlm-crm-design .idlm-kanban-board-shell::after {
+        transition: none;
+    }
+}

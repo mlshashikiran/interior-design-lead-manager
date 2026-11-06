@@ -7,7 +7,7 @@ final class IDLM_Lead_Outbox {
     private static $dispatching = false;
     private static $current_id = 0;
     private static function hooks() {
-        return array('idlm_lead_stage_converted','idlm_lead_attribution_merged','idlm_trigger_interakt_event','idlm_lead_call_status_no_answer','idlm_qualified_handoff_notification','idlm_lead_cache_invalidation');
+        return array('idlm_lead_stage_converted','idlm_lead_attribution_merged','idlm_trigger_interakt_event','idlm_lead_call_status_no_answer','idlm_qualified_handoff_notification','idlm_lead_cache_invalidation','idlm_lead_payment_schedule_published','idlm_lead_payment_recorded','idlm_lead_payment_corrected','idlm_lead_payment_revoked','idlm_design_handoff_notification','idlm_design_project_event');
     }
     public static function init() {
         add_action(self::HOOK, array(__CLASS__, 'drain'));

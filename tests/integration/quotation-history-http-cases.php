@@ -20,7 +20,7 @@ function idlm_history_http_denials(object $quote): void {
         idlm_http_denied(static function() use ($payload,$actor){return idlm_http_autosave($payload,$actor);},array(409));
         idlm_http_denied(static function() use ($payload,$actor){return idlm_http_autosave($payload,$actor,true);},array(404));
         $r=idlm_http_request('/workspace',array('action'=>'view','quote_id'=>$quote->id),$actor,false);
-        idlm_http_check($r['status']===200 && strpos($r['body'],'SYNTHETIC-ITEM-ORIGINAL')!==false && strpos($r['body'],'Edit Quotation')===false,'Historical view missing or exposes editor');
+        idlm_http_check($r['status']===200 && strpos($r['body'],'SYNTHETIC-ITEM-ORIGINAL')!==false && stripos($r['body'],'Edit Quotation')===false,'Historical view missing or exposes editor');
         $r=idlm_http_request('/workspace',array('action'=>'edit','quote_id'=>$quote->id),$actor,false);
         idlm_http_check($r['status']===302 && strpos($r['headers'],'read-only')!==false,'Historical editor opened');
         idlm_http_check($before===idlm_http_snapshot(),'Historical UI requests changed state');

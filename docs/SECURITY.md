@@ -2,7 +2,7 @@
 
 ## Roles and capabilities
 
-Initial setup creates `idlm_pre_sales` and provisions recognized dedicated CRM roles by slug or normalized display name once. Effective `idlm_access_leads` (or administrator `manage_options`) and no CRM suspension are required for customer access; role membership alone never grants admission. Version updates preserve removed capabilities. Ordinary WordPress editorial roles receive no automatic customer access. See [the approved migration, role impact and evidence](AUDIT-REMEDIATION-READ-SLICE.md).
+Initial setup creates `idlm_pre_sales` and provisions recognized dedicated CRM roles by slug or normalized display name once. On an existing install, a recognized role first seen during an update is recorded and granted nothing; an administrator sets its permissions in the role editor. Effective `idlm_access_leads` (or administrator `manage_options`) and no CRM suspension are required for customer access; role membership alone never grants admission. Version updates preserve removed capabilities. Ordinary WordPress editorial roles receive no automatic customer access. See [the approved migration, role impact and evidence](AUDIT-REMEDIATION-READ-SLICE.md).
 
 - General CRM: `idlm_access_leads`, `idlm_qualify_leads`.
 - Assignment managers: `idlm_assign_leads` (administrator and recognized manager roles).
@@ -14,6 +14,8 @@ Initial setup creates `idlm_pre_sales` and provisions recognized dedicated CRM r
 Administrators can configure `All leads` or `Assigned leads only` for every managed CRM role. The saved `idlm_role_lead_scopes` value overrides the legacy `idlm_reps_see_all_leads` default for that role; administrators remain unrestricted, and assigned-only wins when a user has multiple roles. Pre-sales quotation exclusion remains effective, including mixed roles; the pre-sales role has no assignment grant. Explicit additional manager grants keep their existing non-quotation authority. Mutating handlers use `current_user_can_access_lead()`, so read-all scope never grants non-managers permission to mutate another owner's lead.
 
 In the local role-permissions UI, administrators can select the allowlisted CRM capabilities for dedicated managed roles. The action requires `manage_options` and a nonce; it never edits administrator or shared editorial roles, and pre-sales choices are limited to CRM access and qualification. These are role grants, not a complete effective-access report: direct user grants, other roles, suspension, ownership and pre-sales policy continue to apply. Role option changes invalidate cached reads. Builder: Shashi.
+
+Saving a role a person already holds changes no roles. A person with no managed role sees `Keep current role`; an empty role is accepted only for them. Their first managed role needs a form that offered that choice (`idlm_role_choice_offered`), so an out-of-date page or a script cannot promote them. Create, update and scope handlers refuse anything but POST. A new role replaces only managed roles and keeps roles from other plugins. An explicit change away from a website role removes the capabilities that enrollment added, and existing accounts are otherwise never migrated. The last-administrator safeguard counts only unsuspended administrators. `IDLM_Lead_Access_Policy::describe_user_access()` is display-only and grants nothing. These handlers record changes in `idlm_access_change_log`, and recording can never block a save. Builder: Shashi.
 
 Users marked with the `idlm_crm_access_disabled` user meta retain their WordPress account and historical lead relationships, but cannot obtain CRM representative or quotation access.
 
@@ -109,3 +111,19 @@ Builder: Shashi. Export authorization rejects structured, negative, floating/exp
 ## Site-owned Facebook connection (local unreleased, 2026-10-27)
 
 Builder: Shashi. New consent uses the site's own Meta app. `admin_post_idlm_facebook_callback` requires administrator authentication plus one-use state bound to user/session, recovery generation, app fingerprint and current connection epoch. Direct operations serialize under a site-specific MySQL session lock; callback state is consumed before fixed-host POST code exchange. App secrets and tokens stay encrypted server-side, never in browser/AJAX data or Graph query parameters. Redirects are disabled on provider HTTP; errors omit provider response details. Page/form IDs must come from that consent's bounded picker results. Selection checks each form's lead access and Page subscription before enabling signed direct intake. Disconnect stops local intake; provider permission revocation is separate. Existing hosted transport remains for compatibility. [Setup and qualification](META-LEAD-CONNECTOR.md).
+
+## Design handoff access — 2026-11-05
+
+Builder: Shashi. Sending requires the existing `idlm_record_lead_payments` grant plus lead ownership or assignment-manager scope, never pre-sales, rechecked under the lead lock. Design Manager authority is `idlm_receive_design_handoffs` or `manage_options`; a manager sees and decides only handoffs addressed to them, and administrators see all. `idlm_work_design_projects` gives a rep read access to handoffs assigned to them, removed immediately on reassignment. Grants are refreshed under the lead lock and respect CRM suspension. No existing role gets either on update. The optional `idlm_design` and `idlm_design_rep` roles hold only `read` and their grant, stay out of `idlm_get_crm_role_slugs()` and sales pick lists, and have no lead access. A person can read a lead's private files through a handoff only when `IDLM_Design_Handoffs::can_see()` allows it. Detail pages show the same message for a missing or out-of-scope handoff.
+
+## Design quotation access — 2026-11-05
+
+Builder: Shashi. Editing needs an accepted handoff and either decision authority or being its assigned designer, rechecked under the lead, quote and handoff locks. Reps cannot change either discount or the rate on a known line, in save or autosave. Managers and administrators can, with a required remark for a discount change. A new custom line can carry a rep's own rate and is listed in the audit event. Printing is limited to revisions of a handoff the viewer can see and grants no other quotation access.
+
+## Customer approved and later payments — 2026-11-05
+
+Builder: Shashi. Approval needs decision authority on the handoff, rechecked with refreshed grants under the lead lock. Recording a payment extends `IDLM_Lead_Payments::permitted()` for the addressed Design Manager or an administrator on an accepted handoff only; it gives no lead access and no correction authority. Reps read balances and cannot write. Payment proof upload follows the same rule.
+
+## Design documents — 2026-11-05
+
+Builder: Shashi. Files use the `design` purpose: PDF, JPEG, PNG, WebP and DWG up to 10 MB, each slot narrowing further. DWG content must start with an `AC10nn` signature and is always downloaded, never shown inline. Internal design files need `IDLM_Design_Handoffs::can_see()`, so lead access alone does not open them, including for the sales owner. Reps upload and move stages on assigned projects only. Moves back, completion, reopening and archiving need decision authority. Stage settings need `manage_options`.

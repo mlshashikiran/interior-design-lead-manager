@@ -133,7 +133,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             $validated_workspace_url = wp_validate_redirect($workspace_url, '');
             if ($validated_workspace_url) {
                 $workspace_base = remove_query_arg(
-                    array('idlm_view', 'workspace', 'action', 'quote_id', 'lead_id', 'revision_id', 'quote_search', 'catalogue_search', 'status', 'created_by', 'date_from', 'date_to', 'idlm_notice', 'idlm_error'),
+                    array('idlm_view', 'workspace', 'action', 'quote_id', 'lead_id', 'revision_id', 'quote_search', 'catalogue_search', 'status', 'created_by', 'date_range', 'date_from', 'date_to', 'idlm_notice', 'idlm_error'),
                     $validated_workspace_url
                 );
                 $quote_url = add_query_arg(
@@ -201,6 +201,15 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             }
         }
         $qualification_ready = !$missing_qualification_fields && IDLM_DB::budget_to_rupees($lead->budget) >= 400000;
+        // The requesting page states its design, so a ?idlm_design preview gets a matching drawer.
+        $design_layer = isset($_POST['idlm_design']) ? 'crm' === sanitize_key(wp_unslash($_POST['idlm_design'])) : IDLM_Admin_Assets::design_layer_enabled();
+        $attribution_rows = array(
+            'UTM Source' => $lead->utm_source, 'UTM Medium' => $lead->utm_medium, 'UTM Campaign' => $lead->utm_campaign, 'UTM Adgroup' => $lead->utm_adgroup,
+            'UTM Term' => $lead->utm_term, 'UTM Content' => $lead->utm_content, 'GCLID' => $lead->gclid, 'GBRAID' => isset($lead->gbraid) ? $lead->gbraid : '',
+            'WBRAID' => isset($lead->wbraid) ? $lead->wbraid : '', 'FBCLID' => $lead->fbclid, 'Meta Lead ID' => $lead->fb_lead_id, 'LI FAT ID' => $lead->li_fat_id,
+            'Landing Page' => isset($lead->landing_page) ? $lead->landing_page : '',
+            'Conversion Time' => isset($lead->conversion_time) && '0000-00-00 00:00:00' !== $lead->conversion_time ? $lead->conversion_time : '',
+        );
 
         // Render HTML for Drawer
         ob_start();
@@ -209,11 +218,12 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         <header class="idlm-drawer-header">
             <div class="idlm-drawer-identity">
                 <div class="idlm-drawer-avatar"><?php echo esc_html($lead->first_name ? strtoupper($lead->first_name[0]) : '?'); ?></div>
-                <div style="display: flex; flex-direction: column; gap: 2px;">
+                <div class="idlm-drawer-identity-text" style="display: flex; flex-direction: column; gap: 2px;">
                     <h2 id="lead-title"><?php echo esc_html($lead->first_name . ' ' . $lead->last_name); ?></h2>
                     <?php if ($lead->source): ?>
                         <span class="idlm-drawer-chip idlm-badge-<?php echo esc_attr(strtolower(str_replace(array(' ', '/', '-'), '', $lead->source))); ?>" style="align-self: flex-start;"><?php echo esc_html($lead->source); ?></span>
                     <?php endif; ?>
+                    <?php if ($design_layer): ?><div class="idlm-drawer-contact"><?php if ($lead->phone): ?><a href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', (string) $lead->phone)); ?>"><?php echo esc_html($lead->phone); ?></a><?php endif; ?><?php if ($lead->email): ?><a href="mailto:<?php echo esc_attr($lead->email); ?>" title="<?php echo esc_attr($lead->email); ?>"><?php echo esc_html($lead->email); ?></a><?php endif; ?></div><?php endif; ?>
                 </div>
             </div>
 
@@ -226,7 +236,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                     <div class="idlm-drawer-status-item">
                         <?php if (self::current_user_is_pre_sales()): ?>
                             <span class="idlm-drawer-status-label">Stage</span>
-                            <span class="idlm-drawer-status-value"><?php echo esc_html($lead->stage ? $lead->stage : 'New'); ?></span>
+                            <span class="idlm-drawer-status-value" data-idlm-stage="<?php echo esc_attr($lead->stage ? $lead->stage : 'New'); ?>"><?php echo esc_html($lead->stage ? $lead->stage : 'New'); ?></span>
                         <?php else: ?>
                             <label class="idlm-drawer-status-label" for="idlm-drawer-stage-select">Stage</label>
                             <select id="idlm-drawer-stage-select" class="idlm-drawer-stage-select idlm-quick-edit" data-field="stage" data-edit-context="drawer_header" data-id="<?php echo esc_attr($lead->id); ?>" data-original-value="<?php echo esc_attr($lead->stage ? $lead->stage : 'New'); ?>" data-property-location="<?php echo esc_attr($lead->property_location); ?>" data-quote-value="<?php echo esc_attr(isset($lead->quote_value) ? $lead->quote_value : ''); ?>" data-quote-file="<?php echo esc_url(isset($lead->quote_file) ? $lead->quote_file : ''); ?>" aria-label="Change lead stage">
@@ -242,7 +252,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                     </div>
                     <div class="idlm-drawer-status-item">
                         <span class="idlm-drawer-status-label">Lead quality</span>
-                        <span class="idlm-drawer-status-value"><?php echo esc_html(self::get_qualification_status_label($lead)); ?></span>
+                        <span class="idlm-drawer-status-value" data-idlm-quality="<?php echo esc_attr('Qualified' === $lead->lead_quality && empty($lead->floor_plan_received) ? 'plan-pending' : (string) $lead->lead_quality); ?>"><?php echo esc_html(self::get_qualification_status_label($lead)); ?></span>
                     </div>
                 </div>
                 <div class="idlm-drawer-status-context" aria-label="Additional lead context">
@@ -268,6 +278,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                         <span class="idlm-drawer-status-context-label">Created:</span>
                         <span class="idlm-drawer-status-context-value"><?php echo esc_html(self::format_datetime($lead->created_at)); ?></span>
                     </span>
+                    <?php if ($design_layer && !empty($lead->assigned_at)): ?><span class="idlm-drawer-status-context-item"><span class="idlm-drawer-status-context-label">Assigned:</span> <span class="idlm-drawer-status-context-value"><?php echo esc_html(self::format_datetime($lead->assigned_at)); ?></span></span><?php endif; ?>
                 </div>
             </div>
 
@@ -283,10 +294,12 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
 
         <div class="idlm-drawer-body">
             <div id="drawer-tab-info" class="idlm-drawer-tab-content active">
+                <?php echo IDLM_Design_Handoff_Controller::drawer_card($lead); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped per value in the renderer. ?>
+                <?php if ($design_layer) { echo IDLM_Lead_Payment_Controller::drawer_summary($lead); } // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped per value in the renderer. ?>
                 <?php if ($show_presales_compliance): ?>
                 <section class="idlm-drawer-panel idlm-presales-compliance" data-lead-id="<?php echo esc_attr($lead->id); ?>" data-has-floor-plan="<?php echo empty($lead->floor_plan_received) ? '0' : '1'; ?>">
                     <?php if ($is_administrator): ?><details class="idlm-presales-accordion"><summary class="idlm-drawer-panel-head idlm-presales-summary"><?php else: ?><div class="idlm-drawer-panel-head"><?php endif; ?>
-                        <h3 class="idlm-drawer-panel-title">PRE-SALES 6-CYCLE FOLLOW-UP</h3>
+                        <h3 class="idlm-drawer-panel-title"><?php echo $design_layer ? 'Pre-sales follow-up' : 'PRE-SALES 6-CYCLE FOLLOW-UP'; ?></h3>
                         <span><?php echo esc_html($followup['message']); ?></span>
                         <?php if ($is_administrator): ?><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span></summary><?php else: ?></div><?php endif; ?>
                     <div class="idlm-presales-day-grid">
@@ -313,8 +326,8 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                         <button type="button" class="idlm-btn idlm-btn-primary idlm-presales-decision" data-decision="qualify" <?php disabled(!$qualification_ready || in_array($lead->lead_quality, array('Qualified', 'Unqualified'), true)); ?>>Qualify Lead</button>
                         <button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-decision" data-decision="unreachable" <?php disabled(empty($followup['eligible']) || 'Unqualified' === $lead->lead_quality); ?>>Close as Unreachable</button>
                     </div>
-                    <div class="idlm-early-close-box">
-                        <strong>Early close for confirmed junk or mismatch</strong>
+                    <<?php echo $design_layer ? 'details' : 'div'; ?> class="idlm-early-close-box">
+                        <?php echo $design_layer ? '<summary>Close early: confirmed junk or mismatch</summary><div class="idlm-early-close-fields">' : '<strong>Early close for confirmed junk or mismatch</strong>'; ?>
                         <select class="idlm-input idlm-early-close-reason" aria-label="Early close reason">
                             <option value="">Select a reason…</option>
                             <?php foreach (array('objective' => 'Objective junk', 'confirmed' => 'Confirmed response') as $group => $group_label): ?>
@@ -332,7 +345,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                         </select>
                         <textarea class="idlm-input idlm-early-close-note" rows="2" maxlength="1000" placeholder="Document the evidence and specific reason (required)"></textarea>
                         <button type="button" class="idlm-btn idlm-btn-danger idlm-log-presales-touch" data-kind="early_close">Close lead early</button>
-                    </div>
+                    <?php echo $design_layer ? '</div></details>' : '</div>'; ?>
                     <?php if ($is_administrator): ?></details><?php endif; ?>
                 </section>
                 <?php endif; ?>
@@ -348,10 +361,11 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                             <?php endif; ?>
 
                             <section class="idlm-drawer-panel">
-                                <div class="idlm-drawer-panel-head">
+                                <?php if (!$design_layer): ?><div class="idlm-drawer-panel-head">
                                     <h3 class="idlm-drawer-panel-title">Details</h3>
-                                </div>
+                                </div><?php endif; ?>
                                 <div class="idlm-drawer-form-grid">
+                                    <?php if ($design_layer): ?><h3 class="idlm-drawer-group-title">Contact</h3><?php endif; ?>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-first-name">First Name</label>
                                         <input type="text" name="first_name" class="idlm-drawer-control" id="idlm-edit-first-name" value="<?php echo esc_attr($lead->first_name); ?>" required />
@@ -368,17 +382,18 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                         <label for="idlm-edit-phone">Phone</label>
                                         <input type="tel" name="phone" class="idlm-drawer-control" id="idlm-edit-phone" value="<?php echo esc_attr($lead->phone); ?>" required />
                                     </div>
+                                    <?php if ($design_layer): ?><h3 class="idlm-drawer-group-title">Qualification and deal</h3><?php endif; ?>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-lead-quality">Lead Quality</label>
                                         <?php if (self::current_user_is_pre_sales()): ?>
                                             <input type="hidden" name="lead_quality" value="<?php echo esc_attr($lead->lead_quality); ?>">
-                                            <div class="idlm-drawer-control idlm-readonly-quality" id="idlm-edit-lead-quality"><?php echo esc_html(self::get_qualification_status_label($lead)); ?></div>
+                                            <div class="idlm-drawer-control idlm-readonly-quality" id="idlm-edit-lead-quality" data-idlm-quality="<?php echo esc_attr('Qualified' === $lead->lead_quality && empty($lead->floor_plan_received) ? 'plan-pending' : (string) $lead->lead_quality); ?>"><?php echo esc_html(self::get_qualification_status_label($lead)); ?></div>
                                             <small>Use the Lead Decision controls above to qualify or close this lead.</small>
                                         <?php else: ?>
-                                        <select name="lead_quality" class="idlm-drawer-control" id="idlm-edit-lead-quality">
-                                            <option value="" <?php selected($lead->lead_quality, ''); ?>>Pending Qualification</option>
-                                            <option value="Qualified" <?php selected($lead->lead_quality, 'Qualified'); ?>>✅ <?php echo esc_html('Qualified' === $lead->lead_quality ? self::get_qualification_status_label($lead) : 'Qualified'); ?></option>
-                                            <option value="Unqualified" <?php selected($lead->lead_quality, 'Unqualified'); ?>>❌ Unqualified</option>
+                                        <select name="lead_quality" class="idlm-drawer-control" id="idlm-edit-lead-quality"<?php echo empty($lead->floor_plan_received) ? ' data-idlm-plan-pending="1"' : ''; ?>>
+                                            <option value="" <?php selected($lead->lead_quality, ''); ?>><?php echo esc_html(class_exists('IDLM_Admin_Assets') && IDLM_Admin_Assets::design_layer_enabled() ? 'Pending qualification' : 'Pending Qualification'); ?></option>
+                                            <option value="Qualified" <?php selected($lead->lead_quality, 'Qualified'); ?>><?php echo esc_html('Qualified' === $lead->lead_quality ? self::get_qualification_status_label($lead) : 'Qualified'); ?></option>
+                                            <option value="Unqualified" <?php selected($lead->lead_quality, 'Unqualified'); ?>>Unqualified</option>
                                         </select>
                                         <?php endif; ?>
                                     </div>
@@ -398,6 +413,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                         <label for="idlm-edit-discount-percentage">Discount %</label>
                                         <input <?php disabled(self::current_user_is_pre_sales()); ?> type="number" step="0.01" min="0" max="100" name="discount_percentage" class="idlm-drawer-control" id="idlm-edit-discount-percentage" value="<?php echo esc_attr(isset($lead->discount_percentage) ? $lead->discount_percentage : '0.00'); ?>" placeholder="e.g. 10" />
                                     </div>
+                                    <?php if ($design_layer): ?><h3 class="idlm-drawer-group-title">Project</h3><?php endif; ?>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-timeline">Project Timeline</label>
                                         <input type="text" name="project_timeline" class="idlm-drawer-control" id="idlm-edit-timeline" value="<?php echo esc_attr($lead->project_timeline); ?>" placeholder="Immediately" />
@@ -428,7 +444,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    <div class="idlm-drawer-field">
+                                    <div class="idlm-drawer-field idlm-drawer-field-file">
                                         <label for="idlm-edit-floor-plan">Floor Plan Recd</label>
                                         <select name="floor_plan_received" class="idlm-drawer-control" id="idlm-edit-floor-plan" style="margin-bottom: 8px;">
                                             <option value="1" <?php selected($lead->floor_plan_received, 1); ?>>Yes</option>
@@ -439,7 +455,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                             <input type="hidden" name="floor_plan_files" id="idlm_floor_plan_files" value="<?php echo esc_attr(wp_json_encode($floor_plan_files)); ?>">
                                             <input type="file" class="idlm-file-input" data-input-id="idlm_floor_plan_file" data-preview-id="idlm_floor_plan_preview" accept=".pdf,.jpg,.jpeg,.png,.webp" multiple style="display: none;">
                                             <button type="button" class="idlm-drawer-btn-file idlm-direct-upload-trigger">
-                                                <?php echo $floor_plan_files ? 'Add Floor Plans' : 'Upload Floor Plans'; ?>
+                                                <?php echo $floor_plan_files ? ($design_layer ? 'Add floor plans' : 'Add Floor Plans') : ($design_layer ? 'Upload floor plans' : 'Upload Floor Plans'); ?>
                                             </button>
                                             <span id="idlm_floor_plan_preview" class="idlm-drawer-file-note idlm-floor-plan-file-list">
                                                 <?php if ($floor_plan_files): ?>
@@ -462,6 +478,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
 
                             <section class="idlm-drawer-panel">
                                 <div class="idlm-drawer-form-grid idlm-drawer-form-grid-two">
+                                    <?php if ($design_layer): ?><h3 class="idlm-drawer-group-title">Quote and studio</h3><?php endif; ?>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-quote-shared">Quote Shared</label>
                                         <select <?php disabled(self::current_user_is_pre_sales()); ?> name="quote_shared" class="idlm-drawer-control" id="idlm-edit-quote-shared" style="margin-bottom: 8px;">
@@ -472,7 +489,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                             <input <?php disabled(self::current_user_is_pre_sales()); ?> type="hidden" name="quote_file" id="idlm_quote_file" value="<?php echo esc_attr(isset($lead->quote_file) ? $lead->quote_file : ''); ?>">
                                             <input <?php disabled(self::current_user_is_pre_sales()); ?> type="file" class="idlm-file-input" data-input-id="idlm_quote_file" data-preview-id="idlm_quote_preview" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;">
                                             <button <?php disabled(self::current_user_is_pre_sales()); ?> type="button" class="idlm-drawer-btn-file idlm-direct-upload-trigger">
-                                                <?php echo !empty($lead->quote_file) ? 'Change File' : 'Upload Quote'; ?>
+                                                <?php echo !empty($lead->quote_file) ? ($design_layer ? 'Change file' : 'Change File') : ($design_layer ? 'Upload quote' : 'Upload Quote'); ?>
                                             </button>
                                             <span id="idlm_quote_preview" class="idlm-drawer-file-note">
                                                 <?php if (!empty($lead->quote_file)): ?>
@@ -502,7 +519,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                     </div>
 
                                     <?php if ($lead->source === 'Referral'): ?>
-                                        <div class="idlm-drawer-field" style="grid-column: span 2;">
+                                        <div class="idlm-drawer-field idlm-drawer-field-wide" style="grid-column: span 2;">
                                             <label for="idlm-edit-referrer">Referrer Details</label>
                                             <textarea name="referrer_details" class="idlm-drawer-control" id="idlm-edit-referrer" rows="2" style="min-height: 48px;"><?php echo esc_html($lead->referrer_details); ?></textarea>
                                         </div>
@@ -516,7 +533,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                             $callback_val = wp_date('Y-m-d\TH:i', strtotime($lead->callback_datetime));
                                         }
                                     ?>
-                                        <div class="idlm-drawer-field" style="grid-column: span 2;">
+                                        <div class="idlm-drawer-field idlm-drawer-field-wide" style="grid-column: span 2;">
                                             <label for="idlm-edit-callback-datetime">Callback Scheduled</label>
                                             <input type="datetime-local" name="callback_datetime" class="idlm-drawer-control" id="idlm-edit-callback-datetime" value="<?php echo esc_attr($callback_val); ?>" style="width: 100%;">
                                         </div>
@@ -524,72 +541,28 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                 </div>
                             </section>
 
-                            <section class="idlm-drawer-panel">
-                                <div class="idlm-drawer-panel-head">
-                                    <h3 class="idlm-drawer-panel-title">CAMPAIGN ATTRIBUTION DETAILS</h3>
-                                </div>
+                            <<?php echo $design_layer ? 'details' : 'section'; ?> class="idlm-drawer-panel idlm-drawer-attribution">
+                                <<?php echo $design_layer ? 'summary' : 'div'; ?> class="idlm-drawer-panel-head">
+                                    <h3 class="idlm-drawer-panel-title"><?php echo $design_layer ? 'Campaign attribution' : 'CAMPAIGN ATTRIBUTION DETAILS'; ?></h3>
+                                    <?php if ($design_layer): ?><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><?php endif; ?>
+                                </<?php echo $design_layer ? 'summary' : 'div'; ?>>
                                 <div class="idlm-drawer-data-grid">
+                                    <?php foreach ($attribution_rows as $attribution_label => $attribution_value):
+                                        if ($design_layer && !$attribution_value) {
+                                            continue;
+                                        }
+                                    ?>
                                     <div>
-                                        <span class="idlm-drawer-data-label">UTM Source</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html($lead->utm_source ? $lead->utm_source : 'N/A'); ?></div>
+                                        <span class="idlm-drawer-data-label"><?php echo esc_html($attribution_label); ?></span>
+                                        <div class="idlm-drawer-data-value"><?php echo esc_html($attribution_value ? $attribution_value : 'N/A'); ?></div>
                                     </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">UTM Medium</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html($lead->utm_medium ? $lead->utm_medium : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">UTM Campaign</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html($lead->utm_campaign ? $lead->utm_campaign : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">UTM Adgroup</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html($lead->utm_adgroup ? $lead->utm_adgroup : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">UTM Term</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html($lead->utm_term ? $lead->utm_term : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">UTM Content</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html($lead->utm_content ? $lead->utm_content : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">GCLID</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html($lead->gclid ? $lead->gclid : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">GBRAID</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html(isset($lead->gbraid) && $lead->gbraid ? $lead->gbraid : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">WBRAID</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html(isset($lead->wbraid) && $lead->wbraid ? $lead->wbraid : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">FBCLID</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html($lead->fbclid ? $lead->fbclid : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">Meta Lead ID</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html($lead->fb_lead_id ? $lead->fb_lead_id : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">LI FAT ID</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html($lead->li_fat_id ? $lead->li_fat_id : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">Landing Page</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html(isset($lead->landing_page) && $lead->landing_page ? $lead->landing_page : 'N/A'); ?></div>
-                                    </div>
-                                    <div>
-                                        <span class="idlm-drawer-data-label">Conversion Time</span>
-                                        <div class="idlm-drawer-data-value"><?php echo esc_html(isset($lead->conversion_time) && $lead->conversion_time && $lead->conversion_time !== '0000-00-00 00:00:00' ? $lead->conversion_time : 'N/A'); ?></div>
-                                    </div>
+                                    <?php endforeach; ?>
+                                    <?php if ($design_layer && !array_filter($attribution_rows)): ?><p class="idlm-drawer-empty-note">No campaign data was recorded for this lead.</p><?php endif; ?>
                                 </div>
-                            </section>
+                            </<?php echo $design_layer ? 'details' : 'section'; ?>>
 
                             <?php if (!empty($duplicates)): ?>
-                                <div style="margin-top:20px; padding: 0 14px;">
+                                <div class="idlm-drawer-duplicates" style="margin-top:20px; padding: 0 14px;">
                                     <h4 style="margin: 0 0 10px 0; font-size:13px; font-weight:700;">Linked Duplicate Leads (Merged):</h4>
                                     <ul class="idlm-duplicate-list" style="margin:0; padding-left:18px;">
                                         <?php foreach ($duplicates as $dup): ?>
@@ -750,6 +723,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         </div>
 
         <footer class="idlm-drawer-form-footer">
+            <?php if ($design_layer): ?><span class="idlm-drawer-dirty-note" id="idlm-drawer-dirty-note" role="status" hidden>Unsaved changes</span><?php endif; ?>
             <?php if (current_user_can('manage_options')): ?>
                 <button type="button" class="idlm-btn idlm-btn-danger-outline" onclick="deleteSingleLead(<?php echo esc_attr($lead->id); ?>)">Delete Lead</button>
             <?php endif; ?>
@@ -760,6 +734,21 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         </footer>
         <?php
         $html = ob_get_clean();
+        if ($design_layer) {
+            // Presentation lives in crm-design-leads.css. A display:none attribute stays because scripts toggle it.
+            $html = strtr((string) preg_replace('/\sstyle="(?!\s*display:\s*none)[^"]*"/i', '', $html), array(
+                '>First Name<' => '>First name<', '>Last Name<' => '>Last name<', '>Lead Quality<' => '>Lead quality<', '>Project Name<' => '>Project name<', '>Lead Budget<' => '>Lead budget<',
+                '>Deal Value (' => '>Deal value (', '>Quote Value (' => '>Quote value (', '>Project Timeline<' => '>Project timeline<', '>Possession Date<' => '>Possession date<', '>Property Location / Pincode<' => '>Property location or pincode<',
+                '>Property Type<' => '>Property type<', '>Floor Plan Recd<' => '>Floor plan received<', '>Quote Shared<' => '>Quote shared<', '>Studio Location<' => '>Studio location<', '>Referrer Details<' => '>Referrer details<', '>Callback Scheduled<' => '>Callback scheduled<',
+                // Every key is anchored to markup: this runs over the form, so a bare phrase would rewrite a lead's own saved text.
+                '>📄 View File<' => '>View file<', '>Open Quotations<' => '>Open quotations<',
+                '>Lead Decision<' => '>Lead decision<', '>Qualify Lead<' => '>Qualify lead<', '>Close as Unreachable<' => '>Close as unreachable<', '>Activity Log & Comments<' => '>Activity and comments<',
+                '>Add Note / Comment<' => '>Add a comment<', '>Recent Comments<' => '>Recent comments<', '>Notes &amp; Comments<' => '>Comments<', '>Activity History<' => '>Activity history<', 'placeholder="Add activity notes or comment..."' => 'placeholder="Add a note for the team"', '>Add Comment<' => '>Add comment<',
+                '>No comments found for this lead.<' => '>No comments yet.<', '>Create New Task<' => '>Add a task<', '>Task Title / Description *<' => '>Task title *<', '>Due Date & Time<' => '>Due date and time<', '>Task Type<' => '>Task type<', '>Task List<' => '>Tasks<', '>Add Task<' => '>Add task<',
+                '>Save Lead Details<' => '>Save changes<', '>Delete Lead<' => '>Delete lead<', '>View / Edit Quote<' => '>Open quotation<', '>Create Quote<' => '>Create quotation<', '>Linked Duplicate Leads (Merged):<' => '>Linked duplicate leads<',
+                '<strong>Warning!</strong> Duplicate Lead detected. Linked to original lead:' => 'This lead is a duplicate. Original lead:',
+            ));
+        }
         wp_send_json_success(array(
             'html' => $html,
             'first_name' => $lead->first_name,

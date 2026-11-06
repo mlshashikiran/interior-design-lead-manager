@@ -4,7 +4,13 @@ jQuery(document).ready(function($) {
         var fieldDefaults = {call_status: 'Call Status', lost_reason: 'Lost Reason', preferred_studio: 'Preferred Studio', num_rooms: 'Rooms'};
         Object.keys(fieldDefaults).forEach(function(key) { if (aliases[key]) aliases[fieldDefaults[key]] = aliases[key]; delete aliases[key]; });
         var groups = (window.idlm_vars && idlm_vars.value_labels) || {};
-        Object.keys(groups).forEach(function(group) { Object.keys(groups[group] || {}).forEach(function(value) { aliases[value] = groups[group][value]; }); });
+        // Stage names such as "Qualified" are also stored quality values. In the design layer a stage label is not applied to a quality control.
+        var stageAliases = {};
+        Object.keys(groups).forEach(function(group) { Object.keys(groups[group] || {}).forEach(function(value) {
+            aliases[value] = groups[group][value];
+            if ('custom_stages' === group) stageAliases[value] = true;
+        }); });
+        var designLayer = document.body.classList.contains('idlm-crm-design');
         var walker = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT);
         var node;
         while ((node = walker.nextNode())) {
@@ -12,6 +18,7 @@ jQuery(document).ready(function($) {
             var original = node.nodeValue;
             var label = original.trim();
             if (!label || !Object.prototype.hasOwnProperty.call(aliases, label) || !aliases[label]) continue;
+            if (designLayer && stageAliases[label] && $(node.parentNode).closest('select[id*="quality"], select[name*="quality"], select[data-field="lead_quality"]').length) continue;
             node.nodeValue = original.replace(label, aliases[label]);
         }
     }
@@ -22,6 +29,7 @@ jQuery(document).ready(function($) {
     var filtersReturnFocus = null;
     var pendingBulkDelete = null;
     var exportCountRequest = null;
+    var isCrmDesign = document.body.classList.contains('idlm-crm-design');
 
     function openAccessibleDialog(selector, trigger) {
         var dialog = document.querySelector(selector);
@@ -34,6 +42,62 @@ jQuery(document).ready(function($) {
         if (!window.IDLMDialog) return false;
         return window.IDLMDialog.close(selector, {reason: reason || 'programmatic'});
     }
+
+    // Send to design: the same dialog handles the first send and a resend.
+    $(document).on('click', '.idlm-design-send-open', function() {
+        var data = $(this).data('idlmHandoff') || {};
+        var $form = $('#idlm-design-send-form');
+        // Reopening the same draft keeps what was typed.
+        if ($form.data('requestKey') !== data.request_key) {
+            $form.data({requestKey: data.request_key, leadId: data.lead_id, nonce: data.nonce});
+            $('#idlm-design-send-description').text(data.lead_name || '');
+            $('#idlm-design-send-basis').text(data.basis || '').prop('hidden', !data.basis);
+            $('#idlm-design-send-onfile').text(data.on_file || '').prop('hidden', !data.on_file);
+            $('#idlm-design-send-advance').prop('hidden', !!data.on_file);
+            var $manager = $('#idlm-design-send-manager').empty();
+            var managers = data.managers || [];
+            if (managers.length !== 1) { $manager.append($('<option>').val('').text('Choose a Design Manager')); }
+            managers.forEach(function(person) { $manager.append($('<option>').val(person.id).text(person.name)); });
+            if (data.design_manager_id) { $manager.val(String(data.design_manager_id)); }
+            $('#idlm-design-send-notes').val(data.notes || '');
+            $('#idlm-design-send-scope').val(data.scope_summary || '');
+            $('#idlm-design-send-pending').val(data.pending_items || '');
+            $('#idlm-design-send-amount').val(data.amount || '');
+            $('#idlm-design-send-date').val(data.received_date || '');
+            if (data.method) { $('#idlm-design-send-method').val(data.method); }
+            $('#idlm-design-send-reference').val(data.reference || '');
+            $('#idlm-design-send-file').val('');
+            $('#idlm-design-send-error').text('').prop('hidden', true);
+        }
+        openAccessibleDialog('#idlm-design-send-modal', $(this));
+    });
+
+    $(document).on('submit', '#idlm-design-send-form', function(event) {
+        event.preventDefault();
+        var $form = $(this);
+        var $submit = $('#idlm-design-send-submit');
+        var $error = $('#idlm-design-send-error');
+        var body = new FormData(this);
+        if ($submit.prop('disabled')) { return; }
+        body.append('action', 'idlm_design_handoff_send');
+        body.append('nonce', $form.data('nonce'));
+        body.append('lead_id', $form.data('leadId'));
+        body.append('request_key', $form.data('requestKey'));
+        $error.text('').prop('hidden', true);
+        $submit.prop('disabled', true).text('Sending…');
+        $.ajax({url: idlm_vars.ajax_url, type: 'POST', data: body, processData: false, contentType: false}).done(function(response) {
+            var leadId = $form.data('leadId');
+            closeAccessibleDialog('#idlm-design-send-modal');
+            $form.removeData('requestKey');
+            if (window.IDLMDialog) { window.IDLMDialog.notify(response.data.message, 'success'); }
+            openLeadDrawer(leadId);
+        }).fail(function(xhr) {
+            var message = xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message;
+            $error.text(message || 'Could not send. Your entries are still here. Try again.').prop('hidden', false);
+        }).always(function() {
+            $submit.prop('disabled', false).text('Send to design');
+        });
+    });
 
     function showInlineFieldError(selector, message) {
         return window.IDLMDialog ? window.IDLMDialog.setFieldError(selector, message) : false;
@@ -52,6 +116,104 @@ jQuery(document).ready(function($) {
             if (value && !isDefault) count += 1;
         });
         $count.text(count).attr('aria-label', count + ' active filter' + (count === 1 ? '' : 's')).prop('hidden', count === 0);
+        if (isCrmDesign) renderActiveFilters();
+    }
+
+    // Design layer: active filters read as removable chips, and every quick filter shows whether it is on.
+    function renderActiveFilters() {
+        var $list = $('#idlm-active-filters-list');
+        if (!$list.length) return;
+        var chips = [];
+        var searchTerm = String($('#filter-search').val() || '').trim();
+        if (searchTerm) chips.push({id: 'filter-search', label: 'Search', value: searchTerm});
+        $('#idlm-lead-filters select').each(function() {
+            var value = $(this).val();
+            var isDefault = (this.id === 'filter-date-basis' && value === 'assigned_at') || (this.id === 'filter-followup' && value === 'action_required');
+            if (!value || isDefault) return;
+            chips.push({
+                id: this.id,
+                label: $('label[for="' + this.id + '"]').first().text().trim(),
+                value: $(this).find('option:selected').text().trim()
+            });
+        });
+        $list.empty();
+        chips.forEach(function(chip) {
+            var $remove = $('<button>', {type: 'button', 'class': 'idlm-active-filter-remove', 'data-filter-id': chip.id, 'aria-label': 'Remove filter ' + chip.label + ': ' + chip.value})
+                .append($('<span>', {'class': 'dashicons dashicons-no-alt', 'aria-hidden': 'true'}));
+            $('<li>', {'class': 'idlm-active-filter'})
+                .append($('<span>', {'class': 'idlm-active-filter-label', text: chip.label + ':'}))
+                .append(' ')
+                .append($('<span>', {'class': 'idlm-active-filter-value', text: chip.value, title: chip.value}))
+                .append($remove)
+                .appendTo($list);
+        });
+        $list.prop('hidden', chips.length === 0);
+        $('#idlm-active-filters-clear').prop('hidden', chips.length === 0);
+
+        var metricTargets = leadMetricFilterTargets();
+        $('.idlm-metric[data-filter]').each(function() {
+            var target = metricTargets[$(this).data('filter')];
+            var pressed = Boolean(target) && String($(target[0]).val() || '') === target[1];
+            $(this).toggleClass('is-selected', pressed).attr('aria-pressed', pressed ? 'true' : 'false');
+        });
+        var followup = $('#filter-followup').val();
+        $('#idlm-pending-calls-pill').attr('aria-pressed', followup === 'pending_calls' ? 'true' : 'false');
+        $('#idlm-stale-leads-pill').attr('aria-pressed', followup === 'stale_updates' ? 'true' : 'false');
+        $('#idlm-whatsapp-unread-pill').attr('aria-pressed', followup === 'unread_whatsapp' ? 'true' : 'false');
+        $('#idlm-qualified-handoffs-pill').attr('aria-pressed', $('#filter-quality').val() === 'Qualified Awaiting Assignment' ? 'true' : 'false');
+    }
+
+    function leadMetricFilterTargets() {
+        return {
+            'New': ['#filter-stage', 'New'],
+            'Not Called': ['#filter-call-status', 'Not Called'],
+            'Follow-up': ['#filter-call-status', 'Call Back Requested'],
+            'Unassigned': ['#filter-rep', '0'],
+            'Qualified Handoffs': ['#filter-quality', 'Qualified Awaiting Assignment'],
+            'Routing Exceptions': ['#filter-quality', 'Routing Exception'],
+            'Qualified': ['#filter-quality', 'Qualified'],
+            'Pending Quality': ['#filter-quality', 'Pending']
+        };
+    }
+
+    function leadsActiveFilterCount() {
+        return $('#idlm-active-filters-list li').length;
+    }
+
+    // Design layer: result count, range, empty wording and refresh state for the table.
+    function renderLeadsSummary(data) {
+        var total = Number(data.total_items) || 0;
+        var perPage = Number($('#idlm-leads-per-page').val()) || 25;
+        var page = Number(data.current_page) || 1;
+        var first = total ? ((page - 1) * perPage) + 1 : 0;
+        var last = Math.min(page * perPage, total);
+        var countLabel = total.toLocaleString() + (total === 1 ? ' lead' : ' leads');
+        $('#idlm-leads-result-count').text(countLabel);
+        $('#idlm-leads-range').text(total ? first.toLocaleString() + '–' + last.toLocaleString() + ' of ' + countLabel : 'No leads');
+        $('#idlm-filters-done').text(total ? 'Show ' + countLabel : 'Close');
+        $('.idlm-pagination').toggleClass('is-single-page', Number(data.total_pages) <= 1 && total <= 25);
+        if (!total && !leadsActiveFilterCount()) {
+            var isQueue = $('#filter-followup').val() === 'action_required';
+            $('.idlm-leads-empty-title').text(isQueue ? 'Your queue is clear' : 'No leads yet');
+            $('.idlm-leads-empty-text').text(isQueue ? 'No leads need action right now. New assignments appear here.' : 'Leads appear here when they arrive, or add one yourself.');
+            $('.idlm-leads-empty-row .idlm-state__actions').remove();
+        }
+    }
+
+    // State rows span the columns actually shown, because a fixed table adds a column for any excess.
+    function fitLeadsStateRows() {
+        var columns = $('#idlm-leads-table thead th:visible').length;
+        if (columns) $('#idlm-leads-table :is(.idlm-leads-empty-row, .idlm-leads-skeleton-row) td').attr('colspan', columns);
+    }
+
+    function renderLeadsLoadError(page) {
+        var $retry = $('<button>', {type: 'button', 'class': 'idlm-btn idlm-btn-secondary', text: 'Try again'}).on('click', function() { loadLeadsTable(page); });
+        var $state = $('<div>', {'class': 'idlm-state is-error', role: 'alert'})
+            .append($('<strong>', {text: 'Leads could not be loaded'}))
+            .append($('<span>', {text: 'Check your connection and try again. Your filters are unchanged.'}))
+            .append($('<div>', {'class': 'idlm-state__actions'}).append($retry));
+        $('#idlm-leads-table tbody').empty().append($('<tr>', {'class': 'idlm-leads-empty-row'}).append($('<td>', {colspan: 12}).append($state)));
+        fitLeadsStateRows();
     }
 
     function openFiltersPanel() {
@@ -448,6 +610,13 @@ jQuery(document).ready(function($) {
 
     // Load table on start if present
     if ($('#idlm-leads-table').length > 0) {
+        // Read-only link from Users & access: open one person's open leads. The server still applies this viewer's scope.
+        var urlRepId = isCrmDesign ? new URLSearchParams(window.location.search).get('rep') : null;
+        if (urlRepId && /^[1-9][0-9]*$/.test(urlRepId) && $('#filter-rep option[value="' + urlRepId + '"]').length) {
+            $('#filter-rep').val(urlRepId);
+            leadsActiveOnly = true;
+            updateActiveFilterCount();
+        }
         loadLeadsTable(1);
     }
 
@@ -490,6 +659,10 @@ jQuery(document).ready(function($) {
         updateActiveFilterCount();
         loadLeadsTable(1);
     });
+    // Custom range dates apply as soon as both are set.
+    $('#filter-date-start, #filter-date-end').on('change', function() {
+        if ($('#filter-date-start').val() && $('#filter-date-end').val()) { leadsActiveOnly = false; loadLeadsTable(1); }
+    });
 
     // Search input changes trigger table refresh with a small debounce
     var searchTimeout;
@@ -507,7 +680,7 @@ jQuery(document).ready(function($) {
         leadsActiveOnly = false;
         $('#filter-search').val('');
         $('#filter-date-basis').val('assigned_at');
-        $('#filter-date-range').val('');
+        $('#filter-date-range').val(''); if (window.IDLMDialog && window.IDLMDialog.syncDateRange) { window.IDLMDialog.syncDateRange(document.getElementById('filter-date-range')); }
         $('#filter-stage').val('');
         $('#filter-source').val('');
         $('#filter-rep').val('');
@@ -517,6 +690,76 @@ jQuery(document).ready(function($) {
         updateActiveFilterCount();
         loadLeadsTable(1);
     });
+
+    if (isCrmDesign) {
+        $(document).on('click', '.idlm-active-filter-remove', function() {
+            var id = $(this).attr('data-filter-id');
+            if (id === 'filter-search') {
+                $('#filter-search').val('').trigger('input');
+            } else {
+                $('#' + id).val(id === 'filter-date-basis' ? 'assigned_at' : '').trigger('change');
+            }
+            var $next = $('.idlm-active-filter-remove').first();
+            ($next.length ? $next : $('#filter-search')).trigger('focus');
+        });
+        $(document).on('click', '.idlm-active-filters-clear', function() {
+            $('#btn-clear-filters').trigger('click');
+            $('#filter-search').trigger('focus');
+        });
+        $('#idlm-filters-done').on('click', closeFiltersPanel);
+
+        // More menu: Enter or arrow opens, arrows move, Escape returns to the button, Tab leaves.
+        var $moreButton = $('#idlm-leads-more-btn');
+        var $moreMenu = $('#idlm-leads-more-menu');
+        var setMoreMenu = function(open, focusFirst) {
+            $moreMenu.prop('hidden', !open);
+            $moreButton.attr('aria-expanded', open ? 'true' : 'false');
+            if (open && focusFirst) $moreMenu.find('[role="menuitem"]').first().trigger('focus');
+        };
+        $moreButton.on('click', function() { setMoreMenu($moreMenu.prop('hidden'), true); });
+        $moreButton.on('keydown', function(event) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                setMoreMenu(true, true);
+            }
+        });
+        $moreMenu.on('keydown', function(event) {
+            var $items = $moreMenu.find('[role="menuitem"]');
+            var index = $items.index(document.activeElement);
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                setMoreMenu(false);
+                $moreButton.trigger('focus');
+            } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                $items.eq((index + (event.key === 'ArrowDown' ? 1 : -1) + $items.length) % $items.length).trigger('focus');
+            } else if (event.key === 'Home' || event.key === 'End') {
+                event.preventDefault();
+                $items.eq(event.key === 'Home' ? 0 : $items.length - 1).trigger('focus');
+            } else if (event.key === 'Tab') {
+                setMoreMenu(false);
+            }
+        });
+        $moreMenu.on('click', '[role="menuitem"]', function() { setMoreMenu(false); });
+        $(document).on('click', function(event) {
+            if (!$moreMenu.prop('hidden') && !$(event.target).closest('.idlm-leads-menu').length) setMoreMenu(false);
+        });
+        // The menu is closed by the time a dialog returns focus, so hand focus to its button.
+        $(document).on('idlm:dialogclose', '#idlm-import-modal, #idlm-export-modal, #idlm-routing-modal', function() {
+            window.setTimeout(function() {
+                if (document.activeElement === document.body || !$(document.activeElement).is(':visible')) $moreButton.trigger('focus');
+            }, 20);
+        });
+
+        // Sticky table headers need the height of the sticky page header above them.
+        var leadsHeader = document.querySelector('.idlm-leads-page .idlm-header');
+        if (leadsHeader && window.ResizeObserver) {
+            new ResizeObserver(function() {
+                document.documentElement.style.setProperty('--idlm-leads-header-height', Math.round(leadsHeader.getBoundingClientRect().height) + 'px');
+            }).observe(leadsHeader);
+        }
+    }
 
     $('#idlm-open-filters').on('click', openFiltersPanel);
     $('#idlm-close-filters, #idlm-filters-backdrop').on('click', closeFiltersPanel);
@@ -573,14 +816,25 @@ jQuery(document).ready(function($) {
     });
 
     // Pagination events
+    // A new page starts at its first row, not wherever the previous page's pager was.
+    function scrollLeadsTableToTop() {
+        if (!isCrmDesign) return;
+        var table = document.getElementById('idlm-leads-table');
+        if (!table) return;
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({top: Math.max(0, window.pageYOffset + table.getBoundingClientRect().top - 140), behavior: reduce ? 'auto' : 'smooth'});
+    }
+
     $('#prev-page').click(function() {
         if (currentPage > 1) {
             loadLeadsTable(currentPage - 1);
+            scrollLeadsTableToTop();
         }
     });
 
     $('#next-page').click(function() {
         loadLeadsTable(currentPage + 1);
+        scrollLeadsTableToTop();
     });
 
     $('#idlm-leads-per-page').change(function() {
@@ -737,7 +991,10 @@ jQuery(document).ready(function($) {
                 leadId: leadId,
                 val: val
             };
-            $('#idlm-deal-value-input').val('');
+            // Start from the lead's quote value (the saved quotation total) when one exists.
+            var wonQuoteValue = parseFloat($select.attr('data-quote-value') || 0);
+            $('#idlm-deal-value-input').val(wonQuoteValue > 0 ? wonQuoteValue : '');
+            $('#idlm-deal-value-source').prop('hidden', !(wonQuoteValue > 0));
             $('#idlm-discount-percentage-input').val('');
             $('#idlm-won-property-location-input').val($select.attr('data-property-location') || '');
             openAccessibleDialog('#idlm-deal-value-modal', $select);
@@ -1101,6 +1358,7 @@ jQuery(document).ready(function($) {
             var search = $('#export-filter-search').val();
 
             if (dateRange) exportUrl += '&date_range=' + encodeURIComponent(dateRange);
+            if ('custom' === dateRange) exportUrl += '&date_start=' + encodeURIComponent($('#export-filter-date-start').val() || '') + '&date_end=' + encodeURIComponent($('#export-filter-date-end').val() || '');
             if (dateBasis) exportUrl += '&date_basis=' + encodeURIComponent(dateBasis);
             if (source) exportUrl += '&source=' + encodeURIComponent(source);
             if (repId) exportUrl += '&rep_id=' + encodeURIComponent(repId);
@@ -1150,6 +1408,8 @@ jQuery(document).ready(function($) {
             requestData.search = $('#export-filter-search').val();
             requestData.date_basis = $('#export-filter-date-basis').val();
             requestData.date_range = $('#export-filter-date-range').val();
+            requestData.date_start = 'custom' === requestData.date_range ? $('#export-filter-date-start').val() : '';
+            requestData.date_end = 'custom' === requestData.date_range ? $('#export-filter-date-end').val() : '';
             requestData.source = $('#export-filter-source').val();
             requestData.rep_id = $('#export-filter-rep').length ? $('#export-filter-rep').val() : '';
             requestData.stage = $('#export-filter-stage').val();
@@ -1183,9 +1443,19 @@ jQuery(document).ready(function($) {
         }
     });
 
+    // Qualification details matter only for "Qualified now"; the server checks them either way.
+    function syncAddLeadChoice() {
+        var choice = $('#idlm-add-lead-form input[name="qualification_choice"]:checked').val();
+        $('#idlm-add-lead-form [data-idlm-qualified-only]').prop('hidden', choice !== 'qualified');
+        $('#idlm-add-lead-form [data-idlm-floor-plan-remark]').prop('hidden', $('#idlm-add-lead-floor-plan').val() !== '0');
+    }
+    $(document).on('change', '#idlm-add-lead-form input[name="qualification_choice"], #idlm-add-lead-floor-plan', syncAddLeadChoice);
+    syncAddLeadChoice();
+
     // Manual Lead Form submit handler
     $('#idlm-add-lead-form').submit(function(e) {
         e.preventDefault();
+        var $leadForm = $(this);
         var formData = $(this).serialize();
 
         $.ajax({
@@ -1201,6 +1471,7 @@ jQuery(document).ready(function($) {
                     showToast(response.data.message, 'success');
                     closeLeadModal();
                     $('#idlm-add-lead-form')[0].reset();
+                    syncAddLeadChoice();
                     loadLeadsTable(1);
 
                     // Update pending calls count pill
@@ -1209,6 +1480,9 @@ jQuery(document).ready(function($) {
                     }
                 } else {
                     showToast(response.data.message || 'Creation failed.', 'error');
+                    // Keep everything typed and move to the field that needs attention.
+                    var field = response.data && response.data.field ? String(response.data.field).replace(/[^a-z_]/g, '') : '';
+                    if (field) { var $field = $leadForm.find('[name="' + field + '"]').first(); if ($field.length) { $field.closest('[hidden]').prop('hidden', false); $field.trigger('focus'); } }
                 }
             }
         });
@@ -1379,9 +1653,12 @@ jQuery(document).ready(function($) {
 
         var requestData = {
             action: 'idlm_get_leads_table',
+            idlm_design: isCrmDesign ? 'crm' : 'legacy',
             nonce: idlm_vars.nonce,
             page: page,
             date_range: dateRange,
+            date_start: 'custom' === dateRange ? $('#filter-date-start').val() : '',
+            date_end: 'custom' === dateRange ? $('#filter-date-end').val() : '',
             date_basis: dateBasis,
             source: source,
             rep_id: repId,
@@ -1399,6 +1676,11 @@ jQuery(document).ready(function($) {
             requestData.cursor = leadsPageCursors[page];
         }
 
+        if (isCrmDesign) {
+            fitLeadsStateRows();
+            $('.idlm-leads-table-wrapper').addClass('is-refreshing').attr('aria-busy', 'true');
+        }
+
         leadsTableRequest = $.ajax({
             url: idlm_vars.ajax_url,
             type: 'POST',
@@ -1406,6 +1688,11 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success) {
                     $('#idlm-leads-table tbody').html(response.data.html);
+                    if (isCrmDesign) {
+                        fitLeadsStateRows();
+                        renderLeadsSummary(response.data);
+                        if (response.data.hasOwnProperty('stale_lead_count')) updateStaleLeadsPill(response.data.stale_lead_count);
+                    }
                     if (response.data.metric_stats) {
                         Object.keys(response.data.metric_stats).forEach(function(key) {
                             $('[data-metric-count="' + key + '"]').text(Number(response.data.metric_stats[key]) || 0);
@@ -1444,9 +1731,12 @@ jQuery(document).ready(function($) {
                     showToast(xhr.responseJSON.data.message, 'error');
                     leadsPageCursors = { 1: '' };
                     window.setTimeout(function() { loadLeadsTable(1); }, 0);
+                } else if (isCrmDesign && xhr.statusText !== 'abort') {
+                    renderLeadsLoadError(page);
                 }
             },
-            complete: function() {
+            complete: function(xhr) {
+                if (isCrmDesign && xhr.statusText !== 'abort') $('.idlm-leads-table-wrapper').removeClass('is-refreshing').removeAttr('aria-busy');
                 leadsTableRequest = null;
             }
         });
@@ -2143,7 +2433,7 @@ jQuery(document).ready(function($) {
                     var previewHtml = '<a href="' + response.data.url + '" target="_blank" class="idlm-file-link" style="color: var(--idlm-action); font-weight: 500; text-decoration: none;"><span class="dashicons dashicons-media-document" aria-hidden="true"></span> View file<span class="screen-reader-text"> (opens in a new tab)</span></a>' +
                                       '<button type="button" class="idlm-remove-file-btn" data-input-id="' + inputId + '" data-preview-id="' + previewId + '" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:12px; padding:0; margin-left:5px; font-weight:500;">Remove</button>';
                     $preview.html(previewHtml);
-                    $button.text('Change File');
+                    $button.text(idlmDesignLabel('Change File', 'Change file'));
 
                     // Automatically select 'Yes' for the dropdown if a file is uploaded
                     if (inputId === 'idlm_floor_plan_file') {
@@ -2179,7 +2469,7 @@ jQuery(document).ready(function($) {
         $('#idlm_floor_plan_files').val(JSON.stringify(files));
         $('#idlm_floor_plan_file').val(files[0] || '');
         $('select[name="floor_plan_received"]').val(files.length ? '1' : '0');
-        $('.idlm-file-input[data-input-id="idlm_floor_plan_file"]').siblings('.idlm-direct-upload-trigger').text(files.length ? 'Add Floor Plans' : 'Upload Floor Plans');
+        $('.idlm-file-input[data-input-id="idlm_floor_plan_file"]').siblings('.idlm-direct-upload-trigger').text(files.length ? idlmDesignLabel('Add Floor Plans', 'Add floor plans') : idlmDesignLabel('Upload Floor Plans', 'Upload floor plans'));
         if (!files.length) {
             $list.text('No file uploaded');
             return;
@@ -2270,13 +2560,13 @@ jQuery(document).ready(function($) {
         
         var uploadBtnText = 'Upload File';
         if (inputId === 'idlm_floor_plan_file') {
-            uploadBtnText = 'Upload Floor Plan';
+            uploadBtnText = idlmDesignLabel('Upload Floor Plan', 'Upload floor plan');
             $('select[name="floor_plan_received"]').val('0');
         } else if (inputId === 'idlm_quote_file') {
-            uploadBtnText = 'Upload Quote';
+            uploadBtnText = idlmDesignLabel('Upload Quote', 'Upload quote');
             $('select[name="quote_shared"]').val('0');
         } else if (inputId.indexOf('quote-file') !== -1) {
-            uploadBtnText = 'Upload Quote';
+            uploadBtnText = idlmDesignLabel('Upload Quote', 'Upload quote');
         }
         
         // Find sibling trigger button and update text
@@ -2311,10 +2601,10 @@ jQuery(document).ready(function($) {
                 'data-preview-id': previewId
             }).css({ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px', padding: 0, marginLeft: '5px', fontWeight: 500 });
             $preview.empty().append($link, $removeButton);
-            $uploadButton.text('Change File');
+            $uploadButton.text(idlmDesignLabel('Change File', 'Change file'));
         } else {
             $preview.text('No file uploaded');
-            $uploadButton.text('Upload Quote');
+            $uploadButton.text(idlmDesignLabel('Upload Quote', 'Upload quote'));
         }
     }
 
@@ -2515,7 +2805,7 @@ jQuery(document).ready(function($) {
 
         window.IDLMDialog.confirm({
             title: 'Delete comment?',
-            message: 'Are you sure you want to delete this comment?',
+            message: isCrmDesign ? 'This comment will be removed from the lead’s history. This can’t be undone.' : 'Are you sure you want to delete this comment?',
             confirmLabel: 'Delete comment',
             destructive: true,
             trigger: $link.get(0)
@@ -2562,7 +2852,7 @@ jQuery(document).ready(function($) {
         
         // Reset all other filter fields first
         $('#filter-search').val('');
-        $('#filter-date-range').val('');
+        $('#filter-date-range').val(''); if (window.IDLMDialog && window.IDLMDialog.syncDateRange) { window.IDLMDialog.syncDateRange(document.getElementById('filter-date-range')); }
         $('#filter-stage').val('');
         $('#filter-source').val('');
         $('#filter-rep').val('');
@@ -2584,7 +2874,7 @@ jQuery(document).ready(function($) {
         }
 
         $('#filter-search').val('');
-        $('#filter-date-range').val('');
+        $('#filter-date-range').val(''); if (window.IDLMDialog && window.IDLMDialog.syncDateRange) { window.IDLMDialog.syncDateRange(document.getElementById('filter-date-range')); }
         $('#filter-stage').val('');
         $('#filter-source').val('');
         $('#filter-rep').val('');
@@ -2604,7 +2894,7 @@ jQuery(document).ready(function($) {
         }
 
         $('#filter-search').val('');
-        $('#filter-date-range').val('');
+        $('#filter-date-range').val(''); if (window.IDLMDialog && window.IDLMDialog.syncDateRange) { window.IDLMDialog.syncDateRange(document.getElementById('filter-date-range')); }
         $('#filter-stage').val('');
         $('#filter-source').val('');
         $('#filter-rep').val('');
@@ -2626,12 +2916,13 @@ jQuery(document).ready(function($) {
     $(document).on('input change', '#idlm-edit-lead-form :input', function() {
         var name = $(this).attr('name');
         if (name && name !== 'lead_id') {
-            var label = $(this).closest('.idlm-form-group').find('label').text().replace('*', '').trim();
+            var label = (isCrmDesign ? $(this).closest('.idlm-form-group, .idlm-drawer-field').find('label').first() : $(this).closest('.idlm-form-group').find('label')).text().replace('*', '').trim();
             if (!label) {
                 label = name.replace('_', ' ');
             }
             window.idlmChangedFields[name] = label;
             window.idlmHasUnsavedChanges = true;
+            $('#idlm-drawer-dirty-note').prop('hidden', false);
         }
     });
 
@@ -2659,6 +2950,7 @@ jQuery(document).ready(function($) {
                     window.IDLMDialog.close('#idlm-unsaved-changes-modal', {reason: 'save', restoreFocus: false});
                     jQuery('#idlm-lead-drawer').removeClass('active').attr('aria-hidden', 'true');
                     updateBodyScrollLock();
+                    returnLeadDrawerFocus();
                     showToast(response.data.message, 'success');
                     loadLeadsTable(currentPage);
                 } else {
@@ -2678,6 +2970,7 @@ jQuery(document).ready(function($) {
         window.IDLMDialog.close('#idlm-unsaved-changes-modal', {reason: 'discard', restoreFocus: false});
         jQuery('#idlm-lead-drawer').removeClass('active').attr('aria-hidden', 'true');
         updateBodyScrollLock();
+        returnLeadDrawerFocus();
     });
 
     // Esc key listener to close active pop-ups (modals & drawer)
@@ -2717,6 +3010,11 @@ jQuery(document).ready(function($) {
     window.idlmShowToast = showToast;
 });
 
+// Button wording a script restores after an action, matched to the active design.
+function idlmDesignLabel(legacy, crm) {
+    return document.body.classList.contains('idlm-crm-design') ? crm : legacy;
+}
+
 // Helper function to manage body scroll lock when modals or drawers are open
 function updateBodyScrollLock() {
     var $ = jQuery;
@@ -2729,11 +3027,19 @@ function updateBodyScrollLock() {
 
 // Global modal and drawer pings available inside table scopes
 function openLeadModal() {
+    if (document.body.classList.contains('idlm-crm-design') && window.IDLMDialog) {
+        window.IDLMDialog.open('#idlm-lead-modal', {trigger: document.activeElement});
+        return;
+    }
     jQuery('#idlm-lead-modal').addClass('active');
     updateBodyScrollLock();
 }
 
 function closeLeadModal() {
+    if (document.body.classList.contains('idlm-crm-design') && window.IDLMDialog) {
+        window.IDLMDialog.close('#idlm-lead-modal', {reason: 'programmatic'});
+        return;
+    }
     jQuery('#idlm-lead-modal').removeClass('active');
     updateBodyScrollLock();
 }
@@ -2778,13 +3084,14 @@ function openLeadDrawer(leadId, startTab) {
     updateBodyScrollLock();
     updateLeadDrawerNavigation(leadId);
     
-    $('#idlm-drawer-content-wrapper-inner').html('<div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> Loading Detailed Profile...</div>');
+    $('#idlm-drawer-content-wrapper-inner').html('<div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> ' + (document.body.classList.contains('idlm-crm-design') ? 'Loading lead details…' : 'Loading Detailed Profile...') + '</div>');
     
     $.ajax({
         url: idlm_vars.ajax_url,
         type: 'POST',
         data: {
             action: 'idlm_get_lead_details',
+            idlm_design: document.body.classList.contains('idlm-crm-design') ? 'crm' : 'legacy',
             nonce: idlm_vars.nonce,
             lead_id: leadId,
             workspace_url: $('[data-idlm-workspace]').length ? window.location.href : ''
@@ -2887,9 +3194,14 @@ function closeLeadDrawer() {
     } else {
         jQuery('#idlm-lead-drawer').removeClass('active').attr('aria-hidden', 'true');
         updateBodyScrollLock();
-        if (window.idlmLeadDrawerReturnFocus && document.contains(window.idlmLeadDrawerReturnFocus)) {
-            window.idlmLeadDrawerReturnFocus.focus();
-        }
+        returnLeadDrawerFocus();
+    }
+}
+
+// Closing the drawer by any route gives focus back to the row or control that opened it.
+function returnLeadDrawerFocus() {
+    if (window.idlmLeadDrawerReturnFocus && document.contains(window.idlmLeadDrawerReturnFocus)) {
+        window.idlmLeadDrawerReturnFocus.focus();
     }
 }
 
@@ -2971,6 +3283,7 @@ function loadLeadActivityLog(leadId, forceRefresh) {
         type: 'POST',
         data: {
             action: 'idlm_get_lead_activity',
+            idlm_design: document.body.classList.contains('idlm-crm-design') ? 'crm' : 'legacy',
             nonce: idlm_vars.nonce,
             lead_id: leadId
         },
@@ -2984,19 +3297,19 @@ function loadLeadActivityLog(leadId, forceRefresh) {
                 }
             } else {
                 if ($container.length) {
-                    $container.html('<div class="idlm-alert idlm-alert-warning">' + response.data.message + '</div>');
+                    $container.html('<div class="idlm-alert idlm-alert-warning" data-idlm-notice-inline>' + response.data.message + '</div>');
                 }
                 if ($detailsContainer.length) {
-                    $detailsContainer.html('<div class="idlm-alert idlm-alert-warning">' + response.data.message + '</div>');
+                    $detailsContainer.html('<div class="idlm-alert idlm-alert-warning" data-idlm-notice-inline>' + response.data.message + '</div>');
                 }
             }
         },
         error: function() {
             if ($container.length) {
-                $container.html('<div class="idlm-alert idlm-alert-warning">Server connection error.</div>');
+                $container.html('<div class="idlm-alert idlm-alert-warning" data-idlm-notice-inline>Server connection error.</div>');
             }
             if ($detailsContainer.length) {
-                $detailsContainer.html('<div class="idlm-alert idlm-alert-warning">Server connection error.</div>');
+                $detailsContainer.html('<div class="idlm-alert idlm-alert-warning" data-idlm-notice-inline>Server connection error.</div>');
             }
         }
     });
@@ -3026,7 +3339,7 @@ function saveActivityComment(btn, leadId) {
             }
         },
         complete: function() {
-            $btn.prop('disabled', false).text('Add Comment');
+            $btn.prop('disabled', false).text(idlmDesignLabel('Add Comment', 'Add comment'));
         }
     });
 }
@@ -3055,7 +3368,7 @@ function saveActivityCommentDetails(btn, leadId) {
             }
         },
         complete: function() {
-            $btn.prop('disabled', false).text('Add Comment');
+            $btn.prop('disabled', false).text(idlmDesignLabel('Add Comment', 'Add comment'));
         }
     });
 }
@@ -3301,6 +3614,9 @@ function openExportModal(trigger) {
     $('#export-filter-search').val($('#filter-search').val() || '');
     $('#export-filter-date-basis').val($('#filter-date-basis').val() || 'assigned_at');
     $('#export-filter-date-range').val($('#filter-date-range').val() || '');
+    $('#export-filter-date-start').val($('#filter-date-start').val() || '');
+    $('#export-filter-date-end').val($('#filter-date-end').val() || '');
+    if (window.IDLMDialog && window.IDLMDialog.syncDateRange) { window.IDLMDialog.syncDateRange(document.getElementById('export-filter-date-range')); }
     $('#export-filter-source').val($('#filter-source').val() || '');
     $('#export-filter-stage').val($('#filter-stage').val() || '');
     $('#export-filter-call-status').val($('#filter-call-status').val() || '');
@@ -3473,6 +3789,10 @@ function renderLeadTasks(tasks, $container) {
         .attr('aria-label', overdueCount + ' overdue task' + (overdueCount === 1 ? '' : 's'))
         .prop('hidden', overdueCount === 0);
 
+    if (tasks.length === 0 && document.body.classList.contains('idlm-crm-design')) {
+        $container.html('<div class="idlm-drawer-empty-note" id="idlm-tasks-empty-state">No active tasks for this lead.</div>');
+        return;
+    }
     if (tasks.length === 0) {
         $container.html('<div style="text-align: center; color: var(--idlm-text-muted); padding: 40px 0;" id="idlm-tasks-empty-state"><span class="dashicons dashicons-saved" style="font-size: 32px; width: 32px; height: 32px; margin-bottom: 8px; color: var(--idlm-border-strong); display: inline-block;"></span><p style="margin: 0; font-size: 12px;">No active tasks for this lead.</p></div>');
         return;

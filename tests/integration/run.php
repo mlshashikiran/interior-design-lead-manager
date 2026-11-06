@@ -856,6 +856,9 @@ try {
     require_once __DIR__ . '/quotation-engine-contracts.php';
     require_once __DIR__ . '/quotation-numeric-contracts.php';
     require_once __DIR__ . '/quotation-document-contracts.php';
+    require_once __DIR__ . '/lead-payment-contracts.php';
+    require_once __DIR__ . '/design-handoff-contracts.php';
+    require_once __DIR__ . '/manual-lead-contracts.php';
     require_once __DIR__ . '/interakt-dispatch-contracts.php';
     require_once __DIR__ . '/capi-retry-contracts.php';
     require_once __DIR__ . '/capi-retention-contracts.php';

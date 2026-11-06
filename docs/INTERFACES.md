@@ -4,6 +4,8 @@ Authentication notation: **CRM** = effective `manage_options` or `idlm_access_le
 
 `idlm_create_user`, `idlm_update_user`, and `idlm_update_role_scopes`: administrator-only admin-post actions with their own nonces. They create or update only managed CRM roles, preserve historical CRM ownership, configure allowlisted role visibility scopes, and reject an administrator self-lockout or removal of the final administrator.
 
+`idlm_update_role_access`: administrator-only, POST-only admin-post action with its own nonce, registered in `includes/class-admin-users-controller.php`. It takes `access_role`, `role_scope` (`default`, `all` or `assigned`) and `permissions[]`, changes only that role's key in `idlm_role_lead_scopes`, and applies `idlm_update_role_permissions` semantics to dedicated CRM roles. Administrator is refused and website roles change scope only. Builder: Shashi.
+
 ## Shortcodes
 
 | Name | Location | Purpose | Access / output |
@@ -177,3 +179,33 @@ Builder: Shashi. `wp_ajax_idlm_meta_form_mapping` in `IDLM_Lead_Connector::ajax_
 ## Catalogue CSV preview/import — 1.102.97, 2026-10-27
 
 Builder: Shashi. Authenticated `wp_ajax_idlm_import_catalogue_csv` requires `idlm_manage_quote_items` and `_wpnonce` for `idlm_import_catalogue_csv`. Multipart `catalogue_csv` uses the existing 5 MB CSV upload checks; scalar `import_mode` is `preview` or `import`. Preview returns `total`, `valid`, `invalid`, `duplicates`, `generated_codes` and bounded `rows` with CSV record number, state, messages and sanitized catalogue values. Import revalidates the uploaded file/current codes, adds `imported` and changes successful row states to `imported`; persistence failures return a safe specific error and roll back all writes. CSV records are numbered from header row 1, including records with quoted multiline descriptions. Legacy admin-post import remains available. Neither endpoint accepts browser-supplied parsed rows or stores preview files.
+
+## Local payment foundation
+
+Builder: Shashi. Authenticated `admin_post_idlm_payment_schedule|record|correct|revoke|upload` actions use matching operation-specific nonces, effective payment grants and live lead scope. The Payments section is capability-matched within `[idlm_workspace]`; administrator utilities expose the same renderer. Versioned lead-payment hooks are explicitly allowlisted in the lead outbox and carry minimal ID envelopes. [Operations, permissions and delivery details](DESIGN-PROJECTS-PAYMENT-FOUNDATION.md).
+
+Legacy payment recovery adds authenticated `admin_post_idlm_payment_resolve_legacy` with its matching nonce, the separate correction grant, live lead scope and explicit source/reason/confirmation. It publishes a new audited payment-schedule snapshot without changing the quotation. See [legacy recovery](DESIGN-PROJECTS-PAYMENT-FOUNDATION.md#legacy-recovery-and-crm-consistency-follow-up). Builder: Shashi.
+
+## Design handoff requests — 2026-11-05
+
+Builder: Shashi. Authenticated `wp_ajax_idlm_design_handoff_send` (nonce `idlm_design_handoff_send`, multipart, returns JSON). Authenticated `admin_post_idlm_design_handoff_accept`, `_assign` and `_send_back` with matching nonces. The outbox allows `idlm_design_handoff_notification` (lead ID, event `sent`, `accepted`, `assigned` or `sent_back`), which sends internal staff email only, behind `idlm_handoff_notifications_enabled`. No public route, conversion or WhatsApp event is added.
+
+## Design quotation requests — 2026-11-05
+
+Builder: Shashi. Authenticated `admin_post_idlm_design_quote_save` (nonce `idlm_design_quote_save`), `admin_post_idlm_design_quote_print` (per-handoff nonce), and `wp_ajax_idlm_design_quote_autosave` and `wp_ajax_idlm_design_quote_discard` (nonce `idlm_design_quote_autosave`). `idlm_search_quote_catalogue` also accepts design team members.
+
+## Customer approved requests — 2026-11-05
+
+Builder: Shashi. Authenticated `admin_post_idlm_design_quote_approve` (nonce `idlm_design_quote_approve`, record version and request key) and `admin_post_idlm_design_payment_record` (nonce `idlm_design_payment_record`, multipart). The existing `idlm_lead_payment_schedule_published` and `idlm_lead_payment_recorded` events fire for these.
+
+## Design stage requests — 2026-11-05
+
+Builder: Shashi. Authenticated `admin_post_idlm_design_stage_action` (advance, back, hold, resume, complete, reopen), `idlm_design_doc_upload`, `idlm_design_doc_archive` and `idlm_design_stage_settings`, each with a matching nonce.
+
+## Design board request — 2026-11-06
+
+Builder: Shashi. Authenticated `wp_ajax_idlm_design_stage_move` (nonce `idlm_design_stage_action`, handoff ID and expected stage). It returns 422 with a message and code when refused, including `idlm_design_stage_checklist` and `idlm_design_stage_stale`.
+
+## Design project event — 2026-11-06
+
+Builder: Shashi. The outbox allows `idlm_design_project_event`, with lead ID and a version-1 array: `schema_version`, `event_id`, `event_type`, `handoff_id`, `actor_id`, `occurred_at`. It carries no customer data. Delivery is at least once, so consumers deduplicate by `event_id`. Events from a design revision save queue just after its quotation transaction commits, so a crash in that gap leaves the event row without a delivery. Full history stays in `idlm_design_handoff_events`.

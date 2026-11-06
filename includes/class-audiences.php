@@ -155,7 +155,7 @@ class IDLM_Audiences {
         $data = array();
 
         foreach ($leads as $lead) {
-            $email_hash = !empty($lead->email) ? hash('sha256', strtolower(trim($lead->email))) : '';
+            $ads_email = IDLM_Contact_Identity::email_for_ads($lead); $email_hash = '' !== $ads_email ? hash('sha256', $ads_email) : '';
             $phone_hash = !empty($lead->phone) ? hash('sha256', preg_replace('/[^0-9]/', '', $lead->phone)) : '';
             $first_hash = !empty($lead->first_name) ? hash('sha256', strtolower(trim($lead->first_name))) : '';
             $last_hash = !empty($lead->last_name) ? hash('sha256', strtolower(trim($lead->last_name))) : '';
@@ -224,7 +224,7 @@ class IDLM_Audiences {
             fputcsv($output, array('Email', 'Phone Number', 'Country Code', 'Zip', 'Hashed first name', 'Hashed last name'), ',', '"', '\\');
 
             foreach ($leads as $lead) {
-                $email = !empty($lead->email) ? strtolower(trim($lead->email)) : '';
+                $email = IDLM_Contact_Identity::email_for_ads($lead);
                 $phone = !empty($lead->phone) ? IDLM_CAPI::format_phone_e164($lead->phone) : '';
                 $first_hash = !empty($lead->first_name) ? IDLM_CAPI::normalize_name_for_hash($lead->first_name) : '';
                 $last_hash = !empty($lead->last_name) ? IDLM_CAPI::normalize_name_for_hash($lead->last_name) : '';
@@ -260,7 +260,7 @@ class IDLM_Audiences {
 
         $elements = array();
         foreach ($leads as $lead) {
-            $email_hash = !empty($lead->email) ? hash('sha256', strtolower(trim($lead->email))) : '';
+            $ads_email = IDLM_Contact_Identity::email_for_ads($lead); $email_hash = '' !== $ads_email ? hash('sha256', $ads_email) : '';
             if ($email_hash) {
                 $elements[] = array(
                     'email' => $email_hash,

@@ -12,14 +12,53 @@ if (!defined('ABSPATH')) {
 final class IDLM_Quotation_Policy {
     /** Commercial evidence stays read-only even when an old migration erased status. */
     public static function is_editable_draft($quote, $revision) {
-        if (!$quote || !$revision || 'Draft' !== ($quote->status ?? '') || 'Draft' !== ($revision->status ?? '') ||
+        // An imported legacy quote may be the source of the next revision even
+        // when imported as Shared. Every other non-Draft state stays read-only.
+        $legacy = self::is_legacy_quote($quote, $revision);
+        if (!$quote || !$revision || (!$legacy && ('Draft' !== ($quote->status ?? '') || 'Draft' !== ($revision->status ?? ''))) ||
             !absint($quote->id ?? 0) || absint($revision->quote_id ?? 0) !== absint($quote->id) ||
             !absint($revision->id ?? 0) || absint($quote->current_revision_id ?? 0) !== absint($revision->id) ||
             !empty($revision->finalized_at) || !empty($quote->accepted_revision_id) ||
             !empty($quote->shared_at) || !empty($quote->accepted_at) || !empty($quote->rejected_at)) {
             return false;
         }
+        // Design holds the quotation from handover on; returned handoffs reopen it.
+        if (IDLM_Design_Handoffs::locks_sales_quote(absint($quote->lead_id ?? 0))) { return false; }
+        // Once a new quotation replaced a legacy quote, the legacy quote is history.
+        if ($legacy && IDLM_Quotation_Repository::has_newer_quote($quote)) { return false; }
         return !IDLM_Quotation_Repository::has_commercial_history($quote->id);
+    }
+
+    /**
+     * Pure: the current revision is still the untouched import written by
+     * IDLM_Quotation_Schema::migrate_legacy_quotes(). A saved revision, or any
+     * acceptance, date or finalization evidence, means it is no longer legacy.
+     */
+    public static function is_legacy_quote($quote, $revision) {
+        if (!$quote || !$revision || !absint($quote->id ?? 0) || !absint($revision->id ?? 0) ||
+            absint($revision->quote_id ?? 0) !== absint($quote->id) || absint($quote->current_revision_id ?? 0) !== absint($revision->id)) {
+            return false;
+        }
+        $status = (string) ($quote->status ?? '');
+        if (!in_array($status, array('Draft', 'Shared'), true) || ($revision->status ?? '') !== $status) { return false; }
+        if (IDLM_Quotation_Repository::LEGACY_REVISION_REASON !== ($revision->revision_reason ?? '') || 1 !== absint($revision->revision_number ?? 0) ||
+            !isset($revision->created_by) || 0 !== absint($revision->created_by) || absint($revision->source_revision_id ?? 0)) {
+            return false;
+        }
+        return empty($revision->finalized_at) && empty($quote->accepted_revision_id) && empty($quote->shared_at) && empty($quote->accepted_at) && empty($quote->rejected_at);
+    }
+
+    /**
+     * A lead keeps one working quotation. The one exception: a legacy quote that
+     * is still the lead's newest may be followed by a new quotation and number.
+     */
+    public static function allows_new_quote($existing_quote) {
+        if (!$existing_quote) { return false; }
+        $revision = IDLM_Quotation_Repository::get_revision(absint($existing_quote->current_revision_id ?? 0));
+        return self::is_legacy_quote($existing_quote, $revision) &&
+            !IDLM_Design_Handoffs::locks_sales_quote(absint($existing_quote->lead_id ?? 0)) &&
+            !IDLM_Quotation_Repository::has_newer_quote($existing_quote) &&
+            !IDLM_Quotation_Repository::has_commercial_history($existing_quote->id);
     }
 
     /**

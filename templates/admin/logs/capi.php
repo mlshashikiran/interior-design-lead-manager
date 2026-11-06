@@ -6,14 +6,20 @@ if (!defined('ABSPATH')) {
 $idlm_logs = isset($context['logs']) && is_array($context['logs']) ? $context['logs'] : array();
 $idlm_filters = isset($context['filters']) && is_array($context['filters']) ? $context['filters'] : array();
 $idlm_retry_nonce = isset($context['retry_nonce']) ? (string) $context['retry_nonce'] : '';
-$idlm_filter_keys = array('log_search', 'log_status', 'log_date_from', 'log_date_to');
+$idlm_filter_keys = array('log_search', 'log_status', 'log_date_range', 'log_date_from', 'log_date_to');
 $idlm_clear_url = remove_query_arg($idlm_filter_keys);
-$idlm_has_filters = !empty($idlm_filters['search']) || !empty($idlm_filters['status']) || !empty($idlm_filters['date_from']) || !empty($idlm_filters['date_to']);
+$idlm_has_filters = !empty($idlm_filters['search']) || !empty($idlm_filters['status']) || !empty($idlm_filters['range']) || !empty($idlm_filters['date_from']) || !empty($idlm_filters['date_to']);
+$idlm_design = class_exists('IDLM_Admin_Assets') && method_exists('IDLM_Admin_Assets', 'design_layer_enabled') && IDLM_Admin_Assets::design_layer_enabled();
+$idlm_failed_count = 0;
+foreach ($idlm_logs as $idlm_counted) { if ('success' !== $idlm_counted->status) { ++$idlm_failed_count; } }
+$idlm_ok_count = count($idlm_logs) - $idlm_failed_count;
+$idlm_status_now = (string) ($idlm_filters['status'] ?? '');
+$idlm_status_tabs = array('' => 'All', 'failed' => 'Failed', 'success' => 'Succeeded');
 ?>
 <div class="wrap idlm-wrap idlm-logs-page" data-idlm-log-page="capi" data-idlm-log-nonce="<?php echo esc_attr($idlm_retry_nonce); ?>">
     <header class="idlm-header">
         <div class="idlm-header-meta">
-            <h1>Conversion delivery log</h1>
+            <h1><?php echo IDLM_Admin_Assets::design_layer_enabled() ? 'Ad conversions' : 'Conversion delivery log'; ?></h1>
         </div>
         <div class="idlm-header-actions">
             <button type="button" class="idlm-btn idlm-btn-secondary idlm-header-filter-button" data-idlm-filter-open aria-controls="idlm-capi-log-filters" aria-expanded="false">
@@ -44,10 +50,14 @@ $idlm_has_filters = !empty($idlm_filters['search']) || !empty($idlm_filters['sta
             </select>
         </div>
         <div class="idlm-form-group">
+            <label for="idlm-capi-log-date-range">Date range</label>
+            <select class="idlm-input" id="idlm-capi-log-date-range" name="log_date_range" data-idlm-date-range data-idlm-filter-field><?php echo IDLM_Date_Ranges::options_html($idlm_filters['range'] ?? '', 'All time'); ?></select>
+        </div>
+        <div class="idlm-form-group" data-idlm-date-custom-for="idlm-capi-log-date-range"<?php echo 'custom' === ($idlm_filters['range'] ?? '') ? '' : ' hidden'; ?>>
             <label for="idlm-capi-log-date-from">From date</label>
             <input class="idlm-input" id="idlm-capi-log-date-from" name="log_date_from" type="date" data-idlm-filter-field value="<?php echo esc_attr($idlm_filters['date_from'] ?? ''); ?>">
         </div>
-        <div class="idlm-form-group">
+        <div class="idlm-form-group" data-idlm-date-custom-for="idlm-capi-log-date-range"<?php echo 'custom' === ($idlm_filters['range'] ?? '') ? '' : ' hidden'; ?>>
             <label for="idlm-capi-log-date-to">To date</label>
             <input class="idlm-input" id="idlm-capi-log-date-to" name="log_date_to" type="date" data-idlm-filter-field value="<?php echo esc_attr($idlm_filters['date_to'] ?? ''); ?>">
         </div>
@@ -57,6 +67,21 @@ $idlm_has_filters = !empty($idlm_filters['search']) || !empty($idlm_filters['sta
         </div>
         </div>
     </form>
+
+
+<?php if ($idlm_design): ?>
+    <nav class="idlm-log-tabs" aria-label="Delivery status">
+        <?php foreach ($idlm_status_tabs as $idlm_tab_value => $idlm_tab_label): ?>
+            <a class="idlm-log-tab<?php echo $idlm_status_now === $idlm_tab_value ? ' is-active' : ''; ?>" href="<?php echo esc_url('' === $idlm_tab_value ? remove_query_arg('log_status') : add_query_arg('log_status', $idlm_tab_value)); ?>"<?php echo $idlm_status_now === $idlm_tab_value ? ' aria-current="page"' : ''; ?>><?php echo esc_html($idlm_tab_label); ?></a>
+        <?php endforeach; ?>
+    </nav>
+    <div class="idlm-log-summary" role="group" aria-label="Summary of the entries shown">
+        <span class="idlm-log-summary-item<?php echo $idlm_failed_count ? ' is-failed' : ''; ?>"><strong><?php echo esc_html(number_format_i18n($idlm_failed_count)); ?></strong> failed</span>
+        <span class="idlm-log-summary-item"><strong><?php echo esc_html(number_format_i18n($idlm_ok_count)); ?></strong> succeeded</span>
+        <span class="idlm-log-summary-scope">Latest 50 matching entries</span>
+        <?php if ($idlm_failed_count): ?><button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-compact" data-idlm-select-failed>Select failed</button><?php endif; ?>
+    </div>
+<?php endif; ?>
 
     <div class="idlm-bulk-capi-bar" data-idlm-capi-bulk-bar hidden>
         <span class="idlm-selected-capi-count" data-idlm-selected-capi-count>0 logs selected</span>
@@ -80,13 +105,13 @@ $idlm_has_filters = !empty($idlm_filters['search']) || !empty($idlm_filters['sta
             </thead>
             <tbody>
                 <?php if (!$idlm_logs): ?>
-                    <tr><td colspan="7" class="idlm-table-empty"><?php echo esc_html($idlm_has_filters ? 'No conversion logs match these filters.' : 'No conversion logs have been recorded yet.'); ?></td></tr>
+                    <tr><td colspan="7" class="idlm-table-empty"><?php echo esc_html($idlm_has_filters ? 'No conversion logs match these filters.' : 'No conversion logs have been recorded yet.'); ?><?php if ($idlm_design && $idlm_has_filters): ?> <a href="<?php echo esc_url($idlm_clear_url); ?>">Clear filters</a><?php endif; ?></td></tr>
                 <?php else: ?>
                     <?php foreach ($idlm_logs as $idlm_log):
                         $idlm_lead_label = $idlm_log->email ? $idlm_log->email : 'Lead #' . $idlm_log->lead_id;
                         $idlm_entry_label = sprintf('%s for %s at %s', $idlm_log->event_name, $idlm_lead_label, IDLM_Admin::format_datetime($idlm_log->created_at));
                     ?>
-                        <tr>
+                        <tr<?php echo $idlm_design && 'success' !== $idlm_log->status ? ' class="is-failed"' : ''; ?>>
                             <td data-label="Select" class="idlm-selection-column"><label class="screen-reader-text" for="idlm-capi-log-<?php echo esc_attr($idlm_log->id); ?>">Select <?php echo esc_html($idlm_entry_label); ?></label><input class="idlm-checkbox-control idlm-capi-log-selector" type="checkbox" id="idlm-capi-log-<?php echo esc_attr($idlm_log->id); ?>" value="<?php echo esc_attr($idlm_log->id); ?>"></td>
                             <td data-label="Time" class="idlm-table-cell-nowrap"><?php echo esc_html(IDLM_Admin::format_datetime($idlm_log->created_at)); ?></td>
                             <td data-label="Lead"><span class="idlm-log-primary"><?php echo esc_html($idlm_lead_label); ?></span><small>Lead #<?php echo esc_html((string) $idlm_log->lead_id); ?></small></td>
