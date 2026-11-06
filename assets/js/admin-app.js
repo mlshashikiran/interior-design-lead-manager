@@ -1743,16 +1743,6 @@ jQuery(document).ready(function($) {
     }
 
     // Helper functions
-    function getCurrentDateTimeString() {
-        var now = new Date();
-        var yyyy = now.getFullYear();
-        var mm = String(now.getMonth() + 1).padStart(2, '0');
-        var dd = String(now.getDate()).padStart(2, '0');
-        var hh = String(now.getHours()).padStart(2, '0');
-        var min = String(now.getMinutes()).padStart(2, '0');
-        return yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + min;
-    }
-
     // Custom non-intrusive notification toasts
     function showToast(message, type) {
         window.IDLMDialog.notify(message, type);
