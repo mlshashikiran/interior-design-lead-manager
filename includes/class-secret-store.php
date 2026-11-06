@@ -89,6 +89,11 @@ final class IDLM_Secret_Store {
         return $wpdb->last_error ? null : (null === $raw ? '' : $raw);
     }
 
+    /** stored() for several options in one uncached read; all null when the read fails. */
+    public static function stored_many(array $names) {
+        return IDLM_Schema_Migration::versions($names);
+    }
+
     private static function invalidate($name) {
         wp_cache_delete($name, 'options');
         wp_cache_delete('alloptions', 'options');
@@ -117,8 +122,10 @@ final class IDLM_Secret_Store {
     /** Bounded, repeatable migration: no completion marker advances on failure. */
     public static function migrate_platforms() {
         $ready = true;
+        // One live read of every platform secret; each value is what stored() returns.
+        $stored = self::stored_many(self::platform_options());
         foreach (self::platform_options() as $name) {
-            $raw = self::stored($name);
+            $raw = $stored[$name];
             if (null === $raw) { $ready = false; continue; }
             if ('' !== $raw && self::is_environment_managed($name)) {
                 if (0 !== strpos($raw, self::PREFIX) && !self::migrate($name, $raw)) { $ready = false; }

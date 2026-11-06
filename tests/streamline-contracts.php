@@ -58,3 +58,19 @@ idlm_test('STREAMLINE quotation completion matches the per-marker check in one r
     assert_false(IDLM_Quotation_Schema::is_current(), 'A failed marker read is never current.');
     $GLOBALS['wpdb']->query_fail_contains = '';
 });
+
+idlm_test('STREAMLINE platform secret scan reads every secret live in one query', static function (): void {
+    $names = IDLM_Secret_Store::platform_options();
+    $GLOBALS['idlm_test_options']['idlm_meta_access_token'] = 'synthetic-plaintext-token';
+    $batched = IDLM_Secret_Store::stored_many($names);
+    foreach ($names as $name) {
+        assert_same(IDLM_Secret_Store::stored($name), $batched[$name], $name);
+    }
+    $GLOBALS['wpdb']->get_results_calls = array();
+    assert_true(IDLM_Secret_Store::migrate_platforms());
+    assert_count_value(1, array_filter($GLOBALS['wpdb']->get_results_calls, static function ($query) { return false !== strpos($query, 'option_name IN'); }));
+    assert_same(0, strpos((string) get_option('idlm_meta_access_token'), IDLM_Secret_Store::PREFIX), 'Plaintext is still encrypted by the scan.');
+    $GLOBALS['wpdb']->query_fail_contains = 'option_name IN';
+    assert_false(IDLM_Secret_Store::migrate_platforms(), 'A failed scan read is never ready.');
+    $GLOBALS['wpdb']->query_fail_contains = '';
+});
