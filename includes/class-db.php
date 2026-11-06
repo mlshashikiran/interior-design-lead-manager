@@ -9,16 +9,19 @@ class IDLM_DB {
     public static function get_last_validation_error() {
         return self::$last_validation_error;
     }
+    /** Completion marker option => idempotent backfill run by init(). */
+    const MIGRATION_STEPS = array(
+        'idlm_handoff_state_version' => 'backfill_handoff_state',
+        'idlm_duplicate_quality_version' => 'backfill_duplicate_early_close_quality',
+        'idlm_workflow_integrity_version' => 'repair_workflow_integrity',
+        'idlm_assignment_timestamp_version' => 'backfill_assignment_timestamps',
+        'idlm_attribution_touchpoint_backfill_version' => 'backfill_duplicate_touchpoints',
+        'idlm_conversion_time_integrity_version' => 'clear_non_won_conversion_times',
+        'idlm_task_queue_cleanup_version' => 'cleanup_stale_pending_tasks',
+    );
+
     public static function init() {
-        $steps = array(
-            'idlm_handoff_state_version' => 'backfill_handoff_state',
-            'idlm_duplicate_quality_version' => 'backfill_duplicate_early_close_quality',
-            'idlm_workflow_integrity_version' => 'repair_workflow_integrity',
-            'idlm_assignment_timestamp_version' => 'backfill_assignment_timestamps',
-            'idlm_attribution_touchpoint_backfill_version' => 'backfill_duplicate_touchpoints',
-            'idlm_conversion_time_integrity_version' => 'clear_non_won_conversion_times',
-            'idlm_task_queue_cleanup_version' => 'cleanup_stale_pending_tasks',
-        );
+        $steps = self::MIGRATION_STEPS;
         $complete = IDLM_DB_VERSION === get_option('idlm_schema_version', '');
         foreach ($steps as $option => $method) { $complete = $complete && '1.0.1' === get_option($option, ''); }
         if ($complete) { return true; }

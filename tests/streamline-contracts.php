@@ -74,3 +74,39 @@ idlm_test('STREAMLINE platform secret scan reads every secret live in one query'
     assert_false(IDLM_Secret_Store::migrate_platforms(), 'A failed scan read is never ready.');
     $GLOBALS['wpdb']->query_fail_contains = '';
 });
+
+/** Body of a top-level function or class method, for source contracts. */
+function idlm_streamline_function_source(string $file, string $function): string {
+    $source = (string) file_get_contents(dirname(__DIR__) . '/' . $file);
+    $start = strpos($source, 'function ' . $function . '(');
+    assert_true(false !== $start, $function . ' exists in ' . $file);
+    $next = preg_match('/\n\s*(?:(?:public|private|protected)\s+)?(?:static\s+)?function\s/', $source, $match, PREG_OFFSET_CAPTURE, $start + 10) ? $match[0][1] : strlen($source);
+    return substr($source, $start, $next - $start);
+}
+
+idlm_test('STREAMLINE boot priming covers every option the boot path reads', static function (): void {
+    if (!function_exists('idlm_boot_option_names')) {
+        // The fast suite does not load the bootstrap file; evaluate only this pure list function.
+        eval(idlm_streamline_function_source('interior-design-lead-manager.php', 'idlm_boot_option_names')); // phpcs:ignore Squiz.PHP.Eval.Discouraged
+    }
+    $primed = idlm_boot_option_names();
+    foreach (array_keys(IDLM_DB::MIGRATION_STEPS) as $marker) { assert_true(in_array($marker, $primed, true), $marker); }
+    $paths = array(
+        array('interior-design-lead-manager.php', 'idlm_boot_plugin'),
+        array('interior-design-lead-manager.php', 'idlm_register_design_role'),
+        array('includes/class-telemetry.php', 'init_handlers'),
+        array('includes/class-settings.php', 'init'),
+        array('includes/class-db.php', 'init'),
+        array('includes/class-integration-auth.php', 'maybe_migrate_api_credentials'),
+        array('includes/class-integrations.php', 'init'),
+    );
+    foreach ($paths as $path) {
+        preg_match_all("/get_option\\('(idlm_[a-z0-9_]+)'/", idlm_streamline_function_source($path[0], $path[1]), $reads);
+        foreach ($reads[1] as $name) { assert_true(in_array($name, $primed, true), $name . ' read by ' . $path[1] . ' is primed'); }
+    }
+    foreach (array('idlm_webhook_api_key', 'idlm_mcp_api_key', 'idlm_google_gadm_password', IDLM_Settings::VERSION_OPTION, IDLM_Production_Security::MCP_METADATA_OPTION) as $name) {
+        assert_true(in_array($name, $primed, true), $name);
+    }
+    $boot = idlm_streamline_function_source('interior-design-lead-manager.php', 'idlm_boot_plugin');
+    assert_true(strpos($boot, 'wp_prime_option_caches(idlm_boot_option_names())') < strpos($boot, 'IDLM_Auth::init()'), 'Options are primed before the first boot read.');
+});
