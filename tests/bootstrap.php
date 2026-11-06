@@ -177,6 +177,7 @@ final class IDLM_Test_WPDB {
     public array $custom_query_results = array();
     public $custom_get_var_result = null;
     public string $last_get_results_query = '';
+    public array $get_results_calls = array();
     public array $failed_writes = array();
     public string $query_fail_contains = '';
     public bool $deny_schema_lock = false;
@@ -196,6 +197,7 @@ final class IDLM_Test_WPDB {
         $this->custom_query_results = array();
         $this->custom_get_var_result = null;
         $this->last_get_results_query = '';
+        $this->get_results_calls = array();
         $this->failed_writes = array();
         $this->query_fail_contains = '';
         $this->deny_schema_lock = false;
@@ -636,7 +638,12 @@ final class IDLM_Test_WPDB {
         $this->last_get_results_query = preg_replace('/\s+/', ' ', trim($query));
         $query = $this->last_get_results_query;
         if (strpos($query, 'SELECT option_name, option_value FROM wp_options WHERE option_name IN') === 0) {
-            $rows=array();foreach(array('idlm_max_active_leads_per_rep',IDLM_Settings::ROUTING_OPTION) as $key) {
+            // Rows for the bound names, read like get_var(): table rows first, then stored options.
+            $this->get_results_calls[] = $query;
+            if ($this->query_fail_contains && strpos($query, $this->query_fail_contains) !== false) { $this->last_error = 'Synthetic query failure'; return array(); }
+            preg_match('/option_name IN \\(([^)]*)\\)/', $query, $list); preg_match_all("/'([^']*)'/", $list[1] ?? '', $names);
+            $rows=array();foreach(array_unique($names[1]) as $key) {
+                foreach ($this->tables['wp_options'] ?? array() as $row) { if ($row['option_name']===$key) { $rows[]=(object)array('option_name'=>$key,'option_value'=>$row['option_value']); continue 2; } }
                 if (array_key_exists($key,$GLOBALS['idlm_test_options'])) { $value=$GLOBALS['idlm_test_options'][$key];$rows[]=(object)array('option_name'=>$key,'option_value'=>is_array($value)?serialize($value):$value); }
             }return $rows;
         }

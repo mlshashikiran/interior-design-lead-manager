@@ -18,9 +18,11 @@ final class IDLM_Quotation_Schema {
 
     /** Completion includes independently checked backfill markers. */
     public static function is_current() {
-        if ('ready' !== IDLM_Schema_Migration::version(self::STATUS_OPTION)) { return false; }
+        // One live read of the status and every marker; a failed read is never current.
+        $saved = IDLM_Schema_Migration::versions(array_merge(array(self::STATUS_OPTION), array_keys(self::markers())));
+        if ('ready' !== ($saved[self::STATUS_OPTION] ?? null)) { return false; }
         foreach (self::markers() as $option => $version) {
-            if ($version !== IDLM_Schema_Migration::version($option)) { return false; }
+            if ($version !== ($saved[$option] ?? null)) { return false; }
         }
         return true;
     }

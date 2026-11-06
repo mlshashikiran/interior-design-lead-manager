@@ -44,6 +44,28 @@ final class IDLM_Schema_Migration {
         return $wpdb->last_error ? null : (string) $value;
     }
 
+    /**
+     * Live values for several markers in one read, as version() would return
+     * each: '' when absent, or null for every marker when the read fails.
+     */
+    public static function versions(array $options) {
+        global $wpdb;
+        $options = array_values(array_unique(array_map('strval', $options)));
+        if (!$options) { return array(); }
+        $placeholders = implode(', ', array_fill(0, count($options), '%s'));
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- REL007-SQL-0388: versions(): the same live marker read as version(), batched; the IN list is built only from %s placeholders and every option name is bound.
+        $rows = $wpdb->get_results($wpdb->prepare("SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name IN ({$placeholders})", $options));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+        if ($wpdb->last_error) { return array_fill_keys($options, null); }
+        $values = array_fill_keys($options, '');
+        foreach ((array) $rows as $row) {
+            if (isset($row->option_name) && array_key_exists((string) $row->option_name, $values)) {
+                $values[(string) $row->option_name] = (string) $row->option_value;
+            }
+        }
+        return $values;
+    }
+
     public static function publish($option, $version) {
         global $wpdb;
         // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0389: publish(): installer declarations supply identifiers validated by the CREATE TABLE identifier regexp; metadata option values bound; physical schema/version checks must be live.
