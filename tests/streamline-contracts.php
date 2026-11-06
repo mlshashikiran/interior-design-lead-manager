@@ -110,3 +110,22 @@ idlm_test('STREAMLINE boot priming covers every option the boot path reads', sta
     $boot = idlm_streamline_function_source('interior-design-lead-manager.php', 'idlm_boot_plugin');
     assert_true(strpos($boot, 'wp_prime_option_caches(idlm_boot_option_names())') < strpos($boot, 'IDLM_Auth::init()'), 'Options are primed before the first boot read.');
 });
+
+idlm_test('STREAMLINE both quotation editor entry points enqueue the same bundle', static function (): void {
+    $GLOBALS['idlm_test_asset_calls'] = array();
+    IDLM_Quotations::enqueue_assets('toplevel_page_other');
+    assert_same(array(), $GLOBALS['idlm_test_asset_calls'], 'Other admin pages load nothing.');
+    IDLM_Quotations::enqueue_assets('toplevel_page_idlm_quotations');
+    $admin = $GLOBALS['idlm_test_asset_calls'];
+    $GLOBALS['idlm_test_asset_calls'] = array();
+    IDLM_Quotations::load_editor_assets();
+    $editor = $GLOBALS['idlm_test_asset_calls'];
+    assert_same(array('type' => 'enqueue_style', 'args' => array('dashicons')), array_shift($editor));
+    assert_same($admin, $editor);
+    $sequence = array_map(static function ($call) { return $call['type'] . ':' . $call['args'][0] . (('localize_script' === $call['type']) ? ':' . $call['args'][1] : ''); },
+        array_values(array_filter($admin, static function ($call) { return 0 !== strpos($call['type'], 'register') && 'inline_script' !== $call['type'] && !('localize_script' === $call['type'] && 'idlm-admin-app' === $call['args'][0]); })));
+    assert_same(array('enqueue_style:idlm-google-fonts', 'enqueue_style:idlm-admin-styles', 'enqueue_script:idlm-dialog', 'enqueue_style:idlm-quotations', 'enqueue_script:idlm-quotations', 'localize_script:idlm-quotations:idlmQuoteData'), $sequence);
+    $settings = end($admin)['args'][2];
+    assert_same(array('ajaxUrl', 'nonce', 'autosaveNonce', 'currencyCode', 'numericLimits'), array_keys($settings));
+    assert_same(array('maxAmount', 'maxMeasure', 'maxRows', 'maxSections'), array_keys($settings['numericLimits']));
+});
