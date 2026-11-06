@@ -37,11 +37,13 @@ idlm_handoff_native_test('HANDOFF send refuses a lead that is not Won, blank rem
     idlm_integration_assert_true(is_wp_error(IDLM_Design_Handoffs::send($f[0],idlm_handoff_input(),wp_generate_uuid4())));
     idlm_integration_assert_same(null,IDLM_Design_Handoffs::for_lead($f[0]));
 });
-idlm_handoff_native_test('HANDOFF without quotation terms keeps the advance on the handoff', static function(): void {
+idlm_handoff_native_test('HANDOFF without quotation terms is refused and records nothing', static function(): void {
+    // Design needs a quotation with payment terms; the advance is never parked on a handoff.
     global $wpdb; $f=idlm_payment_native_fixture(); $wpdb->update($wpdb->prefix.'idlm_quote_revisions',array('document_terms'=>''),array('id'=>$f[2]));
-    $sent=IDLM_Design_Handoffs::send($f[0],idlm_handoff_input(),wp_generate_uuid4()); idlm_integration_assert_true(is_array($sent));
-    idlm_integration_assert_same('0',(string)$sent['handoff']->receipt_confirmation_id); idlm_integration_assert_same('99000.00',$sent['handoff']->advance_amount);
+    $sent=IDLM_Design_Handoffs::send($f[0],idlm_handoff_input(),wp_generate_uuid4()); idlm_integration_assert_true(is_wp_error($sent),'Send without payment terms must be refused.');
+    idlm_integration_assert_same(null,IDLM_Design_Handoffs::for_lead($f[0]));
     idlm_integration_assert_same(array(),IDLM_Lead_Payments::read($f[0])['receipts']);
+    idlm_integration_assert_same(null,IDLM_Lead_Payments::read($f[0])['schedule'],'A refused send must not publish a schedule.');
 });
 function idlm_handoff_person($capability): int {
     $id=idlm_handoff_user('subscriber'); (new WP_User($id))->add_cap($capability); return $id;
@@ -298,15 +300,17 @@ idlm_handoff_native_test('APPROVED sales cannot amend the schedule while design 
     $result=IDLM_Lead_Payments::publish_schedule($d['lead'],$d['revision'],array(0),'Trying to amend from sales',$read['version'],wp_generate_uuid4());
     idlm_integration_assert_same('idlm_payment_design_locked',$result->get_error_code());
 });
-idlm_handoff_native_test('APPROVED an advance kept on the handoff joins Payments once terms exist', static function(): void {
+idlm_handoff_native_test('HANDOFF Accept refuses a lead whose quotation lost its payment terms', static function(): void {
     global $wpdb; $f=idlm_payment_native_fixture(); $admin=get_current_user_id(); $good=$wpdb->get_var($wpdb->prepare("SELECT document_terms FROM {$wpdb->prefix}idlm_quote_revisions WHERE id=%d",$f[2]));
+    $sent=IDLM_Design_Handoffs::send($f[0],idlm_handoff_input(),wp_generate_uuid4()); idlm_integration_assert_true(is_array($sent)); $id=(int)$sent['handoff']->id;
+    idlm_integration_assert_true((int)$sent['handoff']->receipt_confirmation_id>0,'With terms, the advance is recorded in Payments at send.');
     $wpdb->update($wpdb->prefix.'idlm_quote_revisions',array('document_terms'=>''),array('id'=>$f[2]));
-    $sent=IDLM_Design_Handoffs::send($f[0],idlm_handoff_input(),wp_generate_uuid4()); $id=(int)$sent['handoff']->id; idlm_integration_assert_same('0',(string)$sent['handoff']->receipt_confirmation_id);
-    IDLM_Design_Handoffs::accept($id,$admin,'2027-01-31');
+    idlm_integration_assert_true(is_wp_error(IDLM_Design_Handoffs::accept($id,$admin,'2027-01-31')),'Accept needs a quotation with payment terms.');
+    idlm_integration_assert_same('new',IDLM_Design_Handoffs::find($id)->status);
     $wpdb->update($wpdb->prefix.'idlm_quote_revisions',array('document_terms'=>$good),array('id'=>$f[2]));
-    $saved=IDLM_Design_Revisions::save($id,$f[2],idlm_design_revision_post(array(idlm_design_revision_line('100000','12')),array('wooden_discount_percent'=>'0','additional_discount_amount'=>'0')),wp_generate_uuid4()); idlm_integration_assert_true(is_array($saved));
-    $result=IDLM_Design_Revisions::customer_approve($id,$saved['revision_id'],'Approved in the site meeting',0,wp_generate_uuid4()); idlm_integration_assert_same('',$result['note']);
-    $read=IDLM_Lead_Payments::read($f[0]); idlm_integration_assert_same('99000.00',$read['balance']['total_received']); idlm_integration_assert_true((int)IDLM_Design_Handoffs::find($id)->receipt_confirmation_id>0);
+    idlm_integration_assert_true(!is_wp_error(IDLM_Design_Handoffs::accept($id,$admin,'2027-01-31')));
+    idlm_integration_assert_same('accepted',IDLM_Design_Handoffs::find($id)->status);
+    idlm_integration_assert_same('99000.00',IDLM_Lead_Payments::read($f[0])['balance']['total_received']);
 });
 idlm_handoff_native_test('APPROVED a Design Manager records later payments, and reps and others cannot', static function(): void {
     $manager=idlm_handoff_person(IDLM_Design_Handoffs::CAPABILITY); $rep=idlm_design_rep(); $f=idlm_payment_native_fixture(); $admin=get_current_user_id();
