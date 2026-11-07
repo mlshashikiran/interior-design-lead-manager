@@ -5,7 +5,8 @@ if (!defined('ABSPATH')) { exit; }
 final class IDLM_Admin_Task_Controller extends IDLM_Admin {
 
     public static function ajax_get_lead_tasks() {
-        IDLM_Admin::guard_ajax('rep');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
 
         $lead_id = isset($_POST['lead_id']) ? intval($_POST['lead_id']) : 0;
         if (!$lead_id) {
@@ -48,7 +49,8 @@ final class IDLM_Admin_Task_Controller extends IDLM_Admin {
     }
 
     public static function ajax_add_lead_task() {
-        IDLM_Admin::guard_ajax('rep');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
 
         $lead_id = isset($_POST['lead_id']) ? intval($_POST['lead_id']) : 0;
         $title = isset($_POST['title']) ? trim(sanitize_text_field(wp_unslash($_POST['title']))) : '';
@@ -121,7 +123,8 @@ final class IDLM_Admin_Task_Controller extends IDLM_Admin {
     }
 
     public static function ajax_toggle_task_status() {
-        IDLM_Admin::guard_ajax('rep');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
 
         $task_id = isset($_POST['task_id']) ? intval($_POST['task_id']) : 0;
         $status = isset($_POST['status']) ? sanitize_key($_POST['status']) : 'pending';
@@ -175,7 +178,8 @@ final class IDLM_Admin_Task_Controller extends IDLM_Admin {
     }
 
     public static function ajax_delete_lead_task() {
-        IDLM_Admin::guard_ajax('rep');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
 
         $task_id = isset($_POST['task_id']) ? intval($_POST['task_id']) : 0;
         if (!$task_id) {

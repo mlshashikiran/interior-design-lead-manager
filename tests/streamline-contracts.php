@@ -274,25 +274,23 @@ idlm_test('STREAMLINE maintenance checks run once per interval and again right a
 });
 
 idlm_test('STREAMLINE CRM AJAX checks the nonce before access and refuses with one error shape', static function (): void {
-    $caps = $GLOBALS['idlm_test_caps'] ?? array(); $nonce = $GLOBALS['idlm_test_nonce_valid'] ?? true;
-    try {
-        $GLOBALS['idlm_test_nonce_valid'] = false; $GLOBALS['idlm_test_caps'] = array('manage_options' => true);
-        assert_same(403, expect_json_response(static function () { IDLM_Admin::guard_ajax('admin'); }, false)->status, 'A bad nonce is refused even for an administrator.');
-        $GLOBALS['idlm_test_nonce_valid'] = true; $GLOBALS['idlm_test_caps'] = array();
-        $refused = expect_json_response(static function () { IDLM_Admin::guard_ajax('admin', 'Only administrators can do this.', 403); }, false, 403);
-        assert_same(array('message' => 'Only administrators can do this.'), $refused->data);
-        assert_same(array('message' => 'Permission denied.'), expect_json_response(static function () { IDLM_Admin::guard_ajax('unknown-rule'); }, false)->data);
-        $GLOBALS['idlm_test_caps'] = array('manage_options' => true);
-        IDLM_Admin::guard_ajax('admin');
-    } finally { $GLOBALS['idlm_test_caps'] = $caps; $GLOBALS['idlm_test_nonce_valid'] = $nonce; }
     foreach (glob(dirname(__DIR__) . '/includes/*.php') as $file) {
-        assert_false((bool) preg_match("/wp_send_json_error\\(\\s*['\"]/", (string) file_get_contents($file)), basename($file) . ' sends a bare-string error.');
+        $source = (string) file_get_contents($file);
+        assert_false((bool) preg_match("/wp_send_json_error\\(\\s*['\"]/", $source), basename($file) . ' sends a bare-string error.');
+        // Every shared access check comes straight after the handler's own nonce check.
+        $calls = substr_count($source, 'IDLM_Admin::require_ajax_access(');
+        assert_same($calls, preg_match_all("/check_ajax_referer\\('idlm_admin_nonce', 'nonce'\\);\\n\\s*IDLM_Admin::require_ajax_access\\(/", $source), basename($file) . ' checks access without the nonce first.');
     }
-    $admin = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin.php');
-    $guard = substr($admin, strpos($admin, 'public static function guard_ajax('), 600);
-    assert_true(strpos($guard, "check_ajax_referer('idlm_admin_nonce', 'nonce');") < strpos($guard, 'current_user_can'), 'Nonce first.');
-    assert_contains("wp_send_json_error(array('message' => \$message), \$status);", $guard);
-    assert_contains("'admin' === \$rule ? current_user_can('manage_options') : ('rep' === \$rule ? IDLM_Lead_Access_Policy::has_rep_access() : false)", $guard, 'Unknown rules refuse.');
+    $caps = $GLOBALS['idlm_test_caps'] ?? array();
+    try {
+        $GLOBALS['idlm_test_caps'] = array();
+        $refused = expect_json_response(static function () { IDLM_Admin::require_ajax_access('admin', 'Only administrators can do this.', 403); }, false, 403);
+        assert_same(array('message' => 'Only administrators can do this.'), $refused->data);
+        assert_same(array('message' => 'Permission denied.'), expect_json_response(static function () { IDLM_Admin::require_ajax_access('unknown-rule'); }, false)->data);
+        $GLOBALS['idlm_test_caps'] = array('manage_options' => true);
+        IDLM_Admin::require_ajax_access('admin');
+        assert_same(array('message' => 'Permission denied.'), expect_json_response(static function () { IDLM_Admin::require_ajax_access('unknown-rule'); }, false)->data, 'Unknown rules refuse even administrators.');
+    } finally { $GLOBALS['idlm_test_caps'] = $caps; }
 });
 
 idlm_test('STREAMLINE each workspace view loads the shared shell plus only its own assets', static function (): void {

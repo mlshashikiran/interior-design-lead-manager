@@ -102,7 +102,8 @@ class IDLM_Admin_Logs_Renderer {
      * Return one redacted integration log payload behind the shared administrator boundary.
      */
     private static function ajax_get_log_payload($table_suffix) {
-        IDLM_Admin::guard_ajax('admin', 'Permission denied.', 403);
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('admin', 'Permission denied.', 403);
 
         $log_id = isset($_POST['log_id']) ? absint(wp_unslash($_POST['log_id'])) : 0;
         if (!$log_id) {

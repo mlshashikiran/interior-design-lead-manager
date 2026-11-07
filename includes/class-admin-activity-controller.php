@@ -11,7 +11,8 @@ if (!defined('ABSPATH')) {
 final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
 
     public static function ajax_get_lead_activity() {
-        IDLM_Admin::guard_ajax('rep');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
         
         $lead_id = isset($_POST['lead_id']) ? intval(wp_unslash($_POST['lead_id'])) : 0;
         if (!$lead_id) {
@@ -121,7 +122,8 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
     }
 
     public static function ajax_save_activity_comment() {
-        IDLM_Admin::guard_ajax('rep');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
 
         $lead_id = isset($_POST['lead_id']) ? intval(wp_unslash($_POST['lead_id'])) : 0;
         $comment = isset($_POST['comment']) ? sanitize_textarea_field(wp_unslash($_POST['comment'])) : '';
@@ -164,7 +166,8 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
     }
 
     public static function ajax_edit_activity_comment() {
-        IDLM_Admin::guard_ajax('rep');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
 
         $log_id = isset($_POST['log_id']) ? intval(wp_unslash($_POST['log_id'])) : 0;
         $comment = isset($_POST['comment']) ? sanitize_textarea_field(wp_unslash($_POST['comment'])) : '';
@@ -201,7 +204,8 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
     }
 
     public static function ajax_delete_activity_comment() {
-        IDLM_Admin::guard_ajax('rep');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
 
         $log_id = isset($_POST['log_id']) ? intval(wp_unslash($_POST['log_id'])) : 0;
         if (!$log_id) {

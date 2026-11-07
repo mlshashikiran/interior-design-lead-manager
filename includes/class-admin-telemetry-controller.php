@@ -28,7 +28,8 @@ class IDLM_Admin_Telemetry_Controller {
     }
 
     public static function ajax_clear_telemetry_logs() {
-        IDLM_Admin::guard_ajax('admin');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('admin');
 
         global $wpdb;
         $table_telemetry = $wpdb->prefix . 'idlm_telemetry_logs';

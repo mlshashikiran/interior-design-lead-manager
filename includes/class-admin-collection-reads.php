@@ -5,7 +5,8 @@ if (!defined('ABSPATH')) { exit; }
 final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
 
     public static function ajax_get_leads_table() {
-        IDLM_Admin::guard_ajax('rep');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
 
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
@@ -618,7 +619,8 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
     }
 
     public static function ajax_get_kanban_leads() {
-        IDLM_Admin::guard_ajax('rep');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
 
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
@@ -902,7 +904,8 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
     }
 
     public static function ajax_get_total_leads_count() {
-        IDLM_Admin::guard_ajax('admin', 'Permission denied. Only administrators can perform this action.');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('admin', 'Permission denied. Only administrators can perform this action.');
 
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';

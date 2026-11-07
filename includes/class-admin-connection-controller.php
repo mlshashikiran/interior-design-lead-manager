@@ -4,7 +4,8 @@ if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_Admin_Connection_Controller {
     public static function ajax_test_api_connection() {
-        IDLM_Admin::guard_ajax('admin');
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('admin');
 
         $platform = isset($_POST['platform']) ? sanitize_key(wp_unslash($_POST['platform'])) : '';
         $test_type = isset($_POST['test_type']) ? sanitize_key(wp_unslash($_POST['test_type'])) : '';
