@@ -317,10 +317,8 @@ final class IDLM_Lead_Payment_Controller {
     }
     /** Which quotation revision and plan version the schedule comes from. */
     private static function plan_source($schedule) {
-        global $wpdb;
-        $revision = (int) $schedule['revision_id'];
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- One prepared read of the plugin's own revision name for display. Builder: Shashi.
-        $name = $revision ? (string) $wpdb->get_var($wpdb->prepare("SELECT revision_name FROM {$wpdb->prefix}idlm_quote_revisions WHERE id=%d", $revision)) : '';
+        $revision = (int) $schedule['revision_id'] ? IDLM_Quotation_Repository::get_revision((int) $schedule['revision_id']) : null;
+        $name = $revision ? (string) $revision->revision_name : '';
         return ('' !== $name ? 'From quotation ' . $name . ', plan' : 'Plan') . ' version ' . (int) $schedule['version_no'] . '.';
     }
     /** Who entered recovered historic terms, when, and why. */

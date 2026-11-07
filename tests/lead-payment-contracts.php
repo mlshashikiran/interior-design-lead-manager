@@ -115,5 +115,5 @@ idlm_test('PAYMENT Won-amount plan writes no quotation, keeps first-plan and cha
     assert_contains("return self::operate(\$lead_id, false, static function(\$lead) use (\$lead_id, \$milestones",$p);
     assert_contains("'won_plan', 'record', 'correct', 'revoke'",$c);
     assert_contains("if (\$won && \$can_record) {",$c);
-    assert_contains('$name = $revision ? (string) $wpdb->get_var(',$c);
+    assert_contains('IDLM_Quotation_Repository::get_revision((int) $schedule[\'revision_id\']) : null;',$c);
 });
