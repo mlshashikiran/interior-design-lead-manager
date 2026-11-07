@@ -877,14 +877,15 @@ class IDLM_DB {
         $last = ''; $deadline = min(microtime(true) + 5, $request_deadline ?? PHP_FLOAT_MAX);
         $targets = self::get_presales_outreach_targets();
         $result = array('completed_cycles'=>array(), 'active_cycle'=>array('date'=>'','calls'=>0,'whatsapp'=>0,'complete'=>false), 'closure_count'=>0);
+        $since = self::outreach_round_start($lead_id);
         do {
             if (microtime(true) > $deadline) { return new WP_Error('idlm_task_history_time', 'Task history took too long. Retry shortly.'); }
             $after = $last !== '' ? $wpdb->prepare(" AND COALESCE(DATE(created_at), '0000-00-00') > %s", $last) : '';
             // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0245: bounded_followup_progress(): canonical prefixed schema/tables; fixed migration/task predicates and absint ID lists; numeric/string/date values bound or wpdb CRUD escaped; lifecycle/task/schema checks cannot use stale per-query data.
             $rows = $wpdb->get_results($wpdb->prepare("SELECT DATE(created_at) activity_date,
                 SUM(activity_type = 'outbound_call') calls, SUM(activity_type = 'whatsapp_outbound') whatsapp, SUM(activity_type = 'closure_message') closure
-                FROM {$wpdb->prefix}idlm_lead_activity_log WHERE lead_id = %d AND activity_type IN ('outbound_call','whatsapp_outbound','closure_message'){$after}
-                GROUP BY DATE(created_at) ORDER BY DATE(created_at) ASC LIMIT 100", absint($lead_id)));
+                FROM {$wpdb->prefix}idlm_lead_activity_log WHERE lead_id = %d AND activity_type IN ('outbound_call','whatsapp_outbound','closure_message') AND created_at >= %s{$after}
+                GROUP BY DATE(created_at) ORDER BY DATE(created_at) ASC LIMIT 100", absint($lead_id), $since));
             // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             if ($wpdb->last_error) { return new WP_Error('idlm_task_history_read', 'Unable to load task history. Retry shortly.'); }
             $count = count($rows);
@@ -897,6 +898,15 @@ class IDLM_DB {
         } while ($count === 100);
         if (microtime(true) > $deadline) { return new WP_Error('idlm_task_history_time', 'Task history took too long. Retry shortly.'); }
         return $result;
+    }
+
+    /** Start of the current outreach round: the latest reopen, or the beginning of history. */
+    public static function outreach_round_start($lead_id) {
+        global $wpdb;
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Bound lead ID; the latest reopen must be read fresh.
+        $since = $wpdb->get_var($wpdb->prepare("SELECT MAX(created_at) FROM {$wpdb->prefix}idlm_lead_activity_log WHERE lead_id = %d AND activity_type = 'lead_reopened'", absint($lead_id)));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        return $since ? (string) $since : '1000-01-01 00:00:00';
     }
 
     /** Return the six-day outreach checklist used by the UI and status gates. */
@@ -935,10 +945,11 @@ class IDLM_DB {
                         SUM(activity_type = 'whatsapp_outbound') whatsapp,
                         SUM(activity_type = 'closure_message') closure
                  FROM {$wpdb->prefix}idlm_lead_activity_log
-                 WHERE lead_id = %d AND activity_type IN ('outbound_call','whatsapp_outbound','closure_message')
+                 WHERE lead_id = %d AND activity_type IN ('outbound_call','whatsapp_outbound','closure_message') AND created_at >= %s
                  GROUP BY DATE(created_at)
                  ORDER BY DATE(created_at) ASC",
-                absint($lead_id)
+                absint($lead_id),
+                self::outreach_round_start($lead_id)
             ));
 
             $targets = self::get_presales_outreach_targets();

@@ -2890,3 +2890,31 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         min-height: var(--idlm-target-size);
     }
 }
+
+/* Reopen for qualification (Unqualified leads). */
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-body {
+    padding: var(--idlm-space-3);
+    font-size: 0.8125rem;
+}
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-help {
+    margin: 0 0 var(--idlm-space-3);
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-fields {
+    display: grid;
+    gap: var(--idlm-space-2);
+    max-width: 480px;
+}
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-fields label {
+    color: var(--idlm-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-fields .idlm-reopen-submit {
+    justify-self: start;
+}
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-error {
+    margin: 0;
+    color: var(--idlm-danger);
+}

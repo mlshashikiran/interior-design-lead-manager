@@ -363,8 +363,9 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                 "SELECT lead_id, DATE(created_at) activity_date,
                         SUM(activity_type = 'outbound_call') calls,
                         SUM(activity_type = 'whatsapp_outbound') whatsapp
-                 FROM {$wpdb->prefix}idlm_lead_activity_log
+                 FROM {$wpdb->prefix}idlm_lead_activity_log a
                  WHERE lead_id IN ({$id_sql}) AND activity_type IN ('outbound_call', 'whatsapp_outbound')
+                   AND created_at >= COALESCE((SELECT MAX(r.created_at) FROM {$wpdb->prefix}idlm_lead_activity_log r WHERE r.lead_id = a.lead_id AND r.activity_type = 'lead_reopened'), '1000-01-01 00:00:00')
                  GROUP BY lead_id, DATE(created_at)
                  ORDER BY lead_id ASC, DATE(created_at) ASC"
             // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared

@@ -67,7 +67,19 @@ Tests: `tests/presales-leads-contracts.php` (fast source contracts) and `tests/i
 - **Q2, audience sync queue:** administrators only. The bulk menu shows Add to and Remove from audience sync queue only to administrators, and `ajax_bulk_action` refuses `bulk_audience_queue` and `bulk_audience_cancel` from anyone else. This also removes them from sales executives and sales managers. The INT-009 HTTP cases now queue as an administrator and check that a sales executive is refused and sees no option.
 - **Q3, bulk decisions:** pre-sales has no bulk qualify or unqualify. The bulk stage list for pre-sales holds New and Contacted only, Mark unqualified is hidden, and the server refuses `bulk_unqualified` and a bulk move to any other stage from pre-sales. Other roles are unchanged.
 - **Q5, project type:** both selects start with an empty "Choose a project type" choice. An untouched save keeps the field empty, so Qualify stays blocked until a type is chosen.
-- **Q1 and Q4:** answered in the session and still open.
+- **Q4, closed leads that come back:** built as **Reopen for qualification** (below). Early close on an Unqualified lead is now refused for everyone, so an earlier closure can change only through a reopen.
+- **Q1:** explained, not changed. The reopen path applies the shared CRM access rule itself.
+
+## Reopen for qualification
+
+An Unqualified lead can return to the qualification queue from the drawer.
+
+- **Who:** pre-sales reopens a lead assigned to them that pre-sales closed (early close or six-cycle unreachable) and that was never Qualified. Managers (`idlm_assign_leads`) and administrators reopen any Unqualified lead. Nobody reopens a duplicate; a sales executive cannot reopen.
+- **What it asks:** a reason (Customer called back, Budget changed, Timeline changed, Closed by mistake, Other) and a note of at least 10 characters.
+- **What it writes:** `idlm_presales_decision` with `decision=reopen` sets quality to pending and stage to Contacted in one lead transaction, which clears the lost reason and disqualification fields, and logs a `lead_reopened` activity with the reason, the note and the earlier closure. The six qualification tasks go back to pending.
+- **Fresh outreach round:** follow-up compliance, the drawer cycle grid and the queue row now count outreach logged after the latest `lead_reopened` entry. Earlier calls, WhatsApp messages and the closure stay in the activity history.
+- **Reporting:** dashboards count Unqualified by current quality, so a reopened lead leaves that count. The closure and the reopen both stay in the activity log.
+- **Drawer:** decided leads no longer show the disabled Qualify and Close as unreachable buttons. Unqualified leads show no Early close.
 
 ## Needs the owner's decision (original questions)
 

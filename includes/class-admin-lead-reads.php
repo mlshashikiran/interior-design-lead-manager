@@ -197,6 +197,8 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         $qualification_ready = !$missing_qualification_fields && IDLM_DB::budget_to_rupees($lead->budget) >= 400000;
         $is_pre_sales_user = self::current_user_is_pre_sales();
         $decision_complete = in_array($lead->lead_quality, array('Qualified', 'Unqualified'), true);
+        // Unqualified leads come back through Reopen for qualification, never through a second close.
+        $can_reopen = 'Unqualified' === $lead->lead_quality && '' === IDLM_Admin_Ajax::reopen_refusal($lead);
         // Pre-sales sees which saved details still block the Qualify decision, beside each field.
         $qualification_needs = array();
         if ($show_presales_compliance && !$decision_complete) {
@@ -321,7 +323,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                         <div>
                             <strong>Lead decision</strong>
                             <?php if ($decision_complete): ?>
-                            <small><span class="idlm-decision-guidance">Decision recorded: <?php echo esc_html(self::get_qualification_status_label($lead)); ?>. Outreach is closed for this lead.</span></small>
+                            <small><span class="idlm-decision-guidance">Decision recorded: <?php echo esc_html(self::get_qualification_status_label($lead)); ?>. Outreach is closed for this lead.<?php echo $can_reopen ? ' If the customer is back in touch, reopen it below.' : ''; ?></span></small>
                             <?php else: ?>
                             <small>Choose an outcome after logging the required evidence. <span class="idlm-decision-guidance"><?php if (!$qualification_ready): ?>Qualification needs: <?php echo esc_html(implode(', ', $missing_qualification_fields ?: array('Budget of ₹4L or above'))); ?>. Save the details, then qualify.
                             <?php elseif (empty($followup['eligible'])): ?>Qualify now, use structured Early Close, or continue follow-up.
@@ -329,8 +331,10 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                             <?php if (empty($followup['eligible'])): ?><span class="idlm-decision-guidance">Close as unreachable unlocks after six cycles and the final closure.</span><?php endif; ?></small>
                             <?php endif; ?>
                         </div>
+<?php if (!$decision_complete): ?>
                         <button type="button" class="idlm-btn idlm-btn-primary idlm-presales-decision" data-decision="qualify" <?php disabled(!$qualification_ready || in_array($lead->lead_quality, array('Qualified', 'Unqualified'), true)); ?>>Qualify lead</button>
                         <button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-decision" data-decision="unreachable" <?php disabled(empty($followup['eligible']) || 'Unqualified' === $lead->lead_quality); ?>>Close as unreachable</button>
+                        <?php endif; ?>
                     </div>
                     <div class="idlm-presales-day-grid">
                         <?php foreach ($followup['days'] as $index => $day): ?>
@@ -341,7 +345,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                             </div>
                         <?php endforeach; ?>
                     </div>
-                    <?php if (!$decision_complete || $is_administrator): ?>
+                    <?php if (!$decision_complete || ($is_administrator && 'Unqualified' !== $lead->lead_quality)): ?>
                     <details class="idlm-early-close-box">
                         <?php echo '<summary>Close early: confirmed junk or mismatch</summary><div class="idlm-early-close-fields">'; ?>
                         <select class="idlm-input idlm-early-close-reason" aria-label="Early close reason">
@@ -364,6 +368,27 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                     <?php echo '</div></details>'; ?>
                     <?php endif; ?>
                     <?php if ($is_administrator): ?></details><?php endif; ?>
+                </section>
+                <?php endif; ?>
+                <?php if ($can_reopen): ?>
+                <section class="idlm-drawer-panel idlm-reopen-panel" data-lead-id="<?php echo esc_attr($lead->id); ?>" aria-labelledby="idlm-reopen-title">
+                    <div class="idlm-drawer-panel-head"><h3 class="idlm-drawer-panel-title" id="idlm-reopen-title">Reopen for qualification</h3></div>
+                    <div class="idlm-reopen-body">
+                    <p class="idlm-reopen-help">Use this when the customer is interested again. The lead returns to Contacted and outreach restarts at cycle 1. The earlier closure stays in the activity history.</p>
+                    <div class="idlm-reopen-fields">
+                        <label for="idlm-reopen-reason">Why reopen?</label>
+                        <select class="idlm-input idlm-reopen-reason" id="idlm-reopen-reason">
+                            <option value="">Choose a reason</option>
+                            <?php foreach (IDLM_Admin_Ajax::reopen_reasons() as $idlm_reason => $idlm_label): ?>
+                                <option value="<?php echo esc_attr($idlm_reason); ?>"><?php echo esc_html($idlm_label); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <label for="idlm-reopen-note">What changed?</label>
+                        <textarea class="idlm-input idlm-reopen-note" id="idlm-reopen-note" rows="2" maxlength="1000" placeholder="For example: customer called back, budget now ₹6L"></textarea>
+                        <p class="idlm-reopen-error" role="alert" hidden></p>
+                        <button type="button" class="idlm-btn idlm-btn-primary idlm-reopen-submit">Reopen lead</button>
+                    </div>
+                    </div>
                 </section>
                 <?php endif; ?>
                 <form id="idlm-edit-lead-form">

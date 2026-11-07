@@ -59,3 +59,12 @@ idlm_test('Project type starts empty instead of pretending Apartment was chosen'
     $template = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/leads.php');
     assert_contains('<option value="">Choose a project type</option>', $template, 'Add lead must not default to Apartment either.');
 });
+
+idlm_test('Reopened leads count outreach only from the reopen, everywhere cycles are counted', static function(): void {
+    $db = (string) file_get_contents(dirname(__DIR__) . '/includes/class-db.php');
+    assert_same(2, substr_count($db, "AND created_at >= %s"), 'Both compliance readers must start the round at the latest reopen.');
+    $rows = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-collection-reads.php');
+    assert_contains("r.activity_type = 'lead_reopened'", $rows, 'Queue rows must count the same round as the drawer.');
+    $ajax = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-ajax.php');
+    assert_contains("'Unqualified' === \$lead->lead_quality) {\n                wp_send_json_error(array('message' => 'This lead is already closed.", $ajax, 'Early close must not rewrite an earlier closure.');
+});

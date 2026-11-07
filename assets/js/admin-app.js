@@ -451,6 +451,46 @@ jQuery(document).ready(function($) {
         });
     });
 
+    $(document).on('click', '.idlm-reopen-submit', function() {
+        var $button = $(this);
+        var $panel = $button.closest('.idlm-reopen-panel');
+        var leadId = $panel.data('lead-id');
+        var $reason = $panel.find('.idlm-reopen-reason');
+        var $note = $panel.find('.idlm-reopen-note');
+        var $error = $panel.find('.idlm-reopen-error');
+        var reason = $reason.val();
+        var note = $.trim($note.val());
+        $error.prop('hidden', true).text('');
+        if (!reason) { $error.text('Choose why this lead is being reopened.').prop('hidden', false); $reason.trigger('focus'); return; }
+        if (note.length < 10) { $error.text('Describe what changed in at least 10 characters.').prop('hidden', false); $note.trigger('focus'); return; }
+        window.IDLMDialog.confirm({
+            title: 'Reopen this lead?',
+            message: 'The lead goes back to Contacted and outreach restarts at cycle 1. The earlier closure stays in the history.',
+            confirmLabel: 'Reopen lead',
+            trigger: $button.get(0)
+        }).then(function(confirmed) {
+            if (!confirmed) { return; }
+            $button.prop('disabled', true);
+            $.post(idlm_vars.ajax_url, {
+                action: 'idlm_presales_decision', nonce: idlm_vars.nonce,
+                lead_id: leadId, decision: 'reopen', reason: reason, note: note
+            }).done(function(response) {
+                if (response.success) {
+                    showToast(response.data.message, 'success');
+                    openLeadDrawer(leadId);
+                    loadLeadsTable(1);
+                    updateFloatingTasksCount();
+                } else {
+                    $error.text(response.data.message || 'Unable to reopen the lead.').prop('hidden', false);
+                    $button.prop('disabled', false);
+                }
+            }).fail(function() {
+                $error.text('Server error reopening the lead. Nothing was changed.').prop('hidden', false);
+                $button.prop('disabled', false);
+            });
+        });
+    });
+
     $(document).on('click', '.idlm-presales-decision', function() {
         var $button = $(this);
         var $panel = $button.closest('.idlm-presales-compliance');
