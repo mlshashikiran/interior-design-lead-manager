@@ -138,7 +138,10 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
                     $idlm_metric_cards[] = array('Unassigned', 'Unassigned', 'unassigned', $idlm_unassigned_count, 'needs owner', false);
                 }
                 $idlm_metric_cards[] = array('New', 'New leads', 'new', $idlm_new_leads_count, 'filtered', false);
-                $idlm_metric_cards[] = array('Qualified', 'Qualified leads', 'qualified', $idlm_qualified_count, 'active', false);
+                // Pre-sales works the Action required queue, which never holds a decided lead, so a Qualified card would always read 0 there.
+                if (!$idlm_is_pre_sales) {
+                    $idlm_metric_cards[] = array('Qualified', 'Qualified leads', 'qualified', $idlm_qualified_count, 'active', false);
+                }
             ?>
             <section class="idlm-metric-grid" aria-label="Lead summary">
                 <?php foreach ($idlm_metric_cards as $idlm_metric_card): ?>
@@ -341,6 +344,7 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
                         <option value="">Choose a stage</option>
                         <?php foreach ($idlm_stages as $idlm_stage): ?>
                             <?php if ('Won' === $idlm_stage) { continue; } // Won is set per lead with its deal value. ?>
+                            <?php if ($idlm_is_pre_sales && !in_array($idlm_stage, array('New', 'Contacted', 'Qualified'), true)) { continue; } // The server limits pre-sales to these stages. ?>
                             <option value="<?php echo esc_attr($idlm_stage); ?>"><?php echo esc_html($idlm_stage); ?></option>
                         <?php endforeach; ?>
                     </select>
