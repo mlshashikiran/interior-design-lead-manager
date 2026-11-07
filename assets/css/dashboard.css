@@ -70,9 +70,6 @@ button.idlm-dashboard-bar { cursor: pointer; }
 .idlm-dashboard-quality .is-qualified, .idlm-dashboard-legend .is-qualified::before { background: var(--idlm-success, #2f7a55); }
 .idlm-dashboard-quality .is-unqualified, .idlm-dashboard-legend .is-unqualified::before { background: var(--idlm-danger, #a64040); }
 .idlm-dashboard-quality .is-pending, .idlm-dashboard-legend .is-pending::before { background: var(--idlm-border-strong, #d9dce1); }
-.idlm-dashboard-trend-legend .is-leads::before { background: var(--idlm-action); }
-.idlm-dashboard-trend-legend .is-qualified::before { background: var(--idlm-brand-gold, #2f7a55); }
-.idlm-dashboard-trend-legend .is-won::before { background: var(--idlm-text-muted, #9aa0aa); }
 .idlm-dashboard-quality-detail { position: absolute; z-index: 1; right: 0; bottom: calc(100% + 6px); display: none; max-width: 260px; padding: 7px 9px; color: var(--idlm-action-contrast, #fff) !important; background: var(--idlm-text, #20242c); border-radius: 6px; box-shadow: 0 4px 12px rgba(20,24,32,.16); font-size: 11px; line-height: 1.35; }
 .idlm-dashboard-quality-detail::after { content: ''; position: absolute; right: 14px; bottom: -4px; width: 8px; height: 8px; background: var(--idlm-text, #20242c); transform: rotate(45deg); }
 .idlm-dashboard-quality-row:hover .idlm-dashboard-quality-detail, .idlm-dashboard-quality-row:focus-visible .idlm-dashboard-quality-detail { display: block; }

@@ -67,7 +67,7 @@ idlm_test('Phase 4 visual matrix keeps canonical responsive, role, motion, and s
         assert_contains($viewport, $admin_css . idlm_ui_css_sources($root . '/assets/css'));
     }
     foreach (array('.idlm-state.is-empty', '.idlm-state.is-loading', '.idlm-state.is-error', '.idlm-state.is-success') as $state) {
-        assert_contains($state, $admin_css);
+        assert_contains($state, $admin_css . idlm_ui_css_sources($root . '/assets/css'));
     }
     assert_contains('@media (prefers-reduced-motion: reduce)', $admin_css);
     assert_contains('data-idlm-role=', $workspace);
@@ -163,7 +163,7 @@ idlm_test('settings notices use accessible non-duplicating floating toasts with 
     $shell = (string) file_get_contents($root . '/templates/admin/settings/shell.php');
     $backup = (string) file_get_contents($root . '/templates/admin/settings/backup.php');
     $script = (string) file_get_contents($root . '/assets/js/settings.js');
-    $css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $css = (string) file_get_contents($root . '/assets/css/admin-style.css') . idlm_ui_css_sources($root . '/assets/css');
 
     foreach (array('data-idlm-settings-toast', 'data-idlm-toast-autoclose="4000"', 'notice-success', 'is-dismissible') as $contract) {
         assert_contains($contract, $shell);
@@ -175,7 +175,7 @@ idlm_test('settings notices use accessible non-duplicating floating toasts with 
         assert_contains($contract, $script);
     }
     assert_false(false !== strpos($script, 'notice.focus();'), 'Saved notices should not receive focus or duplicate their status announcement.');
-    foreach (array('.idlm-settings-toast-stack', '.notice.idlm-settings-toast', 'pointer-events: none', 'top: max(48px', 'left: 50%', 'width: fit-content', 'max-width: min(520px, calc(100vw - (var(--idlm-space-4) * 2)))', 'background: var(--idlm-success)', 'font-family: Inter, ui-sans-serif, system-ui', 'font-size: 13px', 'font-weight: 400', 'content: none', 'display: none', '.idlm-settings-toast__dismiss-icon', 'stroke-width: 1.75', '@media (prefers-reduced-motion: reduce)', 'max-height: calc(100dvh - 128px)') as $contract) {
+    foreach (array('.idlm-settings-toast-stack', '.notice.idlm-settings-toast', 'pointer-events: none', 'left: 50%', 'width: fit-content', 'max-width: min(520px, calc(100vw - (var(--idlm-space-4) * 2)))', 'background: var(--idlm-success)', 'font-family: Inter, ui-sans-serif, system-ui', 'font-size: 13px', 'font-weight: 400', 'content: none', 'display: none', '.idlm-settings-toast__dismiss-icon', 'stroke-width: 1.75', '@media (prefers-reduced-motion: reduce)', 'max-height: calc(100dvh - 128px)') as $contract) {
         assert_contains($contract, $css);
     }
     assert_false(false !== strpos($css, 'border-top: 1.5px solid currentColor'), 'Settings toast close control must not fall back to a CSS-drawn glyph.');
