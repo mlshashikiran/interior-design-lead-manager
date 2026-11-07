@@ -31,7 +31,8 @@ idlm_test('white-label derived tokens keep sidebar accents at 3:1 and accent fil
     $sidebars = array('#111A24', '#0B0A1F', '#1F2937', '#264653', '#3B2F80', '#5C1A15', '#737373', '#0E5A43');
     $accents = array('#C99644', '#F4D35E', '#E9C46A', '#3B2F80', '#FFFFFF', '#000000', '#888888', '#B3261E', '#2A9D8F', '#F8FAFC');
     foreach ($sidebars as $sidebar) {
-        assert_true(idlm_white_label_test_ratio($sidebar, '#FFFFFF') >= 4.5, 'Fixture sidebar must pass save validation: ' . $sidebar);
+        // #737373 (4.74:1) is no longer accepted as a new value but may already be saved, so it must still render safely.
+        assert_true(idlm_white_label_test_ratio($sidebar, '#FFFFFF') >= 4.5, 'Fixture sidebar must pass the saved-value rule: ' . $sidebar);
         foreach ($accents as $accent) {
             $tokens = IDLM_Settings::white_label_style(array('primary_color' => '#7A5017', 'accent_color' => $accent, 'sidebar_color' => $sidebar));
             $sidebar_accent = idlm_white_label_test_token($tokens, '--idlm-sidebar-accent');
@@ -75,4 +76,59 @@ idlm_test('white-label names replace product copy on the sign-in surfaces', stat
 idlm_test('the CRM browser icon covers every CRM shortcode, including quotations', static function(): void {
     $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-settings.php');
     assert_contains("array('idlm_workspace', 'idlm_leads_list', 'idlm_dashboard', 'idlm_kanban', 'idlm_quotations')", $source);
+});
+
+idlm_test('new white-label colours must stay readable as link and navigation text; saved colours are kept', static function(): void {
+    $base = IDLM_Settings::white_label_defaults();
+    // #0E7C86 passes 4.5:1 with white (4.95) but is 4.46:1 on the canvas and 4.33:1 on its soft tint.
+    $teal = IDLM_Settings::validate_white_label(array_merge($base, array('primary_color' => '#0E7C86')));
+    assert_contains('link text', $teal['errors']['primary_color'] ?? '');
+    // #737373 passes 4.5:1 with white (4.74) but 78% white navigation text on it is 3.6:1.
+    $grey = IDLM_Settings::validate_white_label(array_merge($base, array('sidebar_color' => '#737373')));
+    assert_contains('7:1', $grey['errors']['sidebar_color'] ?? '');
+    // Unchanged colours saved under the old rule never block a save of another tab.
+    $legacy = array_merge($base, array('primary_color' => '#0E7C86', 'sidebar_color' => '#737373'));
+    assert_same(array(), IDLM_Settings::validate_white_label($legacy, $legacy)['errors']);
+    // The old minimum still applies to every colour, changed or not.
+    $white = array_merge($base, array('primary_color' => '#FFFFFF'));
+    assert_true(isset(IDLM_Settings::validate_white_label($white, $white)['errors']['primary_color']));
+    // Brands used in the browser check and the defaults pass the stricter rules.
+    foreach (array(array('#7A5017', '#111A24'), array('#264653', '#17212B'), array('#1E1B4B', '#0B0A1F'), array('#B3261E', '#0E5A43')) as $pair) {
+        assert_same(array(), IDLM_Settings::validate_white_label(array_merge($base, array('primary_color' => $pair[0], 'sidebar_color' => $pair[1])))['errors'], implode(' / ', $pair));
+    }
+    $controller = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-settings-controller.php');
+    assert_contains('IDLM_Settings::validate_white_label($white_label_raw, $saved_white_label)', $controller);
+    $js = (string) file_get_contents(dirname(__DIR__) . '/assets/js/settings.js');
+    assert_contains("contrastRatio(hex, '#F5F3EF'), contrastRatio(hex, '#EEF2F6'), contrastRatio(hex, lightenHex(hex, 90))", $js);
+    assert_contains("return {ratio: white, min: 7,", $js);
+    assert_contains("normalizeHex(input.defaultValue) !== normalized", $js);
+});
+
+idlm_test('notification subjects and the wp-admin menu use the white-label workspace title', static function(): void {
+    $root = dirname(__DIR__);
+    $sources = '';
+    foreach (array('class-integrations.php', 'class-design-handoffs.php', 'class-handoff-notifications.php', 'class-admin.php') as $file) {
+        $sources .= (string) file_get_contents($root . '/includes/' . $file);
+    }
+    assert_false(false !== strpos($sources, '[Lead Manager]'), 'Subjects use IDLM_Settings::mail_subject_prefix().');
+    assert_false(false !== strpos($sources, "'Lead Manager'"), 'The admin menu uses the workspace title.');
+    assert_same(6, substr_count($sources, 'IDLM_Settings::mail_subject_prefix()'));
+    // The default title keeps the established prefix, so existing mail filters keep matching.
+    assert_same('[Lead Manager]', IDLM_Settings::mail_subject_prefix());
+    $previous = get_option(IDLM_Settings::WHITE_LABEL_OPTION, null);
+    update_option(IDLM_Settings::WHITE_LABEL_OPTION, array_merge(IDLM_Settings::white_label_defaults(), array('workspace_title' => "Desk [beta]")));
+    try {
+        assert_same('[Desk beta]', IDLM_Settings::mail_subject_prefix());
+    } finally {
+        null === $previous ? delete_option(IDLM_Settings::WHITE_LABEL_OPTION) : update_option(IDLM_Settings::WHITE_LABEL_OPTION, $previous);
+    }
+    $login = (string) file_get_contents($root . '/templates/access-restricted.php');
+    assert_contains("esc_url('mailto:' . \$idlm_white_label['support_email'])", $login);
+});
+
+idlm_test('root token aliases that would freeze white-label colours are gone', static function(): void {
+    $css = (string) file_get_contents(dirname(__DIR__) . '/assets/css/admin-style.css');
+    foreach (array('--idlm-primary:', '--idlm-primary-hover:', '--idlm-dark:', '--idlm-gold:', '--idlm-gold-dark:', '--idlm-gold-soft:') as $alias) {
+        assert_false(false !== strpos($css, $alias), 'Removed alias reintroduced: ' . $alias);
+    }
 });
