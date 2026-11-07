@@ -15,6 +15,7 @@
 ### Security
 
 - Stored plugin settings and log rows are decoded without building PHP objects. Builder: Shashi.
+- The Google conversions CSV download in Settings needs a request token. The Google Ads feed URL is unchanged. Builder: Shashi.
 
 ## [1.103.0] - 2026-11-06
 

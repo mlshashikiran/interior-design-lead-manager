@@ -83,6 +83,7 @@ Each item is one commit. Each was verified with the fast suite, runtime prerequi
 | S15 | c16aa59 | Two designs behind a switch; Payments kept a second, older page (D2) | `includes/class-admin-assets.php`, `includes/class-lead-payment-controller.php` | One design; −295 lines in Payments | Low: CRM markup unchanged; see Live update safety | Switch retired; old payment page and upload step removed; details only the old page showed added to the dialog page |
 | S16 | 226ae9b | About 270 old-design branches in templates, controllers and scripts, plus six render-time rewrites of labels and inline styles | templates, `includes/class-admin-*`, `assets/js/*` | One rendering path | Low: byte-compared with the CRM baseline | Kept the CRM branch; rewrites moved into the templates |
 | S17 | 77b75a0 | ~115 stylesheet rules matched only removed markup | `assets/css/*` | Size: −12 KB CSS | None: computed styles unchanged | Removed |
+| S18 | 582546d | The Download OCI CSV button (`idlm_export_google_conversions`) checked `manage_options` but no request token (D10) | `includes/class-admin-ajax.php:380`, `templates/admin/settings/capi.php:138` | Security: another site cannot start the download in an administrator's browser | Low: the button carries the token; a bookmarked old link returns 403. The REST feed URL Google fetches is unchanged | Nonce on the link, checked after the capability |
 
 `tests/streamline-contracts.php` holds the drift guards for S2 to S13 and runs in the fast suite.
 
@@ -137,10 +138,7 @@ Ordered by value. None of these was started.
 - `tests/integration/quotation-engine-http-cases.php:26` appends to `docs/remediation-2026-10-07/quotation-engine-slice/expected-http-fault-diagnostics.log` on every HTTP-suite run, which dirties the tree.
 - **Proposed.** Write to `IDLM_TEST_*_EVIDENCE_DIR` like the document cases do.
 
-### D10. Google conversions export has no nonce
-- `idlm_export_google_conversions` (`includes/class-admin-ajax.php:380`) is the **Download OCI CSV** button under the feed URL in Settings → Conversion tracking (`templates/admin/settings/capi.php:138`). It checks `manage_options` but not a nonce. It only reads and streams a CSV.
-- The **feed URL** Google fetches is a separate REST route (`/wp-json/interior-design-lead-manager/v1/google-ads-conversions.csv`, `permission_google_feed`) and is not affected either way.
-- **Proposed.** Add a nonce to the button link and check it. The button keeps working; only a bookmarked copy of the old download link would stop.
+### D10. Google conversions export has no nonce — done (S18)
 
 ### D11. Three-hop delegation for AJAX handlers — done (S14)
 
@@ -179,6 +177,7 @@ No migration runs and no stored data changes: no change to tables, schedules, ro
 
 What does change on update:
 - **The design.** Sites already on the CRM design (the default) see the same pages. A site that switched to the previous design, by the Utilities switch or `IDLM_DESIGN_LAYER` in `wp-config.php`, will show the CRM design; the stored option is left in place but not read, and the constant can be removed.
+- **Download OCI CSV.** The Settings button works as before; a saved copy of the old link without its token returns 403.
 - **Retired entry points.** `?idlm_design=…` is ignored; the Utilities "Interface design" form and `admin_post_idlm_set_design_layer` are gone; `admin_post_idlm_payment_upload` is gone (Record payment takes the screenshot); wp-admin → Lead Manager → Payments opens the workspace page.
 - **Public code kept.** `IDLM_Admin_Assets::design_layer_enabled()` and every `IDLM_Admin`/`IDLM_Admin_Ajax` method remain callable.
 
