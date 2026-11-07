@@ -39,7 +39,7 @@ Severity: **High** means it breaks the feature or a WCAG AA requirement for a re
 | W7 | Medium | **Fixed product copy on the sign-in panel.** `templates/access-restricted.php` printed "Lead Manager" (label and `aria-label`) instead of the workspace title. | **Fixed** (`552ffd9`). |
 | W8 | Low | **The core login header was unescaped.** `wp-login.php` echoes the `login_headertext` filter without escaping, and `IDLM_Auth::login_header_text()` returned the raw brand name and title. `sanitize_text_field` already strips tags, so this is defence in depth. | **Fixed** (`552ffd9`): `esc_html()`. |
 | W9 | Low | **The brand letter split multibyte names.** `strtoupper(substr(…, 0, 1))` printed half a character for names such as "Écrin" or Devanagari names. | **Fixed** (`552ffd9`): `mb_substr` and `mb_strtoupper`, with the old path as fallback. |
-| W10 | Low | **The quotations page had no CRM favicon.** `render_frontend_favicon()` skipped `[idlm_quotations]`. | **Fixed** (this branch): the shortcode was added to the list. |
+| W10 | Low | **The quotations page had no CRM favicon.** `render_frontend_favicon()` skipped `[idlm_quotations]`. | **Fixed** (`d35c27e`): the shortcode was added to the list. |
 | W11 | Low | **Notification emails carry fixed product branding.** Subjects start with `[Lead Manager]` (`class-handoff-notifications.php`, `class-design-handoffs.php` ×4, `class-integrations.php`). Bodies are plain text with no brand. | **Needs decision**. Recipients may filter on the prefix. See P3. |
 | W12 | Low | **The wp-admin menu and utilities page are titled "Lead Manager"** (`class-admin.php`). They are seen only by administrators. | Open. See P3. |
 | W13 | Low | **The login panel has a fixed gold label colour `#e5c28a`** (`.idlm-login-product`) instead of a brand token. | Open. Tied to W5. It needs a text-safe sidebar token, and 3:1 is not enough for 12px text. |
@@ -63,7 +63,9 @@ Severity: **High** means it breaks the feature or a WCAG AA requirement for a re
 | `f0676d3` | The workspace sidebar uses `--idlm-sidebar` (W1). |
 | `bd46261` | New `--idlm-sidebar-accent` and `--idlm-on-accent`, emitted by `white_label_style()`; the sidebar focus colour wins; the brand letter uses the on-accent colour (W2–W4). Nothing new is stored, and the layer defines no white-label token (STD-CSS-4). |
 | `552ffd9` | The sign-in panel uses the workspace title, the core login header is escaped, and the brand letter is multibyte-safe (W7–W9). |
-| `50733c1` and later | `tests/white-label-contracts.php`: a sweep of 8 sidebar colours × 10 accent colours proves the 3:1 and 4.5:1 guarantees; the delivery and copy contracts; the favicon shortcode (W10). |
+| `50733c1`, `d35c27e` | `tests/white-label-contracts.php`: a sweep of 8 sidebar colours × 10 accent colours proves the 3:1 and 4.5:1 guarantees; the delivery and copy contracts; the favicon shortcode (W10). |
+
+Suites: `php tests/run.php` 525 passed, 0 failed; `php tests/integration/run.php` 411 passed, 0 failed; `php tests/integration/quotation-http.php` 501 passed, 0 failed.
 
 Browser check: `/crm-workspace?idlm_view=leads` as a sales rep at 1440 and 390 px, with a light brand (`#0E7C86` / `#F4D35E` / `#1F2937`) and a dark brand (`#1E1B4B` / `#3B2F80` / `#0B0A1F`). The sidebar paints the configured colour, sidebar focus and the active icon reach 3:1 or more, an in-page contrast scan of the sidebar, top bar and header finds no text below 4.5:1, there is no horizontal scroll, and there are no script errors. The fixture serves the sign-in page without stylesheets, so the sign-in colours were reviewed statically.
 
