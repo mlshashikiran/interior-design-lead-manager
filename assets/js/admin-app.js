@@ -101,17 +101,27 @@ jQuery(document).ready(function($) {
         return window.IDLMDialog ? window.IDLMDialog.setFieldError(selector, message) : false;
     }
 
+    // A filter rests on the option its markup selects: pre-sales on the Action required
+    // queue, date basis on Assigned date, everything else on its first option.
+    function leadFilterDefault(field) {
+        if (!field || !field.options) return '';
+        for (var i = 0; i < field.options.length; i++) {
+            if (field.options[i].defaultSelected) return field.options[i].value;
+        }
+        return field.options.length ? field.options[0].value : '';
+    }
+
+    function resetLeadFilter(selector) {
+        return $(selector).val(leadFilterDefault($(selector).get(0)));
+    }
+
     function updateActiveFilterCount() {
         var $panel = $('#idlm-lead-filters');
         var $count = $('#idlm-open-filters .idlm-filter-count');
         if (!$panel.length || !$count.length) return;
         var count = 0;
         $panel.find('input, select').each(function() {
-            var id = this.id;
-            var value = $(this).val();
-            var isDefault = (id === 'filter-date-basis' && value === 'assigned_at') ||
-                (id === 'filter-followup' && value === 'action_required');
-            if (value && !isDefault) count += 1;
+            if (String($(this).val() || '') !== leadFilterDefault(this)) count += 1;
         });
         $count.text(count).attr('aria-label', count + ' active filter' + (count === 1 ? '' : 's')).prop('hidden', count === 0);
         renderActiveFilters();
@@ -125,9 +135,7 @@ jQuery(document).ready(function($) {
         var searchTerm = String($('#filter-search').val() || '').trim();
         if (searchTerm) chips.push({id: 'filter-search', label: 'Search', value: searchTerm});
         $('#idlm-lead-filters select').each(function() {
-            var value = $(this).val();
-            var isDefault = (this.id === 'filter-date-basis' && value === 'assigned_at') || (this.id === 'filter-followup' && value === 'action_required');
-            if (!value || isDefault) return;
+            if (String($(this).val() || '') === leadFilterDefault(this)) return;
             chips.push({
                 id: this.id,
                 label: $('label[for="' + this.id + '"]').first().text().trim(),
@@ -443,6 +451,46 @@ jQuery(document).ready(function($) {
         });
     });
 
+    $(document).on('click', '.idlm-reopen-submit', function() {
+        var $button = $(this);
+        var $panel = $button.closest('.idlm-reopen-panel');
+        var leadId = $panel.data('lead-id');
+        var $reason = $panel.find('.idlm-reopen-reason');
+        var $note = $panel.find('.idlm-reopen-note');
+        var $error = $panel.find('.idlm-reopen-error');
+        var reason = $reason.val();
+        var note = $.trim($note.val());
+        $error.prop('hidden', true).text('');
+        if (!reason) { $error.text('Choose why this lead is being reopened.').prop('hidden', false); $reason.trigger('focus'); return; }
+        if (note.length < 10) { $error.text('Describe what changed in at least 10 characters.').prop('hidden', false); $note.trigger('focus'); return; }
+        window.IDLMDialog.confirm({
+            title: 'Reopen this lead?',
+            message: 'The lead goes back to Contacted and outreach restarts at cycle 1. The earlier closure stays in the history.',
+            confirmLabel: 'Reopen lead',
+            trigger: $button.get(0)
+        }).then(function(confirmed) {
+            if (!confirmed) { return; }
+            $button.prop('disabled', true);
+            $.post(idlm_vars.ajax_url, {
+                action: 'idlm_presales_decision', nonce: idlm_vars.nonce,
+                lead_id: leadId, decision: 'reopen', reason: reason, note: note
+            }).done(function(response) {
+                if (response.success) {
+                    showToast(response.data.message, 'success');
+                    openLeadDrawer(leadId);
+                    loadLeadsTable(1);
+                    updateFloatingTasksCount();
+                } else {
+                    $error.text(response.data.message || 'Unable to reopen the lead.').prop('hidden', false);
+                    $button.prop('disabled', false);
+                }
+            }).fail(function() {
+                $error.text('Server error reopening the lead. Nothing was changed.').prop('hidden', false);
+                $button.prop('disabled', false);
+            });
+        });
+    });
+
     $(document).on('click', '.idlm-presales-decision', function() {
         var $button = $(this);
         var $panel = $button.closest('.idlm-presales-compliance');
@@ -677,14 +725,14 @@ jQuery(document).ready(function($) {
     $('#btn-clear-filters').click(function() {
         leadsActiveOnly = false;
         $('#filter-search').val('');
-        $('#filter-date-basis').val('assigned_at');
+        resetLeadFilter('#filter-date-basis');
         $('#filter-date-range').val(''); if (window.IDLMDialog && window.IDLMDialog.syncDateRange) { window.IDLMDialog.syncDateRange(document.getElementById('filter-date-range')); }
         $('#filter-stage').val('');
         $('#filter-source').val('');
         $('#filter-rep').val('');
         $('#filter-call-status').val('');
         $('#filter-quality').val('');
-        $('#filter-followup').val('');
+        resetLeadFilter('#filter-followup');
         updateActiveFilterCount();
         loadLeadsTable(1);
     });
@@ -694,7 +742,7 @@ jQuery(document).ready(function($) {
         if (id === 'filter-search') {
             $('#filter-search').val('').trigger('input');
         } else {
-            $('#' + id).val(id === 'filter-date-basis' ? 'assigned_at' : '').trigger('change');
+            resetLeadFilter('#' + id).trigger('change');
         }
         var $next = $('.idlm-active-filter-remove').first();
         ($next.length ? $next : $('#filter-search')).trigger('focus');
@@ -2826,7 +2874,7 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         var isActive = $('#filter-followup').val() === 'pending_calls';
         if (isActive) {
-            $('#filter-followup').val('').change();
+            resetLeadFilter('#filter-followup').change();
             return;
         }
         
@@ -2849,7 +2897,7 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         var isActive = $('#filter-followup').val() === 'unread_whatsapp';
         if (isActive) {
-            $('#filter-followup').val('').change();
+            resetLeadFilter('#filter-followup').change();
             return;
         }
 
@@ -2869,7 +2917,7 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         var isActive = $('#filter-followup').val() === 'stale_updates';
         if (isActive) {
-            $('#filter-followup').val('').change();
+            resetLeadFilter('#filter-followup').change();
             return;
         }
 

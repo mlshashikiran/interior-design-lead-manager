@@ -17,7 +17,7 @@ final class IDLM_Admin_Lead_Notifications {
         'update', 'outbound_call', 'whatsapp_outbound', 'comment', 'stage_change',
         'call_status_change', 'task', 'qualification_decision', 'lead_quality',
         'early_disqualification', 'qualification_handoff_remark', 'closure_message',
-        'lost_remark', 'duplicate_exclusion', 'quotation',
+        'lost_remark', 'duplicate_exclusion', 'quotation', 'lead_reopened',
     );
 
     /** Request-local copy of the current user's unread WhatsApp snapshot. */

@@ -170,6 +170,9 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
 
         $types = array('call' => 'outbound_call', 'whatsapp' => 'whatsapp_outbound', 'closure' => 'closure_message');
         if ('early_close' === $kind) {
+            if ('Unqualified' === $lead->lead_quality) {
+                wp_send_json_error(array('message' => 'This lead is already closed. Reopen it for qualification before closing it again, so the original reasons stay on record.'));
+            }
             $reason = isset($_POST['reason']) ? sanitize_key(wp_unslash($_POST['reason'])) : '';
             $reason_labels = IDLM_State_Registry::early_close_reasons();
             if (!isset($reason_labels[$reason])) {
@@ -303,12 +306,15 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
     /** Apply an explicit pre-sales qualification or unreachable decision. */
     public static function ajax_presales_decision() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_is_pre_sales() && !current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Only pre-sales representatives and administrators can make this decision.'));
-        }
         $lead_id = isset($_POST['lead_id']) ? absint($_POST['lead_id']) : 0;
         $decision = isset($_POST['decision']) ? sanitize_key(wp_unslash($_POST['decision'])) : '';
         $handoff_remark = isset($_POST['handoff_remark']) ? sanitize_textarea_field(wp_unslash($_POST['handoff_remark'])) : '';
+        if ('reopen' === $decision) {
+            self::reopen_for_qualification($lead_id);
+        }
+        if (!self::current_user_is_pre_sales() && !current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Only pre-sales representatives and administrators can make this decision.'));
+        }
         if (!$lead_id || !self::current_user_can_access_lead($lead_id)) {
             wp_send_json_error(array('message' => 'You can decide only leads assigned to you.'));
         }
@@ -336,6 +342,95 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             wp_send_json_success(array('message' => 'Lead closed as Unqualified — Unable to Contact.'));
         }
         wp_send_json_error(array('message' => 'Select a valid lead decision.'));
+    }
+
+    /** Reasons offered when an Unqualified lead is reopened for qualification. */
+    public static function reopen_reasons() {
+        return array(
+            'customer_called_back' => 'Customer called back',
+            'budget_changed' => 'Budget changed',
+            'timeline_changed' => 'Timeline changed',
+            'closed_by_mistake' => 'Closed by mistake',
+            'other' => 'Other',
+        );
+    }
+
+    /**
+     * Why the current user may not reopen this lead for qualification, or '' when they may.
+     * Managers and administrators reopen any non-duplicate Unqualified lead. Pre-sales reopens
+     * only a lead that pre-sales closed before it was ever qualified, and never a manager or
+     * administrator closure. Lead ownership is checked separately by the caller.
+     */
+    public static function reopen_refusal($lead) {
+        if (!$lead || 'Unqualified' !== $lead->lead_quality) {
+            return 'Only an Unqualified lead can be reopened for qualification.';
+        }
+        if (!empty($lead->is_duplicate) || 'duplicate' === $lead->disqualification_reason) {
+            return 'A duplicate lead cannot be reopened. Work the original lead instead.';
+        }
+        if (current_user_can('manage_options') || (self::current_user_can_assign_leads() && !self::current_user_is_pre_sales())) {
+            return '';
+        }
+        if (!self::current_user_is_pre_sales()) {
+            return 'Only pre-sales, sales managers and administrators can reopen a lead for qualification.';
+        }
+        if (!empty($lead->qualified_at)) {
+            return 'This lead was qualified before it closed. Ask a sales manager to reopen it.';
+        }
+        if ('administrator_exception' === $lead->disqualification_reason || !in_array($lead->disqualification_method, array('early_close', 'six_cycle_followup'), true)) {
+            return 'This lead was not closed in pre-sales. Ask a sales manager to reopen it.';
+        }
+        $closer = get_userdata(absint($lead->disqualified_by_user_id));
+        if (!$closer || !in_array('idlm_pre_sales', (array) $closer->roles, true)) {
+            return 'A manager or administrator closed this lead. Ask a sales manager to reopen it.';
+        }
+        return '';
+    }
+
+    /**
+     * Return an Unqualified lead to the qualification queue with a fresh outreach round.
+     * The closure stays in the activity log; the new round counts outreach logged after the reopen.
+     */
+    private static function reopen_for_qualification($lead_id) {
+        // Reopen is open to managers, so it applies the shared CRM access rule itself.
+        if (!IDLM_Lead_Access_Policy::has_rep_access()) {
+            wp_send_json_error(array('message' => 'Permission denied.'));
+        }
+        if (!$lead_id || !self::current_user_can_access_lead($lead_id)) {
+            wp_send_json_error(array('message' => 'You can reopen only leads assigned to you.'));
+        }
+        $reason = isset($_POST['reason']) ? sanitize_key(wp_unslash($_POST['reason'])) : '';
+        $note = isset($_POST['note']) ? sanitize_textarea_field(wp_unslash($_POST['note'])) : '';
+        $reasons = self::reopen_reasons();
+        if (!isset($reasons[$reason])) {
+            wp_send_json_error(array('message' => 'Select why this lead is being reopened.'));
+        }
+        if (strlen(trim($note)) < 10) {
+            wp_send_json_error(array('message' => 'Describe what changed in at least 10 characters.'));
+        }
+        global $wpdb;
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Reopen reads one lead by bound ID after nonce and object access checks.
+        $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_leads WHERE id = %d", $lead_id));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        $refusal = self::reopen_refusal($lead);
+        if ('' !== $refusal) {
+            wp_send_json_error(array('message' => $refusal));
+        }
+        $closed_as = $lead->lost_reason ?: (IDLM_State_Registry::early_close_reasons()[$lead->disqualification_reason] ?? 'Unqualified');
+        $details = sprintf('Reopened for qualification. Reason: %s. Note: %s. Previous closure: %s. Outreach restarts at cycle 1.', $reasons[$reason], $note, $closed_as);
+        $result = IDLM_Lead_Transaction::run(static function() use ($lead_id, $details) {
+            if (false === IDLM_DB::update_lead($lead_id, array('lead_quality' => '', 'stage' => 'Contacted'))) {
+                return false;
+            }
+            return IDLM_DB::log_activity($lead_id, 'lead_reopened', $details);
+        });
+        if (is_wp_error($result) || true !== $result) {
+            wp_send_json_error(array('message' => IDLM_DB::get_last_validation_error() ?: 'The lead could not be reopened. Nothing was changed.'));
+        }
+        if (!IDLM_DB::sync_presales_task_status($lead_id)) {
+            wp_send_json_error(array('message' => 'The lead was reopened, but its qualification tasks need repair. The scheduled worker will retry.'));
+        }
+        wp_send_json_success(array('message' => 'Lead reopened for qualification. Outreach restarts at cycle 1.'));
     }
 
     /**
@@ -1026,8 +1121,8 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             case 'bulk_stage':
                 $stage = isset($_POST['stage']) ? sanitize_text_field(wp_unslash($_POST['stage'])) : '';
                 if (!empty($stage)) {
-                    if (self::current_user_is_pre_sales() && !in_array($stage, array('New', 'Contacted', 'Qualified'), true)) {
-                        wp_send_json_error(array('message' => 'Pre-sales users can progress leads only through the Qualified stage.'));
+                    if (self::current_user_is_pre_sales() && !in_array($stage, array('New', 'Contacted'), true)) {
+                        wp_send_json_error(array('message' => 'Pre-sales qualifies leads one at a time from Lead decision. Bulk stage changes are limited to New and Contacted.'));
                     }
                     // Won needs each lead's own final deal value and discount, so it is never a bulk move.
                     if ('Won' === $stage) {
@@ -1061,6 +1156,9 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 break;
 
             case 'bulk_unqualified':
+                if (self::current_user_is_pre_sales()) {
+                    wp_send_json_error(array('message' => 'Pre-sales closes leads one at a time from Lead decision, so each closure records its reason.'));
+                }
                 foreach ($ids as $id) {
                     $compliance = IDLM_DB::get_followup_compliance($id);
                     if (!$compliance['eligible']) {
@@ -1080,12 +1178,18 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 break;
 
             case 'bulk_audience_cancel':
+                if (!current_user_can('manage_options')) {
+                    wp_send_json_error(array('message' => 'Only administrators can manage the audience sync queue.'));
+                }
                 $result = IDLM_Audience_Dispatch::cancel($ids);
                 if (is_wp_error($result) || false === $result) { wp_send_json_error(array('message'=>is_wp_error($result) ? $result->get_error_message() : 'Audience work is busy. Retry shortly.'), 409); }
                 wp_send_json_success(array('message'=>'Selected manual audience work removed. Unknown delivery outcomes remain blocked.', 'removed_count'=>$result['removed']));
                 break;
 
             case 'bulk_audience_queue':
+                if (!current_user_can('manage_options')) {
+                    wp_send_json_error(array('message' => 'Only administrators can manage the audience sync queue.'));
+                }
                 $result = IDLM_Audience_Dispatch::enqueue($ids);
                 if (is_wp_error($result) || false === $result) { wp_send_json_error(array('message'=>is_wp_error($result) ? $result->get_error_message() : 'Audience queue is busy. Retry shortly.'), 409); }
                 wp_send_json_success(array('message'=>'Selected leads queued. Current audience exclusions apply at dispatch.', 'queued_count'=>$result['queued']));

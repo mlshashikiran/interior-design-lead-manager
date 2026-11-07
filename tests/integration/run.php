@@ -837,6 +837,8 @@ try {
 
     require_once __DIR__ . '/package-dashboard-contracts.php';
     require_once __DIR__ . '/high-priority-contracts.php';
+    require_once __DIR__ . '/presales-leads-contracts.php';
+    require_once __DIR__ . '/presales-reopen-contracts.php';
     require_once __DIR__ . '/lead-access-contracts.php';
     require_once __DIR__ . '/mcp-query-contracts.php';
     require_once __DIR__ . '/private-file-contracts.php';

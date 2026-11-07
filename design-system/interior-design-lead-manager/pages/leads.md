@@ -33,3 +33,13 @@ The CRM design is the only design. Styles live in `assets/css/crm-design-leads.c
 - **Drawer.** Fixed height, top-aligned frame. Previous, next and position sit beside close, never over the page or footer. Identity then contact, then the four status values, then created and assigned dates. Form groups are Contact, Qualification and deal, Project, Quote and studio. Attribution collapses and lists recorded values only. Early close is a disclosure. Comments stay beside the form above `1024px`.
 - **Footers.** Delete is quiet and far left, primary last. Phones keep one row so the form keeps the screen. A quiet "Unsaved changes" appears as soon as a field changes.
 - **Inline presentation.** The Leads template, row, drawer and activity markup carry no `style` attributes except `display:none`, which scripts toggle, and their labels are written in sentence case in the source. Nothing rewrites markup at render time.
+
+## Pre-sales queue (Shashi, 2026-11-07)
+
+Detail and open questions: `docs/PRESALES-LEADS-REVIEW.md`.
+
+- **Resting filter.** Pre-sales rests on Engagement → Action required. Clear all, chip removal and switching off an attention pill return to the option the markup marks `selected`, never to "" (All leads). All leads shows as a chip.
+- **Summary.** Pre-sales has no Qualified card, because their queue never holds a decided lead.
+- **Rows.** Undecided rows offer Log call and Log WA, plus Decide when a decision is ready. Decided rows offer View only. Each button's accessible name includes the lead's name.
+- **Drawer.** The order is outreach actions, then Lead decision, then cycle history, then Early close. A locked control states what unlocks it. Missing saved qualification details are marked under their fields. Decided leads show "Decision recorded" and no outreach or early close for pre-sales. Deal and quote fields are not rendered for pre-sales.
+- **Bulk.** Pre-sales sees only the stages the server accepts from them: New, Contacted and Qualified.

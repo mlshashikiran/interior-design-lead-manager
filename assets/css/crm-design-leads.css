@@ -860,13 +860,14 @@ body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-col-today 
     display: none;
 }
 
+/* Call outcomes are short configured labels: wrap inside the cell instead of clamping. */
 body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-response-chip {
-    display: -webkit-box;
-    overflow: hidden;
+    display: block;
+    width: auto;
+    max-width: 100%;
     color: var(--idlm-text);
     white-space: normal;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
 }
 
 body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-budget-check {
@@ -1592,6 +1593,26 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day :is(span, small) {
 body.idlm-crm-design #idlm-lead-drawer .idlm-presales-actions {
     gap: var(--idlm-space-1);
     padding: var(--idlm-space-2) var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-panel-head + .idlm-presales-decision-box {
+    margin-top: var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day-grid + .idlm-early-close-box {
+    margin-top: var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-actions-hint {
+    flex-basis: 100%;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field-needed {
+    color: var(--idlm-warning);
+    font-size: 0.6875rem;
+    font-weight: 500;
 }
 
 body.idlm-crm-design #idlm-lead-drawer .idlm-presales-decision-box {
@@ -2587,6 +2608,11 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         display: none;
     }
 
+    /* On a card the next step has the full width, so it wraps instead of trailing off. */
+    body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-lead-next-action {
+        white-space: normal;
+    }
+
     body.idlm-crm-design #idlm-leads-table .idlm-table-select {
         height: var(--idlm-target-size);
         min-height: var(--idlm-target-size);
@@ -2863,4 +2889,32 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         min-width: var(--idlm-target-size);
         min-height: var(--idlm-target-size);
     }
+}
+
+/* Reopen for qualification (Unqualified leads). */
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-body {
+    padding: var(--idlm-space-3);
+    font-size: 0.8125rem;
+}
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-help {
+    margin: 0 0 var(--idlm-space-3);
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-fields {
+    display: grid;
+    gap: var(--idlm-space-2);
+    max-width: 480px;
+}
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-fields label {
+    color: var(--idlm-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-fields .idlm-reopen-submit {
+    justify-self: start;
+}
+body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-error {
+    margin: 0;
+    color: var(--idlm-danger);
 }
