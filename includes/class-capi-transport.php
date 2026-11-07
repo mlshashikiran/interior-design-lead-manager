@@ -3,6 +3,8 @@
 if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_CAPI_Transport {
+    /** The one Meta Graph API version used by every plugin request (CAPI, audiences, Lead Ads, Facebook login). Builder: Shashi. */
+    const GRAPH_VERSION = 'v25.0';
 
     /** GA4 wire name; retain the original Google Ads label and receipt identity. */
     public static function google_event_name($label) {
@@ -119,8 +121,7 @@ final class IDLM_CAPI_Transport {
             $payload['data'][0]['user_data']=array('ctwa_clid'=>$attribution['ctwa_clid'],'page_id'=>$attribution['page_id']);
         }
 
-        // Updated API version to v25.0 to align with Meta latest API version standard (implemented by Shashi)
-        $endpoint = "https://graph.facebook.com/v25.0/" . rawurlencode($pixel_id) . "/events";
+        $endpoint = "https://graph.facebook.com/" . self::GRAPH_VERSION . "/" . rawurlencode($pixel_id) . "/events";
         
         if (!IDLM_Recovery_Guard::lease_valid()) { return false; }
         $response = IDLM_Secret_Store::request($endpoint, array(

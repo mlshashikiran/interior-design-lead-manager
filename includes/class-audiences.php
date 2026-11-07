@@ -176,7 +176,7 @@ class IDLM_Audiences {
             )
         );
 
-        $endpoint = "https://graph.facebook.com/v25.0/" . rawurlencode($audience_id) . "/users";
+        $endpoint = "https://graph.facebook.com/" . IDLM_CAPI_Transport::GRAPH_VERSION . "/" . rawurlencode($audience_id) . "/users";
 
         if (!IDLM_Recovery_Guard::lease_valid()) { return array('status'=>'uncertain','payload'=>array(),'response'=>'Worker fence lost.','retry_after'=>0); }
         $response = IDLM_Secret_Store::request($endpoint, array(

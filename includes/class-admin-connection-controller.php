@@ -26,7 +26,7 @@ final class IDLM_Admin_Connection_Controller {
             }
 
             // We can check Pixel ID (CAPI) or Custom Audience ID
-            $endpoint = "https://graph.facebook.com/v25.0/" . rawurlencode($target_id) . "?";
+            $endpoint = "https://graph.facebook.com/" . IDLM_CAPI_Transport::GRAPH_VERSION . "/" . rawurlencode($target_id) . "?";
             if ($test_type === 'capi') {
                 $endpoint .= "fields=name";
             } else {
