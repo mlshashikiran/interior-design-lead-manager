@@ -71,3 +71,8 @@ idlm_test('white-label names replace product copy on the sign-in surfaces', stat
     assert_contains("mb_substr(\$idlm_brand_mark_source, 0, 1, 'UTF-8')", $workspace);
     assert_contains("return esc_html(\$white_label['brand_name'] . ' ' . \$white_label['workspace_title']);", $auth);
 });
+
+idlm_test('the CRM browser icon covers every CRM shortcode, including quotations', static function(): void {
+    $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-settings.php');
+    assert_contains("array('idlm_workspace', 'idlm_leads_list', 'idlm_dashboard', 'idlm_kanban', 'idlm_quotations')", $source);
+});

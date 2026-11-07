@@ -182,7 +182,7 @@ class IDLM_Settings {
             return;
         }
         $is_crm_page = false;
-        foreach (array('idlm_workspace', 'idlm_leads_list', 'idlm_dashboard', 'idlm_kanban') as $shortcode) {
+        foreach (array('idlm_workspace', 'idlm_leads_list', 'idlm_dashboard', 'idlm_kanban', 'idlm_quotations') as $shortcode) {
             if (has_shortcode($post->post_content, $shortcode)) {
                 $is_crm_page = true;
                 break;
