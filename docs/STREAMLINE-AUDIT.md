@@ -168,7 +168,7 @@ No lead, quotation, payment or setting value is changed on update. REST routes a
 
 What does change on update:
 - **Two indexes are added once** to `idlm_leads` by the new migration marker `idlm_lead_index_version`. It only runs `ALTER TABLE … ADD KEY` for a missing index; it reads and writes no row, and the schema version is not bumped, so no older repair re-runs. On 200,000 rows adding them took under a second. The database user needs the ALTER privilege, as for any plugin schema update. Take a backup before updating, as with any schema change.
-- **One new option** `idlm_maintenance_checks` (autoloaded) records when schedules and the legacy queue scrub last ran.
+- **One new option** `idlm_maintenance_checks` (autoloaded) records when the schedule check and the credential, secret and legacy queue upkeep next run.
 - **The design.** Sites on the CRM design (the default) see the same pages. A site switched to the previous design by the Utilities switch or `IDLM_DESIGN_LAYER` will show the CRM design; the stored option is left in place but not read.
 - **Each workspace view loads fewer files.** Browsers fetch only the changed files.
 - **Retired entry points.** `?idlm_design=…` is ignored; the Utilities "Interface design" form, `admin_post_idlm_set_design_layer`, `admin_post_idlm_payment_upload`, `admin_post_idlm_update_role_scopes` and `admin_post_idlm_update_role_permissions` are gone; wp-admin → Lead Manager → Payments opens the workspace page; a saved Download OCI CSV link without its token returns 403.
