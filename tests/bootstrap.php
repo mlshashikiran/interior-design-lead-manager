@@ -1116,6 +1116,10 @@ function wp_get_current_user(): object {
     );
 }
 
+function apply_filters(string $hook_name, $value, ...$args) {
+    return $value;
+}
+
 function is_user_logged_in(): bool {
     return (bool) $GLOBALS['idlm_test_logged_in'];
 }

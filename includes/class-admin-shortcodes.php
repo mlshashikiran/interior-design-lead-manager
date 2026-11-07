@@ -73,16 +73,17 @@ final class IDLM_Admin_Shortcodes {
         return ob_get_clean();
     }
 
-    /** Render the complete capability-aware CRM workspace. */
-    public static function render_workspace_shortcode() {
+    /**
+     * The workspace sections this person may open and the one this request shows.
+     * Returns null when they may not use the workspace. The renderer and the asset loader share it.
+     */
+    public static function workspace_sections() {
         $has_lead_access = IDLM_Lead_Access_Policy::has_rep_access();
         if (!$has_lead_access && !IDLM_Design_Handoffs::can_receive()) {
-            return IDLM_View::render('access-restricted.php');
+            return null;
         }
-
-        IDLM_Admin_Assets::enqueue_shortcode_assets('workspace');
         $is_pre_sales = IDLM_Lead_Access_Policy::is_pre_sales();
-        // Navigation labels are sentence case in the design layer, and each page title repeats its label.
+        // Each page title repeats its navigation label.
         $sections = array(
             'dashboard' => array('Dashboard', 'dashicons-chart-area', array('IDLM_Admin', 'render_dashboard_page')),
             'leads' => array('Leads', 'dashicons-groups', array('IDLM_Admin', 'render_leads_list_page')),
@@ -121,6 +122,19 @@ final class IDLM_Admin_Shortcodes {
             $requested = 'quotations';
         }
         $active = isset($sections[$requested]) ? $requested : ($has_lead_access ? 'dashboard' : IDLM_Design_Handoff_Controller::VIEW);
+        return array('sections' => $sections, 'active' => $active, 'has_lead_access' => $has_lead_access);
+    }
+
+    /** Render the complete capability-aware CRM workspace. */
+    public static function render_workspace_shortcode() {
+        $workspace = self::workspace_sections();
+        if (null === $workspace) {
+            return IDLM_View::render('access-restricted.php');
+        }
+        IDLM_Admin_Assets::enqueue_shortcode_assets('workspace');
+        $sections = $workspace['sections'];
+        $active = $workspace['active'];
+        $has_lead_access = $workspace['has_lead_access'];
         // Navigation always opens a section's start, so no view's tab, filter or open record follows it.
         $base_url = remove_query_arg(array_merge(array('idlm_view', 'workspace', 'action', 'quote_id', 'lead_id', 'revision_id', 'quote_search', 'catalogue_search', 'status', 'created_by', 'date_from', 'date_to', 'idlm_notice', 'idlm_error'), IDLM_Design_Handoff_Controller::QUERY_KEYS));
         $current_user = wp_get_current_user();

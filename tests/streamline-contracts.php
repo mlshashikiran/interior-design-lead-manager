@@ -294,3 +294,38 @@ idlm_test('STREAMLINE CRM AJAX checks the nonce before access and refuses with o
     assert_contains("wp_send_json_error(array('message' => \$message), \$status);", $guard);
     assert_contains("'admin' === \$rule ? current_user_can('manage_options') : ('rep' === \$rule ? IDLM_Lead_Access_Policy::has_rep_access() : false)", $guard, 'Unknown rules refuse.');
 });
+
+idlm_test('STREAMLINE each workspace view loads the shared shell plus only its own assets', static function (): void {
+    $caps = $GLOBALS['idlm_test_caps'] ?? array(); $get = $_GET; $logged_in = $GLOBALS['idlm_test_logged_in'] ?? false;
+    try {
+        $GLOBALS['idlm_test_logged_in'] = true;
+        $GLOBALS['idlm_test_caps'] = array('manage_options' => true, 'idlm_access_leads' => true, 'idlm_view_quotes' => true);
+        $shared = array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-workspace-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-payments');
+        $cases = array(
+            'leads' => array($shared, array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app')),
+            'pipeline' => array(array_merge($shared, array('idlm-kanban-styles', 'idlm-crm-design-pipeline')), array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app', 'idlm-kanban-app')),
+            'dashboard' => array(array_merge($shared, array('idlm-dashboard-styles', 'idlm-crm-design-dashboard')), array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app', 'idlm-chartjs', 'idlm-dashboard-app')),
+            'settings' => array(array_merge($shared, array('idlm-crm-design-settings', 'idlm-crm-design-admin')), array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app', 'idlm-settings')),
+        );
+        foreach ($cases as $view => $expected) {
+            $_GET = array('idlm_view' => $view);
+            $GLOBALS['idlm_test_asset_calls'] = array();
+            $GLOBALS['post'] = new WP_Post('[idlm_workspace]');
+            IDLM_Admin::enqueue_frontend_assets();
+            $styles = idlm_admin_asset_handles('enqueue_style'); $scripts = idlm_admin_asset_handles('enqueue_script');
+            sort($styles); $want = $expected[0]; sort($want);
+            assert_same($want, $styles, $view . ' styles');
+            assert_same($expected[1], $scripts, $view . ' scripts');
+        }
+        // Every manifest handle is registered, and every view the workspace offers has an entry.
+        foreach (IDLM_Admin_Assets::VIEW_ASSETS as $view => $assets) {
+            foreach (array_merge($assets['styles'], $assets['scripts']) as $handle) {
+                assert_true(false !== strpos((string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-assets.php'), "'" . $handle . "', \$asset_url"), $view . ': ' . $handle . ' is not registered.');
+            }
+            assert_same(array(), array_diff($assets['areas'], IDLM_Admin_Assets::DESIGN_AREAS), $view . ' names an unknown design area.');
+        }
+        $_GET = array();
+        $sections = array_keys(IDLM_Admin_Shortcodes::workspace_sections()['sections']);
+        assert_same(array(), array_values(array_diff($sections, array_keys(IDLM_Admin_Assets::VIEW_ASSETS))), 'A workspace view has no asset entry.');
+    } finally { $GLOBALS['idlm_test_caps'] = $caps; $_GET = $get; $GLOBALS['idlm_test_logged_in'] = $logged_in; }
+});
