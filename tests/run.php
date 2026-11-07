@@ -137,7 +137,7 @@ idlm_test('heavy CRM log reads are bounded and audience payloads are lazy loaded
     assert_contains('ORDER BY a.id DESC LIMIT 100', $activity_reads);
     assert_contains('SELECT id, platform, audience_id, lead_count, status, created_at', $log_renderer);
     assert_false(false !== strpos($log_renderer, 'SELECT *\n            FROM {$wpdb->prefix}idlm_audience_sync_logs'));
-    assert_contains("check_ajax_referer('idlm_admin_nonce', 'nonce')", $log_renderer);
+    assert_contains("IDLM_Admin::guard_ajax('admin', 'Permission denied.', 403);", $log_renderer);
     assert_contains("current_user_can('manage_options')", $log_renderer);
     assert_contains("add_action('wp_ajax_idlm_get_audience_log_payload'", $admin);
     assert_contains("'idlm_get_audience_log_payload'", $log_script);

@@ -5,10 +5,7 @@ if (!defined('ABSPATH')) { exit; }
 final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
 
     public static function ajax_get_leads_table() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
 
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
@@ -621,10 +618,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
     }
 
     public static function ajax_get_kanban_leads() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
 
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
@@ -908,11 +902,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
     }
 
     public static function ajax_get_total_leads_count() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Permission denied. Only administrators can perform this action.'));
-        }
+        IDLM_Admin::guard_ajax('admin', 'Permission denied. Only administrators can perform this action.');
 
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';

@@ -45,7 +45,7 @@ if (!defined('ABSPATH')) {
                     nonce: '<?php echo esc_js(wp_create_nonce("idlm_admin_nonce")); ?>'
                 }, function(res) {
                     if (!res.success) {
-                        window.IDLMDialog.notify(res.data || 'Failed to fetch leads', 'error');
+                        window.IDLMDialog.notify((res.data && res.data.message) || 'Failed to fetch leads', 'error');
                         resetSyncBtn();
                         return;
                     }

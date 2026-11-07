@@ -67,6 +67,18 @@ class IDLM_Admin {
     }
 
     /**
+     * The shared CRM AJAX gate: the admin nonce first, then one access rule. 'rep' is CRM lead
+     * access and 'admin' is manage_options. A refusal always answers {success:false, data:{message}}.
+     */
+    public static function guard_ajax($rule, $message = 'Permission denied.', $status = null) {
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        $allowed = 'admin' === $rule ? current_user_can('manage_options') : ('rep' === $rule ? IDLM_Lead_Access_Policy::has_rep_access() : false);
+        if (!$allowed) {
+            wp_send_json_error(array('message' => $message), $status);
+        }
+    }
+
+    /**
      * Get list of allowed roles for representative users
      */
     public static function get_allowed_rep_roles() {

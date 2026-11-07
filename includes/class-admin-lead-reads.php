@@ -11,10 +11,7 @@ if (!defined('ABSPATH')) {
 final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
     /** Mark the visible lead's inbound WhatsApp messages as read for this user. */
     public static function ajax_mark_whatsapp_messages_read() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'), 403);
-        }
+        IDLM_Admin::guard_ajax('rep', 'Permission denied.', 403);
         $lead_id = isset($_POST['lead_id']) ? absint(wp_unslash($_POST['lead_id'])) : 0;
         if (!$lead_id || !self::current_user_can_view_lead($lead_id)) {
             wp_send_json_error(array('message' => 'You can access only leads assigned to you.'), 403);
@@ -42,10 +39,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
 
     /** Return WhatsApp history only when its drawer tab is opened. */
     public static function ajax_get_lead_whatsapp() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
         $lead_id = isset($_POST['lead_id']) ? absint(wp_unslash($_POST['lead_id'])) : 0;
         if (!$lead_id) {
             wp_send_json_error(array('message' => 'Invalid Lead ID'));
@@ -98,10 +92,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         wp_send_json_success(array('html' => ob_get_clean(), 'unread_whatsapp_count' => $unread_count));
     }
     public static function ajax_get_lead_details() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
 
         $lead_id = isset($_POST['lead_id']) ? intval(wp_unslash($_POST['lead_id'])) : 0;
         if (!$lead_id) {

@@ -31,7 +31,7 @@ function idlm_admin_asset_handles(string $type): array {
 
 idlm_test('admin facade preserves every public compatibility method and its size baseline', static function(): void {
     $expected = array(
-        'init', 'get_allowed_rep_roles', 'current_user_can_assign_leads', 'current_user_is_pre_sales',
+        'init', 'guard_ajax', 'get_allowed_rep_roles', 'current_user_can_assign_leads', 'current_user_is_pre_sales',
         'get_qualification_status_label', 'is_assignable_rep',
         'current_user_can_access_lead', 'current_user_can_view_lead', 'format_datetime',
         'render_activity_details', 'current_user_has_rep_access', 'get_whatsapp_read_activity_ids',
@@ -65,7 +65,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
     })));
 
     assert_same($expected, $actual, 'The IDLM_Admin public compatibility surface changed.');
-    assert_same(84, count($actual));
+    assert_same(85, count($actual));
     assert_true(count(file(dirname(__DIR__) . '/includes/class-admin.php')) <= 3240, 'The Phase 2 admin facade exceeded its 3,240-line size contract.');
 });
 
@@ -608,10 +608,10 @@ idlm_test('production scalability Phase 5 starts with a focused lead-detail AJAX
     assert_true(class_exists('IDLM_Admin_Lead_Reads'));
     assert_contains('return IDLM_Admin_Lead_Reads::ajax_get_lead_details();', $facade);
     assert_true(!str_contains($ajax, 'function ajax_get_lead_details('), 'The AJAX class inherits the facade method instead of adding a pass-through.');
-    assert_contains("check_ajax_referer('idlm_admin_nonce', 'nonce')", $reads);
+    assert_contains("IDLM_Admin::guard_ajax('rep', 'Permission denied.', 403);", $reads);
 
     $handler = strpos($reads, 'public static function ajax_get_lead_details()');
-    $broad_access = strpos($reads, 'current_user_has_rep_access()', $handler);
+    $broad_access = strpos($reads, "IDLM_Admin::guard_ajax('rep'", $handler);
     $object_access = strpos($reads, 'current_user_can_view_lead($lead_id)', $broad_access);
     $lead_read = strpos($reads, '$wpdb->get_row(', $object_access);
     assert_true(false !== $handler && false !== $broad_access && false !== $object_access && false !== $lead_read);

@@ -3670,9 +3670,9 @@ jQuery(document).ready(function($) {
                     // Reload the page or list to reflect settings changes (like active reps dropdown updates)
                     location.reload();
                 } else {
-                    var error = response.data || 'Failed to save routing settings.';
-                    setRoutingFormError(typeof error === 'string' ? error : 'Failed to save routing settings.');
-                    window.IDLMDialog.notify(typeof error === 'string' ? error : 'Failed to save routing settings.', 'error');
+                    var error = (response.data && response.data.message) || 'Failed to save routing settings.';
+                    setRoutingFormError(error);
+                    window.IDLMDialog.notify(error, 'error');
                 }
             },
             error: function() {

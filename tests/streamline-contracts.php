@@ -272,3 +272,25 @@ idlm_test('STREAMLINE maintenance checks run once per interval and again right a
     assert_true(in_array('cron_schedules', $hooks, true), 'The minute interval is registered on every request.');
     unset($GLOBALS['idlm_test_options'][IDLM_Scheduler::MAINTENANCE_OPTION]);
 });
+
+idlm_test('STREAMLINE CRM AJAX checks the nonce before access and refuses with one error shape', static function (): void {
+    $caps = $GLOBALS['idlm_test_caps'] ?? array(); $nonce = $GLOBALS['idlm_test_nonce_valid'] ?? true;
+    try {
+        $GLOBALS['idlm_test_nonce_valid'] = false; $GLOBALS['idlm_test_caps'] = array('manage_options' => true);
+        assert_same(403, expect_json_response(static function () { IDLM_Admin::guard_ajax('admin'); }, false)->status, 'A bad nonce is refused even for an administrator.');
+        $GLOBALS['idlm_test_nonce_valid'] = true; $GLOBALS['idlm_test_caps'] = array();
+        $refused = expect_json_response(static function () { IDLM_Admin::guard_ajax('admin', 'Only administrators can do this.', 403); }, false, 403);
+        assert_same(array('message' => 'Only administrators can do this.'), $refused->data);
+        assert_same(array('message' => 'Permission denied.'), expect_json_response(static function () { IDLM_Admin::guard_ajax('unknown-rule'); }, false)->data);
+        $GLOBALS['idlm_test_caps'] = array('manage_options' => true);
+        IDLM_Admin::guard_ajax('admin');
+    } finally { $GLOBALS['idlm_test_caps'] = $caps; $GLOBALS['idlm_test_nonce_valid'] = $nonce; }
+    foreach (glob(dirname(__DIR__) . '/includes/*.php') as $file) {
+        assert_false((bool) preg_match("/wp_send_json_error\\(\\s*['\"]/", (string) file_get_contents($file)), basename($file) . ' sends a bare-string error.');
+    }
+    $admin = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin.php');
+    $guard = substr($admin, strpos($admin, 'public static function guard_ajax('), 600);
+    assert_true(strpos($guard, "check_ajax_referer('idlm_admin_nonce', 'nonce');") < strpos($guard, 'current_user_can'), 'Nonce first.');
+    assert_contains("wp_send_json_error(array('message' => \$message), \$status);", $guard);
+    assert_contains("'admin' === \$rule ? current_user_can('manage_options') : ('rep' === \$rule ? IDLM_Lead_Access_Policy::has_rep_access() : false)", $guard, 'Unknown rules refuse.');
+});

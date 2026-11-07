@@ -14,10 +14,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Inline Quick-Edit row changes
      */
     public static function ajax_quick_edit_lead() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
         
         $lead_id = isset($_POST['lead_id']) ? intval(wp_unslash($_POST['lead_id'])) : 0;
         $field = isset($_POST['field']) ? sanitize_key(wp_unslash($_POST['field'])) : '';
@@ -142,10 +139,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
 
     /** Log auditable pre-sales outreach or a policy-controlled early close. */
     public static function ajax_log_presales_touch() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
         if (!self::current_user_is_pre_sales() && !current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Only pre-sales representatives and administrators can log pre-sales follow-up.'));
         }
@@ -633,10 +627,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Create manual lead in backend popup
      */
     public static function ajax_add_lead_manual() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $form_data_raw = isset($_POST['form_data']) ? wp_unslash($_POST['form_data']) : '';
         parse_str($form_data_raw, $form_fields);
@@ -750,10 +741,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Manual sync triggers
      */
     public static function ajax_trigger_manual_audience_sync() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Access denied'));
-        }
+        IDLM_Admin::guard_ajax('admin');
 
         // Trigger the batch sync immediately
         $result = IDLM_Audiences::run_batch_sync(true);
@@ -765,10 +753,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Bulk retry Conversions API events
      */
     public static function ajax_retry_capi_events() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Access denied'));
-        }
+        IDLM_Admin::guard_ajax('admin');
 
         // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0043: ajax_retry_capi_events(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers.
         $raw_ids = isset($_POST['log_ids']) && is_array($_POST['log_ids']) ? wp_unslash($_POST['log_ids']) : array();
@@ -809,10 +794,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX POST Handler: Save Lead Routing settings from the frontend workspace modal
      */
     public static function ajax_save_routing_settings() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Access Denied');
-        }
+        IDLM_Admin::guard_ajax('admin');
         $previous_presales_targets = IDLM_DB::get_presales_outreach_targets();
 
         // Save strategy
@@ -904,10 +886,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * Run both fallback flows immediately for an administrator.
      */
     public static function ajax_run_fallback_now() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Access denied.'));
-        }
+        IDLM_Admin::guard_ajax('admin');
 
         IDLM_Integrations::run_assignment_fallback();
         global $wpdb;
@@ -931,15 +910,12 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Fetch all lead IDs matching a specific mapping trigger criteria
      */
     public static function ajax_get_mapped_past_leads() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Access Denied');
-        }
+        IDLM_Admin::guard_ajax('admin');
 
         $allowed_types = array('call_status', 'stage', 'lead_quality');
         $trigger_type = isset($_POST['trigger_type']) ? sanitize_key($_POST['trigger_type']) : '';
         if (!in_array($trigger_type, $allowed_types)) {
-            wp_send_json_error('Invalid trigger type');
+            wp_send_json_error(array('message' => 'Invalid trigger type'));
         }
 
         $trigger_value = isset($_POST['trigger_value']) ? sanitize_text_field(wp_unslash($_POST['trigger_value'])) : '';
@@ -962,26 +938,23 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Sync a batch of leads to Interakt for a specific event with throttling
      */
     public static function ajax_sync_mapped_past_batch() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Access Denied');
-        }
+        IDLM_Admin::guard_ajax('admin');
         // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0045: ajax_sync_mapped_past_batch(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers.
         $raw_ids = isset($_POST['lead_ids']) ? wp_unslash($_POST['lead_ids']) : array();
         // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if (!is_array($raw_ids) || !$raw_ids || count($raw_ids) > 50 || count(array_filter($raw_ids, 'is_scalar')) !== count($raw_ids)) {
-            wp_send_json_error('Select between 1 and 50 leads per batch.');
+            wp_send_json_error(array('message' => 'Select between 1 and 50 leads per batch.'));
         }
         $event = isset($_POST['event_name']) && is_scalar($_POST['event_name']) ? sanitize_text_field(wp_unslash($_POST['event_name'])) : '';
         $request_id = isset($_POST['request_id']) && is_scalar($_POST['request_id']) ? sanitize_text_field(wp_unslash($_POST['request_id'])) : '';
         if (!preg_match('/^[a-zA-Z0-9_-]{8,80}$/D', $request_id)) {
-            wp_send_json_error('A valid sync request ID is required. Refresh the page and retry.');
+            wp_send_json_error(array('message' => 'A valid sync request ID is required. Refresh the page and retry.'));
         }
         if (!IDLM_Interakt_Batch::allowed_event($event)) {
-            wp_send_json_error('Save a valid Interakt event mapping before syncing.');
+            wp_send_json_error(array('message' => 'Save a valid Interakt event mapping before syncing.'));
         }
         if (!IDLM_Settings::notification_enabled('idlm_whatsapp_notifications_enabled') || '1' !== get_option('idlm_interakt_enabled', '0') || !IDLM_Secret_Store::get('idlm_interakt_api_key', '', true)) {
-            wp_send_json_error('Interakt automation is disabled or API key is missing.');
+            wp_send_json_error(array('message' => 'Interakt automation is disabled or API key is missing.'));
         }
         $queued = 0;
         $existing = 0;
@@ -999,10 +972,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Bulk operations from Leads Table
      */
     public static function ajax_bulk_action() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
         
         $ids = (isset($_POST['ids']) && is_array($_POST['ids'])) ? array_map('intval', wp_unslash($_POST['ids'])) : array();
         $action = isset($_POST['bulk_action']) ? sanitize_key(wp_unslash($_POST['bulk_action'])) : '';
@@ -1130,10 +1100,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Fetch JSON dataset for dashboard widgets & ChartJS
      */
     public static function ajax_get_dashboard_stats() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
 
         $period = isset($_POST['period']) ? sanitize_key(wp_unslash($_POST['period'])) : 'this_month';
         $custom_start = isset($_POST['start_date']) ? sanitize_text_field(wp_unslash($_POST['start_date'])) : '';
@@ -1175,10 +1142,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Save complete Lead details form changes
      */
     public static function ajax_save_lead_details() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
 
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $form_raw = isset($_POST['form_data']) && is_string($_POST['form_data']) ? wp_unslash($_POST['form_data']) : '';
@@ -1283,11 +1247,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Upload lead file directly via standard HTML5 file uploader
      */
     public static function ajax_upload_lead_file() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::guard_ajax('rep');
 
         $lead_id = isset($_POST['lead_id']) ? absint($_POST['lead_id']) : 0;
         if (!$lead_id || !IDLM_Private_Files::allowed($lead_id, true)) {
@@ -1319,11 +1279,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Reset all CRM lead tables & analytics
      */
     public static function ajax_reset_crm_data() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Permission denied. Only administrators can reset data.'));
-        }
+        IDLM_Admin::guard_ajax('admin', 'Permission denied. Only administrators can reset data.');
 
         $input_count = isset($_POST['confirm_count']) ? sanitize_text_field(wp_unslash($_POST['confirm_count'])) : '';
         if ('' === $input_count || !ctype_digit($input_count)) {
@@ -1345,11 +1301,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Delete a single lead and associated activity/CAPI logs (Admin only)
      */
     public static function ajax_delete_lead() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Permission denied. Only administrators can delete leads.'));
-        }
+        IDLM_Admin::guard_ajax('admin', 'Permission denied. Only administrators can delete leads.');
 
         $lead_id = isset($_POST['lead_id']) ? intval(wp_unslash($_POST['lead_id'])) : 0;
         if ($lead_id <= 0) {
@@ -1367,11 +1319,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * AJAX Endpoint: Import a batch of leads from CSV
      */
     public static function ajax_import_leads_batch() {
-        check_ajax_referer('idlm_admin_nonce', 'nonce');
-
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Permission denied. Only administrators can import leads.'));
-        }
+        IDLM_Admin::guard_ajax('admin', 'Permission denied. Only administrators can import leads.');
 
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $leads = isset($_POST['leads']) ? (array) wp_unslash($_POST['leads']) : array();
