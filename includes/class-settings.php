@@ -9,6 +9,8 @@ class IDLM_Settings {
     const VERSION_OPTION = 'idlm_settings_version';
     const ROUTING_OPTION = 'idlm_routing_settings';
     const WHITE_LABEL_OPTION = 'idlm_white_label_settings';
+    /** Page backgrounds (--idlm-canvas in crm-design.css and admin-style.css); primary is checked as text on them. */
+    const CANVAS_COLORS = array('#F5F3EF', '#EEF2F6');
 
     /** Check committed notification consent immediately before enqueue/delivery. */
     public static function notification_enabled($option_name) {
@@ -62,8 +64,9 @@ class IDLM_Settings {
     }
 
     /** Validate and sanitize one submitted white-label snapshot before any settings are saved. */
-    public static function validate_white_label($raw) {
+    public static function validate_white_label($raw, $saved = null) {
         $raw = is_array($raw) ? $raw : array();
+        $saved = is_array($saved) ? $saved : array();
         $defaults = self::white_label_defaults();
         $settings = array(
             'brand_name' => sanitize_text_field(isset($raw['brand_name']) ? $raw['brand_name'] : $defaults['brand_name']),
@@ -104,6 +107,19 @@ class IDLM_Settings {
         }
         if (self::contrast_ratio($settings['sidebar_color'], '#FFFFFF') < 4.5) {
             $errors['sidebar_color'] = 'Sidebar colour must provide at least 4.5:1 contrast with white navigation text.';
+        }
+        // Stricter text-safety rules apply to new colours only, so a settings save on
+        // another tab never blocks on a colour that was accepted before these rules.
+        // Primary is also link and tab text on the canvas and on its own soft tint.
+        $primary = $settings['primary_color'];
+        if (!isset($errors['primary_color']) && self::colour_changed($saved, 'primary_color', $primary)
+            && self::min_contrast($primary, array_merge(self::CANVAS_COLORS, array(self::lighten_hex($primary, 90)))) < 4.5) {
+            $errors['primary_color'] = 'Primary colour must provide at least 4.5:1 contrast as link text on the page background. Choose a darker colour.';
+        }
+        // Sidebar navigation text is 78% white and the active item a 14% white fill; 7:1 keeps both at 4.5:1.
+        if (!isset($errors['sidebar_color']) && self::colour_changed($saved, 'sidebar_color', $settings['sidebar_color'])
+            && self::contrast_ratio($settings['sidebar_color'], '#FFFFFF') < 7) {
+            $errors['sidebar_color'] = 'Sidebar colour must provide at least 7:1 contrast with white so navigation text stays readable. Choose a darker colour.';
         }
         foreach (array('logo_id' => 'Main logo', 'compact_logo_id' => 'Compact mark', 'favicon_id' => 'Browser icon') as $key => $label) {
             $media_error = self::validate_brand_asset($settings[$key], $label);
@@ -196,6 +212,24 @@ class IDLM_Settings {
         if ($asset['url']) {
             echo '<link rel="icon" href="' . esc_url($asset['url']) . '">' . "\n";
         }
+    }
+
+    /** True when no saved snapshot is given or the submitted colour differs from the saved one. */
+    private static function colour_changed($saved, $key, $value) {
+        return !isset($saved[$key]) || self::normalize_hex($saved[$key]) !== $value;
+    }
+
+    /** Lowest contrast of one colour against several backgrounds. */
+    private static function min_contrast($colour, $backgrounds) {
+        return min(array_map(static function($background) use ($colour) {
+            return self::contrast_ratio($colour, $background);
+        }, $backgrounds));
+    }
+
+    /** Bracketed prefix for plugin notification subjects: the white-label workspace title. */
+    public static function mail_subject_prefix() {
+        $title = trim(preg_replace('/\s+/', ' ', str_replace(array('[', ']'), '', (string) self::get_white_label()['workspace_title'])));
+        return '[' . ('' !== $title ? $title : self::white_label_defaults()['workspace_title']) . ']';
     }
 
     /** Normalize a hexadecimal colour to the stored six-digit uppercase form. */
