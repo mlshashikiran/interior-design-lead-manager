@@ -607,7 +607,7 @@ idlm_test('production scalability Phase 5 starts with a focused lead-detail AJAX
 
     assert_true(class_exists('IDLM_Admin_Lead_Reads'));
     assert_contains('return IDLM_Admin_Lead_Reads::ajax_get_lead_details();', $facade);
-    assert_true(!str_contains($ajax, 'function ajax_get_lead_details('), 'The AJAX class inherits the facade method instead of adding a pass-through.');
+    assert_true(false === strpos($ajax, 'function ajax_get_lead_details('), 'The AJAX class inherits the facade method instead of adding a pass-through.');
     assert_contains("IDLM_Admin::require_ajax_access('rep', 'Permission denied.', 403);", $reads);
 
     $handler = strpos($reads, 'public static function ajax_get_lead_details()');
