@@ -18,7 +18,7 @@ idlm_http_case('M6-H-telemetry-denials-preserve-rows-jobs-and-outbound-state', s
         idlm_http_check($before === idlm_http_snapshot(), 'Anonymous request changed state');
     }
     $r = idlm_telemetry_http('clear_telemetry_logs', array(), 'owner');
-    idlm_http_check($r['status'] === 200 && json_decode($r['body'], true) === array('success'=>false, 'data'=>array('message'=>'Access denied')), 'Representative clear denial changed');
+    idlm_http_check($r['status'] === 200 && json_decode($r['body'], true) === array('success'=>false, 'data'=>array('message'=>'Permission denied.')), 'Representative clear denial changed');
     idlm_http_check($before === idlm_http_snapshot(), 'Denied clear changed state');
     $r = idlm_telemetry_http('download_diagnostic_report', array(), 'owner');
     idlm_http_check($r['status'] === 403 && strpos($r['body'], 'Access denied.') !== false, 'Representative download denial changed');
