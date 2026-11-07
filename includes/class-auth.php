@@ -156,7 +156,8 @@ final class IDLM_Auth {
             return $text;
         }
         $white_label = IDLM_Settings::get_white_label();
-        return $white_label['brand_name'] . ' ' . $white_label['workspace_title'];
+        // wp-login.php prints this filter's value without escaping.
+        return esc_html($white_label['brand_name'] . ' ' . $white_label['workspace_title']);
     }
 
     private static function return_url() {

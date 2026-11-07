@@ -88,17 +88,11 @@
     --idlm-layer-toast: 100200;
 
     /* Backward-compatible aliases for established selectors and modules. */
-    --idlm-primary: var(--idlm-action);
-    --idlm-primary-hover: var(--idlm-action-hover);
     --idlm-secondary: var(--idlm-info);
     --idlm-bg-main: var(--idlm-canvas);
     --idlm-card-bg: var(--idlm-surface);
     --idlm-text-main: var(--idlm-text);
-    --idlm-dark: var(--idlm-sidebar);
     --idlm-muted: var(--idlm-text-muted);
-    --idlm-gold: var(--idlm-brand-gold);
-    --idlm-gold-dark: var(--idlm-action);
-    --idlm-gold-soft: var(--idlm-action-soft);
     --idlm-bg: var(--idlm-canvas);
     --idlm-blue: var(--idlm-info);
     --idlm-green: var(--idlm-success);
@@ -6619,7 +6613,7 @@ div.wrap.idlm-wrap {
 .idlm-login-brand .dashicons { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; background: var(--idlm-action); color: var(--idlm-surface); }
 .idlm-login-brand img { width: auto; max-width: 160px; height: 34px; object-fit: contain; }
 .idlm-login-context-copy { margin: auto 0; max-width: 430px; }
-.idlm-login-product { margin: 0 0 14px; color: #e5c28a; font-size: 12px; font-weight: 700; }
+.idlm-login-product { margin: 0 0 14px; color: var(--idlm-sidebar-accent-text, #e5c28a); font-size: 12px; font-weight: 700; }
 .idlm-login-context h1 { max-width: 12ch; margin: 0; color: var(--idlm-surface-soft); }
 .idlm-login-context-copy > p:last-child { max-width: 42ch; margin: 22px 0 0; color: #bdc8d5; font-size: 14px; line-height: 1.65; }
 .idlm-login-access-note { margin: 28px 0 0; color: #9baabd; font-size: 12px; }
