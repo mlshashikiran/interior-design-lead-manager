@@ -39,9 +39,10 @@ idlm_integration_test('pre-sales drawer rejects forged fields and partial saves 
             $drawer = json_decode((string) ob_get_clean(), true);
             idlm_integration_assert_true(!empty($drawer['success']));
             $html = $drawer['data']['html'];
-            idlm_integration_assert_true(1 === preg_match('/<input[^>]*disabled[^>]*name="deal_value"/', $html), 'Pre-sales deal values must render disabled.');
+            // Sales-only deal and quote fields are not rendered for pre-sales; the server still rejects them (above).
+            idlm_integration_assert_true(false === strpos($html, 'name="deal_value"') && false === strpos($html, 'name="quote_value"'), 'Pre-sales must not see deal or quote values.');
             idlm_integration_assert_true(1 === preg_match('/<button(?![^>]*disabled)[^>]*>\s*Upload Floor Plans\s*<\/button>/i', $html), 'Pre-sales floor-plan uploads must remain available.');
-            idlm_integration_assert_true(1 === preg_match('/<button[^>]*disabled[^>]*>\s*Upload Quote\s*<\/button>/i', $html), 'Pre-sales quote uploads must render disabled.');
+            idlm_integration_assert_true(0 === preg_match('/>\s*Upload Quote\s*<\/button>/i', $html), 'Pre-sales must not see quote uploads.');
         }
     } finally {
         remove_filter('wp_die_ajax_handler', $die_filter);

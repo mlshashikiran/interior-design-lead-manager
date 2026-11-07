@@ -1595,6 +1595,26 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-presales-actions {
     padding: var(--idlm-space-2) var(--idlm-space-3);
 }
 
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-panel-head + .idlm-presales-decision-box {
+    margin-top: var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day-grid + .idlm-early-close-box {
+    margin-top: var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-actions-hint {
+    flex-basis: 100%;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field-needed {
+    color: var(--idlm-warning);
+    font-size: 0.6875rem;
+    font-weight: 500;
+}
+
 body.idlm-crm-design #idlm-lead-drawer .idlm-presales-decision-box {
     gap: var(--idlm-space-2);
     margin: 0 var(--idlm-space-3) var(--idlm-space-2);
