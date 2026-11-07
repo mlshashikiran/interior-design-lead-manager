@@ -1789,6 +1789,7 @@ require_once __DIR__ . '/lead-payment-contracts.php';
 require_once __DIR__ . '/design-handoff-contracts.php';
 require_once __DIR__ . '/manual-lead-contracts.php';
 require_once __DIR__ . '/streamline-contracts.php';
+require_once __DIR__ . '/presales-leads-contracts.php';
 require_once __DIR__ . '/quotation-paper-contracts.php';
 
 $passed = 0;
