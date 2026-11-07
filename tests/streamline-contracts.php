@@ -307,12 +307,25 @@ idlm_test('STREAMLINE each workspace view loads the shared shell plus only its o
         $GLOBALS['idlm_test_logged_in'] = true;
         $GLOBALS['idlm_test_caps'] = array('manage_options' => true, 'idlm_access_leads' => true, 'idlm_view_quotes' => true);
         $shared = array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-workspace-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-payments');
-        $cases = array(
-            'leads' => array($shared, array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app')),
-            'pipeline' => array(array_merge($shared, array('idlm-kanban-styles', 'idlm-crm-design-pipeline')), array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app', 'idlm-kanban-app')),
-            'dashboard' => array(array_merge($shared, array('idlm-dashboard-styles', 'idlm-crm-design-dashboard')), array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app', 'idlm-chartjs', 'idlm-dashboard-app')),
-            'settings' => array(array_merge($shared, array('idlm-crm-design-settings', 'idlm-crm-design-admin')), array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app', 'idlm-settings')),
+        // Every workspace view, pinned: the shared shell plus only that view's own bundles.
+        $shell = array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app');
+        $own = array(
+            'leads'         => array(array(), array()),
+            'pipeline'      => array(array('idlm-kanban-styles', 'idlm-crm-design-pipeline'), array('idlm-kanban-app')),
+            'dashboard'     => array(array('idlm-dashboard-styles', 'idlm-crm-design-dashboard'), array('idlm-chartjs', 'idlm-dashboard-app')),
+            'quotations'    => array(array('idlm-crm-design-quotations'), array()),
+            'payments'      => array(array(), array()),
+            'design-team'   => array(array(), array()),
+            'capi-logs'     => array(array('idlm-crm-design-admin'), array('idlm-users-logs')),
+            'audience-logs' => array(array('idlm-crm-design-admin'), array('idlm-users-logs')),
+            'users'         => array(array('idlm-crm-design-admin'), array('idlm-users-logs')),
+            'settings'      => array(array('idlm-crm-design-settings', 'idlm-crm-design-admin'), array('idlm-settings')),
+            'my-account'    => array(array('idlm-crm-design-admin'), array()),
+            // An unknown view renders the default dashboard, so it gets the dashboard's bundles.
+            'no-such-view'  => array(array('idlm-dashboard-styles', 'idlm-crm-design-dashboard'), array('idlm-chartjs', 'idlm-dashboard-app')),
         );
+        $cases = array();
+        foreach ($own as $view => $extra) { $cases[$view] = array(array_merge($shared, $extra[0]), array_merge($shell, $extra[1])); }
         foreach ($cases as $view => $expected) {
             $_GET = array('idlm_view' => $view);
             $GLOBALS['idlm_test_asset_calls'] = array();
