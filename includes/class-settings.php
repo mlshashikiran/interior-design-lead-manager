@@ -9,6 +9,8 @@ class IDLM_Settings {
     const VERSION_OPTION = 'idlm_settings_version';
     const ROUTING_OPTION = 'idlm_routing_settings';
     const WHITE_LABEL_OPTION = 'idlm_white_label_settings';
+    /** Page backgrounds (--idlm-canvas in crm-design.css and admin-style.css); primary is checked as text on them. */
+    const CANVAS_COLORS = array('#F5F3EF', '#EEF2F6');
 
     /** Check committed notification consent immediately before enqueue/delivery. */
     public static function notification_enabled($option_name) {
@@ -62,8 +64,9 @@ class IDLM_Settings {
     }
 
     /** Validate and sanitize one submitted white-label snapshot before any settings are saved. */
-    public static function validate_white_label($raw) {
+    public static function validate_white_label($raw, $saved = null) {
         $raw = is_array($raw) ? $raw : array();
+        $saved = is_array($saved) ? $saved : array();
         $defaults = self::white_label_defaults();
         $settings = array(
             'brand_name' => sanitize_text_field(isset($raw['brand_name']) ? $raw['brand_name'] : $defaults['brand_name']),
@@ -105,6 +108,19 @@ class IDLM_Settings {
         if (self::contrast_ratio($settings['sidebar_color'], '#FFFFFF') < 4.5) {
             $errors['sidebar_color'] = 'Sidebar colour must provide at least 4.5:1 contrast with white navigation text.';
         }
+        // Stricter text-safety rules apply to new colours only, so a settings save on
+        // another tab never blocks on a colour that was accepted before these rules.
+        // Primary is also link and tab text on the canvas and on its own soft tint.
+        $primary = $settings['primary_color'];
+        if (!isset($errors['primary_color']) && self::colour_changed($saved, 'primary_color', $primary)
+            && self::min_contrast($primary, array_merge(self::CANVAS_COLORS, array(self::lighten_hex($primary, 90)))) < 4.5) {
+            $errors['primary_color'] = 'Primary colour must provide at least 4.5:1 contrast as link text on the page background. Choose a darker colour.';
+        }
+        // Sidebar navigation text is 78% white and the active item a 14% white fill; 7:1 keeps both at 4.5:1.
+        if (!isset($errors['sidebar_color']) && self::colour_changed($saved, 'sidebar_color', $settings['sidebar_color'])
+            && self::contrast_ratio($settings['sidebar_color'], '#FFFFFF') < 7) {
+            $errors['sidebar_color'] = 'Sidebar colour must provide at least 7:1 contrast with white so navigation text stays readable. Choose a darker colour.';
+        }
         foreach (array('logo_id' => 'Main logo', 'compact_logo_id' => 'Compact mark', 'favicon_id' => 'Browser icon') as $key => $label) {
             $media_error = self::validate_brand_asset($settings[$key], $label);
             if ($media_error) {
@@ -138,7 +154,48 @@ class IDLM_Settings {
             . '--idlm-action-soft:' . self::lighten_hex($settings['primary_color'], 90) . ';'
             . '--idlm-focus-ring:' . self::normalize_hex($settings['primary_color']) . ';'
             . '--idlm-brand-gold:' . self::normalize_hex($settings['accent_color']) . ';'
-            . '--idlm-sidebar:' . self::normalize_hex($settings['sidebar_color']) . ';';
+            . '--idlm-sidebar:' . self::normalize_hex($settings['sidebar_color']) . ';'
+            . '--idlm-sidebar-accent:' . self::sidebar_accent($settings) . ';'
+            . '--idlm-on-accent:' . self::on_accent($settings) . ';'
+            . '--idlm-sidebar-accent-text:' . self::sidebar_accent_text($settings) . ';';
+    }
+
+    /**
+     * The accent is not contrast-checked when saved, so icons and focus rings on the
+     * sidebar use it only when it reaches 3:1 there; otherwise they use white, which
+     * the sidebar validation guarantees at 4.5:1. Presentation only: nothing is stored.
+     */
+    private static function sidebar_accent($settings) {
+        list($accent, $sidebar) = self::accent_pair($settings);
+        // The active item is filled with 14% white over the sidebar (--idlm-sidebar-active).
+        $active = self::lighten_hex($sidebar, 14);
+        return min(self::contrast_ratio($accent, $sidebar), self::contrast_ratio($accent, $active)) >= 3 ? $accent : '#FFFFFF';
+    }
+
+    /** Small accent-coloured text on the sidebar (the sign-in label): the accent at 4.5:1, otherwise white. */
+    private static function sidebar_accent_text($settings) {
+        list($accent, $sidebar) = self::accent_pair($settings);
+        return self::contrast_ratio($accent, $sidebar) >= 4.5 ? $accent : '#FFFFFF';
+    }
+
+    /** Text on an accent fill: white, else the sidebar colour, else black, whichever first reaches 4.5:1. */
+    private static function on_accent($settings) {
+        list($accent, $sidebar) = self::accent_pair($settings);
+        foreach (array('#FFFFFF', $sidebar) as $candidate) {
+            if (self::contrast_ratio($candidate, $accent) >= 4.5) {
+                return $candidate;
+            }
+        }
+        return '#000000';
+    }
+
+    /** Normalized accent and sidebar colours, falling back to the defaults. */
+    private static function accent_pair($settings) {
+        $defaults = self::white_label_defaults();
+        return array(
+            self::normalize_hex($settings['accent_color']) ?: $defaults['accent_color'],
+            self::normalize_hex($settings['sidebar_color']) ?: $defaults['sidebar_color'],
+        );
     }
 
     /** Output a CRM-specific browser icon without changing the site's global Site Icon. */
@@ -148,7 +205,7 @@ class IDLM_Settings {
             return;
         }
         $is_crm_page = false;
-        foreach (array('idlm_workspace', 'idlm_leads_list', 'idlm_dashboard', 'idlm_kanban') as $shortcode) {
+        foreach (array('idlm_workspace', 'idlm_leads_list', 'idlm_dashboard', 'idlm_kanban', 'idlm_quotations') as $shortcode) {
             if (has_shortcode($post->post_content, $shortcode)) {
                 $is_crm_page = true;
                 break;
@@ -162,6 +219,24 @@ class IDLM_Settings {
         if ($asset['url']) {
             echo '<link rel="icon" href="' . esc_url($asset['url']) . '">' . "\n";
         }
+    }
+
+    /** True when no saved snapshot is given or the submitted colour differs from the saved one. */
+    private static function colour_changed($saved, $key, $value) {
+        return !isset($saved[$key]) || self::normalize_hex($saved[$key]) !== $value;
+    }
+
+    /** Lowest contrast of one colour against several backgrounds. */
+    private static function min_contrast($colour, $backgrounds) {
+        return min(array_map(static function($background) use ($colour) {
+            return self::contrast_ratio($colour, $background);
+        }, $backgrounds));
+    }
+
+    /** Bracketed prefix for plugin notification subjects: the white-label workspace title. */
+    public static function mail_subject_prefix() {
+        $title = trim(preg_replace('/\s+/', ' ', str_replace(array('[', ']'), '', (string) self::get_white_label()['workspace_title'])));
+        return '[' . ('' !== $title ? $title : self::white_label_defaults()['workspace_title']) . ']';
     }
 
     /** Normalize a hexadecimal colour to the stored six-digit uppercase form. */

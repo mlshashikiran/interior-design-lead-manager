@@ -26,7 +26,7 @@ final class IDLM_Handoff_Notifications {
         }
 
         $lead_name = $lead ? trim($lead->first_name . ' ' . $lead->last_name) : 'Lead #' . absint($lead_id);
-        $subject = sprintf('[Lead Manager] Qualified lead assigned: %s', $lead_name);
+        $subject = sprintf('%s Qualified lead assigned: %s', IDLM_Settings::mail_subject_prefix(), $lead_name);
         $body = $activity_message . "\n\nLead: " . $lead_name;
         if ($lead && !empty($lead->preferred_studio)) {
             $body .= "\nPreferred Studio: " . $lead->preferred_studio;

@@ -617,16 +617,16 @@ final class IDLM_Design_Handoffs {
         $email_of = static function($user_id) { $user = get_userdata((int) $user_id); return $user ? $user->user_email : ''; };
         if ('sent' === $event) {
             $emails = array($email_of($row->design_manager_id));
-            $subject = sprintf('[Lead Manager] New design handoff: %s', $name); $body = 'A Won lead has been sent to you for design: ' . $name . '.';
+            $subject = sprintf('%s New design handoff: %s', IDLM_Settings::mail_subject_prefix(), $name); $body = 'A Won lead has been sent to you for design: ' . $name . '.';
         } elseif ('accepted' === $event) {
             $emails = array($email_of($row->designer_id), $email_of($row->sent_by));
-            $subject = sprintf('[Lead Manager] Design handoff accepted: %s', $name); $body = 'The design team accepted ' . $name . '.';
+            $subject = sprintf('%s Design handoff accepted: %s', IDLM_Settings::mail_subject_prefix(), $name); $body = 'The design team accepted ' . $name . '.';
         } elseif ('assigned' === $event) {
             $emails = array($email_of($row->designer_id));
-            $subject = sprintf('[Lead Manager] Design project assigned: %s', $name); $body = $name . ' has been assigned to you.';
+            $subject = sprintf('%s Design project assigned: %s', IDLM_Settings::mail_subject_prefix(), $name); $body = $name . ' has been assigned to you.';
         } elseif ('sent_back' === $event) {
             $emails = array($email_of($row->sent_by));
-            $subject = sprintf('[Lead Manager] Design handoff returned: %s', $name); $body = 'The design team returned ' . $name . ": \n\n" . $row->send_back_reason;
+            $subject = sprintf('%s Design handoff returned: %s', IDLM_Settings::mail_subject_prefix(), $name); $body = 'The design team returned ' . $name . ": \n\n" . $row->send_back_reason;
         } else { return; }
         $emails = array_values(array_unique(array_filter($emails, 'is_email')));
         if (!$emails) { return; }
