@@ -23,7 +23,7 @@ $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                 <section id="settings-mcp" class="idlm-settings-tab-content <?php echo $idlm_active_tab === 'mcp' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-mcp" <?php echo $idlm_active_tab === 'mcp' ? '' : 'hidden'; ?>>
                 <div class="idlm-grid-full">
                     <article class="idlm-card">
-                        <h3>Model Context Protocol (MCP) Server Configuration</h3>
+                        <h3>Model Context Protocol (MCP) server configuration</h3>
                         <p class="idlm-card-desc">Expose secure, read-only analytical database access to AI models to perform complex lead and sales representative analysis.</p>
                         <div class="idlm-alert idlm-mcp-status <?php echo $idlm_mcp_enabled ? 'idlm-alert-success' : 'idlm-alert-warning'; ?>" data-idlm-notice-inline>
                             <strong><?php echo $idlm_mcp_enabled ? 'MCP enabled' : 'MCP disabled'; ?></strong>
@@ -54,7 +54,7 @@ $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                         <!-- Subtab 1: Claude Desktop -->
                         <div id="mcp-claude" class="idlm-mcp-client-tab-content active" role="tabpanel" aria-labelledby="idlm-mcp-tab-claude">
                             <div class="idlm-form-group full">
-                                <h4 data-idlm-ui="heading">Claude Desktop Settings</h4>
+                                <h4 data-idlm-ui="heading">Claude Desktop settings</h4>
                                 <p class="idlm-card-desc">Add the snippet below into the <code>mcpServers</code> section of your Claude configuration file (<code>~/Library/Application Support/Claude/claude_desktop_config.json</code> on macOS).</p>
                                 
                                 <h5 data-idlm-ui="option-heading">Option A: Remote HTTPS SSE (Recommended for Production)</h5>
@@ -76,7 +76,7 @@ $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                         <!-- Subtab 2: Antigravity IDE -->
                         <div id="mcp-antigravity" class="idlm-mcp-client-tab-content" role="tabpanel" aria-labelledby="idlm-mcp-tab-antigravity" hidden>
                             <div class="idlm-form-group full">
-                                <h4 data-idlm-ui="heading">Antigravity / Gemini Code Assist Setup</h4>
+                                <h4 data-idlm-ui="heading">Antigravity / Gemini Code Assist setup</h4>
                                 <p class="idlm-card-desc">Configure the Google Antigravity developer agent environment (<code>~/.gemini/antigravity/mcp_config.json</code>) to use this database MCP server.</p>
                                 
                                 <h5 data-idlm-ui="option-heading">Option A: Remote HTTPS SSE (Recommended for Production)</h5>
@@ -98,7 +98,7 @@ $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                         <!-- Subtab 3: Cursor -->
                         <div id="mcp-cursor" class="idlm-mcp-client-tab-content" role="tabpanel" aria-labelledby="idlm-mcp-tab-cursor" hidden>
                             <div class="idlm-form-group full">
-                                <h4 data-idlm-ui="heading">Cursor Editor Setup</h4>
+                                <h4 data-idlm-ui="heading">Cursor editor setup</h4>
                                 <p class="idlm-card-desc">Navigate to **Cursor Settings > Features > MCP**, click **+ Add New MCP Server**, and configure using one of the options below:</p>
                                 
                                 <h5 data-idlm-ui="option-heading">Option A: Remote HTTPS SSE (Recommended for Production)</h5>
@@ -193,7 +193,7 @@ args = ["<?php echo esc_html($idlm_mcp_script_path); ?>"]</pre>
                         </div>
 
                         <div class="idlm-form-group full idlm-settings-divider">
-                            <h4 data-idlm-ui="heading">Security &amp; Access Sandbox</h4>
+                            <h4 data-idlm-ui="heading">Security and access sandbox</h4>
                             <ul class="idlm-security-list">
                                 <li><strong>Read-Only Restraints</strong>: The MCP server strictly executes only <code>SELECT</code> queries. Any writing, modifying, or structure altering statements are automatically rejected.</li>
                                 <li><strong>Table Isolation</strong>: Access is strictly sandboxed to the CRM plugin custom tables (leads, activities, sync logs, cost mappings) and the <code>wp_users</code> table. Attempts to read other WordPress database tables (like <code>wp_options</code> or <code>wp_posts</code>) are blocked.</li>

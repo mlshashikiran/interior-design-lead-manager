@@ -122,8 +122,8 @@ idlm_test('Kanban header reports overall leads and filtered current-month wins b
     assert_contains("l.conversion_time < %s", $ajax_source);
     assert_contains('$monthly_won_conditions = $where;', $ajax_source);
     assert_contains("'won_revenue_current_month'", $ajax_source);
-    assert_contains('Overall Leads — Filtered', $template);
-    assert_contains('Won Revenue This Month', $template);
+    assert_contains('Leads on board', $template);
+    assert_contains('Won revenue this month', $template);
     assert_false(false !== strpos($template, 'Assigned Leads — Filtered'));
     assert_false(false !== strpos($template, 'Qualified Leads — Filtered'));
     assert_contains('stats.total_filtered', $script);
@@ -437,9 +437,9 @@ idlm_test('Won dialogs prefill the deal value from the quote value and stay blan
     assert_contains("\$('#idlm-kanban-deal-source').prop('hidden', !(wonQuoteValue > 0));", $open);
     assert_contains("\$('#idlm-kanban-discount-input').val('');", $open, 'Discount must still be entered at close.');
 
-    // The source note is new wording, so it renders only with the design layer.
-    assert_contains('<?php if ($idlm_design_layer): ?><p class="idlm-field-help" id="idlm-deal-value-source" hidden>', $overlays);
-    assert_contains('<?php if ($idlm_design): ?><p class="idlm-field-help" id="idlm-kanban-deal-source" hidden>', $kanban);
+    // The source note stays hidden until a quote value fills the field.
+    assert_contains('<p class="idlm-field-help" id="idlm-deal-value-source" hidden>', $overlays);
+    assert_contains('<p class="idlm-field-help" id="idlm-kanban-deal-source" hidden>', $kanban);
 });
 
 idlm_test('admin page, overlay, workspace, and account selector contracts remain present', static function(): void {
@@ -675,7 +675,7 @@ idlm_test('frontend UI UX Phase 2 preserves keyboard, selection, and data-altern
     assert_contains("{ key: 'possession_date'", $leads_script);
     assert_contains('claimedColumns', $leads_script);
     assert_contains('validateImportRows', $leads_script);
-    assert_contains('Default Preferred Studio', $leads_template);
+    assert_contains('Default preferred studio', $leads_template);
     assert_contains('Imported + Duplicates + Failed = ', $leads_script);
     assert_contains("'project_name' => isset(\$lead['project_name'])", $ajax);
     assert_contains("'possession_date' => !empty(\$lead['possession_date'])", $ajax);

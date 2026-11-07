@@ -72,7 +72,7 @@ idlm_test('PAYMENT tab is retired while each lead page, data and grants stay',st
     // The per-lead page keeps its own checks; the drawer and Design links reuse them.
     assert_contains("return self::visible() && IDLM_Lead_Access_Policy::can_access((int) \$lead_id, true);",$controller);
     assert_contains("if (!\$lead || !self::can_open(\$lead->id)) { return ''; }",$controller);
-    assert_contains("if (\$design_layer) { echo IDLM_Lead_Payment_Controller::drawer_summary(\$lead); }",$read('includes/class-admin-lead-reads.php'));
+    assert_contains("echo IDLM_Lead_Payment_Controller::drawer_summary(\$lead);",$read('includes/class-admin-lead-reads.php'));
     assert_contains("if (!IDLM_Lead_Payment_Controller::can_open(\$lead_id)) { return ''; }",$read('includes/class-design-handoff-controller.php'));
     assert_contains("IDLM_Lead_Payment_Controller::tab_shown() ? 'payments' : 'leads'",$read('includes/class-design-dashboard.php'));
     // Retirement writes nothing: handlers, grants and tables are unchanged.

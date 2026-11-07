@@ -1396,7 +1396,7 @@ idlm_test('white-label runtime surfaces do not retain fixed default accent color
     assert_false((bool) preg_match('/(?:201\s*,\s*150\s*,\s*68|225\s*,\s*182\s*,\s*109|#e1b66d)/i', $workspace . $dashboard . $kanban . $lead_markup));
     assert_false(false !== strpos($lead_markup, 'var(--gold)'));
     assert_false(false !== strpos($lead_markup, 'var(--red)'));
-    assert_contains("dashboardToken('--idlm-brand-gold'", $dashboard);
+    assert_contains("dashboardToken('--idlm-success'", $dashboard);
 });
 
 idlm_test('guarded view renderer rejects traversal and renders the correct authentication state', static function(): void {

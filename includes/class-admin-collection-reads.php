@@ -388,19 +388,18 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
         ));
         $active_rep_ids = get_option('idlm_active_assignment_reps', array());
         $whatsapp_read_ids = self::get_whatsapp_read_activity_ids();
-        $design_layer = IDLM_Admin_Assets::design_layer_enabled();
         ob_start();
-        if (empty($leads) && $design_layer) {
+        if (empty($leads)) {
             echo '<tr class="idlm-leads-empty-row"><td colspan="12"><div class="idlm-state is-empty"><strong class="idlm-leads-empty-title">No leads match these filters</strong><span class="idlm-leads-empty-text">Change or clear the filters to see more leads.</span><div class="idlm-state__actions"><button type="button" class="idlm-btn idlm-btn-secondary idlm-active-filters-clear">Clear filters</button></div></div></td></tr>';
         } elseif (empty($leads)) {
-            echo '<tr><td colspan="' . ($is_pre_sales ? '12' : '11') . '" style="text-align:center;">No leads found matching your active filters.</td></tr>';
+            echo '<tr><td colspan="' . ($is_pre_sales ? '12' : '11') . '">No leads found matching your active filters.</td></tr>';
         } else {
             foreach ($leads as $l) {
                 $name = esc_html($l->first_name . ' ' . $l->last_name);
                 if (empty($name)) {
                     $name = 'Unnamed Lead';
                 }
-                $dup_badge = $l->is_duplicate ? '<span class="idlm-badge idlm-badge-warning" style="margin-left:5px; font-size:9px; padding:2px 6px;">DUP</span>' : '';
+                $dup_badge = $l->is_duplicate ? '<span class="idlm-badge idlm-badge-warning">Duplicate</span>' : '';
                 $last_read_whatsapp_id = isset($whatsapp_read_ids[$l->id]) ? absint($whatsapp_read_ids[$l->id]) : 0;
                 $has_unread_whatsapp = !empty($l->latest_whatsapp_reply_id) && absint($l->latest_whatsapp_reply_id) > $last_read_whatsapp_id;
                 $responsive_row_id = 'idlm-lead-row-' . absint($l->id);
@@ -478,29 +477,23 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                     <tr id="<?php echo esc_attr($responsive_row_id); ?>" data-id="<?php echo esc_attr($l->id); ?>" class="idlm-presales-queue-row idlm-responsive-lead-row <?php echo $l->is_duplicate ? 'idlm-duplicate-row' : ''; ?>">
                         <td class="idlm-selection-column idlm-col-priority-primary" data-label="Select"><input type="checkbox" class="idlm-row-selector" value="<?php echo esc_attr($l->id); ?>" aria-label="Select lead <?php echo esc_attr($name); ?>"></td>
                         <td class="idlm-lead-identity-cell idlm-col-lead idlm-col-priority-primary" data-label="Lead" data-lead-drawer-id="<?php echo esc_attr($l->id); ?>">
-                            <?php if ($design_layer): ?>
                             <div class="idlm-lead-row-headline">
                                 <button type="button" class="idlm-lead-row-open" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)" title="<?php echo esc_attr($name); ?>"><strong><?php echo esc_html($name); ?></strong><span class="screen-reader-text"> — open lead details</span></button>
                                 <?php echo wp_kses_post($dup_badge); ?>
                                 <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span><?php endif; ?>
                             </div>
                             <div class="idlm-lead-row-contact"><a class="idlm-lead-row-phone" href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', (string) $l->phone)); ?>"><?php echo esc_html($l->phone); ?></a><?php if ($l->project_name): ?><span class="idlm-lead-row-email" title="<?php echo esc_attr($l->project_name); ?>"><?php echo esc_html($l->project_name); ?></span><?php endif; ?></div>
-                            <?php else: ?>
-                            <button type="button" class="idlm-lead-row-open" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)"><strong><?php echo esc_html($name); ?></strong><span class="screen-reader-text"> — open lead details</span></button> <?php echo wp_kses_post($dup_badge); ?>
-                            <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge">New WhatsApp</span><?php endif; ?>
-                            <small><?php echo esc_html($l->phone); ?><?php echo $l->project_name ? ' · ' . esc_html($l->project_name) : ''; ?></small>
-                            <?php endif; ?>
                             <button type="button" class="idlm-lead-row-expand" aria-expanded="false" aria-controls="<?php echo esc_attr($responsive_row_id); ?>"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><span class="idlm-lead-row-expand-label">Show details</span></button>
                         </td>
-                        <td class="idlm-col-channel idlm-col-priority-low" data-label="Channel"><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(array(' ', '/', '-'), '', $l->source))); ?>"><?php echo esc_html($l->source ?: 'Unknown'); ?></span><?php if ($design_layer && $l->preferred_studio): ?><small class="idlm-lead-row-studio" title="<?php echo esc_attr($l->preferred_studio); ?>"><?php echo esc_html($l->preferred_studio); ?></small><?php endif; ?></td>
+                        <td class="idlm-col-channel idlm-col-priority-low" data-label="Channel"><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(array(' ', '/', '-'), '', $l->source))); ?>"><?php echo esc_html($l->source ?: 'Unknown'); ?></span><?php if ($l->preferred_studio): ?><small class="idlm-lead-row-studio" title="<?php echo esc_attr($l->preferred_studio); ?>"><?php echo esc_html($l->preferred_studio); ?></small><?php endif; ?></td>
                         <td class="idlm-col-studio idlm-col-priority-low" data-label="Studio"><?php echo esc_html($l->preferred_studio ?: '—'); ?></td>
                         <td class="idlm-col-assigned idlm-col-created-at idlm-col-priority-low" data-label="Assigned date"><?php echo wp_kses_post(IDLM_Admin_Presenter::render_lead_table_datetime($l->assigned_at)); ?></td>
-                        <td class="idlm-col-age idlm-col-priority-low" data-label="Age"<?php echo $design_layer ? ' title="Business days since the lead was created"' : ''; ?>><strong><?php echo esc_html(self::get_business_day_age($l->created_at)); ?></strong><small><?php echo $design_layer ? 'days' : 'business days'; ?></small></td>
+                        <td class="idlm-col-age idlm-col-priority-low" data-label="Age" title="Business days since the lead was created"><strong><?php echo esc_html(self::get_business_day_age($l->created_at)); ?></strong><small>days</small></td>
                         <td class="idlm-col-today idlm-col-priority-low" data-label="Today"><span class="idlm-progress-chip"><?php echo esc_html($cycle_outreach['calls']); ?>/<?php echo esc_html($outreach_targets['calls']); ?> calls</span><span class="idlm-progress-chip"><?php echo esc_html($cycle_outreach['whatsapp']); ?>/<?php echo esc_html($outreach_targets['whatsapp']); ?> WA</span><small><?php echo esc_html(min(6, $complete_cycles)); ?>/6 cycles</small></td>
                         <td class="idlm-col-response idlm-col-priority-secondary" data-label="Response"><span class="idlm-response-chip"><?php echo esc_html($response_label); ?></span></td>
-                        <td class="idlm-col-budget idlm-col-priority-secondary" data-label="Budget"<?php echo $design_layer && $l->budget ? ' title="' . esc_attr($l->budget) . '"' : ''; ?>><strong><?php echo esc_html($l->budget ?: 'Missing'); ?></strong><span class="idlm-budget-check <?php echo $budget_pass ? 'is-pass' : 'is-review'; ?>"><?php echo $budget_pass ? '₹4L+' : 'Review'; ?></span></td>
+                        <td class="idlm-col-budget idlm-col-priority-secondary" data-label="Budget"<?php echo $l->budget ? ' title="' . esc_attr($l->budget) . '"' : ''; ?>><strong><?php echo esc_html($l->budget ?: 'Missing'); ?></strong><span class="idlm-budget-check <?php echo $budget_pass ? 'is-pass' : 'is-review'; ?>"><?php echo $budget_pass ? '₹4L+' : 'Review'; ?></span></td>
                         <td class="idlm-col-details idlm-col-priority-low" data-label="Project details"><strong><?php echo esc_html($details_complete); ?>/6</strong><small><?php echo empty($l->floor_plan_received) ? 'Plan pending' : 'Plan received'; ?></small></td>
-                        <td class="idlm-col-quality idlm-col-priority-primary" data-label="Follow-up status"><span class="idlm-sla-chip <?php echo esc_attr($sla_class); ?>"><?php echo esc_html($sla_label); ?></span><?php if ($design_layer): ?><small class="idlm-lead-next-action" title="<?php echo esc_attr($next_action); ?>"><?php echo esc_html($next_action); ?></small><?php endif; ?></td>
+                        <td class="idlm-col-quality idlm-col-priority-primary" data-label="Follow-up status"><span class="idlm-sla-chip <?php echo esc_attr($sla_class); ?>"><?php echo esc_html($sla_label); ?></span><small class="idlm-lead-next-action" title="<?php echo esc_attr($next_action); ?>"><?php echo esc_html($next_action); ?></small></td>
                         <td class="idlm-col-actions idlm-col-priority-primary idlm-lead-row-actions" data-label="Actions"><div class="idlm-queue-actions"><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="call" data-lead-id="<?php echo esc_attr($l->id); ?>" <?php disabled($decision_complete); ?>>Log call</button><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="whatsapp" data-lead-id="<?php echo esc_attr($l->id); ?>" <?php disabled($decision_complete); ?>>Log WA</button><?php if ($decision_ready): ?><button type="button" class="idlm-btn idlm-btn-primary" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)">Decide</button><?php endif; ?></div></td>
                     </tr>
                     <?php
@@ -510,7 +503,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                 <tr id="<?php echo esc_attr($responsive_row_id); ?>" data-id="<?php echo esc_attr($l->id); ?>" class="idlm-responsive-lead-row <?php echo $l->is_duplicate ? 'idlm-duplicate-row' : ''; ?>">
                     <td class="idlm-selection-column idlm-col-priority-primary" data-label="Select"><input type="checkbox" class="idlm-row-selector" value="<?php echo esc_attr($l->id); ?>" aria-label="Select lead <?php echo esc_attr($name); ?>"></td>
                     <td class="idlm-lead-identity-cell idlm-col-lead idlm-col-priority-primary" data-label="Lead" data-lead-drawer-id="<?php echo esc_attr($l->id); ?>">
-                        <?php if ($design_layer):
+                        <?php 
                             $awaiting_handoff = 'Qualified' === $l->lead_quality && 'awaiting_manager' === $l->handoff_status;
                             $handoff_hours = $awaiting_handoff ? IDLM_Integrations::get_elapsed_working_hours(
                                 $l->qualified_at ?: ($l->updated_at ?: $l->created_at),
@@ -532,32 +525,10 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                         <div class="idlm-lead-row-contact"><a class="idlm-lead-row-phone" href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', (string) $l->phone)); ?>"><?php echo esc_html($l->phone); ?></a></div>
                         <?php if ($awaiting_handoff && !empty($l->property_location)): ?><small class="idlm-row-handoff-location"><?php echo esc_html($l->property_location); ?></small><?php endif; ?>
                         <button type="button" class="idlm-lead-row-expand" aria-expanded="false" aria-controls="<?php echo esc_attr($responsive_row_id); ?>"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><span class="idlm-lead-row-expand-label">Show details</span></button>
-                        <?php else: ?>
-                        <button type="button" class="idlm-lead-row-open" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)"><strong><?php echo esc_html($name); ?></strong><span class="screen-reader-text"> — open lead details</span></button> <?php echo wp_kses_post($dup_badge); ?>
-                        <?php if ($has_unread_whatsapp): ?>
-                            <span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span>
-                        <?php endif; ?>
-                        <div class="idlm-lead-row-contact"><?php echo esc_html($l->phone); ?></div>
-                        <?php if ('Qualified' === $l->lead_quality && 'awaiting_manager' === $l->handoff_status):
-                            $handoff_started_at = $l->qualified_at ?: ($l->updated_at ?: $l->created_at);
-                            $handoff_wait_hours = IDLM_Integrations::get_elapsed_working_hours(
-                                $handoff_started_at,
-                                current_time('mysql'),
-                                get_option('idlm_working_hours_start', '09:00'),
-                                get_option('idlm_working_hours_end', '18:00'),
-                                get_option('idlm_working_days', array(1, 2, 3, 4, 5, 6))
-                            );
-                            $handoff_is_overdue = $handoff_wait_hours >= max(1, intval(get_option('idlm_qualified_fallback_hours', '4')));
-                        ?>
-                            <span class="idlm-row-handoff-badge <?php echo $handoff_is_overdue ? 'is-overdue' : ''; ?>">Awaiting assignment · <?php echo esc_html($handoff_wait_hours < 1 ? '<1 working hour' : floor($handoff_wait_hours) . ' working hours'); ?></span>
-                            <?php if (!empty($l->property_location)): ?><small class="idlm-row-handoff-location"><?php echo esc_html($l->property_location); ?></small><?php endif; ?>
-                        <?php endif; ?>
-                        <button type="button" class="idlm-lead-row-expand" aria-expanded="false" aria-controls="<?php echo esc_attr($responsive_row_id); ?>"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><span class="idlm-lead-row-expand-label">Show details</span></button>
-                        <?php endif; ?>
                     </td>
-                    <td class="idlm-col-channel idlm-col-priority-low" data-label="Channel"><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(' ', '', $l->source))); ?>"><?php echo esc_html($l->source); ?></span><?php if ($design_layer && $l->preferred_studio): ?><small class="idlm-lead-row-studio" title="<?php echo esc_attr($l->preferred_studio); ?>"><?php echo esc_html($l->preferred_studio); ?></small><?php endif; ?></td>
+                    <td class="idlm-col-channel idlm-col-priority-low" data-label="Channel"><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(' ', '', $l->source))); ?>"><?php echo esc_html($l->source); ?></span><?php if ($l->preferred_studio): ?><small class="idlm-lead-row-studio" title="<?php echo esc_attr($l->preferred_studio); ?>"><?php echo esc_html($l->preferred_studio); ?></small><?php endif; ?></td>
                     <td class="idlm-col-studio idlm-col-priority-low" data-label="Studio"><?php echo esc_html($l->preferred_studio ?: '—'); ?></td>
-                    <td class="idlm-col-budget idlm-col-priority-secondary" data-label="Budget"<?php echo $design_layer && !empty($l->budget) ? ' title="' . esc_attr($l->budget) . '"' : ''; ?>><strong><?php echo !empty($l->budget) ? esc_html($l->budget) : ($design_layer ? '—' : 'N/A'); ?></strong></td>
+                    <td class="idlm-col-budget idlm-col-priority-secondary" data-label="Budget"<?php echo !empty($l->budget) ? ' title="' . esc_attr($l->budget) . '"' : ''; ?>><strong><?php echo !empty($l->budget) ? esc_html($l->budget) : ('—'); ?></strong></td>
                     
                     <!-- Stage Quick Edit dropdown -->
                     <td class="idlm-col-stage idlm-col-priority-primary" data-label="Stage">
@@ -593,7 +564,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                     <!-- Lead Quality dropdown -->
                     <td class="idlm-col-quality idlm-col-priority-primary" data-label="Lead quality">
                         <select class="idlm-table-select idlm-quick-edit" data-field="lead_quality" data-id="<?php echo esc_attr($l->id); ?>"<?php echo empty($l->floor_plan_received) ? ' data-idlm-plan-pending="1"' : ''; ?>>
-                            <option value="" <?php selected($l->lead_quality, ''); ?>><?php echo esc_html(class_exists('IDLM_Admin_Assets') && IDLM_Admin_Assets::design_layer_enabled() ? 'Pending qualification' : 'Pending Qualification'); ?></option>
+                            <option value="" <?php selected($l->lead_quality, ''); ?>><?php echo esc_html('Pending qualification'); ?></option>
                             <option value="Qualified" <?php selected($l->lead_quality, 'Qualified'); ?>><?php echo esc_html('Qualified' === $l->lead_quality ? self::get_qualification_status_label($l) : 'Qualified'); ?></option>
                             <option value="Unqualified" <?php selected($l->lead_quality, 'Unqualified'); ?>>Unqualified</option>
                         </select>
@@ -607,19 +578,10 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                         if ($pending_count > 0): 
                             $badge_class = ($overdue_count > 0) ? 'idlm-task-badge-overdue' : 'idlm-task-badge-active';
                             $title_text = sprintf('%d pending tasks (%d overdue)', $pending_count, $overdue_count);
-                            if ($design_layer):
                         ?>
                             <button type="button" class="idlm-table-task-badge <?php echo esc_attr($badge_class); ?>" title="<?php echo esc_attr($title_text); ?>" aria-label="<?php echo esc_attr($title_text); ?>" onclick="event.stopPropagation(); openLeadDrawer(<?php echo esc_attr($l->id); ?>, 'drawer-tab-tasks');"><?php echo esc_html($pending_count); ?></button>
                         <?php else: ?>
-                            <div class="idlm-table-task-badge <?php echo esc_attr($badge_class); ?>" title="<?php echo esc_attr($title_text); ?>" onclick="event.stopPropagation(); openLeadDrawer(<?php echo esc_attr($l->id); ?>, 'drawer-tab-tasks');" style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
-                                <span class="dashicons dashicons-editor-ul" style="font-size: 14px; width: 14px; height: 14px; line-height: 14px;"></span>
-                                <span><?php echo esc_html($pending_count); ?></span>
-                            </div>
-                        <?php endif; ?>
-                        <?php elseif ($design_layer): ?>
                             <span class="idlm-muted" aria-label="No pending tasks">—</span>
-                        <?php else: ?>
-                            <span style="color: #cbd5e1; font-size: 11px;">None</span>
                         <?php endif; ?>
                     </td>
 
@@ -630,10 +592,6 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
             }
         }
         $html = ob_get_clean();
-        if ($design_layer) {
-            // Row presentation lives in crm-design-leads.css. Duplicate badges keep their 11px design-layer size.
-            $html = (string) preg_replace('/\sstyle="[^"]*"/i', '', str_replace('>DUP<', '>Duplicate<', $html));
-        }
 
         $next_cursor = '';
         if ($cursor_enabled && $page < $total_pages && !empty($leads)) {

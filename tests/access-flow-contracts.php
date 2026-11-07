@@ -500,7 +500,7 @@ idlm_test('role editor, invite and suspend markup keep their gated contracts', s
     $quotations = (string) file_get_contents($root . '/assets/js/quotations.js');
     assert_contains("input:not([type=\"submit\"],[type=\"button\"],[type=\"reset\"],[type=\"image\"],[type=\"file\"])", $quotations);
     $leads = (string) file_get_contents($root . '/assets/js/admin-app.js');
-    assert_contains("isCrmDesign ? new URLSearchParams(window.location.search).get('rep') : null", $leads);
+    assert_contains("var urlRepId = new URLSearchParams(window.location.search).get('rep');", $leads);
 });
 
 idlm_test('a person with no managed role can keep it, and nothing promotes them without a real choice', static function(): void {
@@ -538,8 +538,8 @@ idlm_test('a person with no managed role can keep it, and nothing promotes them 
     assert_same(array('sales_manager'), $GLOBALS['idlm_test_users'][6]->roles);
 
     $users = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/users.php');
-    assert_same(2, substr_count($users, '<option value="" selected>Keep current role</option>'), 'Both designs offer Keep.');
-    assert_same(2, substr_count($users, '<option value="">Choose a role</option>'), 'No invite form preselects a role.');
+    assert_same(1, substr_count($users, '<option value="" selected>Keep current role</option>'), 'Editing offers Keep.');
+    assert_same(1, substr_count($users, '<option value="">Choose a role</option>'), 'The invite form never preselects a role.');
     assert_contains('name="idlm_role_choice_offered"', $users);
     assert_same(array('role_changed', 'role_changed'), idlm_access_events());
 });

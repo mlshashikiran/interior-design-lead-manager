@@ -20,7 +20,6 @@ jQuery(document).ready(function($) {
     var kanbanPhoneMedia = window.matchMedia('(max-width: 782px)');
     var activeMobileStage = String($('.idlm-kanban-stage-tab').first().data('stage') || '');
     // The redesigned board behaviour is gated, so the previous design keeps its own.
-    var designLayer = document.body.classList.contains('idlm-crm-design');
     var announceBoardLoad = true;
     var boardScrollFrame = null;
     var boardRequestSequenceStarted = false;
@@ -49,7 +48,6 @@ jQuery(document).ready(function($) {
 
     // Name the lead and its current stage in the dialog so the decision is never anonymous.
     function describeKanbanDialog(selector, leadId, text) {
-        if (!designLayer) return;
         var lead = kanbanLeadLookup[String(leadId)] || {};
         var name = $.trim((lead.first_name || '') + ' ' + (lead.last_name || '')) || 'This lead';
         var from = lead.stage ? kanbanStageLabel(lead.stage) : '';
@@ -85,7 +83,7 @@ jQuery(document).ready(function($) {
 
         $('.idlm-kanban-card').attr('draggable', kanbanPhoneMedia.matches ? 'false' : 'true');
         $('#idlm-kanban-board').attr('aria-label', kanbanPhoneMedia.matches ? 'Sales pipeline stage list' : 'Sales pipeline board');
-        if (designLayer && kanbanPhoneMedia.matches) {
+        if (kanbanPhoneMedia.matches) {
             // Keep the selected stage inside the scrolling tab strip without moving the page.
             var strip = document.getElementById('idlm-kanban-stage-tabs');
             var tabNode = $targetTab.get(0);
@@ -138,10 +136,8 @@ jQuery(document).ready(function($) {
             if (value && !isDefault) count += 1;
         });
         $('.idlm-kanban-filter-count').text(count).attr('aria-label', count + ' active filter' + (count === 1 ? '' : 's')).prop('hidden', count === 0);
-        if (designLayer) {
-            var staleActive = $('#idlm-kanban-filter-attention').val() === 'stale_updates';
-            $('#idlm-kanban-stale-leads-pill').attr('aria-pressed', staleActive ? 'true' : 'false').toggleClass('is-active', staleActive);
-        }
+        var staleActive = $('#idlm-kanban-filter-attention').val() === 'stale_updates';
+        $('#idlm-kanban-stale-leads-pill').attr('aria-pressed', staleActive ? 'true' : 'false').toggleClass('is-active', staleActive);
     }
 
     function openKanbanFilters() {
@@ -252,10 +248,8 @@ jQuery(document).ready(function($) {
         activeDragCard = $(this);
         startKanbanDragScroll();
         activeDragCard.addClass('dragging');
-        if (designLayer) {
-            $('#idlm-kanban-board').addClass('is-dragging');
-            activeDragCard.closest('.idlm-kanban-column').addClass('is-drag-source');
-        }
+        $('#idlm-kanban-board').addClass('is-dragging');
+        activeDragCard.closest('.idlm-kanban-column').addClass('is-drag-source');
         if (e.originalEvent.dataTransfer) {
             e.originalEvent.dataTransfer.setData('text/plain', activeDragCard.data('id'));
             e.originalEvent.dataTransfer.effectAllowed = 'move';
@@ -264,7 +258,7 @@ jQuery(document).ready(function($) {
 
     $(document).on('dragend', '.idlm-kanban-card', function() {
         if (activeDragCard) activeDragCard.removeClass('dragging');
-        $('.idlm-kanban-column').removeClass('drag-over is-drop-target is-drag-source');
+        $('.idlm-kanban-column').removeClass('is-drop-target is-drag-source');
         $('#idlm-kanban-board').removeClass('is-dragging');
         activeDragCard = null;
         stopKanbanDragScroll();
@@ -315,9 +309,8 @@ jQuery(document).ready(function($) {
 
     $(document).on('dragover', '.idlm-kanban-column', function(e) {
         e.preventDefault();
-        // The previous design keeps drag-over; the redesign uses is-drop-target, which has no !important rule to fight.
-        if (!designLayer) $(this).addClass('drag-over');
-        else if (!$(this).hasClass('is-drag-source')) $(this).addClass('is-drop-target');
+        // is-drop-target marks the column; it has no !important rule to fight.
+        if (!$(this).hasClass('is-drag-source')) $(this).addClass('is-drop-target');
         if (e.originalEvent.dataTransfer) {
             e.originalEvent.dataTransfer.dropEffect = 'move';
         }
@@ -325,15 +318,15 @@ jQuery(document).ready(function($) {
 
     $(document).on('dragleave', '.idlm-kanban-column', function(e) {
         // Crossing onto a child card also fires dragleave; keep the highlight until the pointer leaves the column.
-        var next = designLayer && e.originalEvent ? e.originalEvent.relatedTarget : null;
+        var next = e.originalEvent ? e.originalEvent.relatedTarget : null;
         if (next && this.contains(next)) return;
-        $(this).removeClass('drag-over is-drop-target');
+        $(this).removeClass('is-drop-target');
     });
 
     $(document).on('drop', '.idlm-kanban-column', function(e) {
         e.preventDefault();
         stopKanbanDragScroll();
-        $(this).removeClass('drag-over is-drop-target');
+        $(this).removeClass('is-drop-target');
         $('#idlm-kanban-board').removeClass('is-dragging');
         $('.idlm-kanban-column').removeClass('is-drag-source');
         if (!activeDragCard) return;
@@ -426,7 +419,7 @@ jQuery(document).ready(function($) {
     }
 
     $('#idlm-kanban-quote-modal').on('idlm:dialogclose', function() {
-        if (activeQuoteLeadId !== null) { if (designLayer) pendingFocusLeadId = Number(activeQuoteLeadId); activeQuoteLeadId = null; loadKanbanBoard(); }
+        if (activeQuoteLeadId !== null) { pendingFocusLeadId = Number(activeQuoteLeadId); activeQuoteLeadId = null; loadKanbanBoard(); }
     });
 
     // Custom Kanban Won Modal Event Handlers
@@ -471,7 +464,7 @@ jQuery(document).ready(function($) {
     }
 
     $('#idlm-kanban-deal-modal').on('idlm:dialogclose', function() {
-        if (activeWonLeadId !== null) { if (designLayer) pendingFocusLeadId = Number(activeWonLeadId); activeWonLeadId = null; loadKanbanBoard(); }
+        if (activeWonLeadId !== null) { pendingFocusLeadId = Number(activeWonLeadId); activeWonLeadId = null; loadKanbanBoard(); }
     });
 
     // A reason is mandatory before a lead can be moved to Lost.
@@ -508,7 +501,7 @@ jQuery(document).ready(function($) {
     }
 
     $('#idlm-kanban-lost-modal').on('idlm:dialogclose', function() {
-        if (activeLostLeadId !== null) { if (designLayer) pendingFocusLeadId = Number(activeLostLeadId); activeLostLeadId = null; loadKanbanBoard(); }
+        if (activeLostLeadId !== null) { pendingFocusLeadId = Number(activeLostLeadId); activeLostLeadId = null; loadKanbanBoard(); }
     });
 
     // Function to submit AJAX Stage updates on drag-and-drop
@@ -557,24 +550,22 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success) {
                     if (typeof window.idlmShowToast === 'function') {
-                        window.idlmShowToast(designLayer ? leadName + ' moved to ' + kanbanStageLabel(newStage) + '.' : 'Stage updated successfully!', 'success');
+                        window.idlmShowToast(leadName + ' moved to ' + kanbanStageLabel(newStage) + '.', 'success');
                     }
                     pendingFocusLeadId = Number(leadId);
-                    pendingAnnouncement = designLayer
-                        ? leadName + ' moved from ' + kanbanStageLabel(oldStage) + ' to ' + kanbanStageLabel(newStage) + '. Board counts updated.'
-                        : leadName + ' moved from ' + oldStage + ' to ' + newStage + '. Board counts updated.';
+                    pendingAnnouncement = leadName + ' moved from ' + kanbanStageLabel(oldStage) + ' to ' + kanbanStageLabel(newStage) + '. Board counts updated.';
                     activeMobileStage = String(newStage);
                     loadKanbanBoard();
                 } else {
                     if (typeof window.idlmShowToast === 'function') {
-                        window.idlmShowToast((response.data && response.data.message) || (designLayer ? leadName + ' was not moved. Check the details and try again.' : 'Stage update failed.'), 'error');
+                        window.idlmShowToast((response.data && response.data.message) || (leadName + ' was not moved. Check the details and try again.'), 'error');
                     }
                     loadKanbanBoard();
                 }
             },
             error: function() {
                 if (typeof window.idlmShowToast === 'function') {
-                    window.idlmShowToast(designLayer ? leadName + ' was not moved because the server did not respond. Try again.' : 'Server error updating stage.', 'error');
+                    window.idlmShowToast(leadName + ' was not moved because the server did not respond. Try again.', 'error');
                 }
                 loadKanbanBoard();
             }
@@ -629,21 +620,19 @@ jQuery(document).ready(function($) {
         var loaded = $body.children('.idlm-kanban-card').length;
         var total = Number($col.find('.idlm-kanban-column-count').text()) || 0;
         var message = state.error || (state.loading ? 'Loading more leads…' : (state.next ? loaded + ' of ' + total + ' leads loaded' : 'All ' + loaded + ' leads loaded'));
-        if (designLayer) {
-            if (!state.loading) $body.children('.idlm-kanban-skeleton').remove();
-            // A board-wide failure is reported once above the board; a column only speaks when it has more to load or its own error.
-            var ownError = state.error && !state.reloadBoard;
-            if (!state.next && !ownError && !(state.loading && loaded)) {
-                if (focused) $body.trigger('focus');
-                return;
-            }
-            message = ownError ? state.error : (state.loading ? 'Loading more…' : loaded + ' of ' + total + ' loaded');
+        if (!state.loading) $body.children('.idlm-kanban-skeleton').remove();
+        // A board-wide failure is reported once above the board; a column only speaks when it has more to load or its own error.
+        var ownError = state.error && !state.reloadBoard;
+        if (!state.next && !ownError && !(state.loading && loaded)) {
+            if (focused) $body.trigger('focus');
+            return;
         }
+        message = ownError ? state.error : (state.loading ? 'Loading more…' : loaded + ' of ' + total + ' loaded');
         var $loader = $('<div class="idlm-kanban-column-loader"><p role="status" aria-live="polite"></p></div>');
         $loader.find('p').text(message);
         if (state.next || state.error) {
             $('<button type="button" class="idlm-btn idlm-btn-secondary idlm-kanban-load-more"></button>')
-                .text(state.error ? 'Retry' : (designLayer ? 'Load more leads' : 'Load more'))
+                .text(state.error ? 'Retry' : ('Load more leads'))
                 .attr('aria-label', (state.error ? 'Retry loading ' : 'Load more ') + String($col.data('stage')) + ' leads')
                 .attr('data-reload-board', state.reloadBoard ? '1' : '0')
                 .prop('disabled', state.loading).appendTo($loader);
@@ -730,7 +719,7 @@ jQuery(document).ready(function($) {
         if (reset) columnScrollPositions = Object.create(null);
         kanbanLeadLookup = {};
         boardFilters = getKanbanFilters();
-        if (designLayer && (reset || !boardRequestSequenceStarted)) announceBoardLoad = true;
+        if ((reset || !boardRequestSequenceStarted)) announceBoardLoad = true;
         boardRequestSequenceStarted = true;
         $('.idlm-kanban-column').each(function() {
             var $col = $(this), stage = String($col.data('stage'));
@@ -742,7 +731,7 @@ jQuery(document).ready(function($) {
             };
             if (reset || !previous[stage]) {
                 $body.empty().scrollTop(0);
-                if (designLayer) $body.append(kanbanSkeletonHtml());
+                $body.append(kanbanSkeletonHtml());
             }
             updateColumnLoader($col);
         });
@@ -760,7 +749,7 @@ jQuery(document).ready(function($) {
                     var movedAnnouncement = !!pendingAnnouncement;
                     renderKanbanLeads(response.data.leads, response.data.stage_summaries || {});
                     renderKanbanStats(response.data.stats || {});
-                    if (designLayer && announceBoardLoad && !movedAnnouncement) {
+                    if (announceBoardLoad && !movedAnnouncement) {
                         var boardTotal = Number((response.data.stats || {}).total_filtered) || 0;
                         $('#idlm-kanban-live-status').text(boardTotal ? boardTotal + ' lead' + (boardTotal === 1 ? '' : 's') + ' on the board.' : 'No leads match these filters.');
                     }
@@ -791,7 +780,6 @@ jQuery(document).ready(function($) {
 
     // One board-wide message for a failed load or an empty result, instead of the same text in every column.
     function syncBoardStatus() {
-        if (!designLayer) return;
         var $status = $('#idlm-kanban-board-status');
         var $shell = $('#idlm-kanban-board-shell');
         if (!$status.length) return;
@@ -835,29 +823,27 @@ jQuery(document).ready(function($) {
     }
 
     function queueBoardScrollCue() {
-        if (!designLayer || boardScrollFrame !== null) return;
+        if (boardScrollFrame !== null) return;
         boardScrollFrame = window.requestAnimationFrame(updateBoardScrollCue);
     }
 
-    if (designLayer) {
-        $('#idlm-kanban-board').on('scroll', queueBoardScrollCue);
-        $(window).on('resize', queueBoardScrollCue);
-        // On phones the stage list scrolls with the page, so lazy loading follows the page scroll too.
-        $(window).on('scroll', function() {
-            if (!kanbanPhoneMedia.matches) return;
-            var $button = $('.idlm-kanban-column.is-mobile-active .idlm-kanban-load-more');
-            if ($button.length && !$button.prop('disabled') && $button.get(0).getBoundingClientRect().top < window.innerHeight + 240) {
-                $button.closest('.idlm-kanban-column').find('.idlm-kanban-column-body').each(function() {
-                    loadKanbanColumn($(this).closest('.idlm-kanban-column'), false);
-                });
-            }
-        });
-        // The drag handle is pointer only, so Enter or Space on it opens the same Move to stage dialog.
-        $(document).on('click', '.idlm-kanban-card-drag-handle', function(event) {
-            if (event.detail !== 0) return;
-            openKanbanMoveModal($(this).closest('.idlm-kanban-card').data('id'), this);
-        });
-    }
+    $('#idlm-kanban-board').on('scroll', queueBoardScrollCue);
+    $(window).on('resize', queueBoardScrollCue);
+    // On phones the stage list scrolls with the page, so lazy loading follows the page scroll too.
+    $(window).on('scroll', function() {
+        if (!kanbanPhoneMedia.matches) return;
+        var $button = $('.idlm-kanban-column.is-mobile-active .idlm-kanban-load-more');
+        if ($button.length && !$button.prop('disabled') && $button.get(0).getBoundingClientRect().top < window.innerHeight + 240) {
+            $button.closest('.idlm-kanban-column').find('.idlm-kanban-column-body').each(function() {
+                loadKanbanColumn($(this).closest('.idlm-kanban-column'), false);
+            });
+        }
+    });
+    // The drag handle is pointer only, so Enter or Space on it opens the same Move to stage dialog.
+    $(document).on('click', '.idlm-kanban-card-drag-handle', function(event) {
+        if (event.detail !== 0) return;
+        openKanbanMoveModal($(this).closest('.idlm-kanban-card').data('id'), this);
+    });
 
     function renderKanbanStats(stats) {
         var currencySymbol = $('#idlm-kanban-board').data('currency-symbol') || '';
@@ -878,7 +864,7 @@ jQuery(document).ready(function($) {
         $pill.attr('title', count + ' pipeline leads need a fresh update');
         $pill.attr('aria-label', 'Show ' + count + ' pipeline leads that need a fresh update');
         $pill.toggle(count > 0);
-        if (designLayer) $pill.attr('title', count + ' pipeline leads have had no update in 7 days. Select to filter the board.');
+        $pill.attr('title', count + ' pipeline leads have had no update in 7 days. Select to filter the board.');
     }
 
     // Render cards inside columns dynamically
@@ -912,7 +898,7 @@ jQuery(document).ready(function($) {
                 });
                 if (summary[totalSource] !== undefined) stageTotal = Number(summary[totalSource]) || 0;
                 var totalLabel = totalSource === 'quote_value' ? 'Quote Total' : 'Deal Total';
-                if (designLayer) totalLabel = totalSource === 'quote_value' ? 'Quote total' : 'Deal total';
+                totalLabel = totalSource === 'quote_value' ? 'Quote total' : 'Deal total';
                 $pipelineValue
                     .text(totalLabel + ': ' + ($('#idlm-kanban-board').data('currency-symbol') || '') + formatPipelineValue(stageTotal))
                     .show();
@@ -921,9 +907,7 @@ jQuery(document).ready(function($) {
             }
 
             if (leads.length === 0 && !append) {
-                $body.append(designLayer
-                    ? '<div class="idlm-kanban-column-empty"><strong>No leads in this stage</strong><span>Drag a card here, or use Move to stage on a lead.</span></div>'
-                    : '<div class="idlm-kanban-column-empty">No leads in this stage</div>');
+                $body.append('<div class="idlm-kanban-column-empty"><strong>No leads in this stage</strong><span>Drag a card here, or use Move to stage on a lead.</span></div>');
                 return;
             }
 
@@ -994,7 +978,7 @@ jQuery(document).ready(function($) {
                         '</footer>' +
                     '</article>';
 
-                if (designLayer) cardHtml = buildDesignCard(lead, stage, safeName, dupBadge, indicatorsHtml);
+                cardHtml = buildDesignCard(lead, stage, safeName, dupBadge, indicatorsHtml);
                 var $card = $(cardHtml);
                 $body.append($card);
             });
@@ -1098,7 +1082,7 @@ jQuery(document).ready(function($) {
     }
 
     function formatPipelineValue(value) {
-        if (designLayer && window.IDLMFormat) {
+        if (window.IDLMFormat) {
             return window.IDLMFormat.number(value, $('#idlm-kanban-board').data('currency-symbol'), {max: 2});
         }
         return Number(value || 0).toLocaleString(undefined, {
@@ -1131,8 +1115,7 @@ jQuery(document).ready(function($) {
                 class: 'idlm-file-link',
                 text: 'View file'
             });
-            if (!designLayer) $link.css({ color: 'var(--idlm-brand-gold)', fontWeight: 500, textDecoration: 'none' });
-            else $link.addClass('idlm-kanban-file-link');
+            $link.addClass('idlm-kanban-file-link');
             var $removeButton = $('<button>', {
                 type: 'button',
                 class: 'idlm-remove-file-btn',
@@ -1141,13 +1124,12 @@ jQuery(document).ready(function($) {
                 'data-input-id': 'idlm-kanban-quote-file',
                 'data-preview-id': 'idlm-kanban-quote-preview'
             });
-            if (!designLayer) $removeButton.css({ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px', padding: 0, marginLeft: '5px', fontWeight: 500 });
-            else $removeButton.addClass('idlm-kanban-file-remove');
+            $removeButton.addClass('idlm-kanban-file-remove');
             $preview.empty().append($link, $removeButton);
-            $uploadButton.text(designLayer ? 'Change file' : 'Change File');
+            $uploadButton.text('Change file');
         } else {
             $preview.text('No file uploaded');
-            $uploadButton.text(designLayer ? 'Upload quote' : 'Upload Quote');
+            $uploadButton.text('Upload quote');
         }
     }
 

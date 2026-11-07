@@ -111,7 +111,6 @@ final class IDLM_Admin_Users_Controller {
         $registry = wp_roles();
         $all = $registry && is_array($registry->roles) ? $registry->roles : array();
         $name = translate_user_role($all[$slug]['name'] ?? $slug);
-        if (!class_exists('IDLM_Admin_Assets') || !IDLM_Admin_Assets::design_layer_enabled()) { return $name; }
         $labels = array('agent' => 'Sales representative', 'agentadmin' => 'Sales manager', 'idlm_pre_sales' => 'Pre-sales', 'administrator' => 'Administrator');
         if (isset($labels[$slug])) { return $labels[$slug]; }
         return in_array($slug, self::EDITORIAL_ROLES, true) ? $name . ' (website role)' : $name;
@@ -294,11 +293,10 @@ final class IDLM_Admin_Users_Controller {
                 return ('disabled' === $status) === self::is_crm_access_disabled($user->ID);
             }));
         }
-        $design_layer = class_exists('IDLM_Admin_Assets') && IDLM_Admin_Assets::design_layer_enabled();
         IDLM_View::display('admin/users.php', array(
             'users' => $users, 'roles' => $roles, 'search' => $search, 'selected_role' => $role,
-            'open_leads' => $design_layer ? self::open_lead_counts(wp_list_pluck($users, 'ID')) : array(),
-            'access_log' => $design_layer && class_exists('IDLM_Access_Change_Log') ? IDLM_Access_Change_Log::entries() : array(),
+            'open_leads' => self::open_lead_counts(wp_list_pluck($users, 'ID')),
+            'access_log' => class_exists('IDLM_Access_Change_Log') ? IDLM_Access_Change_Log::entries() : array(),
             'role_scopes' => self::role_scopes(),
             'permission_roles' => self::permission_roles(),
             'selected_access' => $status, 'paged' => $paged, 'total' => (int) $query->get_total(),

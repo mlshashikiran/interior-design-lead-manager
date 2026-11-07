@@ -20,8 +20,6 @@
         return Math.floor(amount / 10000) * percent + Math.floor(((amount % 10000) * percent + 5000) / 10000);
     }
     // End QUO008 integer decimal helpers.
-    // Everything behind crmDesign is presentation only: it never changes what is saved or sent.
-    var crmDesign = !!(document.body && document.body.classList.contains('idlm-crm-design'));
     function crmTrapFocus(dialog) {
         dialog.addEventListener('keydown', function (event) {
             if (event.key !== 'Tab') { return; }
@@ -36,22 +34,20 @@
         var target = dialog.querySelector('input:not([type="hidden"]):not([readonly]),select,textarea');
         if (target) { target.focus(); }
     }
-    if (crmDesign) {
-        // A notice from a redirect is shown once; it must not return on reload.
-        var crmNoticeUrl = new URL(window.location.href);
-        if (crmNoticeUrl.searchParams.has('idlm_notice') || crmNoticeUrl.searchParams.has('idlm_error')) {
-            crmNoticeUrl.searchParams.delete('idlm_notice');
-            crmNoticeUrl.searchParams.delete('idlm_error');
-            window.history.replaceState({}, '', crmNoticeUrl.href);
-        }
-        document.addEventListener('click', function (event) {
-            document.querySelectorAll('.idlm-quote-menu[open]').forEach(function (menu) { if (!menu.contains(event.target)) { menu.open = false; } });
-        });
-        document.addEventListener('keydown', function (event) {
-            if (event.key !== 'Escape') { return; }
-            document.querySelectorAll('.idlm-quote-menu[open]').forEach(function (menu) { menu.open = false; menu.querySelector('summary').focus(); });
-        });
+    // A notice from a redirect is shown once; it must not return on reload.
+    var crmNoticeUrl = new URL(window.location.href);
+    if (crmNoticeUrl.searchParams.has('idlm_notice') || crmNoticeUrl.searchParams.has('idlm_error')) {
+        crmNoticeUrl.searchParams.delete('idlm_notice');
+        crmNoticeUrl.searchParams.delete('idlm_error');
+        window.history.replaceState({}, '', crmNoticeUrl.href);
     }
+    document.addEventListener('click', function (event) {
+        document.querySelectorAll('.idlm-quote-menu[open]').forEach(function (menu) { if (!menu.contains(event.target)) { menu.open = false; } });
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') { return; }
+        document.querySelectorAll('.idlm-quote-menu[open]').forEach(function (menu) { menu.open = false; menu.querySelector('summary').focus(); });
+    });
     function bindQuotationRows(scope) {
         scope.querySelectorAll('.idlm-quote-row[data-href]').forEach(function (row) {
             if (row.dataset.idlmRowBound) { return; }
@@ -69,7 +65,7 @@
     function currencyCode(value) { value = String(value || '').trim().toUpperCase(); return /^[A-Z]{3}$/.test(value) ? value : 'INR'; }
     function formatMoney(value, code) {
         code = currencyCode(code || (idlmQuoteData && idlmQuoteData.currencyCode));
-        try { return new Intl.NumberFormat(crmDesign && code !== 'INR' ? 'en-US' : 'en-IN', {style: 'currency', currency: code, maximumFractionDigits: 2}).format(Number(value || 0)); }
+        try { return new Intl.NumberFormat(code !== 'INR' ? 'en-US' : 'en-IN', {style: 'currency', currency: code, maximumFractionDigits: 2}).format(Number(value || 0)); }
         catch (error) { return code + ' ' + Number(value || 0).toFixed(2); }
     }
     function liveListUrl(args) {
@@ -123,12 +119,12 @@
             (page < pages ? '<button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + (page + 1) + '">Next</button>' : '');
     }
     function quotationRow(row) {
-        if (crmDesign) { return crmQuotationRow(row); }
+ return crmQuotationRow(row);
         var customer = [row.first_name, row.last_name].filter(Boolean).join(' ') || '—';
         return '<tr class="idlm-quote-row" data-href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '"><td><strong>' + escapeHtml(row.quote_number) + '</strong><br><small>' + escapeHtml(row.title) + '</small></td><td><strong>' + escapeHtml(customer) + '</strong><br><small>' + escapeHtml([row.phone, row.project_name].filter(Boolean).join(' · ')) + '</small></td><td>' + escapeHtml(row.revision_name || '—') + '</td><td>' + escapeHtml(formatMoney(row.grand_total, row.currency_code)) + '</td><td>' + escapeHtml(row.creator_name || 'Unknown') + '<br><small>' + escapeHtml(row.created_at) + '</small></td><td>' + escapeHtml(row.updated_at) + '</td><td><a class="idlm-btn idlm-btn-secondary" href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '">Open</a></td></tr>';
     }
     function catalogueRow(row) {
-        if (crmDesign) { return crmCatalogueRow(row); }
+ return crmCatalogueRow(row);
         var editUrl = liveListUrl({workspace: 'catalogue', edit_item: row.id, catalogue_search: document.querySelector('[name="catalogue_search"]').value}).href;
         return '<tr><td class="idlm-checkbox-column"><input type="checkbox" name="item_ids[]" value="' + escapeHtml(row.id) + '" data-row-select aria-label="Select ' + escapeHtml(row.item_name) + '"></td><td>' + escapeHtml(row.item_code) + '</td><td>' + escapeHtml(row.category) + '</td><td><strong>' + escapeHtml(row.item_name) + '</strong><br><small>' + escapeHtml(row.description) + '</small></td><td>' + escapeHtml(row.unit) + '</td><td>' + (Number(row.is_wood) ? 'Yes' : 'No') + '</td><td>' + escapeHtml(formatMoney(row.default_rate)) + '</td><td>' + escapeHtml((row.status || '').charAt(0).toUpperCase() + (row.status || '').slice(1)) + '</td><td><div class="idlm-catalogue-actions"><a class="button-link" href="' + escapeHtml(editUrl) + '">Edit</a>' + ('active' === row.status ? '<button class="button-link-delete" name="bulk_action" value="archive" data-single-submit>Archive</button>' : '') + '<button class="button-link-delete" name="bulk_action" value="delete" data-single-submit>Delete</button></div></td></tr>';
     }
@@ -167,64 +163,58 @@
             params.set(type === 'catalogue' ? 'catalogue_page' : 'quote_page', page);
             params.set('action', type === 'catalogue' ? 'idlm_filter_catalogue_list' : 'idlm_filter_quotation_list');
             params.set('nonce', idlmQuoteData.nonce);
-            if (crmDesign) { rows.setAttribute('aria-busy', 'true'); }
+ rows.setAttribute('aria-busy', 'true');
             fetch(idlmQuoteData.ajaxUrl + '?' + params.toString(), {credentials: 'same-origin', signal: controller.signal}).then(function (response) {
                 if (!response.ok) { throw new Error('Search failed.'); }
                 return response.json();
             }).then(function (payload) {
                 if (!payload.success || !payload.data || !Array.isArray(payload.data.rows)) { throw new Error(payload.data && payload.data.message ? payload.data.message : 'Search failed.'); }
                 var data = payload.data, rowMarkup = type === 'catalogue' ? catalogueRow : quotationRow;
-                if (crmDesign) { crmSyncUrl(data); }
-                rows.innerHTML = data.rows.length ? data.rows.map(rowMarkup).join('') : (crmDesign ? crmEmptyRow(type, crmFiltersActive()) : '<tr><td colspan="' + (type === 'catalogue' ? 9 : 7) + '">No ' + (type === 'catalogue' ? 'catalogue items' : 'quotations') + ' found.</td></tr>');
+ crmSyncUrl(data);
+                rows.innerHTML = data.rows.length ? data.rows.map(rowMarkup).join('') : (crmEmptyRow(type, crmFiltersActive()));
                 if ('quotations' === type) { bindQuotationRows(rows); }
                 var pages = Math.max(1, Math.ceil(Number(data.total) / Number(data.perPage)));
-                if (crmDesign) {
-                    rows.removeAttribute('aria-busy');
-                    rows.dispatchEvent(new CustomEvent('idlm-rows-updated', {bubbles: true}));
-                    var filterClear = filterForm.querySelector('[data-quote-filter-clear]');
-                    if (filterClear) { filterClear.hidden = !crmFiltersActive(); }
-                }
-                pagination.innerHTML = crmDesign ? crmPagination(type, data) : pages > 1 ? '<button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + Math.max(1, data.page - 1) + '" ' + (data.page <= 1 ? 'disabled' : '') + '>Previous</button> <span>Page ' + data.page + ' of ' + pages + '</span> <button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + Math.min(pages, data.page + 1) + '" ' + (data.page >= pages ? 'disabled' : '') + '>Next</button>' : '';
+                rows.removeAttribute('aria-busy');
+                rows.dispatchEvent(new CustomEvent('idlm-rows-updated', {bubbles: true}));
+                var filterClear = filterForm.querySelector('[data-quote-filter-clear]');
+                if (filterClear) { filterClear.hidden = !crmFiltersActive(); }
+                pagination.innerHTML = crmPagination(type, data);
                 if (status) { status.textContent = data.total + ' result' + (Number(data.total) === 1 ? '' : 's') + ' found.'; }
-                if (crmDesign) { return; }
+ return;
                 var url = liveListUrl({[type === 'catalogue' ? 'catalogue_search' : 'quote_search']: searchInput.value, [type === 'catalogue' ? 'catalogue_page' : 'quote_page']: data.page > 1 ? data.page : null});
                 window.history.replaceState({}, '', url.href);
             }).catch(function (error) {
                 if ('AbortError' === error.name) { return; }
                 if (status) { status.textContent = error.message || 'Search failed.'; }
-                if (crmDesign) {
-                    // Keep the rows on screen and offer the same request again.
-                    rows.removeAttribute('aria-busy');
-                    window.IDLMDialog.notify('The list could not be updated. Check your connection and try again.', 'error', {action: {label: 'Retry', onClick: function () { request(page); }}});
-                }
+                // Keep the rows on screen and offer the same request again.
+                rows.removeAttribute('aria-busy');
+                window.IDLMDialog.notify('The list could not be updated. Check your connection and try again.', 'error', {action: {label: 'Retry', onClick: function () { request(page); }}});
             });
         }
         filterForm.addEventListener('submit', function (event) { event.preventDefault(); window.clearTimeout(timer); request(1); });
         searchInput.addEventListener('input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { request(1); }, 250); });
-        pagination.addEventListener('click', function (event) { var button = event.target.closest('[data-live-list-page]'); if (button) { if (crmDesign) { event.preventDefault(); rows.closest('.idlm-table-wrapper').scrollIntoView({block: 'nearest'}); } request(Number(button.dataset.liveListPage)); } });
-        if (crmDesign) {
-            filterForm.classList.add('is-live');
-            filterForm.addEventListener('change', function (event) { if (event.target !== searchInput) { window.clearTimeout(timer); request(1); } });
-            document.addEventListener('click', function (event) {
-                var clear = event.target.closest('[data-quote-filter-clear]');
-                if (!clear) { return; }
-                event.preventDefault();
-                searchInput.value = '';
-                crmFilterFields.forEach(function (name) { if (filterForm.elements[name]) { filterForm.elements[name].value = ''; } });
-                if (window.IDLMDialog && window.IDLMDialog.syncDateRange) { window.IDLMDialog.syncDateRange(filterForm.elements.date_range); }
-                request(1);
-                searchInput.focus();
-            });
-        }
+        pagination.addEventListener('click', function (event) { var button = event.target.closest('[data-live-list-page]'); if (button) { event.preventDefault(); rows.closest('.idlm-table-wrapper').scrollIntoView({block: 'nearest'}); request(Number(button.dataset.liveListPage)); } });
+        filterForm.classList.add('is-live');
+        filterForm.addEventListener('change', function (event) { if (event.target !== searchInput) { window.clearTimeout(timer); request(1); } });
+        document.addEventListener('click', function (event) {
+            var clear = event.target.closest('[data-quote-filter-clear]');
+            if (!clear) { return; }
+            event.preventDefault();
+            searchInput.value = '';
+            crmFilterFields.forEach(function (name) { if (filterForm.elements[name]) { filterForm.elements[name].value = ''; } });
+            if (window.IDLMDialog && window.IDLMDialog.syncDateRange) { window.IDLMDialog.syncDateRange(filterForm.elements.date_range); }
+            request(1);
+            searchInput.focus();
+        });
     });
-    if (crmDesign && catalogueSortForm) {
+    if (catalogueSortForm) {
         catalogueSortForm.classList.add('is-live');
         catalogueSortForm.addEventListener('change', function () { catalogueSortForm.requestSubmit(); });
     }
     var catalogueEditor = document.querySelector('.idlm-catalogue-editor');
     // The catalogue editor is a page of its own, so closing it reloads the list. Remember what opened it and give that control focus back.
     var catalogueReturnKey = 'idlmCatalogueReturn';
-    if (crmDesign && !/[?&](add_item|edit_item)=/.test(window.location.search)) {
+    if (!/[?&](add_item|edit_item)=/.test(window.location.search)) {
         try {
             var catalogueReturn = window.sessionStorage.getItem(catalogueReturnKey);
             window.sessionStorage.removeItem(catalogueReturnKey);
@@ -238,7 +228,7 @@
     }
     if (catalogueEditor) {
         var catalogueParams = new URLSearchParams(window.location.search);
-        if (crmDesign && (catalogueParams.has('edit_item') || catalogueParams.has('add_item'))) {
+        if ((catalogueParams.has('edit_item') || catalogueParams.has('add_item'))) {
             try { window.sessionStorage.setItem(catalogueReturnKey, catalogueParams.has('edit_item') ? 'edit:' + catalogueParams.get('edit_item') : 'add'); } catch (error) { /* Not needed to work. */ }
         }
         if (catalogueParams.has('edit_item') || catalogueParams.has('add_item')) {
@@ -260,7 +250,7 @@
                 window.location.search = catalogueParams.toString();
             });
             document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { catalogueEditor.querySelector('.idlm-catalogue-editor-close').click(); } });
-            if (crmDesign) { crmTrapFocus(catalogueEditor); crmFocusFirst(catalogueEditor); }
+ crmTrapFocus(catalogueEditor); crmFocusFirst(catalogueEditor);
         }
     }
     var catalogueImport = document.querySelector('.idlm-catalogue-editor + .idlm-quote-panel');
@@ -281,7 +271,7 @@
             if (importHeading) { importHeading.insertAdjacentElement('afterend', importClose); }
             importClose.addEventListener('click', function () { importParams.delete('import_catalogue'); window.location.search = importParams.toString(); });
             document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { importClose.click(); } });
-            if (crmDesign) { crmTrapFocus(catalogueImport); crmFocusFirst(catalogueImport); }
+ crmTrapFocus(catalogueImport); crmFocusFirst(catalogueImport);
         }
     }
     var importForm = document.querySelector('[data-catalogue-import-form]');
@@ -398,7 +388,7 @@
         if (categoryManager.parentNode !== document.body) { document.body.appendChild(categoryManager); }
         document.body.classList.add('idlm-catalogue-editor-open');
         document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { categoryManager.querySelector('.idlm-catalogue-editor-close').click(); } });
-        if (crmDesign) { crmTrapFocus(categoryManager); var managerField = categoryManager.querySelector('input[name="unit_name"],input[name="category_name"]'); if (managerField) { managerField.focus(); } }
+ crmTrapFocus(categoryManager); var managerField = categoryManager.querySelector('input[name="unit_name"],input[name="category_name"]'); if (managerField) { managerField.focus(); }
     }
     document.querySelectorAll('[data-bulk-form]').forEach(function (bulkForm) {
         var selectAll = bulkForm.querySelector('[data-select-all]');
@@ -409,12 +399,12 @@
             var checkboxes = rowSelects();
             var selected = checkboxes.filter(function (checkbox) { return checkbox.checked; }).length;
             if (counter) { counter.textContent = selected + ' selected'; }
-            if (crmDesign && counter && counter.closest('.idlm-bulk-action-bar')) { counter.closest('.idlm-bulk-action-bar').classList.toggle('has-selection', selected > 0); }
+            if (counter && counter.closest('.idlm-bulk-action-bar')) { counter.closest('.idlm-bulk-action-bar').classList.toggle('has-selection', selected > 0); }
             if (selectAll) { selectAll.checked = checkboxes.length > 0 && selected === checkboxes.length; selectAll.indeterminate = selected > 0 && selected < checkboxes.length; }
         }
         if (selectAll) { selectAll.addEventListener('change', function () { rowSelects().forEach(function (checkbox) { checkbox.checked = selectAll.checked; }); updateSelection(); }); }
         bulkForm.addEventListener('change', function (event) { if (event.target.matches('[data-row-select]')) { updateSelection(); } });
-        if (crmDesign) { bulkForm.addEventListener('idlm-rows-updated', updateSelection); }
+ bulkForm.addEventListener('idlm-rows-updated', updateSelection);
         var crmSingleSubmit = false;
         bulkForm.addEventListener('click', function (event) {
             var button = event.target.closest('[data-single-submit]');
@@ -434,21 +424,19 @@
                 (actionSelect || rowSelects()[0]).focus();
                 return;
             }
-            if (actionSelect && ('delete' === actionSelect.value || (crmDesign && 'archive' === actionSelect.value)) && bulkForm.dataset.idlmDeleteConfirmed !== 'true') {
+            if (actionSelect && ('delete' === actionSelect.value || ('archive' === actionSelect.value)) && bulkForm.dataset.idlmDeleteConfirmed !== 'true') {
                 event.preventDefault();
                 var crmDialog = {};
-                if (crmDesign) {
-                    var crmCount = rowSelects().filter(function (checkbox) { return checkbox.checked; }).length;
-                    var crmNoun = bulkForm.dataset.noun || 'record';
-                    var crmName = crmCount + ' ' + (crmCount === 1 ? crmNoun : ('category' === crmNoun ? 'categories' : crmNoun + 's'));
-                    var crmDelete = 'delete' === actionSelect.value;
-                    crmDialog = {
-                        title: (crmDelete ? 'Delete ' : 'Archive ') + crmName + '?',
-                        message: crmDelete ? 'This permanently deletes ' + crmName + ' and cannot be undone. ' + (bulkForm.dataset.deleteNote || '') : (bulkForm.dataset.archiveNote || ''),
-                        confirmLabel: (crmDelete ? 'Delete ' : 'Archive ') + crmName,
-                        destructive: crmDelete
-                    };
-                }
+                var crmCount = rowSelects().filter(function (checkbox) { return checkbox.checked; }).length;
+                var crmNoun = bulkForm.dataset.noun || 'record';
+                var crmName = crmCount + ' ' + (crmCount === 1 ? crmNoun : ('category' === crmNoun ? 'categories' : crmNoun + 's'));
+                var crmDelete = 'delete' === actionSelect.value;
+                crmDialog = {
+                    title: (crmDelete ? 'Delete ' : 'Archive ') + crmName + '?',
+                    message: crmDelete ? 'This permanently deletes ' + crmName + ' and cannot be undone. ' + (bulkForm.dataset.deleteNote || '') : (bulkForm.dataset.archiveNote || ''),
+                    confirmLabel: (crmDelete ? 'Delete ' : 'Archive ') + crmName,
+                    destructive: crmDelete
+                };
                 window.IDLMDialog.confirm(Object.assign({
                     title: 'Delete selected records?',
                     message: bulkForm.dataset.deleteMessage || 'Permanently delete the selected records?',
@@ -457,7 +445,7 @@
                     trigger: event.submitter || document.activeElement
                 }, crmDialog)).then(function (confirmed) {
                     if (!confirmed) {
-                        if (crmDesign && crmSingleSubmit) {
+                        if (crmSingleSubmit) {
                             // A cancelled row action must not leave that row selected.
                             rowSelects().forEach(function (checkbox) { checkbox.checked = false; });
                             actionSelect.value = '';
@@ -480,7 +468,7 @@
         var paymentTotal = document.querySelector('[data-payment-total]');
         function updatePaymentTotal() {
             var total = Array.from(paymentStructure.querySelectorAll('input[name$="[percentage]"]')).reduce(function (sum, input) { return sum + Math.max(0, Number(input.value) || 0); }, 0);
-            if (paymentTotal) { paymentTotal.textContent = 'Milestone total: ' + total.toFixed(2) + '% of 100%.' + (crmDesign && total > 100 ? ' Reduce the milestones by ' + (total - 100).toFixed(2) + '% before saving.' : ''); paymentTotal.classList.toggle('idlm-payment-total-error', total > 100); }
+            if (paymentTotal) { paymentTotal.textContent = 'Milestone total: ' + total.toFixed(2) + '% of 100%.' + (total > 100 ? ' Reduce the milestones by ' + (total - 100).toFixed(2) + '% before saving.' : ''); paymentTotal.classList.toggle('idlm-payment-total-error', total > 100); }
         }
         function renumberPaymentRows() {
             paymentStructure.querySelectorAll('.idlm-payment-structure-row').forEach(function (row, index) {
@@ -503,7 +491,7 @@
         paymentStructure.addEventListener('input', updatePaymentTotal);
         updatePaymentTotal();
     }
-    var crmSettingsForm = crmDesign ? document.querySelector('.idlm-quotation-settings') : null;
+    var crmSettingsForm = document.querySelector('.idlm-quotation-settings');
     if (crmSettingsForm) {
         var crmSettingsDirty = false;
         var crmNumberPreview = crmSettingsForm.querySelector('.idlm-settings-preview p');
@@ -577,23 +565,21 @@
         });
         return false;
     }
-    if (crmDesign) {
-        // A new quotation with no lead is refused by the server after the page has gone. Catch it here so nothing typed is lost.
-        var crmLeadField = document.getElementById('idlm-quote-lead');
-        form.addEventListener('submit', function (event) {
-            if (Number(form.elements.quote_id.value) > 0 || !crmLeadField || Number(crmLeadField.value) > 0) { return; }
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            window.IDLMDialog.notify('Choose a lead before saving this quotation. Your entries are still here.', 'error');
-            document.getElementById('idlm-lead-search').focus();
-        });
-        // Enter in a search box searches; it must not submit the quotation.
-        form.addEventListener('keydown', function (event) {
-            if (event.key === 'Enter' && event.target.matches('#idlm-lead-search,#idlm-bulk-items-search,.idlm-catalogue-search')) { event.preventDefault(); }
-            // Nor in any plain field. Textareas keep their line breaks and buttons still press.
-            if (event.key === 'Enter' && event.target.matches('input:not([type="submit"],[type="button"],[type="reset"],[type="image"],[type="file"])')) { event.preventDefault(); }
-        });
-    }
+    // A new quotation with no lead is refused by the server after the page has gone. Catch it here so nothing typed is lost.
+    var crmLeadField = document.getElementById('idlm-quote-lead');
+    form.addEventListener('submit', function (event) {
+        if (Number(form.elements.quote_id.value) > 0 || !crmLeadField || Number(crmLeadField.value) > 0) { return; }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.IDLMDialog.notify('Choose a lead before saving this quotation. Your entries are still here.', 'error');
+        document.getElementById('idlm-lead-search').focus();
+    });
+    // Enter in a search box searches; it must not submit the quotation.
+    form.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && event.target.matches('#idlm-lead-search,#idlm-bulk-items-search,.idlm-catalogue-search')) { event.preventDefault(); }
+        // Nor in any plain field. Textareas keep their line breaks and buttons still press.
+        if (event.key === 'Enter' && event.target.matches('input:not([type="submit"],[type="button"],[type="reset"],[type="image"],[type="file"])')) { event.preventDefault(); }
+    });
     form.addEventListener('submit', ensureRevisionReason);
     function setAutosaveStatus(message, state) {
         if (!autosaveStatus) { return; }
@@ -626,10 +612,10 @@
                 autosaveHasWorkingCopy = true;
                 formDirty = false;
                 autosaveStatus.dataset.hasWorkingCopy = '1';
-                setAutosaveStatus('Saved at ' + (crmDesign ? (function (stamp) {
+                setAutosaveStatus('Saved at ' + ((function (stamp) {
                     var clock = /^(\d{1,2}):(\d{2})/.exec(String(stamp || ''));
                     return clock ? ((Number(clock[1]) % 12) || 12) + ':' + clock[2] + ' ' + (Number(clock[1]) < 12 ? 'AM' : 'PM') : stamp;
-                }(payload.data.savedAt)) : payload.data.savedAt), 'saved');
+                }(payload.data.savedAt))), 'saved');
             })
             .catch(function (error) {
                 autosaveDirty = false !== error.retry;
@@ -844,7 +830,7 @@
                 if (!optional) { subtotal += base; sectionTotal += total; var woodGroup = Number(field(row, 'is_wood').value) === 1 ? 'Wood' : 'Others'; woodGroups[woodGroup].base += net; }
             });
             var sectionName = String(section.querySelector('.idlm-section-name').value || 'Untitled Section').trim() || 'Untitled Section';
-            section.querySelector('.idlm-section-subtotal-label').textContent = sectionName + (crmDesign ? ' subtotal' : ' Subtotal');
+            section.querySelector('.idlm-section-subtotal-label').textContent = sectionName + (' subtotal');
             section.querySelector('.idlm-section-subtotal').textContent = money(sectionTotal);
             sectionTotals.push({name: sectionName, total: sectionTotal});
         });
@@ -888,7 +874,7 @@
         var roundOffOutput = form.querySelector('[data-total="round-off"]');
         if (!roundOffOutput) {
             var roundOffRow = document.createElement('div');
-            roundOffRow.innerHTML = '<dt>' + (crmDesign ? 'Round off' : 'Round Off') + '</dt><dd data-total="round-off"></dd>';
+            roundOffRow.innerHTML = '<dt>' + ('Round off') + '</dt><dd data-total="round-off"></dd>';
             form.querySelector('.idlm-grand-total').before(roundOffRow);
             roundOffOutput = roundOffRow.querySelector('[data-total="round-off"]');
         }
@@ -948,7 +934,7 @@
         document.getElementById('idlm-bulk-items-selected').innerHTML = selected.length ? selected.map(function (item) { return '<button type="button" class="idlm-bulk-item is-selected" data-remove-bulk-item-id="' + escapeHtml(String(item.id)) + '"><span><strong>' + escapeHtml(item.item_name) + '</strong><small>' + escapeHtml(item.item_code || 'No code') + '</small></span><span aria-hidden="true">&times;</span></button>'; }).join('') : '<p class="idlm-bulk-items-empty">No items selected.</p>';
         document.getElementById('idlm-bulk-items-count').textContent = selected.length;
         document.getElementById('idlm-add-bulk-items').disabled = !selected.length;
-        if (crmDesign) { document.getElementById('idlm-add-bulk-items').textContent = selected.length ? 'Add ' + selected.length + (selected.length === 1 ? ' item' : ' items') : 'Add selected'; }
+ document.getElementById('idlm-add-bulk-items').textContent = selected.length ? 'Add ' + selected.length + (selected.length === 1 ? ' item' : ' items') : 'Add selected';
     }
 
     function closeBulkItems() {
@@ -985,7 +971,7 @@
     }
 
     document.getElementById('idlm-open-bulk-items').addEventListener('click', openBulkItems);
-    if (crmDesign) { crmTrapFocus(bulkModal); }
+ crmTrapFocus(bulkModal);
     bulkModal.querySelector('.idlm-bulk-items-close').addEventListener('click', closeBulkItems);
     bulkModal.querySelector('.idlm-bulk-items-cancel').addEventListener('click', closeBulkItems);
     bulkModal.addEventListener('click', function (event) {
@@ -1064,16 +1050,14 @@
             var isHeader = row.classList.contains('idlm-quote-header-row');
             var remainingLineItems = row.parentNode.querySelectorAll('.idlm-quote-item-row:not(.idlm-quote-header-row)').length;
             if (isHeader || remainingLineItems > 1) {
-                if (crmDesign) { var rowNeighbour = row.nextElementSibling || row.previousElementSibling; crmRemoveWithUndo(row, isHeader ? 'Header removed.' : 'Line item removed.', rowNeighbour && rowNeighbour.querySelector('.idlm-remove-row')); }
-                else { row.remove(); }
-            } else if (crmDesign) { window.IDLMDialog.notify('A section needs at least one line item. Remove the section instead.', 'warning'); }
+ var rowNeighbour = row.nextElementSibling || row.previousElementSibling; crmRemoveWithUndo(row, isHeader ? 'Header removed.' : 'Line item removed.', rowNeighbour && rowNeighbour.querySelector('.idlm-remove-row'));
+            } else window.IDLMDialog.notify('A section needs at least one line item. Remove the section instead.', 'warning');
         }
         else if (event.target.classList.contains('idlm-remove-section') && sections.querySelectorAll('.idlm-quote-section').length > 1) {
             var removedSection = event.target.closest('.idlm-quote-section');
-            if (crmDesign) { var removedName = removedSection.querySelector('.idlm-section-name').value.trim() || 'Untitled section', removedCount = removedSection.querySelectorAll('.idlm-quote-item-row:not(.idlm-quote-header-row)').length, sectionNeighbour = removedSection.nextElementSibling || removedSection.previousElementSibling; crmRemoveWithUndo(removedSection, removedName + ' removed with ' + removedCount + (removedCount === 1 ? ' line item.' : ' line items.'), sectionNeighbour && sectionNeighbour.querySelector('.idlm-remove-section')); }
-            else { removedSection.remove(); }
+ var removedName = removedSection.querySelector('.idlm-section-name').value.trim() || 'Untitled section', removedCount = removedSection.querySelectorAll('.idlm-quote-item-row:not(.idlm-quote-header-row)').length, sectionNeighbour = removedSection.nextElementSibling || removedSection.previousElementSibling; crmRemoveWithUndo(removedSection, removedName + ' removed with ' + removedCount + (removedCount === 1 ? ' line item.' : ' line items.'), sectionNeighbour && sectionNeighbour.querySelector('.idlm-remove-section'));
         }
-        else if (crmDesign && event.target.classList.contains('idlm-remove-section')) { window.IDLMDialog.notify('A quotation needs at least one section.', 'warning'); }
+        else if (event.target.classList.contains('idlm-remove-section')) { window.IDLMDialog.notify('A quotation needs at least one section.', 'warning'); }
         renumberAll(); calculate();
     });
 
@@ -1093,21 +1077,19 @@
         crmOpenResults.results.innerHTML = '';
         crmOpenResults = null;
     }
-    if (crmDesign) {
-        window.addEventListener('scroll', function () { if (crmOpenResults) { crmPlaceResults(crmOpenResults.input, crmOpenResults.results); } }, true);
-        window.addEventListener('resize', function () { if (crmOpenResults) { crmPlaceResults(crmOpenResults.input, crmOpenResults.results); } });
-        document.addEventListener('click', function (event) {
-            if (crmOpenResults && !crmOpenResults.results.contains(event.target) && event.target !== crmOpenResults.input) { crmCloseResults(); }
-        });
-        form.addEventListener('keydown', function (event) {
-            if (!crmOpenResults) { return; }
-            var options = Array.from(crmOpenResults.results.querySelectorAll('.idlm-catalogue-result'));
-            var current = options.indexOf(document.activeElement);
-            if (event.key === 'Escape') { var searchField = crmOpenResults.input; crmCloseResults(); searchField.focus(); event.stopPropagation(); }
-            else if (event.key === 'ArrowDown' && options.length) { event.preventDefault(); options[Math.min(options.length - 1, current + 1)].focus(); }
-            else if (event.key === 'ArrowUp' && options.length) { event.preventDefault(); if (current <= 0) { crmOpenResults.input.focus(); } else { options[current - 1].focus(); } }
-        });
-    }
+    window.addEventListener('scroll', function () { if (crmOpenResults) { crmPlaceResults(crmOpenResults.input, crmOpenResults.results); } }, true);
+    window.addEventListener('resize', function () { if (crmOpenResults) { crmPlaceResults(crmOpenResults.input, crmOpenResults.results); } });
+    document.addEventListener('click', function (event) {
+        if (crmOpenResults && !crmOpenResults.results.contains(event.target) && event.target !== crmOpenResults.input) { crmCloseResults(); }
+    });
+    form.addEventListener('keydown', function (event) {
+        if (!crmOpenResults) { return; }
+        var options = Array.from(crmOpenResults.results.querySelectorAll('.idlm-catalogue-result'));
+        var current = options.indexOf(document.activeElement);
+        if (event.key === 'Escape') { var searchField = crmOpenResults.input; crmCloseResults(); searchField.focus(); event.stopPropagation(); }
+        else if (event.key === 'ArrowDown' && options.length) { event.preventDefault(); options[Math.min(options.length - 1, current + 1)].focus(); }
+        else if (event.key === 'ArrowUp' && options.length) { event.preventDefault(); if (current <= 0) { crmOpenResults.input.focus(); } else { options[current - 1].focus(); } }
+    });
     var catalogueSearchState = new WeakMap();
     form.addEventListener('input', function (event) {
         if (!event.target.classList.contains('idlm-catalogue-search')) { calculate(); return; }
@@ -1115,7 +1097,7 @@
         window.clearTimeout(previous.timer);
         if (previous.controller) { previous.controller.abort(); }
         if (term.length < 2) { results.innerHTML = ''; catalogueSearchState.delete(input); if (crmOpenResults && crmOpenResults.results === results) { crmOpenResults = null; } return; }
-        if (crmDesign) { results.innerHTML = '<p class="idlm-catalogue-search-note">Searching the catalogue…</p>'; crmPlaceResults(input, results); }
+ results.innerHTML = '<p class="idlm-catalogue-search-note">Searching the catalogue…</p>'; crmPlaceResults(input, results);
         var state = {timer: 0, controller: null, sequence: (previous.sequence || 0) + 1};
         state.timer = window.setTimeout(function () {
             state.controller = new AbortController();
@@ -1128,10 +1110,8 @@
                 if (!current || current.sequence !== sequence) { return; }
                 if (!payload.success || !Array.isArray(payload.data)) { throw new Error(payload.data && payload.data.message ? payload.data.message : 'Catalogue search failed.'); }
                 results.innerHTML = payload.data.map(function (item) { return '<button type="button" class="idlm-catalogue-result" data-item="' + encodeURIComponent(JSON.stringify(item)) + '"><strong>' + escapeHtml(item.item_name) + '</strong><small>' + escapeHtml(item.item_code + ' · ' + item.category + ' · Wood: ' + (Number(item.is_wood) === 1 ? 'Yes' : 'No')) + '</small></button>'; }).join('');
-                if (crmDesign) {
-                    if (!payload.data.length) { results.innerHTML = '<p class="idlm-catalogue-search-note">No catalogue match. Keep typing to enter a custom item.</p>'; }
-                    crmPlaceResults(input, results);
-                }
+                if (!payload.data.length) { results.innerHTML = '<p class="idlm-catalogue-search-note">No catalogue match. Keep typing to enter a custom item.</p>'; }
+                crmPlaceResults(input, results);
             }).catch(function (error) { if ('AbortError' !== error.name) { results.innerHTML = '<p class="idlm-catalogue-search-error">' + escapeHtml(error.message || 'Catalogue search failed.') + '</p>'; } });
         }, 250);
         catalogueSearchState.set(input, state);

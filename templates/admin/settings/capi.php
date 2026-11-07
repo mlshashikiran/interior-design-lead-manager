@@ -22,7 +22,7 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                 <section id="settings-capi" class="idlm-settings-tab-content <?php echo $idlm_active_tab === 'capi' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-capi" <?php echo $idlm_active_tab === 'capi' ? '' : 'hidden'; ?>>
                     <div class="idlm-grid-full">
                         <article class="idlm-card">
-                            <h3>Platform Conversion APIs (CAPI) Settings</h3>
+                            <h3>Platform conversion APIs (CAPI) settings</h3>
                             <p class="idlm-card-desc">Configure the real-time Conversions API settings to transmit server-side conversion signals to Meta, Google Ads, and LinkedIn upon pipeline stage changes.</p>
                         </article>
 
@@ -88,7 +88,7 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                             <article class="idlm-card">
                                 <div class="idlm-settings-card-head">
                                     <input type="checkbox" id="idlm-google-capi-enabled" name="google_capi_enabled" value="1" <?php checked($idlm_google_capi_enabled, '1'); ?> class="idlm-capi-toggle" data-idlm-ui="checkbox">
-                                    <h3 class="idlm-heading-flush"><label for="idlm-google-capi-enabled">Google Ads Offline Conversions</label></h3>
+                                    <h3 class="idlm-heading-flush"><label for="idlm-google-capi-enabled">Google Ads offline conversions</label></h3>
                                 </div>
                                 <div class="idlm-form-grid two">
                                     <div class="idlm-form-group">

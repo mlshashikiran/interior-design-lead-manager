@@ -23,7 +23,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                     <div class="idlm-grid-full">
                         <!-- Custom Audience Sync card -->
                         <article class="idlm-card">
-                            <h3>Custom Audience Batch Sync Rules</h3>
+                            <h3>Custom audience batch sync rules</h3>
                             <p class="idlm-card-desc">Configure multiple Custom Audience batch sync jobs to run daily at 2:00 AM. You can target specific segments by choosing custom pipeline stages, call statuses, or lead qualities for each platform's destination list.</p>
                             
                             <p class="idlm-card-desc">Select leads in the Leads table to queue or remove manual work. Current rule filters still apply. Confirmed temporary failures retry up to three times; reselect leads to retry a rejected destination. Unknown delivery outcomes remain blocked. Google mapping does not confirm that Google fetched the feed.</p>
@@ -111,7 +111,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
 
                         <!-- Google Ads Data Manager HTTPS Pull Feeds card -->
                         <article class="idlm-card idlm-gadm-feed-card">
-                            <h3>Google Ads Data Manager (HTTPS Pull Feeds)</h3>
+                            <h3>Google Ads Data Manager (HTTPS pull feeds)</h3>
                             <p class="idlm-card-desc">Instead of complex API integrations, Google Ads Data Manager pulls conversion data and customer match segments from secure HTTPS feeds on your site. Configure the Basic Auth credentials below, then map these URLs in your Google Ads Data Manager. <button type="button" class="idlm-action-link" onclick="switchSettingsTab(document.querySelector('.idlm-tab-link[onclick*=\'settings-help\']'), 'settings-help'); setTimeout(function(){ document.getElementById('idlm-help-google-ads-creds').scrollIntoView({behavior: 'smooth'}); }, 100);">Read step-by-step instructions to link sources</button>.</p>
                             
                             <div class="idlm-form-grid two" data-idlm-ui="mt-4">
@@ -137,7 +137,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
 
                         <!-- Follow-up Reminders card -->
                         <article class="idlm-card">
-                            <h3>Followup Reminder Settings</h3>
+                            <h3>Follow-up reminder settings</h3>
                             <p class="idlm-card-desc">Configure different reminder intervals (in hours) for various Call Statuses. When a lead's call status remains in one of these statuses longer than the specified hours, it will be highlighted as "Overdue" in the leads list.</p>
                             
                             <table class="idlm-table idlm-control-full">
@@ -182,7 +182,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                                     <span class="idlm-settings-toggle__track" aria-hidden="true"></span>
                                     <span class="screen-reader-text">Enable Interakt Automation</span>
                                 </label>
-                                <h3 class="idlm-heading-flush">WhatsApp Automation (Interakt) Integration</h3>
+                                <h3 class="idlm-heading-flush">WhatsApp automation (Interakt) integration</h3>
                             </div>
                             <p class="idlm-card-desc">Configure Interakt credentials, incoming replies and campaign event mappings. Outgoing WhatsApp automations also require General → Notifications → Enable outgoing WhatsApp automations.</p>
                             
@@ -253,7 +253,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                                 </div>
 
                                 <div id="idlm-bulk-sync-progress-container" class="idlm-settings-progress" hidden>
-                                    <h4 data-idlm-ui="heading">Bulk Sync Progress</h4>
+                                    <h4 data-idlm-ui="heading">Bulk sync progress</h4>
                                     <div class="idlm-settings-progress__track">
                                         <div id="idlm-bulk-sync-progress-bar" class="idlm-settings-progress__bar"></div>
                                     </div>
@@ -270,7 +270,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                                     <span class="idlm-settings-toggle__track" aria-hidden="true"></span>
                                     <span class="screen-reader-text">Enable Direct Meta Webhook</span>
                                 </label>
-                                <h3 class="idlm-heading-flush">Meta Direct WhatsApp Webhook Configuration</h3>
+                                <h3 class="idlm-heading-flush">Meta direct WhatsApp webhook configuration</h3>
                             </div>
                             <p class="idlm-card-desc">Bypass third-party integration charges by subscribing directly to Meta's free incoming message webhooks.</p>
                             

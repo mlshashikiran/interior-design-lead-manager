@@ -3,23 +3,21 @@ jQuery(function($) {
     'use strict';
     var $root = $('.idlm-dashboard');
     if (!$root.length) return;
-    var design = document.body.classList.contains('idlm-crm-design');
     var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     // One readable date format for the whole dashboard: "5 Nov 2026" (year dropped on chart ticks).
     function formatDay(value, withYear) {
         var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value || ''));
-        var short = design && /^([A-Z][a-z]{2}) (\d{1,2})$/.exec(String(value || ''));
+        var short = /^([A-Z][a-z]{2}) (\d{1,2})$/.exec(String(value || ''));
         if (short) return Number(short[2]) + ' ' + short[1];
-        if (!m || !design) return String(value || '').slice(0, 10);
+        if (!m) return String(value || '').slice(0, 10);
         return Number(m[3]) + ' ' + MONTHS[Number(m[2]) - 1] + (withYear ? ' ' + m[1] : '');
     }
     function formatRange(start, end) {
-        if (!design) return (start || '').slice(0, 10) + ' – ' + (end || '').slice(0, 10);
         if (String(start || '').slice(0, 10) === String(end || '').slice(0, 10)) return formatDay(start, true);
         var s = formatDay(start, false), e = formatDay(end, true);
         return String(start || '').slice(0, 4) === String(end || '').slice(0, 4) ? s + ' – ' + e : formatDay(start, true) + ' – ' + e;
     }
-    if (design && window.Chart) {
+    if (window.Chart) {
         Chart.defaults.font.family = getComputedStyle($root[0]).fontFamily;
         Chart.defaults.font.size = 12;
         Chart.defaults.color = getComputedStyle($root[0]).getPropertyValue('--idlm-text-muted').trim() || Chart.defaults.color;
@@ -53,7 +51,6 @@ jQuery(function($) {
         return kpi(label, value, delta.note, kind, title, delta.state);
     }
     function axisDates(options) {
-        if (!design) return options;
         options.interaction = { mode: 'index', intersect: false };
         options.scales.x.ticks.callback = function(value) { return formatDay(this.getLabelForValue(value), false); };
         options.plugins.tooltip = $.extend(options.plugins.tooltip || {}, { callbacks: { title: function(items) { return items.length ? formatDay(items[0].label, true) : ''; } } });
@@ -61,7 +58,7 @@ jQuery(function($) {
     }
     function tint(name, percent) { return 'color-mix(in srgb, ' + dashboardToken(name, 'currentColor') + ' ' + percent + '%, transparent)'; }
     function dashboardToken(name, fallback) { return getComputedStyle($root[0]).getPropertyValue(name).trim() || fallback; }
-    function money(value, symbol) { return design && window.IDLMFormat ? window.IDLMFormat.money(num(value), symbol) : (symbol || '') + num(value).toLocaleString(undefined, { maximumFractionDigits: 0 }); }
+    function money(value, symbol) { return window.IDLMFormat ? window.IDLMFormat.money(num(value), symbol) : (symbol || '') + num(value).toLocaleString(undefined, { maximumFractionDigits: 0 }); }
     function summary(label, value, note) { return '<article><span>' + text(label) + '</span><strong>' + text(value) + '</strong><small>' + text(note) + '</small></article>'; }
     function kpi(label, value, note, kind, title, comparisonState) { return '<button type="button" class="idlm-dashboard-kpi' + (comparisonState ? ' is-' + text(comparisonState) : '') + '" data-investigate="' + text(kind) + '" data-title="' + text(title || label) + '"' + (kind ? '' : ' disabled') + '><span class="idlm-dashboard-kpi-label">' + text(label) + '</span><strong class="idlm-dashboard-kpi-value">' + text(value) + '</strong><small class="idlm-dashboard-kpi-meta">' + text(note) + '</small></button>'; }
     function empty(cols, message) { return '<tr><td colspan="' + cols + '"><p class="idlm-dashboard-empty">' + text(message) + '</p></td></tr>'; }
@@ -108,7 +105,7 @@ jQuery(function($) {
         $('#idlm-dashboard-error').prop('hidden', true);
         $root.find('[role="tabpanel"]').attr('aria-busy', 'true').find('button').prop('disabled', true);
         $('#idlm-dashboard-range-status').text('Updating dashboard…');
-        if (design && !stats) {
+        if (!stats) {
             var skeleton = '<div class="idlm-dashboard-kpi idlm-dashboard-kpi--loading" aria-hidden="true"><span class="idlm-skeleton idlm-skeleton-text"></span><span class="idlm-skeleton idlm-dashboard-skeleton-value"></span><span class="idlm-skeleton idlm-skeleton-text"></span></div>';
             $('#idlm-sales-kpis, #idlm-marketing-kpis').html(new Array(6).join(skeleton));
         }
@@ -125,15 +122,15 @@ jQuery(function($) {
                 $root.find('[data-sales-trend], [data-marketing-trend], [data-disqualification-view], [data-segment]').prop('disabled', false);
                 updateResetState();
                 var ranges = stats.ranges || {};
-                $('#idlm-dashboard-range-status').text(design ? 'Showing ' + formatRange(ranges.curr_start, ranges.curr_end) : 'Period: ' + (ranges.curr_start || '').slice(0, 10) + ' – ' + (ranges.curr_end || '').slice(0, 10) + '.');
+                $('#idlm-dashboard-range-status').text('Showing ' + formatRange(ranges.curr_start, ranges.curr_end));
             }).fail(function(xhr, status) { if (status !== 'abort' && token === sequence) fail(); })
             .always(function() { if (token === sequence) $root.find('[role="tabpanel"]').removeAttr('aria-busy'); });
     }
     function fail(message) {
-        $('#idlm-dashboard-error').prop('hidden', false).find('span').first().text(message || (design && stats ? 'Dashboard could not refresh. The figures below are from the last successful load.' : 'Dashboard could not be loaded. Try again.'));
+        $('#idlm-dashboard-error').prop('hidden', false).find('span').first().text(message || (stats ? 'Dashboard could not refresh. The figures below are from the last successful load.' : 'Dashboard could not be loaded. Try again.'));
         $('#idlm-dashboard-range-status').text(stats ? 'The report below is from the last successful load. Investigations are paused until refresh succeeds.' : 'No report loaded.');
-        if (design && !stats) $('.idlm-dashboard-kpi--loading').remove();
-        if (design) $root.find('[role="tabpanel"]').removeAttr('aria-busy').find('[data-sales-trend], [data-marketing-trend], [data-disqualification-view], [data-segment]').prop('disabled', false);
+        if (!stats) $('.idlm-dashboard-kpi--loading').remove();
+        $root.find('[role="tabpanel"]').removeAttr('aria-busy').find('[data-sales-trend], [data-marketing-trend], [data-disqualification-view], [data-segment]').prop('disabled', false);
     }
     $('#idlm-period-selector').on('change', function() {
         var custom = this.value === 'custom';
@@ -192,7 +189,7 @@ jQuery(function($) {
         var queues = queue('overdue', health.overdue_task, 'Callbacks overdue', 'Pending task due date has passed', true) +
             queue('no_task', health.without_next_task, 'No next task', 'Set a next step for these active leads') +
             queue('aged', health.aged_61_plus, 'Open more than 60 days', 'Review older leads; age is since creation');
-        if (design && !num(health.overdue_task) && !num(health.without_next_task) && !num(health.aged_61_plus) && !num(health.awaiting_manager)) queues = '<p class="idlm-dashboard-clear">Nothing needs action right now.</p>' + queues;
+        if (!num(health.overdue_task) && !num(health.without_next_task) && !num(health.aged_61_plus) && !num(health.awaiting_manager)) queues = '<p class="idlm-dashboard-clear">Nothing needs action right now.</p>' + queues;
         $('#idlm-attention-list').html(queues);
         $('#sales-open-pipeline-total').text(count(s.open_pipeline_total) + ' leads');
         var stages = (s.funnel_data || []).filter(function(row) { return num(row.active_count) > 0; });
@@ -263,7 +260,7 @@ jQuery(function($) {
             queue('no_task', health.without_next_task, 'No next task', 'Set a next step for these open leads') +
             queue('aged', health.aged_61_plus, 'Open more than 60 days', 'Review older opportunities; age is since creation');
         if (access.manager) queues += queue('handoff', health.awaiting_manager, 'Awaiting sales assignment', 'Qualified leads waiting for manager handoff');
-        if (design && !num(health.overdue_task) && !num(health.without_next_task) && !num(health.aged_61_plus) && !num(health.awaiting_manager)) queues = '<p class="idlm-dashboard-clear">Nothing needs action right now.</p>' + queues;
+        if (!num(health.overdue_task) && !num(health.without_next_task) && !num(health.aged_61_plus) && !num(health.awaiting_manager)) queues = '<p class="idlm-dashboard-clear">Nothing needs action right now.</p>' + queues;
         $('#idlm-attention-list').html(queues);
         $('#sales-open-pipeline-total').text(count(s.open_pipeline_total) + ' leads');
         var stages = (s.funnel_data || []).filter(function(row) { return num(row.active_count) > 0; });
@@ -287,7 +284,7 @@ jQuery(function($) {
             $('#idlm-events-note').text('Readiness uses your currently assigned leads. Completed handoffs remain in the pre-sales history workspace.');
         } else {
             $('#idlm-sales-summary').html(summary('Won deals', count(s.total_won), wonDetail) + summary('Won value', money(s.won_revenue_total, s.currency_symbol), wonDetail) + summary('Avg. time to close', s.avg_time_to_close || '—', 'Lead creation to recorded close'));
-            $('#idlm-events-note').text(num(s.won_legacy_count) ? 'Includes ' + count(s.won_legacy_count) + ' legacy Won records grouped by their canonical conversion time; immutable events cover newer transitions.' : 'Event reporting begins ' + (s.reporting_events_started_at ? (design && window.IDLMFormat ? window.IDLMFormat.dateTime(s.reporting_events_started_at) : s.reporting_events_started_at) : 'when event tracking was installed') + '. Reopened and re-won leads may contribute more than one transition. Earlier history is not reconstructed.');
+            $('#idlm-events-note').text(num(s.won_legacy_count) ? 'Includes ' + count(s.won_legacy_count) + ' legacy Won records grouped by their canonical conversion time; immutable events cover newer transitions.' : 'Event reporting begins ' + (s.reporting_events_started_at ? (window.IDLMFormat ? window.IDLMFormat.dateTime(s.reporting_events_started_at) : s.reporting_events_started_at) : 'when event tracking was installed') + '. Reopened and re-won leads may contribute more than one transition. Earlier history is not reconstructed.');
             $('#sales-estimated-pipeline').text(money(s.estimated_pipeline_total, s.currency_symbol));
             $('#sales-estimated-pipeline-detail').text(count(s.estimated_pipeline_covered_leads) + ' of ' + count(s.open_pipeline_total) + ' open leads have a positive value in a configured stage.');
             renderSalesTrend(s, 'revenue');
@@ -330,14 +327,14 @@ jQuery(function($) {
             }
             return num(day.revenue);
         });
-        if (design) $('#idlm-sales-trend-data').html(days.length ? days.map(function(day) { return '<tr><th scope="row">' + text(formatDay(day.date, true)) + '</th><td>' + count(day.won) + '</td><td>' + text(money(day.revenue, s.currency_symbol)) + '</td></tr>'; }).join('') : empty(3, 'No daily data for this period.'));
+        $('#idlm-sales-trend-data').html(days.length ? days.map(function(day) { return '<tr><th scope="row">' + text(formatDay(day.date, true)) + '</th><td>' + count(day.won) + '</td><td>' + text(money(day.revenue, s.currency_symbol)) + '</td></tr>'; }).join('') : empty(3, 'No daily data for this period.'));
         if (salesChart) { salesChart.destroy(); salesChart = null; }
         var hasData = values.some(function(value) { return value > 0; });
         $('#idlm-sales-trend-chart').prop('hidden', !hasData || !window.Chart);
         $('#idlm-sales-trend-empty').prop('hidden', hasData && !!window.Chart).text(hasData ? 'Chart unavailable; use the summary values below.' : 'No Won transitions were recorded in this period.');
         if (hasData && window.Chart) salesChart = new Chart(document.getElementById('idlm-sales-trend-chart'), {
-            type: 'line', data: { labels: days.map(function(day) { return day.date; }), datasets: [{ label: metric === 'won' ? 'Won Deals' : (metric === 'average' ? 'Cumulative Avg. Deal Value' : 'Revenue'), data: values, borderColor: dashboardToken('--idlm-action', '#7a5136'), backgroundColor: design ? tint('--idlm-action', 10) : 'rgba(122,81,54,.09)', borderWidth: 2.5, pointRadius: days.length > 31 ? 0 : 3, pointBackgroundColor: design ? dashboardToken('--idlm-surface', '#fff') : '#fff', fill: metric === 'revenue', tension: 0, spanGaps: false }] },
-            options: axisDates({ responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } }, y: { beginAtZero: true, ticks: design ? { callback: function(value) { return metric === 'won' ? value : money(value, s.currency_symbol); }, precision: metric === 'won' ? 0 : undefined } : {}, grid: { color: dashboardToken('--idlm-border', '#e7e8ec') } } } })
+            type: 'line', data: { labels: days.map(function(day) { return day.date; }), datasets: [{ label: metric === 'won' ? 'Won Deals' : (metric === 'average' ? 'Cumulative Avg. Deal Value' : 'Revenue'), data: values, borderColor: dashboardToken('--idlm-action', '#7a5136'), backgroundColor: tint('--idlm-action', 10), borderWidth: 2.5, pointRadius: days.length > 31 ? 0 : 3, pointBackgroundColor: dashboardToken('--idlm-surface', '#fff'), fill: metric === 'revenue', tension: 0, spanGaps: false }] },
+            options: axisDates({ responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } }, y: { beginAtZero: true, ticks: { callback: function(value) { return metric === 'won' ? value : money(value, s.currency_symbol); }, precision: metric === 'won' ? 0 : undefined }, grid: { color: dashboardToken('--idlm-border', '#e7e8ec') } } } })
         });
     }
     $root.on('click', '[data-sales-trend]', function() { $root.find('[data-sales-trend]').removeClass('active'); $(this).addClass('active'); if (stats && stats.sales) renderSalesTrend(stats.sales, $(this).data('sales-trend')); });
@@ -373,7 +370,7 @@ jQuery(function($) {
         var reasons = reasonSets[disqualificationView] || [], reasonMax = Math.max.apply(null, reasons.map(function(row) { return num(row.count); }).concat([1]));
         $('#idlm-disqualification-reasons').html(reasons.length ? reasons.map(function(row) { return '<div class="idlm-dashboard-bar"><span>' + text(row.reason) + '</span><span class="idlm-dashboard-track"><span style="width:' + (num(row.count) / reasonMax * 100) + '%"></span></span><strong>' + count(row.count) + '</strong></div>'; }).join('') : '<p class="idlm-dashboard-empty">No disqualification reasons were recorded in this period.</p>');
         var days = m.leads_over_time || [];
-        if (design) $('#idlm-trend-data').html(days.length ? days.map(function(day) { return '<tr><th scope="row">' + text(formatDay(day.date, true)) + '</th><td>' + count(day.count) + '</td><td>' + count(day.qualified) + '</td><td>' + count(day.won) + '</td></tr>'; }).join('') : empty(4, 'No daily data for this period.'));
+        $('#idlm-trend-data').html(days.length ? days.map(function(day) { return '<tr><th scope="row">' + text(formatDay(day.date, true)) + '</th><td>' + count(day.count) + '</td><td>' + count(day.qualified) + '</td><td>' + count(day.won) + '</td></tr>'; }).join('') : empty(4, 'No daily data for this period.'));
         if (chart) { chart.destroy(); chart = null; }
         var hasLeads = days.some(function(day) { return num(day.count) > 0; });
         $('#chart-leads-over-time').prop('hidden', !hasLeads || !window.Chart);
@@ -381,8 +378,8 @@ jQuery(function($) {
         if (hasLeads && window.Chart) chart = new Chart(document.getElementById('chart-leads-over-time'), {
             type: 'line', data: { labels: days.map(function(day) { return day.date; }), datasets: [
                 { label: 'Leads Acquired', data: days.map(function(day) { return num(day.count); }), borderColor: dashboardToken('--idlm-action', '#7a5136'), borderWidth: 2.5, pointRadius: days.length > 31 ? 0 : 3, fill: false, tension: 0, hidden: marketingTrend !== 'all' && marketingTrend !== 'leads' },
-                { label: 'Qualified', data: days.map(function(day) { return num(day.qualified); }), borderColor: design ? dashboardToken('--idlm-success', '#177c51') : dashboardToken('--idlm-brand-gold', '#2f7a55'), borderWidth: 2, borderDash: [5, 5], pointRadius: days.length > 31 ? 0 : 3, pointBackgroundColor: '#fff', fill: false, tension: 0, hidden: marketingTrend !== 'all' && marketingTrend !== 'qualified' },
-                { label: 'Won Closed', data: days.map(function(day) { return num(day.won); }), borderColor: design ? dashboardToken('--idlm-info', '#176a9e') : dashboardToken('--idlm-text-muted', '#9aa0aa'), borderWidth: 2, pointRadius: days.length > 31 ? 0 : 3, pointBackgroundColor: design ? dashboardToken('--idlm-surface', '#fff') : '#fff', fill: false, tension: 0, hidden: marketingTrend !== 'all' && marketingTrend !== 'won' }
+                { label: 'Qualified', data: days.map(function(day) { return num(day.qualified); }), borderColor: dashboardToken('--idlm-success', '#177c51'), borderWidth: 2, borderDash: [5, 5], pointRadius: days.length > 31 ? 0 : 3, pointBackgroundColor: '#fff', fill: false, tension: 0, hidden: marketingTrend !== 'all' && marketingTrend !== 'qualified' },
+                { label: 'Won Closed', data: days.map(function(day) { return num(day.won); }), borderColor: dashboardToken('--idlm-info', '#176a9e'), borderWidth: 2, pointRadius: days.length > 31 ? 0 : 3, pointBackgroundColor: dashboardToken('--idlm-surface', '#fff'), fill: false, tension: 0, hidden: marketingTrend !== 'all' && marketingTrend !== 'won' }
             ] },
             options: axisDates({ responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 7 } }, y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: dashboardToken('--idlm-border', '#e2e8f0') } } } })
         });
@@ -457,20 +454,18 @@ jQuery(function($) {
             else if (!event.shiftKey && event.target === last) { event.preventDefault(); first.focus(); }
         });
     }
-    if (design) {
-        $root.find('.idlm-dashboard-segment-tabs').attr('role', 'group');
-        $root.find('.idlm-dashboard-chip').each(function() { $(this).attr('aria-pressed', $(this).hasClass('active') ? 'true' : 'false'); });
-        $root.on('click', '.idlm-dashboard-chip', function() {
-            var $group = $(this).closest('.idlm-dashboard-panel-actions, .idlm-dashboard-segment-tabs');
-            $group.find('.idlm-dashboard-chip').attr('aria-pressed', 'false');
-            $(this).attr('aria-pressed', 'true');
-        });
-        $root[0].addEventListener('toggle', function() {
-            if (chart) chart.resize();
-            if (salesChart) salesChart.resize();
-            if (pipelineChannelChart) pipelineChannelChart.resize();
-        }, true);
-    }
+    $root.find('.idlm-dashboard-segment-tabs').attr('role', 'group');
+    $root.find('.idlm-dashboard-chip').each(function() { $(this).attr('aria-pressed', $(this).hasClass('active') ? 'true' : 'false'); });
+    $root.on('click', '.idlm-dashboard-chip', function() {
+        var $group = $(this).closest('.idlm-dashboard-panel-actions, .idlm-dashboard-segment-tabs');
+        $group.find('.idlm-dashboard-chip').attr('aria-pressed', 'false');
+        $(this).attr('aria-pressed', 'true');
+    });
+    $root[0].addEventListener('toggle', function() {
+        if (chart) chart.resize();
+        if (salesChart) salesChart.resize();
+        if (pipelineChannelChart) pipelineChannelChart.resize();
+    }, true);
     syncFilterVisibility();
     load(applied);
 });

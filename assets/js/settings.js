@@ -635,9 +635,7 @@
      */
     function enhanceSettingsNotices($page) {
         // The design layer shows every notice in one shared stack (dialog.js).
-        if (document.body.classList.contains('idlm-crm-design')) {
-            return;
-        }
+        return;
         var stack = document.createElement('div');
         stack.className = 'idlm-settings-toast-stack';
         stack.setAttribute('aria-label', 'Settings notifications');
@@ -1023,11 +1021,9 @@
                 });
             });
         }
-        if (document.body.classList.contains('idlm-crm-design')) {
-            $('.idlm-settings-tabs').on('click', '[role="tab"]', function() {
-                if (this.scrollIntoView) { this.scrollIntoView({block: 'nearest', inline: 'nearest'}); }
-            });
-        }
+        $('.idlm-settings-tabs').on('click', '[role="tab"]', function() {
+            if (this.scrollIntoView) { this.scrollIntoView({block: 'nearest', inline: 'nearest'}); }
+        });
         var initialState = $form.serialize();
         $form.on('input change', ':input', function() {
             if ($form.serialize() !== initialState) {
@@ -1036,44 +1032,40 @@
                 setSaveState($form, 'clean', 'No unsaved changes');
             }
         });
-        if (document.body.classList.contains('idlm-crm-design')) {
-            // Unsaved edits can be discarded in one step, and leaving the page never drops them silently.
-            var discardingSettings = false;
-            var $discard = $form.closest('.idlm-settings-page').find('[data-idlm-discard-settings]');
-            // Switching tabs only changes the remembered tab, so that field is not an edit.
-            var settingsSnapshot = function() { return $form.find(':input').not('#idlm-active-tab-input').serialize(); };
-            var settingsStart = settingsSnapshot();
-            var syncDiscard = function() { $discard.prop('hidden', settingsSnapshot() === settingsStart); };
-            $form.on('input change', ':input', syncDiscard);
-            $discard.on('click', function() {
-                if (!window.IDLMDialog || !window.IDLMDialog.confirm) { return; }
-                window.IDLMDialog.confirm({
-                    title: 'Discard unsaved changes?',
-                    message: 'Every tab goes back to its last saved values. Nothing is saved or changed on the server.',
-                    confirmLabel: 'Discard changes',
-                    destructive: true,
-                    trigger: this
-                }).then(function(confirmed) {
-                    if (!confirmed) { return; }
-                    discardingSettings = true;
-                    window.location.assign(window.location.pathname + window.location.search);
-                });
+        // Unsaved edits can be discarded in one step, and leaving the page never drops them silently.
+        var discardingSettings = false;
+        var $discard = $form.closest('.idlm-settings-page').find('[data-idlm-discard-settings]');
+        // Switching tabs only changes the remembered tab, so that field is not an edit.
+        var settingsSnapshot = function() { return $form.find(':input').not('#idlm-active-tab-input').serialize(); };
+        var settingsStart = settingsSnapshot();
+        var syncDiscard = function() { $discard.prop('hidden', settingsSnapshot() === settingsStart); };
+        $form.on('input change', ':input', syncDiscard);
+        $discard.on('click', function() {
+            if (!window.IDLMDialog || !window.IDLMDialog.confirm) { return; }
+            window.IDLMDialog.confirm({
+                title: 'Discard unsaved changes?',
+                message: 'Every tab goes back to its last saved values. Nothing is saved or changed on the server.',
+                confirmLabel: 'Discard changes',
+                destructive: true,
+                trigger: this
+            }).then(function(confirmed) {
+                if (!confirmed) { return; }
+                discardingSettings = true;
+                window.location.assign(window.location.pathname + window.location.search);
             });
-            window.addEventListener('beforeunload', function(event) {
-                if (discardingSettings || settingsSnapshot() === settingsStart) { return; }
-                event.preventDefault();
-                event.returnValue = '';
-            });
-            $form.on('submit', function() { discardingSettings = true; });
-        }
+        });
+        window.addEventListener('beforeunload', function(event) {
+            if (discardingSettings || settingsSnapshot() === settingsStart) { return; }
+            event.preventDefault();
+            event.returnValue = '';
+        });
+        $form.on('submit', function() { discardingSettings = true; });
         $form.on('submit', function(event) {
             if (!validateTokenEditors($form) || ($whiteLabel.length && !validateWhiteLabel($whiteLabel))) {
                 event.preventDefault();
-                setSaveState($form, document.body.classList.contains('idlm-crm-design') ? 'error' : 'dirty', 'Fix the highlighted settings before saving.');
-                if (document.body.classList.contains('idlm-crm-design')) {
-                    var firstInvalid = $form.find('.has-error :input:visible, [aria-invalid="true"]:visible').first();
-                    if (firstInvalid.length) { firstInvalid.get(0).scrollIntoView({block: 'center'}); firstInvalid.trigger('focus'); }
-                }
+                setSaveState($form, 'error', 'Fix the highlighted settings before saving.');
+                var firstInvalid = $form.find('.has-error :input:visible, [aria-invalid="true"]:visible').first();
+                if (firstInvalid.length) { firstInvalid.get(0).scrollIntoView({block: 'center'}); firstInvalid.trigger('focus'); }
                 return;
             }
             $form.triggerHandler('idlm-settings-will-save');
