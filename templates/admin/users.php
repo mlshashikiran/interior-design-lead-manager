@@ -12,8 +12,6 @@ $idlm_error = isset($context['error']) ? (string) $context['error'] : '';
 $idlm_notice_messages = array(
     'created' => 'The user was created and a password-reset link was sent.',
     'updated' => 'The user account and CRM access were updated.',
-    'role-scopes-updated' => 'Role lead scopes were updated.',
-    'role-permissions-updated' => 'Role permissions were updated.',
 );
 $idlm_error_messages = array(
     'invalid-user'  => 'Check the account details, email address, and selected CRM role.',
@@ -42,7 +40,7 @@ $idlm_invite_open = in_array($idlm_error, array('invalid-user', 'create-failed')
 // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only view selection.
 $idlm_requested_tab = isset($_GET['users_tab']) ? sanitize_key(wp_unslash($_GET['users_tab'])) : '';
 $idlm_users_tab = in_array($idlm_requested_tab, array('roles', 'activity'), true) ? $idlm_requested_tab : 'team';
-if (in_array($idlm_notice, array('role-scopes-updated', 'role-permissions-updated', 'role-access-updated'), true)) { $idlm_users_tab = 'roles'; }
+if ('role-access-updated' === $idlm_notice) { $idlm_users_tab = 'roles'; }
 $idlm_team_url = remove_query_arg(array('users_tab', 'role_edit', 'idlm_users_notice', 'idlm_users_error'));
 $idlm_roles_url = add_query_arg('users_tab', 'roles', remove_query_arg(array('s', 'role', 'access', 'paged', 'role_edit', 'idlm_users_notice', 'idlm_users_error')));
 $idlm_activity_url = add_query_arg('users_tab', 'activity', remove_query_arg(array('s', 'role', 'access', 'paged', 'role_edit', 'idlm_users_notice', 'idlm_users_error')));

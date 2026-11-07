@@ -125,7 +125,8 @@ try {
         global $wpdb;
         $operation=$argv[2];$lead=absint($argv[3]);$target=absint($argv[4]);
         if ($mode==='capacity-race') {
-            if (!IDLM_Integrations::rep_has_capacity($target)) { throw new RuntimeException('Concurrent fixture did not observe the final free slot.'); }
+            $capacity=new ReflectionMethod('IDLM_Integrations','filter_pool_by_capacity');$capacity->setAccessible(true);
+            if (!in_array($target,$capacity->invoke(null,array($target)),true)) { throw new RuntimeException('Concurrent fixture did not observe the final free slot.'); }
             $barrier=WP_CONTENT_DIR.'/lead-barrier';file_put_contents($barrier,getmypid()."\n",FILE_APPEND|LOCK_EX);$deadline=microtime(true)+10;
             while(count(file($barrier,FILE_IGNORE_NEW_LINES))<2){if(microtime(true)>$deadline){throw new RuntimeException('Capacity barrier timed out');}usleep(10000);}
         } else { add_filter('query',static function($sql){if($sql==='COMMIT'){exit(77);}return $sql;}); }

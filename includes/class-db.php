@@ -996,10 +996,6 @@ class IDLM_DB {
         return IDLM_Presales_Task_Plan::sync($lead_id);
     }
 
-    public static function reschedule_pending_presales_tasks($lead_id) {
-        return IDLM_Presales_Task_Plan::sync($lead_id);
-    }
-
     /** Bounded, checkpointed repair also discovers assigned leads with no task rows. */
     public static function roll_forward_presales_tasks() {
         return IDLM_Presales_Task_Plan::sweep();

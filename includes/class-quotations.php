@@ -50,11 +50,6 @@ class IDLM_Quotations {
     public static function install() {
         return IDLM_Quotation_Schema::install();
     }
-    /**
-     * Kept as a no-op compatibility method after consolidating CRM UI in the
-     * frontend workspace. Legacy wp-admin quotation URLs redirect there.
-     */
-    public static function register_menu() {}
 
     public static function enqueue_assets($hook) {
         if (false === strpos((string) $hook, 'idlm_quotations')) {

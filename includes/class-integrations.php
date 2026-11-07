@@ -496,33 +496,6 @@ class IDLM_Integrations {
         }));
     }
 
-    /** Advisory capacity for selection; canonical persistence checks current admission. */
-    public static function rep_has_capacity($rep_id) {
-        $rep_id = absint($rep_id);
-        return 0 === $rep_id || in_array($rep_id, self::filter_pool_by_capacity(array($rep_id)), true);
-    }
-
-    public static function get_rep_capacity_status($rep_id) {
-        global $wpdb;
-        $rep_id = absint($rep_id);
-        $maximum = max(0, absint(IDLM_Settings::get('idlm_max_active_leads_per_rep', 30)));
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0432: get_rep_capacity_status(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
-        $active = $rep_id ? (int) $wpdb->get_var($wpdb->prepare(
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-            "SELECT COUNT(*) FROM {$wpdb->prefix}idlm_leads
-             WHERE assigned_rep_id = %d AND is_duplicate = 0
-               AND COALESCE(stage, '') NOT IN ('Won', 'Lost')
-               AND COALESCE(lead_quality, '') != 'Unqualified'",
-            $rep_id
-        )) : 0;
-        $failed = $rep_id && (bool) $wpdb->last_error;
-        return array(
-            'maximum' => $maximum,
-            'active' => $active,
-            'remaining' => $failed ? 0 : (0 === $maximum ? PHP_INT_MAX : max(0, $maximum - $active)),
-        );
-    }
-
     /**
      * Match a representative pool to a preferred studio.
      */

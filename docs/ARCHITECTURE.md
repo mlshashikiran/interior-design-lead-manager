@@ -143,7 +143,7 @@ Shashi, candidate 1.102.50: `IDLM_Lead_Transaction` owns required core lead aggr
 
 ## Qualification task-plan owner — 2026-10-07
 
-Shashi: `IDLM_Presales_Task_Plan` owns checked stable-cycle adoption, fill, evidence synchronization and bounded scheduled repair. `IDLM_DB::create_presales_followup_tasks`, `sync_presales_task_status`, `reschedule_pending_presales_tasks` and `roll_forward_presales_tasks` remain compatibility facades. Lead update and automatic intake assignment invoke it inside `IDLM_Lead_Transaction`; it reuses the live lead lock/recovery fencing and durable cache intent. [Boundary and evidence](AUDIT-REMEDIATION-TASK-PLAN-SLICE.md).
+Shashi: `IDLM_Presales_Task_Plan` owns checked stable-cycle adoption, fill, evidence synchronization and bounded scheduled repair. `IDLM_DB::create_presales_followup_tasks`, `sync_presales_task_status` and `roll_forward_presales_tasks` remain compatibility facades. Lead update and automatic intake assignment invoke it inside `IDLM_Lead_Transaction`; it reuses the live lead lock/recovery fencing and durable cache intent. [Boundary and evidence](AUDIT-REMEDIATION-TASK-PLAN-SLICE.md).
 
 ## Current capacity admission boundary — CORE-010
 

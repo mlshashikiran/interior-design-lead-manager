@@ -2,7 +2,7 @@
 
 Authentication notation: **CRM** = effective `manage_options` or `idlm_access_leads`, without CRM suspension, as implemented by `IDLM_Admin`; **object** = ownership/visibility check; all AJAX actions are logged-in-only and use `idlm_admin_nonce` unless noted.
 
-`idlm_create_user`, `idlm_update_user`, and `idlm_update_role_scopes`: administrator-only admin-post actions with their own nonces. They create or update only managed CRM roles, preserve historical CRM ownership, configure allowlisted role visibility scopes, and reject an administrator self-lockout or removal of the final administrator.
+`idlm_create_user` and `idlm_update_user`: administrator-only admin-post actions with their own nonces. They create or update only managed CRM roles, preserve historical CRM ownership, and reject an administrator self-lockout or removal of the final administrator.
 
 `idlm_update_role_access`: administrator-only, POST-only admin-post action with its own nonce, registered in `includes/class-admin-users-controller.php`. It takes `access_role`, `role_scope` (`default`, `all` or `assigned`) and `permissions[]`, changes only that role's key in `idlm_role_lead_scopes`, and applies `idlm_update_role_permissions` semantics to dedicated CRM roles. Administrator is refused and website roles change scope only. Builder: Shashi.
 

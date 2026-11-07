@@ -14,8 +14,6 @@ class IDLM_Admin {
         add_action('admin_post_idlm_rotate_api_credential', array(__CLASS__, 'handle_rotate_api_credential'));
         add_action('admin_post_idlm_create_user', array(__CLASS__, 'handle_create_user'));
         add_action('admin_post_idlm_update_user', array(__CLASS__, 'handle_update_user'));
-        add_action('admin_post_idlm_update_role_scopes', array(__CLASS__, 'handle_update_role_scopes'));
-        add_action('admin_post_idlm_update_role_permissions', array(__CLASS__, 'handle_update_role_permissions'));
 
         // Shortcodes for frontend lead manager & dashboard
         add_shortcode('idlm_leads_list', array(__CLASS__, 'render_leads_list_shortcode'));
@@ -101,13 +99,6 @@ class IDLM_Admin {
      */
     public static function is_assignable_rep($user_id) {
         return IDLM_Lead_Access_Policy::is_assignable_rep($user_id);
-    }
-
-    /**
-     * Return user IDs currently serving in the pre-sales role.
-     */
-    public static function get_pre_sales_user_ids() {
-        return IDLM_Lead_Access_Policy::pre_sales_user_ids();
     }
 
     /**
@@ -287,8 +278,6 @@ class IDLM_Admin {
     }
     public static function handle_create_user() { return IDLM_Admin_Users_Controller::handle_create(); }
     public static function handle_update_user() { return IDLM_Admin_Users_Controller::handle_update(); }
-    public static function handle_update_role_scopes() { return IDLM_Admin_Users_Controller::handle_update_role_scopes(); }
-    public static function handle_update_role_permissions() { return IDLM_Admin_Users_Controller::handle_update_role_permissions(); }
 
     /** Register the deliberately small wp-admin utility page. */
     public static function register_admin_menus() {

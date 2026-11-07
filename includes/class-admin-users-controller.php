@@ -29,19 +29,6 @@ final class IDLM_Admin_Users_Controller {
         return array_diff_key(self::managed_roles(), array_flip(array('administrator', 'editor', 'author', 'contributor')));
     }
 
-    public static function handle_update_role_permissions() {
-        if (!current_user_can('manage_options')) { wp_die('You do not have permission to manage CRM users.', 403); }
-        check_admin_referer('idlm_update_role_permissions');
-        $request_method = isset($_SERVER['REQUEST_METHOD']) && is_string($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : '';
-        if ('POST' !== $request_method) { wp_die('Invalid request.', 405); }
-        $role_name = isset($_POST['permission_role']) && is_string($_POST['permission_role']) ? sanitize_key(wp_unslash($_POST['permission_role'])) : '';
-        if (!isset(self::permission_roles()[$role_name]) || !($role = get_role($role_name))) { self::redirect('error', 'invalid-role'); }
-        $submitted = isset($_POST['permissions']) && is_array($_POST['permissions']) ? array_map('sanitize_text_field', wp_unslash($_POST['permissions'])) : array();
-        $changes = self::apply_role_permissions($role, $role_name, $submitted);
-        self::log_role_permissions($role_name, $changes);
-        self::redirect('notice', 'role-permissions-updated');
-    }
-
     /**
      * Save one role's lead visibility and permissions from the single role editor.
      * Other roles' scopes are never rewritten. Administrator stays read-only.
@@ -391,32 +378,6 @@ final class IDLM_Admin_Users_Controller {
         if (!empty($_POST['send_reset_link'])) { self::send_reset($user_id); }
         // phpcs:enable WordPress.Security.NonceVerification.Missing
         self::redirect('notice', 'updated');
-    }
-
-    public static function handle_update_role_scopes() {
-        self::authorize('idlm_update_role_scopes');
-        // phpcs:disable WordPress.Security.NonceVerification.Missing -- REL007-BOUNDARY-0122: handle_update_role_scopes(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain.
-        $submitted = isset($_POST['role_scopes']) && is_array($_POST['role_scopes'])
-        // phpcs:enable WordPress.Security.NonceVerification.Missing
-            // phpcs:disable WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0123: handle_update_role_scopes(): render requires manage_options and uses only bounded read filters/notices; create/update/scopes call authorize(action) before private helpers, which enforces manage_options, POST and action-specific nonce; managed roles/scopes and self/final-admin protections remain.
-            ? wp_unslash($_POST['role_scopes']) : array();
-            // phpcs:enable WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $scopes = array();
-        foreach (self::managed_roles() as $role => $data) {
-            if ('administrator' === $role) { continue; }
-            $scope = isset($submitted[$role]) ? sanitize_key($submitted[$role]) : 'default';
-            if (in_array($scope, array('all', 'assigned'), true)) {
-                $scopes[$role] = $scope;
-            }
-        }
-        $scopes_before = self::role_scopes();
-        update_option(self::ROLE_SCOPES_OPTION, $scopes, false);
-        foreach (array_keys($scopes_before + $scopes) as $scoped_role) {
-            $was = $scopes_before[$scoped_role] ?? 'default';
-            $now = $scopes[$scoped_role] ?? 'default';
-            if ($was !== $now) { self::log_role_scope($scoped_role, $was, $now); }
-        }
-        self::redirect('notice', 'role-scopes-updated');
     }
 
     private static function enroll_editorial_user($user_id, $role) {
