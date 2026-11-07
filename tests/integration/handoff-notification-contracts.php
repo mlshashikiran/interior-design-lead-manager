@@ -22,7 +22,7 @@ idlm_integration_test('M6-handoff-opt-in-and-hook-preserve-recipient-and-message
         do_action('idlm_qualified_handoff_notification', $lead, $administrator_id, $administrator_id, 'Synthetic handoff');
         idlm_integration_assert_same(1, count($messages));
         idlm_integration_assert_same(array(get_userdata($administrator_id)->user_email), $messages[0]['to']);
-        idlm_integration_assert_same('[Lead Manager] Qualified lead assigned: Synthetic Handoff', $messages[0]['subject']);
+        idlm_integration_assert_same(IDLM_Settings::mail_subject_prefix() . ' Qualified lead assigned: Synthetic Handoff', $messages[0]['subject']);
         idlm_integration_assert_same("Synthetic handoff\n\nLead: Synthetic Handoff\nPreferred Studio: North Studio", $messages[0]['message']);
     } finally { remove_filter('pre_wp_mail', $capture, PHP_INT_MAX); remove_filter('query', $observe); update_option('idlm_handoff_notifications_enabled', $previous); }
 });
@@ -41,8 +41,17 @@ idlm_integration_test('M6-handoff-missing-lead-and-recipient-fallbacks-remain-co
         idlm_integration_assert_same(null, IDLM_Integrations::send_handoff_notifications($missing, 0, $administrator_id, 'Synthetic fallback'));
         idlm_integration_assert_same(1, count($messages));
         idlm_integration_assert_same(array(get_userdata($administrator_id)->user_email), $messages[0]['to']);
-        idlm_integration_assert_same('[Lead Manager] Qualified lead assigned: Lead #' . $missing, $messages[0]['subject']);
+        idlm_integration_assert_same(IDLM_Settings::mail_subject_prefix() . ' Qualified lead assigned: Lead #' . $missing, $messages[0]['subject']);
         idlm_integration_assert_same("Synthetic fallback\n\nLead: Lead #" . $missing, $messages[0]['message']);
+        // A white-labelled workspace title replaces the default subject prefix.
+        $previous_white_label = get_option(IDLM_Settings::WHITE_LABEL_OPTION, null);
+        update_option(IDLM_Settings::WHITE_LABEL_OPTION, array_merge(IDLM_Settings::white_label_defaults(), array('workspace_title' => 'Project Desk')), false);
+        try {
+            IDLM_Integrations::send_handoff_notifications($missing, 0, $administrator_id, 'Synthetic fallback');
+            idlm_integration_assert_same('[Project Desk] Qualified lead assigned: Lead #' . $missing, $messages[1]['subject']);
+        } finally {
+            null === $previous_white_label ? delete_option(IDLM_Settings::WHITE_LABEL_OPTION) : update_option(IDLM_Settings::WHITE_LABEL_OPTION, $previous_white_label, false);
+        }
     } finally { remove_filter('pre_wp_mail', $capture, PHP_INT_MAX); update_option('idlm_handoff_notifications_enabled', $previous); }
 });
 
