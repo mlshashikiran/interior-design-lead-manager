@@ -1736,7 +1736,9 @@ jQuery(document).ready(function($) {
                             $('[data-metric-count="' + key + '"]').text(Number(response.data.metric_stats[key]) || 0);
                         });
                         var overdueHandoffs = Number(response.data.metric_stats.overdue_handoffs) || 0;
-                        $('[data-metric-hint="qualified_handoffs"]').text(overdueHandoffs > 0 ? overdueHandoffs + ' overdue' : 'awaiting assignment');
+                        var qualifiedHandoffs = Number(response.data.metric_stats.qualified_handoffs) || 0;
+                        // The count sits beside the hint, so say "all overdue" rather than repeat the same number.
+                        $('[data-metric-hint="qualified_handoffs"]').text(overdueHandoffs <= 0 ? 'awaiting assignment' : (overdueHandoffs >= qualifiedHandoffs ? 'all overdue' : overdueHandoffs + ' overdue'));
                         $('.idlm-metric[data-filter="Qualified Handoffs"]').toggleClass('is-alert', overdueHandoffs > 0);
                     }
                     currentPage = response.data.current_page;
