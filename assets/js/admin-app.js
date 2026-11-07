@@ -1653,7 +1653,6 @@ jQuery(document).ready(function($) {
 
         var requestData = {
             action: 'idlm_get_leads_table',
-            idlm_design: isCrmDesign ? 'crm' : 'legacy',
             nonce: idlm_vars.nonce,
             page: page,
             date_range: dateRange,
@@ -3081,7 +3080,6 @@ function openLeadDrawer(leadId, startTab) {
         type: 'POST',
         data: {
             action: 'idlm_get_lead_details',
-            idlm_design: document.body.classList.contains('idlm-crm-design') ? 'crm' : 'legacy',
             nonce: idlm_vars.nonce,
             lead_id: leadId,
             workspace_url: $('[data-idlm-workspace]').length ? window.location.href : ''
@@ -3273,7 +3271,6 @@ function loadLeadActivityLog(leadId, forceRefresh) {
         type: 'POST',
         data: {
             action: 'idlm_get_lead_activity',
-            idlm_design: document.body.classList.contains('idlm-crm-design') ? 'crm' : 'legacy',
             nonce: idlm_vars.nonce,
             lead_id: leadId
         },

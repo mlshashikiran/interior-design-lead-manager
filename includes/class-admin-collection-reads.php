@@ -388,8 +388,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
         ));
         $active_rep_ids = get_option('idlm_active_assignment_reps', array());
         $whatsapp_read_ids = self::get_whatsapp_read_activity_ids();
-        // The requesting page states its design, so a ?idlm_design preview gets matching rows.
-        $design_layer = isset($_POST['idlm_design']) ? 'crm' === sanitize_key(wp_unslash($_POST['idlm_design'])) : IDLM_Admin_Assets::design_layer_enabled();
+        $design_layer = IDLM_Admin_Assets::design_layer_enabled();
         ob_start();
         if (empty($leads) && $design_layer) {
             echo '<tr class="idlm-leads-empty-row"><td colspan="12"><div class="idlm-state is-empty"><strong class="idlm-leads-empty-title">No leads match these filters</strong><span class="idlm-leads-empty-text">Change or clear the filters to see more leads.</span><div class="idlm-state__actions"><button type="button" class="idlm-btn idlm-btn-secondary idlm-active-filters-clear">Clear filters</button></div></div></td></tr>';

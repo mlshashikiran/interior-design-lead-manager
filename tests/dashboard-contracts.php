@@ -169,14 +169,6 @@ idlm_test('dashboard renders standard header and only authorized body tabs', sta
     assert_contains('Lead quality by source', $html);
     assert_contains('Disqualification reasons', $html);
     assert_false(strpos($html, 'Channel performance') !== false);
-    // The previous design keeps its Title Case headings.
-    $_GET['idlm_design'] = 'legacy';
-    $legacy_html = IDLM_View::render('admin/dashboard.php', array('access' => IDLM_Dashboard::access_context()));
-    unset($_GET['idlm_design']);
-    foreach (array('Open &amp; Closed Pipeline by Channel', 'Business Mix', 'Lead Volume &amp; Quality Trend', 'Lead Quality by Source', 'Disqualification Reasons') as $legacy_heading) {
-        assert_contains($legacy_heading, $legacy_html);
-    }
-    assert_false(strpos($legacy_html, 'Channel Performance') !== false);
     assert_false(strpos($html, 'Value still in the pipeline') !== false);
 });
 

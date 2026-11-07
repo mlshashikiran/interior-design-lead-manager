@@ -25,7 +25,7 @@ const IDLM_MEASURE_SCREENS = array(
     'workspace-quotations' => array('type' => 'page', 'view' => 'quotations'),
     'workspace-settings' => array('type' => 'page', 'view' => 'settings'),
     'ajax-dashboard-stats' => array('type' => 'ajax', 'action' => 'idlm_get_dashboard_stats', 'post' => array('period' => 'this_year')),
-    'ajax-leads-table' => array('type' => 'ajax', 'action' => 'idlm_get_leads_table', 'post' => array('idlm_design' => 'crm', 'page' => '1', 'date_range' => '', 'date_basis' => 'assigned_at', 'active_only' => '0', 'sort_by' => 'created_at', 'sort_order' => 'DESC', 'per_page' => '25')),
+    'ajax-leads-table' => array('type' => 'ajax', 'action' => 'idlm_get_leads_table', 'post' => array('page' => '1', 'date_range' => '', 'date_basis' => 'assigned_at', 'active_only' => '0', 'sort_by' => 'created_at', 'sort_order' => 'DESC', 'per_page' => '25')),
     'ajax-kanban-board' => array('type' => 'ajax', 'action' => 'idlm_get_kanban_leads', 'post' => array()),
 );
 

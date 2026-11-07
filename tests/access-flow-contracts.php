@@ -378,7 +378,7 @@ idlm_test('default visibility sentence states the real outcome for each kind of 
     assert_same('none', IDLM_Admin_Users_Controller::default_scope_outcome('editor')['outcome']);
 });
 
-idlm_test('job-role labels and pick lists apply only under the design layer', static function(): void {
+idlm_test('job-role labels and pick lists use the CRM wording', static function(): void {
     idlm_access_fixture();
     $GLOBALS['idlm_test_extra_roles'] += array('agent' => array('name' => 'Agent'), 'agentadmin' => array('name' => 'Agent admin'));
     assert_same('Sales representative', IDLM_Admin_Users_Controller::role_label('agent'));
@@ -394,10 +394,6 @@ idlm_test('job-role labels and pick lists apply only under the design layer', st
     $held = IDLM_Admin_Users_Controller::pick_list_roles($GLOBALS['idlm_test_extra_roles'], array('author'));
     assert_true(isset($held['main']['author']), 'A held website role stays in the list.');
 
-    $_GET['idlm_design'] = 'legacy';
-    assert_same('Agent', IDLM_Admin_Users_Controller::role_label('agent'));
-    assert_same('Editor', IDLM_Admin_Users_Controller::role_label('editor'));
-    unset($_GET['idlm_design']);
 });
 
 idlm_test('access change log keeps the newest 200, names only, and never blocks a save', static function(): void {

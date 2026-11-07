@@ -316,6 +316,7 @@ class IDLM_Admin {
             'idlm_audience_sync_logs' => array('view' => 'audience-logs', 'capability' => 'manage_options'),
             'idlm_settings' => array('view' => 'settings', 'capability' => 'manage_options'),
             'idlm_users_access' => array('view' => 'users', 'capability' => 'manage_options'),
+            'idlm-payments' => array('view' => 'payments', 'capability' => 'manage_options'),
         );
         if (!isset($legacy_pages[$page])) {
             return;
@@ -337,7 +338,7 @@ class IDLM_Admin {
             exit;
         }
         $query_args = array('idlm_view' => $legacy_pages[$page]['view']);
-        foreach (array('workspace', 'quote_id', 'lead_id', 'revision_id', 'quote_search', 'catalogue_search', 'status', 'created_by', 'date_from', 'date_to', 's', 'role', 'access', 'paged', 'idlm_notice', 'idlm_error') as $key) {
+        foreach (array('workspace', 'quote_id', 'lead_id', 'revision_id', 'quote_search', 'catalogue_search', 'status', 'created_by', 'date_from', 'date_to', 's', 'role', 'access', 'paged', 'idlm_notice', 'idlm_error', 'payment_lead_id', 'payment_page', 'payment_saved', 'payment_done') as $key) {
             // phpcs:ignore WordPress.Security.NonceVerification.Recommended
             if (isset($_GET[$key]) && is_scalar($_GET[$key])) {
                 // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0055: redirect_legacy_admin_page(): legacy-page redirect validates current page capability and forwards only a fixed sanitized query-key allowlist to the local workspace; this is read-only navigation, not a mutation.
@@ -370,7 +371,6 @@ class IDLM_Admin {
             <?php else : ?>
                 <div class="notice notice-warning inline"><p>Create a published page containing the recommended workspace shortcode below to enable the CRM workspace and legacy-link redirects.</p></div>
             <?php endif; ?>
-            <?php IDLM_Admin_Assets::render_design_layer_control(); ?>
             <h2>Shortcodes</h2>
             <p><code>[idlm_workspace]</code> — complete, role-aware CRM workspace (recommended).</p>
             <p><code>[idlm_leads_list]</code> <code>[idlm_dashboard]</code> <code>[idlm_kanban]</code> <code>[idlm_quotations]</code> — individual compatibility views.</p>

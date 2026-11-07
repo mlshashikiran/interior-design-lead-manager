@@ -508,17 +508,19 @@ idlm_test('CRM design layer stays fully gated, token-led and reversible', static
     }
     assert_true($rule_count > 20, 'The design layer rules must be parseable by this contract.');
 
-    foreach (array("defined('IDLM_DESIGN_LAYER')", "'idlm_design_layer'", "check_admin_referer('idlm_set_design_layer')", "current_user_can('manage_options')", "'idlm-crm-design'", 'DESIGN_AREAS') as $contract) {
+    // One design: the switch, preview parameter and rollback constant are retired.
+    foreach (array("'idlm-crm-design'", 'DESIGN_AREAS') as $contract) {
         assert_contains($contract, $assets);
     }
-    assert_contains('IDLM_Admin_Assets::render_design_layer_control()', $admin);
-    assert_contains("add_action('admin_post_idlm_set_design_layer'", $assets);
+    foreach (array('IDLM_DESIGN_LAYER', 'idlm_design_layer', 'idlm_set_design_layer', "\$_GET['idlm_design']", 'render_design_layer_control') as $retired) {
+        assert_true(false === strpos($assets . $admin, $retired), 'Retired design switch is back: ' . $retired);
+    }
 });
 
 idlm_test('design standard stays the entry point for agents and status options stay free of emoji', static function(): void {
     $root = dirname(__DIR__);
     $standard = (string) file_get_contents($root . '/design-system/interior-design-lead-manager/STANDARD.md');
-    foreach (array('STD-CSS-1', 'STD-CRM-1', 'STD-TYPE-1', 'IDLM_DESIGN_LAYER', 'design-baseline-worktree') as $contract) {
+    foreach (array('STD-CSS-1', 'STD-CRM-1', 'STD-TYPE-1', 'STD-CSS-9', 'design-baseline-worktree') as $contract) {
         assert_contains($contract, $standard);
     }
     assert_contains('design-system/interior-design-lead-manager/STANDARD.md', (string) file_get_contents($root . '/AGENTS.md'));

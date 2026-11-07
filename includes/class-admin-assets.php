@@ -10,9 +10,6 @@ if (!defined('ABSPATH')) {
 }
 
 final class IDLM_Admin_Assets {
-    const DESIGN_OPTION = 'idlm_design_layer';
-    const DESIGN_CRM = 'crm';
-    const DESIGN_LEGACY = 'legacy';
     const DESIGN_AREAS = array('leads', 'pipeline', 'dashboard', 'quotations', 'settings', 'admin', 'payments');
 
     private static $white_label_style_added = false;
@@ -98,25 +95,12 @@ final class IDLM_Admin_Assets {
     }
 
     /**
-     * Whether the switchable CRM design layer applies to this request.
-     *
-     * Order: IDLM_DESIGN_LAYER constant (wp-config rollback), then the read-only
-     * ?idlm_design=legacy|crm comparison parameter, then the saved option.
+     * Whether the CRM design applies to this request. It is the only front-end design;
+     * wp-admin pages load no design stylesheet, so they keep plain WordPress markup.
+     * Kept as a public method because templates, controllers and site code ask it.
      */
     public static function design_layer_enabled() {
-        // wp-admin pages load no layer stylesheet, so they keep the markup their CSS expects.
-        if (function_exists('is_admin') && is_admin() && !(function_exists('wp_doing_ajax') && wp_doing_ajax())) {
-            return false;
-        }
-        if (defined('IDLM_DESIGN_LAYER')) {
-            return (bool) IDLM_DESIGN_LAYER;
-        }
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only presentation preference.
-        $preview = isset($_GET['idlm_design']) ? sanitize_key(wp_unslash($_GET['idlm_design'])) : '';
-        if ('legacy' === $preview || 'crm' === $preview) {
-            return 'crm' === $preview;
-        }
-        return self::DESIGN_LEGACY !== get_option(self::DESIGN_OPTION, self::DESIGN_CRM);
+        return !(function_exists('is_admin') && is_admin() && !(function_exists('wp_doing_ajax') && wp_doing_ajax()));
     }
 
     /** Load the design layer last and expose the body class that gates every rule. */
@@ -136,37 +120,6 @@ final class IDLM_Admin_Assets {
     public static function add_design_body_class($classes) {
         $classes[] = 'idlm-crm-design';
         return $classes;
-    }
-
-    /** Administrator rollback control, rendered on the asset-free wp-admin utility page. */
-    public static function render_design_layer_control() {
-        $locked = defined('IDLM_DESIGN_LAYER');
-        $active = $locked ? (bool) IDLM_DESIGN_LAYER : self::DESIGN_LEGACY !== get_option(self::DESIGN_OPTION, self::DESIGN_CRM);
-        ?>
-        <h2>Interface design</h2>
-        <p>Currently using the <strong><?php echo $active ? 'CRM design' : 'previous design'; ?></strong>. Switching changes appearance only; leads, quotations and settings are not affected.</p>
-        <?php if ($locked) : ?>
-            <p>This is set by the <code>IDLM_DESIGN_LAYER</code> constant in <code>wp-config.php</code>. Remove the constant to switch here.</p>
-        <?php else : ?>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                <input type="hidden" name="action" value="idlm_set_design_layer">
-                <input type="hidden" name="design" value="<?php echo esc_attr($active ? self::DESIGN_LEGACY : self::DESIGN_CRM); ?>">
-                <?php wp_nonce_field('idlm_set_design_layer'); ?>
-                <button type="submit" class="button"><?php echo $active ? 'Switch to previous design' : 'Switch to CRM design'; ?></button>
-            </form>
-        <?php endif;
-    }
-
-    /** Save the administrator's design layer choice. */
-    public static function handle_set_design_layer() {
-        if (!current_user_can('manage_options')) {
-            wp_die('You do not have permission to manage Lead Manager.', 403);
-        }
-        check_admin_referer('idlm_set_design_layer');
-        $design = isset($_POST['design']) ? sanitize_key(wp_unslash($_POST['design'])) : '';
-        update_option(self::DESIGN_OPTION, self::DESIGN_LEGACY === $design ? self::DESIGN_LEGACY : self::DESIGN_CRM, false);
-        wp_safe_redirect(admin_url('admin.php?page=idlm_utilities'));
-        exit;
     }
 
     /** Conditionally enqueue the established frontend shortcode asset sets. */
@@ -249,5 +202,3 @@ final class IDLM_Admin_Assets {
         }
     }
 }
-
-add_action('admin_post_idlm_set_design_layer', array('IDLM_Admin_Assets', 'handle_set_design_layer'));

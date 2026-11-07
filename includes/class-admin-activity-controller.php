@@ -116,7 +116,7 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
         <?php
         $comments_html = ob_get_clean();
 
-        if (isset($_POST['idlm_design']) ? 'crm' === sanitize_key(wp_unslash($_POST['idlm_design'])) : IDLM_Admin_Assets::design_layer_enabled()) {
+        if (IDLM_Admin_Assets::design_layer_enabled()) {
             // Timeline presentation lives in crm-design-leads.css.
             $strip_and_label = static function ($markup) {
                 return strtr((string) preg_replace('/\sstyle="[^"]*"/i', '', $markup), array(

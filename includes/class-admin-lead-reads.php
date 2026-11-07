@@ -201,8 +201,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             }
         }
         $qualification_ready = !$missing_qualification_fields && IDLM_DB::budget_to_rupees($lead->budget) >= 400000;
-        // The requesting page states its design, so a ?idlm_design preview gets a matching drawer.
-        $design_layer = isset($_POST['idlm_design']) ? 'crm' === sanitize_key(wp_unslash($_POST['idlm_design'])) : IDLM_Admin_Assets::design_layer_enabled();
+        $design_layer = IDLM_Admin_Assets::design_layer_enabled();
         $attribution_rows = array(
             'UTM Source' => $lead->utm_source, 'UTM Medium' => $lead->utm_medium, 'UTM Campaign' => $lead->utm_campaign, 'UTM Adgroup' => $lead->utm_adgroup,
             'UTM Term' => $lead->utm_term, 'UTM Content' => $lead->utm_content, 'GCLID' => $lead->gclid, 'GBRAID' => isset($lead->gbraid) ? $lead->gbraid : '',
