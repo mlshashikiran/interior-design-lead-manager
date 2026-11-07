@@ -241,3 +241,34 @@ idlm_test('STREAMLINE test suites never write into tracked docs', static functio
         assert_false((bool) preg_match('#file_put_contents\([^;]*/docs/#', $source), basename($file) . ' writes into docs/.');
     }
 });
+
+idlm_test('STREAMLINE leads and settings screens prime every option they read in one query', static function (): void {
+    foreach (array('IDLM_Admin_Leads_Renderer' => 'class-admin-leads-renderer.php', 'IDLM_Admin_Settings_Renderer' => 'class-admin-settings-renderer.php') as $class => $file) {
+        $source = (string) file_get_contents(dirname(__DIR__) . '/includes/' . $file);
+        preg_match_all("/get_option\\('(idlm_[a-zA-Z0-9_]*[a-zA-Z0-9])'/", $source, $reads);
+        $missing = array_diff(array_unique($reads[1]), constant($class . '::SCREEN_OPTIONS'));
+        assert_same(array(), array_values($missing), $file . ' reads options it does not prime.');
+        assert_true(false !== strpos($source, "private static function build_context() {\n        wp_prime_option_caches(self::SCREEN_OPTIONS);"), $file . ' must prime before reading.');
+    }
+});
+
+idlm_test('STREAMLINE maintenance checks run once per interval and again right after an update', static function (): void {
+    unset($GLOBALS['idlm_test_options'][IDLM_Scheduler::MAINTENANCE_OPTION]);
+    assert_true(IDLM_Scheduler::maintenance_due('schedules'), 'First request runs the check.');
+    assert_false(IDLM_Scheduler::maintenance_due('schedules'), 'The next request inside the interval skips it.');
+    assert_true(IDLM_Scheduler::maintenance_due('legacy_queue_scrub'), 'Tasks are throttled separately.');
+    $GLOBALS['idlm_test_options'][IDLM_Scheduler::MAINTENANCE_OPTION]['schedules'] = IDLM_VERSION . '|' . (time() - 1);
+    assert_true(IDLM_Scheduler::maintenance_due('schedules'), 'An expired interval runs again.');
+    $GLOBALS['idlm_test_options'][IDLM_Scheduler::MAINTENANCE_OPTION]['schedules'] = '0.0.1|' . (time() + 3600);
+    assert_true(IDLM_Scheduler::maintenance_due('schedules'), 'A plugin update runs it at once.');
+    $GLOBALS['idlm_test_options'][IDLM_Scheduler::MAINTENANCE_OPTION] = 'corrupt';
+    assert_true(IDLM_Scheduler::maintenance_due('schedules'), 'A damaged value fails open and runs the check.');
+
+    $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-integrations.php');
+    assert_contains("IDLM_Secret_Store::migrate_platforms();\n        if (IDLM_Scheduler::maintenance_due('legacy_queue_scrub')) {", $source, 'Secret encryption stays on every request.');
+    $GLOBALS['idlm_test_hooks'] = array();
+    IDLM_Scheduler::init();
+    $hooks = array_column($GLOBALS['idlm_test_hooks'], 'hook');
+    assert_true(in_array('cron_schedules', $hooks, true), 'The minute interval is registered on every request.');
+    unset($GLOBALS['idlm_test_options'][IDLM_Scheduler::MAINTENANCE_OPTION]);
+});

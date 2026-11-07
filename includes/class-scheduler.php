@@ -4,9 +4,15 @@ if (!defined('ABSPATH')) {
 }
 
 class IDLM_Scheduler {
+    /** Next run of each throttled maintenance check, keyed by task: "plugin version|timestamp". */
+    const MAINTENANCE_OPTION = 'idlm_maintenance_checks';
+    const MAINTENANCE_INTERVAL = 600;
+
     public static function init() {
-        // Register the activation schedule setup
-        add_action('wp', array(__CLASS__, 'setup_schedules'));
+        // The custom interval must exist on every request, including cron, or recurring events cannot be rescheduled.
+        add_filter('cron_schedules', array(__CLASS__, 'cron_schedules'));
+        // Schedules are checked on page views at most every ten minutes, and right after an update.
+        add_action('wp', array(__CLASS__, 'maybe_setup_schedules'));
 
         add_action(IDLM_Audience_Dispatch::HOOK, array('IDLM_Audience_Dispatch', 'resume'), 10, 3);
 
@@ -21,6 +27,28 @@ class IDLM_Scheduler {
         add_action('idlm_daily_audience_sync_cron', array('IDLM_Telemetry', 'prune_logs'));
         add_action('idlm_hourly_assignment_fallback_cron', array('IDLM_Integrations', 'run_assignment_fallback'));
         add_action('idlm_hourly_assignment_fallback_cron', array('IDLM_DB', 'roll_forward_presales_tasks'));
+    }
+
+    /**
+     * True when a maintenance task should run on this request: at most once per interval,
+     * and always on the first request after the plugin version changes. One autoloaded option.
+     */
+    public static function maintenance_due($task, $interval = self::MAINTENANCE_INTERVAL) {
+        $checks = get_option(self::MAINTENANCE_OPTION, array());
+        $checks = is_array($checks) ? $checks : array();
+        $parts = explode('|', isset($checks[$task]) && is_string($checks[$task]) ? $checks[$task] : '', 2);
+        if (IDLM_VERSION === $parts[0] && isset($parts[1]) && time() < (int) $parts[1]) {
+            return false;
+        }
+        $checks[$task] = IDLM_VERSION . '|' . (time() + max(60, (int) $interval));
+        update_option(self::MAINTENANCE_OPTION, $checks, true);
+        return true;
+    }
+
+    public static function maybe_setup_schedules() {
+        if (self::maintenance_due('schedules')) {
+            self::setup_schedules();
+        }
     }
 
     public static function setup_schedules() {

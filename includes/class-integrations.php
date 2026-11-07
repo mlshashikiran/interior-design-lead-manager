@@ -9,8 +9,11 @@ class IDLM_Integrations {
     public static function init() {
         add_action('idlm_qualified_handoff_notification', array(__CLASS__, 'send_handoff_notifications'), 10, 4);
         self::maybe_migrate_api_credentials();
+        // Encrypting plaintext secrets stays on every request; the legacy queue scrub reads several tables, so it is throttled.
         IDLM_Secret_Store::migrate_platforms();
-        IDLM_Secret_Store::scrub_legacy_queues();
+        if (IDLM_Scheduler::maintenance_due('legacy_queue_scrub')) {
+            IDLM_Secret_Store::scrub_legacy_queues();
+        }
         add_action('wp_head', array(__CLASS__, 'inject_utm_tracker_script'));
         add_action('rest_api_init', array(__CLASS__, 'register_webhook_routes'));
         add_filter('rest_authentication_errors', array(__CLASS__, 'bypass_rest_auth_for_webhook'), 99999);
