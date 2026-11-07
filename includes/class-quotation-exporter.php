@@ -51,6 +51,9 @@ final class IDLM_Quotation_Exporter {
         if (!$bundle || !$bundle->revision || absint($bundle->revision->quote_id) !== absint($quote_id) || !IDLM_Quotation_Policy::can_view_lead($bundle->lead_id)) {
             return new WP_Error('idlm_quote_export_not_found', 'Quotation not found.');
         }
+        if (!IDLM_Design_Revisions::may_share($bundle->revision->id)) {
+            return new WP_Error('idlm_quote_export_review', IDLM_Design_Revisions::WAITING_FOR_REVIEW);
+        }
         return $bundle;
     }
 
@@ -61,7 +64,7 @@ final class IDLM_Quotation_Exporter {
         $bundle = self::authorize(wp_unslash($_GET['quote_id'] ?? 0), wp_unslash($_GET['revision_id'] ?? 0), $format);
         // phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if (is_wp_error($bundle)) {
-            wp_die(esc_html($bundle->get_error_message()), 'Quotation download', array('response' => 'idlm_quote_export_nonce' === $bundle->get_error_code() ? 403 : 404));
+            wp_die(esc_html($bundle->get_error_message()), 'Quotation download', array('response' => in_array($bundle->get_error_code(), array('idlm_quote_export_nonce', 'idlm_quote_export_review'), true) ? 403 : 404));
         }
         if ('pdf' === $format) {
             self::download_pdf($bundle);
@@ -373,7 +376,7 @@ final class IDLM_Quotation_Exporter {
         return in_array($format, array('pdf', 'csv', 'xlsx'), true) ? $format : '';
     }
 
-    private static function revision_label($revision) { return 'R' . str_pad((string) max(1, absint($revision->revision_number ?? 1)), 2, '0', STR_PAD_LEFT); }
+    private static function revision_label($revision) { return 'R' . str_pad((string) max(1, absint($revision->revision_number ?? 1)), 2, '0', STR_PAD_LEFT) . ('-DES' === substr((string) ($revision->revision_name ?? ''), -4) ? '-DES' : ''); }
     private static function paper_size() {
         $settings = (array) get_option('idlm_quote_settings', array());
         return IDLM_Quotations::normalize_paper_size($settings['paper_size'] ?? 'A4');

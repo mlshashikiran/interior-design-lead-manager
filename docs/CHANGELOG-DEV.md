@@ -1,5 +1,33 @@
 # Engineering Change Log
 
+## 1.103.0 — release of the local unreleased work below (2026-11-06)
+
+Builder: Shashi. Releases every "Local unreleased" entry below as 1.103.0, plus the shared `IDLM_Date_Ranges` period class, the reconciled dashboard Won set (`IDLM_Dashboard::won_set_sql()`), sidebar needs-action counts and toast notices. Core schema is `IDLM_DB_VERSION` as defined in the plugin file; updating runs its additive migrations. Release version and schema versions stay independent.
+
+## Local unreleased — Add lead qualification, duplicates and placeholder emails (2026-11-06)
+
+Builder: Shashi. Non-pre-sales users add leads as Qualified with every detail, keep them with a two-day task, or ask pre-sales to call (the lead returns to them once qualified). Known phones and real emails are refused. Placeholder and shared emails no longer match leads or reach ad platforms, and administrators can clear them. Hand-added leads report conversions only from ad sources by default. No schema change.
+
+## Local unreleased — Design review, rates, hold reasons and review flags (2026-11-06)
+
+Builder: Shashi. Core 1.3.17 adds review and rate columns to `idlm_design_revisions` and `flags_cleared` to `idlm_design_handoffs`. Designers may change rates; a manager reviews each design revision before it is printed, exported or marked Customer approved. Hold reasons are picked from a standard list plus administrator-added reasons. Managers clear review flags with a note.
+
+## Local unreleased — User access security review fixes (2026-11-05)
+
+Builder: Shashi. A person with no managed role now gets `Keep current role` in both designs, and the server refuses a first managed role from a form that did not offer it, so an out-of-date page cannot promote them to Administrator. The old-design invite no longer preselects a role. Create, update and scope handlers are POST-only. An update no longer provisions a recognized role first seen on an existing install. The access summary now reflects site-manager admission, missing prerequisites, pre-sales history and what a suspended site manager keeps. The suspend prompt no longer claims sign-out. Access log names truncate by character. See `tests/access-flow-contracts.php`.
+
+## Local unreleased — Legacy payment recovery and existing CRM styling (2026-11-05)
+
+Builder: Shashi. Add an explicitly authorized, versioned recovery flow for Won leads whose saved quotation revision lacks usable payment terms. Require the correction grant, live lead scope, dedicated nonce, exact revision, historic source, reason, advance mapping and confirmation. Calculate expected amounts from entered agreed percentages and that revision’s stored total/currency; preserve quotation bytes, history and original sales state. Existing receipt entry accepts original received dates and shortfalls after recovery. Reuse the actual quotation header, summary, cards, tables and controls rather than a separate payment-page design; compare their computed dimensions in the browser. [Scope, evidence and limits](DESIGN-PROJECTS-PAYMENT-FOUNDATION.md#legacy-recovery-and-crm-consistency-follow-up). Local checks: 410 fast / 16 focused native / 10 actual HTTP pass, with desktop/mobile inspection. Exclude the local review-graph directory from release inventory. No schema/version change or deployment.
+
+## Local unreleased — Payments workspace design (2026-11-05)
+
+Builder: Shashi. Redesign the Payments workspace using UI UX Pro Max guidance and Design Taste Frontend’s applicable audit/hierarchy principles within the existing IDLM design system. Replace the long balance list with a compact collection summary, advance-pending strip and semantic milestone table. Pair the schedule/history with a focused receipt panel; group history by receipt identity and disclose previous versions/corrections on demand. Add scoped payment CSS, project context, grouped currency amounts, a project picker and guided schedule setup. Preserve payment handlers, field names, grants, nonces and accounting. Native disclosures work with the keyboard; phone form text is 16 px, submit targets 44 px, and content/focus order matches at responsive breakpoints. [Design rules and audit](../design-system/interior-design-lead-manager/pages/payments.md). Local checks: 408 fast and seven focused actual HTTP checks pass; browser inspection at 375/768/1024/1440 px finds no horizontal overflow. No release metadata/schema change or deployment.
+
+## Local unreleased — Design Projects payment foundation (2026-11-05)
+
+Builder: Shashi. [Implemented scope, transaction rules, verification and remaining slices](DESIGN-PROJECTS-PAYMENT-FOUNDATION.md). Add the sales Payments workspace, exact saved-revision schedules, explicit advance mapping, versioned proof-bearing receipts, corrections/revocations, minor-unit allocations and pending/excess summaries. Core schema advances independently to 1.3.10; existing release metadata stays unchanged. Extend private payment-purpose references, granular sales grants, checked lead transactions/outbox and erasure manifests. Partial JSON recovery refuses incomplete ledger replacement. Independent concurrency checks require current locking reads after a lead-lock wait. No automatic handover, project creation or production deployment.
+
 ## 1.102.97 — catalogue CSV preview/import (2026-10-27)
 
 Builder: Shashi. `IDLM_Quotation_Catalogue_Import` owns shared read-only validation and engine-checked import. The quotation controller validates actual CSV uploads and exposes authenticated `wp_ajax_idlm_import_catalogue_csv` with `idlm_manage_quote_items` plus the existing import nonce; `import_mode=preview|import` selects the operation. The legacy admin-post action remains supported. No browser row data is trusted and no preview/upload is persisted. Import re-reads the file/current codes within the transaction; database failures roll back all item/term writes and identify the failing CSV record when available. CSV-only grouped-rate normalization leaves strict quotation decimal parsing unchanged. Preserve active/inactive and reject malformed grouping, column counts, field lengths and enums; strip UTF-8 header BOM. Limits remain 5 MB / 2,000 records.
@@ -1437,3 +1465,15 @@ Verification: 400 fast checks passed, including current-vs-stale quotation selec
 Builder: Shashi. Reproduced the reported failure using actual client assets and a synthetic HTTP selection endpoint: Start syncing persisted the selected form, but location.assign to the existing settings anchor performed no document reload. The page remained at Connecting and the old Review rendered Not selected with no mapping cards. The handler now requires connected=true, remembers Review plus a one-use metadata-autoload flag, cleans the callback marker with history.replaceState and explicitly reloads the document. The new server-rendered form cards populate immediately and first-form question loading runs after Review opens. A dedicated inline status near the button announces progress/error, keeps controls disabled while saving, restores editable retry state on failure and prevents unsaved checked forms from advancing. No provider credential, server selection, ingestion, schema or CAPI-price logic changed.
 
 Verification: five dependency-free Node behavioral client tests, 30 mocked connection/mapping checks and 400 fast checks passed. Browser regressions reproduce the pre-fix stale-review symptom, then verify confirmed selection triggers a full refresh, saved form names and mapping dropdowns appear, and a synthetic permission failure remains on selection with a focused inline error. Tests use loopback synthetic endpoints; no Meta call or live CRM change. PHP/JavaScript syntax and diff checks passed. Local test build only, not CI-attested or deployed.
+
+## Design handoff — 2026-11-05
+
+Builder: Shashi. Added the Won-to-design handoff, slice 1 of the release plan: core schema 1.3.12, `idlm_design_handoffs` with immutable versions and append-only events, Design Manager and Design Rep grants and optional roles, lead drawer card, send dialog and Design team tab. Tests: `tests/design-handoff-contracts.php`, `IDLM_TEST_FILTER=HANDOFF php tests/integration/run.php`, `php tests/integration/quotation-http.php --design-handoff-only`.
+
+## Design Projects slices 2 to 6 — 2026-11-06
+
+Builder: Shashi. Core schema 1.3.15. Added design quotation revisions with a separate save path and discount and rate locks; Customer approved with schedule versions and later payments by Design Managers; six stages, checklists, hold, completion and private versioned documents including DWG; Board and List; Overview; and `idlm_design_project_event`. The plugin version and stable tag are unchanged because this is an unreleased local iteration. Tests: `tests/design-handoff-contracts.php`, `IDLM_TEST_FILTER=HANDOFF|DESIGNREV|APPROVED|STAGES|BOARD|OVERVIEW|RELEASE php tests/integration/run.php` (one filter at a time), `php tests/integration/quotation-http.php --design-handoff-only`.
+
+## Design team table and schema 1.3.16 — 2026-11-06
+
+Builder: Shashi. Core schema 1.3.16, additive only. Design managers land on a Projects table that combines the intake queues with the old project list. The designer and target date are set in the row: over AJAX through `wp_ajax_idlm_design_handoff_decide`, or with the row's form post, which runs the same checks. Designers land on a board of their own projects. Fix: accepting a handoff showed "That change was not saved. Try again." on sites that recorded 1.3.15 before `stage_receipt_mark` existed. The update failed with `idlm_lead_write_failed`, and the bump to 1.3.16 adds the column. A contract test now pins the design schema to the version.

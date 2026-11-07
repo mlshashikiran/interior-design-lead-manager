@@ -10,7 +10,10 @@ White-label settings are implemented as a goal-oriented tab after General. The l
 
 The White label editor and every branded CRM surface remain independent from the active site theme. Plugin roots own their complete typography, colour, spacing, control, and component contracts; white-label fields may change documented plugin tokens only.
 
-- Tabs are ordered by user goal: General, White label, Routing, Lead capture, Conversion tracking, Automation, Health, Help, AI access, Danger Zone.
+- Tabs are ordered by user goal and grouped by a divider in one horizontal, sticky, self-scrolling bar (design layer only): setup (General, White label, Routing), connections (Lead capture, Conversion tracking, Automation, AI access), upkeep (Health, Help, Backup & restore), then Danger Zone alone at the far end in danger red. Group order is rendered in `shell.php` from one array; tab IDs and `switchSettingsTab` calls are unchanged. The page title is "Settings" in the design layer.
+- Labels are 13px/600 in the text colour and always outrank help text (12px/400 muted). Field grids use auto-fit columns so no card has a half-empty row; token editors keep their own widths. General pairs Notifications with Firm metrics; the two vocabulary editors span the row.
+- Settings confirmations use `IDLMDialog.confirm({...}).then(...)`. Never test the return value of `confirm` directly: it is a Promise, so a string argument would run the action without waiting (this was the case for Clear telemetry logs and Sync past; fixed by Shashi).
+- The save bar has clean, dirty, saving, saved and error states; an invalid save focuses the first invalid field. The form reserves space below so the bar never covers the last field. Danger Zone and Backup hide it.
 - Each card begins with the outcome it controls, then fields, help, current state, and an optional test action.
 - Save is sticky only within the settings form and reports saved/unsaved/error state. It must not apply to Danger Zone.
 - Configuration vocabularies use add/remove token lists and retain their established server-side option format.

@@ -189,13 +189,29 @@ final class IDLM_Production_Security {
         return (ord($address_binary[$full_bytes]) & $mask) === (ord($network_binary[$full_bytes]) & $mask);
     }
 
+    /** AutoCAD drawings start with a version marker such as AC1032. */
+    public static function is_dwg_head($head) {
+        return 1 === preg_match('/^AC10[0-9]{2}/', (string) $head);
+    }
+
     /** Field-specific extension, MIME, and size rules for CRM attachments. */
     public static function upload_policy($purpose) {
         $policies = array(
+            'payment' => array(
+                'max_bytes' => 10 * MB_IN_BYTES,
+                'extensions' => array('jpg', 'jpeg', 'png', 'webp'),
+                'mimes' => array('image/jpeg', 'image/png', 'image/webp'),
+            ),
             'floor_plan' => array(
                 'max_bytes' => 10 * MB_IN_BYTES,
                 'extensions' => array('pdf', 'jpg', 'jpeg', 'png', 'webp'),
                 'mimes' => array('application/pdf', 'image/jpeg', 'image/png', 'image/webp'),
+            ),
+            // DWG has no reliable MIME type, so its content is checked by is_dwg_head().
+            'design' => array(
+                'max_bytes' => 10 * MB_IN_BYTES,
+                'extensions' => array('pdf', 'jpg', 'jpeg', 'png', 'webp', 'dwg'),
+                'mimes' => array('application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/vnd.dwg', 'application/acad', 'application/x-acad', 'application/dwg', 'application/x-dwg', 'application/octet-stream'),
             ),
             'quote' => array(
                 'max_bytes' => 10 * MB_IN_BYTES,
@@ -243,8 +259,23 @@ final class IDLM_Production_Security {
         if ('' === $detected_mime) {
             $detected_mime = strtolower(sanitize_mime_type($file['type'] ?? ''));
         }
+        // DWG: the reported type varies by libmagic version (PHP 7.4 bundles an older one), so the
+        // AutoCAD signature is the check. Any other file must still match the MIME allow-list.
+        if ('design' === sanitize_key($purpose) && 'dwg' === $extension) {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reads only the signature of the validated temporary upload.
+            $head = $temporary_path ? (string) file_get_contents($temporary_path, false, null, 0, 6) : '';
+            return self::is_dwg_head($head) ? true : new WP_Error('idlm_upload_mime', 'The file contents do not match an allowed document type.');
+        }
         if (!in_array($detected_mime, $policy['mimes'], true)) {
             return new WP_Error('idlm_upload_mime', 'The file contents do not match an allowed document type.');
+        }
+        if ('design' === sanitize_key($purpose)) {
+            $is_dwg = 'dwg' === $extension;
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reads only the signature of the validated temporary upload.
+            $head = $is_dwg && $temporary_path ? (string) file_get_contents($temporary_path, false, null, 0, 6) : '';
+            if ($is_dwg ? !self::is_dwg_head($head) : in_array($detected_mime, array('image/vnd.dwg', 'application/acad', 'application/x-acad', 'application/dwg', 'application/x-dwg', 'application/octet-stream'), true)) {
+                return new WP_Error('idlm_upload_mime', 'The file contents do not match an allowed document type.');
+            }
         }
 
         return true;

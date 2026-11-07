@@ -4,7 +4,7 @@
 **Status:** Reusable visual and interaction specification  
 **Scope:** Admin CRM, `[idlm_workspace]`, leads, pipeline, dashboard, quotations, users, settings, logs, and future modules  
 **Reference:** [Twenty CRM](https://github.com/twentyhq/twenty)  
-**Local source of truth:** [`docs/DESIGN.md`](docs/DESIGN.md) and [`design-system/interior-design-lead-manager/MASTER.md`](design-system/interior-design-lead-manager/MASTER.md)
+**Local source of truth:** [`design-system/interior-design-lead-manager/STANDARD.md`](design-system/interior-design-lead-manager/STANDARD.md), which takes precedence over this file, then [`MASTER.md`](design-system/interior-design-lead-manager/MASTER.md) and [`docs/DESIGN.md`](docs/DESIGN.md)
 
 ## 1. Intent
 

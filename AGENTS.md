@@ -45,6 +45,7 @@ All agents must:
 - Make the smallest complete change that satisfies the requested behaviour. Reuse existing components, functions, APIs, design-system primitives, file organization, naming, and style. Do not add abstractions or dependencies when existing project mechanisms are adequate.
 - Avoid unrelated refactoring, cleanup, formatting, modernization, renaming, and architectural changes. Fix the underlying cause of a defect when practical instead of masking its visible symptom.
 - Preserve unrelated working-tree changes. If the requested approach conflicts with the existing architecture or creates meaningful risk, explain the conflict and use the safer compatible approach.
+- Before any UI change, read and follow [design-system/interior-design-lead-manager/STANDARD.md](design-system/interior-design-lead-manager/STANDARD.md). It overrides every other design document, its rules are enforced by `tests/ui-regression-contracts.php`, and it explains how to revert the design.
 - For existing UI, preserve the established styling, CSS variables, components, markup conventions, responsive behaviour, and admin/shortcode parity. Avoid duplicate CSS or JavaScript, and check affected desktop and mobile contexts.
 - Keep the quotation editor free of the document-content review panel (removed in 1.102.90 at Shashi’s request). Document defaults belong in Quotation Setup; preserve this omission in future builds and retain revision snapshot behavior.
 

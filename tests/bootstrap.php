@@ -11,7 +11,7 @@ define('ABSPATH', __DIR__ . '/support/wp/');
 define('IDLM_TESTING', true);
 define('DB_NAME', 'idlm_test_unit');
 define('IDLM_VERSION', '1.101.75');
-define('IDLM_DB_VERSION', '1.3.9');
+define('IDLM_DB_VERSION', '1.3.17');
 define('IDLM_PATH', dirname(__DIR__) . '/');
 define('IDLM_URL', 'https://example.test/wp-content/plugins/interior-design-lead-manager/');
 define('ARRAY_A', 'ARRAY_A');
@@ -424,8 +424,14 @@ final class IDLM_Test_WPDB {
             return null;
         }
 
-        if (preg_match('/FROM (wp_idlm_quotes) WHERE lead_id = ([0-9]+) ORDER BY id ASC LIMIT 1/i', $query, $matches)) {
-            foreach ($this->tables[$matches[1]] as $row) {
+        if (preg_match('/SELECT \* FROM (wp_idlm_design_handoffs) WHERE lead_id = ([0-9]+)$/i', trim($query), $matches)) {
+            foreach ($this->tables[$matches[1]] ?? array() as $row) {
+                if ((int) ($row['lead_id'] ?? 0) === (int) $matches[2]) { return $this->format_row($row, $output); }
+            }
+            return null;
+        }
+        if (preg_match('/FROM (wp_idlm_quotes) WHERE lead_id = ([0-9]+) ORDER BY id DESC LIMIT 1/i', $query, $matches)) {
+            foreach (array_reverse($this->tables[$matches[1]]) as $row) {
                 if ((int) ($row['lead_id'] ?? 0) === (int) $matches[2]) {
                     return $this->format_row($row, $output);
                 }
@@ -454,13 +460,20 @@ final class IDLM_Test_WPDB {
         $this->last_error = '';
         if (preg_match('/SELECT COUNT\(\*\) FROM wp_idlm_quote_revisions WHERE quote_id = ([0-9]+) AND LOWER/', $query, $match)) {
             return count(array_filter($this->tables['wp_idlm_quote_revisions'] ?? array(), static function($row) use ($match) {
-                return (int) ($row['quote_id'] ?? 0) === (int) $match[1] && !in_array(strtolower(trim($row['status'] ?? 'Draft')), array('draft', 'superseded'), true);
+                return (int) ($row['quote_id'] ?? 0) === (int) $match[1] && !in_array(strtolower(trim($row['status'] ?? 'Draft')), array('draft', 'superseded'), true) &&
+                    !('Shared' === ($row['status'] ?? '') && 1 === (int) ($row['revision_number'] ?? 0) && isset($row['created_by']) && 0 === (int) $row['created_by'] && empty($row['finalized_at']) && IDLM_Quotation_Repository::LEGACY_REVISION_REASON === ($row['revision_reason'] ?? ''));
             }));
         }
         if (preg_match('/SELECT COUNT\(\*\) FROM wp_idlm_quote_status_history WHERE quote_id = ([0-9]+) AND/', $query, $match)) {
             return count(array_filter($this->tables['wp_idlm_quote_status_history'] ?? array(), static function($row) use ($match) {
                 return (int) ($row['quote_id'] ?? 0) === (int) $match[1] &&
-                    (!in_array(strtolower(trim($row['from_status'] ?? '')), array('', 'draft', 'superseded'), true) || !in_array(strtolower(trim($row['to_status'] ?? '')), array('', 'draft', 'superseded'), true));
+                    (!in_array(strtolower(trim($row['from_status'] ?? '')), array('', 'draft', 'superseded'), true) || !in_array(strtolower(trim($row['to_status'] ?? '')), array('', 'draft', 'superseded'), true)) &&
+                    !('' === ($row['from_status'] ?? '') && 'Shared' === ($row['to_status'] ?? '') && IDLM_Quotation_Repository::LEGACY_HISTORY_NOTE === ($row['note'] ?? ''));
+            }));
+        }
+        if (preg_match('/SELECT COUNT\(\*\) FROM wp_idlm_quotes WHERE lead_id = ([0-9]+) AND id > ([0-9]+)/', $query, $match)) {
+            return count(array_filter($this->tables['wp_idlm_quotes'] ?? array(), static function($row) use ($match) {
+                return (int) ($row['lead_id'] ?? 0) === (int) $match[1] && (int) ($row['id'] ?? 0) > (int) $match[2];
             }));
         }
         if (strpos($query, 'SELECT ENGINE FROM information_schema.TABLES') === 0) { foreach ($this->schema_engines as $table => $engine) { if (strpos($query, $table) !== false) { return $engine; } } return 'InnoDB'; }
@@ -854,6 +867,8 @@ function idlm_test_reset_environment(): void {
     $GLOBALS['idlm_test_hooks'] = array();
     $GLOBALS['idlm_test_users'] = array();
     $GLOBALS['idlm_test_role_cap_overrides'] = array();
+    $GLOBALS['idlm_test_extra_roles'] = array();
+    $GLOBALS['idlm_test_redirect_throws'] = false;
     $GLOBALS['idlm_test_user_meta'] = array();
     $GLOBALS['idlm_test_current_user_id'] = 0;
     $GLOBALS['idlm_test_current_roles'] = array();
@@ -1133,6 +1148,8 @@ class WP_Role {
     public $name; public $capabilities;
     public function __construct($name, $caps) { $this->name=$name; $this->capabilities=$caps; }
     public function has_cap($cap) { return !empty($this->capabilities[$cap]); }
+    public function add_cap($cap) { $this->capabilities[$cap]=true; $GLOBALS['idlm_test_role_cap_overrides'][$this->name]=$this->capabilities; }
+    public function remove_cap($cap) { unset($this->capabilities[$cap]); $GLOBALS['idlm_test_role_cap_overrides'][$this->name]=$this->capabilities; }
 }
 function get_role($name) { return new WP_Role($name, idlm_test_role_caps($name)); }
 function user_can($user, string $cap): bool {
@@ -1324,6 +1341,8 @@ function wp_validate_redirect(string $location, string $fallback = ''): string {
 }
 
 function wp_safe_redirect(string $location, int $status = 302): bool {
+    // Handlers exit after redirecting. A test can set this to observe the redirect and survive the exit.
+    if (!empty($GLOBALS['idlm_test_redirect_throws'])) { throw new IDLM_Test_Response(true, array('redirect' => $location), $status); }
     return true;
 }
 
@@ -1394,9 +1413,23 @@ require_once dirname(__DIR__) . '/includes/class-private-files.php';
 require_once dirname(__DIR__) . '/includes/class-recovery-guard.php';
 require_once dirname(__DIR__) . '/includes/class-lead-transaction.php';
 require_once dirname(__DIR__) . '/includes/class-lead-outbox.php';
+require_once dirname(__DIR__) . '/includes/class-lead-payment-schema.php';
+require_once dirname(__DIR__) . '/includes/class-lead-payment-ledger.php';
+require_once dirname(__DIR__) . '/includes/class-lead-payments.php';
+require_once dirname(__DIR__) . '/includes/class-lead-payment-controller.php';
+require_once dirname(__DIR__) . '/includes/class-design-handoffs.php';
+require_once dirname(__DIR__) . '/includes/class-design-handoff-controller.php';
+require_once dirname(__DIR__) . '/includes/class-design-revisions.php';
+require_once dirname(__DIR__) . '/includes/class-design-stages.php';
+require_once dirname(__DIR__) . '/includes/class-design-stage-controller.php';
+require_once dirname(__DIR__) . '/includes/class-design-board.php';
+require_once dirname(__DIR__) . '/includes/class-design-projects-table.php';
+require_once dirname(__DIR__) . '/includes/class-design-project-panel.php';
+require_once dirname(__DIR__) . '/includes/class-design-dashboard.php';
 require_once dirname(__DIR__) . '/includes/class-presales-task-plan.php';
 require_once dirname(__DIR__) . '/includes/class-assignment-capacity.php';
 require_once dirname(__DIR__) . '/includes/class-backup-validator.php';
+require_once dirname(__DIR__) . '/includes/class-contact-identity.php';
 require_once dirname(__DIR__) . '/includes/class-lead-lifecycle-service.php';
 require_once dirname(__DIR__) . '/includes/class-identity-review.php';
 require_once dirname(__DIR__) . '/includes/class-task-queue-service.php';
@@ -1417,6 +1450,7 @@ require_once dirname(__DIR__) . '/includes/class-facebook-connect.php';
 require_once dirname(__DIR__) . '/includes/class-interakt-batch.php';
 require_once dirname(__DIR__) . '/includes/class-interakt-dispatch.php';
 require_once dirname(__DIR__) . '/includes/class-dashboard-read-model.php';
+require_once dirname(__DIR__) . '/includes/class-date-ranges.php';
 require_once dirname(__DIR__) . '/includes/class-dashboard.php';
 require_once dirname(__DIR__) . '/includes/class-admin-dashboard-renderer.php';
 require_once dirname(__DIR__) . '/includes/class-admin-kanban-renderer.php';
@@ -1430,6 +1464,7 @@ require_once dirname(__DIR__) . '/includes/class-admin-assets.php';
 require_once dirname(__DIR__) . '/includes/class-admin-shortcodes.php';
 require_once dirname(__DIR__) . '/includes/class-admin-account-controller.php';
 require_once dirname(__DIR__) . '/includes/class-admin-users-controller.php';
+require_once dirname(__DIR__) . '/includes/class-access-change-log.php';
 require_once dirname(__DIR__) . '/includes/class-admin.php';
 require_once dirname(__DIR__) . '/includes/class-admin-lead-reads.php';
 require_once dirname(__DIR__) . '/includes/class-admin-connection-controller.php';
@@ -1456,7 +1491,7 @@ function wp_roles(): object {
         'marketing' => array('name' => 'Marketing'),
         'marketing_manager' => array('name' => 'Marketing Manager'),
         'campaign_team' => array('name' => 'Marketing Manager'),
-    ));
+    ) + (array) ($GLOBALS['idlm_test_extra_roles'] ?? array()));
 }
 
 function doing_action($hook = null) { return false; }

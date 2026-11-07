@@ -155,3 +155,7 @@ Builder: Shashi. Extend telemetry transport through `IDLM_Admin_Telemetry_Contro
 ## Activity request ownership — M6
 
 Builder: Shashi. Extend timeline/comment transport in `IDLM_Admin_Activity_Controller`, following the existing `IDLM_Admin_Lead_Reads` inheritance pattern. Keep public `IDLM_Admin` and `IDLM_Admin_Ajax` callbacks callable. Reuse the inherited access/presenter helpers and `IDLM_DB::log_activity()`; do not duplicate permission or escaping rules. Production and fast-test bootstraps load this controller after `IDLM_Admin` and before `IDLM_Admin_Ajax`. Run `php tests/integration/quotation-http.php --activity-controller-only` with disposable `IDLM_TEST_*` variables for eight actual HTTP groups; the accumulated suite also includes them. Preserve the timeline's 100-row and recent-comments five-row bounds, reserved activity types and existing duplicate/error behavior. [Evidence](AUDIT-REMEDIATION-ACTIVITY-CONTROLLER-SLICE.md).
+
+## Local payment foundation checks
+
+Builder: Shashi. `IDLM_TEST_FILTER=PAYMENT php tests/integration/run.php` checks the owned native payment fixture; `php tests/integration/quotation-http.php --payments-only` checks actual authenticated forms and multipart private proof. Add `--hold` for desktop/mobile inspection. Supply disposable credentials, nonempty test password and `TMPDIR=/private/tmp` on macOS; configured-site data is never used. [Implementation and qualification limits](DESIGN-PROJECTS-PAYMENT-FOUNDATION.md).

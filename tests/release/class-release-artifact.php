@@ -48,6 +48,7 @@ final class IDLM_Release_Artifact {
             'vendor/dompdf/vendor/masterminds/html5/LICENSE.txt',
             'vendor/dompdf/vendor/sabberworm/php-css-parser/LICENSE',
             'includes/class-admin.php',
+            'includes/class-access-change-log.php',
             'includes/class-db.php',
             'includes/class-private-files.php',
             'includes/class-backup-validator.php',
@@ -58,6 +59,8 @@ final class IDLM_Release_Artifact {
             'includes/class-mcp-query-policy.php',
             'includes/class-quotations.php',
             'templates/workspace.php',
+            'templates/admin/users-roles.php',
+            'templates/admin/users-activity.php',
         );
     }
 

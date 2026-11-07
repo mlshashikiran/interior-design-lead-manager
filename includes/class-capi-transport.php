@@ -49,7 +49,7 @@ final class IDLM_CAPI_Transport {
         $pixel_id = $delivery['destination'];
         $access_token = $delivery['credential'];
 
-        $hashed_email = !empty($lead->email) ? hash('sha256', strtolower(trim($lead->email))) : '';
+        $ads_email = IDLM_Contact_Identity::email_for_ads($lead); $hashed_email = '' !== $ads_email ? hash('sha256', $ads_email) : '';
         $hashed_phone = !empty($lead->phone) ? hash('sha256', preg_replace('/[^0-9]/', '', $lead->phone)) : '';
 
         // CRM workers do not possess the visitor's browser IP or user agent.
@@ -213,7 +213,7 @@ final class IDLM_CAPI_Transport {
         $conversion_id = $delivery['destination'];
         $access_token = $delivery['credential'];
 
-        $hashed_email = !empty($lead->email) ? hash('sha256', strtolower(trim($lead->email))) : '';
+        $ads_email = IDLM_Contact_Identity::email_for_ads($lead); $hashed_email = '' !== $ads_email ? hash('sha256', $ads_email) : '';
 
         $user_ids = array();
         if (!empty($lead->li_fat_id)) {

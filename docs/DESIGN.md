@@ -5,7 +5,7 @@
 **Normative source of truth:** [`design-system/interior-design-lead-manager/MASTER.md`](../design-system/interior-design-lead-manager/MASTER.md), with page overrides in its `pages/` directory
 **Implementation audit:** [`UI-UX-AUDIT-2026-09-01.md`](UI-UX-AUDIT-2026-09-01.md)
 
-> This document describes the established frontend patterns. Where it conflicts with the normative master design system, the master and its page-specific override take precedence.
+> This document describes the established frontend patterns. Where it conflicts, [`STANDARD.md`](../design-system/interior-design-lead-manager/STANDARD.md) takes precedence, then the normative master design system and its page-specific overrides.
 
 **Phase 3 implementation:** Completed 2026-09-01 by Shashi. Leads, Kanban, and quotation responsive workflows now use the canonical master breakpoints and preserve their established data, permissions, and mutation contracts.
 

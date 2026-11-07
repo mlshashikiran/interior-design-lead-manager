@@ -2,9 +2,37 @@
 
 Author: Shashi  
 Date: 2026-10-26  
-Status: Planning only; no implementation or database migration authorized.
+Updated: 2026-11-05
 
-This document records the proposed first release discussed with Shashi. Quotation numbering has been updated to reflect the decision to keep the same quotation number and continue its revision sequence after handover. Manual handover after first-payment confirmation and restricted discount authority are also confirmed requirements. Other recommended defaults remain proposals where identified below.
+Status: Implementation authorized by Shashi on 2026-11-05, one slice at a time. See section 0.
+
+This document records the proposed first release discussed with Shashi. Quotation numbering has been updated to reflect the decision to keep the same quotation number and continue its revision sequence after handover. Manual handover after first-payment confirmation and restricted discount authority are also confirmed requirements. The design-phase upload/payment gates and editable design-item requirement below are also confirmed requirements. Other recommended defaults remain proposals where identified below.
+
+Detailed fields, schema proposals, operations/hooks, workspace views and delivery slices are maintained in [the implementation blueprint](DESIGN-PROJECTS-IMPLEMENTATION-PLAN.md).
+
+## 0. Decisions confirmed by Shashi, 2026-11-05
+
+These override anything below that conflicts.
+
+**Pricing and payments.** Keep three prices apart: the sales price (the revision handed over, locked at acceptance), the working design price (the latest design revision, which never moves payments) and the agreed price (the latest revision a Design Manager or administrator marks **Customer approved**, with a required note or the approval evidence). Marking it publishes a new payment schedule version: same percentages from the saved quotation, amounts recalculated on the new total, receipts unchanged and reallocated oldest milestone first. Excess shows as credit. Quotation Setup changes never affect a saved project. This settles the 10% basis: expected amounts use the agreed price at that time.
+
+**Payment gates.** A short payment does not block a stage: a payment with evidence is required and the shortfall stays visible. Material Selection uses the advance milestone, Kick Off the second, P2P the final. Confirm the real payment structure when the stage slice starts.
+
+**People.** Sales owner and Design Manager record later payments; only managers correct them; reps see balances only. P2P stays active until someone explicitly marks the project complete.
+
+**Handover.** Sales picks the Design Manager and gives the advance, remarks, scope and pending items. Other checklist items are optional. The manager returns it with a reason, or accepts and assigns a rep in one step. An accepted handover is not returned; later changes use the amendment flow.
+
+**Streamlining.** Release one has one project per lead, so it reuses the lead transaction and outbox. About five tables instead of thirteen. Six fixed stages with editable names and required documents; a workflow builder waits. Update 2026-11-06, on the owner's request: stages are now managed (add, rename, reorder, remove by archiving, per-stage requirements, added document types), still without versioned workflows.
+
+**Build order.** 1 Handover versions and roles. 2 Design revisions and discount locks. 3 Customer approved and schedule versions. 4 Stages and private documents, including DWG. 5 Kanban and List. 6 Dashboards and release checks.
+
+**Rates.** Design Reps keep the source rate on known lines and the catalogue rate on new catalogue lines. A new custom line can have its own rate and is listed in the audit. Sales Manager discount access is not built; it needs the scoped grant in section 3.
+
+**Build status, 2026-11-06.** Slices 1 to 6 are built locally and uncommitted. Not built, because the business decision is open or the scope was deferred: the amendment flow for accepted handovers, cancelling a project, Sales Manager discount access, a project priority field, configurable custom fields and project tasks, target stage durations, and studio-scoped manager boundaries. Nothing has been deployed, and the plugin version is unchanged.
+
+**Decisions, 2026-11-06 (Shashi).** (1) Keep the `-DES` marker on design revisions on screens, PDFs and exports; already built. (2) Design Reps may change line rates; a manager must review a design revision before it is shared with the customer. Built. (3) Payment corrections after acceptance: corrections and revocations keep history; a passed stage whose payment no longer holds shows a review flag everywhere the project appears; the Design Manager may clear it with a note; nothing moves automatically. Built, approved by Shashi. (4) Sales do not see the design team's internal documents for now; already enforced, since design files are readable only by the people who can see the project. (5) Hold reasons: a standard list plus reasons the administrator adds; the business timezone is the WordPress site timezone. Built.
+
+**Risks to handle.** The design working revision lives on the project and must not become the quotation's current revision: Meta Purchase reads that revision for its amount. Design revisions need a narrow successor path, because locked quotations stay read-only.
 
 ## 1. Scope and boundaries
 
@@ -14,24 +42,51 @@ Introduce a Design Projects workspace linked to the existing lead and quotation.
 - Customer details and existing floor plans remain on the lead and are read-only for design users.
 - Reuse the quotation editor, item calculator, contractual snapshots, autosave conventions, and revision history.
 - Include handover, assignment, configurable stages, project fields, private versioned documents, design quotation revisions, activity history, and basic project queues.
-- Defer a visual automation builder, external webhook configuration UI, customer portal, structured room-by-room measurement system, CAD support, and execution management.
+- Defer a visual automation builder, external webhook configuration UI, customer portal, structured room-by-room measurement system, CAD viewing/editing, and execution management. Private DWG upload/version/download support is included for the confirmed design-phase requirements.
 - Do not introduce a separate generic task engine in this release. Project task support, if included, must have explicit project scope and avoid qualification/sales-task lifecycle behavior; its inclusion is an open scope decision.
 
 ## 2. Handover
 
+**2026-11-05, Shashi:** the owner replaced this section's first release with a simpler flow: one form on the Won lead and one shared Design team list. See `docs/FEATURE-MAP.md`, Design handoff. The detail below remains background for later work.
+
 Confirmed flow: Won → sales receives/confirms the first customer payment → sales manually submits handover → manager review → acceptance → design representative assignment. Manager acceptance and assignment may occur together. Won alone or payment confirmation alone must never automatically submit handover, create an actionable design assignment, or start design work. Sales may retain the Won lead while awaiting payment or preparing handover.
 
-Submission requires a Design Manager, exact quotation/revision identity, scope summary, exclusions/commitments where applicable, and pending-information notes. Existing lead floor plans are shown without duplicating files. Record the source sales owner and relevant customer/project snapshot at submission.
+Submission requires mandatory Sales remarks to Design alongside the payment details, a Design Manager, exact quotation/revision identity, scope summary, exclusions/commitments where applicable, and pending-information notes. Existing lead floor plans are shown without duplicating files. Record the source sales owner and relevant customer/project snapshot at submission.
 
 ### First-payment confirmation and proposed handover checklist
 
-Sales records first-payment confirmation before manual handover submission. Proposed structured fields: confirmed amount, currency, payment date, payment method, transaction/receipt reference, confirmation note, confirming user/time, and optional private proof document. This is a handover prerequisite and evidence record, not an accounting/payment-gateway integration. Whether confirmation means a customer-provided receipt or independently verified receipt of funds must be decided; do not imply bank verification that the plugin has not performed. Any later correction/reversal preserves the original confirmation and flags accepted design work for manager review.
+Sales must enter the actual advance payment received before manually submitting the closed/Won lead to the Design Manager. The form preloads the expected advance from the selected agreed quotation revision’s saved payment timeline; expected amounts are calculated values and never evidence that payment occurred. Proposed structured fields: confirmed amount, currency, payment date, payment method, URN/transaction/receipt reference, confirmation note, confirming user/time, and optional private payment screenshot. Every collected payment requires the received date and actual amount plus at least one evidence option: an uploaded screenshot (SS) or a recorded URN/transaction reference; both may be supplied. This is a handover prerequisite and evidence record, not an accounting/payment-gateway integration. Whether confirmation means a customer-provided receipt or independently verified receipt of funds must be decided; do not imply bank verification that the plugin has not performed. Any later correction/reversal preserves the original confirmation and flags accepted design work for manager review.
+
+### Payment timeline and saved payment fields
+
+Use the exact agreed quotation revision as the payment basis. The current quotation document snapshot already stores milestone names, percentages and calculated amounts in `document_terms.milestones` through `IDLM_Quotation_Document::capture()`; `read()` retrieves those saved terms. Reuse the saved amounts and existing decimal/rounding rules rather than calculating from today's Quotation Setup. This is an implementation reference, not authorization to change quotation persistence.
+
+At handover, show the payment timeline and its expected amounts, then require sales to record the advance actually received. Save structured payment fields associated with the lead so they exist before project creation, and reference their version in the handover snapshot:
+
+| Field group | Saved values / behaviour |
+|---|---|
+| Payment basis | Canonical quotation ID, exact revision ID/reference, currency and saved grand total |
+| Timeline snapshot | Ordered milestone identity, name, percentage and expected amount from that revision; preserve snapshot/version and source milestone position where a legacy snapshot lacks stable milestone IDs |
+| Advance requirement | Explicitly mapped advance milestone(s), expected advance amount and percentage; do not infer which milestone is advance from free-text labels alone |
+| Actual advance received | Mandatory positive amount, received date and method; require an uploaded private screenshot (SS) or a URN/transaction reference, allowing both; confirming actor and recorded time captured automatically |
+| Calculated progress | Confirmed received amount, amount allocated to each milestone, remaining advance, total remaining against the selected quote, and payment status (Unpaid/Partial/Met/Excess) |
+| Corrections | Original values, corrected/revoked values, actor/time and reason; preserve prior evidence and handover snapshots |
+
+Only expected amounts come from the timeline. Actual receipts are entered and confirmed by an authorized sales user; never auto-mark a milestone Paid from its percentage or due amount. Multiple receipts may contribute to the advance, but each receipt has one identity and must not be counted twice across milestones. Enforce matching currency and preserve excess amounts explicitly rather than producing a negative outstanding balance. Do not treat a schedule totalling less than 100% as a fully allocated collection plan; show any unscheduled balance separately. Date-based due dates remain unspecified unless the saved terms or an explicit business rule provides them.
+
+Confirmed handover policy: require the actual advance receipt fields and evidence (screenshot or URN/reference), but allow handover when the amount received is below the expected advance. No minimum coverage percentage, rupee tolerance threshold, manager exception or short-payment approval is required. Differences of ₹1, ₹10, ₹100, ₹1,000 or other amounts remain pending collection and must not block handover. This does not waive the requirement to record an actual positive advance payment. Recording payment does not automatically hand over the lead or assign a Design Rep; sales submits to the Design Manager, who accepts and assigns as already planned.
+
+Carry the unpaid advance forward as a separately visible pending balance in the handover summary, Design Projects workspace and collection view. Show expected advance, actual received, advance pending, subsequent scheduled payments and total outstanding. Later receipts reduce the pending balance through explicit allocations; show any combined next-collection amount as prior pending plus the next scheduled amount, without rewriting the agreed timeline, recording fictitious receipts, forgiving the difference or counting the carried balance twice in total outstanding. Payment status remains Partial until the expected amount is covered, even though handover proceeds. Apply the date/amount plus screenshot-or-URN evidence rule to every subsequent payment collection as well.
+
+A design revision or later settings change must not silently recalculate the accepted handover's payment schedule or reallocate receipts. An explicitly approved schedule amendment creates a new version with its quote basis, before/after amounts and reason; original receipts and historical balances remain traceable. Stage payment gates use explicit milestone mappings. These do not introduce a full-advance-payment gate on sales-to-design handover. The confirmed 10% Material Selection rule remains in force; a different advance percentage must be surfaced for business resolution rather than silently replacing that rule. Kick Off Meeting and P2P payment thresholds still require business decisions.
+
+For legacy quotation revisions without a usable saved timeline, show the payment basis as missing and require an explicit authorized resolution before handover; never substitute current settings or fabricate historic payment terms. This remains receipt-confirmation tracking, without bank reconciliation or an accounting integration.
 
 The exact additional information and mandatory/optional policy must be finalized with the business. Proposed checklist:
 
 | Information | Proposed policy |
 |---|---|
-| First-payment confirmation | Required before submission; final evidence/verification policy pending |
+| First-payment confirmation | Actual positive advance amount/date/method and screenshot or URN/reference required before submission; expected amount comes from the agreed revision’s saved timeline; short payments allowed with balance pending collection |
 | Exact agreed quotation revision | Required; amount/currency derived from saved revision |
 | Included rooms/work, exclusions, special commitments | Scope required; explicit None permitted for exclusions/commitments |
 | Customer decision-maker and preferred coordination contact/time | Confirm existing lead details; record project-specific coordination notes without duplicating editable lead identity |
@@ -41,9 +96,9 @@ The exact additional information and mandatory/optional policy must be finalized
 | Promised design timeline and important customer dates | Record commitments; distinguish requested dates from confirmed commitments |
 | Payment terms or exceptions agreed with customer | Reference saved quotation terms; record additional commitments explicitly |
 | Pending questions, risks, next action and responsible person | Explicit None or actionable details |
-| Sales handover summary and receiving Design Manager | Required |
+| Sales remarks to Design and receiving Design Manager | Required; dedicated remarks field alongside payment details, visible in manager review and the design project |
 
-Configure business checklist requirements within a bounded field/document vocabulary; do not hard-code every proposed checklist item as mandatory. The payment prerequisite, exact revision identity, authorized recipient, and audit requirements remain enforced system controls. Store a versioned submission snapshot so later lead/configuration changes do not rewrite what was handed over.
+Configure business checklist requirements within a bounded field/document vocabulary; do not hard-code every proposed checklist item as mandatory. The payment prerequisite, exact revision identity, authorized recipient, and audit requirements remain enforced system controls. Store a versioned submission snapshot so later lead/configuration changes do not rewrite what was handed over. Sales remarks to Design are a dedicated required long-text field for customer commitments, context, special requests and pending points. Reject empty/whitespace-only remarks; payment details do not substitute for remarks. Sales can edit remarks before submission and on return/resubmission, with each submission retaining its own author/time and remarks snapshot. After acceptance, changes use the audited handover-amendment flow. Show the accepted remarks to the assigned Design Rep and scoped Design Manager in the handover summary; preserve previous versions in history.
 
 System handover states are Pending, Returned, and Accepted; these are separate from business-configurable design stages. A returned handover requires a reason. Resubmission preserves prior versions. An accepted handover can only change through an audited amendment; it must never silently replace the agreed baseline.
 
@@ -80,11 +135,28 @@ Enforce access for every read, mutation, download, search, autosave, and export 
 
 Business users can configure stage name, description, colour, order, stable identifier, start stage, reporting category (Active/Completed/Cancelled), allowed next stages, permitted actors, entry requirements, optional target duration, and active/archive state.
 
-Editable starter stages:
+Confirmed design-phase sequence:
 
-Requirements & Measurement → Design in Progress → Internal Review → Customer Review → Design Finalized.
+New Project / Lead → Material Selection → Masking → Kick Off Meeting → Design Quality Check (DQC) → P2P.
 
-Examples: require a Measurement-category document before Design in Progress; require a manager to enter Design Finalized. Release one supports a bounded rule vocabulary: required project fields, current document categories, required transition remark, and actor permissions. It does not execute arbitrary user-defined code.
+The design team workspace defaults to Kanban with a List toggle. New Project / Lead is the first column for accepted handovers before Material Selection; pending/returned handovers remain in separate intake queues. Assigned reps see their projects; managers also see accepted unassigned projects in their scope. Acceptance can place a project in this column without automatically starting design work.
+
+### Confirmed phase requirements
+
+| Design phase | Required uploads | Payment requirement |
+|---|---|---|
+| New Project / Lead | Accepted handover, including payment details and Sales remarks to Design | An actual advance with required evidence is recorded at handover; shortfall remains pending and does not block handover |
+| Material Selection | Payment screenshot or recorded URN/reference for the 10% milestone, with received date and actual amount | Payment mandatory; preserve the 10% expected amount and show any shortfall separately |
+| Masking | Final render PDF and masking DWG | No additional payment requirement specified |
+| Kick Off Meeting | Tentative quote and masking-changes DWG | Payment mandatory; amount/percentage and evidence policy remain to be finalized |
+| Design Quality Check (DQC) | Tentative quote, DWG, MOM (minutes of meeting), and approval-mail screenshot | No additional payment requirement specified |
+| P2P | Final quote, DWG, and payment evidence (screenshot or recorded URN/reference, with received date and actual amount) | Payment evidence required; expected amount/percentage and confirmation policy remain to be finalized |
+
+Each listed document/evidence slot is a distinct requirement; payment evidence may be a structured URN/reference instead of a file upload; one uploaded file must not silently satisfy unrelated evidence slots. Store the exact document version and, for quotation evidence, the exact quotation/revision identity used to satisfy a gate. Quotation evidence must use the existing canonical quotation and continuous revision history, not create another quotation number. Do not invent percentage thresholds for Kick Off Meeting or P2P, or expand the P2P acronym without a business decision.
+
+Proposed gate timing: require the phase checklist before leaving/completing that phase, so its evidence can be produced during the work. The business must confirm timing before implementation; published rules explicitly distinguish entry and completion gates. Show missing requirements in the workspace and enforce the configured gate on the server. Missing required evidence or mandatory payment confirmation blocks the gated transition. The Material Selection payment may reference the first-payment confirmation used for handover with its actual amount, date and screenshot or URN/reference; show progress against the expected 10% amount and any pending balance, without implying a short first payment fully satisfies 10% or blocking sales handover for that difference. Define the quotation/revision amount used as the percentage basis before implementation. Later corrections/revocations preserve evidence history and flag affected work for manager review.
+
+Stage names, descriptions, colours and permitted transitions remain configurable through versioned workflows. Confirm whether P2P marks completion or remains an active stage; do not infer a terminal category from its position in the sequence. Release one supports a bounded rule vocabulary: required project fields, current documents by category/evidence slot and allowed file type, linked payment confirmations, required transition remark, and actor permissions. It does not execute arbitrary user-defined code.
 
 On Hold is a separate flag with reason, actor/time, and optional expected resume date; the actual stage remains visible. Hold/reopen/completion permissions and reasons are explicit. Completion records actual completion time; reopening preserves prior completion history.
 
@@ -96,8 +168,8 @@ Used stages are archived rather than deleted, and archived stages cannot receive
 |---|---|---|
 | Identity | ID, project number, title, lead ID, team type | Generated; title editable |
 | Ownership | Sales owner at handover, Design Manager, Design Rep, studio | Manager at submission; rep before assigned work |
-| Handover | Source quote/revision, scope, exclusions, commitments, pending information | Revision and scope required |
-| Payment confirmation | Amount/currency, payment date/method/reference, confirmer/time, note, optional proof | Required confirmation before manual submission; evidence policy pending |
+| Handover | Source quote/revision, Sales remarks to Design, scope, exclusions, commitments, pending information | Revision, sales remarks and scope required |
+| Payment confirmation | Source quote/revision and timeline snapshot; expected advance; actual amount/currency, date/method, screenshot or URN/reference, confirmer/time, note and calculated balances/status | Actual positive advance and evidence required before manual submission; short payments allowed without exception approval |
 | Dates | Expected start, target design completion, actual start/completion | Target at rep assignment |
 | Design brief | Requirements, preferences, measurement summary, site constraints | Optional initially; stage rules may require |
 | Progress | Workflow version, stage, stage-entry time, priority | Controlled/defaulted |
@@ -108,15 +180,21 @@ Customer identity/contact and existing lead project fields are read from the lea
 
 Proposed additional-field support: text, long text, number, date, and dropdown, with stable field keys, validation, visibility/edit permissions, and optional stage requirements. Ownership, stages, financial totals, and other lifecycle controls remain system fields. Measurement detail stays in versioned documents; the project stores a summary.
 
+### Editable design items
+
+Include an item field/editor for the design team where the assigned Design Rep can add items and edit the item name, description, and other details. Design Managers can also manage items within their project scope. Reuse the existing quotation item editor and item snapshots when these are quotation items; item edits create permitted design revisions and never overwrite the sales handover baseline or protected revisions.
+
+Name and description are confirmed editable fields. Finalize the remaining item-detail fields before implementation, reusing supported dimensions, quantities, materials/specifications and notes where appropriate. Item editing does not grant shared-catalogue access or discount authority; the existing manager-only discount rule applies, and rate-override authority remains an open decision. Confirm whether any non-priced, project-only items are needed before introducing separate item storage.
+
 ## 6. Documents
 
 Show Lead Documents (existing floor plans/sales attachments, read-only) separately from Design Documents. The existing lead supports multiple floor-plan links; do not create a duplicate floor-plan field on the project.
 
-Configurable starter categories: Measurement, Site Photos, Layout, Electrical/Plumbing, 3D Design, Material Specification, Other.
+Configurable categories include Measurement, Site Photos, Layout, Electrical/Plumbing, 3D Design, Material Specification, and Other, plus explicit evidence slots for 10% Payment Evidence, Final Render PDF, Masking DWG, Tentative Quote, Masking Changes DWG, DQC DWG, MOM, Approval Mail Screenshot, Final Quote, P2P DWG, and P2P Payment Evidence. Stage requirements bind to stable category/evidence-slot identities and exact versions rather than display labels. Kick Off Meeting also links its mandatory payment confirmation. All payment-evidence slots accept a structured URN/reference instead of a screenshot upload, with amount and received date required in either case; a URN-only receipt does not create a placeholder file.
 
 Document metadata: title/category (required), optional room/area and description, current version, state, uploader/time, private file identity, prior version, and optional related quotation revision. Uploading a new version retains previous bytes/metadata. Archive instead of ordinary destructive deletion; administrative erasure remains an explicit governed operation.
 
-Proposed first-release types: PDF/JPG/PNG, retaining the current 10 MB per-file ceiling and validated MIME/content checks. CAD and other formats require a later explicit allowlist extension. Validate ownership and document reference state on upload/download and after reassignment.
+First-release types include PDF/JPG/PNG and the explicitly required DWG uploads, retaining the current 10 MB per-file ceiling. Implement an explicit DWG extension/MIME/content-validation policy compatible with supported WordPress environments before enabling upload; do not broadly allow arbitrary CAD or executable formats. DWG support covers private upload, versioning and download only, without CAD preview, parsing or editing. Evidence slots restrict allowed file types: final renders require PDF, drawing slots require DWG, and screenshot slots require supported image types; finalize quote/MOM formats before implementation. Validate ownership and document reference state on upload/download and after reassignment.
 
 Reuse the private-file storage foundation but extend project-purpose authorization and reference tracking explicitly. A design document upload must not require permission to modify the lead. Existing lead file compatibility fields stay intact. Stage requirements reference an active document/category, not a filename match; superseding/archiving a required document must be validated.
 
@@ -277,7 +355,7 @@ Store raw facts and event intervals; calculate dashboard counts/durations from t
 | Discount audit | Changed discount field, old/new setting, before/after monetary values where comparable, actor/authorized role at event, required remark, timestamp and source/new revision IDs | Immutable revision-linked audit details; no separate editable discount total |
 | Integration consistency | Event ID, schema version, occurrence/recorded time, project/lead IDs, actor and relevant event-time ownership | Project event/delivery boundary; retry delivery does not create duplicate reporting events |
 
-First-payment confirmation must exist independently of handover submission so the administrator can report paid-but-not-handed-over leads. A handover snapshot alone is insufficient. Proposed schema addition: a dedicated versioned `idlm_lead_payment_confirmations` table (or equivalent canonical lead-owned structured record), retaining corrections/revocations and a stable confirmation ID. It records confirmation evidence only and is not a payment ledger. Do not couple the record's creation to project creation or automatic handover.
+First-payment confirmation must exist independently of handover submission so the administrator can report paid-but-not-handed-over leads. A handover snapshot alone is insufficient. Proposed schema addition: a dedicated versioned `idlm_lead_payment_confirmations` table (or equivalent canonical lead-owned structured record), retaining corrections/revocations and a stable confirmation ID. It records receipt-confirmation evidence and allocations against versioned expected milestones, including the agreed quote/revision basis, calculated balances and correction history; it is not an accounting ledger. Extend the proposed lead-owned storage with versioned schedule/milestone and receipt-allocation records as needed, reusing quotation snapshots rather than duplicating editable quotation terms. Do not couple the record's creation to project creation or automatic handover.
 
 The original accepted sales baseline remains the comparison default. If an amendment changes the operational baseline, retain both revision identities/amounts and disclose the amendment; never rewrite historic value-change metrics silently. For discount changes, distinguish deliberate changes to discount settings from automatic amount recalculation caused by scope or quantity changes. A monetary discount-impact comparison must identify its calculation basis; do not attribute the entire total-price difference to discount when other inputs changed.
 
@@ -299,9 +377,12 @@ The original accepted sales baseline remains the comparison default. If an amend
 Before implementation is considered complete, verify:
 
 - Won → first-payment confirmation → manual submission → return/resubmit → acceptance → assignment, including missing payment evidence, duplicates, confirmation correction/reversal, and no automatic handover on Won/payment confirmation.
+- Advance receipt required at manual handover; expected amounts match the selected revision’s saved timeline and decimal rounding. Verify that short advances (including ₹1/₹10/₹100/₹1,000 differences) allow handover without manager approval and remain pending; verify screenshot-only, URN-only and both-evidence receipts, missing evidence/date/amount rejection, later balance collection without double counting, partial/multiple/excess receipts, duplicate prevention, currency mismatch, missing legacy terms, corrections, explicit schedule amendments and unchanged historical snapshots.
 - Discount immutability for Design Reps across every writer; authorized manager/admin changes require remarks and preserve before/after audit history, sales history and revision sequencing.
 - Rep/manager/sales permissions across workspace, direct requests, search, autosave, uploads and downloads; immediate reassignment/suspension effects.
 - Workflow publication, archive rules, explicit version migration, permitted transitions, hold/resume and completion/reopening history.
+- All five confirmed design phases and their separate evidence slots; missing/wrong-type/archived evidence blocks the configured gate, payment gates validate linked confirmation, and payment corrections flag affected work. Verify the 10% percentage basis and screenshot requirement without assuming an arbitrary first payment is sufficient.
+- Assigned Design Rep item creation and name/description/detail edits; scoped manager access, immutable source revisions, unchanged discount restrictions, and the finalized rate policy.
 - Document versioning, category requirements, private retrieval, archive and erasure/recovery integrity.
 - Same quotation base number and global revision sequence across handover; saved design designation/designer identity; exact old sales outputs and commercial evidence preserved.
 - No design write to sales quote-value projections/Won reporting; safe context-aware pointers and concurrent save conflicts.
@@ -314,10 +395,10 @@ Before implementation is considered complete, verify:
 
 1. Confirm the recommended `DES` suffix and whether it is shown on all exports (recommended yes).
 2. Decide designer rate-override authority consistently with the confirmed discount restriction, and whether manager review is required before customer sharing.
-3. Finalize the proposed handover checklist, mandatory fields, payment verification/evidence policy, and document/stage entry requirements.
-4. Decide correction/reversal handling for first-payment confirmation after accepted handover; manual submission after confirmation is already confirmed.
+3. Finalize the proposed handover checklist, mandatory fields and payment verification policy. The five design-phase upload requirements and mandatory payments at Material Selection and Kick Off Meeting are confirmed; decide entry-versus-completion gate timing, the 10% quotation/revision basis, Kick Off Meeting payment amount/evidence, P2P payment amount/confirmation policy, quote/MOM file formats, and whether P2P marks completion.
+4. Decide correction/reversal handling for first-payment confirmation after accepted handover, advance-milestone mappings and receipt-verification policy. Actual positive advance entry with date, amount and screenshot or URN/reference before manual submission is confirmed. Short payments permit handover without manager approval; carry the unpaid balance forward and show pending collection.
 5. Confirm manager team/studio boundaries and sales visibility into internal design documents.
-6. Confirm additional-field support and basic project tasks as release-one scope.
+6. Confirm additional-field support and basic project tasks as release-one scope. Design Rep item creation and editable item names/descriptions/details are confirmed; finalize remaining item-detail fields and whether project-only, non-priced items are needed.
 7. Define the manager exception flow for post-handover sales corrections and baseline amendments.
 8. Confirm business timezone, stage-purpose tags and target durations, hold-reason vocabulary, and whether payment expectations should create overdue intake indicators. Elapsed calendar time is the proposed first-release duration basis.
 

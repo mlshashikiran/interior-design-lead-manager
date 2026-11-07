@@ -361,19 +361,19 @@ idlm_test('admin utility stays asset-free while shortcode contexts enqueue their
 
     $contexts = array(
         '[idlm_leads_list]' => array(
-            array('idlm-google-fonts', 'idlm-admin-styles'),
+            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
             array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account'),
         ),
         '[idlm_dashboard]' => array(
-            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-dashboard-styles'),
+            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-dashboard-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
             array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-chartjs', 'idlm-dashboard-app'),
         ),
         '[idlm_kanban]' => array(
-            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-kanban-styles'),
+            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-kanban-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
             array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-kanban-app'),
         ),
         '[idlm_workspace]' => array(
-            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-workspace-styles', 'idlm-dashboard-styles', 'idlm-kanban-styles'),
+            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-workspace-styles', 'idlm-dashboard-styles', 'idlm-kanban-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
             array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app', 'idlm-users-logs', 'idlm-settings', 'idlm-chartjs', 'idlm-dashboard-app', 'idlm-kanban-app'),
         ),
     );
@@ -409,6 +409,37 @@ idlm_test('Phase 1 accessible dialog and design-token contracts remain present',
     assert_contains('data-autosave-cancel-modal data-idlm-dialog', $quotations);
     assert_contains('aria-errormessage=', $overlays);
     assert_contains('aria-errormessage=', $kanban);
+});
+
+idlm_test('Won dialogs prefill the deal value from the quote value and stay blank without one', static function(): void {
+    $root = dirname(__DIR__);
+    $app = (string) file_get_contents($root . '/assets/js/admin-app.js');
+    $board = (string) file_get_contents($root . '/assets/js/kanban.js');
+    $overlays = (string) file_get_contents($root . '/templates/admin/common-overlays.php');
+    $kanban = (string) file_get_contents($root . '/templates/admin/kanban.php');
+    $rows = (string) file_get_contents($root . '/includes/class-admin-collection-reads.php');
+    $drawer = (string) file_get_contents($root . '/includes/class-admin-lead-reads.php');
+
+    // Table and drawer stage selects carry the lead's quote value; the board lookup reads it.
+    assert_contains('data-field="stage" data-id="<?php echo esc_attr($l->id); ?>" data-property-location="<?php echo esc_attr($l->property_location); ?>" data-quote-value=', $rows);
+    assert_contains('data-quote-value="<?php echo esc_attr(isset($lead->quote_value) ? $lead->quote_value : \'\'); ?>"', $drawer);
+    assert_contains('l.quote_value', $rows);
+
+    $won = substr($app, (int) strpos($app, "if (field === 'stage' && val === 'Won') {"), 900);
+    assert_contains("var wonQuoteValue = parseFloat(\$select.attr('data-quote-value') || 0);", $won);
+    assert_contains("\$('#idlm-deal-value-input').val(wonQuoteValue > 0 ? wonQuoteValue : '');", $won);
+    assert_contains("\$('#idlm-deal-value-source').prop('hidden', !(wonQuoteValue > 0));", $won);
+    assert_contains("\$('#idlm-discount-percentage-input').val('');", $won, 'Discount must still be entered at close.');
+
+    $open = substr($board, (int) strpos($board, 'function openKanbanWonModal('), 900);
+    assert_contains('var wonQuoteValue = parseFloat(lead.quote_value || 0);', $open);
+    assert_contains("\$('#idlm-kanban-deal-input').val(wonQuoteValue > 0 ? wonQuoteValue : '');", $open);
+    assert_contains("\$('#idlm-kanban-deal-source').prop('hidden', !(wonQuoteValue > 0));", $open);
+    assert_contains("\$('#idlm-kanban-discount-input').val('');", $open, 'Discount must still be entered at close.');
+
+    // The source note is new wording, so it renders only with the design layer.
+    assert_contains('<?php if ($idlm_design_layer): ?><p class="idlm-field-help" id="idlm-deal-value-source" hidden>', $overlays);
+    assert_contains('<?php if ($idlm_design): ?><p class="idlm-field-help" id="idlm-kanban-deal-source" hidden>', $kanban);
 });
 
 idlm_test('admin page, overlay, workspace, and account selector contracts remain present', static function(): void {
@@ -628,7 +659,12 @@ idlm_test('frontend UI UX Phase 2 preserves keyboard, selection, and data-altern
     assert_contains('<footer class="idlm-kanban-card-actions">', $kanban_script);
     assert_contains('idlm-kanban-card-footer-meta', $kanban_script);
     assert_contains('requestStageMove', $kanban_script);
-    assert_false(false !== strpos($kanban_script, '<article class="idlm-kanban-card" draggable="true"'), 'The whole Kanban card must not be the drag handle.');
+    // The whole card is the pointer drag source; phones turn it off and Move to stage stays the keyboard path.
+    assert_same(2, substr_count($kanban_script, '<article class="idlm-kanban-card" draggable="true"'));
+    assert_contains("on('dragstart', '.idlm-kanban-card', function", $kanban_script);
+    assert_contains("on('dragend', '.idlm-kanban-card', function", $kanban_script);
+    assert_contains("$('.idlm-kanban-card').attr('draggable', kanbanPhoneMedia.matches ? 'false' : 'true')", $kanban_script);
+    assert_false(false !== strpos($kanban_script, 'idlm-kanban-card-drag-handle" draggable="true"'), 'The handle must not be a second, nested drag source.');
 
     foreach (array('idlm-clear-selection', 'idlm-bulk-delete-modal', 'role="progressbar"', 'idlm-import-download-failures', 'idlm-export-count-preview') as $contract) {
         assert_contains($contract, $leads_template);

@@ -476,6 +476,19 @@ idlm_test('bulk lifecycle mutation remains available to the current lead owner',
     assert_same('Contacted', $GLOBALS['wpdb']->rows('idlm_leads')[0]['stage']);
 });
 
+idlm_test('bulk stage update refuses Won even when a stored deal value would pass', static function(): void {
+    idlm_test_login(5, array('sales_executive'), array('idlm_access_leads'));
+    $GLOBALS['idlm_test_options']['idlm_reps_see_all_leads'] = '0';
+    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('assigned_rep_id' => 5, 'stage' => 'Negotiation', 'lead_quality' => 'Qualified', 'deal_value' => 750000))));
+    $_POST = array('ids' => array(1), 'bulk_action' => 'bulk_stage', 'stage' => 'Won');
+    $response = expect_json_response(static fn() => IDLM_Admin::ajax_bulk_action(), false);
+    assert_contains('Move leads to Won one at a time', (string) $response->data['message']);
+    assert_same('Negotiation', $GLOBALS['wpdb']->rows('idlm_leads')[0]['stage']);
+    assert_count_value(0, $GLOBALS['wpdb']->rows('idlm_lead_state_events'));
+    $template = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/leads.php');
+    assert_contains("<?php if ('Won' === \$idlm_stage) { continue; }", $template, 'The bulk stage list must not offer Won.');
+});
+
 idlm_test('REST routes explicitly register permission callbacks and callback authentication remains enforced', static function(): void {
     $GLOBALS['idlm_test_options']['idlm_webhook_api_key'] = 'webhook-scope-key';
     IDLM_Integrations::register_webhook_routes();
@@ -1222,7 +1235,7 @@ idlm_test('quotation editor retains revision remarks and exposes Width throughou
 
 idlm_test('core schema baseline declares required lifecycle columns, defaults, and indexes', static function(): void {
     IDLM_DB::create_tables();
-    assert_count_value(13, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(23, $GLOBALS['wpdb']->dbdelta);
     $leads_sql = $GLOBALS['wpdb']->dbdelta[0];
     assert_contains("handoff_status varchar(30) DEFAULT 'not_ready'", $leads_sql);
     assert_contains('qualified_at datetime DEFAULT NULL', $leads_sql);
@@ -1269,7 +1282,7 @@ idlm_test('core migration upgrades an older schema and records the independent s
         'idlm_attribution_touchpoint_backfill_version' => '1.0.0',
     );
     IDLM_DB::init();
-    assert_count_value(13, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(23, $GLOBALS['wpdb']->dbdelta);
     assert_same(IDLM_DB_VERSION, get_option('idlm_schema_version'));
 });
 
@@ -1286,7 +1299,7 @@ idlm_test('core migration reconciles the state-event amount column from schema 1
 
     IDLM_DB::init();
 
-    assert_count_value(13, $GLOBALS['wpdb']->dbdelta);
+    assert_count_value(23, $GLOBALS['wpdb']->dbdelta);
     assert_contains('amount decimal(14,2) DEFAULT NULL', $GLOBALS['wpdb']->dbdelta[2]);
     assert_same(IDLM_DB_VERSION, get_option('idlm_schema_version'));
 });
@@ -1737,6 +1750,7 @@ idlm_test('operational health marks critical gates and renders the administrator
 
 require_once __DIR__ . '/admin-refactor-contracts.php';
 require_once __DIR__ . '/ui-regression-contracts.php';
+require_once __DIR__ . '/access-flow-contracts.php';
 require_once __DIR__ . '/quotation-authorization-contracts.php';
 require_once __DIR__ . '/lead-read-authorization-contracts.php';
 require_once __DIR__ . '/mcp-query-contracts.php';
@@ -1766,10 +1780,14 @@ require_once __DIR__ . '/state-policy-contracts.php';
 require_once __DIR__ . '/quotation-migration-contracts.php';
 require_once __DIR__ . '/quotation-classification-contracts.php';
 require_once __DIR__ . '/quotation-history-contracts.php';
+require_once __DIR__ . '/quotation-legacy-contracts.php';
 require_once __DIR__ . '/quotation-engine-contracts.php';
 require_once __DIR__ . '/catalogue-import-contracts.php';
 require_once __DIR__ . '/quotation-numeric-contracts.php';
 require_once __DIR__ . '/quotation-document-contracts.php';
+require_once __DIR__ . '/lead-payment-contracts.php';
+require_once __DIR__ . '/design-handoff-contracts.php';
+require_once __DIR__ . '/manual-lead-contracts.php';
 require_once __DIR__ . '/quotation-paper-contracts.php';
 
 $passed = 0;

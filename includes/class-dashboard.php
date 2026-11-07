@@ -227,6 +227,12 @@ class IDLM_Dashboard {
             $dup_percentage_change = (($dup_curr - $dup_prev) / $dup_prev) * 100;
         }
 
+        // One Won basis for every Won figure: each deal once per period (see won_set_sql()).
+        $table_state_events = $wpdb->prefix . 'idlm_lead_state_events';
+        $won_revenue_field = self::state_events_have_amount($table_state_events) ? 'e.amount' : 'l.deal_value';
+        $won_set_curr = self::won_set_sql($table_leads, $table_state_events, $won_revenue_field, $curr_start, $curr_end);
+        $won_set_prev = self::won_set_sql($table_leads, $table_state_events, $won_revenue_field, $prev_start, $prev_end);
+
         // 3. Leads by Channel: acquisition quality plus selected-period closes.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $channel_leads_raw = $wpdb->get_results($wpdb->prepare(
@@ -237,17 +243,16 @@ class IDLM_Dashboard {
                     SUM(CASE WHEN created_at BETWEEN %s AND %s AND LOWER(lead_quality) = 'unqualified' THEN 1 ELSE 0 END) as unqualified,
                     SUM(CASE WHEN created_at BETWEEN %s AND %s AND (lead_quality = '' OR lead_quality IS NULL) THEN 1 ELSE 0 END) as pending,
                     SUM(CASE WHEN created_at BETWEEN %s AND %s AND stage = 'Won' THEN 1 ELSE 0 END) as cohort_won,
-                    SUM(CASE WHEN stage = 'Won' AND conversion_time BETWEEN %s AND %s THEN 1 ELSE 0 END) as won,
-                    SUM(CASE WHEN stage = 'Won' AND conversion_time BETWEEN %s AND %s THEN COALESCE(deal_value, 0) ELSE 0 END) as revenue,
+                    COUNT(w.lead_id) as won,
+                    SUM(COALESCE(w.won_amount, 0)) as revenue,
                     SUM(CASE WHEN created_at BETWEEN %s AND %s AND stage = 'Lost' THEN 1 ELSE 0 END) as lost,
                     SUM(CASE WHEN created_at BETWEEN %s AND %s AND utm_source <> '' AND utm_medium <> '' THEN 1 ELSE 0 END) as attributed
-             FROM $table_leads 
+             FROM $table_leads LEFT JOIN {$won_set_curr} w ON w.lead_id = {$table_leads}.id
              WHERE is_duplicate = 0 $reporting_rep_clause
-               AND (created_at BETWEEN %s AND %s OR (stage = 'Won' AND conversion_time BETWEEN %s AND %s))
+               AND (created_at BETWEEN %s AND %s OR w.lead_id IS NOT NULL)
              GROUP BY source 
              ORDER BY won DESC, count DESC",
             // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $curr_start, $curr_end, $curr_start, $curr_end, $curr_start, $curr_end,
             $curr_start, $curr_end, $curr_start, $curr_end, $curr_start, $curr_end,
             $curr_start, $curr_end, $curr_start, $curr_end, $curr_start, $curr_end,
             $curr_start, $curr_end, $curr_start, $curr_end
@@ -361,8 +366,6 @@ class IDLM_Dashboard {
         // from a lead's current state. On sites upgraded before event tracking
         // was active, retain a clearly-labelled cohort fallback so the widget
         // is useful without inventing historical transition timestamps.
-        $table_state_events = $wpdb->prefix . 'idlm_lead_state_events';
-        $won_revenue_field = self::state_events_have_amount($table_state_events) ? 'e.amount' : 'l.deal_value';
         $event_rep_clause = $rep_id ? $wpdb->prepare(' AND l.assigned_rep_id = %d', $rep_id) : '';
         if ($filters['rep_id']) { $event_rep_clause .= $wpdb->prepare(' AND l.assigned_rep_id = %d', $filters['rep_id']); }
         if ('' !== $filters['studio']) { $event_rep_clause .= $wpdb->prepare(' AND l.preferred_studio = %s', $filters['studio']); }
@@ -514,17 +517,6 @@ class IDLM_Dashboard {
             }
         }
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $won_revenue_total = floatval($wpdb->get_var($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0331: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT SUM(COALESCE({$won_revenue_field}, 0)) FROM {$table_state_events} e
-             INNER JOIN {$table_leads} l ON l.id = e.lead_id
-             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won'
-               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $curr_start,
-            $curr_end
-        )));
 
         $revenue_by_channel = array_values(array_filter($revenue_channel_map, function($row) {
             return $row['estimated_pipeline'] > 0;
@@ -581,17 +573,17 @@ class IDLM_Dashboard {
                     SUM(CASE WHEN created_at BETWEEN %s AND %s AND LOWER(lead_quality) = 'qualified' THEN 1 ELSE 0 END) as qualified,
                     SUM(CASE WHEN created_at BETWEEN %s AND %s AND LOWER(lead_quality) = 'unqualified' THEN 1 ELSE 0 END) as unqualified,
                     SUM(CASE WHEN created_at BETWEEN %s AND %s AND (lead_quality = '' OR lead_quality IS NULL) THEN 1 ELSE 0 END) as pending,
-                    SUM(CASE WHEN stage = 'Won' AND conversion_time BETWEEN %s AND %s THEN 1 ELSE 0 END) as converted,
-                    SUM(CASE WHEN stage = 'Won' AND conversion_time BETWEEN %s AND %s THEN COALESCE(deal_value, 0) ELSE 0 END) as revenue,
+                    COUNT(w.lead_id) as converted,
+                    SUM(CASE WHEN created_at BETWEEN %s AND %s AND stage = 'Won' THEN 1 ELSE 0 END) as cohort_won,
+                    SUM(COALESCE(w.won_amount, 0)) as revenue,
                     AVG(CASE WHEN created_at BETWEEN %s AND %s THEN time_to_connected END) as avg_connected,
-                    AVG(CASE WHEN stage = 'Won' AND conversion_time BETWEEN %s AND %s THEN time_to_won END) as avg_won
-             FROM $table_leads 
+                    AVG(CASE WHEN w.lead_id IS NOT NULL THEN GREATEST(0, TIMESTAMPDIFF(SECOND, created_at, w.won_at)) END) as avg_won
+             FROM $table_leads LEFT JOIN {$won_set_curr} w ON w.lead_id = {$table_leads}.id
              WHERE is_duplicate = 0 AND assigned_rep_id > 0 $rep_clause
-               AND (created_at BETWEEN %s AND %s OR (stage = 'Won' AND conversion_time BETWEEN %s AND %s))
+               AND (created_at BETWEEN %s AND %s OR w.lead_id IS NOT NULL)
              GROUP BY assigned_rep_id
              ORDER BY converted DESC, total_leads DESC",
             // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $curr_start, $curr_end, $curr_start, $curr_end, $curr_start, $curr_end,
             $curr_start, $curr_end, $curr_start, $curr_end, $curr_start, $curr_end,
             $curr_start, $curr_end, $curr_start, $curr_end, $curr_start, $curr_end,
             $curr_start, $curr_end, $curr_start, $curr_end
@@ -599,12 +591,10 @@ class IDLM_Dashboard {
 
         $rep_metrics = array();
         // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0334: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-        $rep_cycle_rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT assigned_rep_id, time_to_won FROM {$table_leads} WHERE is_duplicate = 0 AND stage = 'Won' AND time_to_won IS NOT NULL AND conversion_time BETWEEN %s AND %s AND assigned_rep_id > 0 {$rep_clause} ORDER BY assigned_rep_id, time_to_won",
+        $rep_cycle_rows = $wpdb->get_results(
+            "SELECT assigned_rep_id, GREATEST(0, TIMESTAMPDIFF(SECOND, created_at, w.won_at)) AS time_to_won FROM {$table_leads} INNER JOIN {$won_set_curr} w ON w.lead_id = {$table_leads}.id WHERE is_duplicate = 0 AND assigned_rep_id > 0 {$rep_clause} ORDER BY assigned_rep_id, time_to_won"
         // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $curr_start,
-            $curr_end
-        ));
+        );
         $rep_cycles = array();
         foreach ($rep_cycle_rows as $cycle_row) { $rep_cycles[intval($cycle_row->assigned_rep_id)][] = intval($cycle_row->time_to_won); }
         foreach ($leads_by_rep as $row) {
@@ -613,8 +603,8 @@ class IDLM_Dashboard {
                 continue;
             }
 
-            $name = $user ? $user->display_name : 'Deleted Rep';
-            $conv_rate = ($row->total_leads > 0) ? round(($row->converted / $row->total_leads) * 100, 1) : 0;
+            $name = $user ? $user->display_name : 'Removed user #' . absint($row->assigned_rep_id);
+            $conv_rate = ($row->total_leads > 0) ? round(($row->cohort_won / $row->total_leads) * 100, 1) : 0;
             $avg_connected = null !== $row->avg_connected ? self::format_seconds($row->avg_connected) : 'N/A';
             $avg_won = null !== $row->avg_won ? self::format_seconds($row->avg_won) : 'N/A';
             $cycles = $rep_cycles[intval($row->assigned_rep_id)] ?? array();
@@ -627,6 +617,7 @@ class IDLM_Dashboard {
                 'total' => intval($row->total_leads),
                 'contacted' => intval($row->contacted),
                 'converted' => intval($row->converted),
+                'cohort_won' => intval($row->cohort_won),
                 'qualified' => intval($row->qualified),
                 'unqualified' => intval($row->unqualified),
                 'pending' => intval($row->pending),
@@ -927,14 +918,14 @@ class IDLM_Dashboard {
             "SELECT AVG(time_to_connected) as avg_connected, 
                     AVG(time_to_won) as avg_won 
              FROM $table_leads 
-             WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $rep_clause",
+             WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s $reporting_rep_clause",
             // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $curr_start, $curr_end
         ));
 
         // Convert seconds to human readable hours/days
-        $avg_time_connected = $avg_speeds->avg_connected ? self::format_seconds($avg_speeds->avg_connected) : 'N/A';
-        $avg_time_won = $avg_speeds->avg_won ? self::format_seconds($avg_speeds->avg_won) : 'N/A';
+        $avg_time_connected = null !== $avg_speeds->avg_connected ? self::format_seconds($avg_speeds->avg_connected) : 'N/A';
+        $avg_time_won = null !== $avg_speeds->avg_won ? self::format_seconds($avg_speeds->avg_won) : 'N/A';
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
         $avg_time_connected_previous_seconds = floatval($wpdb->get_var($wpdb->prepare(
             // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0345: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
@@ -1045,23 +1036,34 @@ class IDLM_Dashboard {
             $timeline_counts[$row->lead_date]['qualified'] = intval($row->qualified);
         }
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $won_over_time_raw = $wpdb->get_results($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0350: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT DATE(conversion_time) AS close_date, COUNT(id) AS won
-             FROM {$table_leads}
-             WHERE is_duplicate = 0 AND stage = 'Won' AND conversion_time BETWEEN %s AND %s {$reporting_rep_clause}
-             GROUP BY DATE(conversion_time) ORDER BY close_date ASC",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $curr_start,
-            $curr_end
-        ));
-        foreach ($won_over_time_raw as $row) {
-            if (isset($timeline_counts[$row->close_date])) {
-                $timeline_counts[$row->close_date]['won'] = intval($row->won);
-            }
+        // Won summary and trend: each deal once per period, recorded transitions first, legacy closes after.
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0351: Won sets are prepared in won_set_sql(); prefix-derived tables and prepared scope clauses.
+        $won_summary = static function($won_set) use ($wpdb, $table_leads, $reporting_event_rep_clause) {
+            return $wpdb->get_row(
+                "SELECT COUNT(w.lead_id) AS won, SUM(w.won_amount) AS revenue, SUM(w.won_basis = 'legacy') AS legacy,
+                        SUM(GREATEST(0, TIMESTAMPDIFF(SECOND, l.created_at, w.won_at))) AS close_seconds
+                 FROM {$won_set} w INNER JOIN {$table_leads} l ON l.id = w.lead_id
+                 WHERE l.is_duplicate = 0{$reporting_event_rep_clause}"
+            );
+        };
+        $won_current = $won_summary($won_set_curr);
+        $won_previous = $won_summary($won_set_prev);
+        $won_trend_raw = $wpdb->get_results(
+            "SELECT DATE(w.won_at) AS event_date, COUNT(w.lead_id) AS won, SUM(w.won_amount) AS revenue
+             FROM {$won_set_curr} w INNER JOIN {$table_leads} l ON l.id = w.lead_id
+             WHERE l.is_duplicate = 0{$reporting_event_rep_clause}
+             GROUP BY DATE(w.won_at) ORDER BY event_date ASC"
+        );
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
+        $won_trend_index = array();
+        foreach ($won_trend_raw as $row) {
+            $won_trend_index[$row->event_date] = array('won' => intval($row->won), 'revenue' => round(floatval($row->revenue), 2));
         }
-
+        $won_legacy_count = intval($won_current->legacy ?? 0);
+        // Won per day matches the Won KPI: recorded transitions, then legacy closes.
+        foreach ($won_trend_index as $won_date => $won_point) {
+            if (isset($timeline_counts[$won_date])) { $timeline_counts[$won_date]['won'] = $won_point['won']; }
+        }
         $leads_over_time = array();
         foreach ($timeline_counts as $date => $day_counts) {
             $leads_over_time[] = array(
@@ -1070,49 +1072,6 @@ class IDLM_Dashboard {
                 'qualified' => $day_counts['qualified'],
                 'won' => $day_counts['won']
             );
-        }
-
-        // Won-event trend powers the Sales dashboard's revenue / deal / average selector.
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $won_trend_raw = $wpdb->get_results($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0351: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT DATE(e.occurred_at) AS event_date, COUNT(e.id) AS won, SUM(COALESCE({$won_revenue_field}, 0)) AS revenue
-             FROM {$table_state_events} e INNER JOIN {$table_leads} l ON l.id = e.lead_id
-             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won' AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}
-             GROUP BY DATE(e.occurred_at) ORDER BY event_date ASC",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $curr_start,
-            $curr_end
-        ));
-        $won_trend_index = array();
-        foreach ($won_trend_raw as $row) {
-            $won_trend_index[$row->event_date] = array('won' => intval($row->won), 'revenue' => round(floatval($row->revenue), 2));
-        }
-        // Existing installations store canonical conversion_time even when
-        // immutable reporting began later. Use it only for Won leads with no
-        // Won event, preserving event records as the authoritative source.
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $won_legacy_rows = $wpdb->get_results($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0352: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT DATE(l.conversion_time) AS event_date, COUNT(l.id) AS won, SUM(COALESCE(l.deal_value, 0)) AS revenue
-             FROM {$table_leads} l
-             WHERE l.is_duplicate = 0 AND l.stage = 'Won' AND l.conversion_time BETWEEN %s AND %s{$reporting_event_rep_clause}
-               AND NOT EXISTS (SELECT 1 FROM {$table_state_events} legacy_event WHERE legacy_event.lead_id = l.id AND legacy_event.event_type = 'stage_change' AND legacy_event.to_value = 'Won')
-             GROUP BY DATE(l.conversion_time) ORDER BY event_date ASC",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $curr_start,
-            $curr_end
-        ));
-        $won_legacy_count = 0;
-        $won_legacy_revenue = 0.0;
-        foreach ($won_legacy_rows as $row) {
-            $date = $row->event_date;
-            $won = intval($row->won);
-            $revenue = round(floatval($row->revenue), 2);
-            $point = $won_trend_index[$date] ?? array('won' => 0, 'revenue' => 0);
-            $won_trend_index[$date] = array('won' => $point['won'] + $won, 'revenue' => $point['revenue'] + $revenue);
-            $won_legacy_count += $won;
-            $won_legacy_revenue += $revenue;
         }
         $won_over_time = array();
         $won_timeline_date = new DateTime(substr($curr_start, 0, 10), wp_timezone());
@@ -1167,15 +1126,14 @@ class IDLM_Dashboard {
                 // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0357: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
                 "SELECT COALESCE(NULLIF(TRIM({$mix_field}), ''), 'Not specified') AS segment,
                         SUM(CASE WHEN created_at BETWEEN %s AND %s THEN 1 ELSE 0 END) AS count,
-                        SUM(CASE WHEN created_at BETWEEN %s AND %s AND COALESCE(stage, '') NOT IN ('New', 'Lost') THEN 1 ELSE 0 END) AS opportunities,
-                        SUM(CASE WHEN stage = 'Won' AND conversion_time BETWEEN %s AND %s THEN 1 ELSE 0 END) AS won,
-                        SUM(CASE WHEN stage = 'Won' AND conversion_time BETWEEN %s AND %s THEN COALESCE(deal_value, 0) ELSE 0 END) AS revenue
-                 FROM {$table_leads}
+                        SUM(CASE WHEN created_at BETWEEN %s AND %s AND COALESCE(NULLIF(TRIM(stage), ''), 'New') NOT IN ('New', 'Lost') THEN 1 ELSE 0 END) AS opportunities,
+                        COUNT(w.lead_id) AS won,
+                        SUM(COALESCE(w.won_amount, 0)) AS revenue
+                 FROM {$table_leads} LEFT JOIN {$won_set_curr} w ON w.lead_id = {$table_leads}.id
                  WHERE is_duplicate = 0 {$reporting_rep_clause}
-                   AND (created_at BETWEEN %s AND %s OR (stage = 'Won' AND conversion_time BETWEEN %s AND %s))
+                   AND (created_at BETWEEN %s AND %s OR w.lead_id IS NOT NULL)
                  GROUP BY segment ORDER BY won DESC, count DESC LIMIT 10",
                 // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-                $curr_start, $curr_end, $curr_start, $curr_end, $curr_start, $curr_end,
                 $curr_start, $curr_end, $curr_start, $curr_end, $curr_start, $curr_end
             ), ARRAY_A);
         }
@@ -1302,82 +1260,13 @@ class IDLM_Dashboard {
             $funnel_counts_active[$stage_key] += intval($row->count);
         }
 
-        // Won cards are event based. The amount snapshot is recorded with the
-        // transition, so later edits to a lead cannot rewrite past revenue.
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $total_won = intval($wpdb->get_var($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0363: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT COUNT(e.id) FROM {$table_state_events} e
-             INNER JOIN {$table_leads} l ON l.id = e.lead_id
-             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won'
-               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $curr_start,
-            $curr_end
-        )));
-        $total_won += $won_legacy_count;
-        $won_revenue_total += $won_legacy_revenue;
-        // The prior Won baseline uses the same event-first, legacy-fallback
-        // reporting basis as the current period.
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $total_won_previous = intval($wpdb->get_var($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0364: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT COUNT(e.id) FROM {$table_state_events} e
-             INNER JOIN {$table_leads} l ON l.id = e.lead_id
-             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won'
-               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $prev_start,
-            $prev_end
-        )));
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $won_revenue_previous = floatval($wpdb->get_var($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0365: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT SUM(COALESCE({$won_revenue_field}, 0)) FROM {$table_state_events} e
-             INNER JOIN {$table_leads} l ON l.id = e.lead_id
-             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won'
-               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $prev_start,
-            $prev_end
-        )));
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $won_legacy_previous = $wpdb->get_row($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0366: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT COUNT(l.id) AS count, SUM(COALESCE(l.deal_value, 0)) AS revenue FROM {$table_leads} l
-             WHERE l.is_duplicate = 0 AND l.stage = 'Won' AND l.conversion_time BETWEEN %s AND %s{$reporting_event_rep_clause}
-               AND NOT EXISTS (SELECT 1 FROM {$table_state_events} legacy_event WHERE legacy_event.lead_id = l.id AND legacy_event.event_type = 'stage_change' AND legacy_event.to_value = 'Won')",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $prev_start,
-            $prev_end
-        ));
-        $total_won_previous += intval($won_legacy_previous->count ?? 0);
-        $won_revenue_previous += floatval($won_legacy_previous->revenue ?? 0);
+        // Won cards share the Won summary above, so cards, trend and tables reconcile.
+        $total_won = intval($won_current->won ?? 0);
+        $won_revenue_total = floatval($won_current->revenue ?? 0);
+        $total_won_previous = intval($won_previous->won ?? 0);
+        $won_revenue_previous = floatval($won_previous->revenue ?? 0);
         $won_reporting_basis = $won_legacy_count ? 'recorded_transitions_with_conversion_time_fallback' : 'recorded_transitions';
-        // Use elapsed calendar time from lead creation to the actual close
-        // timestamp. Event occurrence is authoritative; conversion_time fills
-        // only legacy Won records that have no corresponding event.
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $won_event_close_seconds = floatval($wpdb->get_var($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0367: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT SUM(GREATEST(0, TIMESTAMPDIFF(SECOND, l.created_at, e.occurred_at))) FROM {$table_state_events} e
-             INNER JOIN {$table_leads} l ON l.id = e.lead_id
-             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won' AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$reporting_event_rep_clause}",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $curr_start,
-            $curr_end
-        )));
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $won_legacy_close_seconds = floatval($wpdb->get_var($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0368: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT SUM(GREATEST(0, TIMESTAMPDIFF(SECOND, l.created_at, l.conversion_time))) FROM {$table_leads} l
-             WHERE l.is_duplicate = 0 AND l.stage = 'Won' AND l.conversion_time BETWEEN %s AND %s{$reporting_event_rep_clause}
-               AND NOT EXISTS (SELECT 1 FROM {$table_state_events} legacy_event WHERE legacy_event.lead_id = l.id AND legacy_event.event_type = 'stage_change' AND legacy_event.to_value = 'Won')",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $curr_start,
-            $curr_end
-        )));
-        $avg_time_to_close = $total_won ? self::format_seconds(($won_event_close_seconds + $won_legacy_close_seconds) / $total_won) : '—';
+        $avg_time_to_close = $total_won ? self::format_seconds(floatval($won_current->close_seconds ?? 0) / $total_won) : '—';
         // This is deliberately a current result for the acquisition cohort,
         // not a selected-period Won-event count divided by new leads.
         // Keep the event count above separate for the sales-event cards.
@@ -1385,7 +1274,7 @@ class IDLM_Dashboard {
         $cohort_won_current = intval($wpdb->get_var($wpdb->prepare(
             // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0369: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
             "SELECT COUNT(id) FROM $table_leads
-             WHERE is_duplicate = 0 AND stage = 'Won' AND created_at BETWEEN %s AND %s $rep_clause",
+             WHERE is_duplicate = 0 AND stage = 'Won' AND created_at BETWEEN %s AND %s $reporting_rep_clause",
             // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
             $curr_start,
             $curr_end
@@ -1448,17 +1337,9 @@ class IDLM_Dashboard {
             $month_start,
             $month_end
         )));
+        $won_set_month = self::won_set_sql($table_leads, $table_state_events, $won_revenue_field, $month_start, $month_end);
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-        $monthly_conversions = intval($wpdb->get_var($wpdb->prepare(
-            // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0372: calculate_stats(): prefix-derived tables; fixed dimension/amount maps; rep/studio/source/campaign clauses prepared at construction, dates and ID-list values bound; actor-scoped aggregate cache is owned by Dashboard_Read_Model.
-            "SELECT COUNT(e.id) FROM {$table_state_events} e
-             INNER JOIN {$table_leads} l ON l.id = e.lead_id
-             WHERE e.event_type = 'stage_change' AND e.to_value = 'Won'
-               AND e.occurred_at BETWEEN %s AND %s AND l.is_duplicate = 0{$event_rep_clause}",
-            // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $month_start,
-            $month_end
-        )));
+        $monthly_conversions = intval($wpdb->get_var("SELECT COUNT(w.lead_id) FROM {$won_set_month} w INNER JOIN {$table_leads} l ON l.id = w.lead_id WHERE l.is_duplicate = 0{$event_rep_clause}"));
         $days_elapsed = intval($now_month->format('j'));
         $days_in_month = intval($now_month->format('t'));
         $lead_target = intval(get_option('idlm_monthly_lead_target', 100));
@@ -1512,6 +1393,13 @@ class IDLM_Dashboard {
                     $curr_start,
                     $curr_end
                 ))),
+                // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0374: campaign coverage over every campaign, not the top five; prefix-derived table, prepared clauses and bound dates.
+                'campaign_attributed' => intval($wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(id) FROM {$table_leads} WHERE is_duplicate = 0 AND created_at BETWEEN %s AND %s {$rep_clause} AND utm_campaign <> ''",
+                // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                    $curr_start,
+                    $curr_end
+                ))),
                 'currency_symbol' => $currency_symbol,
                 'leads_by_property' => $leads_by_property,
                 'leads_by_rooms' => $leads_by_rooms
@@ -1521,6 +1409,7 @@ class IDLM_Dashboard {
                 'lost_reasons' => $lost_reasons,
                 'lost_reasons_basis' => $lost_reasons_basis,
                 'lost_reasons_legacy_count' => $lost_legacy_count,
+                'total_lost' => array_sum(array_column($lost_reasons, 'count')),
                 'funnel_data' => $funnel_data,
                 'leads_by_rep' => $rep_metrics,
                 'assignment_distribution' => $assignment_distribution,
@@ -1596,6 +1485,31 @@ class IDLM_Dashboard {
     }
 
     /**
+     * Leads won in a window, one row each, as a prepared derived table: the latest
+     * recorded Won transition in the window (its amount snapshot), or for leads with
+     * no Won event at all, the legacy close time and deal value. A reopened lead that
+     * is won again counts once per window.
+     */
+    private static function won_set_sql($table_leads, $table_state_events, $won_revenue_field, $start, $end) {
+        global $wpdb;
+        $amount = 'e.amount' === $won_revenue_field ? 'e.amount' : 'el.deal_value';
+        // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Prefix-derived table names and a fixed column choice; dates are bound.
+        return $wpdb->prepare(
+            "(SELECT e.lead_id, e.occurred_at AS won_at, COALESCE({$amount}, 0) AS won_amount, 'event' AS won_basis
+              FROM {$table_state_events} e
+              INNER JOIN (SELECT MAX(id) AS id FROM {$table_state_events} WHERE event_type = 'stage_change' AND to_value = 'Won' AND occurred_at BETWEEN %s AND %s GROUP BY lead_id) won_last ON won_last.id = e.id
+              INNER JOIN {$table_leads} el ON el.id = e.lead_id
+              UNION ALL
+              SELECT ll.id, ll.conversion_time, COALESCE(ll.deal_value, 0), 'legacy'
+              FROM {$table_leads} ll
+              WHERE ll.stage = 'Won' AND ll.conversion_time BETWEEN %s AND %s
+                AND NOT EXISTS (SELECT 1 FROM {$table_state_events} legacy_event WHERE legacy_event.lead_id = ll.id AND legacy_event.event_type = 'stage_change' AND legacy_event.to_value = 'Won'))",
+            $start, $end, $start, $end
+        );
+        // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    }
+
+    /**
      * Support installations whose state-event migration marker was recorded
      * before dbDelta added the immutable event amount column. Those sites can
      * still render the dashboard from the linked lead value until upgraded.
@@ -1643,157 +1557,9 @@ class IDLM_Dashboard {
      * Compute Start & End timestamps for filters
      */
     public static function get_date_ranges($period, $custom_start = '', $custom_end = '') {
-        $timezone = wp_timezone();
-        $now = new DateTime('now', $timezone);
-        
-        $curr_start = '';
-        $curr_end = $now->format('Y-m-d H:i:s');
-        $prev_start = '';
-        $prev_end = '';
-
-        switch ($period) {
-            case 'today':
-                $curr_start = $now->format('Y-m-d 00:00:00');
-                
-                $yesterday = clone $now;
-                $yesterday->modify('-1 day');
-                $prev_start = $yesterday->format('Y-m-d 00:00:00');
-                $prev_end = $yesterday->format('Y-m-d 23:59:59');
-                break;
-
-            case 'yesterday':
-                $yesterday = clone $now;
-                $yesterday->modify('-1 day');
-                $curr_start = $yesterday->format('Y-m-d 00:00:00');
-                $curr_end = $yesterday->format('Y-m-d 23:59:59');
-
-                $day_before = clone $yesterday;
-                $day_before->modify('-1 day');
-                $prev_start = $day_before->format('Y-m-d 00:00:00');
-                $prev_end = $day_before->format('Y-m-d 23:59:59');
-                break;
-
-            case 'this_week':
-                $start_of_week = clone $now;
-                $start_of_week->modify('monday this week');
-                $curr_start = $start_of_week->format('Y-m-d 00:00:00');
-
-                $days_diff = intval($now->diff($start_of_week)->format('%a')) + 1;
-                $prev_start_dt = clone $start_of_week;
-                $prev_start_dt->modify("-{$days_diff} days");
-                $prev_start = $prev_start_dt->format('Y-m-d 00:00:00');
-                
-                $prev_end_dt = clone $start_of_week;
-                $prev_end_dt->modify('-1 second');
-                $prev_end = $prev_end_dt->format('Y-m-d H:i:s');
-                break;
-
-            case 'this_month':
-                $curr_start = $now->format('Y-m-01 00:00:00');
-
-                $prev_month_dt = clone $now;
-                $prev_month_dt->modify('first day of last month');
-                $prev_start = $prev_month_dt->format('Y-m-d 00:00:00');
-                
-                $prev_month_end_dt = clone $prev_month_dt;
-                $comparison_day = min(intval($now->format('j')), intval($prev_month_end_dt->format('t')));
-                $prev_month_end_dt->setDate(
-                    intval($prev_month_end_dt->format('Y')),
-                    intval($prev_month_end_dt->format('m')),
-                    $comparison_day
-                );
-                $prev_end = $prev_month_end_dt->format('Y-m-d') . ' ' . $now->format('H:i:s');
-                break;
-
-            case 'last_month':
-                $last_month_start = clone $now;
-                $last_month_start->modify('first day of last month');
-                $curr_start = $last_month_start->format('Y-m-d 00:00:00');
-                
-                $last_month_end = clone $now;
-                $last_month_end->modify('last day of last month');
-                $curr_end = $last_month_end->format('Y-m-d 23:59:59');
-
-                $prev_prev_month = clone $last_month_start;
-                $prev_prev_month->modify('-1 month');
-                $prev_start = $prev_prev_month->format('Y-m-d 00:00:00');
-                
-                $prev_prev_end = clone $last_month_start;
-                $prev_prev_end->modify('-1 second');
-                $prev_end = $prev_prev_end->format('Y-m-d H:i:s');
-                break;
-
-            case 'last_7_days':
-                $start = clone $now;
-                $start->modify('-6 days');
-                $curr_start = $start->format('Y-m-d 00:00:00');
-
-                $prev_start_dt = clone $start;
-                $prev_start_dt->modify('-7 days');
-                $prev_start = $prev_start_dt->format('Y-m-d 00:00:00');
-
-                $prev_end_dt = clone $start;
-                $prev_end_dt->modify('-1 second');
-                $prev_end = $prev_end_dt->format('Y-m-d H:i:s');
-                break;
-
-            case 'last_30_days':
-                $start = clone $now;
-                $start->modify('-29 days');
-                $curr_start = $start->format('Y-m-d 00:00:00');
-
-                $prev_start_dt = clone $start;
-                $prev_start_dt->modify('-30 days');
-                $prev_start = $prev_start_dt->format('Y-m-d 00:00:00');
-
-                $prev_end_dt = clone $start;
-                $prev_end_dt->modify('-1 second');
-                $prev_end = $prev_end_dt->format('Y-m-d H:i:s');
-                break;
-
-            case 'year':
-            case 'this_year':
-                $curr_start = $now->format('Y-01-01 00:00:00');
-
-                $prev_start = (intval($now->format('Y')) - 1) . '-01-01 00:00:00';
-                $prev_end_dt = clone $now;
-                $prev_end_dt->modify('-1 year');
-                $prev_end = $prev_end_dt->format('Y-m-d H:i:s');
-                break;
-
-            case 'custom':
-                if (!empty($custom_start) && !empty($custom_end)) {
-                    $timezone = wp_timezone();
-                    $start_dt = new DateTime($custom_start, $timezone);
-                    $end_dt = new DateTime($custom_end, $timezone);
-                    $curr_start = $start_dt->format('Y-m-d 00:00:00');
-                    $curr_end = $end_dt->format('Y-m-d 23:59:59');
-
-                    // Calculate same number of days preceding
-                    $curr_start_dt = new DateTime($curr_start, $timezone);
-                    $curr_end_dt = new DateTime($curr_end, $timezone);
-                    $diff_days = intval($curr_end_dt->diff($curr_start_dt)->format('%a')) + 1;
-
-                    $prev_start_dt = clone $curr_start_dt;
-                    $prev_start_dt->modify("-{$diff_days} days");
-                    $prev_start = $prev_start_dt->format('Y-m-d 00:00:00');
-
-                    $prev_end_dt = clone $curr_start_dt;
-                    $prev_end_dt->modify('-1 second');
-                    $prev_end = $prev_end_dt->format('Y-m-d H:i:s');
-                } else {
-                    // Fallback to this month
-                    $curr_start = $now->format('Y-m-01 00:00:00');
-                }
-                break;
-        }
-
-        return array(
-            'curr_start' => $curr_start,
-            'curr_end' => $curr_end,
-            'prev_start' => $prev_start,
-            'prev_end' => $prev_end
-        );
+        // One definition of every reporting period, shared with every date filter.
+        $range = IDLM_Date_Ranges::resolve($period, $custom_start, $custom_end);
+        return $range ?: IDLM_Date_Ranges::resolve('this_month');
     }
 
     /**

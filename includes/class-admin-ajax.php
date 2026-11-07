@@ -438,48 +438,11 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             $get_date_basis = isset($_GET['date_basis']) ? sanitize_key(wp_unslash($_GET['date_basis'])) : 'assigned_at';
             $date_column = $date_columns[$get_date_basis] ?? 'assigned_at';
             $get_date_range = isset($_GET['date_range']) ? sanitize_key(wp_unslash($_GET['date_range'])) : '';
-            if (!empty($get_date_range)) {
-                $timezone = wp_timezone();
-                $now = new DateTime('now', $timezone);
-                if ($get_date_range === 'today') {
-                    $where[] = "{$date_column} >= %s";
-                    $params[] = $now->format('Y-m-d 00:00:00');
-                } elseif ($get_date_range === 'yesterday') {
-                    $yesterday = clone $now;
-                    $yesterday->modify('-1 day');
-                    $where[] = "{$date_column} >= %s AND {$date_column} <= %s";
-                    $params[] = $yesterday->format('Y-m-d 00:00:00');
-                    $params[] = $yesterday->format('Y-m-d 23:59:59');
-                } elseif ($get_date_range === 'week') {
-                    $start = clone $now;
-                    $start->modify('monday this week');
-                    $where[] = "{$date_column} >= %s";
-                    $params[] = $start->format('Y-m-d 00:00:00');
-                } elseif ($get_date_range === 'month') {
-                    $where[] = "{$date_column} >= %s";
-                    $params[] = $now->format('Y-m-01 00:00:00');
-                } elseif ($get_date_range === 'last_7_days') {
-                    $start = clone $now;
-                    $start->modify('-6 days');
-                    $where[] = "{$date_column} >= %s";
-                    $params[] = $start->format('Y-m-d 00:00:00');
-                } elseif ($get_date_range === 'last_30_days') {
-                    $start = clone $now;
-                    $start->modify('-29 days');
-                    $where[] = "{$date_column} >= %s";
-                    $params[] = $start->format('Y-m-d 00:00:00');
-                } elseif ($get_date_range === 'last_month') {
-                    $start = clone $now;
-                    $start->modify('first day of last month');
-                    $end = clone $now;
-                    $end->modify('last day of last month');
-                    $where[] = "{$date_column} >= %s AND {$date_column} <= %s";
-                    $params[] = $start->format('Y-m-d 00:00:00');
-                    $params[] = $end->format('Y-m-d 23:59:59');
-                } elseif ($get_date_range === 'year' || $get_date_range === 'this_year') {
-                    $where[] = "{$date_column} >= %s";
-                    $params[] = $now->format('Y-01-01 00:00:00');
-                }
+            $get_range = IDLM_Date_Ranges::resolve($get_date_range, isset($_GET['date_start']) ? sanitize_text_field(wp_unslash($_GET['date_start'])) : '', isset($_GET['date_end']) ? sanitize_text_field(wp_unslash($_GET['date_end'])) : '');
+            if ($get_range) {
+                $where[] = "{$date_column} >= %s AND {$date_column} <= %s";
+                $params[] = $get_range['curr_start'];
+                $params[] = $get_range['curr_end'];
             }
 
             $get_source          = isset($_GET['source']) ? sanitize_text_field(wp_unslash($_GET['source'])) : '';
@@ -707,35 +670,16 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $form_data_raw = isset($_POST['form_data']) ? wp_unslash($_POST['form_data']) : '';
         parse_str($form_data_raw, $form_fields);
-        $first_name = isset($form_fields['first_name']) ? sanitize_text_field($form_fields['first_name']) : '';
-        $email = isset($form_fields['email']) ? sanitize_email($form_fields['email']) : '';
-        $phone = isset($form_fields['phone']) ? sanitize_text_field($form_fields['phone']) : '';
-        if (empty($first_name) || empty($email) || empty($phone)) {
-            wp_send_json_error(array('message' => 'First Name, Email Address, and Phone are required.'));
+        $prepared = self::prepare_manual_lead($form_fields, IDLM_Lead_Access_Policy::is_pre_sales(), get_current_user_id());
+        if (is_wp_error($prepared)) {
+            wp_send_json_error(array('message' => $prepared->get_error_message(), 'field' => $prepared->get_error_data()['field'] ?? ''));
         }
-        if (!is_email($email)) {
-            wp_send_json_error(array('message' => 'Please enter a valid email address.'));
+        // Refuse a customer already in the CRM: nothing is saved and the existing lead is untouched.
+        $existing = IDLM_Contact_Identity::existing_leads($prepared['data']['phone'], $prepared['data']['email']);
+        if ($existing) {
+            wp_send_json_error(array('message' => self::existing_lead_message($existing), 'field' => 'email' === $existing[0]->matched ? 'email' : 'phone'));
         }
-        $lead_data = array(
-            'first_name' => $first_name,
-            'last_name' => sanitize_text_field($form_fields['last_name'] ?? ''),
-            'email' => $email,
-            'phone' => $phone,
-            'budget' => isset($form_fields['budget']) ? IDLM_Integrations::normalize_budget(sanitize_text_field($form_fields['budget'])) : '',
-            'project_timeline' => isset($form_fields['project_timeline']) ? sanitize_text_field($form_fields['project_timeline']) : '',
-            'property_location' => isset($form_fields['property_location']) ? sanitize_text_field($form_fields['property_location']) : '',
-            'source' => sanitize_text_field($form_fields['source'] ?? ''),
-            'property_type' => sanitize_text_field($form_fields['property_type'] ?? ''),
-            'num_rooms' => IDLM_Integrations::normalize_num_rooms(sanitize_text_field($form_fields['num_rooms'] ?? '')),
-            'preferred_studio' => sanitize_text_field($form_fields['preferred_studio'] ?? ''),
-            'lead_quality' => sanitize_text_field($form_fields['lead_quality'] ?? ''),
-            'stage' => 'New',
-            'call_status' => 'Not Called',
-            'assigned_rep_id' => get_current_user_id()
-        );
-        if ($lead_data['source'] === 'Referral') {
-            $lead_data['referrer_details'] = sanitize_textarea_field($form_fields['referrer_details'] ?? '');
-        }
+        $lead_data = $prepared['data'];
         // Capture local UTMs if present in admin browser session
         $captured = IDLM_Integrations::get_captured_attribution();
         foreach ($captured as $k => $v) {
@@ -743,23 +687,93 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 $lead_data[$k] = $v;
             }
         }
-        $result = IDLM_DB::upsert_inbound_lead($lead_data, 'manual', $lead_data);
+        $payload = $lead_data;
+        if ('pre_sales' === $prepared['choice']) { $payload['return_to_rep_id'] = get_current_user_id(); }
+        // Conversions are gated per lead by IDLM_CAPI; a manual lead from an ad may report Qualified.
+        $options = array('capi' => true, 'route_pre_sales' => 'pre_sales' === $prepared['choice'], 'details_task' => 'later' === $prepared['choice'], 'manual_note' => $prepared['note']);
+        $result = IDLM_DB::upsert_inbound_lead($lead_data, 'manual', $payload, $options);
         if ($result) {
-            if (!empty($result['requires_duplicate_review'])) {
-                wp_send_json_success(array(
-                    'message' => 'Submission retained for identity review; no new lead or task was created.',
-                    'pending_calls_count' => self::get_pending_calls_count(),
-                ));
+            if (!empty($result['requires_duplicate_review']) || empty($result['created'])) {
+                // The pre-check and the locked match normally agree; a race leaves the existing lead as it was.
+                wp_send_json_error(array('message' => 'This customer was just added by someone else. Search for them instead.'));
             }
-            $lead_id = absint($result['lead_id']);
-            $created = !empty($result['created']);
+            $messages = array('qualified' => 'Lead added as Qualified.', 'later' => 'Lead added. A task reminds you to complete the qualification details within 2 days.', 'pre_sales' => 'Lead added and sent to pre-sales. It comes back to you once they qualify it.', 'intake' => 'Lead added.');
             wp_send_json_success(array(
-                'message' => $created ? 'Manual Lead added successfully!' : 'Existing lead updated with the new submission data.',
+                'message' => $messages[$prepared['choice']],
                 'pending_calls_count' => self::get_pending_calls_count()
             ));
         }
         $validation_error = IDLM_DB::get_last_validation_error();
         wp_send_json_error(array('message' => $validation_error ?: 'Failed to create lead. Database write error.'));
+    }
+
+    /** The qualification details a sales-side lead needs before it can start as Qualified. */
+    const MANUAL_QUALIFICATION_FIELDS = array('project_name' => 'project name', 'property_location' => 'location', 'property_type' => 'project type', 'budget' => 'budget', 'possession_date' => 'possession date', 'project_timeline' => 'timeline');
+
+    /**
+     * Pure apart from settings: check and shape one Add lead submission. Pre-sales add leads
+     * for their own intake as before. Everyone else chooses: qualified now (every detail),
+     * add details later (stays theirs, with a task), or ask pre-sales to call (returns to them).
+     * Returns array(data, choice, note) or WP_Error carrying the field to focus.
+     */
+    public static function prepare_manual_lead($fields, $is_pre_sales, $user_id) {
+        $error = static function($message, $field) { return new WP_Error('idlm_manual_lead', $message, array('field' => $field)); };
+        $text = static function($key) use ($fields) { return isset($fields[$key]) && is_string($fields[$key]) ? trim(sanitize_text_field($fields[$key])) : ''; };
+        $first_name = $text('first_name'); $phone = $text('phone'); $email = strtolower($text('email'));
+        if ('' === $first_name) { return $error('Enter the customer\'s first name.', 'first_name'); }
+        if ('' === IDLM_Contact_Identity::phone_key($phone)) { return $error('Enter a phone number with at least 10 digits.', 'phone'); }
+        if ('' !== $email && !is_email($email)) { return $error('Enter a valid email address, or leave it empty.', 'email'); }
+        if ('' !== $email && IDLM_Contact_Identity::is_placeholder_email($email, $phone)) { return $error('This looks like a made-up email. Leave the email empty if the customer did not share one.', 'email'); }
+        $data = array(
+            'first_name' => $first_name, 'last_name' => $text('last_name'), 'email' => $email, 'phone' => $phone,
+            'budget' => '' !== $text('budget') ? IDLM_Integrations::normalize_budget($text('budget')) : '',
+            'project_timeline' => $text('project_timeline'), 'property_location' => $text('property_location'),
+            'source' => $text('source'), 'property_type' => $text('property_type'),
+            'num_rooms' => IDLM_Integrations::normalize_num_rooms($text('num_rooms')), 'preferred_studio' => $text('preferred_studio'),
+            'stage' => 'New', 'call_status' => 'Not Called', 'assigned_rep_id' => absint($user_id),
+        );
+        if ('Referral' === $data['source']) { $data['referrer_details'] = isset($fields['referrer_details']) && is_string($fields['referrer_details']) ? sanitize_textarea_field($fields['referrer_details']) : ''; }
+        if ('' === $data['preferred_studio']) {
+            // The creating rep's studio, when one is set for them in routing.
+            $studios = IDLM_Settings::get('idlm_rep_studio_assignments', array());
+            if (is_array($studios) && !empty($studios[$user_id])) { $data['preferred_studio'] = sanitize_text_field((string) $studios[$user_id]); }
+        }
+        if ($is_pre_sales) { return array('data' => $data, 'choice' => 'intake', 'note' => ''); }
+
+        $choice = $text('qualification_choice') ?: 'qualified';
+        if (!in_array($choice, array('qualified', 'later', 'pre_sales'), true)) { return $error('Choose how to save this lead.', 'qualification_choice'); }
+        $data['project_name'] = $text('project_name');
+        $possession = $text('possession_date');
+        if ('' !== $possession && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $possession)) { return $error('Enter the possession date as a date.', 'possession_date'); }
+        $data['possession_date'] = $possession;
+        if ('pre_sales' === $choice) {
+            if (!IDLM_Integrations::pre_sales_available()) { return $error('No one in pre-sales is available right now. Choose "Save, I\'ll add details later".', 'qualification_choice'); }
+            $data['assigned_rep_id'] = 0;
+            return array('data' => $data, 'choice' => $choice, 'note' => '');
+        }
+        if ('later' === $choice) { return array('data' => $data, 'choice' => $choice, 'note' => ''); }
+
+        $missing = array();
+        foreach (self::MANUAL_QUALIFICATION_FIELDS as $key => $label) { if ('' === (string) $data[$key]) { $missing[$key] = $label; } }
+        if ($missing) { return $error('To add this lead as Qualified, complete: ' . implode(', ', $missing) . '. Or choose to add the details later.', (string) array_key_first($missing)); }
+        if (IDLM_DB::budget_to_rupees($data['budget']) < 400000) { return $error('The minimum project budget to qualify is ₹4,00,000.', 'budget'); }
+        $floor_plan = $text('floor_plan_received');
+        if (!in_array($floor_plan, array('1', '0'), true)) { return $error('Say whether the floor plan has been received.', 'floor_plan_received'); }
+        $remark = isset($fields['qualification_handoff_remark']) && is_string($fields['qualification_handoff_remark']) ? trim(sanitize_textarea_field($fields['qualification_handoff_remark'])) : '';
+        if ('0' === $floor_plan && '' === $remark) { return $error('Add a remark explaining why there is no floor plan yet.', 'qualification_handoff_remark'); }
+        $data['floor_plan_received'] = (int) $floor_plan;
+        $data['lead_quality'] = 'Qualified';
+        return array('data' => $data, 'choice' => $choice, 'note' => '' === $remark ? '' : 'Qualified without a floor plan. Remark: ' . $remark);
+    }
+
+    /** What the rep is told about an existing customer, without revealing a lead they cannot see. */
+    private static function existing_lead_message($existing) {
+        $lead = $existing[0]; $by = 'email' === $lead->matched ? 'email' : 'phone number';
+        if (IDLM_Lead_Access_Policy::can_access((int) $lead->id)) {
+            $owner = (int) $lead->assigned_rep_id ? get_userdata((int) $lead->assigned_rep_id) : false;
+            return sprintf('This %s already belongs to %s (%s, assigned to %s). Open that lead instead.', $by, trim($lead->first_name . ' ' . $lead->last_name), $lead->stage, $owner ? $owner->display_name : 'no one');
+        }
+        return sprintf('This %s already belongs to a customer in the CRM handled by another team member. Ask your manager to reassign it if it is yours.', $by);
     }
 
     /**
@@ -1093,6 +1107,10 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                     if (self::current_user_is_pre_sales() && !in_array($stage, array('New', 'Contacted', 'Qualified'), true)) {
                         wp_send_json_error(array('message' => 'Pre-sales users can progress leads only through the Qualified stage.'));
                     }
+                    // Won needs each lead's own final deal value and discount, so it is never a bulk move.
+                    if ('Won' === $stage) {
+                        wp_send_json_error(array('message' => 'Move leads to Won one at a time, so each records its own deal value and discount.'));
+                    }
                     if ('Lost' === $stage) {
                         $allowed_lost_reasons = get_option('idlm_custom_lost_reasons', array('Budget Too High', 'Lost to Competitor', 'Project Postponed', 'Unable to Contact', 'Location or Service Unavailable', 'Timeline Mismatch', 'Client Not Interested', 'Duplicate or Invalid Lead', 'Other'));
                         if (!in_array($lost_reason, $allowed_lost_reasons, true)) {
@@ -1193,8 +1211,8 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $custom_start = isset($_POST['start_date']) ? sanitize_text_field(wp_unslash($_POST['start_date'])) : '';
         $custom_end = isset($_POST['end_date']) ? sanitize_text_field(wp_unslash($_POST['end_date'])) : '';
 
-        $allowed_periods = array('today', 'yesterday', 'this_week', 'last_7_days', 'this_month', 'last_30_days', 'last_month', 'year', 'this_year', 'custom');
-        if (!in_array($period, $allowed_periods, true)) {
+        $period = IDLM_Date_Ranges::normalize($period);
+        if ('' === $period) {
             wp_send_json_error(array('message' => 'Invalid dashboard period.'));
         }
         if ('custom' === $period) {

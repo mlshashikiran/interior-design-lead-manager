@@ -13,6 +13,8 @@ $idlm_can_assign_leads = !empty($context['can_assign_leads']);
 $idlm_stale_lead_count = isset($context['stale_lead_count']) ? absint($context['stale_lead_count']) : 0;
 $idlm_ajax_url = isset($context['ajax_url']) ? (string) $context['ajax_url'] : '';
 $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
+// The redesigned wording and structure render only while the CRM design layer is on.
+$idlm_design = class_exists('IDLM_Admin_Assets') && method_exists('IDLM_Admin_Assets', 'design_layer_enabled') && IDLM_Admin_Assets::design_layer_enabled();
 ?>
         <script type="text/javascript">
             if (typeof idlm_vars === 'undefined') {
@@ -25,7 +27,7 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
         <div class="wrap idlm-wrap">
             <header class="idlm-header">
                 <div>
-                    <h1>Kanban Deal Board</h1>
+                    <h1><?php echo $idlm_design ? 'Pipeline' : 'Kanban Deal Board'; ?></h1>
                 </div>
                 <div class="idlm-header-actions">
                     <label class="idlm-header-search" for="idlm-kanban-filter-search">
@@ -37,7 +39,7 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                         <span>Filters</span>
                         <span class="idlm-filter-count idlm-kanban-filter-count" aria-label="0 active filters" hidden>0</span>
                     </button>
-                    <button type="button" class="idlm-pending-calls-pill" id="idlm-kanban-stale-leads-pill" title="Show pipeline leads that need a fresh update" aria-label="Show <?php echo esc_attr($idlm_stale_lead_count); ?> pipeline leads that need a fresh update" <?php echo $idlm_stale_lead_count > 0 ? '' : 'style="display:none;"'; ?>>
+                    <button type="button" class="idlm-pending-calls-pill" id="idlm-kanban-stale-leads-pill"<?php echo $idlm_design ? ' aria-pressed="false"' : ''; ?> title="Show pipeline leads that need a fresh update" aria-label="Show <?php echo esc_attr($idlm_stale_lead_count); ?> pipeline leads that need a fresh update" <?php echo $idlm_stale_lead_count > 0 ? '' : 'style="display:none;"'; ?>>
                         <span class="dashicons dashicons-warning" aria-hidden="true"></span>
                         <span class="idlm-pending-text"><strong><?php echo esc_html($idlm_stale_lead_count); ?></strong> Needs update</span>
                     </button>
@@ -46,23 +48,23 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
 
             <section class="idlm-metric-grid idlm-kanban-stats" aria-label="Kanban pipeline summary">
                 <div class="idlm-metric idlm-metric-static idlm-kanban-stat">
-                    <span class="idlm-metric-label">Overall Leads — Filtered</span>
+                    <span class="idlm-metric-label"><?php echo $idlm_design ? 'Leads on board' : 'Overall Leads — Filtered'; ?></span>
                     <strong class="idlm-metric-value" id="idlm-stat-overall-leads">—</strong>
                 </div>
                 <div class="idlm-metric idlm-metric-static idlm-kanban-stat idlm-kanban-stat-attention">
-                    <span class="idlm-metric-label">Follow-ups Due</span>
+                    <span class="idlm-metric-label"><?php echo $idlm_design ? 'Follow-ups due' : 'Follow-ups Due'; ?></span>
                     <strong class="idlm-metric-value" id="idlm-stat-followups-due">—</strong>
                 </div>
                 <div class="idlm-metric idlm-metric-static idlm-kanban-stat idlm-kanban-stat-value-card">
-                    <span class="idlm-metric-label">Open Pipeline Value</span>
+                    <span class="idlm-metric-label"><?php echo $idlm_design ? 'Open pipeline value' : 'Open Pipeline Value'; ?></span>
                     <strong class="idlm-metric-value" id="idlm-stat-pipeline-value">—</strong>
                 </div>
                 <div class="idlm-metric idlm-metric-static idlm-kanban-stat idlm-kanban-stat-success">
-                    <span class="idlm-metric-label">Won This Month</span>
+                    <span class="idlm-metric-label"><?php echo $idlm_design ? 'Won this month' : 'Won This Month'; ?></span>
                     <strong class="idlm-metric-value" id="idlm-stat-won-month">—</strong>
                 </div>
                 <div class="idlm-metric idlm-metric-static idlm-kanban-stat idlm-kanban-stat-success">
-                    <span class="idlm-metric-label">Won Revenue This Month</span>
+                    <span class="idlm-metric-label"><?php echo $idlm_design ? 'Won revenue this month' : 'Won Revenue This Month'; ?></span>
                     <strong class="idlm-metric-value" id="idlm-stat-won-revenue">—</strong>
                 </div>
             </section>
@@ -72,7 +74,7 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                 <div class="idlm-filters-panel-header">
                     <div>
                         <h2 id="idlm-kanban-filters-title">Filter pipeline</h2>
-                        <p>Narrow the board by assignment, activity, and qualification.</p>
+                        <p><?php echo $idlm_design ? 'The board updates as you change a filter.' : 'Narrow the board by assignment, activity, and qualification.'; ?></p>
                     </div>
                     <button type="button" id="idlm-kanban-close-filters" class="idlm-filters-close" aria-label="Close filters">
                         <span class="dashicons dashicons-no-alt" aria-hidden="true"></span>
@@ -82,32 +84,23 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                 <div class="idlm-filter-group">
                     <label for="idlm-kanban-filter-date-basis">Date basis</label>
                     <select id="idlm-kanban-filter-date-basis" class="idlm-input">
-                        <option value="assigned_at" selected>Assigned Date</option>
-                        <option value="created_at">Created Date</option>
-                        <option value="handoff_at">Sales Handoff Date</option>
-                        <option value="updated_at">Last Updated Date</option>
-                        <option value="qualified_at">Qualified Date</option>
-                        <option value="conversion_time">Won Date</option>
+                        <option value="assigned_at" selected><?php echo $idlm_design ? 'Assigned date' : 'Assigned Date'; ?></option>
+                        <option value="created_at"><?php echo $idlm_design ? 'Created date' : 'Created Date'; ?></option>
+                        <option value="handoff_at"><?php echo $idlm_design ? 'Sales handoff date' : 'Sales Handoff Date'; ?></option>
+                        <option value="updated_at"><?php echo $idlm_design ? 'Last updated date' : 'Last Updated Date'; ?></option>
+                        <option value="qualified_at"><?php echo $idlm_design ? 'Qualified date' : 'Qualified Date'; ?></option>
+                        <option value="conversion_time"><?php echo $idlm_design ? 'Won date' : 'Won Date'; ?></option>
                     </select>
                 </div>
                 <div class="idlm-filter-group">
                     <label for="idlm-kanban-filter-date-range">Date range</label>
-                    <select id="idlm-kanban-filter-date-range" class="idlm-input">
-                        <option value="">All Time</option>
-                        <option value="today">Today</option>
-                        <option value="yesterday">Yesterday</option>
-                        <option value="week">This Week</option>
-                        <option value="last_7_days">Last 7 Days</option>
-                        <option value="month">This Month</option>
-                        <option value="last_30_days">Last 30 Days</option>
-                        <option value="last_month">Last Month</option>
-                        <option value="year">This Year</option>
-                    </select>
+                    <select data-idlm-date-range id="idlm-kanban-filter-date-range" class="idlm-input"><?php IDLM_Date_Ranges::print_options('', 'All time'); ?></select>
+                    <div class="idlm-date-custom" data-idlm-date-custom-for="idlm-kanban-filter-date-range" hidden><label for="idlm-kanban-filter-date-start">From</label><input type="date" id="idlm-kanban-filter-date-start" class="idlm-input"><label for="idlm-kanban-filter-date-end">To</label><input type="date" id="idlm-kanban-filter-date-end" class="idlm-input"></div>
                 </div>
                 <div class="idlm-filter-group">
                     <label for="idlm-kanban-filter-rep">Representative</label>
                     <select id="idlm-kanban-filter-rep" class="idlm-input">
-                        <option value="">All Reps</option>
+                        <option value=""><?php echo $idlm_design ? 'All representatives' : 'All Reps'; ?></option>
                         <option value="0">Unassigned</option>
                         <?php foreach ($idlm_reps as $idlm_rep): ?>
                             <option value="<?php echo esc_attr($idlm_rep->ID); ?>"><?php echo esc_html($idlm_rep->display_name); ?></option>
@@ -117,7 +110,7 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                 <div class="idlm-filter-group">
                     <label for="idlm-kanban-filter-source">Source channel</label>
                     <select id="idlm-kanban-filter-source" class="idlm-input">
-                        <option value="">All Channels</option>
+                        <option value=""><?php echo $idlm_design ? 'All channels' : 'All Channels'; ?></option>
                         <option value="Website">Website</option>
                         <option value="Meta Ads">Meta Ads</option>
                         <option value="Google Ads">Google Ads</option>
@@ -129,7 +122,7 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                 <div class="idlm-filter-group">
                     <label for="idlm-kanban-filter-call-status">Call status</label>
                     <select id="idlm-kanban-filter-call-status" class="idlm-input">
-                        <option value="">All Statuses</option>
+                        <option value=""><?php echo $idlm_design ? 'All statuses' : 'All Statuses'; ?></option>
                         <?php foreach ($idlm_call_statuses as $idlm_cs): ?>
                             <option value="<?php echo esc_attr($idlm_cs); ?>"><?php echo esc_html($idlm_cs); ?></option>
                         <?php endforeach; ?>
@@ -138,38 +131,46 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                 <div class="idlm-filter-group">
                     <label for="idlm-kanban-filter-quality">Lead quality</label>
                     <select id="idlm-kanban-filter-quality" class="idlm-input">
-                        <option value="">All Qualities</option>
+                        <option value=""><?php echo $idlm_design ? 'All qualities' : 'All Qualities'; ?></option>
                         <?php if ($idlm_can_assign_leads): ?>
-                            <option value="Qualified Awaiting Assignment">Qualified – Awaiting Assignment</option>
-                            <option value="Routing Exception">Routing Exceptions</option>
+                            <option value="Qualified Awaiting Assignment"><?php echo $idlm_design ? 'Qualified, awaiting assignment' : 'Qualified – Awaiting Assignment'; ?></option>
+                            <option value="Routing Exception"><?php echo $idlm_design ? 'Routing exceptions' : 'Routing Exceptions'; ?></option>
                         <?php endif; ?>
                         <option value="Qualified" selected>Qualified</option>
-                        <option value="Qualified Plan Received">Qualified · Plan Received</option>
-                        <option value="Qualified Plan Pending">Qualified · Plan Pending</option>
+                        <option value="Qualified Plan Received"><?php echo $idlm_design ? 'Qualified, plan received' : 'Qualified · Plan Received'; ?></option>
+                        <option value="Qualified Plan Pending"><?php echo $idlm_design ? 'Qualified, plan pending' : 'Qualified · Plan Pending'; ?></option>
                         <option value="Unqualified">Unqualified</option>
-                        <option value="Pending">Pending Qualification</option>
+                        <option value="Pending"><?php echo $idlm_design ? 'Pending qualification' : 'Pending Qualification'; ?></option>
                     </select>
                 </div>
                 <div class="idlm-filter-group">
                     <label for="idlm-kanban-filter-attention">Update status</label>
                     <select id="idlm-kanban-filter-attention" class="idlm-input">
                         <option value="">All leads</option>
-                        <option value="stale_updates">Needs fresh update (7+ days)</option>
+                        <option value="stale_updates"><?php echo $idlm_design ? 'No update in 7+ days' : 'Needs fresh update (7+ days)'; ?></option>
                     </select>
                 </div>
                 <div class="idlm-filter-group">
                     <label for="idlm-kanban-sort">Sort cards</label>
                     <select id="idlm-kanban-sort" class="idlm-input">
-                        <option value="newest" selected>Newest Leads</option>
-                        <option value="oldest">Oldest Leads</option>
+                        <option value="newest" selected><?php echo $idlm_design ? 'Newest leads' : 'Newest Leads'; ?></option>
+                        <option value="oldest"><?php echo $idlm_design ? 'Oldest leads' : 'Oldest Leads'; ?></option>
                         <option value="name_asc">Name A–Z</option>
                         <option value="name_desc">Name Z–A</option>
                     </select>
                 </div>
+                <?php if (!$idlm_design): ?>
                 <div class="idlm-filter-group">
                     <button type="button" id="idlm-kanban-clear-filters" class="idlm-btn idlm-btn-secondary">Clear filters</button>
                 </div>
+                <?php endif; ?>
                 </div>
+                <?php if ($idlm_design): ?>
+                <div class="idlm-filters-panel-footer">
+                    <button type="button" id="idlm-kanban-clear-filters" class="idlm-btn idlm-btn-secondary">Reset filters</button>
+                    <button type="button" id="idlm-kanban-done-filters" class="idlm-btn idlm-btn-primary">Show board</button>
+                </div>
+                <?php endif; ?>
             </div>
 
             <p id="idlm-kanban-live-status" class="screen-reader-text" role="status" aria-live="polite" aria-atomic="true"></p>
@@ -187,12 +188,16 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                 <?php endforeach; ?>
             </div>
 
+            <?php if ($idlm_design): ?>
+            <div class="idlm-kanban-board-status" id="idlm-kanban-board-status" hidden></div>
+            <div class="idlm-kanban-board-shell" id="idlm-kanban-board-shell">
+            <?php endif; ?>
             <!-- Kanban Board -->
             <div class="idlm-kanban-board" id="idlm-kanban-board" data-currency-symbol="<?php echo esc_attr($idlm_currency_symbol); ?>" role="region" aria-label="Sales pipeline board" tabindex="0">
                 <?php foreach ($idlm_stages as $idlm_stage): ?>
                     <?php
                     $idlm_total_source = isset($idlm_kanban_stage_totals[$idlm_stage]) ? $idlm_kanban_stage_totals[$idlm_stage] : 'none';
-                    $idlm_total_label = 'quote_value' === $idlm_total_source ? 'Quote Total' : ('deal_value' === $idlm_total_source ? 'Deal Total' : '');
+                    $idlm_total_label = 'quote_value' === $idlm_total_source ? ($idlm_design ? 'Quote total' : 'Quote Total') : ('deal_value' === $idlm_total_source ? ($idlm_design ? 'Deal total' : 'Deal Total') : '');
                     ?>
                     <?php
                     $idlm_stage_slug = sanitize_html_class(strtolower(str_replace(' ', '-', $idlm_stage)));
@@ -213,6 +218,9 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                     </section>
                 <?php endforeach; ?>
             </div>
+            <?php if ($idlm_design): ?>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Kanban Won Dialog -->
@@ -220,7 +228,7 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
             <div class="idlm-modal-content idlm-dialog__panel">
                 <header class="idlm-modal-header idlm-dialog__header"><div><h2 class="idlm-dialog__title" id="idlm-kanban-deal-title">Move lead to Won</h2><p class="idlm-dialog__description" id="idlm-kanban-deal-description">Record the final commercial value before moving this card.</p></div><button type="button" class="idlm-dialog__close" id="idlm-kanban-deal-close" data-idlm-dialog-close aria-label="Close Won dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button></header>
                 <div class="idlm-dialog__body">
-                    <div class="idlm-form-group"><label for="idlm-kanban-deal-input">Deal value (<?php echo esc_html($idlm_currency_symbol); ?>) <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0.01" inputmode="decimal" id="idlm-kanban-deal-input" class="idlm-input" required aria-errormessage="idlm-kanban-deal-error" placeholder="e.g. 150000"><p class="idlm-field-error" id="idlm-kanban-deal-error" role="alert" hidden></p></div>
+                    <div class="idlm-form-group"><label for="idlm-kanban-deal-input">Deal value (<?php echo esc_html($idlm_currency_symbol); ?>) <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0.01" inputmode="decimal" id="idlm-kanban-deal-input" class="idlm-input" required aria-errormessage="idlm-kanban-deal-error" placeholder="e.g. 150000"><p class="idlm-field-error" id="idlm-kanban-deal-error" role="alert" hidden></p><?php if ($idlm_design): ?><p class="idlm-field-help" id="idlm-kanban-deal-source" hidden>Prefilled from the quote value. Change it if the final price differs.</p><?php endif; ?></div>
                     <div class="idlm-form-group"><label for="idlm-kanban-discount-input">Discount percentage <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0" max="100" inputmode="decimal" id="idlm-kanban-discount-input" class="idlm-input" required aria-errormessage="idlm-kanban-discount-error" placeholder="e.g. 10"><p class="idlm-field-error" id="idlm-kanban-discount-error" role="alert" hidden></p></div>
                     <div class="idlm-form-group"><label for="idlm-kanban-property-location-input">Property location or pincode</label><input type="text" id="idlm-kanban-property-location-input" class="idlm-input" maxlength="255" autocomplete="street-address" placeholder="e.g. North Bangalore / 560001"></div>
                 </div>

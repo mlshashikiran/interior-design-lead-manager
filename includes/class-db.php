@@ -710,6 +710,12 @@ class IDLM_DB {
 
         $statements[] = $sql_inbound_reviews;
         $statements[] = IDLM_Lead_Outbox::schema();
+        $statements = array_merge($statements, IDLM_Lead_Payment_Schema::statements());
+        $statements[] = IDLM_Design_Handoffs::schema();
+        $statements[] = IDLM_Design_Handoffs::versions_schema();
+        $statements[] = IDLM_Design_Handoffs::events_schema();
+        $statements[] = IDLM_Design_Revisions::schema();
+        $statements[] = IDLM_Design_Stages::schema();
         return $statements;
     }
 

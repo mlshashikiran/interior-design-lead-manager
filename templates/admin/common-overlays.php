@@ -9,6 +9,7 @@ $idlm_lost_reasons = isset($context['lost_reasons']) && is_array($context['lost_
 $idlm_reps = isset($context['reps']) && is_array($context['reps']) ? $context['reps'] : array();
 $idlm_can_assign_leads = !empty($context['can_assign_leads']);
 $idlm_can_manage_options = !empty($context['can_manage_options']);
+$idlm_design_layer = IDLM_Admin_Assets::design_layer_enabled();
 ?>
         <!-- Sliding Drawer Panel (Right side slideout) -->
         <div class="idlm-drawer" id="idlm-lead-drawer" role="dialog" aria-modal="true" aria-labelledby="lead-title" aria-hidden="true" tabindex="-1">
@@ -17,7 +18,7 @@ $idlm_can_manage_options = !empty($context['can_manage_options']);
             </button>
             <div class="idlm-drawer-content-wrapper" id="idlm-drawer-content-wrapper-inner">
                 <!-- Header, Tabs, and Body loaded dynamically via AJAX to match mockup -->
-                <div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> Loading Lead details...</div>
+                <div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> <?php echo $idlm_design_layer ? 'Loading lead details…' : 'Loading Lead details...'; ?></div>
             </div>
             <button type="button" class="idlm-drawer-lead-nav idlm-drawer-lead-nav-next" id="idlm-drawer-next-lead" aria-label="Open next lead" title="Next lead (Right arrow)" disabled>
                 <span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
@@ -51,7 +52,7 @@ $idlm_can_manage_options = !empty($context['can_manage_options']);
                     <button type="button" class="idlm-dialog__close" id="idlm-deal-value-modal-close" data-idlm-dialog-close aria-label="Close Won dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
                 </header>
                 <div class="idlm-dialog__body">
-                    <div class="idlm-form-group"><label for="idlm-deal-value-input">Deal value (<?php echo esc_html($idlm_currency_code); ?>) <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0.01" inputmode="decimal" id="idlm-deal-value-input" class="idlm-input" required aria-errormessage="idlm-deal-value-error" placeholder="e.g. 150000"><p class="idlm-field-error" id="idlm-deal-value-error" role="alert" hidden></p></div>
+                    <div class="idlm-form-group"><label for="idlm-deal-value-input">Deal value (<?php echo esc_html($idlm_currency_code); ?>) <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0.01" inputmode="decimal" id="idlm-deal-value-input" class="idlm-input" required aria-errormessage="idlm-deal-value-error" placeholder="e.g. 150000"><p class="idlm-field-error" id="idlm-deal-value-error" role="alert" hidden></p><?php if ($idlm_design_layer): ?><p class="idlm-field-help" id="idlm-deal-value-source" hidden>Prefilled from the quote value. Change it if the final price differs.</p><?php endif; ?></div>
                     <div class="idlm-form-group"><label for="idlm-discount-percentage-input">Discount percentage <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="number" step="0.01" min="0" max="100" inputmode="decimal" id="idlm-discount-percentage-input" class="idlm-input" required aria-errormessage="idlm-discount-percentage-error" placeholder="e.g. 10"><p class="idlm-field-error" id="idlm-discount-percentage-error" role="alert" hidden></p></div>
                     <div class="idlm-form-group"><label for="idlm-won-property-location-input">Property location or pincode</label><input type="text" id="idlm-won-property-location-input" class="idlm-input" maxlength="255" autocomplete="street-address" placeholder="e.g. North Bangalore / 560001"></div>
                 </div>
@@ -89,6 +90,38 @@ $idlm_can_manage_options = !empty($context['can_manage_options']);
             </div>
         </div>
 
+        <!-- Send to Design Dialog -->
+        <div class="idlm-modal idlm-dialog" id="idlm-design-send-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-design-send-title" aria-describedby="idlm-design-send-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-design-send-manager">
+            <div class="idlm-modal-content idlm-dialog__panel">
+                <header class="idlm-modal-header idlm-dialog__header">
+                    <div><h2 class="idlm-dialog__title" id="idlm-design-send-title">Send to design</h2><p class="idlm-dialog__description" id="idlm-design-send-description"></p></div>
+                    <button type="button" class="idlm-dialog__close" data-idlm-dialog-close aria-label="Close send to design dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
+                </header>
+                <div class="idlm-dialog__body">
+                    <form id="idlm-design-send-form" enctype="multipart/form-data" novalidate>
+                        <p class="idlm-design-send-basis" id="idlm-design-send-basis" hidden></p>
+                        <p class="idlm-design-send-onfile" id="idlm-design-send-onfile" hidden></p>
+                        <div class="idlm-form-group"><label for="idlm-design-send-manager">Design Manager <span class="idlm-required-indicator" aria-hidden="true">*</span></label><select class="idlm-input" id="idlm-design-send-manager" name="design_manager_id" required></select></div>
+                        <div class="idlm-form-group"><label for="idlm-design-send-notes">Remarks for design <span class="idlm-required-indicator" aria-hidden="true">*</span></label><textarea class="idlm-input" id="idlm-design-send-notes" name="notes" rows="3" maxlength="2000" required placeholder="What was promised, special requests"></textarea></div>
+                        <div class="idlm-form-group"><label for="idlm-design-send-scope">Scope <span class="idlm-required-indicator" aria-hidden="true">*</span></label><textarea class="idlm-input" id="idlm-design-send-scope" name="scope_summary" rows="2" maxlength="2000" required placeholder="Rooms and work included, anything excluded"></textarea></div>
+                        <div class="idlm-form-group"><label for="idlm-design-send-pending">Pending items <span class="idlm-required-indicator" aria-hidden="true">*</span></label><textarea class="idlm-input" id="idlm-design-send-pending" name="pending_items" rows="2" maxlength="2000" required placeholder="What is still open. Write None if nothing."></textarea></div>
+                        <fieldset class="idlm-design-send-advance" id="idlm-design-send-advance">
+                            <legend>Advance received</legend>
+                            <div class="idlm-design-send-grid">
+                                <div class="idlm-form-group"><label for="idlm-design-send-amount">Amount <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="text" inputmode="decimal" autocomplete="off" class="idlm-input" id="idlm-design-send-amount" name="amount"></div>
+                                <div class="idlm-form-group"><label for="idlm-design-send-date">Date received <span class="idlm-required-indicator" aria-hidden="true">*</span></label><input type="date" class="idlm-input" id="idlm-design-send-date" name="received_date"></div>
+                            </div>
+                            <div class="idlm-form-group"><label for="idlm-design-send-method">Paid by <span class="idlm-required-indicator" aria-hidden="true">*</span></label><select class="idlm-input" id="idlm-design-send-method" name="method"><option value="UPI">UPI</option><option value="Bank transfer">Bank transfer</option><option value="Cheque">Cheque</option><option value="Card">Card</option><option value="Cash">Cash</option></select></div>
+                            <div class="idlm-form-group"><label for="idlm-design-send-reference">Transaction reference</label><input type="text" class="idlm-input" id="idlm-design-send-reference" name="reference" maxlength="255" autocomplete="off"></div>
+                            <div class="idlm-form-group"><label for="idlm-design-send-file">Or payment screenshot</label><input type="file" class="idlm-input" id="idlm-design-send-file" name="advance_screenshot" accept="image/jpeg,image/png,image/webp" aria-describedby="idlm-design-send-file-help"><small id="idlm-design-send-file-help">JPEG, PNG or WebP, up to 10 MB. A short payment is fine.</small></div>
+                        </fieldset>
+                        <p class="idlm-field-error" id="idlm-design-send-error" role="alert" hidden></p>
+                    </form>
+                </div>
+                <footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-dialog-close>Cancel</button><button type="submit" form="idlm-design-send-form" class="idlm-btn idlm-btn-primary" id="idlm-design-send-submit">Send to design</button></footer>
+            </div>
+        </div>
+
         <!-- Unsaved Changes Dialog -->
         <div class="idlm-modal idlm-dialog idlm-dialog--stacked-actions" id="idlm-unsaved-changes-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-unsaved-modal-title" aria-describedby="idlm-unsaved-modal-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-unsaved-save-exit">
             <div class="idlm-modal-content idlm-dialog__panel">
@@ -97,19 +130,23 @@ $idlm_can_manage_options = !empty($context['can_manage_options']);
                     <button type="button" class="idlm-dialog__close" id="idlm-unsaved-modal-close" data-idlm-dialog-close aria-label="Close unsaved changes dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
                 </header>
                 <div class="idlm-dialog__body"><div id="idlm-unsaved-fields-list" role="status" aria-live="polite"></div><p class="idlm-field-error" id="idlm-unsaved-save-error" role="alert" hidden></p></div>
+                <?php if ($idlm_design_layer): ?>
+                <footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-danger-quiet" id="idlm-unsaved-discard-exit">Discard and exit</button><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-unsaved-cancel" data-idlm-dialog-close>Keep editing</button><button type="button" class="idlm-btn idlm-btn-primary" id="idlm-unsaved-save-exit">Save and exit</button></footer>
+                <?php else: ?>
                 <footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-unsaved-cancel" data-idlm-dialog-close>Keep editing</button><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-unsaved-discard-exit">Discard and exit</button><button type="button" class="idlm-btn idlm-btn-primary" id="idlm-unsaved-save-exit">Save and exit</button></footer>
+                <?php endif; ?>
             </div>
         </div>
 
         <!-- Global Task Sidebar Panel -->
-        <div class="idlm-global-sidebar" id="idlm-global-tasks-sidebar">
+        <div class="idlm-global-sidebar" id="idlm-global-tasks-sidebar"<?php echo $idlm_design_layer ? ' role="region" aria-labelledby="idlm-global-tasks-title"' : ''; ?>>
             <div class="idlm-global-sidebar-header">
-                <h2 class="idlm-global-sidebar-title">Today’s work</h2>
+                <h2 class="idlm-global-sidebar-title"<?php echo $idlm_design_layer ? ' id="idlm-global-tasks-title" tabindex="-1"' : ''; ?>>Today’s work</h2>
                 <div class="idlm-global-sidebar-actions">
                     <button type="button" class="idlm-global-sidebar-filter-btn active" id="idlm-global-tasks-filter-attention" onclick="filterGlobalTasks('attention')">Needs attention</button>
                     <button type="button" class="idlm-global-sidebar-filter-btn" id="idlm-global-tasks-filter-completed" onclick="filterGlobalTasks('completed')">Completed</button>
                     <?php if (current_user_can('manage_options')): ?>
-                        <button type="button" class="idlm-global-sidebar-filter-btn" onclick="cleanupStaleTasks()">Clean up</button>
+                        <button type="button" class="idlm-global-sidebar-filter-btn idlm-global-sidebar-cleanup" onclick="cleanupStaleTasks()">Clean up</button>
                     <?php endif; ?>
                     <button type="button" class="idlm-close" id="idlm-global-tasks-sidebar-close" aria-label="Close active tasks">&times;</button>
                 </div>
@@ -123,7 +160,7 @@ $idlm_can_manage_options = !empty($context['can_manage_options']);
         </div>
 
         <!-- Floating Action Button for Tasks -->
-        <button type="button" class="idlm-floating-tasks-btn" id="idlm-floating-tasks-btn" title="View today’s work" onclick="toggleGlobalTasksSidebar()">
+        <button type="button" class="idlm-floating-tasks-btn" id="idlm-floating-tasks-btn" title="View today’s work"<?php echo $idlm_design_layer ? ' aria-controls="idlm-global-tasks-sidebar" aria-expanded="false"' : ''; ?> onclick="toggleGlobalTasksSidebar()">
             <span class="dashicons dashicons-editor-ul idlm-floating-tasks-icon" aria-hidden="true"></span>
             <span class="idlm-floating-tasks-label">Today’s work</span>
             <span class="idlm-floating-tasks-badge" id="idlm-floating-tasks-badge">0</span>

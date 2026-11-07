@@ -6,7 +6,33 @@
 (function () {
     'use strict';
 
+    // Mouse and touch users get no lingering focus ring; the keyboard keeps it. Design layer only.
+    if (document.body && document.body.classList.contains('idlm-crm-design')) {
+        // A click that loads a new page (for example "Add item") must not show a ring on the field it focuses, so the pointer state survives one navigation.
+        var pointerFlag = function (value) {
+            try {
+                if (null === value) { window.sessionStorage.removeItem('idlmPointerInput'); } else if (undefined === value) { return '1' === window.sessionStorage.getItem('idlmPointerInput'); } else { window.sessionStorage.setItem('idlmPointerInput', value); }
+            } catch (error) { /* Storage can be unavailable; the ring then simply shows. */ }
+            return false;
+        };
+        if (pointerFlag()) {
+            document.body.classList.add('idlm-pointer-input');
+        }
+        document.addEventListener('pointerdown', function () {
+            document.body.classList.add('idlm-pointer-input');
+            pointerFlag('1');
+        }, true);
+        document.addEventListener('keydown', function (event) {
+            pointerFlag(null);
+            if ('Tab' === event.key) {
+                document.body.classList.remove('idlm-pointer-input');
+            }
+        }, true);
+    }
+
     var activeDialog = null;
+    var toastStack = null;
+    var toastIcons = {success: 'dashicons-yes-alt', error: 'dashicons-dismiss', warning: 'dashicons-warning', info: 'dashicons-info'};
     var returnFocus = new WeakMap();
     var hiddenOnClose = new WeakMap();
     var inertedNodes = [];
@@ -23,6 +49,10 @@
         '[contenteditable="true"]',
         '[tabindex]:not([tabindex="-1"])'
     ].join(',');
+
+    function designLayerActive() {
+        return document.body.classList.contains('idlm-crm-design');
+    }
 
     function resolveDialog(target) {
         if (!target) {
@@ -241,6 +271,12 @@
                 '</div>' +
             '</div>';
         document.body.appendChild(dialog);
+        if (designLayerActive()) {
+            // A confirmation has no form body, so its actions belong in the shared dialog footer.
+            var actions = dialog.querySelector('.idlm-dialog__actions');
+            actions.classList.add('idlm-dialog__footer');
+            dialog.querySelector('.idlm-dialog__panel').appendChild(actions);
+        }
         return dialog;
     }
 
@@ -276,6 +312,11 @@
         error.textContent = '';
         confirmButton.textContent = options.confirmLabel || (promptMode ? 'Continue' : 'Confirm');
         confirmButton.classList.toggle('idlm-btn-danger', !!options.destructive);
+        if (designLayerActive()) {
+            dialog.querySelector('.idlm-dialog__body').hidden = !promptMode;
+            dialog.classList.toggle('idlm-dialog--destructive', !!options.destructive);
+            cancelButton.textContent = options.cancelLabel || 'Cancel';
+        }
 
         return new Promise(function(resolve) {
             var settled = false;
@@ -317,11 +358,105 @@
             dialog.addEventListener('idlm:dialogclose', onClose);
             confirmButton.addEventListener('click', onConfirm);
             cancelButton.addEventListener('click', onCancel);
-            open(dialog, {trigger: options.trigger, initialFocus: promptMode ? '#' + control.id : '[data-idlm-action-confirm]'});
+            // Enter on a destructive confirmation must not complete it by accident.
+            var safeFocus = designLayerActive() && options.destructive ? '[data-idlm-action-cancel]' : '[data-idlm-action-confirm]';
+            open(dialog, {trigger: options.trigger, initialFocus: promptMode ? '#' + control.id : safeFocus});
         });
     }
 
-    function notify(message, type) {
+    function ensureToastStack() {
+        if (!toastStack || !document.body.contains(toastStack)) {
+            toastStack = document.createElement('div');
+            toastStack.className = 'idlm-toast-stack';
+            toastStack.setAttribute('aria-label', 'Notifications');
+            document.body.appendChild(toastStack);
+        }
+        return toastStack;
+    }
+
+    /**
+     * Stacked, readable feedback. Errors stay longer and can carry a retry action:
+     * notify(message, 'error', {action: {label: 'Retry', onClick: fn}, duration: 8000}).
+     */
+    function stackedToast(message, type, options) {
+        var stack = ensureToastStack();
+        var kind = toastIcons[type] ? type : 'info';
+        var duration = options.duration || ('error' === kind || options.action ? 10000 : ('warning' === kind ? 8000 : 5000));
+        var existing = Array.prototype.filter.call(stack.children, function (item) {
+            return item.dataset.idlmToastMessage === String(message);
+        })[0];
+        var toast = document.createElement('div');
+        var timer = null;
+
+        function dismiss() {
+            window.clearTimeout(timer);
+            toast.classList.remove('is-visible');
+            window.setTimeout(function () { toast.remove(); }, 220);
+        }
+        function schedule() {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(dismiss, duration);
+        }
+
+        if (existing) {
+            existing.remove();
+        }
+        while (stack.children.length >= 5) {
+            stack.firstElementChild.remove();
+        }
+
+        toast.className = 'idlm-toast ' + kind;
+        toast.dataset.idlmToastMessage = String(message);
+        toast.setAttribute('role', 'error' === kind ? 'alert' : 'status');
+        toast.setAttribute('aria-live', 'error' === kind ? 'assertive' : 'polite');
+
+        var icon = document.createElement('span');
+        icon.className = 'dashicons ' + toastIcons[kind] + ' idlm-toast__icon';
+        icon.setAttribute('aria-hidden', 'true');
+        toast.appendChild(icon);
+
+        var text = document.createElement('span');
+        text.className = 'idlm-toast__message';
+        text.textContent = message;
+        toast.appendChild(text);
+
+        if (options.action && options.action.label) {
+            var action = document.createElement('button');
+            action.type = 'button';
+            action.className = 'idlm-toast__action';
+            action.textContent = options.action.label;
+            action.addEventListener('click', function () {
+                dismiss();
+                if ('function' === typeof options.action.onClick) {
+                    options.action.onClick();
+                }
+            });
+            toast.appendChild(action);
+        }
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'idlm-toast__dismiss';
+        close.setAttribute('aria-label', 'Dismiss notification');
+        close.innerHTML = '<span class="dashicons dashicons-no-alt" aria-hidden="true"></span>';
+        close.addEventListener('click', dismiss);
+        toast.appendChild(close);
+
+        toast.addEventListener('mouseenter', function () { window.clearTimeout(timer); });
+        toast.addEventListener('mouseleave', schedule);
+        toast.addEventListener('focusin', function () { window.clearTimeout(timer); });
+        toast.addEventListener('focusout', schedule);
+
+        stack.appendChild(toast);
+        window.setTimeout(function () { toast.classList.add('is-visible'); }, 0);
+        schedule();
+    }
+
+    function notify(message, type, options) {
+        if (designLayerActive()) {
+            stackedToast(message, type, options || {});
+            return;
+        }
         var toast = document.createElement('div');
         toast.className = 'idlm-toast ' + (type || 'info');
         toast.setAttribute('role', 'status');
@@ -335,6 +470,86 @@
             toast.classList.remove('is-visible');
             window.setTimeout(function() { toast.remove(); }, 220);
         }, 3000);
+    }
+
+    /*
+     * Design layer: page notices become toasts, so none stays pinned above the page.
+     * These stay where they are: anything with a link or control (it must stay usable),
+     * anything inside a dialog or drawer, and anything marked data-idlm-notice-inline
+     * (standing context about the record, or a problem with a form field).
+     * The original stays hidden in the DOM because other scripts read it, such as Settings' saved state.
+     */
+    function noticeKind(notice) {
+        if (notice.matches('.notice-error, .idlm-alert-danger, .idlm-alert-error')) { return 'error'; }
+        if (notice.matches('.notice-warning, .idlm-alert-warning')) { return 'warning'; }
+        if (notice.matches('.notice-success, .idlm-alert-success, .idlm-account-success')) { return 'success'; }
+        return 'info';
+    }
+
+    function promoteNotice(notice) {
+        if (notice.dataset.idlmNoticePromoted || notice.hidden
+            || !notice.closest('.idlm-workspace, .idlm-wrap')
+            || notice.closest('[data-idlm-notice-inline], [data-idlm-dialog], .idlm-dialog, .idlm-modal, .idlm-drawer, .idlm-toast-stack')
+            || notice.querySelector('a, button:not(.notice-dismiss), input, select, textarea')) {
+            return;
+        }
+        var copy = notice.cloneNode(true);
+        copy.querySelectorAll('.notice-dismiss').forEach(function (button) { button.remove(); });
+        var message = copy.textContent.replace(/\s+/g, ' ').trim();
+        if (!message) {
+            return;
+        }
+        var requested = parseInt(notice.getAttribute('data-idlm-toast-autoclose'), 10);
+        notice.dataset.idlmNoticePromoted = '1';
+        notice.style.setProperty('display', 'none', 'important');
+        stackedToast(message, noticeKind(notice), requested > 0 ? {duration: requested} : {});
+    }
+
+    function promoteNotices(scope) {
+        if (scope.matches && scope.matches('.notice, .idlm-alert')) {
+            promoteNotice(scope);
+        }
+        scope.querySelectorAll('.notice, .idlm-alert').forEach(promoteNotice);
+    }
+
+    function watchNotices() {
+        if (!designLayerActive()) {
+            return;
+        }
+        promoteNotices(document);
+        new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (1 === node.nodeType) {
+                        promoteNotices(node);
+                    }
+                });
+            });
+        }).observe(document.body, {childList: true, subtree: true});
+    }
+
+    /* Date range filters: "Custom range" reveals its From and To fields (data-idlm-date-custom-for). */
+    function syncDateRange(select) {
+        if (!select || !select.id) { return; }
+        document.querySelectorAll('[data-idlm-date-custom-for="' + select.id + '"]').forEach(function (fields) {
+            fields.hidden = 'custom' !== select.value;
+            fields.style.display = fields.hidden ? 'none' : '';
+        });
+    }
+    document.addEventListener('change', function (event) {
+        if (event.target.matches && event.target.matches('select[data-idlm-date-range]')) {
+            syncDateRange(event.target);
+            // Report forms apply a period at once; a custom range waits for its dates.
+            if (event.target.matches('[data-idlm-date-submit]') && 'custom' !== event.target.value && event.target.form) { event.target.form.requestSubmit(); }
+        }
+    });
+    function syncAllDateRanges() { document.querySelectorAll('select[data-idlm-date-range]').forEach(syncDateRange); }
+    if ('loading' === document.readyState) { document.addEventListener('DOMContentLoaded', syncAllDateRanges); } else { syncAllDateRanges(); }
+
+    if ('loading' === document.readyState) {
+        document.addEventListener('DOMContentLoaded', watchNotices);
+    } else {
+        watchNotices();
     }
 
     document.addEventListener('click', function (event) {
@@ -416,6 +631,7 @@
     }, true);
 
     window.IDLMDialog = {
+        syncDateRange: syncDateRange,
         open: open,
         close: close,
         setFieldError: setFieldError,
@@ -424,5 +640,41 @@
         prompt: function(options) { return actionDialog(options, true); },
         notify: notify,
         getActive: function () { return activeDialog; }
+    };
+
+    // Display-only formats shared by the design layer. Nothing here changes a stored or submitted value.
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    function moneyLocale(symbol) {
+        return /^(₹|INR|Rs\.?)$/i.test(String(symbol || '').trim()) ? 'en-IN' : 'en-US';
+    }
+    window.IDLMFormat = {
+        // Indian lakh grouping for rupees, thousands grouping for every other currency.
+        number: function (value, symbol, options) {
+            var settings = options || {};
+            var amount = Number(value);
+            if (!isFinite(amount)) { amount = 0; }
+            try {
+                return amount.toLocaleString(moneyLocale(symbol), {
+                    minimumFractionDigits: settings.min || 0,
+                    maximumFractionDigits: undefined === settings.max ? 0 : settings.max
+                });
+            } catch (error) {
+                return String(amount);
+            }
+        },
+        money: function (value, symbol, options) {
+            return (symbol || '') + window.IDLMFormat.number(value, symbol, options);
+        },
+        // Stored site-time values such as 2026-09-09 20:21:00 read as Sep 9, 2026, 8:21 PM.
+        dateTime: function (value) {
+            var match = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/.exec(String(value || ''));
+            if (!match || Number(match[2]) < 1 || Number(match[2]) > 12) { return String(value || ''); }
+            var text = months[Number(match[2]) - 1] + ' ' + Number(match[3]) + ', ' + match[1];
+            if (match[4]) {
+                var hour = Number(match[4]);
+                text += ', ' + ((hour % 12) || 12) + ':' + match[5] + ' ' + (hour < 12 ? 'AM' : 'PM');
+            }
+            return text;
+        }
     };
 }());

@@ -1,0 +1,1790 @@
+/* IDLM CRM design layer: Quotations, item catalogue and quotation setup. Builder: Shashi.
+   Contract: design-system/interior-design-lead-manager/STANDARD.md. Every selector starts
+   with body.idlm-crm-design. Tokens only: no hex colours, no important overrides.
+   Print and PDF never load this file: render_print_document() has no design-layer body class. */
+
+/* --- 1. Workspace tabs --------------------------------------------------- */
+body.idlm-crm-design .idlm-quotation-workspace-nav {
+    gap: var(--idlm-space-1);
+    margin-bottom: var(--idlm-space-4);
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--idlm-border);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-quotation-workspace-nav a {
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+    border-radius: 0;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-quotation-workspace-nav a:hover {
+    background: transparent;
+}
+
+body.idlm-crm-design .idlm-quotation-workspace-nav a.is-active {
+    background: transparent;
+    box-shadow: inset 0 -2px 0 var(--idlm-action);
+    color: var(--idlm-action);
+}
+
+/* --- 2. Shared quotation controls ---------------------------------------- */
+body.idlm-crm-design .idlm-quotes-wrap .screen-reader-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-quotes-wrap :is(input, select, textarea) {
+    font-weight: 400;
+}
+
+body.idlm-crm-design .idlm-quotes-wrap label {
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .button:not(.idlm-btn) {
+    padding: 0 var(--idlm-space-3);
+    font-size: 0.75rem;
+    transition: background-color var(--idlm-motion-fast) var(--idlm-ease), border-color var(--idlm-motion-fast) var(--idlm-ease), color var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .button:not(.idlm-btn):hover {
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .button-primary:not(.idlm-btn) {
+    box-shadow: none;
+    color: var(--idlm-text-inverse);
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .button-primary:not(.idlm-btn):hover {
+    border-color: var(--idlm-action-hover);
+    background: var(--idlm-action-hover);
+    color: var(--idlm-text-inverse);
+    transform: none;
+}
+
+/* Row and section actions read as quiet text until they are the thing being pointed at. */
+body.idlm-crm-design .idlm-quotes-wrap :is(.button-link, .button-link-delete) {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--idlm-space-1);
+    border-radius: var(--idlm-radius-compact);
+    color: var(--idlm-text-muted);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .button-link:hover {
+    background: var(--idlm-hover-tint);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .button-link-delete:hover {
+    background: var(--idlm-danger-soft);
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-quote-panel {
+    border-radius: var(--idlm-radius);
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-quote-panel h2 {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-quote-num {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .idlm-table th.idlm-quote-num,
+body.idlm-crm-design .idlm-quotes-wrap .idlm-table td.idlm-quote-num {
+    text-align: right;
+}
+
+/* Sentence case and the 11px floor for every legacy quotation table head. */
+body.idlm-crm-design .idlm-quotes-wrap .idlm-table th,
+body.idlm-crm-design .idlm-quotes-wrap .idlm-quote-items th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .idlm-state {
+    display: grid;
+    justify-items: center;
+    text-align: center;
+}
+
+/* Overflow menu on a native details element, so it works by keyboard without script. */
+body.idlm-crm-design .idlm-quote-menu {
+    position: relative;
+}
+
+body.idlm-crm-design .idlm-quote-menu > summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+body.idlm-crm-design .idlm-quote-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-quote-menu > summary::after {
+    width: 6px;
+    height: 6px;
+    margin-left: var(--idlm-space-1);
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    content: "";
+    transform: translateY(-2px) rotate(45deg);
+}
+
+body.idlm-crm-design .idlm-quote-menu__panel {
+    position: absolute;
+    z-index: var(--idlm-layer-dropdown);
+    top: calc(100% + 4px);
+    right: 0;
+    display: grid;
+    min-width: 180px;
+    padding: var(--idlm-space-1);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    box-shadow: var(--idlm-shadow-lg);
+}
+
+body.idlm-crm-design .idlm-quote-menu__panel a {
+    display: flex;
+    align-items: center;
+    min-height: var(--idlm-control-height);
+    padding: 0 var(--idlm-space-3);
+    border-radius: var(--idlm-radius-compact);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    text-decoration: none;
+}
+
+body.idlm-crm-design .idlm-quote-menu__panel a:hover {
+    background: var(--idlm-hover-tint);
+}
+
+/* --- 3. Quotation list --------------------------------------------------- */
+body.idlm-crm-design .idlm-quote-filter {
+    align-items: center;
+    margin-bottom: var(--idlm-space-3);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+body.idlm-crm-design .idlm-quote-filter__search,
+body.idlm-crm-design .idlm-quote-filter__field {
+    min-width: 0;
+}
+
+body.idlm-crm-design .idlm-quote-filter__date {
+    display: flex;
+    align-items: center;
+    gap: var(--idlm-space-2);
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-quote-filter__date > span {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-quote-filter.is-live > button,
+body.idlm-crm-design .idlm-quote-filter > [data-quote-filter-clear][hidden] {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-quote-list-table small,
+body.idlm-crm-design .idlm-catalogue-table small {
+    display: block;
+    margin-top: 1px;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    line-height: 1.35;
+}
+
+body.idlm-crm-design .idlm-quote-list-table td {
+    padding-block: var(--idlm-space-2);
+    vertical-align: middle;
+}
+
+body.idlm-crm-design .idlm-quote-list-table strong {
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-quote-identity-link {
+    color: var(--idlm-text);
+    text-decoration: none;
+}
+
+body.idlm-crm-design .idlm-quote-identity-link:hover {
+    text-decoration: underline;
+}
+
+body.idlm-crm-design .idlm-quote-status-cell {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-quote-revision-label {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-quote-creator-none {
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-quote-row-action {
+    width: 1%;
+    text-align: right;
+}
+
+body.idlm-crm-design .idlm-quote-empty td {
+    padding: 0;
+}
+
+body.idlm-crm-design .idlm-quote-empty .idlm-state {
+    border: 0;
+    border-radius: 0;
+}
+
+body.idlm-crm-design .idlm-quotes-wrap tbody[aria-busy="true"] {
+    opacity: 0.55;
+    transition: opacity var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+/* Legacy pagination styles every link and span as a square button. */
+body.idlm-crm-design .idlm-quote-pagination {
+    display: flex;
+    align-items: center;
+}
+
+body.idlm-crm-design .idlm-quote-pagination .idlm-pagination-info {
+    display: inline;
+    min-width: 0;
+    min-height: 0;
+    margin-right: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+body.idlm-crm-design .idlm-quote-pagination a.idlm-btn {
+    display: inline-flex;
+}
+
+/* --- 4. Quotation detail ------------------------------------------------- */
+/* One highlights strip: dividers instead of separate cards with edge stripes. */
+body.idlm-crm-design .idlm-quote-highlights {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    gap: 0;
+    margin-bottom: var(--idlm-space-4);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-quote-highlights > div {
+    padding: var(--idlm-space-3) var(--idlm-space-4);
+    border: 0;
+    border-left: 1px solid var(--idlm-border);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-quote-highlights > div:first-child {
+    border-left: 0;
+}
+
+body.idlm-crm-design .idlm-quote-highlights span {
+    margin-bottom: 2px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design .idlm-quote-highlights strong {
+    overflow-wrap: anywhere;
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: normal;
+}
+
+body.idlm-crm-design .idlm-quote-highlights strong.idlm-quote-status-cell {
+    display: flex;
+}
+
+body.idlm-crm-design .idlm-quote-highlights strong .idlm-badge {
+    display: inline-flex;
+    margin: 0;
+}
+
+body.idlm-crm-design .idlm-quote-highlights small {
+    display: block;
+    margin-top: 2px;
+    overflow-wrap: anywhere;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    line-height: 1.35;
+}
+
+body.idlm-crm-design .idlm-quote-highlights__total {
+    min-width: 170px;
+    text-align: right;
+}
+
+body.idlm-crm-design .idlm-quote-highlights .idlm-quote-highlights__total strong {
+    font-size: 1.125rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-quote-detail > .idlm-alert {
+    margin-bottom: var(--idlm-space-4);
+}
+
+/* The screen wrapper gets no frame around the section frame. Print has no body class. */
+body.idlm-crm-design .idlm-quote-detail .idlm-print-breakdown {
+    border: 0;
+    border-radius: 0;
+}
+
+body.idlm-crm-design .idlm-quote-detail .idlm-quote-section {
+    margin-bottom: var(--idlm-space-3);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-quote-detail .idlm-readonly-section > header {
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+    background: var(--idlm-surface-soft);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-quote-detail .idlm-readonly-section .idlm-quote-items {
+    border: 0;
+    border-radius: 0;
+}
+
+body.idlm-crm-design .idlm-quote-detail .idlm-readonly-section .idlm-quote-items th,
+body.idlm-crm-design .idlm-quote-detail .idlm-readonly-section .idlm-quote-items td {
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-quote-detail .idlm-readonly-section .idlm-quote-items td:nth-child(n+4) {
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-quote-detail .idlm-readonly-section .idlm-quote-items tfoot th {
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+    background: var(--idlm-surface-soft);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-quote-detail .idlm-readonly-section .idlm-quote-items tfoot th:last-child {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-quote-detail-totals {
+    width: min(420px, 100%);
+    margin: var(--idlm-space-4) 0 0 auto;
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-quote-detail-totals div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--idlm-space-3);
+    padding: var(--idlm-space-1) 0;
+    border-bottom: 1px solid var(--idlm-border);
+}
+
+body.idlm-crm-design .idlm-quote-detail-totals dt {
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-quote-detail-totals dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-quote-detail-totals .idlm-grand-total {
+    padding-top: var(--idlm-space-2);
+    border-bottom: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-quote-detail-totals .idlm-grand-total dt {
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-quote-copy a {
+    color: var(--idlm-info);
+    overflow-wrap: anywhere;
+}
+
+/* Revision history: one line per revision, newest first. */
+body.idlm-crm-design .idlm-quote-revisions .idlm-revision-list li {
+    grid-template-columns: 180px 190px minmax(0, 1fr) minmax(0, auto);
+    align-items: baseline;
+    gap: var(--idlm-space-4);
+    padding: var(--idlm-space-2) 0;
+}
+
+body.idlm-crm-design .idlm-quote-revisions .idlm-revision-list li:last-child {
+    border-bottom: 0;
+}
+
+body.idlm-crm-design .idlm-quote-revision-id {
+    display: flex;
+    align-items: center;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-quote-revisions .idlm-revision-list .idlm-quote-revision-id a {
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-color: var(--idlm-border-strong);
+    text-underline-offset: 2px;
+}
+
+body.idlm-crm-design .idlm-quote-revisions .idlm-revision-list .idlm-quote-revision-viewing {
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-quote-revisions .idlm-revision-list .idlm-quote-revision-value span {
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-quote-revision-value small,
+body.idlm-crm-design .idlm-quote-revision-meta {
+    display: block;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design .idlm-quote-revision-remark {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+}
+
+/* --- 5. Editor: identity ------------------------------------------------- */
+body.idlm-crm-design .idlm-quote-panel.idlm-quote-identity {
+    grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+    padding: 0;
+}
+
+body.idlm-crm-design .idlm-quote-identity-side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--idlm-space-2) var(--idlm-space-3);
+    padding: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-quote-identity-side > h2,
+body.idlm-crm-design .idlm-quote-identity-side > .idlm-identity-inline,
+body.idlm-crm-design .idlm-quote-identity-side > dl {
+    grid-column: 1 / -1;
+}
+
+body.idlm-crm-design .idlm-quote-identity-side + .idlm-quote-identity-side {
+    border-radius: 0 var(--idlm-radius) var(--idlm-radius) 0;
+}
+
+body.idlm-crm-design .idlm-quote-identity-side input:disabled {
+    background: var(--idlm-readonly);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-quote-meta dl div {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: var(--idlm-space-2);
+    padding: var(--idlm-space-1) 0;
+}
+
+body.idlm-crm-design .idlm-quote-meta dl div:last-child {
+    border-bottom: 0;
+}
+
+body.idlm-crm-design .idlm-quote-meta dt {
+    font-size: 0.75rem;
+    font-weight: 400;
+}
+
+body.idlm-crm-design .idlm-quote-meta dd {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: left;
+}
+
+/* --- 6. Editor: sections and line items ---------------------------------- */
+body.idlm-crm-design .idlm-quote-section {
+    margin-bottom: var(--idlm-space-3);
+    border-radius: var(--idlm-radius);
+}
+
+body.idlm-crm-design .idlm-quote-section > header {
+    gap: var(--idlm-space-1);
+    padding: var(--idlm-space-2);
+    background: var(--idlm-surface-soft);
+}
+
+/* The handle promised dragging that does not exist. Ordering uses the move buttons. */
+body.idlm-crm-design .idlm-quote-section > header .idlm-section-handle {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-quote-section > header {
+    grid-template-columns: minmax(220px, 1fr) auto auto auto;
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-section-name {
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-quote-section > header .idlm-remove-section {
+    white-space: nowrap;
+}
+
+/* Legacy overflow:hidden on the table would stop the sticky item column working. */
+body.idlm-crm-design #idlm-quote-form .idlm-quote-items {
+    overflow: visible;
+}
+
+@media (min-width: 783px) {
+    body.idlm-crm-design #idlm-quote-form .idlm-quote-items {
+        min-width: 900px;
+    }
+}
+
+body.idlm-crm-design #idlm-quote-form .idlm-unit-value {
+    padding-inline: var(--idlm-space-1);
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-quote-items th:nth-child(1) {
+    width: 33%;
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-quote-items th:nth-child(2),
+body.idlm-crm-design .idlm-quote-section .idlm-quote-items th:nth-child(3) {
+    width: 8%;
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-quote-items th:nth-child(4) {
+    width: 9%;
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-quote-items th:nth-child(5) {
+    width: 7%;
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-quote-items th:nth-child(6) {
+    width: 13%;
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-quote-items th:nth-child(7) {
+    width: 12%;
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-quote-items th:nth-child(8) {
+    width: 10%;
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-quote-items:not(.idlm-readonly-section *) th:nth-child(n+7),
+body.idlm-crm-design .idlm-quote-item-row td.idlm-line-total {
+    text-align: right;
+}
+
+body.idlm-crm-design .idlm-quote-item-row td.idlm-line-total {
+    padding-top: var(--idlm-space-3);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-quote-section tfoot th {
+    background: var(--idlm-surface-soft);
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-section-subtotal-label {
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-quote-section .idlm-section-subtotal {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Only the description grows, so a short item stays a short row. */
+body.idlm-crm-design .idlm-item-cell .idlm-item-description {
+    min-height: 34px;
+    max-height: 7.5em;
+    field-sizing: content;
+    resize: none;
+}
+
+body.idlm-crm-design .idlm-item-cell .idlm-catalogue-search {
+    font-weight: 500;
+}
+
+/* Fixed catalogue values read as values, not as disabled inputs. */
+body.idlm-crm-design .idlm-quote-item-row.is-catalogue-item .idlm-catalogue-locked {
+    border-color: transparent;
+    background: transparent;
+    cursor: default;
+}
+
+body.idlm-crm-design .idlm-quote-item-row.is-catalogue-item .idlm-item-meta .idlm-catalogue-locked {
+    min-height: 0;
+    padding-block: 0;
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design .idlm-quote-item-row.is-catalogue-item .idlm-item-description {
+    padding-block: var(--idlm-space-1);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-quote-items .idlm-unit-value {
+    border-color: transparent;
+    background: transparent;
+    cursor: default;
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .idlm-line-action {
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .idlm-line-action:hover {
+    background: var(--idlm-hover-tint);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .button-link-delete.idlm-line-action:hover {
+    background: var(--idlm-danger-soft);
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-quote-header-row td:first-child {
+    background: var(--idlm-surface-soft);
+}
+
+/* The dropdown is placed by script, so a scrolling table cannot clip it. */
+body.idlm-crm-design .idlm-catalogue-results:empty {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-catalogue-results.is-floating {
+    position: fixed;
+    right: auto;
+    overflow-y: auto;
+}
+
+body.idlm-crm-design .idlm-catalogue-result {
+    gap: 2px;
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-catalogue-result small {
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design .idlm-catalogue-result:is(:hover, :focus) {
+    background: var(--idlm-hover-tint);
+}
+
+body.idlm-crm-design :is(.idlm-catalogue-search-note, .idlm-catalogue-search-error) {
+    margin: 0;
+    padding: var(--idlm-space-3);
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-add-section-row {
+    margin-block: var(--idlm-space-1) var(--idlm-space-4);
+}
+
+/* --- 7. Editor: summaries and totals ------------------------------------- */
+/* Summaries stack beside the totals, so neither column stretches into empty boxes. */
+body.idlm-crm-design .idlm-subtotals-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+    grid-template-rows: auto 1fr;
+    gap: var(--idlm-space-3);
+    align-items: start;
+}
+
+body.idlm-crm-design .idlm-subtotals-layout .idlm-quote-totals {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    padding: var(--idlm-space-4);
+    border-top: 1px solid var(--idlm-border);
+}
+
+body.idlm-crm-design :is(.idlm-wood-summary, .idlm-section-summary) {
+    grid-column: 1;
+    padding: var(--idlm-space-3) var(--idlm-space-4);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design :is(.idlm-wood-summary, .idlm-section-summary) h3 {
+    margin: 0 0 var(--idlm-space-1);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-wood-summary #idlm-wood-totals,
+body.idlm-crm-design .idlm-section-summary #idlm-section-totals {
+    gap: 0;
+}
+
+body.idlm-crm-design .idlm-wood-summary #idlm-wood-totals div,
+body.idlm-crm-design .idlm-section-summary #idlm-section-totals div {
+    padding: var(--idlm-space-1) 0;
+    border: 0;
+    border-bottom: 1px solid var(--idlm-border);
+    border-radius: 0;
+    background: transparent;
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-wood-summary #idlm-wood-totals div:last-child,
+body.idlm-crm-design .idlm-section-summary #idlm-section-totals div:last-child {
+    border-bottom: 0;
+}
+
+body.idlm-crm-design :is(#idlm-wood-totals, #idlm-section-totals) strong {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-quote-totals dl {
+    margin-top: var(--idlm-space-2);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-quote-totals dl div {
+    padding: 6px 0;
+}
+
+body.idlm-crm-design .idlm-quote-totals dt {
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-quote-totals dd {
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-quote-totals .idlm-grand-total {
+    border-bottom: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-quote-totals .idlm-grand-total dt {
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-editable-total output {
+    font-size: 0.75rem;
+}
+
+/* --- 8. Editor: sticky actions and autosave ------------------------------ */
+body.idlm-crm-design .idlm-quote-actions {
+    align-items: center;
+    margin: 0;
+    padding: var(--idlm-space-2) var(--idlm-space-4);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    box-shadow: none;
+    backdrop-filter: none;
+}
+
+body.idlm-crm-design #idlm-quote-form {
+    padding-bottom: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-quote-running-total {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--idlm-space-2);
+    margin-right: var(--idlm-space-3);
+    margin-left: auto;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-quote-running-total strong {
+    color: var(--idlm-text);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-autosave-status {
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-autosave-status + .idlm-quote-running-total {
+    margin-left: 0;
+}
+
+body.idlm-crm-design .idlm-autosave-status::before {
+    background: var(--idlm-border-strong);
+}
+
+body.idlm-crm-design .idlm-autosave-status[data-state="dirty"]::before {
+    background: var(--idlm-warning);
+}
+
+body.idlm-crm-design .idlm-autosave-status[data-state="saving"]::before {
+    background: var(--idlm-info);
+}
+
+body.idlm-crm-design .idlm-autosave-status[data-state="saved"]::before {
+    background: var(--idlm-success);
+}
+
+body.idlm-crm-design .idlm-autosave-status[data-state="error"]::before {
+    background: var(--idlm-danger);
+}
+
+/* --- 9. Dialogs: one scrim, no blur -------------------------------------- */
+body.idlm-crm-design .idlm-autosave-cancel-modal,
+body.idlm-crm-design .idlm-bulk-items-modal {
+    background: var(--idlm-scrim);
+    backdrop-filter: none;
+}
+
+body.idlm-crm-design .idlm-autosave-cancel-modal .idlm-dialog__footer {
+    justify-content: flex-end;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-autosave-cancel-modal .idlm-dialog__footer .button {
+    min-height: var(--idlm-control-height);
+}
+
+body.idlm-crm-design .idlm-autosave-cancel-modal .idlm-dialog__footer .idlm-quote-dialog-discard {
+    margin-right: auto;
+    padding: 0 var(--idlm-space-3);
+    border: 0;
+    border-radius: var(--idlm-radius);
+    background: transparent;
+    color: var(--idlm-danger);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-autosave-cancel-modal .idlm-dialog__footer .idlm-quote-dialog-discard:hover {
+    background: var(--idlm-danger-soft);
+}
+
+body.idlm-crm-design .idlm-bulk-items-dialog,
+body.idlm-crm-design .idlm-catalogue-editor.is-open,
+body.idlm-crm-design .idlm-catalogue-import.is-open,
+body.idlm-crm-design .idlm-category-manager.is-open {
+    border-radius: var(--idlm-radius);
+    box-shadow: 0 0 0 100vmax var(--idlm-scrim), var(--idlm-shadow-lg);
+}
+
+body.idlm-crm-design .idlm-bulk-items-dialog {
+    box-shadow: var(--idlm-shadow-lg);
+}
+
+body.idlm-crm-design .idlm-bulk-items-dialog > header h2,
+body.idlm-crm-design .idlm-catalogue-editor .idlm-panel-heading h2,
+body.idlm-crm-design .idlm-category-manager > header h2,
+body.idlm-crm-design .idlm-catalogue-import.is-open h2 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-bulk-items-close,
+body.idlm-crm-design .idlm-quotes-wrap .button.idlm-catalogue-editor-close {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+    border-color: transparent;
+    border-radius: var(--idlm-radius);
+    background: transparent;
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-bulk-items-close:hover,
+body.idlm-crm-design .idlm-quotes-wrap .button.idlm-catalogue-editor-close:hover {
+    background: var(--idlm-hover-tint);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-bulk-items-dialog > header,
+body.idlm-crm-design .idlm-catalogue-editor .idlm-panel-heading,
+body.idlm-crm-design .idlm-category-manager > header {
+    padding: var(--idlm-space-3) var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-bulk-items-columns label,
+body.idlm-crm-design .idlm-bulk-items-columns h3 {
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-bulk-items-columns h3 span {
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-readonly);
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-bulk-item:is(:hover, :focus-visible) {
+    background: var(--idlm-hover-tint);
+}
+
+body.idlm-crm-design .idlm-bulk-item strong {
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-bulk-item > span:last-child {
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-bulk-item:disabled {
+    opacity: 1;
+    background: var(--idlm-surface-soft);
+}
+
+body.idlm-crm-design .idlm-bulk-item:disabled > span:last-child {
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design .idlm-bulk-item.is-selected > span:last-child {
+    color: var(--idlm-text-muted);
+    font-size: 1rem;
+}
+
+/* --- 10. Item catalogue -------------------------------------------------- */
+/* The table is the surface: no panel around the toolbar and rows. */
+body.idlm-crm-design .idlm-quote-panel.idlm-catalogue-panel {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+body.idlm-crm-design .idlm-quote-filter.idlm-catalogue-toolbar {
+    grid-template-columns: minmax(200px, 1fr) max-content max-content;
+    gap: var(--idlm-space-3);
+    margin-bottom: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-catalogue-search-form {
+    grid-template-columns: minmax(140px, 1fr);
+}
+
+body.idlm-crm-design .idlm-catalogue-search-form label {
+    min-width: 0;
+}
+
+body.idlm-crm-design .idlm-catalogue-search-form.is-live button,
+body.idlm-crm-design .idlm-catalogue-sort-form.is-live button {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-catalogue-sort-form label {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-catalogue-sort-form select {
+    width: auto;
+    min-width: 7rem;
+    max-width: none;
+}
+
+body.idlm-crm-design .idlm-catalogue-toolbar .idlm-bulk-action-bar [data-selection-count] {
+    min-width: 0;
+    color: var(--idlm-text);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Bulk actions appear once something is selected. Row actions still set their value. */
+body.idlm-crm-design .idlm-bulk-action-bar:not(.has-selection) :is(select, .button, [data-selection-count]) {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-catalogue-table td {
+    padding-block: var(--idlm-space-2);
+    vertical-align: middle;
+}
+
+body.idlm-crm-design .idlm-catalogue-table strong {
+    font-weight: 500;
+}
+
+/* One line per item; the full description stays in the title and the edit dialog. */
+body.idlm-crm-design .idlm-catalogue-item-cell {
+    max-width: 0;
+    width: 44%;
+}
+
+body.idlm-crm-design .idlm-catalogue-item-cell small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-catalogue-table tr.is-archived td:not(.idlm-catalogue-row-actions, .idlm-checkbox-column) {
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-catalogue-actions {
+    justify-content: flex-end;
+    gap: var(--idlm-space-1);
+}
+
+body.idlm-crm-design .idlm-catalogue-row-actions {
+    width: 1%;
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .idlm-catalogue-actions :is(.button-link, .button-link-delete) {
+    min-height: 26px;
+}
+
+/* Row actions show on hover or focus on pointer desktops, and always on touch. */
+@media (min-width: 783px) {
+    body.idlm-crm-design .idlm-catalogue-table tr:not(:hover):not(:focus-within) .idlm-catalogue-actions .button-link-delete {
+        opacity: 0;
+    }
+}
+
+/* Dialog forms. */
+body.idlm-crm-design .idlm-catalogue-editor.is-open {
+    height: auto;
+    max-height: min(90vh, 760px);
+}
+
+body.idlm-crm-design .idlm-catalogue-editor .idlm-catalogue-form {
+    padding: var(--idlm-space-4);
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-catalogue-editor .idlm-catalogue-form textarea {
+    min-height: 88px;
+}
+
+body.idlm-crm-design .idlm-catalogue-form-footer {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+    gap: var(--idlm-space-2);
+    margin: var(--idlm-space-1) calc(var(--idlm-space-4) * -1) calc(var(--idlm-space-4) * -1);
+    padding: var(--idlm-space-3) var(--idlm-space-4);
+    border-top: 1px solid var(--idlm-border);
+}
+
+body.idlm-crm-design .idlm-catalogue-editor .idlm-panel-heading + .description {
+    padding: var(--idlm-space-2) var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-catalogue-import.is-open {
+    padding: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-catalogue-import .description {
+    margin: 0 0 var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-catalogue-import.is-open form {
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-catalogue-import.is-open label {
+    display: grid;
+    gap: var(--idlm-space-1);
+}
+
+body.idlm-crm-design .idlm-catalogue-import [data-catalogue-import-status]:empty,
+body.idlm-crm-design .idlm-catalogue-import [data-catalogue-import-preview]:empty {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-catalogue-import [data-catalogue-import-status] {
+    margin: 0;
+    color: var(--idlm-text-muted);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-catalogue-import [data-catalogue-import-status].is-error {
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-catalogue-import-summary {
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-catalogue-import-table {
+    border-color: var(--idlm-border);
+    border-radius: var(--idlm-radius);
+}
+
+body.idlm-crm-design .idlm-catalogue-import-table table {
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-catalogue-import-table tr[data-state="invalid"] td:last-child {
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-catalogue-import-actions {
+    justify-content: flex-end;
+    margin-top: var(--idlm-space-2);
+    padding-bottom: 0;
+}
+
+/* Categories and units. */
+body.idlm-crm-design .idlm-category-manager.is-open {
+    min-height: 0;
+}
+
+body.idlm-crm-design .idlm-category-manager-body > section {
+    padding: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-category-manager-body h3 {
+    margin-bottom: var(--idlm-space-2);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-category-manager-list {
+    gap: 0;
+}
+
+body.idlm-crm-design .idlm-category-manager-list > div {
+    min-height: 38px;
+    padding: var(--idlm-space-1) 0;
+    border: 0;
+    border-bottom: 1px solid var(--idlm-border);
+    border-radius: 0;
+    background: transparent;
+}
+
+body.idlm-crm-design .idlm-category-manager-list > div:last-child {
+    border-bottom: 0;
+}
+
+body.idlm-crm-design .idlm-category-manager-list strong {
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-category-manager-list span {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+}
+
+body.idlm-crm-design .idlm-category-manager .idlm-bulk-action-bar {
+    min-height: var(--idlm-control-height);
+}
+
+body.idlm-crm-design .idlm-category-manager .idlm-bulk-action-bar select {
+    width: auto;
+    flex: 1;
+}
+
+body.idlm-crm-design .idlm-category-manager-body > section:last-child input:not([type="hidden"]),
+body.idlm-crm-design .idlm-category-manager-body > section:last-child .button-primary {
+    min-height: var(--idlm-control-height);
+}
+
+/* --- 11. Quotation setup ------------------------------------------------- */
+body.idlm-crm-design .idlm-quotation-settings {
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-settings-foundation {
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-settings-foundation > .idlm-settings-inline {
+    gap: var(--idlm-space-3);
+    align-items: stretch;
+}
+
+body.idlm-crm-design .idlm-settings-inline {
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-quotation-settings .description {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-quotation-settings input[name="soft_close_percent"] {
+    width: 7rem;
+    margin-right: var(--idlm-space-1);
+}
+
+body.idlm-crm-design .idlm-quotation-settings label:has(input[name="soft_close_percent"]) {
+    display: block;
+}
+
+body.idlm-crm-design .idlm-quotation-settings label:has(input[name="soft_close_percent"]) input {
+    display: block;
+    display: inline-block;
+    margin-top: var(--idlm-space-1);
+}
+
+body.idlm-crm-design .idlm-quotation-settings input[type="color"] {
+    width: 4.5rem;
+    padding: var(--idlm-space-1);
+}
+
+body.idlm-crm-design .idlm-settings-preview {
+    min-height: var(--idlm-control-height);
+    padding: var(--idlm-space-1) var(--idlm-space-3);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-settings-preview strong {
+    color: var(--idlm-text-muted);
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-settings-preview p {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-settings-disclosure summary {
+    min-height: var(--idlm-control-height);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+body.idlm-crm-design .idlm-settings-disclosure {
+    margin-top: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-payment-structure {
+    gap: 0;
+}
+
+body.idlm-crm-design .idlm-payment-structure-row {
+    padding: var(--idlm-space-1) 0;
+    border: 0;
+    border-bottom: 1px solid var(--idlm-border);
+    border-radius: 0;
+    background: transparent;
+}
+
+/* Save stays reachable on a long page, and leaves with the form. */
+body.idlm-crm-design .idlm-settings-actions {
+    position: sticky;
+    z-index: var(--idlm-layer-sticky);
+    bottom: var(--idlm-space-3);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--idlm-space-3);
+    padding: var(--idlm-space-3) var(--idlm-space-4);
+    border: 1px solid var(--idlm-border-strong);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    box-shadow: var(--idlm-shadow-lg);
+}
+
+body.idlm-crm-design .idlm-settings-actions__note {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+/* Over 100% reads as an error in text as well as colour. */
+body.idlm-crm-design .idlm-quotes-wrap .idlm-quotation-settings [data-payment-total] {
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-quotes-wrap .idlm-quotation-settings [data-payment-total].idlm-payment-total-error {
+    color: var(--idlm-danger);
+}
+
+/* --- 12. Responsive ------------------------------------------------------ */
+@media (min-width: 1025px) {
+    body.idlm-crm-design .idlm-quote-filter {
+        grid-template-columns: minmax(200px, 1.6fr) minmax(140px, 1fr) auto auto auto auto;
+    }
+
+    body.idlm-crm-design .idlm-quote-filter.is-live {
+        grid-template-columns: minmax(200px, 1.6fr) minmax(140px, 1fr) auto auto auto auto;
+    }
+}
+
+@media (max-width: 1280px) {
+    body.idlm-crm-design .idlm-quote-highlights {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.idlm-crm-design .idlm-quote-highlights > div {
+        border-top: 1px solid var(--idlm-border);
+        border-left: 0;
+    }
+
+    body.idlm-crm-design .idlm-quote-highlights > div:nth-child(-n+2) {
+        border-top: 0;
+    }
+
+    body.idlm-crm-design .idlm-quote-highlights > div:nth-child(even) {
+        border-left: 1px solid var(--idlm-border);
+    }
+
+    body.idlm-crm-design .idlm-quote-highlights__total {
+        grid-column: 1 / -1;
+        text-align: left;
+    }
+
+    body.idlm-crm-design .idlm-quote-highlights > .idlm-quote-highlights__total {
+        border-left: 0;
+    }
+
+    /* Keep the item name in view while the numbers scroll inside their own region. */
+    body.idlm-crm-design #idlm-quote-form .idlm-quote-items thead th:first-child,
+    body.idlm-crm-design #idlm-quote-form .idlm-quote-items .idlm-item-cell {
+        position: sticky;
+        z-index: 1;
+        left: 0;
+        background: var(--idlm-surface);
+    }
+
+    body.idlm-crm-design #idlm-quote-form .idlm-quote-items thead th:first-child {
+        background: var(--idlm-surface-soft);
+    }
+}
+
+@media (max-width: 1024px) {
+    body.idlm-crm-design .idlm-quote-filter {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.idlm-crm-design .idlm-quote-filter__search {
+        grid-column: 1 / -1;
+    }
+
+    body.idlm-crm-design .idlm-quote-filter.idlm-catalogue-toolbar {
+        grid-template-columns: minmax(0, 1fr) max-content;
+    }
+
+    body.idlm-crm-design .idlm-quote-panel.idlm-quote-identity {
+        grid-template-columns: 1fr;
+    }
+
+    body.idlm-crm-design .idlm-quote-identity-side + .idlm-quote-identity-side {
+        border-radius: 0 0 var(--idlm-radius) var(--idlm-radius);
+    }
+
+    body.idlm-crm-design .idlm-quote-meta dl {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: var(--idlm-space-4);
+    }
+
+    body.idlm-crm-design .idlm-subtotals-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+    }
+
+    body.idlm-crm-design .idlm-subtotals-layout .idlm-quote-totals {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    body.idlm-crm-design .idlm-quote-revisions .idlm-revision-list li {
+        grid-template-columns: minmax(110px, auto) minmax(0, 1fr);
+        gap: 2px var(--idlm-space-4);
+    }
+}
+
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-quote-filter {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.idlm-crm-design .idlm-quote-filter > :is(.idlm-quote-filter__field:not(.idlm-quote-filter__date), .idlm-btn) {
+        grid-column: 1 / -1;
+    }
+
+    body.idlm-crm-design .idlm-quote-filter__date {
+        display: grid;
+        gap: 2px;
+    }
+
+    body.idlm-crm-design .idlm-quotes-wrap .idlm-quote-filter :is(input, select) {
+        min-height: var(--idlm-target-size);
+    }
+
+    /* Lists become one card per record: identity first, values labelled. */
+    body.idlm-crm-design :is(.idlm-quote-list-table, .idlm-catalogue-table),
+    body.idlm-crm-design :is(.idlm-quote-list-table, .idlm-catalogue-table) tbody {
+        display: block;
+        border: 0;
+        background: transparent;
+    }
+
+    body.idlm-crm-design :is(.idlm-quote-list-table, .idlm-catalogue-table) thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+
+    body.idlm-crm-design :is(.idlm-quote-list-table, .idlm-catalogue-table) tbody tr {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--idlm-space-2) var(--idlm-space-3);
+        margin-bottom: var(--idlm-space-2);
+        padding: var(--idlm-space-3);
+        border: 1px solid var(--idlm-border);
+        border-radius: var(--idlm-radius);
+        background: var(--idlm-surface);
+    }
+
+    body.idlm-crm-design .idlm-quotes-wrap :is(.idlm-quote-list-table, .idlm-catalogue-table) tbody td,
+    body.idlm-crm-design .idlm-quotes-wrap .idlm-table tbody td.idlm-quote-num {
+        display: block;
+        width: auto;
+        max-width: none;
+        padding: 0;
+        border: 0;
+        text-align: left;
+    }
+
+    body.idlm-crm-design :is(.idlm-quote-list-table, .idlm-catalogue-table) tbody td[data-label]::before {
+        display: block;
+        color: var(--idlm-text-muted);
+        content: attr(data-label);
+        font-size: 0.6875rem;
+    }
+
+    body.idlm-crm-design .idlm-quote-list-table tbody td:is([data-label="Quotation"], [data-label="Customer"])::before {
+        display: none;
+    }
+
+    body.idlm-crm-design .idlm-quote-list-table tbody td:is([data-label="Quotation"], [data-label="Customer"]) {
+        grid-column: 1 / -1;
+    }
+
+    /* The whole card opens the record, and the quote number is its link. */
+    body.idlm-crm-design .idlm-quotes-wrap .idlm-quote-list-table tbody td.idlm-quote-row-action {
+        display: none;
+    }
+
+    body.idlm-crm-design .idlm-quotes-wrap .idlm-quote-empty,
+    body.idlm-crm-design .idlm-quotes-wrap :is(.idlm-quote-list-table, .idlm-catalogue-table) tbody tr.idlm-quote-empty {
+        display: block;
+        padding: 0;
+    }
+
+    /* Catalogue card: checkbox beside the name, then values. */
+    body.idlm-crm-design .idlm-catalogue-table tbody tr {
+        grid-template-columns: var(--idlm-target-size) repeat(2, minmax(0, 1fr));
+    }
+
+    body.idlm-crm-design .idlm-quotes-wrap .idlm-catalogue-table tbody td.idlm-checkbox-column {
+        display: grid;
+        grid-row: 1;
+        place-items: center;
+    }
+
+    body.idlm-crm-design .idlm-catalogue-table tbody td:is([data-label="Code"], [data-label="Unit"], [data-label="Rate"]) {
+        grid-column: 1 / 3;
+    }
+
+    body.idlm-crm-design .idlm-catalogue-table tbody td[data-label="Item"] {
+        grid-column: 2 / -1;
+        grid-row: 1;
+    }
+
+    body.idlm-crm-design .idlm-catalogue-table tbody td[data-label="Item"]::before {
+        display: none;
+    }
+
+    body.idlm-crm-design .idlm-catalogue-item-cell small {
+        white-space: normal;
+    }
+
+    body.idlm-crm-design .idlm-quotes-wrap .idlm-catalogue-table tbody td.idlm-catalogue-row-actions {
+        grid-column: 1 / -1;
+    }
+
+    body.idlm-crm-design .idlm-catalogue-actions {
+        justify-content: stretch;
+    }
+
+    body.idlm-crm-design .idlm-quotes-wrap .idlm-catalogue-actions :is(.button-link, .button-link-delete) {
+        flex: 1;
+        justify-content: center;
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-quote-filter.idlm-catalogue-toolbar {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design .idlm-catalogue-sort-form {
+        white-space: normal;
+    }
+
+    body.idlm-crm-design .idlm-catalogue-sort-form select {
+        min-height: var(--idlm-target-size);
+        flex: 1;
+    }
+
+    body.idlm-crm-design .idlm-quote-pagination .idlm-btn {
+        min-height: var(--idlm-target-size);
+    }
+
+    /* Detail. */
+    body.idlm-crm-design .idlm-quote-highlights {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design .idlm-quote-highlights > div,
+    body.idlm-crm-design .idlm-quote-highlights > div:nth-child(even),
+    body.idlm-crm-design .idlm-quote-highlights > div:nth-child(-n+2) {
+        border-top: 1px solid var(--idlm-border);
+        border-left: 0;
+    }
+
+    body.idlm-crm-design .idlm-quote-highlights > div:first-child {
+        border-top: 0;
+    }
+
+    body.idlm-crm-design .idlm-quote-menu__panel a {
+        min-height: var(--idlm-target-size);
+    }
+
+    /* Editor. */
+    body.idlm-crm-design .idlm-quote-identity-side {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design .idlm-quote-meta dl {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design .idlm-quote-section > header {
+        grid-template-columns: var(--idlm-target-size) var(--idlm-target-size) minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design .idlm-quote-section > header .idlm-section-name {
+        grid-column: 1 / -1;
+    }
+
+    body.idlm-crm-design .idlm-quote-section > header :is(.button-link, .button-link-delete) {
+        justify-content: center;
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-quote-section > header .idlm-remove-section {
+        justify-self: end;
+    }
+
+    body.idlm-crm-design .idlm-item-cell .idlm-item-description {
+        max-height: 14em;
+    }
+
+    body.idlm-crm-design #idlm-quote-form .idlm-quote-item-card {
+        box-shadow: none;
+    }
+
+    body.idlm-crm-design #idlm-quote-form .idlm-quote-item-card > td::before {
+        font-weight: 500;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    body.idlm-crm-design #idlm-quote-form .idlm-quote-items .idlm-item-cell {
+        position: static;
+    }
+
+    /* The label sits above the input here, so the symbol hangs from the bottom. */
+    body.idlm-crm-design #idlm-quote-form .idlm-quote-item-card > .idlm-currency-input > span {
+        top: auto;
+        bottom: calc(var(--idlm-space-2) + 18px);
+        left: calc(var(--idlm-space-2) + 10px);
+    }
+
+    body.idlm-crm-design #idlm-quote-form .idlm-quote-item-card > .idlm-line-total {
+        font-size: 0.875rem;
+        text-align: left;
+    }
+
+    body.idlm-crm-design #idlm-quote-form :is(.idlm-quote-items, .idlm-quote-section) input:not([type="hidden"]) {
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design #idlm-quote-form .idlm-quote-item-row.is-catalogue-item .idlm-item-meta .idlm-catalogue-locked {
+        min-height: 0;
+    }
+
+    body.idlm-crm-design .idlm-quote-actions {
+        position: sticky;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--idlm-space-2);
+        padding: var(--idlm-space-2) var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design .idlm-quote-actions > .idlm-quote-running-total:first-child {
+        grid-column: 1 / -1;
+    }
+
+    /* The keyboard needs the room, so the bar steps aside while typing. */
+    body.idlm-crm-design #idlm-quote-form:has(:is(input, textarea, select):focus) .idlm-quote-actions {
+        position: static;
+    }
+
+    body.idlm-crm-design .idlm-quote-running-total {
+        justify-content: flex-end;
+        margin-right: 0;
+    }
+
+    body.idlm-crm-design .idlm-quote-actions .idlm-btn {
+        width: 100%;
+        min-height: var(--idlm-target-size);
+    }
+
+    /* Plain catalogue dialogs are full screen on phones. */
+    body.idlm-crm-design .idlm-catalogue-editor.is-open,
+    body.idlm-crm-design .idlm-catalogue-import.is-open,
+    body.idlm-crm-design .idlm-category-manager.is-open {
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+        transform: none;
+    }
+
+    body.idlm-crm-design .idlm-bulk-items-modal {
+        padding: 0;
+        place-items: stretch;
+    }
+
+    body.idlm-crm-design .idlm-bulk-items-dialog {
+        height: 100dvh;
+        max-height: 100dvh;
+        border: 0;
+        border-radius: 0;
+    }
+
+    body.idlm-crm-design .idlm-bulk-items-columns {
+        flex: 1;
+    }
+
+    body.idlm-crm-design .idlm-bulk-items-close,
+    body.idlm-crm-design .idlm-quotes-wrap .button.idlm-catalogue-editor-close {
+        width: var(--idlm-target-size);
+        min-width: var(--idlm-target-size);
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-catalogue-form-footer {
+        position: sticky;
+        bottom: calc(var(--idlm-space-4) * -1);
+        flex-direction: column-reverse;
+        background: var(--idlm-surface);
+    }
+
+    body.idlm-crm-design .idlm-catalogue-form-footer .idlm-btn {
+        width: 100%;
+        min-height: var(--idlm-target-size);
+    }
+
+    /* Setup. */
+    body.idlm-crm-design .idlm-settings-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    body.idlm-crm-design .idlm-quotation-settings .idlm-settings-actions .idlm-btn {
+        width: 100%;
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-quotation-settings:has(:is(input, textarea, select):focus) .idlm-settings-actions {
+        position: static;
+    }
+
+    /* The setup form's bare fields and buttons keep 44px targets and iOS-safe text. */
+    body.idlm-crm-design .idlm-quotes-wrap .idlm-quotation-settings :is(input:not([type="checkbox"], [type="radio"], [type="hidden"]), select, .button, .button-link-delete) {
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-quotes-wrap .idlm-quotation-settings :is(input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="color"]), select) {
+        font-size: 1rem;
+    }
+
+    body.idlm-crm-design .idlm-quotes-wrap .idlm-revision-list .idlm-quote-revision-id a {
+        display: inline-flex;
+        align-items: center;
+        min-width: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+    }
+}
+
+@media (max-width: 480px) {
+    body.idlm-crm-design .idlm-quote-revisions .idlm-revision-list li {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.idlm-crm-design .idlm-quotes-wrap tbody[aria-busy="true"] {
+        transition: none;
+    }
+}

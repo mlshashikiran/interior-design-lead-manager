@@ -50,6 +50,16 @@ idlm_integration_test('failed stored-role migration leaves policy marker behind 
     idlm_integration_assert_true(!get_role('author')->has_cap('idlm_access_leads'));
     idlm_integration_assert_same('1',get_option('idlm_crm_access_policy_version'));
 });
+idlm_integration_test('a recognized role first seen during an update receives no grants',static function(): void {
+    add_role('native_new_marketing','Marketing',array('read'=>true));
+    $before=get_role('native_new_marketing')->capabilities;
+    try {
+        update_option('idlm_roles_version','1.102.43');
+        idlm_integration_assert_same(true,idlm_register_crm_roles_and_capabilities());
+        idlm_integration_assert_same($before,get_role('native_new_marketing')->capabilities);
+        idlm_integration_assert_same(true,get_option('idlm_initialized_crm_roles')['native_new_marketing']);
+    } finally { remove_role('native_new_marketing'); }
+});
 idlm_integration_test('newly encountered partial CRM role grants are not reconciled upward on update',static function(): void {
     add_role('native_sparse_manager','Sales Manager',array('read'=>true,'idlm_access_leads'=>true,'idlm_assign_leads'=>false,'idlm_view_quotes'=>false));
     $before=get_role('native_sparse_manager')->capabilities;

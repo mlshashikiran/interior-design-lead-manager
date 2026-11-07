@@ -468,3 +468,110 @@ idlm_test('lead routing popup distills safeguards with conditional controls whil
     assert_contains('Run fallback now', $leads);
     assert_contains('Run fallback now', $routing_settings);
 });
+
+idlm_test('CRM design layer stays fully gated, token-led and reversible', static function(): void {
+    $root = dirname(__DIR__);
+    $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
+    $admin = (string) file_get_contents($root . '/includes/class-admin.php');
+    $files = glob($root . '/assets/css/crm-design*.css') ?: array();
+    assert_true(8 === count($files), 'The design layer must stay in its base and seven area stylesheets.');
+    $rule_count = 0;
+
+    foreach ($files as $file) {
+        $name = basename($file);
+        $bare = (string) preg_replace('~/\*.*?\*/~s', '', (string) file_get_contents($file));
+
+        assert_false(false !== stripos($bare, '!important'), 'STD-CSS-3: !important in ' . $name);
+        assert_false((bool) preg_match('/transition\s*:\s*all\b/i', $bare), 'transition: all is prohibited in ' . $name);
+        assert_false((bool) preg_match('/--idlm-(?:action|action-hover|action-soft|brand-gold|sidebar|focus-ring)\s*:/', $bare), 'STD-CSS-4: white-label token overridden in ' . $name);
+
+        preg_match_all('/([^{}]+)\{/', $bare, $preludes);
+        foreach ($preludes[1] as $prelude) {
+            $prelude = trim($prelude);
+            if ('@' === substr($prelude, 0, 1)) {
+                assert_true((bool) preg_match('/^@media \((?:(?:max-width: (?:480|782|1024|1280)px)|(?:min-width: (?:481|783|1025|1281)px)|(?:prefers-reduced-motion: reduce))\)$/', $prelude), 'STD-CSS-5: non-canonical media query in ' . $name . ': ' . $prelude);
+                continue;
+            }
+            ++$rule_count;
+            foreach (preg_split('/,(?![^(]*\))/', $prelude) as $selector) {
+                assert_true(0 === strpos(trim($selector), 'body.idlm-crm-design'), 'STD-CSS-1: ungated selector in ' . $name . ': ' . trim($selector));
+            }
+        }
+
+        $colour_scope = 'crm-design.css' === $name ? substr($bare, (int) strpos($bare, '--idlm-muted')) : $bare;
+        assert_false((bool) preg_match('/#[0-9a-f]{3,8}\b/i', (string) preg_replace('/#(?:idlm|settings|tab)[a-z0-9_-]*/i', '', $colour_scope)), 'STD-CSS-2: hard-coded colour in ' . $name);
+
+        preg_match_all('/font-size:\s*([0-9.]+)rem/', $bare, $sizes);
+        foreach ($sizes[1] as $size) {
+            assert_true((float) $size >= 0.6875, 'STD-TYPE-1: text below 11px in ' . $name);
+        }
+    }
+    assert_true($rule_count > 20, 'The design layer rules must be parseable by this contract.');
+
+    foreach (array("defined('IDLM_DESIGN_LAYER')", "'idlm_design_layer'", "check_admin_referer('idlm_set_design_layer')", "current_user_can('manage_options')", "'idlm-crm-design'", 'DESIGN_AREAS') as $contract) {
+        assert_contains($contract, $assets);
+    }
+    assert_contains('IDLM_Admin_Assets::render_design_layer_control()', $admin);
+    assert_contains("add_action('admin_post_idlm_set_design_layer'", $assets);
+});
+
+idlm_test('design standard stays the entry point for agents and status options stay free of emoji', static function(): void {
+    $root = dirname(__DIR__);
+    $standard = (string) file_get_contents($root . '/design-system/interior-design-lead-manager/STANDARD.md');
+    foreach (array('STD-CSS-1', 'STD-CRM-1', 'STD-TYPE-1', 'IDLM_DESIGN_LAYER', 'design-baseline-worktree') as $contract) {
+        assert_contains($contract, $standard);
+    }
+    assert_contains('design-system/interior-design-lead-manager/STANDARD.md', (string) file_get_contents($root . '/AGENTS.md'));
+    foreach (array('class-admin-collection-reads.php', 'class-admin-lead-reads.php') as $file) {
+        assert_false((bool) preg_match('/>\s*(?:\x{2705}|\x{274C})/u', (string) file_get_contents($root . '/includes/' . $file)), 'STD-CRM-4: status text must not use emoji.');
+    }
+});
+
+idlm_test('Users and permissions views stay presentation only and keep every saved field', static function(): void {
+    $users = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/users.php');
+    assert_false((bool) preg_match('/\b(?:update_option|add_option|delete_option|add_cap|remove_cap|add_role|remove_role|update_user_meta)\s*\(/', $users), 'The users template must not write settings.');
+    foreach (array('name="action" value="idlm_update_role_scopes"', 'name="role_scopes[', 'name="action" value="idlm_update_role_permissions"', 'name="permission_role"', 'name="permissions[', "wp_nonce_field('idlm_update_role_scopes')", "wp_nonce_field('idlm_update_role_permissions')", 'name="action" value="idlm_create_user"', 'name="action" value="idlm_update_user"', 'name="crm_access_disabled"') as $contract) {
+        assert_contains($contract, $users);
+    }
+    // Saving scopes resets any role left out of the form, so the loop must always render every managed role.
+    assert_contains('foreach ($idlm_roles as $idlm_slug => $idlm_data):', $users);
+    assert_contains('name="role_scopes[<?php echo esc_attr($idlm_slug); ?>]"', $users);
+});
+
+idlm_test('design layer shows page notices as dismissible bottom-right toasts and keeps standing context inline', static function(): void {
+    $root = dirname(__DIR__);
+    $dialog = (string) file_get_contents($root . '/assets/js/dialog.js');
+    $css = (string) file_get_contents($root . '/assets/css/crm-design.css');
+    foreach (array('promoteNotices', 'if (!designLayerActive()) {', '[data-idlm-notice-inline]', "a, button:not(.notice-dismiss), input, select, textarea", 'MutationObserver', 'idlm-toast__dismiss', 'idlm-toast-stack') as $contract) {
+        assert_contains($contract, $dialog);
+    }
+    assert_false(false !== strpos($css, 'left: calc(248px + var(--idlm-space-4))'), 'Toasts must stay in the bottom right corner on desktop.');
+    foreach (array('includes/class-quotation-renderer.php', 'includes/class-design-handoff-controller.php', 'templates/admin/settings/lead-connector.php', 'templates/admin/settings/white-label.php', 'templates/admin/settings/mcp.php', 'assets/js/admin-app.js', 'assets/js/users-logs.js') as $file) {
+        assert_contains('data-idlm-notice-inline', (string) file_get_contents($root . '/' . $file), $file);
+    }
+    assert_contains("classList.contains('idlm-crm-design')", (string) file_get_contents($root . '/assets/js/settings.js'));
+});
+
+idlm_test('design layer sidebar groups work and admin, shows needs-action counts and the signed-in person', static function(): void {
+    $root = dirname(__DIR__);
+    $template = (string) file_get_contents($root . '/templates/workspace.php');
+    $shortcodes = (string) file_get_contents($root . '/includes/class-admin-shortcodes.php');
+    $script = (string) file_get_contents($root . '/assets/js/workspace.js');
+    $css = (string) file_get_contents($root . '/assets/css/crm-design.css');
+    foreach (array('idlm-workspace-nav-heading', '>Work</p>', '>Admin</p>', 'idlm-workspace-nav-count', 'data-idlm-tip', 'idlm-workspace-account-name') as $contract) {
+        assert_contains($contract, $template);
+    }
+    // Search and Add lead stay on the Leads page, not in the sidebar.
+    assert_false(false !== strpos($template, 'data-idlm-workspace-search'), 'The sidebar has no search field.');
+    assert_false(false !== strpos($template, 'data-idlm-add-lead'), 'The sidebar has no Add lead entry.');
+    assert_contains("'Ad conversions' : 'CAPI Audit'", $shortcodes);
+    assert_contains("'Ad audiences' : 'Audience Sync'", $shortcodes);
+    assert_contains('private static function nav_counts($sections)', $shortcodes);
+    assert_contains("handoff_status = 'awaiting_manager'", $shortcodes);
+    assert_contains('IDLM_Lead_Access_Policy::scope_sql(', $shortcodes);
+    foreach (array('idlm-nav-tip', 'focusin') as $contract) {
+        assert_contains($contract, $script);
+    }
+    assert_false(false !== strpos($script, "item.setAttribute('title', label.textContent)"), 'The rail must not fall back to native title tooltips.');
+    assert_contains('.idlm-nav-tip.is-visible', $css);
+});

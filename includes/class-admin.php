@@ -370,6 +370,7 @@ class IDLM_Admin {
             <?php else : ?>
                 <div class="notice notice-warning inline"><p>Create a published page containing the recommended workspace shortcode below to enable the CRM workspace and legacy-link redirects.</p></div>
             <?php endif; ?>
+            <?php IDLM_Admin_Assets::render_design_layer_control(); ?>
             <h2>Shortcodes</h2>
             <p><code>[idlm_workspace]</code> — complete, role-aware CRM workspace (recommended).</p>
             <p><code>[idlm_leads_list]</code> <code>[idlm_dashboard]</code> <code>[idlm_kanban]</code> <code>[idlm_quotations]</code> — individual compatibility views.</p>

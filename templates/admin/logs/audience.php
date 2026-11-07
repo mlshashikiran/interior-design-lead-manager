@@ -5,14 +5,20 @@ if (!defined('ABSPATH')) {
 
 $idlm_logs = isset($context['logs']) && is_array($context['logs']) ? $context['logs'] : array();
 $idlm_filters = isset($context['filters']) && is_array($context['filters']) ? $context['filters'] : array();
-$idlm_filter_keys = array('log_search', 'log_status', 'log_date_from', 'log_date_to');
+$idlm_filter_keys = array('log_search', 'log_status', 'log_date_range', 'log_date_from', 'log_date_to');
 $idlm_clear_url = remove_query_arg($idlm_filter_keys);
-$idlm_has_filters = !empty($idlm_filters['search']) || !empty($idlm_filters['status']) || !empty($idlm_filters['date_from']) || !empty($idlm_filters['date_to']);
+$idlm_has_filters = !empty($idlm_filters['search']) || !empty($idlm_filters['status']) || !empty($idlm_filters['range']) || !empty($idlm_filters['date_from']) || !empty($idlm_filters['date_to']);
+$idlm_design = class_exists('IDLM_Admin_Assets') && method_exists('IDLM_Admin_Assets', 'design_layer_enabled') && IDLM_Admin_Assets::design_layer_enabled();
+$idlm_failed_count = 0;
+foreach ($idlm_logs as $idlm_counted) { if ('success' !== $idlm_counted->status) { ++$idlm_failed_count; } }
+$idlm_ok_count = count($idlm_logs) - $idlm_failed_count;
+$idlm_status_now = (string) ($idlm_filters['status'] ?? '');
+$idlm_status_tabs = array('' => 'All', 'failed' => 'Failed', 'success' => 'Succeeded');
 ?>
 <div class="wrap idlm-wrap idlm-logs-page" data-idlm-log-page="audience" data-idlm-log-nonce="<?php echo esc_attr(wp_create_nonce('idlm_admin_nonce')); ?>">
     <header class="idlm-header">
         <div class="idlm-header-meta">
-            <h1>Audience sync log</h1>
+            <h1><?php echo IDLM_Admin_Assets::design_layer_enabled() ? 'Ad audiences' : 'Audience sync log'; ?></h1>
         </div>
         <div class="idlm-header-actions">
             <button type="button" class="idlm-btn idlm-btn-secondary idlm-header-filter-button" data-idlm-filter-open aria-controls="idlm-audience-log-filters" aria-expanded="false">
@@ -43,10 +49,14 @@ $idlm_has_filters = !empty($idlm_filters['search']) || !empty($idlm_filters['sta
             </select>
         </div>
         <div class="idlm-form-group">
+            <label for="idlm-audience-log-date-range">Date range</label>
+            <select class="idlm-input" id="idlm-audience-log-date-range" name="log_date_range" data-idlm-date-range data-idlm-filter-field><?php IDLM_Date_Ranges::print_options($idlm_filters['range'] ?? '', 'All time'); ?></select>
+        </div>
+        <div class="idlm-form-group" data-idlm-date-custom-for="idlm-audience-log-date-range"<?php echo 'custom' === ($idlm_filters['range'] ?? '') ? '' : ' hidden'; ?>>
             <label for="idlm-audience-log-date-from">From date</label>
             <input class="idlm-input" id="idlm-audience-log-date-from" name="log_date_from" type="date" data-idlm-filter-field value="<?php echo esc_attr($idlm_filters['date_from'] ?? ''); ?>">
         </div>
-        <div class="idlm-form-group">
+        <div class="idlm-form-group" data-idlm-date-custom-for="idlm-audience-log-date-range"<?php echo 'custom' === ($idlm_filters['range'] ?? '') ? '' : ' hidden'; ?>>
             <label for="idlm-audience-log-date-to">To date</label>
             <input class="idlm-input" id="idlm-audience-log-date-to" name="log_date_to" type="date" data-idlm-filter-field value="<?php echo esc_attr($idlm_filters['date_to'] ?? ''); ?>">
         </div>
@@ -57,6 +67,20 @@ $idlm_has_filters = !empty($idlm_filters['search']) || !empty($idlm_filters['sta
         </div>
     </form>
 
+
+<?php if ($idlm_design): ?>
+    <nav class="idlm-log-tabs" aria-label="Delivery status">
+        <?php foreach ($idlm_status_tabs as $idlm_tab_value => $idlm_tab_label): ?>
+            <a class="idlm-log-tab<?php echo $idlm_status_now === $idlm_tab_value ? ' is-active' : ''; ?>" href="<?php echo esc_url('' === $idlm_tab_value ? remove_query_arg('log_status') : add_query_arg('log_status', $idlm_tab_value)); ?>"<?php echo $idlm_status_now === $idlm_tab_value ? ' aria-current="page"' : ''; ?>><?php echo esc_html($idlm_tab_label); ?></a>
+        <?php endforeach; ?>
+    </nav>
+    <div class="idlm-log-summary" role="group" aria-label="Summary of the entries shown">
+        <span class="idlm-log-summary-item<?php echo $idlm_failed_count ? ' is-failed' : ''; ?>"><strong><?php echo esc_html(number_format_i18n($idlm_failed_count)); ?></strong> failed</span>
+        <span class="idlm-log-summary-item"><strong><?php echo esc_html(number_format_i18n($idlm_ok_count)); ?></strong> succeeded</span>
+        <span class="idlm-log-summary-scope">Latest 50 matching entries</span>
+        
+    </div>
+<?php endif; ?>
     <p class="idlm-log-page-status" role="status" aria-live="polite" data-idlm-log-page-status></p>
     <div class="idlm-table-wrapper idlm-log-table-region" role="region" aria-label="Audience sync log entries" tabindex="0">
         <table class="idlm-table idlm-log-table">
@@ -73,12 +97,12 @@ $idlm_has_filters = !empty($idlm_filters['search']) || !empty($idlm_filters['sta
             </thead>
             <tbody>
                 <?php if (!$idlm_logs): ?>
-                    <tr><td colspan="6" class="idlm-table-empty"><?php echo esc_html($idlm_has_filters ? 'No audience logs match these filters.' : 'No audience sync logs have been recorded yet.'); ?></td></tr>
+                    <tr><td colspan="6" class="idlm-table-empty"><?php echo esc_html($idlm_has_filters ? 'No audience logs match these filters.' : 'No audience sync logs have been recorded yet.'); ?><?php if ($idlm_design && $idlm_has_filters): ?> <a href="<?php echo esc_url($idlm_clear_url); ?>">Clear filters</a><?php endif; ?></td></tr>
                 <?php else: ?>
                     <?php foreach ($idlm_logs as $idlm_log):
                         $idlm_entry_label = sprintf('%s audience %s at %s', ucfirst($idlm_log->platform), $idlm_log->audience_id, IDLM_Admin::format_datetime($idlm_log->created_at));
                     ?>
-                        <tr>
+                        <tr<?php echo $idlm_design && 'success' !== $idlm_log->status ? ' class="is-failed"' : ''; ?>>
                             <td data-label="Time" class="idlm-table-cell-nowrap"><?php echo esc_html(IDLM_Admin::format_datetime($idlm_log->created_at)); ?></td>
                             <td data-label="Platform"><span class="idlm-badge idlm-badge-<?php echo esc_attr($idlm_log->platform); ?>"><?php echo esc_html(ucfirst($idlm_log->platform)); ?></span></td>
                             <td data-label="Audience"><code class="idlm-log-token"><?php echo esc_html($idlm_log->audience_id); ?></code></td>

@@ -223,6 +223,8 @@ class IDLM_Admin_Settings_Renderer {
             $active_tab = sanitize_key(wp_unslash($_POST['active_tab']));
             // phpcs:enable WordPress.Security.NonceVerification.Missing
         }
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Returning from clearing emails reopens the health tab; display only.
+        if (isset($_GET['email_cleared'])) { $active_tab = 'health'; }
 
         $max_active_leads_per_rep = get_option('idlm_max_active_leads_per_rep', 30);
         $routing_exception_notifications_enabled = get_option('idlm_routing_exception_notifications_enabled', '0');
@@ -324,6 +326,7 @@ class IDLM_Admin_Settings_Renderer {
             'meta_event_mappings' => $meta_event_mappings,
             'google_event_mappings' => $google_event_mappings,
             'linkedin_event_mappings' => $linkedin_event_mappings,
+            'manual_lead_conversions' => get_option(IDLM_Contact_Identity::MANUAL_CONVERSIONS_OPTION, 'ad_sources'),
             'sync_meta_audience' => $sync_meta_audience,
             'sync_google_audience' => $sync_google_audience,
             'sync_linkedin_audience' => $sync_linkedin_audience,
@@ -350,6 +353,9 @@ class IDLM_Admin_Settings_Renderer {
             'action_scheduler_version' => $action_scheduler_version,
             'db_prefix' => $wpdb ? $wpdb->prefix : '',
             'operational_health' => IDLM_Operational_Health::report(),
+            'email_review' => current_user_can('manage_options') ? IDLM_Contact_Identity::review_rows(200) : array(),
+            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- A display-only count from the clear redirect.
+            'email_cleared' => isset($_GET['email_cleared']) ? absint(wp_unslash($_GET['email_cleared'])) : null,
             'horizontal_readiness' => IDLM_Horizontal_Readiness::report(),
             'diagnostic_url' => admin_url('admin-ajax.php?action=idlm_download_diagnostic_report&nonce=' . wp_create_nonce('idlm_admin_nonce')),
             'mcp_script_path' => $mcp_script_path,

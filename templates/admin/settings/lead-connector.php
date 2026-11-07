@@ -14,7 +14,7 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
         <span class="idlm-meta-connector__status"><?php echo !empty($idlm_config['enabled']) ? 'Sync enabled' : ($idlm_facebook_authorized ? 'Facebook connected' : 'Not connected'); ?></span>
     </div>
     <?php if (!empty($idlm_connector['error'])): ?>
-    <div class="idlm-alert idlm-alert-warning" role="alert" tabindex="-1">
+    <div class="idlm-alert idlm-alert-warning" data-idlm-notice-inline role="alert" tabindex="-1">
         <p><strong>Connector setup was not saved.</strong> <?php echo esc_html($idlm_connector['error']); ?></p>
     </div>
     <?php endif; ?>
@@ -81,7 +81,7 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
             <ul><?php foreach (($idlm_facebook['form_names'] ?? array()) as $idlm_name): ?><li><?php echo esc_html($idlm_name); ?></li><?php endforeach; ?></ul>
         <?php endif; ?>
         <?php if (empty($idlm_facebook['ready'])): ?>
-        <div class="idlm-alert idlm-alert-warning" tabindex="-1" data-idlm-facebook-setup>
+        <div class="idlm-alert idlm-alert-warning" data-idlm-notice-inline tabindex="-1" data-idlm-facebook-setup>
             <p><strong>Facebook sign-in is not available yet.</strong> Save your Meta app ID, Facebook Login configuration ID and app secret in step 1. Use a public HTTPS CRM address.</p>
             <p>Use Back to finish app setup, then save your details in step 2.</p>
         </div>

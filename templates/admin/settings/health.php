@@ -14,10 +14,38 @@ $idlm_db_prefix = isset($context['db_prefix']) ? $context['db_prefix'] : '';
 $idlm_operational_health = isset($context['operational_health']) && is_array($context['operational_health']) ? $context['operational_health'] : array();
 $idlm_horizontal_readiness = isset($context['horizontal_readiness']) && is_array($context['horizontal_readiness']) ? $context['horizontal_readiness'] : array();
 $idlm_diagnostic_url = isset($context['diagnostic_url']) ? $context['diagnostic_url'] : '';
+$idlm_email_review = isset($context['email_review']) && is_array($context['email_review']) ? $context['email_review'] : array();
+$idlm_email_cleared = isset($context['email_cleared']) ? $context['email_cleared'] : null;
 ?>
                 <!-- Tab: System Health -->
                 <section id="settings-health" class="idlm-settings-tab-content <?php echo $idlm_active_tab === 'health' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-health" <?php echo $idlm_active_tab === 'health' ? '' : 'hidden'; ?>>
                     <div class="idlm-grid-full">
+                        <!-- Placeholder and shared emails: reviewed and cleared by an administrator, never automatically. -->
+                        <article class="idlm-card idlm-email-review">
+                            <h3>Made-up and shared emails</h3>
+                            <p class="idlm-card-desc">These leads have an email that cannot be the customer&#8217;s own, such as na@gmail.com, or one used for different phone numbers. Such emails no longer match leads together and are not sent to ad platforms. Clearing removes the email from the lead and notes it in the lead&#8217;s activity; nothing else changes.</p>
+                            <?php if (null !== $idlm_email_cleared): ?><p class="idlm-field-help" role="status"><?php echo esc_html(sprintf('%d email%s cleared.', $idlm_email_cleared, 1 === $idlm_email_cleared ? '' : 's')); ?></p><?php endif; ?>
+                            <?php if (!$idlm_email_review): ?>
+                                <p class="idlm-field-help">No leads need review.</p>
+                            <?php else: ?>
+                                <div class="idlm-table-wrapper"><table class="idlm-table"><caption class="screen-reader-text">Leads with made-up or shared emails</caption>
+                                    <thead><tr><th scope="col"><span class="screen-reader-text">Select</span></th><th scope="col">Lead</th><th scope="col">Email</th><th scope="col">Phone</th><th scope="col">Why</th></tr></thead>
+                                    <tbody>
+                                    <?php foreach ($idlm_email_review as $idlm_row): ?>
+                                        <tr>
+                                            <td><input type="checkbox" form="idlm-clear-emails-form" name="lead_ids[]" value="<?php echo esc_attr($idlm_row->id); ?>" aria-label="<?php echo esc_attr('Clear email for ' . trim($idlm_row->first_name . ' ' . $idlm_row->last_name)); ?>"></td>
+                                            <td><?php echo esc_html(trim($idlm_row->first_name . ' ' . $idlm_row->last_name)); ?> <small><?php echo esc_html('#' . $idlm_row->id . ' · ' . $idlm_row->stage); ?></small></td>
+                                            <td><?php echo esc_html($idlm_row->email); ?></td>
+                                            <td><?php echo esc_html($idlm_row->phone); ?></td>
+                                            <td><?php echo esc_html($idlm_row->reason); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table></div>
+                                <p><button type="submit" form="idlm-clear-emails-form" class="idlm-btn idlm-btn-secondary" data-idlm-confirm-submit data-idlm-confirm-title="Clear selected emails" data-idlm-confirm-message="The selected leads lose their email. Phone numbers, owners and stages stay the same." data-idlm-confirm-label="Clear emails" data-idlm-confirm-destructive="true">Clear selected emails</button></p>
+                            <?php endif; ?>
+                        </article>
+
                         <!-- Telemetry Settings Card -->
                         <article class="idlm-card">
                             <h3>Telemetry & Logging Configuration</h3>

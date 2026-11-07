@@ -1,0 +1,676 @@
+/* IDLM CRM design layer: Dashboard. Builder: Shashi.
+   Contract: design-system/interior-design-lead-manager/STANDARD.md. Every selector starts
+   with body.idlm-crm-design. Tokens only: no hex colours, no important overrides.
+   Order of the first screen: what needs action today, headline numbers, then performance.
+   Diagnostic panels sit behind a "More analysis" disclosure. */
+
+/* --- Header row, tabs, scope note ------------------------------------------ */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-top-row {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--idlm-space-2) var(--idlm-space-4);
+    margin-bottom: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-scope {
+    margin-left: auto;
+    color: var(--idlm-text-muted);
+    font-size: var(--idlm-type-meta);
+}
+
+/* --- Filters ---------------------------------------------------------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-filters {
+    flex-wrap: wrap;
+    gap: var(--idlm-space-2) var(--idlm-space-3);
+    margin-bottom: var(--idlm-space-4);
+    padding: var(--idlm-space-3);
+    border-radius: var(--idlm-radius);
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-filters .idlm-input {
+    min-width: 9.5rem;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-filters .idlm-dashboard-reset {
+    margin-left: 0;
+    color: var(--idlm-action);
+    background: transparent;
+    border-color: transparent;
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-filters .idlm-dashboard-reset:disabled {
+    color: var(--idlm-text-muted);
+    opacity: 1;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-filters .idlm-dashboard-reset.is-active {
+    color: var(--idlm-action);
+    background: var(--idlm-action-soft);
+    border-color: var(--idlm-action);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-filters .idlm-dashboard-status {
+    flex: 1 1 12rem;
+    margin-left: auto;
+    text-align: right;
+    font-size: var(--idlm-type-meta);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-custom-range {
+    margin: calc(var(--idlm-space-2) * -1) 0 var(--idlm-space-4);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-custom-range #idlm-dashboard-date-error {
+    flex-basis: 100%;
+    margin: 0;
+    color: var(--idlm-danger);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-insight {
+    border-radius: var(--idlm-radius);
+}
+
+/* --- Tab panel layout: action first ----------------------------------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--idlm-space-4);
+    align-items: start;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section[hidden] {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section > * {
+    min-width: 0;
+    margin: 0;
+    order: 5;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section--sales > .idlm-dashboard-grid--act,
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section--presales > .idlm-dashboard-grid--act {
+    display: contents;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section > .idlm-dashboard-kpi-grid {
+    order: 2;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section .idlm-dashboard-panel--act {
+    grid-column: 1 / -1;
+    order: 1;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section .idlm-dashboard-panel--pipeline {
+    order: 3;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section--sales > .idlm-dashboard-period-panel {
+    order: 3;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section > .idlm-dashboard-more {
+    order: 6;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section--sales > .idlm-dashboard-grid--act > .idlm-dashboard-panel,
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section--presales > .idlm-dashboard-grid--act > .idlm-dashboard-panel {
+    margin: 0;
+}
+
+@media (min-width: 1025px) {
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section--sales {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section--sales > * {
+        grid-column: 1 / -1;
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section--sales .idlm-dashboard-panel--pipeline,
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section--sales > .idlm-dashboard-period-panel {
+        grid-column: auto;
+        align-self: stretch;
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section--marketing > .idlm-dashboard-grid {
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* --- Act next: a row of queues ---------------------------------------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-panel--act .idlm-dashboard-actions {
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-panel--act > header {
+    padding-block: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-action {
+    grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+    border-radius: var(--idlm-radius);
+    border-color: var(--idlm-border);
+    transition: background-color var(--idlm-motion-fast) var(--idlm-ease), border-color var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-action > strong {
+    width: 2.5rem;
+    height: 2.25rem;
+    color: var(--idlm-warning);
+    background: var(--idlm-warning-soft);
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-action.is-critical {
+    border-color: var(--idlm-danger-line);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-action.is-critical > strong {
+    color: var(--idlm-danger);
+    background: var(--idlm-danger-soft);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-action:hover:not(:disabled) {
+    background: var(--idlm-hover-tint);
+    border-color: var(--idlm-action);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-action:disabled > strong {
+    color: var(--idlm-text-muted);
+    background: var(--idlm-surface-soft);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-action b {
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-action small {
+    font-size: var(--idlm-type-meta);
+    line-height: 1.35;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-clear {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--idlm-success);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+/* --- KPI cards: equal height, comparison pinned to the bottom ---------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: var(--idlm-space-3);
+    margin-bottom: 0;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    min-height: 7.25rem;
+    padding: var(--idlm-space-4);
+    border-radius: var(--idlm-radius);
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi-label {
+    margin-bottom: var(--idlm-space-2);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi-value {
+    font-size: 1.625rem;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi-meta {
+    margin-top: auto;
+    padding-top: var(--idlm-space-2);
+    font-size: var(--idlm-type-meta);
+}
+
+body.idlm-crm-design .idlm-dashboard button.idlm-dashboard-kpi:disabled {
+    cursor: default;
+}
+
+body.idlm-crm-design .idlm-dashboard button.idlm-dashboard-kpi:hover:not(:disabled) {
+    transform: none;
+    border-color: var(--idlm-action);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi.is-positive .idlm-dashboard-kpi-meta {
+    color: var(--idlm-success);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi.is-negative .idlm-dashboard-kpi-meta {
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi--loading {
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-skeleton-value {
+    display: block;
+    width: 55%;
+    height: 1.75rem;
+}
+
+/* --- Panels ----------------------------------------------------------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-panel {
+    border-radius: var(--idlm-radius);
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-panel > header {
+    flex-wrap: wrap;
+    padding: var(--idlm-space-3) var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-panel header p {
+    font-size: var(--idlm-type-meta);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-panel [aria-busy="true"],
+body.idlm-crm-design .idlm-dashboard [role="tabpanel"][aria-busy="true"] .idlm-dashboard-panel {
+    opacity: 0.6;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-empty {
+    margin: 0;
+    padding: var(--idlm-space-3) 0;
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-table-wrapper .idlm-dashboard-empty {
+    padding: var(--idlm-space-4) 0;
+    text-align: left;
+    white-space: normal;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-note {
+    font-size: var(--idlm-type-meta);
+}
+
+/* --- Bars (pipeline stages, reasons) ----------------------------------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-bars {
+    gap: var(--idlm-space-1);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-bar {
+    grid-template-columns: minmax(6.5rem, 9rem) minmax(0, 1fr) 3rem;
+    padding: var(--idlm-space-1) var(--idlm-space-2);
+    margin-inline: calc(var(--idlm-space-2) * -1);
+    width: auto;
+    border-radius: var(--idlm-radius-compact);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-dashboard button.idlm-dashboard-bar:hover:not(:disabled) {
+    background: var(--idlm-hover-tint);
+}
+
+body.idlm-crm-design .idlm-dashboard button.idlm-dashboard-bar:hover:not(:disabled) > span:first-child {
+    color: var(--idlm-text);
+    text-decoration: underline;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-track {
+    height: 0.5rem;
+}
+
+/* --- Chips (view switches) ---------------------------------------------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-chip {
+    min-height: 2rem;
+    padding: var(--idlm-space-1) var(--idlm-space-3);
+    font-size: 0.8125rem;
+    transition: background-color var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-chip:hover:not(.active) {
+    background: var(--idlm-hover-tint);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-chip.active {
+    font-weight: 600;
+}
+
+/* --- Charts ------------------------------------------------------------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-trend {
+    height: 15rem;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-vertical-chart {
+    height: 17rem;
+}
+
+body.idlm-crm-design .idlm-dashboard-trend-legend .is-leads::before {
+    background: var(--idlm-action);
+}
+
+body.idlm-crm-design .idlm-dashboard-trend-legend .is-qualified::before {
+    background: var(--idlm-success);
+}
+
+body.idlm-crm-design .idlm-dashboard-trend-legend .is-won::before {
+    background: var(--idlm-info);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-panel p.idlm-dashboard-legend {
+    margin-top: var(--idlm-space-4);
+    color: var(--idlm-text-muted);
+    font-size: var(--idlm-type-meta);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-legend span::before {
+    width: 0.625rem;
+    height: 0.625rem;
+    margin-right: var(--idlm-space-1);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-quality-row {
+    grid-template-columns: minmax(5rem, 7rem) minmax(0, 1fr);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-quality {
+    height: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-quality-detail {
+    font-size: var(--idlm-type-meta);
+}
+
+/* --- Table alternative for trend charts --------------------------------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-data {
+    margin-top: var(--idlm-space-3);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-data > summary {
+    display: inline-block;
+    padding: var(--idlm-space-1) 0;
+    color: var(--idlm-action);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-data .idlm-table-wrapper {
+    max-height: 18rem;
+    margin-top: var(--idlm-space-2);
+    overflow: auto;
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+}
+
+/* --- Summary tiles ------------------------------------------------------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-mini-grid,
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-coverage {
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: var(--idlm-space-3);
+    padding: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-mini-grid article,
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-coverage article {
+    background: var(--idlm-surface-soft);
+    border-radius: var(--idlm-radius);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-mini-grid strong,
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-coverage strong {
+    font-size: 1.25rem;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-workspace :is(.idlm-dashboard-action small, .idlm-dashboard-mini-grid span, .idlm-dashboard-mini-grid small, .idlm-dashboard-coverage span, .idlm-dashboard-coverage small) {
+    font-size: 0.6875rem;
+}
+
+/* --- Tables ---------------------------------------------------------------------- */
+body.idlm-crm-design .idlm-workspace .idlm-dashboard .idlm-table th {
+    font-size: 0.75rem;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-table-wrapper {
+    overflow-x: auto;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section .idlm-table :is(thead th, tbody td):not(:first-child) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section .idlm-table tbody td:first-child:not(:only-child),
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section .idlm-dashboard-campaign-child td:first-child {
+    text-align: left;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section .idlm-table tbody tr:hover > * {
+    background: var(--idlm-hover-tint);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-section .idlm-table .idlm-dashboard-empty {
+    text-align: left;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-link:hover {
+    text-decoration: underline;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-campaign-toggle {
+    min-width: 1.5rem;
+    min-height: 1.5rem;
+}
+
+/* --- More analysis disclosure ------------------------------------------------------ */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more {
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    box-shadow: none;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more > summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--idlm-space-1) var(--idlm-space-3);
+    padding: var(--idlm-space-3) var(--idlm-space-4);
+    border-radius: var(--idlm-radius);
+    cursor: pointer;
+    list-style: none;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more > summary::-webkit-details-marker {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more > summary::after {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-left: auto;
+    border-right: 2px solid var(--idlm-text-muted);
+    border-bottom: 2px solid var(--idlm-text-muted);
+    transform: rotate(45deg);
+    transition: transform var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more[open] > summary::after {
+    transform: rotate(-135deg);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more > summary:hover {
+    background: var(--idlm-hover-tint);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more:focus-within > summary:focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: calc(var(--idlm-focus-offset) * -1);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more__title {
+    color: var(--idlm-text);
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more__hint {
+    flex: 1 1 14rem;
+    color: var(--idlm-text-muted);
+    font-size: var(--idlm-type-meta);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more__body {
+    display: grid;
+    gap: var(--idlm-space-4);
+    padding: var(--idlm-space-4);
+    border-top: 1px solid var(--idlm-border);
+    background: var(--idlm-canvas);
+    border-radius: 0 0 var(--idlm-radius) var(--idlm-radius);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more__body > * {
+    min-width: 0;
+    margin: 0;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more__body > .idlm-dashboard-grid {
+    margin-bottom: 0;
+}
+
+/* --- Investigation records ----------------------------------------------------------- */
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-records {
+    margin-top: var(--idlm-space-4);
+    scroll-margin-top: var(--idlm-sticky-top);
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-records .idlm-table :is(thead th, tbody td):not(:first-child) {
+    text-align: left;
+}
+
+body.idlm-crm-design .idlm-dashboard .idlm-dashboard-pagination {
+    flex-wrap: wrap;
+}
+
+/* --- Phones and tablets ---------------------------------------------------------------- */
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-top-row {
+        align-items: flex-start;
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-scope {
+        margin-left: 0;
+        flex-basis: 100%;
+    }
+
+    /* Two controls per row keeps the first phone screen for the numbers, not the filters. */
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-filters {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
+        gap: var(--idlm-space-2);
+        margin-bottom: var(--idlm-space-3);
+        padding: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-filters .idlm-input,
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-filters .idlm-dashboard-reset {
+        width: 100%;
+        min-width: 0;
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-filters .idlm-dashboard-status {
+        grid-column: 1 / -1;
+        margin-left: 0;
+        text-align: left;
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi-value {
+        font-size: 1.375rem;
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-trend {
+        height: 13rem;
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-bar {
+        grid-template-columns: minmax(5.5rem, 7rem) minmax(0, 1fr) 2.5rem;
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-panel--act .idlm-dashboard-actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-more__body {
+        padding: var(--idlm-space-3);
+    }
+}
+
+@media (max-width: 480px) {
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-kpi {
+        padding: var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-mini-grid,
+    body.idlm-crm-design .idlm-dashboard .idlm-dashboard-coverage {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: var(--idlm-space-3);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.idlm-crm-design .idlm-dashboard :is(.idlm-dashboard-action, .idlm-dashboard-chip, .idlm-dashboard-more > summary::after) {
+        transition: none;
+    }
+}
+
+/* Empty chart: collapse the plot area so the message is not stranded in blank space. */
+body.idlm-crm-design .idlm-dashboard :is(.idlm-dashboard-trend, .idlm-dashboard-vertical-chart):has(> canvas[hidden]) {
+    height: auto;
+}
+
+body.idlm-crm-design .idlm-dashboard #idlm-trend-empty:not([hidden]) {
+    margin: 0;
+    padding: var(--idlm-space-3) 0;
+    color: var(--idlm-text-muted);
+    font-size: 0.8125rem;
+}

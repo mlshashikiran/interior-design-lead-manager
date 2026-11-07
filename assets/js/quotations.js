@@ -20,6 +20,38 @@
         return Math.floor(amount / 10000) * percent + Math.floor(((amount % 10000) * percent + 5000) / 10000);
     }
     // End QUO008 integer decimal helpers.
+    // Everything behind crmDesign is presentation only: it never changes what is saved or sent.
+    var crmDesign = !!(document.body && document.body.classList.contains('idlm-crm-design'));
+    function crmTrapFocus(dialog) {
+        dialog.addEventListener('keydown', function (event) {
+            if (event.key !== 'Tab') { return; }
+            var items = Array.from(dialog.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex="0"]')).filter(function (item) { return item.offsetParent !== null; });
+            if (!items.length) { return; }
+            var first = items[0], last = items[items.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        });
+    }
+    function crmFocusFirst(dialog) {
+        var target = dialog.querySelector('input:not([type="hidden"]):not([readonly]),select,textarea');
+        if (target) { target.focus(); }
+    }
+    if (crmDesign) {
+        // A notice from a redirect is shown once; it must not return on reload.
+        var crmNoticeUrl = new URL(window.location.href);
+        if (crmNoticeUrl.searchParams.has('idlm_notice') || crmNoticeUrl.searchParams.has('idlm_error')) {
+            crmNoticeUrl.searchParams.delete('idlm_notice');
+            crmNoticeUrl.searchParams.delete('idlm_error');
+            window.history.replaceState({}, '', crmNoticeUrl.href);
+        }
+        document.addEventListener('click', function (event) {
+            document.querySelectorAll('.idlm-quote-menu[open]').forEach(function (menu) { if (!menu.contains(event.target)) { menu.open = false; } });
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') { return; }
+            document.querySelectorAll('.idlm-quote-menu[open]').forEach(function (menu) { menu.open = false; menu.querySelector('summary').focus(); });
+        });
+    }
     function bindQuotationRows(scope) {
         scope.querySelectorAll('.idlm-quote-row[data-href]').forEach(function (row) {
             if (row.dataset.idlmRowBound) { return; }
@@ -33,11 +65,11 @@
     if (catalogueSortForm && catalogueToolbar) {
         catalogueToolbar.insertBefore(catalogueSortForm, catalogueToolbar.querySelector('.idlm-bulk-action-bar'));
     }
-    function escapeHtml(value) { var node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML; }
+    function escapeHtml(value) { var node = document.createElement('div'); node.textContent = value == null ? '' : String(value); return node.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
     function currencyCode(value) { value = String(value || '').trim().toUpperCase(); return /^[A-Z]{3}$/.test(value) ? value : 'INR'; }
     function formatMoney(value, code) {
         code = currencyCode(code || (idlmQuoteData && idlmQuoteData.currencyCode));
-        try { return new Intl.NumberFormat('en-IN', {style: 'currency', currency: code, maximumFractionDigits: 2}).format(Number(value || 0)); }
+        try { return new Intl.NumberFormat(crmDesign && code !== 'INR' ? 'en-US' : 'en-IN', {style: 'currency', currency: code, maximumFractionDigits: 2}).format(Number(value || 0)); }
         catch (error) { return code + ' ' + Number(value || 0).toFixed(2); }
     }
     function liveListUrl(args) {
@@ -45,11 +77,58 @@
         Object.keys(args).forEach(function (key) { if (args[key]) { url.searchParams.set(key, args[key]); } else { url.searchParams.delete(key); } });
         return url;
     }
+    function crmDate(value) {
+        // Stored values are already in site time, so format the parts without converting them.
+        var match = /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}))?/.exec(String(value || ''));
+        if (!match || Number(match[2]) < 1) { return {date: '—', time: ''}; }
+        var hour = Number(match[4] || 0);
+        return {
+            date: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(match[2]) - 1] + ' ' + Number(match[3]) + ', ' + match[1],
+            time: match[4] ? ((hour % 12) || 12) + ':' + match[5] + ' ' + (hour < 12 ? 'AM' : 'PM') : ''
+        };
+    }
+    function crmStatusBadge(status) {
+        var label = String(status || 'Draft').trim() || 'Draft';
+        var tones = {shared: 'is-info', accepted: 'is-success', approved: 'is-success', rejected: 'is-danger', expired: 'is-warning'};
+        return '<span class="idlm-badge ' + (tones[label.toLowerCase()] || 'is-neutral') + '">' + escapeHtml(label.charAt(0).toUpperCase() + label.slice(1).toLowerCase()) + '</span>';
+    }
+    function crmCreator(row) {
+        if (row.creator_name) { return escapeHtml(row.creator_name); }
+        return Number(row.created_by) > 0 ? '<span class="idlm-quote-creator-none" title="This user account no longer exists.">Former user</span>' : '<span class="idlm-quote-creator-none" title="Created from the lead’s quote value during migration, so no user was recorded.">Migrated</span>';
+    }
+    function crmQuotationRow(row) {
+        var href = escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href);
+        var customer = [row.first_name, row.last_name].filter(Boolean).join(' ') || '—';
+        var revision = /(R\d+)$/.exec(String(row.revision_name || ''));
+        var updated = crmDate(row.updated_at);
+        return '<tr class="idlm-quote-row" data-href="' + href + '"><td data-label="Quotation"><a class="idlm-quote-identity-link" href="' + href + '"><strong>' + escapeHtml(row.quote_number) + '</strong></a><small>' + escapeHtml(row.title) + '</small></td><td data-label="Customer"><strong>' + escapeHtml(customer) + '</strong><small>' + escapeHtml([row.project_name, row.phone].filter(Boolean).join(' · ')) + '</small></td><td data-label="Status"><span class="idlm-quote-status-cell">' + crmStatusBadge(row.status) + '<span class="idlm-quote-revision-label">' + escapeHtml(revision ? revision[1] : (row.revision_name || '—')) + '</span></span></td><td data-label="Value" class="idlm-quote-num">' + escapeHtml(formatMoney(row.grand_total, row.currency_code)) + '</td><td data-label="Created by">' + crmCreator(row) + '<small>' + escapeHtml(crmDate(row.created_at).date) + '</small></td><td data-label="Updated"><span class="idlm-table-timestamp"><span class="idlm-table-timestamp-date">' + escapeHtml(updated.date) + '</span><span class="idlm-table-timestamp-time">' + escapeHtml(updated.time) + '</span></span></td><td class="idlm-quote-row-action"><a class="idlm-btn idlm-btn-secondary idlm-btn-quiet" href="' + href + '" aria-label="' + escapeHtml('Open ' + row.quote_number) + '">Open</a></td></tr>';
+    }
+    function crmCatalogueRow(row) {
+        var editUrl = escapeHtml(liveListUrl({workspace: 'catalogue', edit_item: row.id, catalogue_search: document.querySelector('[name="catalogue_search"]').value}).href);
+        var name = escapeHtml(row.item_name), active = 'active' === row.status;
+        return '<tr class="' + (active ? '' : 'is-archived') + '"><td class="idlm-checkbox-column"><input type="checkbox" name="item_ids[]" value="' + escapeHtml(row.id) + '" data-row-select aria-label="Select ' + name + '"></td><td data-label="Code">' + escapeHtml(row.item_code) + '</td><td data-label="Category">' + escapeHtml(row.category) + '</td><td data-label="Item" class="idlm-catalogue-item-cell"><strong>' + name + '</strong><small title="' + escapeHtml(row.description) + '">' + escapeHtml(row.description) + '</small></td><td data-label="Unit">' + escapeHtml(row.unit) + '</td><td data-label="Wood">' + (Number(row.is_wood) ? 'Yes' : 'No') + '</td><td data-label="Rate" class="idlm-quote-num">' + escapeHtml(formatMoney(row.default_rate)) + '</td><td data-label="Status">' + (active ? 'Active' : '<span class="idlm-badge is-neutral">Archived</span>') + '</td><td class="idlm-catalogue-row-actions"><div class="idlm-catalogue-actions"><a class="button-link" href="' + editUrl + '" aria-label="Edit ' + name + '">Edit</a>' + (active ? '<button class="button-link-delete" name="bulk_action" value="archive" data-single-submit aria-label="Archive ' + name + '">Archive</button>' : '') + '<button class="button-link-delete" name="bulk_action" value="delete" data-single-submit aria-label="Delete ' + name + '">Delete</button></div></td></tr>';
+    }
+    function crmEmptyRow(type, filtered) {
+        var clear = '<div class="idlm-state__actions"><button type="button" class="idlm-btn idlm-btn-secondary" data-quote-filter-clear>Clear ' + ('catalogue' === type ? 'search' : 'filters') + '</button></div>';
+        var message = 'catalogue' === type
+            ? (filtered ? '<strong>No catalogue items match this search</strong><span>Try a different name, code or category.</span>' + clear : '<strong>No catalogue items yet</strong><span>Add items here so they can be searched and copied into quotations.</span>')
+            : (filtered ? '<strong>No quotations match these filters</strong><span>Try a different name, phone or date range.</span>' + clear : '<strong>No quotations yet</strong><span>A quotation is created for a lead, and revisions keep its history.</span>');
+        return '<tr class="idlm-quote-empty"><td colspan="' + ('catalogue' === type ? 9 : 7) + '"><div class="idlm-state is-empty">' + message + '</div></td></tr>';
+    }
+    function crmPagination(type, data) {
+        var total = Number(data.total), perPage = Number(data.perPage), page = Number(data.page), pages = Math.max(1, Math.ceil(total / perPage)), noun = 'catalogue' === type ? 'items' : 'quotations', number = new Intl.NumberFormat('en-US');
+        if (!total) { return ''; }
+        return '<span class="idlm-pagination-info">' + number.format(((page - 1) * perPage) + 1) + '–' + number.format(Math.min(total, page * perPage)) + ' of ' + number.format(total) + ' ' + noun + '</span>' +
+            (page > 1 ? '<button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + (page - 1) + '">Previous</button>' : '') +
+            (page < pages ? '<button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + (page + 1) + '">Next</button>' : '');
+    }
     function quotationRow(row) {
+        if (crmDesign) { return crmQuotationRow(row); }
         var customer = [row.first_name, row.last_name].filter(Boolean).join(' ') || '—';
         return '<tr class="idlm-quote-row" data-href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '"><td><strong>' + escapeHtml(row.quote_number) + '</strong><br><small>' + escapeHtml(row.title) + '</small></td><td><strong>' + escapeHtml(customer) + '</strong><br><small>' + escapeHtml([row.phone, row.project_name].filter(Boolean).join(' · ')) + '</small></td><td>' + escapeHtml(row.revision_name || '—') + '</td><td>' + escapeHtml(formatMoney(row.grand_total, row.currency_code)) + '</td><td>' + escapeHtml(row.creator_name || 'Unknown') + '<br><small>' + escapeHtml(row.created_at) + '</small></td><td>' + escapeHtml(row.updated_at) + '</td><td><a class="idlm-btn idlm-btn-secondary" href="' + escapeHtml(liveListUrl({action: 'view', quote_id: row.id}).href) + '">Open</a></td></tr>';
     }
     function catalogueRow(row) {
+        if (crmDesign) { return crmCatalogueRow(row); }
         var editUrl = liveListUrl({workspace: 'catalogue', edit_item: row.id, catalogue_search: document.querySelector('[name="catalogue_search"]').value}).href;
         return '<tr><td class="idlm-checkbox-column"><input type="checkbox" name="item_ids[]" value="' + escapeHtml(row.id) + '" data-row-select aria-label="Select ' + escapeHtml(row.item_name) + '"></td><td>' + escapeHtml(row.item_code) + '</td><td>' + escapeHtml(row.category) + '</td><td><strong>' + escapeHtml(row.item_name) + '</strong><br><small>' + escapeHtml(row.description) + '</small></td><td>' + escapeHtml(row.unit) + '</td><td>' + (Number(row.is_wood) ? 'Yes' : 'No') + '</td><td>' + escapeHtml(formatMoney(row.default_rate)) + '</td><td>' + escapeHtml((row.status || '').charAt(0).toUpperCase() + (row.status || '').slice(1)) + '</td><td><div class="idlm-catalogue-actions"><a class="button-link" href="' + escapeHtml(editUrl) + '">Edit</a>' + ('active' === row.status ? '<button class="button-link-delete" name="bulk_action" value="archive" data-single-submit>Archive</button>' : '') + '<button class="button-link-delete" name="bulk_action" value="delete" data-single-submit>Delete</button></div></td></tr>';
     }
@@ -61,6 +140,18 @@
         var searchInput = filterForm.querySelector(type === 'catalogue' ? '[name="catalogue_search"]' : '[name="quote_search"]');
         if (!rows || !searchInput) { return; }
         var timer = 0, controller = null, page = 1;
+        var crmFilterFields = 'quotations' === type ? ['created_by', 'date_range', 'date_from', 'date_to'] : [];
+        function crmFiltersActive() {
+            return !!searchInput.value.trim() || crmFilterFields.some(function (name) { return filterForm.elements[name] && filterForm.elements[name].value; });
+        }
+        function crmSyncUrl(data) {
+            var args = {};
+            args['catalogue' === type ? 'catalogue_search' : 'quote_search'] = searchInput.value;
+            args['catalogue' === type ? 'catalogue_page' : 'quote_page'] = data.page > 1 ? data.page : null;
+            crmFilterFields.forEach(function (name) { args[name] = filterForm.elements[name] ? filterForm.elements[name].value : null; });
+            // Rows read this URL, so opening a record and coming back keeps the filters and page.
+            window.history.replaceState({}, '', liveListUrl(args).href);
+        }
         function request(nextPage) {
             page = nextPage || 1;
             if (controller) { controller.abort(); }
@@ -76,28 +167,80 @@
             params.set(type === 'catalogue' ? 'catalogue_page' : 'quote_page', page);
             params.set('action', type === 'catalogue' ? 'idlm_filter_catalogue_list' : 'idlm_filter_quotation_list');
             params.set('nonce', idlmQuoteData.nonce);
+            if (crmDesign) { rows.setAttribute('aria-busy', 'true'); }
             fetch(idlmQuoteData.ajaxUrl + '?' + params.toString(), {credentials: 'same-origin', signal: controller.signal}).then(function (response) {
                 if (!response.ok) { throw new Error('Search failed.'); }
                 return response.json();
             }).then(function (payload) {
                 if (!payload.success || !payload.data || !Array.isArray(payload.data.rows)) { throw new Error(payload.data && payload.data.message ? payload.data.message : 'Search failed.'); }
                 var data = payload.data, rowMarkup = type === 'catalogue' ? catalogueRow : quotationRow;
-                rows.innerHTML = data.rows.length ? data.rows.map(rowMarkup).join('') : '<tr><td colspan="' + (type === 'catalogue' ? 9 : 7) + '">No ' + (type === 'catalogue' ? 'catalogue items' : 'quotations') + ' found.</td></tr>';
+                if (crmDesign) { crmSyncUrl(data); }
+                rows.innerHTML = data.rows.length ? data.rows.map(rowMarkup).join('') : (crmDesign ? crmEmptyRow(type, crmFiltersActive()) : '<tr><td colspan="' + (type === 'catalogue' ? 9 : 7) + '">No ' + (type === 'catalogue' ? 'catalogue items' : 'quotations') + ' found.</td></tr>');
                 if ('quotations' === type) { bindQuotationRows(rows); }
                 var pages = Math.max(1, Math.ceil(Number(data.total) / Number(data.perPage)));
-                pagination.innerHTML = pages > 1 ? '<button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + Math.max(1, data.page - 1) + '" ' + (data.page <= 1 ? 'disabled' : '') + '>Previous</button> <span>Page ' + data.page + ' of ' + pages + '</span> <button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + Math.min(pages, data.page + 1) + '" ' + (data.page >= pages ? 'disabled' : '') + '>Next</button>' : '';
+                if (crmDesign) {
+                    rows.removeAttribute('aria-busy');
+                    rows.dispatchEvent(new CustomEvent('idlm-rows-updated', {bubbles: true}));
+                    var filterClear = filterForm.querySelector('[data-quote-filter-clear]');
+                    if (filterClear) { filterClear.hidden = !crmFiltersActive(); }
+                }
+                pagination.innerHTML = crmDesign ? crmPagination(type, data) : pages > 1 ? '<button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + Math.max(1, data.page - 1) + '" ' + (data.page <= 1 ? 'disabled' : '') + '>Previous</button> <span>Page ' + data.page + ' of ' + pages + '</span> <button type="button" class="idlm-btn idlm-btn-secondary" data-live-list-page="' + Math.min(pages, data.page + 1) + '" ' + (data.page >= pages ? 'disabled' : '') + '>Next</button>' : '';
                 if (status) { status.textContent = data.total + ' result' + (Number(data.total) === 1 ? '' : 's') + ' found.'; }
+                if (crmDesign) { return; }
                 var url = liveListUrl({[type === 'catalogue' ? 'catalogue_search' : 'quote_search']: searchInput.value, [type === 'catalogue' ? 'catalogue_page' : 'quote_page']: data.page > 1 ? data.page : null});
                 window.history.replaceState({}, '', url.href);
-            }).catch(function (error) { if ('AbortError' !== error.name && status) { status.textContent = error.message || 'Search failed.'; } });
+            }).catch(function (error) {
+                if ('AbortError' === error.name) { return; }
+                if (status) { status.textContent = error.message || 'Search failed.'; }
+                if (crmDesign) {
+                    // Keep the rows on screen and offer the same request again.
+                    rows.removeAttribute('aria-busy');
+                    window.IDLMDialog.notify('The list could not be updated. Check your connection and try again.', 'error', {action: {label: 'Retry', onClick: function () { request(page); }}});
+                }
+            });
         }
         filterForm.addEventListener('submit', function (event) { event.preventDefault(); window.clearTimeout(timer); request(1); });
         searchInput.addEventListener('input', function () { window.clearTimeout(timer); timer = window.setTimeout(function () { request(1); }, 250); });
-        pagination.addEventListener('click', function (event) { var button = event.target.closest('[data-live-list-page]'); if (button) { request(Number(button.dataset.liveListPage)); } });
+        pagination.addEventListener('click', function (event) { var button = event.target.closest('[data-live-list-page]'); if (button) { if (crmDesign) { event.preventDefault(); rows.closest('.idlm-table-wrapper').scrollIntoView({block: 'nearest'}); } request(Number(button.dataset.liveListPage)); } });
+        if (crmDesign) {
+            filterForm.classList.add('is-live');
+            filterForm.addEventListener('change', function (event) { if (event.target !== searchInput) { window.clearTimeout(timer); request(1); } });
+            document.addEventListener('click', function (event) {
+                var clear = event.target.closest('[data-quote-filter-clear]');
+                if (!clear) { return; }
+                event.preventDefault();
+                searchInput.value = '';
+                crmFilterFields.forEach(function (name) { if (filterForm.elements[name]) { filterForm.elements[name].value = ''; } });
+                if (window.IDLMDialog && window.IDLMDialog.syncDateRange) { window.IDLMDialog.syncDateRange(filterForm.elements.date_range); }
+                request(1);
+                searchInput.focus();
+            });
+        }
     });
+    if (crmDesign && catalogueSortForm) {
+        catalogueSortForm.classList.add('is-live');
+        catalogueSortForm.addEventListener('change', function () { catalogueSortForm.requestSubmit(); });
+    }
     var catalogueEditor = document.querySelector('.idlm-catalogue-editor');
+    // The catalogue editor is a page of its own, so closing it reloads the list. Remember what opened it and give that control focus back.
+    var catalogueReturnKey = 'idlmCatalogueReturn';
+    if (crmDesign && !/[?&](add_item|edit_item)=/.test(window.location.search)) {
+        try {
+            var catalogueReturn = window.sessionStorage.getItem(catalogueReturnKey);
+            window.sessionStorage.removeItem(catalogueReturnKey);
+            if (catalogueReturn) {
+                var catalogueTrigger = 'add' === catalogueReturn
+                    ? document.querySelector('a[href*="add_item="]')
+                    : document.querySelector('a[href*="edit_item=' + String(catalogueReturn).replace(/\D/g, '') + '&"], a[href$="edit_item=' + String(catalogueReturn).replace(/\D/g, '') + '"]');
+                if (catalogueTrigger) { catalogueTrigger.focus({preventScroll: true}); }
+            }
+        } catch (error) { /* Storage can be unavailable; focus then stays at the top of the page. */ }
+    }
     if (catalogueEditor) {
         var catalogueParams = new URLSearchParams(window.location.search);
+        if (crmDesign && (catalogueParams.has('edit_item') || catalogueParams.has('add_item'))) {
+            try { window.sessionStorage.setItem(catalogueReturnKey, catalogueParams.has('edit_item') ? 'edit:' + catalogueParams.get('edit_item') : 'add'); } catch (error) { /* Not needed to work. */ }
+        }
         if (catalogueParams.has('edit_item') || catalogueParams.has('add_item')) {
             catalogueEditor.classList.add('is-open');
             catalogueEditor.setAttribute('role', 'dialog');
@@ -117,6 +260,7 @@
                 window.location.search = catalogueParams.toString();
             });
             document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { catalogueEditor.querySelector('.idlm-catalogue-editor-close').click(); } });
+            if (crmDesign) { crmTrapFocus(catalogueEditor); crmFocusFirst(catalogueEditor); }
         }
     }
     var catalogueImport = document.querySelector('.idlm-catalogue-editor + .idlm-quote-panel');
@@ -137,6 +281,7 @@
             if (importHeading) { importHeading.insertAdjacentElement('afterend', importClose); }
             importClose.addEventListener('click', function () { importParams.delete('import_catalogue'); window.location.search = importParams.toString(); });
             document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { importClose.click(); } });
+            if (crmDesign) { crmTrapFocus(catalogueImport); crmFocusFirst(catalogueImport); }
         }
     }
     var importForm = document.querySelector('[data-catalogue-import-form]');
@@ -253,6 +398,7 @@
         if (categoryManager.parentNode !== document.body) { document.body.appendChild(categoryManager); }
         document.body.classList.add('idlm-catalogue-editor-open');
         document.addEventListener('keydown', function (event) { if (event.key === 'Escape') { categoryManager.querySelector('.idlm-catalogue-editor-close').click(); } });
+        if (crmDesign) { crmTrapFocus(categoryManager); var managerField = categoryManager.querySelector('input[name="unit_name"],input[name="category_name"]'); if (managerField) { managerField.focus(); } }
     }
     document.querySelectorAll('[data-bulk-form]').forEach(function (bulkForm) {
         var selectAll = bulkForm.querySelector('[data-select-all]');
@@ -263,10 +409,13 @@
             var checkboxes = rowSelects();
             var selected = checkboxes.filter(function (checkbox) { return checkbox.checked; }).length;
             if (counter) { counter.textContent = selected + ' selected'; }
+            if (crmDesign && counter && counter.closest('.idlm-bulk-action-bar')) { counter.closest('.idlm-bulk-action-bar').classList.toggle('has-selection', selected > 0); }
             if (selectAll) { selectAll.checked = checkboxes.length > 0 && selected === checkboxes.length; selectAll.indeterminate = selected > 0 && selected < checkboxes.length; }
         }
         if (selectAll) { selectAll.addEventListener('change', function () { rowSelects().forEach(function (checkbox) { checkbox.checked = selectAll.checked; }); updateSelection(); }); }
         bulkForm.addEventListener('change', function (event) { if (event.target.matches('[data-row-select]')) { updateSelection(); } });
+        if (crmDesign) { bulkForm.addEventListener('idlm-rows-updated', updateSelection); }
+        var crmSingleSubmit = false;
         bulkForm.addEventListener('click', function (event) {
             var button = event.target.closest('[data-single-submit]');
             if (button) {
@@ -274,6 +423,7 @@
                 var rowCheckbox = button.closest('tr, .idlm-category-manager-list>div').querySelector('[data-row-select]');
                 if (rowCheckbox) { rowCheckbox.checked = true; }
                 if (actionSelect) { actionSelect.value = button.value; }
+                crmSingleSubmit = true;
                 updateSelection();
             }
         });
@@ -284,16 +434,38 @@
                 (actionSelect || rowSelects()[0]).focus();
                 return;
             }
-            if (actionSelect && 'delete' === actionSelect.value && bulkForm.dataset.idlmDeleteConfirmed !== 'true') {
+            if (actionSelect && ('delete' === actionSelect.value || (crmDesign && 'archive' === actionSelect.value)) && bulkForm.dataset.idlmDeleteConfirmed !== 'true') {
                 event.preventDefault();
-                window.IDLMDialog.confirm({
+                var crmDialog = {};
+                if (crmDesign) {
+                    var crmCount = rowSelects().filter(function (checkbox) { return checkbox.checked; }).length;
+                    var crmNoun = bulkForm.dataset.noun || 'record';
+                    var crmName = crmCount + ' ' + (crmCount === 1 ? crmNoun : ('category' === crmNoun ? 'categories' : crmNoun + 's'));
+                    var crmDelete = 'delete' === actionSelect.value;
+                    crmDialog = {
+                        title: (crmDelete ? 'Delete ' : 'Archive ') + crmName + '?',
+                        message: crmDelete ? 'This permanently deletes ' + crmName + ' and cannot be undone. ' + (bulkForm.dataset.deleteNote || '') : (bulkForm.dataset.archiveNote || ''),
+                        confirmLabel: (crmDelete ? 'Delete ' : 'Archive ') + crmName,
+                        destructive: crmDelete
+                    };
+                }
+                window.IDLMDialog.confirm(Object.assign({
                     title: 'Delete selected records?',
                     message: bulkForm.dataset.deleteMessage || 'Permanently delete the selected records?',
                     confirmLabel: 'Delete selected',
                     destructive: true,
                     trigger: event.submitter || document.activeElement
-                }).then(function (confirmed) {
-                    if (!confirmed) { return; }
+                }, crmDialog)).then(function (confirmed) {
+                    if (!confirmed) {
+                        if (crmDesign && crmSingleSubmit) {
+                            // A cancelled row action must not leave that row selected.
+                            rowSelects().forEach(function (checkbox) { checkbox.checked = false; });
+                            actionSelect.value = '';
+                            crmSingleSubmit = false;
+                            updateSelection();
+                        }
+                        return;
+                    }
                     bulkForm.dataset.idlmDeleteConfirmed = 'true';
                     bulkForm.requestSubmit(event.submitter || undefined);
                 });
@@ -308,7 +480,7 @@
         var paymentTotal = document.querySelector('[data-payment-total]');
         function updatePaymentTotal() {
             var total = Array.from(paymentStructure.querySelectorAll('input[name$="[percentage]"]')).reduce(function (sum, input) { return sum + Math.max(0, Number(input.value) || 0); }, 0);
-            if (paymentTotal) { paymentTotal.textContent = 'Milestone total: ' + total.toFixed(2) + '% of 100%.'; paymentTotal.classList.toggle('idlm-payment-total-error', total > 100); }
+            if (paymentTotal) { paymentTotal.textContent = 'Milestone total: ' + total.toFixed(2) + '% of 100%.' + (crmDesign && total > 100 ? ' Reduce the milestones by ' + (total - 100).toFixed(2) + '% before saving.' : ''); paymentTotal.classList.toggle('idlm-payment-total-error', total > 100); }
         }
         function renumberPaymentRows() {
             paymentStructure.querySelectorAll('.idlm-payment-structure-row').forEach(function (row, index) {
@@ -331,12 +503,45 @@
         paymentStructure.addEventListener('input', updatePaymentTotal);
         updatePaymentTotal();
     }
+    var crmSettingsForm = crmDesign ? document.querySelector('.idlm-quotation-settings') : null;
+    if (crmSettingsForm) {
+        var crmSettingsDirty = false;
+        var crmNumberPreview = crmSettingsForm.querySelector('.idlm-settings-preview p');
+        crmSettingsForm.addEventListener('input', function (event) {
+            crmSettingsDirty = true;
+            if (crmNumberPreview && /number_(prefix|separator|padding)/.test(event.target.name || '')) {
+                var separator = crmSettingsForm.elements.number_separator.value;
+                crmNumberPreview.textContent = crmSettingsForm.elements.number_prefix.value + separator + new Date().getFullYear() + separator + '125'.padStart(Math.max(3, Math.min(10, Number(crmSettingsForm.elements.number_padding.value) || 0)), '0');
+            }
+        });
+        crmSettingsForm.addEventListener('change', function () { crmSettingsDirty = true; });
+        crmSettingsForm.addEventListener('click', function (event) { if (event.target.closest('[data-add-payment-row],[data-remove-payment-row]')) { crmSettingsDirty = true; } });
+        crmSettingsForm.addEventListener('submit', function (event) {
+            var percentages = Array.from(crmSettingsForm.querySelectorAll('input[name$="[percentage]"]'));
+            var milestoneTotal = percentages.reduce(function (sum, input) { return sum + Math.max(0, Number(input.value) || 0); }, 0);
+            // Compare whole hundredths: 0.01 + 64.18 + 35.81 sums to just over 100 in floating point.
+            if (Math.round(milestoneTotal * 100) > 10000) {
+                event.preventDefault();
+                window.IDLMDialog.notify('Milestones total ' + milestoneTotal.toFixed(2) + '%. Reduce them to 100% or less, then save. Nothing has been lost.', 'error');
+                percentages[0].focus();
+                return;
+            }
+            crmSettingsDirty = false;
+        });
+        window.addEventListener('beforeunload', function (event) {
+            if (!crmSettingsDirty) { return; }
+            event.preventDefault();
+            event.returnValue = '';
+        });
+    }
     var form = document.getElementById('idlm-quote-form');
     if (!form) { return; }
     var sections = document.getElementById('idlm-quote-sections');
     var bulkModal = document.getElementById('idlm-bulk-items-modal');
     var bulkItems = [];
     var bulkRequest = null;
+    // Design Reps keep the rates they start with; the server enforces this too.
+    if (form.dataset.lockRates) { form.querySelectorAll('[name$="[unit_rate]"]').forEach(function (input) { input.readOnly = true; }); }
     var autosaveStatus = form.querySelector('[data-autosave-status]');
     var autosaveEnabled = !!(autosaveStatus && idlmQuoteData.autosaveNonce && Number(form.elements.quote_id.value) > 0 && Number(form.elements.revision_id.value) > 0);
     var autosaveTimer = 0;
@@ -372,6 +577,23 @@
         });
         return false;
     }
+    if (crmDesign) {
+        // A new quotation with no lead is refused by the server after the page has gone. Catch it here so nothing typed is lost.
+        var crmLeadField = document.getElementById('idlm-quote-lead');
+        form.addEventListener('submit', function (event) {
+            if (Number(form.elements.quote_id.value) > 0 || !crmLeadField || Number(crmLeadField.value) > 0) { return; }
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            window.IDLMDialog.notify('Choose a lead before saving this quotation. Your entries are still here.', 'error');
+            document.getElementById('idlm-lead-search').focus();
+        });
+        // Enter in a search box searches; it must not submit the quotation.
+        form.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && event.target.matches('#idlm-lead-search,#idlm-bulk-items-search,.idlm-catalogue-search')) { event.preventDefault(); }
+            // Nor in any plain field. Textareas keep their line breaks and buttons still press.
+            if (event.key === 'Enter' && event.target.matches('input:not([type="submit"],[type="button"],[type="reset"],[type="image"],[type="file"])')) { event.preventDefault(); }
+        });
+    }
     form.addEventListener('submit', ensureRevisionReason);
     function setAutosaveStatus(message, state) {
         if (!autosaveStatus) { return; }
@@ -394,8 +616,8 @@
         if (form.dataset.idlmNumericInvalid === '1') { autosaveSaving = false; setAutosaveStatus('Correct invalid numeric values before autosaving.', 'error'); return; }
         setAutosaveStatus('Saving…', 'saving');
         var autosaveData = new FormData(form);
-        autosaveData.set('action', 'idlm_autosave_quote');
-        autosaveData.set('nonce', idlmQuoteData.autosaveNonce);
+        autosaveData.set('action', form.dataset.autosaveAction || 'idlm_autosave_quote');
+        autosaveData.set('nonce', form.dataset.autosaveNonce || idlmQuoteData.autosaveNonce);
         fetch(idlmQuoteData.ajaxUrl, {method: 'POST', body: autosaveData, credentials: 'same-origin', keepalive: !!useKeepalive})
             .then(function (response) { return response.json().then(function (payload) { return {payload: payload, status: response.status}; }); })
             .then(function (result) {
@@ -404,7 +626,10 @@
                 autosaveHasWorkingCopy = true;
                 formDirty = false;
                 autosaveStatus.dataset.hasWorkingCopy = '1';
-                setAutosaveStatus('Saved at ' + payload.data.savedAt, 'saved');
+                setAutosaveStatus('Saved at ' + (crmDesign ? (function (stamp) {
+                    var clock = /^(\d{1,2}):(\d{2})/.exec(String(stamp || ''));
+                    return clock ? ((Number(clock[1]) % 12) || 12) + ':' + clock[2] + ' ' + (Number(clock[1]) < 12 ? 'AM' : 'PM') : stamp;
+                }(payload.data.savedAt)) : payload.data.savedAt), 'saved');
             })
             .catch(function (error) {
                 autosaveDirty = false !== error.retry;
@@ -468,8 +693,9 @@
                 window.clearTimeout(autosaveTimer);
                 setAutosaveStatus('Discarding…', 'saving');
                 var discardData = new FormData();
-                discardData.set('action', 'idlm_discard_quote_autosave');
-                discardData.set('nonce', idlmQuoteData.autosaveNonce);
+                discardData.set('action', form.dataset.discardAction || 'idlm_discard_quote_autosave');
+                discardData.set('nonce', form.dataset.autosaveNonce || idlmQuoteData.autosaveNonce);
+                if (form.elements.handoff_id) { discardData.set('handoff_id', form.elements.handoff_id.value); }
                 discardData.set('quote_id', form.elements.quote_id.value);
                 discardData.set('revision_id', form.elements.revision_id.value);
                 fetch(idlmQuoteData.ajaxUrl, {method: 'POST', body: discardData, credentials: 'same-origin'})
@@ -508,7 +734,7 @@
     var createdByField = document.getElementById('idlm-quote-created-by');
     function num(input) { var value = parseFloat(input && input.value); return Number.isFinite(value) ? value : 0; }
     function field(row, suffix) { return row.querySelector('[name$="[' + suffix + ']"]'); }
-    function escapeHtml(value) { var node = document.createElement('div'); node.textContent = value; return node.innerHTML; }
+    function escapeHtml(value) { var node = document.createElement('div'); node.textContent = value; return node.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
     if (createdByField) {
         var salesRepValue = document.getElementById('idlm-quote-sales-rep');
@@ -618,7 +844,7 @@
                 if (!optional) { subtotal += base; sectionTotal += total; var woodGroup = Number(field(row, 'is_wood').value) === 1 ? 'Wood' : 'Others'; woodGroups[woodGroup].base += net; }
             });
             var sectionName = String(section.querySelector('.idlm-section-name').value || 'Untitled Section').trim() || 'Untitled Section';
-            section.querySelector('.idlm-section-subtotal-label').textContent = sectionName + ' Subtotal';
+            section.querySelector('.idlm-section-subtotal-label').textContent = sectionName + (crmDesign ? ' subtotal' : ' Subtotal');
             section.querySelector('.idlm-section-subtotal').textContent = money(sectionTotal);
             sectionTotals.push({name: sectionName, total: sectionTotal});
         });
@@ -662,18 +888,20 @@
         var roundOffOutput = form.querySelector('[data-total="round-off"]');
         if (!roundOffOutput) {
             var roundOffRow = document.createElement('div');
-            roundOffRow.innerHTML = '<dt>Round Off</dt><dd data-total="round-off"></dd>';
+            roundOffRow.innerHTML = '<dt>' + (crmDesign ? 'Round off' : 'Round Off') + '</dt><dd data-total="round-off"></dd>';
             form.querySelector('.idlm-grand-total').before(roundOffRow);
             roundOffOutput = roundOffRow.querySelector('[data-total="round-off"]');
         }
         roundOffOutput.textContent = money(roundOff);
         form.querySelector('[data-total="grand"]').textContent = money(grand);
+        var totalMirror = form.querySelector('[data-quote-total-mirror]');
+        if (totalMirror) { totalMirror.textContent = money(grand); }
         document.getElementById('idlm-wood-totals').innerHTML = Object.keys(woodGroups).map(function (group) { return '<div><span>' + group + '</span><strong>' + escapeHtml(money(woodGroups[group].total)) + '</strong></div>'; }).join('');
         document.getElementById('idlm-section-totals').innerHTML = sectionTotals.map(function (section) { return '<div><span>' + escapeHtml(section.name) + '</span><strong>' + escapeHtml(money(section.total)) + '</strong></div>'; }).join('') || '<p>No section totals yet.</p>';
     }
 
     var addAdditionalDiscount = form.querySelector('[data-add-additional-discount]');
-    addAdditionalDiscount.addEventListener('click', function () {
+    if (addAdditionalDiscount) addAdditionalDiscount.addEventListener('click', function () {
         form.querySelector('[data-additional-discount-row]').hidden = false;
         addAdditionalDiscount.hidden = true;
         form.elements.additional_discount_amount.focus();
@@ -682,6 +910,7 @@
     function blankRow(source) {
         var clone = source.cloneNode(true);
         clone.classList.remove('is-catalogue-item');
+        if (form.dataset.lockRates) { var cloneRate = clone.querySelector('[name$="[unit_rate]"]'); if (cloneRate) { cloneRate.readOnly = false; } }
         clone.querySelectorAll('input, textarea').forEach(function (input) { if (input.matches('[name$="[quantity]"]')) { input.value = '1'; } else if (input.matches('[name$="[length]"], [name$="[height]"]')) { input.value = '0'; } else if (input.matches('[name$="[unit]"]')) { input.value = 'Nos'; } else if (input.matches('[name$="[is_optional]"], [name$="[is_wood]"]')) { input.value = '0'; input.checked = false; } else if ('checkbox' === input.type) { input.checked = false; } else { input.value = ''; } if (input.classList.contains('idlm-catalogue-locked')) { input.readOnly = false; } });
         clone.querySelectorAll('select').forEach(function (select) { select.selectedIndex = 0; }); return clone;
     }
@@ -703,6 +932,7 @@
         field(row, 'description').value = item.description || item.item_name;
         field(row, 'unit').value = item.unit;
         field(row, 'unit_rate').value = item.default_rate;
+        if (form.dataset.lockRates) { field(row, 'unit_rate').readOnly = true; }
         row.querySelectorAll('.idlm-catalogue-locked').forEach(function (input) { input.readOnly = true; });
     }
 
@@ -718,6 +948,7 @@
         document.getElementById('idlm-bulk-items-selected').innerHTML = selected.length ? selected.map(function (item) { return '<button type="button" class="idlm-bulk-item is-selected" data-remove-bulk-item-id="' + escapeHtml(String(item.id)) + '"><span><strong>' + escapeHtml(item.item_name) + '</strong><small>' + escapeHtml(item.item_code || 'No code') + '</small></span><span aria-hidden="true">&times;</span></button>'; }).join('') : '<p class="idlm-bulk-items-empty">No items selected.</p>';
         document.getElementById('idlm-bulk-items-count').textContent = selected.length;
         document.getElementById('idlm-add-bulk-items').disabled = !selected.length;
+        if (crmDesign) { document.getElementById('idlm-add-bulk-items').textContent = selected.length ? 'Add ' + selected.length + (selected.length === 1 ? ' item' : ' items') : 'Add selected'; }
     }
 
     function closeBulkItems() {
@@ -754,6 +985,7 @@
     }
 
     document.getElementById('idlm-open-bulk-items').addEventListener('click', openBulkItems);
+    if (crmDesign) { crmTrapFocus(bulkModal); }
     bulkModal.querySelector('.idlm-bulk-items-close').addEventListener('click', closeBulkItems);
     bulkModal.querySelector('.idlm-bulk-items-cancel').addEventListener('click', closeBulkItems);
     bulkModal.addEventListener('click', function (event) {
@@ -804,6 +1036,21 @@
         addSectionRow.insertBefore(globalHeaderButton, addSectionButton);
     }
 
+    function crmRemoveWithUndo(node, message, nextFocus) {
+        var parent = node.parentNode, next = node.nextSibling;
+        node.remove();
+        if (nextFocus) { nextFocus.focus(); }
+        window.IDLMDialog.notify(message, 'info', {duration: 8000, action: {label: 'Undo', onClick: function () {
+            parent.insertBefore(node, next && next.parentNode === parent ? next : null);
+            renumberAll(); calculate();
+            // The Undo button leaves with its toast, so focus goes to the restored item.
+            var restoredControl = node.querySelector('input:not([type="hidden"]), select, textarea, button');
+            if (restoredControl) { restoredControl.focus(); }
+            // A new quotation has no autosave, and no submit listener to clear the dirty flag this would set.
+            if (autosaveEnabled) { queueAutosave(); }
+        }}});
+    }
+
     form.addEventListener('click', function (event) {
         var row = event.target.closest('.idlm-quote-item-row');
         if (event.target.classList.contains('idlm-add-section-item')) { var targetSection = event.target.closest('.idlm-quote-section') || sections.querySelector('.idlm-quote-section:last-child'); var body = targetSection.querySelector('.idlm-section-items'); body.appendChild(blankRow(body.querySelector('.idlm-quote-item-row:not(.idlm-quote-header-row)'))); }
@@ -816,19 +1063,59 @@
         else if (event.target.classList.contains('idlm-remove-row') && row) {
             var isHeader = row.classList.contains('idlm-quote-header-row');
             var remainingLineItems = row.parentNode.querySelectorAll('.idlm-quote-item-row:not(.idlm-quote-header-row)').length;
-            if (isHeader || remainingLineItems > 1) { row.remove(); }
+            if (isHeader || remainingLineItems > 1) {
+                if (crmDesign) { var rowNeighbour = row.nextElementSibling || row.previousElementSibling; crmRemoveWithUndo(row, isHeader ? 'Header removed.' : 'Line item removed.', rowNeighbour && rowNeighbour.querySelector('.idlm-remove-row')); }
+                else { row.remove(); }
+            } else if (crmDesign) { window.IDLMDialog.notify('A section needs at least one line item. Remove the section instead.', 'warning'); }
         }
-        else if (event.target.classList.contains('idlm-remove-section') && sections.querySelectorAll('.idlm-quote-section').length > 1) { event.target.closest('.idlm-quote-section').remove(); }
+        else if (event.target.classList.contains('idlm-remove-section') && sections.querySelectorAll('.idlm-quote-section').length > 1) {
+            var removedSection = event.target.closest('.idlm-quote-section');
+            if (crmDesign) { var removedName = removedSection.querySelector('.idlm-section-name').value.trim() || 'Untitled section', removedCount = removedSection.querySelectorAll('.idlm-quote-item-row:not(.idlm-quote-header-row)').length, sectionNeighbour = removedSection.nextElementSibling || removedSection.previousElementSibling; crmRemoveWithUndo(removedSection, removedName + ' removed with ' + removedCount + (removedCount === 1 ? ' line item.' : ' line items.'), sectionNeighbour && sectionNeighbour.querySelector('.idlm-remove-section')); }
+            else { removedSection.remove(); }
+        }
+        else if (crmDesign && event.target.classList.contains('idlm-remove-section')) { window.IDLMDialog.notify('A quotation needs at least one section.', 'warning'); }
         renumberAll(); calculate();
     });
 
+    var crmOpenResults = null;
+    function crmPlaceResults(input, results) {
+        var rect = input.getBoundingClientRect(), below = window.innerHeight - rect.bottom - 12, above = rect.top - 12, flip = below < 180 && above > below;
+        results.classList.add('is-floating');
+        results.style.left = rect.left + 'px';
+        results.style.width = Math.max(rect.width, 280) + 'px';
+        results.style.top = flip ? 'auto' : (rect.bottom + 4) + 'px';
+        results.style.bottom = flip ? (window.innerHeight - rect.top + 4) + 'px' : 'auto';
+        results.style.maxHeight = Math.min(280, flip ? above : below) + 'px';
+        crmOpenResults = {input: input, results: results};
+    }
+    function crmCloseResults() {
+        if (!crmOpenResults) { return; }
+        crmOpenResults.results.innerHTML = '';
+        crmOpenResults = null;
+    }
+    if (crmDesign) {
+        window.addEventListener('scroll', function () { if (crmOpenResults) { crmPlaceResults(crmOpenResults.input, crmOpenResults.results); } }, true);
+        window.addEventListener('resize', function () { if (crmOpenResults) { crmPlaceResults(crmOpenResults.input, crmOpenResults.results); } });
+        document.addEventListener('click', function (event) {
+            if (crmOpenResults && !crmOpenResults.results.contains(event.target) && event.target !== crmOpenResults.input) { crmCloseResults(); }
+        });
+        form.addEventListener('keydown', function (event) {
+            if (!crmOpenResults) { return; }
+            var options = Array.from(crmOpenResults.results.querySelectorAll('.idlm-catalogue-result'));
+            var current = options.indexOf(document.activeElement);
+            if (event.key === 'Escape') { var searchField = crmOpenResults.input; crmCloseResults(); searchField.focus(); event.stopPropagation(); }
+            else if (event.key === 'ArrowDown' && options.length) { event.preventDefault(); options[Math.min(options.length - 1, current + 1)].focus(); }
+            else if (event.key === 'ArrowUp' && options.length) { event.preventDefault(); if (current <= 0) { crmOpenResults.input.focus(); } else { options[current - 1].focus(); } }
+        });
+    }
     var catalogueSearchState = new WeakMap();
     form.addEventListener('input', function (event) {
         if (!event.target.classList.contains('idlm-catalogue-search')) { calculate(); return; }
         var input = event.target, results = input.nextElementSibling, term = input.value.trim(), previous = catalogueSearchState.get(input) || {};
         window.clearTimeout(previous.timer);
         if (previous.controller) { previous.controller.abort(); }
-        if (term.length < 2) { results.innerHTML = ''; catalogueSearchState.delete(input); return; }
+        if (term.length < 2) { results.innerHTML = ''; catalogueSearchState.delete(input); if (crmOpenResults && crmOpenResults.results === results) { crmOpenResults = null; } return; }
+        if (crmDesign) { results.innerHTML = '<p class="idlm-catalogue-search-note">Searching the catalogue…</p>'; crmPlaceResults(input, results); }
         var state = {timer: 0, controller: null, sequence: (previous.sequence || 0) + 1};
         state.timer = window.setTimeout(function () {
             state.controller = new AbortController();
@@ -841,6 +1128,10 @@
                 if (!current || current.sequence !== sequence) { return; }
                 if (!payload.success || !Array.isArray(payload.data)) { throw new Error(payload.data && payload.data.message ? payload.data.message : 'Catalogue search failed.'); }
                 results.innerHTML = payload.data.map(function (item) { return '<button type="button" class="idlm-catalogue-result" data-item="' + encodeURIComponent(JSON.stringify(item)) + '"><strong>' + escapeHtml(item.item_name) + '</strong><small>' + escapeHtml(item.item_code + ' · ' + item.category + ' · Wood: ' + (Number(item.is_wood) === 1 ? 'Yes' : 'No')) + '</small></button>'; }).join('');
+                if (crmDesign) {
+                    if (!payload.data.length) { results.innerHTML = '<p class="idlm-catalogue-search-note">No catalogue match. Keep typing to enter a custom item.</p>'; }
+                    crmPlaceResults(input, results);
+                }
             }).catch(function (error) { if ('AbortError' !== error.name) { results.innerHTML = '<p class="idlm-catalogue-search-error">' + escapeHtml(error.message || 'Catalogue search failed.') + '</p>'; } });
         }, 250);
         catalogueSearchState.set(input, state);
@@ -849,7 +1140,7 @@
     form.addEventListener('click', function (event) {
         var result = event.target.closest('.idlm-catalogue-result'); if (!result) { return; }
         var item = JSON.parse(decodeURIComponent(result.dataset.item)), row = result.closest('.idlm-quote-item-row');
-        populateCatalogueRow(row, item); row.querySelector('.idlm-catalogue-results').innerHTML = ''; calculate();
+        populateCatalogueRow(row, item); row.querySelector('.idlm-catalogue-results').innerHTML = ''; crmOpenResults = null; calculate();
     });
 
     form.addEventListener('change', function (event) {

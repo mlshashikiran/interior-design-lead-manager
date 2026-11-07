@@ -22,7 +22,7 @@ $idlm_asset_fields = array(
     </div>
 
     <?php if ($idlm_errors): ?>
-        <div class="idlm-alert idlm-alert-warning idlm-white-label-errors" role="alert" tabindex="-1" data-idlm-white-label-errors>
+        <div class="idlm-alert idlm-alert-warning idlm-white-label-errors" role="alert" tabindex="-1" data-idlm-notice-inline data-idlm-white-label-errors>
             <h3>Review the highlighted branding fields</h3>
             <ul>
                 <?php foreach ($idlm_errors as $idlm_field => $idlm_message): ?>

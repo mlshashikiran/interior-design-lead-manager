@@ -117,10 +117,8 @@ class IDLM_Quotations {
         self::redirect(array_merge($redirect_args, array('idlm_error' => $message)));
     }
 
-    public static function render_shortcode() {
-        if (!is_user_logged_in() || !self::can('idlm_view_quotes')) {
-            return '<p class="idlm-quotation-denied">You do not have permission to view quotations.</p>';
-        }
+    /** Editor scripts and styles, shared with the design quotation screen. */
+    public static function load_editor_assets() {
         wp_enqueue_style('dashicons');
         if (class_exists('IDLM_Admin')) {
             IDLM_Admin::register_core_assets();
@@ -131,6 +129,13 @@ class IDLM_Quotations {
         wp_enqueue_style('idlm-quotations', IDLM_URL . 'assets/css/quotations.css', array(), self::asset_version('css/quotations.css'));
         wp_enqueue_script('idlm-quotations', IDLM_URL . 'assets/js/quotations.js', array('idlm-dialog'), self::asset_version('js/quotations.js'), true);
         wp_localize_script('idlm-quotations', 'idlmQuoteData', array('ajaxUrl' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('idlm_quote_catalogue_search'), 'autosaveNonce' => wp_create_nonce('idlm_quote_autosave'), 'currencyCode' => self::settings()['currency_code'], 'numericLimits' => array('maxAmount' => IDLM_Quotation_Calculator::MAX_AMOUNT_UNITS, 'maxMeasure' => IDLM_Quotation_Calculator::MAX_MEASURE_UNITS, 'maxRows' => IDLM_Quotation_Calculator::MAX_ROWS, 'maxSections' => IDLM_Quotation_Calculator::MAX_SECTIONS)));
+    }
+
+    public static function render_shortcode() {
+        if (!is_user_logged_in() || !self::can('idlm_view_quotes')) {
+            return '<p class="idlm-quotation-denied">You do not have permission to view quotations.</p>';
+        }
+        self::load_editor_assets();
         ob_start();
         self::render_page();
         return ob_get_clean();

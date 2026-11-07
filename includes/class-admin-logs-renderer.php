@@ -144,16 +144,26 @@ class IDLM_Admin_Logs_Renderer {
             $status = '';
         }
 
+        // The shared period list; old links with only From/To dates read as a custom range.
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only log filter; the period is normalized and dates validated.
+        $range = IDLM_Date_Ranges::normalize(isset($_GET['log_date_range']) ? wp_unslash($_GET['log_date_range']) : '');
+        $date_from = self::valid_date(isset($_GET['log_date_from']) ? wp_unslash($_GET['log_date_from']) : '');
+        $date_to = self::valid_date(isset($_GET['log_date_to']) ? wp_unslash($_GET['log_date_to']) : '');
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        if ('' === $range && ('' !== $date_from || '' !== $date_to)) { $range = 'custom'; }
+        $window = '' !== $range && 'custom' !== $range ? IDLM_Date_Ranges::resolve($range) : null;
+        if ($window) { $date_from = substr($window['curr_start'], 0, 10); $date_to = substr($window['curr_end'], 0, 10); }
         return array(
+            'range'     => $range,
             // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0062: request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields.
             'search'    => isset($_GET['log_search']) ? sanitize_text_field(wp_unslash($_GET['log_search'])) : '',
             // phpcs:enable WordPress.Security.NonceVerification.Recommended
             'status'    => $status,
             // phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0063: request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields.
-            'date_from' => self::valid_date(isset($_GET['log_date_from']) ? wp_unslash($_GET['log_date_from']) : ''),
+            'date_from' => $date_from,
             // phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
             // phpcs:disable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0064: request_filters(): manage_options-gated read-only log views; request filters are sanitized and dates validated by valid_date before prepared SQL; no state mutation is selected by these GET fields.
-            'date_to'   => self::valid_date(isset($_GET['log_date_to']) ? wp_unslash($_GET['log_date_to']) : ''),
+            'date_to'   => $date_to,
             // phpcs:enable WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         );
     }

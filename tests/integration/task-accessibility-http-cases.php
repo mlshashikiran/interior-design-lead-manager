@@ -14,9 +14,10 @@ idlm_http_case('T04-T19-H-UI003-task-labels-submit-and-error-associations', stat
     idlm_http_check($response['status']===200 && !empty($body['success']), 'Task drawer response failed');
     $dom = new DOMDocument(); libxml_use_internal_errors(true); $dom->loadHTML($body['data']['html']); libxml_clear_errors(); libxml_use_internal_errors(false);
     $xpath = new DOMXPath($dom);
-    foreach (array('idlm-new-task-title'=>'Task Title / Description *','idlm-new-task-due'=>'Due Date & Time','idlm-new-task-priority'=>'Priority','idlm-new-task-type'=>'Task Type') as $id=>$name) {
+    // Each control's accessible name in either design.
+    foreach (array('idlm-new-task-title'=>array('Task Title / Description *','Task title *'),'idlm-new-task-due'=>array('Due Date & Time','Due date and time'),'idlm-new-task-priority'=>array('Priority'),'idlm-new-task-type'=>array('Task Type','Task type')) as $id=>$names) {
         $labels=$xpath->query('//label[@for="'.$id.'"]');
-        idlm_http_check($labels->length===1 && trim($labels->item(0)->textContent)===$name, 'Missing associated name: '.$id);
+        idlm_http_check($labels->length===1 && in_array(trim($labels->item(0)->textContent),$names,true), 'Missing associated name: '.$id);
         idlm_http_check($xpath->query('//*[@id="'.$id.'"]')->length===1, 'Missing or duplicate task control ID');
     }
     idlm_http_check($xpath->query('//form[@id="idlm-add-task-form"]//button[@id="idlm-btn-add-task" and @type="submit"]')->length===1, 'Task submit semantics missing');

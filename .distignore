@@ -11,6 +11,7 @@ tests/
 design-system/
 docs/
 graphify-out/
+.code-review-graph/
 includes/graphify-out/
 .graphify_*
 .graphifyignore

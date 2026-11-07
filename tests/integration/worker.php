@@ -28,6 +28,16 @@ try {
     }
 
     $mode = $argv[1] ?? '';
+    if ($mode === 'payment-race') {
+        wp_set_current_user((int) $argv[2]);
+        $barrier = WP_CONTENT_DIR . '/payment-barrier';
+        file_put_contents($barrier, getmypid()."\n", FILE_APPEND | LOCK_EX);
+        $deadline = microtime(true) + 10;
+        while (count(file($barrier, FILE_IGNORE_NEW_LINES)) < 2) { if (microtime(true) > $deadline) { throw new RuntimeException('Payment barrier timed out.'); } usleep(10000); }
+        $data = array('amount'=>'1.00', 'currency'=>'INR', 'received_date'=>'2026-11-05', 'method'=>'UPI', 'reference'=>'concurrent-' . $argv[5]);
+        $result = IDLM_Lead_Payments::record((int) $argv[3], $data, (int) $argv[4], $argv[5]);
+        echo wp_json_encode(is_wp_error($result) ? array('error'=>$result->get_error_code()) : array('event_id'=>$result['event']['id'])); exit(0);
+    }
     if (in_array($mode,array('audience-crash','audience-race'),true)) {
         if ($mode==='audience-race') {
             $barrier=WP_CONTENT_DIR.'/audience-barrier';file_put_contents($barrier,getmypid()."\n",FILE_APPEND|LOCK_EX);$deadline=microtime(true)+10;

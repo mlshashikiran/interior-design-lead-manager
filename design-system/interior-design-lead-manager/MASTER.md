@@ -1,6 +1,6 @@
 # Interior Design Lead Manager — Master Design System
 
-> Source of truth for all CRM UI. Before changing a screen, check `pages/<screen>.md`; page rules may refine but must not weaken this file.
+> [`STANDARD.md`](STANDARD.md) takes precedence over this file and settles its conflicts. Otherwise this is the source of truth for CRM components. Before changing a screen, check `pages/<screen>.md`; page rules may refine but must not weaken this file.
 
 **Product:** Operational CRM for an interior-design sales team  
 **Design owner / builder:** Shashi  

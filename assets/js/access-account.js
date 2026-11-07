@@ -14,7 +14,15 @@
         showing = input.type === 'text';
         input.type = showing ? 'password' : 'text';
         button.setAttribute('aria-pressed', showing ? 'false' : 'true');
-        button.setAttribute('aria-label', (showing ? 'Show ' : 'Hide ') + (input.id.indexOf('confirm') !== -1 ? 'password confirmation' : 'password'));
+        if (document.body.classList.contains('idlm-crm-design')) {
+            // Keep the field's own name, so "Show new password" does not become "Hide password".
+            if (!button.dataset.idlmPasswordNoun) {
+                button.dataset.idlmPasswordNoun = (button.getAttribute('aria-label') || '').replace(/^(Show|Hide)\s+/, '') || 'password';
+            }
+            button.setAttribute('aria-label', (showing ? 'Show ' : 'Hide ') + button.dataset.idlmPasswordNoun);
+        } else {
+            button.setAttribute('aria-label', (showing ? 'Show ' : 'Hide ') + (input.id.indexOf('confirm') !== -1 ? 'password confirmation' : 'password'));
+        }
         if (label) {
             label.textContent = showing ? 'Show' : 'Hide';
         }

@@ -1,0 +1,2866 @@
+/* IDLM CRM design layer: Leads list, lead drawer and Leads popups. Builder: Shashi.
+   Contract: design-system/interior-design-lead-manager/STANDARD.md. Screen decisions:
+   design-system/interior-design-lead-manager/pages/leads.md. Every selector starts with
+   body.idlm-crm-design. Tokens only: no hex colours, no important overrides. */
+
+/* --- 1. Page header: search and filters first, secondary actions quiet ----- */
+body.idlm-crm-design .idlm-wrap.idlm-leads-page.idlm-leads-page .idlm-header {
+    gap: var(--idlm-space-3);
+    min-height: 0;
+    margin-bottom: var(--idlm-space-3);
+    padding-block: var(--idlm-space-2);
+}
+
+@media (min-width: 783px) {
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page.idlm-leads-page .idlm-header {
+        min-height: var(--idlm-page-header);
+        margin-bottom: var(--idlm-space-4);
+        padding-block: var(--idlm-space-3);
+    }
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-header-actions {
+    align-items: center;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page.idlm-leads-page .idlm-header-search {
+    flex: 1 1 240px;
+    min-width: 200px;
+    max-width: 320px;
+}
+
+body.idlm-crm-design .idlm-leads-attention {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+}
+
+/* Three quiet counts, not three banners: colour is carried by the number alone. */
+body.idlm-crm-design .idlm-wrap.idlm-leads-page :is(.idlm-handoff-alert-pill, .idlm-pending-calls-pill, .idlm-whatsapp-unread-pill) {
+    gap: var(--idlm-space-1);
+    min-height: 28px;
+    max-width: none;
+    padding: 2px var(--idlm-space-2);
+    border: 0;
+    border-radius: var(--idlm-radius-compact);
+    background: transparent;
+    box-shadow: none;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page :is(.idlm-handoff-alert-pill, .idlm-pending-calls-pill, .idlm-whatsapp-unread-pill):hover {
+    background: var(--idlm-hover-tint);
+    box-shadow: none;
+    color: var(--idlm-text);
+    transform: none;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page :is(.idlm-handoff-alert-pill, .idlm-pending-calls-pill, .idlm-whatsapp-unread-pill)[aria-pressed="true"] {
+    background: var(--idlm-action-soft);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page :is(.idlm-handoff-alert-pill, .idlm-pending-calls-pill, .idlm-whatsapp-unread-pill) :is(.dashicons, .idlm-pending-pulse-dot) {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page :is(.idlm-handoff-alert-pill, .idlm-pending-calls-pill, .idlm-whatsapp-unread-pill) :is(strong, .idlm-pending-text, .idlm-whatsapp-unread-text) {
+    color: inherit;
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page :is(.idlm-handoff-alert-pill, .idlm-pending-calls-pill, .idlm-whatsapp-unread-pill) strong {
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-pending-calls-pill strong {
+    color: var(--idlm-warning);
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-whatsapp-unread-pill strong {
+    color: var(--idlm-info);
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-handoff-alert-pill em {
+    padding-left: var(--idlm-space-1);
+    border-left: 0;
+    color: var(--idlm-danger);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-style: normal;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-handoff-alert-pill em::before {
+    content: "· ";
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-handoff-alert-pill.is-overdue strong {
+    color: var(--idlm-danger);
+}
+
+/* More menu */
+body.idlm-crm-design .idlm-leads-menu {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+body.idlm-crm-design .idlm-leads-menu-toggle .dashicons {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+    line-height: 14px;
+}
+
+body.idlm-crm-design .idlm-leads-menu-list {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + var(--idlm-space-1));
+    right: 0;
+    display: grid;
+    min-width: 188px;
+    padding: var(--idlm-space-1);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    box-shadow: var(--idlm-shadow-lg);
+}
+
+body.idlm-crm-design .idlm-leads-menu-list[hidden] {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-leads-menu-list .idlm-btn.idlm-btn {
+    justify-content: flex-start;
+    gap: var(--idlm-space-2);
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 32px;
+    padding: var(--idlm-space-1) var(--idlm-space-2);
+    border-color: transparent;
+    border-radius: var(--idlm-radius-compact);
+    background: transparent;
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-leads-menu-list .idlm-btn.idlm-btn:is(:hover, :focus-visible) {
+    background: var(--idlm-hover-tint);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-leads-menu-list .idlm-routing-settings-button svg {
+    display: none;
+}
+
+/* OOO notice */
+body.idlm-crm-design .idlm-leads-page .idlm-leads-notice {
+    margin: 0 0 var(--idlm-space-2);
+    font-size: 0.75rem;
+}
+
+/* --- 2. Summary strip: one line of counts that double as quick filters ------ */
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric-grid {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    gap: var(--idlm-space-1);
+    margin: 0 0 var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric.idlm-metric {
+    display: grid;
+    justify-content: stretch;
+    justify-items: start;
+    align-content: center;
+    gap: 1px;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 5px var(--idlm-space-2);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface);
+    color: var(--idlm-text);
+    text-align: left;
+    transition: border-color var(--idlm-motion-base, 180ms) ease, background-color var(--idlm-motion-base, 180ms) ease;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page button.idlm-metric.idlm-metric:hover {
+    border-color: var(--idlm-border-strong);
+    background: var(--idlm-surface);
+    box-shadow: none;
+    transform: none;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric .idlm-metric-label {
+    overflow: hidden;
+    max-width: 100%;
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric .idlm-metric-value {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: var(--idlm-space-1);
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    color: var(--idlm-text);
+    font-size: 0.9375rem;
+    line-height: 1.25;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric .idlm-metric-hint {
+    overflow: hidden;
+    flex: 0 1 auto;
+    flex-basis: auto;
+    min-width: 0;
+    font-size: 0.6875rem;
+    text-overflow: ellipsis;
+}
+
+/* Attention is carried by the number, so selected and alert can coexist. */
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric.is-alert {
+    border-color: var(--idlm-border);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric.is-alert .idlm-metric-value,
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric.is-alert .idlm-metric-hint {
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric.idlm-metric.is-selected,
+body.idlm-crm-design .idlm-wrap.idlm-leads-page button.idlm-metric.idlm-metric.is-selected:hover {
+    border-color: var(--idlm-action);
+    background: var(--idlm-action-soft);
+    box-shadow: inset 0 0 0 1px var(--idlm-action);
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric.idlm-metric-static {
+    background: transparent;
+    cursor: default;
+}
+
+/* --- 3. Result count and active filter chips --------------------------------- */
+body.idlm-crm-design .idlm-active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--idlm-space-1) var(--idlm-space-2);
+    min-height: 24px;
+    margin-bottom: var(--idlm-space-1);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-active-filters-count {
+    color: var(--idlm-text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-active-filters-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--idlm-space-1);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+body.idlm-crm-design .idlm-active-filters-list[hidden] {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-active-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+    max-width: 280px;
+    margin: 0;
+    padding: 0 2px 0 var(--idlm-space-2);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface);
+    line-height: 22px;
+}
+
+body.idlm-crm-design .idlm-active-filter-label {
+    color: var(--idlm-text-muted);
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-active-filter-value {
+    overflow: hidden;
+    color: var(--idlm-text);
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-active-filter-remove {
+    display: inline-grid;
+    flex: 0 0 20px;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--idlm-radius-compact);
+    background: transparent;
+    color: var(--idlm-text-muted);
+    cursor: pointer;
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-active-filter-remove:hover {
+    background: var(--idlm-hover-tint);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design .idlm-active-filter-remove .dashicons {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+    line-height: 14px;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-btn.idlm-active-filters-clear#idlm-active-filters-clear {
+    min-height: 24px;
+    height: 24px;
+    padding-inline: var(--idlm-space-2);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-active-filters-clear[hidden] {
+    display: none;
+}
+
+/* --- 4. Filter drawer ------------------------------------------------------ */
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-primary-row,
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-secondary-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--idlm-space-3);
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-secondary-row {
+    margin-top: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-filters-panel .idlm-filter-group {
+    width: auto;
+    min-width: 0;
+    margin: 0;
+}
+
+body.idlm-crm-design .idlm-filters-panel .idlm-filter-group .idlm-input {
+    width: 100%;
+}
+
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-group-title {
+    grid-column: 1 / -1;
+    margin: var(--idlm-space-2) 0 calc(var(--idlm-space-1) * -1);
+    padding-top: var(--idlm-space-3);
+    border-top: 1px solid var(--idlm-border);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-primary-row > .idlm-filters-group-title:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-secondary-row > .idlm-filters-group-title {
+    margin-top: 0;
+}
+
+body.idlm-crm-design .idlm-filters-panel .idlm-filters-secondary-row > .idlm-filter-group {
+    grid-column: 1 / -1;
+}
+
+/* --- 5. Bulk bar: one line, stays in reach while scrolling ------------------- */
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-bar {
+    position: sticky;
+    z-index: 15;
+    top: calc(var(--idlm-sticky-top) + var(--idlm-leads-header-height, 52px));
+    flex-wrap: wrap;
+    gap: var(--idlm-space-2) var(--idlm-space-3);
+    min-height: 44px;
+    margin: 0 0 var(--idlm-space-1);
+    padding: var(--idlm-space-1) var(--idlm-space-3);
+    border-color: var(--idlm-action);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-action-soft);
+    animation: none;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-bar[hidden] {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-selected-count {
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions {
+    flex-wrap: wrap;
+    gap: var(--idlm-space-2);
+    margin-left: auto;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions .idlm-input {
+    width: auto;
+    min-width: 176px;
+}
+
+/* --- 6. Table: one- and two-line rows, no sideways scroll ------------------- */
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-leads-table-wrapper {
+    margin-bottom: var(--idlm-space-2);
+    transition: opacity var(--idlm-motion-base, 180ms) ease;
+}
+
+body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-leads-table-wrapper.is-refreshing {
+    opacity: 0.6;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-leads-skeleton-row td {
+    padding: 0;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-leads-skeleton-row .idlm-skeleton-row {
+    border-radius: 0;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-leads-empty-row td {
+    padding: 0;
+    border: 0;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-state {
+    display: grid;
+    justify-items: center;
+    border: 0;
+    border-radius: 0;
+    text-align: center;
+}
+
+@media (min-width: 783px) {
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-leads-table-wrapper {
+        overflow: visible;
+    }
+
+    body.idlm-crm-design #idlm-leads-table {
+        overflow: visible;
+        margin-top: 0;
+        table-layout: fixed;
+    }
+
+    /* Studio reads beneath the channel; its own cell stays for phone details. */
+    body.idlm-crm-design #idlm-leads-table :is(th, td).idlm-col-studio {
+        display: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table :is(th, td) {
+        padding: var(--idlm-space-1) 6px;
+    }
+
+    body.idlm-crm-design #idlm-leads-table thead th {
+        position: sticky;
+        z-index: 5;
+        top: calc(var(--idlm-sticky-top) + var(--idlm-leads-header-height, 52px));
+        height: 32px;
+        padding-block: 0;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    body.idlm-crm-design .idlm-leads-page:has(.idlm-bulk-bar:not([hidden])) #idlm-leads-table thead th {
+        top: calc(var(--idlm-sticky-top) + var(--idlm-leads-header-height, 52px) + 44px);
+    }
+
+    body.idlm-crm-design #idlm-leads-table thead th:first-child {
+        border-top-left-radius: var(--idlm-radius);
+    }
+
+    body.idlm-crm-design #idlm-leads-table thead th:last-child {
+        border-top-right-radius: var(--idlm-radius);
+    }
+
+    body.idlm-crm-design #idlm-leads-table tbody tr:last-child > td {
+        border-bottom: 0;
+    }
+
+    body.idlm-crm-design #idlm-leads-table th.idlm-selection-column,
+    body.idlm-crm-design #idlm-leads-table td.idlm-selection-column {
+        width: 34px;
+        padding-inline: 0;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-channel {
+        width: clamp(88px, 7.2vw, 104px);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-budget {
+        width: clamp(88px, 7vw, 100px);
+    }
+
+    /* Stage, owner and quality are inline selects: the widest option has to fit unclipped. */
+    body.idlm-crm-design #idlm-leads-table .idlm-col-stage {
+        width: 144px;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-rep {
+        width: 124px;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-quality {
+        width: 184px;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-tasks {
+        width: 46px;
+    }
+
+    body.idlm-crm-design #idlm-leads-table :is(.idlm-col-assigned, .idlm-col-created) {
+        width: 84px;
+    }
+
+    /* Pre-sales columns */
+    body.idlm-crm-design #idlm-leads-table .idlm-col-age {
+        width: 46px;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-today {
+        width: 86px;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-response {
+        width: clamp(84px, 7.6vw, 112px);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-details {
+        width: 74px;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-actions {
+        width: 186px;
+    }
+
+    body.idlm-crm-design #idlm-leads-table:has(th.idlm-col-actions) .idlm-col-quality {
+        width: clamp(132px, 11vw, 160px);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row td {
+        font-size: 0.75rem;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-expand,
+    body.idlm-crm-design #idlm-leads-table .idlm-row-handoff-location {
+        display: none;
+    }
+
+    /* Inline lead edits stay light, with a thin border and arrow so they read as dropdowns (STD-CRM-6). */
+    body.idlm-crm-design #idlm-leads-table tbody select {
+        border-color: var(--idlm-border);
+        background-color: transparent;
+        background-size: 14px 14px;
+        box-shadow: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table tbody tr:hover select,
+    body.idlm-crm-design #idlm-leads-table tbody select:focus,
+    body.idlm-crm-design #idlm-leads-table tbody tr:focus-within select {
+        border-color: var(--idlm-border-strong);
+        background-color: var(--idlm-surface);
+        background-size: 14px 14px;
+    }
+
+    body.idlm-crm-design .idlm-leads-mobile-sort {
+        display: none;
+    }
+}
+
+body.idlm-crm-design #idlm-leads-table tbody td {
+    height: 44px;
+    font-size: 0.75rem;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design #idlm-leads-table tbody tr:hover > td {
+    background-color: color-mix(in srgb, var(--idlm-text) 3%, var(--idlm-surface));
+}
+
+body.idlm-crm-design #idlm-leads-table tbody tr:has(.idlm-row-selector:checked) > td {
+    background-color: var(--idlm-action-soft);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-sort-indicator::before {
+    margin-left: 3px;
+    color: var(--idlm-text-muted);
+    opacity: 0;
+    transition: opacity var(--idlm-motion-base, 180ms) ease;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-table-sort-button:is(:hover, :focus-visible) .idlm-sort-indicator::before {
+    opacity: 1;
+}
+
+body.idlm-crm-design #idlm-leads-table :is(th[aria-sort="ascending"], th[aria-sort="descending"]) .idlm-sort-indicator::before {
+    color: var(--idlm-action);
+    opacity: 1;
+}
+
+body.idlm-crm-design #idlm-leads-table :is(th[aria-sort="ascending"], th[aria-sort="descending"]) .idlm-table-sort-button {
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-table-sort-button {
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Identity: the same on every screen. Name and flags, then contact. */
+body.idlm-crm-design #idlm-leads-table .idlm-lead-row-headline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+body.idlm-crm-design .idlm-workspace #idlm-leads-table .idlm-lead-row-headline .idlm-lead-row-open {
+    display: block;
+    overflow: hidden;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-lead-row-open strong {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-lead-row-headline :is(.idlm-badge, .idlm-whatsapp-row-badge, .idlm-row-handoff-badge) {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    min-height: 0;
+    margin: 0;
+    padding: 1px 5px;
+    border-radius: var(--idlm-radius-compact);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-whatsapp-row-badge {
+    border: 0;
+    background: var(--idlm-info-soft);
+    color: var(--idlm-info);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-row-handoff-badge {
+    background: var(--idlm-warning-soft);
+    color: var(--idlm-warning);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-row-handoff-badge.is-overdue {
+    background: var(--idlm-danger-soft);
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-lead-row-contact {
+    display: flex;
+    min-width: 0;
+    margin-top: 1px;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design .idlm-workspace #idlm-leads-table .idlm-lead-row-phone {
+    flex: 0 0 auto;
+    color: inherit;
+    font-variant-numeric: tabular-nums;
+    text-decoration: none;
+}
+
+body.idlm-crm-design .idlm-workspace #idlm-leads-table .idlm-lead-row-phone:hover {
+    color: var(--idlm-action);
+    text-decoration: underline;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-lead-row-email {
+    overflow: hidden;
+    flex: 0 1 auto;
+    min-width: 0;
+    text-overflow: ellipsis;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-lead-row-email::before {
+    content: "·";
+    margin-inline: var(--idlm-space-1);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-lead-row-studio {
+    display: block;
+    overflow: hidden;
+    margin-top: 1px;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-col-channel .idlm-badge {
+    min-height: 0;
+    padding: 0 5px;
+    line-height: 1.45;
+}
+
+body.idlm-crm-design #idlm-leads-table td.idlm-col-budget strong {
+    display: block;
+    overflow: hidden;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Inline-edit selects */
+body.idlm-crm-design #idlm-leads-table .idlm-table-select {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: 28px;
+    min-height: 28px;
+    padding: 0 var(--idlm-space-5) 0 var(--idlm-space-1);
+    background-position: right var(--idlm-space-1) center;
+    overflow: hidden;
+    font-size: 0.75rem;
+    line-height: 26px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Timestamps: date first, time beneath, both on the row's two lines. */
+body.idlm-crm-design #idlm-leads-table .idlm-table-timestamp {
+    gap: 0;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-table-timestamp-date {
+    font-size: 0.75rem;
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-table-timestamp-time {
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    white-space: nowrap;
+}
+
+/* Tasks */
+body.idlm-crm-design .idlm-workspace #idlm-leads-table button.idlm-table-task-badge {
+    display: inline-grid;
+    place-items: center;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 var(--idlm-space-1);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface);
+    color: var(--idlm-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+body.idlm-crm-design .idlm-workspace #idlm-leads-table button.idlm-table-task-badge.idlm-task-badge-overdue {
+    border-color: var(--idlm-danger-line);
+    background: var(--idlm-danger-soft);
+    color: var(--idlm-danger);
+}
+
+/* Pre-sales queue cells */
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row :is(strong, small) {
+    display: block;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-lead-row-open strong {
+    display: inline;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row small {
+    color: var(--idlm-text-muted);
+    white-space: nowrap;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row :is(.idlm-progress-chip, .idlm-response-chip, .idlm-budget-check, .idlm-sla-chip) {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-progress-chip {
+    display: block;
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-col-today small {
+    display: none;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-response-chip {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--idlm-text);
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-budget-check {
+    display: block;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-sla-chip {
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-budget-check.is-pass,
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-sla-chip.is-complete {
+    color: var(--idlm-success);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row :is(.idlm-budget-check.is-review, .idlm-sla-chip.is-progress, .idlm-sla-chip.is-due, .idlm-sla-chip.is-response) {
+    color: var(--idlm-warning);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-sla-chip.is-overdue {
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-lead-next-action {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-queue-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--idlm-space-1);
+}
+
+body.idlm-crm-design #idlm-leads-table .idlm-queue-actions .idlm-btn {
+    width: auto;
+    height: 28px;
+    min-height: 28px;
+    padding-inline: 6px;
+    font-size: 0.6875rem;
+    white-space: nowrap;
+}
+
+/* --- 7. Pagination ---------------------------------------------------------- */
+body.idlm-crm-design .idlm-leads-page .idlm-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--idlm-space-2);
+    margin: 0;
+    padding: 0;
+}
+
+body.idlm-crm-design .idlm-leads-page .idlm-pagination-summary {
+    margin-right: auto;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- 8. Lead drawer: fixed frame, identity, then at-a-glance status --------- */
+body.idlm-crm-design #idlm-lead-drawer {
+    align-items: flex-start;
+    padding: var(--idlm-space-6);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-content-wrapper {
+    width: min(1180px, 100%);
+    height: min(900px, calc(100dvh - 48px));
+    max-height: none;
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius-panel);
+    animation-duration: 200ms;
+    animation-timing-function: ease-out;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-header {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--idlm-space-3);
+    padding: var(--idlm-space-3) var(--idlm-space-5);
+    background: var(--idlm-surface);
+}
+
+/* Previous and next sit beside close, in the frame. They no longer float over the page. */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav {
+    position: absolute;
+    top: calc(var(--idlm-space-6) + var(--idlm-space-3));
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface);
+    box-shadow: none;
+    color: var(--idlm-text);
+    transform: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav:disabled {
+    color: var(--idlm-border-strong);
+    opacity: 1;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav:not(:disabled):hover {
+    background: var(--idlm-hover-tint);
+    color: var(--idlm-text);
+    outline: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav:focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: 1px;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 16px;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav-next {
+    right: calc((100% - min(1180px, 100% - 48px)) / 2 + 56px);
+    left: auto;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav-prev {
+    right: calc((100% - min(1180px, 100% - 48px)) / 2 + 90px);
+    left: auto;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-position {
+    position: absolute;
+    top: calc(var(--idlm-space-6) + var(--idlm-space-3));
+    right: calc((100% - min(1180px, 100% - 48px)) / 2 + 128px);
+    bottom: auto;
+    left: auto;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    line-height: 32px;
+    transform: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-identity {
+    min-width: 0;
+    padding-right: 200px;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-avatar {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    background: var(--idlm-surface-tint);
+    color: var(--idlm-text);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-identity-text {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 1px var(--idlm-space-2);
+    min-width: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-identity h2 {
+    margin: 0;
+    color: var(--idlm-text);
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-chip {
+    min-height: 0;
+    padding: 1px 6px;
+    font-size: 0.6875rem;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-contact {
+    display: flex;
+    flex-wrap: wrap;
+    flex-basis: 100%;
+    gap: 0 var(--idlm-space-3);
+    min-width: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-contact a {
+    color: var(--idlm-text-muted);
+    text-decoration: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-contact a:hover {
+    color: var(--idlm-action);
+    text-decoration: underline;
+}
+
+/* At-a-glance strip: four values and one quiet context line. */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--idlm-space-2) var(--idlm-space-5);
+    min-width: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-primary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--idlm-space-2) var(--idlm-space-5);
+    padding: 0;
+    border: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-item {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-label {
+    display: block;
+    margin: 0 0 1px;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.3;
+    text-transform: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-value {
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-stage-select {
+    width: auto;
+    min-height: 26px;
+    height: 26px;
+    /* Inner padding keeps text off the border on hover and focus; the matching negative
+       margin keeps the text in line with the label, and the strip height unchanged. */
+    margin: -2px 0 -2px calc(-1 * var(--idlm-space-2));
+    padding: 0 var(--idlm-space-6) 0 var(--idlm-space-2);
+    /* A thin border and the arrow at rest say this value can be changed. */
+    border-color: var(--idlm-border);
+    background-color: transparent;
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-stage-select:is(:hover, :focus-visible) {
+    border-color: var(--idlm-border-strong);
+    background-color: var(--idlm-surface);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context {
+    display: flex;
+    flex: 1 1 200px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0 var(--idlm-space-3);
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context-item {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 0.6875rem;
+    line-height: 1.5;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context-value {
+    color: var(--idlm-text-muted);
+    font-weight: 500;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-header > .idlm-close {
+    position: absolute;
+    top: var(--idlm-space-3);
+    right: var(--idlm-space-4);
+}
+
+/* Tabs */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tabs {
+    gap: var(--idlm-space-5);
+    padding-inline: var(--idlm-space-5);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tab {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding-inline: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tab.active {
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tab-notification {
+    min-width: 18px;
+    height: 18px;
+    font-size: 0.6875rem;
+}
+
+/* Body and panels */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: var(--idlm-space-3) var(--idlm-space-5);
+    background: var(--idlm-surface-soft);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-workspace {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    align-items: start;
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-panel {
+    margin-bottom: var(--idlm-space-3);
+    border-radius: var(--idlm-radius);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-panel-head {
+    min-height: 36px;
+    padding-inline: var(--idlm-space-3);
+    background: var(--idlm-surface);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-panel-title {
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-grid:not(.idlm-drawer-task-fields) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--idlm-space-2) var(--idlm-space-3);
+    padding: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-group-title {
+    grid-column: 1 / -1;
+    margin: var(--idlm-space-1) 0 0;
+    padding-top: var(--idlm-space-3);
+    border-top: 1px solid var(--idlm-border);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-group-title:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field-file {
+    grid-column: span 2;
+}
+
+/* Qualification labels are the longest value in the form. */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field:has(#idlm-edit-lead-quality) {
+    grid-column: span 2;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field-wide {
+    grid-column: 1 / -1;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field label,
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-data-label,
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tasks-wrapper label {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.3;
+    text-transform: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer :is(.idlm-drawer-control, .idlm-drawer-tasks-wrapper .idlm-input) {
+    width: 100%;
+    height: var(--idlm-control-height);
+    min-height: var(--idlm-control-height);
+    border-radius: var(--idlm-radius-compact);
+    font-family: inherit;
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer textarea.idlm-drawer-control {
+    height: auto;
+    min-height: 48px;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-control:disabled {
+    background: var(--idlm-readonly);
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-readonly-quality {
+    display: flex;
+    align-items: center;
+    background: var(--idlm-readonly);
+    color: var(--idlm-text);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field small {
+    display: block;
+    margin-top: 2px;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    line-height: 1.35;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field select.idlm-drawer-control + .idlm-drawer-file-row {
+    margin-top: var(--idlm-space-1);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-file-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--idlm-space-1) var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-btn-file {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding-inline: var(--idlm-space-2);
+    border: 1px solid var(--idlm-border-strong);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface);
+    color: var(--idlm-text);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer a.idlm-drawer-btn-file {
+    margin-top: var(--idlm-space-1);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-file-note,
+body.idlm-crm-design #idlm-lead-drawer .idlm-floor-plan-file-name {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-file-link {
+    color: var(--idlm-action);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+body.idlm-crm-design #idlm-lead-drawer :is(.idlm-remove-file-btn, .idlm-remove-floor-plan-btn) {
+    border: 0;
+    background: none;
+    color: var(--idlm-danger);
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+/* Attribution: collapsed by default, and only values that were recorded. */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-attribution > summary {
+    border-bottom: 0;
+    cursor: pointer;
+    list-style: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-attribution > summary::-webkit-details-marker {
+    display: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-attribution[open] > summary {
+    border-bottom: 1px solid var(--idlm-border);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-attribution[open] > summary .dashicons {
+    transform: rotate(180deg);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-data-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--idlm-space-2) var(--idlm-space-3);
+    padding: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-data-value {
+    overflow-wrap: anywhere;
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-empty-note {
+    margin: 0;
+    padding: var(--idlm-space-3) 0;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    grid-column: 1 / -1;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-duplicates {
+    margin-top: var(--idlm-space-3);
+    padding: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-duplicates h4 {
+    margin: 0 0 var(--idlm-space-1);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-duplicate-list {
+    margin: 0;
+    padding-left: var(--idlm-space-4);
+    font-size: 0.75rem;
+}
+
+/* Comments stay beside the form while it scrolls. */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-activity {
+    position: sticky;
+    top: 0;
+    margin-bottom: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-activity-body {
+    gap: var(--idlm-space-3);
+    padding: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-activity-title {
+    margin: 0 0 var(--idlm-space-1);
+    color: var(--idlm-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-lead-drawer :is(.idlm-drawer-textarea, .idlm-drawer-textarea-compact) {
+    width: 100%;
+    min-height: 64px;
+    height: 64px;
+    padding: var(--idlm-space-2);
+    border-radius: var(--idlm-radius-compact);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-comment-actions {
+    margin-top: var(--idlm-space-1);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-comment-actions .idlm-btn {
+    min-height: 28px;
+    height: 28px;
+    padding-inline: var(--idlm-space-2);
+    border: 1px solid var(--idlm-border-strong);
+    background: var(--idlm-surface);
+    color: var(--idlm-text);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-comment-actions .idlm-btn-primary {
+    border-color: var(--idlm-action);
+    background: var(--idlm-action);
+    color: var(--idlm-action-contrast);
+}
+
+/* Timeline: hairline rows, no card inside a card. */
+body.idlm-crm-design #idlm-lead-drawer :is(.idlm-timeline-container, .idlm-timeline-container-details) {
+    overflow-y: visible;
+    max-height: none;
+    padding: 0;
+    border: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-timeline {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-timeline::before,
+body.idlm-crm-design #idlm-lead-drawer .idlm-timeline-item::before {
+    display: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-timeline-item {
+    margin: 0;
+    padding: var(--idlm-space-2) 0;
+    border: 0;
+    border-bottom: 1px solid var(--idlm-border);
+    background: transparent;
+    box-shadow: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-timeline-item:last-child {
+    border-bottom: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-timeline-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0 var(--idlm-space-2);
+    margin: 0 0 2px;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-timeline-meta strong {
+    margin-right: var(--idlm-space-1);
+    color: var(--idlm-text);
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-timeline-actions {
+    display: inline-flex;
+    gap: var(--idlm-space-2);
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-edit-comment-link {
+    color: var(--idlm-text-muted);
+    text-decoration: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-delete-comment-link {
+    color: var(--idlm-danger);
+    text-decoration: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer :is(.idlm-edit-comment-link, .idlm-delete-comment-link):hover {
+    text-decoration: underline;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-timeline-details {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--idlm-text);
+    font-size: 0.75rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+/* Pre-sales follow-up: the next step leads, closure is a quiet disclosure. */
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-compliance .idlm-drawer-panel-head {
+    flex-wrap: wrap;
+    gap: 0 var(--idlm-space-3);
+    justify-content: flex-start;
+    padding-block: var(--idlm-space-1);
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-accordion:not([open]) .idlm-presales-summary {
+    border-bottom: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--idlm-space-1);
+    padding: var(--idlm-space-2) var(--idlm-space-3) 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day {
+    gap: 1px;
+    padding: var(--idlm-space-1) var(--idlm-space-2);
+    border-radius: var(--idlm-radius-compact);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day.is-complete {
+    border-color: var(--idlm-success-line);
+    background: var(--idlm-success-soft);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day strong {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day :is(span, small) {
+    display: block;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-actions {
+    gap: var(--idlm-space-1);
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-decision-box {
+    gap: var(--idlm-space-2);
+    margin: 0 var(--idlm-space-3) var(--idlm-space-2);
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface-soft);
+    box-shadow: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-decision-box strong {
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-presales-decision-box :is(small, .idlm-decision-guidance) {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-early-close-box {
+    display: block;
+    margin: 0 var(--idlm-space-3) var(--idlm-space-2);
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-early-close-box > summary {
+    width: fit-content;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-early-close-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+    align-items: start;
+    gap: var(--idlm-space-2);
+    margin-top: var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-early-close-fields textarea {
+    min-height: var(--idlm-control-height);
+    font-size: 0.8125rem;
+}
+
+/* Tasks tab */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tasks-wrapper {
+    grid-template-columns: 300px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tasks-wrapper .idlm-drawer-panel-body {
+    padding: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-lead-drawer #idlm-add-task-form {
+    display: grid;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-lead-drawer #idlm-add-task-form .idlm-form-group {
+    margin: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-task-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--idlm-space-2);
+    padding: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer #idlm-drawer-tasks-list-container {
+    min-height: 120px;
+    max-height: none;
+    overflow: visible;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-count-badge {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Task rows: hairlines, not a stack of cards. */
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-list {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-item {
+    align-items: flex-start;
+    gap: var(--idlm-space-2);
+    margin: 0;
+    padding: var(--idlm-space-2) 0;
+    border: 0;
+    border-bottom: 1px solid var(--idlm-border);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-item:last-child {
+    border-bottom: 0;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-item:hover {
+    box-shadow: none;
+    transform: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-text {
+    margin: 0 0 2px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-item.completed .idlm-task-text {
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-meta {
+    gap: var(--idlm-space-2);
+    align-items: center;
+    margin: 0;
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-type-badge {
+    padding: 0;
+    background: transparent;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-due {
+    gap: 2px;
+    color: var(--idlm-text-muted);
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-due.overdue {
+    color: var(--idlm-danger);
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-task-due .dashicons {
+    width: 13px;
+    height: 13px;
+    font-size: 13px;
+    line-height: 13px;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-activity-full {
+    align-items: start;
+    gap: var(--idlm-space-3);
+    grid-template-columns: 300px minmax(0, 1fr);
+}
+
+/* WhatsApp tab */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-whatsapp-empty {
+    padding: var(--idlm-space-4);
+    color: var(--idlm-text-muted);
+    font-size: 0.8125rem;
+}
+
+/* Footer */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-footer {
+    justify-content: flex-end;
+    gap: var(--idlm-space-2);
+    padding: var(--idlm-space-2) var(--idlm-space-5);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-footer .idlm-btn {
+    width: auto;
+    height: var(--idlm-control-height);
+    min-height: var(--idlm-control-height);
+    padding-inline: var(--idlm-space-3);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-footer .idlm-btn-danger-outline {
+    order: -2;
+    margin-right: auto;
+    border-color: transparent;
+    background: transparent;
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-footer .idlm-btn-danger-outline:hover {
+    background: var(--idlm-danger-soft);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-dirty-note {
+    color: var(--idlm-warning);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-dirty-note[hidden] {
+    display: none;
+}
+
+/* --- 9. Leads popups --------------------------------------------------------- */
+/* Add lead */
+body.idlm-crm-design #idlm-lead-modal .idlm-modal-content {
+    display: flex;
+    flex-direction: column;
+    width: min(640px, 92vw);
+    max-width: none;
+    padding: 0;
+    overflow: hidden;
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-modal-header {
+    flex: 0 0 auto;
+    align-items: center;
+    margin: 0;
+    padding: var(--idlm-space-3) var(--idlm-space-5);
+    border-bottom: 1px solid var(--idlm-border);
+}
+
+/* The whole form scrolls as one; the footer stays in view. */
+body.idlm-crm-design #idlm-lead-modal #idlm-add-lead-form {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-form-grid {
+    flex: 0 0 auto;
+    gap: var(--idlm-space-3);
+    padding: var(--idlm-space-4) var(--idlm-space-5);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-add-lead-qualification {
+    min-width: 0;
+    margin: 0 var(--idlm-space-5) var(--idlm-space-4);
+    padding: var(--idlm-space-3) 0 0;
+    border: 0;
+    border-top: 1px solid var(--idlm-border);
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-add-lead-qualification legend {
+    float: left;
+    width: 100%;
+    margin: 0 0 var(--idlm-space-2);
+    padding: 0;
+    color: var(--idlm-text);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-add-lead-choices {
+    clear: both;
+    display: grid;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-add-lead-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--idlm-space-2);
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius-compact);
+    cursor: pointer;
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-add-lead-choice:has(input:checked) {
+    border-color: var(--idlm-action);
+    background: color-mix(in srgb, var(--idlm-action) 6%, var(--idlm-surface));
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-add-lead-choice span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-add-lead-choice small {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-add-lead-qualification .idlm-form-grid {
+    padding: var(--idlm-space-3) 0 0;
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-add-lead-qualification [data-idlm-floor-plan-remark] {
+    grid-column: 1 / -1;
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-form-group {
+    margin: 0;
+}
+
+body.idlm-crm-design #idlm-lead-modal #idlm-referrer-field {
+    grid-column: 1 / -1;
+}
+
+body.idlm-crm-design #idlm-lead-modal .idlm-add-lead-footer {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+    gap: var(--idlm-space-2);
+    margin: 0;
+    padding: var(--idlm-space-3) var(--idlm-space-5);
+    border-top: 1px solid var(--idlm-border);
+    background: var(--idlm-surface-soft);
+}
+
+/* Import */
+body.idlm-crm-design #idlm-import-modal .idlm-import-steps {
+    gap: var(--idlm-space-4);
+    margin: 0 0 var(--idlm-space-3);
+    padding: 0;
+    list-style: none;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-step-item {
+    gap: var(--idlm-space-1);
+    padding: 0;
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-step-item.active {
+    color: var(--idlm-text);
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-step-number {
+    width: 18px;
+    height: 18px;
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-drag-zone {
+    display: grid;
+    justify-items: center;
+    gap: var(--idlm-space-1);
+    width: 100%;
+    padding: var(--idlm-space-6) var(--idlm-space-4);
+    border-radius: var(--idlm-radius);
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-drag-zone svg {
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    color: var(--idlm-text-muted);
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-drag-text {
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-drag-subtext {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-step-help {
+    margin: 0 0 var(--idlm-space-3);
+    color: var(--idlm-text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-step-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--idlm-space-2);
+    margin-top: var(--idlm-space-4);
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-step-actions.is-split {
+    justify-content: space-between;
+}
+
+body.idlm-crm-design #idlm-import-modal #idlm-import-download-template {
+    display: inline-flex;
+    gap: var(--idlm-space-1);
+    align-items: center;
+}
+
+body.idlm-crm-design #idlm-import-modal #idlm-import-download-template .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+body.idlm-crm-design #idlm-import-modal :is(.idlm-import-defaults, .idlm-import-options) {
+    margin-top: var(--idlm-space-3);
+    padding-top: var(--idlm-space-3);
+    border-top: 1px solid var(--idlm-border);
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-options {
+    display: grid;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-options label {
+    display: flex;
+    align-items: center;
+    gap: var(--idlm-space-2);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-defaults h4 {
+    margin: 0 0 var(--idlm-space-2);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-defaults .idlm-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-defaults .idlm-form-group {
+    margin: 0;
+}
+
+body.idlm-crm-design #idlm-import-modal :is(.idlm-import-mapping-table, .idlm-import-preview-table) th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design #idlm-import-modal :is(.idlm-import-mapping-table, .idlm-import-preview-table) td {
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-preview-table caption {
+    padding-bottom: var(--idlm-space-1);
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    text-align: left;
+}
+
+body.idlm-crm-design #idlm-import-modal .idlm-import-progress-line {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--idlm-space-3);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+/* Export */
+body.idlm-crm-design #idlm-export-modal .idlm-export-scope-options {
+    display: grid;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design #idlm-export-modal .idlm-export-scope legend,
+body.idlm-crm-design #idlm-export-modal #idlm-export-filters-section > .idlm-form-label {
+    display: block;
+    margin: 0 0 var(--idlm-space-2);
+    padding: 0;
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-export-modal .idlm-export-scope label {
+    display: flex;
+    align-items: center;
+    gap: var(--idlm-space-2);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+body.idlm-crm-design #idlm-export-modal .idlm-export-scope label.is-disabled {
+    color: var(--idlm-text-muted);
+    cursor: not-allowed;
+}
+
+body.idlm-crm-design #idlm-export-modal #idlm-export-filters-section {
+    margin-block: var(--idlm-space-3);
+    padding-top: var(--idlm-space-3);
+    border-top: 1px solid var(--idlm-border);
+}
+
+body.idlm-crm-design #idlm-export-modal #idlm-export-filters-section.is-disabled {
+    opacity: 0.55;
+}
+
+body.idlm-crm-design #idlm-export-modal .idlm-export-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design #idlm-export-modal .idlm-export-filter-grid .idlm-filter-group {
+    width: auto;
+    min-width: 0;
+    margin: 0;
+}
+
+body.idlm-crm-design #idlm-export-modal .idlm-export-filter-grid .idlm-input {
+    width: 100%;
+}
+
+body.idlm-crm-design #idlm-export-modal .idlm-export-count-preview {
+    margin: 0;
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface-soft);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+/* Routing rules: sections are hairlines inside one panel, not cards inside a card. */
+body.idlm-crm-design #idlm-routing-modal :is(.idlm-routing-section, .idlm-routing-advanced) {
+    margin: 0;
+    padding: var(--idlm-space-4) 0;
+    border: 0;
+    border-bottom: 1px solid var(--idlm-border);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-modal-body > :last-child {
+    border-bottom: 0;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-primary-grid {
+    gap: 0 var(--idlm-space-5);
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-section-heading {
+    padding: 0;
+    margin: 0 0 var(--idlm-space-3);
+    border: 0;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-section-heading h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-routing-modal :is(.idlm-routing-section-heading p, .description, .idlm-routing-control-heading p, .idlm-routing-switch-row small) {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-control-heading h3 {
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-rep-head {
+    color: var(--idlm-text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-rep-row:has(input:checked) {
+    background: transparent;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-rep-list {
+    border-radius: var(--idlm-radius-compact);
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-current-summary {
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface-soft);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-current-summary strong {
+    color: var(--idlm-text);
+}
+
+/* Stage and pre-sales dialogs */
+body.idlm-crm-design :is(#idlm-callback-modal, #idlm-deal-value-modal, #idlm-quote-value-modal, #idlm-lost-remark-modal, #idlm-presales-activity-modal) .idlm-form-group {
+    margin: 0 0 var(--idlm-space-3);
+}
+
+body.idlm-crm-design :is(#idlm-callback-modal, #idlm-deal-value-modal, #idlm-quote-value-modal, #idlm-lost-remark-modal, #idlm-presales-activity-modal) .idlm-form-group:last-child {
+    margin-bottom: 0;
+}
+
+body.idlm-crm-design :is(#idlm-callback-modal, #idlm-deal-value-modal, #idlm-quote-value-modal, #idlm-lost-remark-modal, #idlm-presales-activity-modal) .idlm-input {
+    width: 100%;
+}
+
+body.idlm-crm-design #idlm-quote-value-modal .idlm-drawer-btn-file {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--idlm-control-height);
+    padding-inline: var(--idlm-space-3);
+    border: 1px solid var(--idlm-border-strong);
+    border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface);
+    color: var(--idlm-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--idlm-space-2);
+    margin-top: var(--idlm-space-3);
+}
+
+/* --- 10. Column priorities as the viewport narrows ------------------------- */
+@media (max-width: 1280px) {
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric-grid {
+        grid-auto-flow: row;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    body.idlm-crm-design #idlm-leads-table :is(th, td):is(.idlm-col-assigned, .idlm-col-created) {
+        display: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table :is(th, td):is(.idlm-col-age, .idlm-col-details),
+    body.idlm-crm-design #idlm-leads-table:has(th.idlm-col-actions) :is(th, td).idlm-col-channel {
+        display: none;
+    }
+
+    /* A collapsed sidebar gives the dates and the channel their room back. */
+    body.idlm-crm-design .idlm-workspace.is-collapsed #idlm-leads-table :is(th, td):is(.idlm-col-assigned, .idlm-col-created) {
+        display: table-cell;
+    }
+
+    /* Search, filters and actions hold the first row; the counts take the second. */
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-leads-attention {
+        flex-basis: 100%;
+        order: 5;
+        justify-content: flex-end;
+        margin-left: 0;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page.idlm-leads-page .idlm-header-search {
+        margin-right: auto;
+    }
+}
+
+/* The inline selects need their widest option, so the channel yields beside an open sidebar. */
+@media (max-width: 1280px) {
+    @media (min-width: 783px) {
+        body.idlm-crm-design #idlm-leads-table :is(th, td).idlm-col-channel {
+            display: none;
+        }
+
+        body.idlm-crm-design .idlm-workspace.is-collapsed #idlm-leads-table:not(:has(th.idlm-col-actions)) :is(th, td).idlm-col-channel {
+            display: table-cell;
+        }
+    }
+}
+
+@media (max-width: 1024px) {
+    /* Beside an open sidebar the table keeps identity, stage, owner and quality.
+       Budget and tasks return when the sidebar collapses; the drawer always has them. */
+    body.idlm-crm-design #idlm-leads-table :is(th, td):is(.idlm-col-budget, .idlm-col-tasks) {
+        display: none;
+    }
+
+    body.idlm-crm-design .idlm-workspace.is-collapsed #idlm-leads-table :is(th, td):is(.idlm-col-budget, .idlm-col-tasks) {
+        display: table-cell;
+    }
+
+    body.idlm-crm-design .idlm-workspace.is-collapsed #idlm-leads-table :is(th, td):is(.idlm-col-assigned, .idlm-col-created) {
+        display: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-stage {
+        width: clamp(104px, 14vw, 144px);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-rep {
+        width: clamp(96px, 12vw, 124px);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-col-quality {
+        width: clamp(136px, 18vw, 184px);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row.is-expanded > .idlm-col-priority-low {
+        display: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-col-response,
+    body.idlm-crm-design #idlm-leads-table th.idlm-col-response {
+        display: none;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-workspace,
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-activity-full,
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tasks-wrapper {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-activity {
+        position: static;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-grid:not(.idlm-drawer-task-fields) {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context {
+        justify-content: flex-start;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* --- 11. Phone: one card per lead ------------------------------------------- */
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-header-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page.idlm-leads-page .idlm-header-search {
+        grid-column: 1 / -1;
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page.idlm-leads-page .idlm-header-search .idlm-input {
+        height: var(--idlm-target-size);
+        font-size: 1rem;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-header-actions .idlm-btn {
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-header-filter-button {
+        grid-column: 1;
+        justify-content: center;
+        width: 100%;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-leads-attention {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        justify-content: flex-start;
+        margin: 0;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-leads-attention:not(:has(> :not([style*="none"]))) {
+        display: none;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page :is(.idlm-handoff-alert-pill, .idlm-pending-calls-pill, .idlm-whatsapp-unread-pill) {
+        flex: 0 0 auto;
+        min-height: var(--idlm-target-size);
+        padding-inline: var(--idlm-space-1);
+    }
+
+    /* Summary becomes a labelled strip that scrolls inside itself. */
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric-grid {
+        display: flex;
+        width: auto;
+        margin-inline: -12px;
+        padding-inline: 12px;
+        overflow-x: auto;
+        scroll-padding-inline: 12px;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric.idlm-metric {
+        flex: 0 0 128px;
+        width: 128px;
+        min-height: var(--idlm-target-size);
+        scroll-snap-align: start;
+    }
+
+    body.idlm-crm-design .idlm-active-filter {
+        max-width: 100%;
+    }
+
+    body.idlm-crm-design .idlm-workspace .idlm-active-filter-remove {
+        flex-basis: 32px;
+        width: 32px;
+        height: 32px;
+    }
+
+    /* The phone header scrolls away, so only the top bar offsets the bar. */
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-bar {
+        top: calc(var(--idlm-sticky-top) + var(--idlm-space-1));
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions {
+        margin: 0;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions .idlm-input {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions .idlm-btn {
+        flex: 1 1 0;
+    }
+
+    /* Result count and sort share one line above the cards. */
+    body.idlm-crm-design .idlm-active-filters {
+        margin-bottom: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design .idlm-active-filters .idlm-leads-mobile-sort {
+        display: block;
+        order: 2;
+        flex: 0 1 190px;
+        min-width: 0;
+        margin: 0 0 0 auto;
+    }
+
+    body.idlm-crm-design .idlm-active-filters .idlm-leads-mobile-sort label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    body.idlm-crm-design .idlm-active-filters-list {
+        order: 3;
+        flex-basis: 100%;
+    }
+
+    body.idlm-crm-design .idlm-wrap .idlm-btn.idlm-active-filters-clear#idlm-active-filters-clear {
+        order: 4;
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+    }
+
+    /* Cards: identity first, then the two values people change on the road. */
+    body.idlm-crm-design #idlm-leads-table tbody {
+        gap: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row {
+        border-radius: var(--idlm-radius);
+        box-shadow: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > td {
+        height: auto;
+        padding: var(--idlm-space-2) var(--idlm-space-3);
+        grid-template-columns: 88px minmax(0, 1fr);
+        font-size: 0.8125rem;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > td::before {
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > .idlm-selection-column {
+        padding: var(--idlm-space-3) 0 0;
+        border-bottom: 1px solid var(--idlm-border);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > .idlm-lead-identity-cell {
+        padding-block: var(--idlm-space-2);
+        padding-left: 0;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-headline {
+        flex-wrap: wrap;
+        row-gap: 2px;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-open strong {
+        font-size: 0.9375rem;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-contact {
+        margin-top: 2px;
+        font-size: 0.75rem;
+    }
+
+    body.idlm-crm-design .idlm-workspace #idlm-leads-table .idlm-lead-row-headline .idlm-lead-row-open {
+        min-width: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-workspace #idlm-leads-table .idlm-lead-row-phone {
+        display: inline-flex;
+        align-items: center;
+        min-height: var(--idlm-target-size);
+        color: var(--idlm-action);
+        font-weight: 500;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-contact {
+        align-items: center;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-row-handoff-location {
+        display: block;
+        margin: 0;
+        color: var(--idlm-text-muted);
+        font-size: 0.75rem;
+    }
+
+    /* Details is a corner control, so the card stays name, contact, stage, quality. */
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > .idlm-lead-identity-cell {
+        position: relative;
+        grid-column: 2 / -1;
+        padding-right: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-workspace #idlm-leads-table .idlm-lead-row-expand {
+        position: absolute;
+        top: 0;
+        right: 0;
+        display: inline-grid;
+        place-items: center;
+        width: var(--idlm-target-size);
+        height: var(--idlm-target-size);
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--idlm-text-muted);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-expand .dashicons {
+        margin: 0;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-expand-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    /* The studio repeats in its own detail row, so the card shows it once. */
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-studio {
+        display: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-table-select {
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+        padding-inline: var(--idlm-space-2) var(--idlm-space-6);
+        font-size: 1rem;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-queue-actions {
+        display: grid;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-queue-actions .idlm-btn {
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+        font-size: 0.8125rem;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-leads-skeleton-row,
+    body.idlm-crm-design #idlm-leads-table .idlm-leads-empty-row {
+        display: block;
+    }
+
+    body.idlm-crm-design #idlm-leads-table :is(.idlm-leads-skeleton-row, .idlm-leads-empty-row) td {
+        display: block;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row.is-expanded > td:is(.idlm-col-budget, .idlm-col-tasks, .idlm-col-response, .idlm-col-assigned, .idlm-col-created, .idlm-col-channel, .idlm-col-studio, .idlm-col-age, .idlm-col-details, .idlm-col-today) {
+        display: grid;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-state {
+        border: 1px solid var(--idlm-border);
+        border-radius: var(--idlm-radius);
+    }
+
+    body.idlm-crm-design .idlm-leads-page .idlm-pagination-summary {
+        flex-basis: 100%;
+        margin: 0;
+    }
+
+    /* Drawer fills the phone. Close and previous/next share the top row. */
+    body.idlm-crm-design #idlm-lead-drawer {
+        padding: 0;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-content-wrapper {
+        width: 100%;
+        height: 100dvh;
+        min-height: 0;
+        border: 0;
+        border-radius: 0;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-header {
+        padding: var(--idlm-space-2) var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-identity {
+        padding-right: 140px;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-avatar {
+        display: none;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-header > .idlm-close {
+        top: 0;
+        right: 0;
+        width: var(--idlm-target-size);
+        height: var(--idlm-target-size);
+        font-size: 1.25rem;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav {
+        top: 0;
+        width: var(--idlm-target-size);
+        height: var(--idlm-target-size);
+        border: 0;
+        background: transparent;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav-next {
+        right: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav-prev {
+        right: calc(var(--idlm-target-size) * 2);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-position {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-primary {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: var(--idlm-space-2) var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-value {
+        white-space: normal;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-stage-select {
+        width: 100%;
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+        margin: 0;
+        padding-inline: var(--idlm-space-2) var(--idlm-space-6);
+        border-color: var(--idlm-border-strong);
+        font-size: 1rem;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tabs {
+        gap: var(--idlm-space-4);
+        padding-inline: var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tab {
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-body {
+        padding: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-grid:not(.idlm-drawer-task-fields) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer :is(.idlm-drawer-control, .idlm-drawer-tasks-wrapper .idlm-input, .idlm-drawer-textarea, .idlm-drawer-textarea-compact) {
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+        font-size: 1rem;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer :is(.idlm-drawer-textarea, .idlm-drawer-textarea-compact, textarea.idlm-drawer-control) {
+        height: 88px;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-btn-file,
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-comment-actions .idlm-btn {
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-early-close-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* Footer stays one row, so the form keeps the screen. */
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-footer {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: var(--idlm-space-1);
+        padding: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-footer .idlm-btn {
+        flex: 0 0 auto;
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+        padding-inline: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-footer .idlm-btn-danger-outline {
+        order: 0;
+        margin-right: 0;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-footer .idlm-btn-primary {
+        flex: 1 1 0;
+        order: 2;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-dirty-note {
+        flex-basis: 100%;
+        order: -1;
+        text-align: center;
+    }
+
+    /* Popups */
+    body.idlm-crm-design :is(#idlm-export-modal, #idlm-import-modal) .idlm-dialog__close {
+        margin-right: 0;
+    }
+
+    body.idlm-crm-design #idlm-lead-modal .idlm-modal-content {
+        width: 100%;
+    }
+
+    body.idlm-crm-design #idlm-lead-modal .idlm-form-grid,
+    body.idlm-crm-design #idlm-export-modal .idlm-export-filter-grid,
+    body.idlm-crm-design #idlm-import-modal .idlm-import-defaults .idlm-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design #idlm-import-modal .idlm-import-steps {
+        gap: var(--idlm-space-2);
+        overflow-x: auto;
+    }
+
+    body.idlm-crm-design #idlm-routing-modal .idlm-routing-primary-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* The desktop column widths would shrink a stacked card's stage and quality controls to a few letters. */
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > td:is(.idlm-col-stage, .idlm-col-quality, .idlm-col-rep) {
+        width: auto;
+    }
+}
+
+/* Tablet cards have room to put stage and quality side by side. */
+@media (min-width: 481px) {
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) {
+        grid-template-columns: var(--idlm-target-size) minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) > td.idlm-col-stage {
+        grid-column: 1 / 3;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) > td.idlm-col-quality {
+        grid-column: 3;
+    }
+}
+
+@media (max-width: 480px) {
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > td {
+        grid-template-columns: 76px minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-form-grid:not(.idlm-drawer-task-fields) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field-file,
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field:has(#idlm-edit-lead-quality) {
+        grid-column: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-content-wrapper {
+        animation: none;
+    }
+}
+
+/* --- 12. Drawer touch targets on phones ------------------------------------- */
+@media (max-width: 782px) {
+    body.idlm-crm-design #idlm-lead-drawer :is(.idlm-drawer-contact a, .idlm-file-link, .idlm-remove-floor-plan-btn, .idlm-edit-comment-link, .idlm-delete-comment-link, .idlm-task-delete-btn) {
+        display: inline-flex;
+        align-items: center;
+        min-width: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer :is(.idlm-early-close-box > summary, summary.idlm-drawer-panel-head) {
+        display: flex;
+        align-items: center;
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tab {
+        min-width: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+    }
+}

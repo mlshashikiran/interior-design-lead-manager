@@ -80,6 +80,8 @@ Dynamic option families include `idlm_field_mappings_{platform}`. Round-robin in
 
 Schema rules: increment the independent core or quotation schema version, update the matching installer, make backfills idempotent, and never assume physical foreign-key cascades.
 
+Access change log: `idlm_access_change_log` is one non-autoloaded option, created by the first logged change and never by activation, upgrade or page load. It holds the newest 200 entries, newest first: time, actor ID and name snapshot, event, target, before and after. Events are user created, role changed, access suspended or restored, role lead visibility changed, and role permissions changed (added and removed lists). `IDLM_Access_Change_Log` stores names, role slugs and capability names only, and replaces a display name holding an email or phone number with `User #ID`. A write failure never blocks the save that triggered it. The JSON backup excludes it and a restore leaves it in place, so a restore cannot rewind the record. CRM reset keeps it, and the plugin has no uninstall purge. Builder: Shashi.
+
 Private-file schema: core version `1.3.5`, independently verified marker `1`; unique attachment ID and chunk composite primary key, InnoDB required. States `uploaded`/`active`, `pending`/`pending_upload` migration journals, and `erasing` cleanup journal preserve verified bytes across filesystem failures. Plugin JSON backups exclude both private tables and WordPress attachment identities; full database recovery is required. Builder: Shashi. See [fifth slice policy](AUDIT-REMEDIATION-PRIVATE-FILE-SLICE.md).
 
 ### CRM JSON recovery (1.102.48)
@@ -167,3 +169,27 @@ Builder: Shashi. No CRM schema migration. `idlm_meta_lead_connector` additionall
 ## Meta form mappings — 1.102.94
 
 Builder: Shashi. Nonautoload `idlm_meta_form_mapping_{sha256(app_id|page_id|form_id)}` options contain allowlisted CRM destination keys and exact provider question-key strings. Empty destinations are explicit omissions. They are source-scoped configuration, contain no token/respondent values and are included in portable settings backups. Existing global connector mappings remain fallback-only. No table/schema migration. Encrypted per-lead Meta acquisition snapshots retain all returned answers independently of mapping choices.
+
+## Local payment ledger — core 1.3.10
+
+Builder: Shashi. Five lead-owned tables store immutable schedule snapshots, stable receipt identities, receipt versions, allocation-set snapshots and idempotent audit events. Every table has a lead index and participates in checked lead erasure/reset. Money uses decimal(14,2) storage and integer minor-unit calculations. [Schema, snapshot and recovery contract](DESIGN-PROJECTS-PAYMENT-FOUNDATION.md).
+
+## Design handoffs — core 1.3.12
+
+Builder: Shashi. Additive InnoDB `idlm_design_handoffs`, declared through `IDLM_DB::create_tables()`: one row per lead (unique `lead_id`). `status` is `new`, `accepted` or `sent_back` (shown as Returned). The row holds the current state: Design Manager, remarks, scope, pending items, the sales price baseline (quote, revision, total; re-fixed at acceptance), target date, sender, sales owner, advance values at send time, `receipt_confirmation_id` (0 when the advance is not on the payment ledger), designer, decider and send-back reason. `idlm_design_handoff_versions` keeps one row per submission; only its outcome fields are filled in later. `idlm_design_handoff_events` is append-only (sent, returned, accepted, assigned) with designer and target before and after. A readable summary also goes to `idlm_lead_activity_log` as `design_handoff`. A handoff never writes the lead's stage, quality, owner or Won value. All three tables join lead deletion and CRM reset, and partial JSON backup/restore is refused once any row exists, as it is for the ledger.
+
+## Design revisions — core 1.3.13
+
+Builder: Shashi. `idlm_design_revisions` is a side table keyed by quotation revision: handoff, lead, source revision, designer ID and name at save, and actual actor. The quotation tables are unchanged, so existing backups and readers keep working. `idlm_design_handoffs.design_revision_id` points at the latest design revision. `idlm_design_handoff_events` gains `details` (JSON) and the event types `design_revision` and `discount_changed`, with before and after values.
+
+## Agreed price — core 1.3.14
+
+Builder: Shashi. `idlm_design_handoffs` gains `agreed_revision_id`, `agreed_total`, `agreed_by` and `agreed_at`. `idlm_design_revisions` gains `approved_by`, `approved_at` and `approval_note`. The event type `customer_approved` records the note, schedule and totals before and after. The quotation's current and accepted revisions are not changed.
+
+## Design stages and documents — core 1.3.15
+
+Builder: Shashi. `idlm_design_handoffs` gains stage, hold and completion columns. `idlm_design_document_versions` keeps one row per uploaded file with its slot or category, version number and state (current, superseded, archived). Bytes stay in private file storage under the new `design` purpose. Stage labels are copied into events, so renaming never rewrites history. An existing accepted handoff with no stage counts as the first stage.
+
+**Core 1.3.17:** additive columns only. `idlm_design_revisions` gains `reviewed_by`, `reviewed_at` (a Design Manager or administrator review before a design revision can be printed, exported or marked Customer approved; a manager's own save is reviewed on save, and a revision already Customer approved counts as reviewed) and `rate_changes` (JSON list of lines whose rate differs from the source or catalogue rate). `idlm_design_handoffs` gains `flags_cleared` (JSON: the review flags a manager cleared with a note, and a mark of the current receipts and documents; any later change shows the flags again). Existing rows keep NULL: design revisions not yet Customer approved start unreviewed.
+
+**Core 1.3.16:** no new structure. `stage_receipt_mark` was added to `idlm_design_handoffs` after sites had already recorded 1.3.15, so 1.3.16 re-runs the additive upgrade to add it. Without it, accepting a handoff fails and rolls back. `tests/design-handoff-contracts.php` now pins the design schema to the schema version.

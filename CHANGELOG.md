@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.103.0] - 2026-11-06
+
+### Added
+
+- CRM design layer across every screen, switchable per page (`?idlm_design=legacy`), for everyone (Lead Manager → Interface design) or by constant; mandatory design standard in `design-system/interior-design-lead-manager/STANDARD.md`. Builder: Shashi.
+- Design handoff and Design Projects: send Won leads with a quotation to design, accept and assign designers, staged checklists, design revisions that keep the quote number, manager review, Customer approved payment schedules, hold reasons, review flags, private documents and an overview. Builder: Shashi.
+- Lead payments: schedules, receipts and corrections per lead. Builder: Shashi.
+- One shared list of date periods for every date filter: Today, Yesterday, Last 7/14/30 days, This week, month, quarter and year, and Custom range, with like-for-like comparisons. Builder: Shashi.
+- Sidebar groups (Work, Admin), needs-action counts, styled rail tooltips and the signed-in person; CAPI audit and Audience sync are now Ad conversions and Ad audiences. Builder: Shashi.
+
+### Changed
+
+- Users & access: explicit saves only, stated access outcomes, role and activity pages and an access change log; an update never grants capabilities on its own. Builder: Shashi.
+- Notices and alerts show as dismissible, self-closing toasts in the bottom right; standing record context stays inline. Builder: Shashi.
+- Stage and quality tones; no lingering focus ring after a click. Builder: Shashi.
+- Add lead qualification choices; placeholder and shared emails no longer match leads or reach ad platforms. Builder: Shashi.
+
+### Fixed
+
+- Dashboard: win rate is Won ÷ (Won + Lost); each deal counts once per period on one basis across cards, trends and tables; like-for-like previous periods; rep conversion bounded; pre-sales populations; campaign coverage; Last month comparison no longer overlaps. Builder: Shashi.
+- Reps can create new or revised quotations for leads with a legacy quotation; Accept on design handoffs saves. Builder: Shashi.
+
 ## [1.102.97] - 2026-10-27
 
 ### Fixed

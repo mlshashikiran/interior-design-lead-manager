@@ -3,7 +3,7 @@
  * Plugin Name:       Interior Design Lead Manager
  * Plugin URI:        https://github.com/shashi-protecto/interior-design-lead-manager
  * Description:       A premium lead management system to replace Google Sheets and Pabbly for interior design firms. Captures leads from ad webhooks, manages routing, schedules custom audience batch uploads, triggers conversions server-side using Action Scheduler, and includes a full analytics workspace.
- * Version:           1.102.97
+ * Version:           1.103.0
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Author:            Shashi
@@ -16,8 +16,8 @@ if (!defined('ABSPATH')) {
 }
 
 // Define Plugin Constants
-define('IDLM_VERSION', '1.102.97');
-define('IDLM_DB_VERSION', '1.3.9');
+define('IDLM_VERSION', '1.103.0');
+define('IDLM_DB_VERSION', '1.3.17');
 define('IDLM_PATH', plugin_dir_path(__FILE__));
 define('IDLM_URL', plugin_dir_url(__FILE__));
 
@@ -43,9 +43,23 @@ require_once IDLM_PATH . 'includes/class-private-files.php';
 require_once IDLM_PATH . 'includes/class-recovery-guard.php';
 require_once IDLM_PATH . 'includes/class-lead-transaction.php';
 require_once IDLM_PATH . 'includes/class-lead-outbox.php';
+require_once IDLM_PATH . 'includes/class-lead-payment-schema.php';
+require_once IDLM_PATH . 'includes/class-lead-payment-ledger.php';
+require_once IDLM_PATH . 'includes/class-lead-payments.php';
+require_once IDLM_PATH . 'includes/class-lead-payment-controller.php';
+require_once IDLM_PATH . 'includes/class-design-handoffs.php';
+require_once IDLM_PATH . 'includes/class-design-handoff-controller.php';
+require_once IDLM_PATH . 'includes/class-design-revisions.php';
+require_once IDLM_PATH . 'includes/class-design-stages.php';
+require_once IDLM_PATH . 'includes/class-design-stage-controller.php';
+require_once IDLM_PATH . 'includes/class-design-board.php';
+require_once IDLM_PATH . 'includes/class-design-projects-table.php';
+require_once IDLM_PATH . 'includes/class-design-project-panel.php';
+require_once IDLM_PATH . 'includes/class-design-dashboard.php';
 require_once IDLM_PATH . 'includes/class-presales-task-plan.php';
 require_once IDLM_PATH . 'includes/class-assignment-capacity.php';
 require_once IDLM_PATH . 'includes/class-backup-validator.php';
+require_once IDLM_PATH . 'includes/class-contact-identity.php';
 require_once IDLM_PATH . 'includes/class-lead-lifecycle-service.php';
 require_once IDLM_PATH . 'includes/class-identity-review.php';
 require_once IDLM_PATH . 'includes/class-task-queue-service.php';
@@ -67,6 +81,7 @@ require_once IDLM_PATH . 'includes/class-interakt-dispatch.php';
 require_once IDLM_PATH . 'includes/class-audiences.php';
 require_once IDLM_PATH . 'includes/class-audience-dispatch.php';
 require_once IDLM_PATH . 'includes/class-dashboard-read-model.php';
+require_once IDLM_PATH . 'includes/class-date-ranges.php';
 require_once IDLM_PATH . 'includes/class-dashboard.php';
 require_once IDLM_PATH . 'includes/class-whatsapp-inbox.php';
 require_once IDLM_PATH . 'includes/class-interakt.php';
@@ -84,6 +99,7 @@ require_once IDLM_PATH . 'includes/class-admin-assets.php';
 require_once IDLM_PATH . 'includes/class-admin-shortcodes.php';
 require_once IDLM_PATH . 'includes/class-admin-account-controller.php';
 require_once IDLM_PATH . 'includes/class-admin-users-controller.php';
+require_once IDLM_PATH . 'includes/class-access-change-log.php';
 require_once IDLM_PATH . 'includes/class-admin.php';
 require_once IDLM_PATH . 'includes/class-admin-lead-reads.php';
 require_once IDLM_PATH . 'includes/class-admin-connection-controller.php';
@@ -152,6 +168,12 @@ function idlm_register_crm_roles_and_capabilities() {
     foreach (array_diff(idlm_get_crm_role_slugs(), $editorial_roles) as $role_name) {
         $role = get_role($role_name);
         if (!$role || !empty($seeded[$role_name])) { continue; }
+        // An update never grants access. A role first seen on an existing install
+        // stays as it is until an administrator saves it in the role editor.
+        if ($legacy_setup && !('idlm_pre_sales' === $role_name && $created_pre_sales)) {
+            $seeded[$role_name] = true;
+            continue;
+        }
         // A newly encountered role may already have deliberately partial or
         // negative IDLM grants. Treat that as provisioned, not a blank default.
         $existing_grants = array_intersect(array_keys($role->capabilities), array_diff(idlm_crm_default_capabilities(true), array('read')));
@@ -220,6 +242,21 @@ function idlm_register_crm_roles_and_capabilities() {
     return true;
 }
 
+/** Adds the optional design roles once. They change no existing user or role. */
+function idlm_register_design_role() {
+    if ('2' === get_option('idlm_design_role_registered', '')) { return; }
+    add_role(IDLM_Design_Handoffs::ROLE, 'Design manager', array('read' => true, IDLM_Design_Handoffs::CAPABILITY => true));
+    add_role(IDLM_Design_Handoffs::REP_ROLE, 'Design representative', array('read' => true, IDLM_Design_Handoffs::REP_CAPABILITY => true));
+    // A role added by the earlier unreleased build keeps its grants and only gains the clearer name.
+    $roles = wp_roles();
+    if (isset($roles->roles[IDLM_Design_Handoffs::ROLE]) && 'Design manager' !== $roles->roles[IDLM_Design_Handoffs::ROLE]['name']) {
+        $roles->roles[IDLM_Design_Handoffs::ROLE]['name'] = 'Design manager';
+        update_option($roles->role_key, $roles->roles);
+        $roles->for_site();
+    }
+    update_option('idlm_design_role_registered', '2', false);
+}
+
 /** Initial CRM enrollment grants; existing grants are never reconciled upward. */
 function idlm_crm_default_capabilities($manager = false) {
     $capabilities = array('read', 'idlm_access_leads', 'idlm_qualify_leads', 'idlm_view_quotes',
@@ -285,6 +322,7 @@ function idlm_boot_plugin() {
     if (get_option('idlm_roles_version') !== IDLM_VERSION || '1' !== get_option('idlm_crm_access_policy_version', '')) {
         idlm_register_crm_roles_and_capabilities();
     }
+    idlm_register_design_role();
 
     $request_script = isset($_SERVER['SCRIPT_NAME']) ? basename(sanitize_text_field(wp_unslash($_SERVER['SCRIPT_NAME']))) : '';
     $current_page = isset($GLOBALS['pagenow']) ? (string) $GLOBALS['pagenow'] : '';
@@ -333,6 +371,13 @@ function idlm_boot_plugin() {
     IDLM_Identity_Review::init();
     IDLM_Backup::init();
     IDLM_Private_Files::init();
+    IDLM_Lead_Payment_Controller::init();
+    IDLM_Design_Handoff_Controller::init();
+    IDLM_Design_Revisions::init();
+    IDLM_Design_Stage_Controller::init();
+    IDLM_Design_Board::init();
+    IDLM_Design_Project_Panel::init();
+    IDLM_Contact_Identity::init();
     IDLM_Quotations::init();
     } finally { IDLM_Recovery_Guard::exit_worker(); }
 }
