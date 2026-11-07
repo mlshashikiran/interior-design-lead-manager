@@ -129,7 +129,7 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
                     $idlm_metric_cards[] = array('Routing Exceptions', 'Routing exceptions', 'routing_exceptions', $idlm_handoff_exception_count, 'manager review', true);
                 }
                 if ($idlm_can_assign_leads) {
-                    $idlm_metric_cards[] = array('Qualified Handoffs', 'Qualified handoffs', 'qualified_handoffs', $idlm_qualified_handoff_count, $idlm_overdue_handoff_count > 0 ? $idlm_overdue_handoff_count . ' overdue' : 'awaiting assignment', $idlm_overdue_handoff_count > 0);
+                    $idlm_metric_cards[] = array('Qualified Handoffs', 'Qualified handoffs', 'qualified_handoffs', $idlm_qualified_handoff_count, $idlm_overdue_handoff_count <= 0 ? 'awaiting assignment' : ($idlm_overdue_handoff_count >= $idlm_qualified_handoff_count ? 'all overdue' : $idlm_overdue_handoff_count . ' overdue'), $idlm_overdue_handoff_count > 0);
                 }
                 $idlm_metric_cards[] = array('Not Called', 'Not called', 'not_called', $idlm_not_called_count, 'active only', false);
                 $idlm_metric_cards[] = array('Follow-up', 'Follow-up', 'followup', $idlm_followup_count, 'active only', false);

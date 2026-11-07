@@ -582,3 +582,11 @@ idlm_test('design layer sidebar groups work and admin, shows needs-action counts
     assert_false(false !== strpos($script, "item.setAttribute('title', label.textContent)"), 'The rail must not fall back to native title tooltips.');
     assert_contains('.idlm-nav-tip.is-visible', $css);
 });
+
+idlm_test('Qualified handoffs card never repeats its count in the overdue hint', static function(): void {
+    $root = dirname(__DIR__);
+    $template = (string) file_get_contents($root . '/templates/admin/leads.php');
+    $script = (string) file_get_contents($root . '/assets/js/admin-app.js');
+    assert_contains('$idlm_overdue_handoff_count >= $idlm_qualified_handoff_count ? \'all overdue\'', $template);
+    assert_contains("overdueHandoffs >= qualifiedHandoffs ? 'all overdue'", $script);
+});
