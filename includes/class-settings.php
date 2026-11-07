@@ -138,7 +138,41 @@ class IDLM_Settings {
             . '--idlm-action-soft:' . self::lighten_hex($settings['primary_color'], 90) . ';'
             . '--idlm-focus-ring:' . self::normalize_hex($settings['primary_color']) . ';'
             . '--idlm-brand-gold:' . self::normalize_hex($settings['accent_color']) . ';'
-            . '--idlm-sidebar:' . self::normalize_hex($settings['sidebar_color']) . ';';
+            . '--idlm-sidebar:' . self::normalize_hex($settings['sidebar_color']) . ';'
+            . '--idlm-sidebar-accent:' . self::sidebar_accent($settings) . ';'
+            . '--idlm-on-accent:' . self::on_accent($settings) . ';';
+    }
+
+    /**
+     * The accent is not contrast-checked when saved, so icons and focus rings on the
+     * sidebar use it only when it reaches 3:1 there; otherwise they use white, which
+     * the sidebar validation guarantees at 4.5:1. Presentation only: nothing is stored.
+     */
+    private static function sidebar_accent($settings) {
+        list($accent, $sidebar) = self::accent_pair($settings);
+        // The active item is filled with 14% white over the sidebar (--idlm-sidebar-active).
+        $active = self::lighten_hex($sidebar, 14);
+        return min(self::contrast_ratio($accent, $sidebar), self::contrast_ratio($accent, $active)) >= 3 ? $accent : '#FFFFFF';
+    }
+
+    /** Text on an accent fill: white, else the sidebar colour, else black, whichever first reaches 4.5:1. */
+    private static function on_accent($settings) {
+        list($accent, $sidebar) = self::accent_pair($settings);
+        foreach (array('#FFFFFF', $sidebar) as $candidate) {
+            if (self::contrast_ratio($candidate, $accent) >= 4.5) {
+                return $candidate;
+            }
+        }
+        return '#000000';
+    }
+
+    /** Normalized accent and sidebar colours, falling back to the defaults. */
+    private static function accent_pair($settings) {
+        $defaults = self::white_label_defaults();
+        return array(
+            self::normalize_hex($settings['accent_color']) ?: $defaults['accent_color'],
+            self::normalize_hex($settings['sidebar_color']) ?: $defaults['sidebar_color'],
+        );
     }
 
     /** Output a CRM-specific browser icon without changing the site's global Site Icon. */

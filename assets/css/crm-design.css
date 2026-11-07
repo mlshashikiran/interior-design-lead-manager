@@ -322,17 +322,30 @@ body.idlm-crm-design .idlm-workspace-nav-item.is-active {
     font-weight: 600;
 }
 
+/* --idlm-sidebar-accent is the accent when it reaches 3:1 on the sidebar, else white (IDLM_Settings::white_label_style). */
 body.idlm-crm-design .idlm-workspace-nav-item.is-active .dashicons {
-    color: var(--idlm-brand-gold);
+    color: var(--idlm-sidebar-accent, var(--idlm-brand-gold));
 }
 
 body.idlm-crm-design .idlm-workspace-nav-item:focus-visible,
 body.idlm-crm-design .idlm-workspace-toggle:focus-visible,
 body.idlm-crm-design .idlm-workspace-drawer-close:focus-visible,
 body.idlm-crm-design .idlm-workspace-account-menu a:focus-visible {
-    outline: 2px solid var(--idlm-brand-gold);
+    outline: 2px solid var(--idlm-sidebar-accent, var(--idlm-brand-gold));
     outline-offset: -2px;
     box-shadow: none;
+}
+
+/* The workspace-wide focus rule is more specific than the one above and painted the
+   primary colour on the dark sidebar (2.5:1 with the default brand). Only the colour
+   changes here, so the pointer-input reset still removes the ring after a click. */
+body.idlm-crm-design .idlm-workspace .idlm-workspace-sidebar :is(a, button, input, select, textarea, summary):focus-visible {
+    outline-color: var(--idlm-sidebar-accent, var(--idlm-brand-gold));
+}
+
+/* The fallback letter sits on the accent; white on the default gold is 2.6:1. */
+body.idlm-crm-design .idlm-workspace-brand-mark {
+    color: var(--idlm-on-accent, var(--idlm-action-contrast));
 }
 
 /* The account row inherited 16px text and did not line up with the navigation. */
@@ -553,7 +566,7 @@ body.idlm-crm-design .idlm-workspace #idlm-floating-tasks-btn.idlm-workspace-tod
     width: 20px;
     height: 20px;
     margin: 0;
-    color: var(--idlm-brand-gold);
+    color: var(--idlm-sidebar-accent, var(--idlm-brand-gold));
     font-size: 20px;
     line-height: 20px;
 }
