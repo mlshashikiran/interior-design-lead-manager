@@ -310,7 +310,9 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         $decision = isset($_POST['decision']) ? sanitize_key(wp_unslash($_POST['decision'])) : '';
         $handoff_remark = isset($_POST['handoff_remark']) ? sanitize_textarea_field(wp_unslash($_POST['handoff_remark'])) : '';
         if ('reopen' === $decision) {
-            self::reopen_for_qualification($lead_id);
+            $reopen_reason = isset($_POST['reason']) ? sanitize_key(wp_unslash($_POST['reason'])) : '';
+            $reopen_note = isset($_POST['note']) ? sanitize_textarea_field(wp_unslash($_POST['note'])) : '';
+            self::reopen_for_qualification($lead_id, $reopen_reason, $reopen_note);
         }
         if (!self::current_user_is_pre_sales() && !current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Only pre-sales representatives and administrators can make this decision.'));
@@ -391,7 +393,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      * Return an Unqualified lead to the qualification queue with a fresh outreach round.
      * The closure stays in the activity log; the new round counts outreach logged after the reopen.
      */
-    private static function reopen_for_qualification($lead_id) {
+    private static function reopen_for_qualification($lead_id, $reason, $note) {
         // Reopen is open to managers, so it applies the shared CRM access rule itself.
         if (!IDLM_Lead_Access_Policy::has_rep_access()) {
             wp_send_json_error(array('message' => 'Permission denied.'));
@@ -399,8 +401,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         if (!$lead_id || !self::current_user_can_access_lead($lead_id)) {
             wp_send_json_error(array('message' => 'You can reopen only leads assigned to you.'));
         }
-        $reason = isset($_POST['reason']) ? sanitize_key(wp_unslash($_POST['reason'])) : '';
-        $note = isset($_POST['note']) ? sanitize_textarea_field(wp_unslash($_POST['note'])) : '';
         $reasons = self::reopen_reasons();
         if (!isset($reasons[$reason])) {
             wp_send_json_error(array('message' => 'Select why this lead is being reopened.'));
