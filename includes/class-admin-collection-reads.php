@@ -528,7 +528,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                     </td>
                     <td class="idlm-col-channel idlm-col-priority-low" data-label="Channel"><span class="idlm-badge idlm-badge-<?php echo esc_attr(strtolower(str_replace(' ', '', $l->source))); ?>"><?php echo esc_html($l->source); ?></span><?php if ($l->preferred_studio): ?><small class="idlm-lead-row-studio" title="<?php echo esc_attr($l->preferred_studio); ?>"><?php echo esc_html($l->preferred_studio); ?></small><?php endif; ?></td>
                     <td class="idlm-col-studio idlm-col-priority-low" data-label="Studio"><?php echo esc_html($l->preferred_studio ?: '—'); ?></td>
-                    <td class="idlm-col-budget idlm-col-priority-secondary" data-label="Budget"<?php echo !empty($l->budget) ? ' title="' . esc_attr($l->budget) . '"' : ''; ?>><strong><?php echo !empty($l->budget) ? esc_html($l->budget) : ('—'); ?></strong></td>
+                    <td class="idlm-col-budget idlm-col-priority-secondary" data-label="Budget"<?php echo !empty($l->budget) ? ' title="' . esc_attr($l->budget) . '"' : ''; ?>><strong><?php echo !empty($l->budget) ? esc_html($l->budget) : '—'; ?></strong></td>
                     
                     <!-- Stage Quick Edit dropdown -->
                     <td class="idlm-col-stage idlm-col-priority-primary" data-label="Stage">

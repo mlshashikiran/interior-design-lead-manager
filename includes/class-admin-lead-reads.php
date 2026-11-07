@@ -450,7 +450,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                             <input type="hidden" name="floor_plan_files" id="idlm_floor_plan_files" value="<?php echo esc_attr(wp_json_encode($floor_plan_files)); ?>">
                                             <input type="file" class="idlm-file-input" data-input-id="idlm_floor_plan_file" data-preview-id="idlm_floor_plan_preview" accept=".pdf,.jpg,.jpeg,.png,.webp" multiple style="display: none;">
                                             <button type="button" class="idlm-drawer-btn-file idlm-direct-upload-trigger">
-                                                <?php echo $floor_plan_files ? ('Add floor plans') : ('Upload floor plans'); ?>
+                                                <?php echo $floor_plan_files ? 'Add floor plans' : 'Upload floor plans'; ?>
                                             </button>
                                             <span id="idlm_floor_plan_preview" class="idlm-drawer-file-note idlm-floor-plan-file-list">
                                                 <?php if ($floor_plan_files): ?>
@@ -484,7 +484,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                             <input <?php disabled(self::current_user_is_pre_sales()); ?> type="hidden" name="quote_file" id="idlm_quote_file" value="<?php echo esc_attr(isset($lead->quote_file) ? $lead->quote_file : ''); ?>">
                                             <input <?php disabled(self::current_user_is_pre_sales()); ?> type="file" class="idlm-file-input" data-input-id="idlm_quote_file" data-preview-id="idlm_quote_preview" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="display: none;">
                                             <button <?php disabled(self::current_user_is_pre_sales()); ?> type="button" class="idlm-drawer-btn-file idlm-direct-upload-trigger">
-                                                <?php echo !empty($lead->quote_file) ? ('Change file') : ('Upload quote'); ?>
+                                                <?php echo !empty($lead->quote_file) ? 'Change file' : 'Upload quote'; ?>
                                             </button>
                                             <span id="idlm_quote_preview" class="idlm-drawer-file-note">
                                                 <?php if (!empty($lead->quote_file)): ?>

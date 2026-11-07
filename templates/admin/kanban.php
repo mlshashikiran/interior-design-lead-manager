@@ -187,7 +187,7 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                 <?php foreach ($idlm_stages as $idlm_stage): ?>
                     <?php
                     $idlm_total_source = isset($idlm_kanban_stage_totals[$idlm_stage]) ? $idlm_kanban_stage_totals[$idlm_stage] : 'none';
-                    $idlm_total_label = 'quote_value' === $idlm_total_source ? ('Quote total') : ('deal_value' === $idlm_total_source ? ('Deal total') : '');
+                    $idlm_total_label = 'quote_value' === $idlm_total_source ? 'Quote total' : ('deal_value' === $idlm_total_source ? 'Deal total' : '');
                     ?>
                     <?php
                     $idlm_stage_slug = sanitize_html_class(strtolower(str_replace(' ', '-', $idlm_stage)));
