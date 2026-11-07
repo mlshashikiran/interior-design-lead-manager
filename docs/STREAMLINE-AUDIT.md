@@ -84,6 +84,14 @@ Each item is one commit. Each was verified with the fast suite, runtime prerequi
 | S16 | 226ae9b | About 270 old-design branches in templates, controllers and scripts, plus six render-time rewrites of labels and inline styles | templates, `includes/class-admin-*`, `assets/js/*` | One rendering path | Low: byte-compared with the CRM baseline | Kept the CRM branch; rewrites moved into the templates |
 | S17 | 77b75a0 | ~115 stylesheet rules matched only removed markup | `assets/css/*` | Size: −12 KB CSS | None: computed styles unchanged | Removed |
 | S18 | 582546d | The Download OCI CSV button (`idlm_export_google_conversions`) checked `manage_options` but no request token (D10) | `includes/class-admin-ajax.php:380`, `templates/admin/settings/capi.php:138` | Security: another site cannot start the download in an administrator's browser | Low: the button carries the token; a bookmarked old link returns 403. The REST feed URL Google fetches is unchanged | Nonce on the link, checked after the capability |
+| S19 | 4d0efcd | HTTP suite appended to a committed log (D9) | `tests/integration/quotation-engine-http-cases.php` | Clean tree after tests | None: test-only | Writes to `IDLM_TEST_ENGINE_EVIDENCE_DIR`; contract stops writes into `docs/` |
+| S20 | 55886c4 | 9 unused public methods and 2 old all-roles handlers (D8, D12) | `class-admin`, `class-date-ranges`, `class-db`, `class-integrations`, `class-interakt`, `class-quotation-repository`, `class-quotations`, `class-admin-users-controller` | −80 lines; two fewer admin-post actions | Low: no plugin caller; the Roles tab uses `idlm_update_role_access`, whose tests now cover the same denials and grant rules | Removed |
+| S21 | c730641 | Leads and Settings read 28 and 57 options one at a time (D7) | `class-admin-leads-renderer.php`, `class-admin-settings-renderer.php` | One query per screen for those options | None: same values and defaults | `SCREEN_OPTIONS` primed; drift contract |
+| S22 | 3e5210c | Schedule lookups on every page view and a multi-table legacy queue scrub on every request (D3) | `class-scheduler.php`, `class-integrations.php` | Both at most every 10 minutes and on the first request after an update | Low: secret encryption still runs every request; the minute cron interval is now registered on every request, cron included | `IDLM_Scheduler::maintenance_due()`, one autoloaded option |
+| S23 | e02261a, 8fcda74 | 34 copies of nonce + permission checks with five refusal spellings; five bare-string errors (D6) | `IDLM_Admin::guard_ajax()` and 8 controllers | One gate; every error is `{message}` | Low: nonce still first; specific refusal texts and 403s kept, generic ones now read "Permission denied." | Routing save and past-lead sync scripts read `{message}` (routing errors used to show a generic line) |
+| S24 | 9205249 | Every workspace view loaded every view's scripts and styles (D1) | `IDLM_Admin_Assets::VIEW_ASSETS`, `IDLM_Admin_Shortcodes::workspace_sections()` | Plugin assets per view: Leads 1,159 → 667 KB, Pipeline → 761, Dashboard → 953, Quotations 1,303 → 861, Settings → 764 | Low: unknown views and pages with other CRM shortcodes still load everything; computed styles unchanged | Per-view manifest |
+| S25 | cfb25b8 | Rep board columns and the handoff queue scanned large index ranges (D4) | `class-db.php` | 200k synthetic leads: rep board column 26 → 0.04 ms, handoff queue 150 → 0.05 ms; other queries unchanged | Low: structure only, one-time; see Live update safety | Two composite indexes via migration marker `idlm_lead_index_version`; native test proves no row changes |
+| S26 | 81c8c8a | Old declarations the CRM layer always overrides (D2b) | `admin-style`, `workspace`, `dashboard`, `kanban`, `quotations` CSS | −15.8 KB CSS (428 declarations) | None: removed only where the same selector behind the always-on gate sets the same property; computed styles unchanged | Removed |
 
 `tests/streamline-contracts.php` holds the drift guards for S2 to S13 and runs in the fast suite.
 
@@ -91,60 +99,22 @@ S11 to S13 change front-end files, so each was also checked in headless Chrome a
 
 ---
 
-## Needs a decision
+## Decisions (all resolved)
 
-Ordered by value. None of these was started.
-
-### D1. Load only the active workspace section's assets (largest front-end win)
-- **What.** Every workspace view loads `chart.js` (208 KB), `dashboard.js`, `kanban.js`, `settings.js`, `users-logs.js` and all seven `crm-design-*.css` area files, although the view renders one section.
-- **Where.** `includes/class-admin-assets.php:186-216` (`enqueue_frontend_assets`) and `:219-247` (`enqueue_shortcode_assets('workspace')`). The view is chosen at `includes/class-admin-shortcodes.php:121`.
-- **Impact.** On Leads, about 330 KB JS (chart.js, dashboard.js, kanban.js, settings.js) and about 180 KB of area CSS, out of 755 KB JS and 690 KB CSS.
-- **Risk.** Medium. `kanban.js` binds a global `ajaxSuccess.idlmKanban` handler (`assets/js/kanban.js:585`) that reacts to drawer saves on any view. The lead drawer's styles live in `crm-design-leads.css` but the drawer opens from the dashboard and the board. Needs a browser pass per view and role.
-- **Proposed.** A per-view manifest in `IDLM_Admin_Assets`: always load dialog, admin-app, workspace and the base layer, and add view-specific bundles. First move cross-view behaviour (the drawer-save handler and drawer styles) into the shared files.
-
-### D2. Merge the legacy UI and the CRM design layer — done (S15–S17), one part left
-- **Done.** The CRM design is the only design: `design_layer_enabled()` is true on every front-end and AJAX request; the `?idlm_design` preview, the Utilities switch, `IDLM_DESIGN_LAYER` and the `idlm_design_layer` option are no longer read. All old-design branches in PHP and JS are gone, and the six render-time rewrites (Leads page, drawer, table rows, activity log, Settings headings) are written into the templates.
-- **Verified.** Every workspace page and AJAX read for administrator, manager and representative renders the same markup as the CRM design did before (whitespace runs aside), and computed styles of 39,598 element views are unchanged. One deliberate fix: the drawer's stage list shows "Quote Shared" like the table and board; the old rewrite lowercased it there by accident.
-- **Payments gaps closed.** The dialog page now also shows the quotation and plan version, who entered recovered terms, when and why, the advance received of expected, and for each payment its receipt number, recorder and duplicate-reference review. The wp-admin Payments entry redirects to the workspace page.
-- **D2b, left: consolidate overridden CSS.** `admin-style.css` (≈210 KB) still holds old rules that the `crm-design*.css` layer overrides on shared classes. Removing overridden declarations needs every dialog, drawer, hover and error state checked visually, not just page loads, so it was not done here.
-
-### D3. Stop running maintenance work on every request
-- `IDLM_Integrations::init()` runs `maybe_migrate_api_credentials()`, `migrate_platforms()` and `scrub_legacy_queues()` on every request (`includes/class-integrations.php:9-22`). With Action Scheduler installed, `scrub_legacy_queues()` adds `SHOW TABLES`, `SHOW COLUMNS`, `MAX(action_id)`, a 100-row select, an option write check and a live read on every request (`includes/class-secret-store.php:135-195`).
-- `IDLM_Scheduler::setup_schedules()` runs on every front-end `wp` hook. With Action Scheduler it issues four `as_next_scheduled_action()` lookups per page view, including anonymous visits (`includes/class-scheduler.php:26-65`).
-- **Risk.** Medium. These run every request so they repair themselves, for example a plaintext secret written directly or a deleted schedule. Gating them changes when that repair happens.
-- **Proposed.** Run them on activation, upgrade, `admin_init` and cron, plus a 5–15 minute transient throttle; keep the per-request fast path a single option read.
-
-### D4. Indexes on the plugin's own tables (schema change)
-- `idlm_leads` has 21 single-column indexes (`includes/class-db.php`, `create_tables`). Almost every read filters `is_duplicate = 0` together with an owner, stage or date column, and lists sort on `created_at`. That calls for composite indexes, for example `(is_duplicate, created_at)` and `(assigned_rep_id, is_duplicate, stage)`. Several low-selectivity single indexes (`lost_reason`, `disqualification_reason`, `call_status`) add write cost.
-- **Proposed.** Run `tests/performance/capture-query-plans.php` on the expected profile, then add composites in a `IDLM_DB_VERSION` bump. Needs your approval: it changes the schema.
-
-### D5. Autoload policy for always-read options
-- Schema markers, `idlm_crm_access_policy_version`, `idlm_design_role_registered` and `idlm_settings_version` are saved with `autoload = no` but read on every request. S4 already folds them into one query. Autoloading them would make it zero, but needs a data update of existing rows.
-
-### D6. One AJAX guard and one error shape
-- 40 handlers repeat `check_ajax_referer('idlm_admin_nonce', 'nonce')` with a capability check. Denials come back in five forms: `'Permission denied.'` (27), `'Access denied'` (4), `'Access Denied'` as a bare string (3), `'Unauthorized operation.'`, and `wp_die()` text in `ajax_export_leads` (`includes/class-admin-ajax.php:398`). 236 errors use `array('message' => …)`, 8 use a bare string.
-- **Risk.** Changing the error shape can change what the JS shows, and this touches authorization.
-- **Proposed.** `IDLM_Admin_Ajax::guard($capability_rule)` returning the existing message per handler at first, then normalize messages after a JS audit of `response.data` vs `response.data.message`.
-
-### D7. Repeated settings reads on render
-- The leads view reads about 30 options and the settings view about 67, one at a time (`IDLM_Admin_Leads_Renderer::build_context`, settings renderer). Many are missing or non-autoloaded on fresh installs. The proposal is priming per screen, like S4. It wasn't done here because on long-lived sites most of these are already autoloaded, and the measured gain would come mostly from the fixture.
-
-### D8. Unused public methods
-- These have no callers in the plugin, templates, JS or MCP: `IDLM_Admin::get_pre_sales_user_ids`, `IDLM_Date_Ranges::options_html`, `IDLM_DB::reschedule_pending_presales_tasks`, `IDLM_Integrations::rep_has_capacity`, `IDLM_Interakt::log_customer_reply_to_lead` and `log_meta_customer_reply_to_lead`, `IDLM_Quotation_Repository::update_revision`, `IDLM_Integrations::get_rep_capacity_status`, and the no-op `IDLM_Quotations::register_menu`.
-- **Risk.** Low, but they are public static methods that site code or snippets could call.
-- **Proposed.** Remove after confirming nothing outside the plugin uses them.
-
-### D9. Test writes into a tracked file
-- `tests/integration/quotation-engine-http-cases.php:26` appends to `docs/remediation-2026-10-07/quotation-engine-slice/expected-http-fault-diagnostics.log` on every HTTP-suite run, which dirties the tree.
-- **Proposed.** Write to `IDLM_TEST_*_EVIDENCE_DIR` like the document cases do.
-
-### D10. Google conversions export has no nonce — done (S18)
-
-### D11. Three-hop delegation for AJAX handlers — done (S14)
-
-### D12. Endpoints and wp-admin branches the single design no longer uses
-- `admin_post_idlm_update_role_scopes` and `admin_post_idlm_update_role_permissions` (`includes/class-admin.php:17-18`) only served the old Users page. The Roles tab saves scope and permissions per role through `idlm_update_role_access`. Removing them changes public action names.
-- `is_admin()` branches for wp-admin quotation, users and log URLs (`includes/class-quotations.php:106,111`, `includes/class-quotation-renderer.php:172,256`, `templates/admin/users.php:132`, `templates/admin/logs/*.php`). Those wp-admin pages redirect to the workspace, so the branches only run in the HTTP test harness.
+| # | Outcome |
+|---|---|
+| D1 | Done (S24). |
+| D2 | Done (S15–S17, S26). Of the old stylesheet, only declarations provably overridden in every state were removed. The rest of `admin-style.css` still styles shared classes the CRM layer builds on; removing more needs a state-by-state visual pass. |
+| D3 | Done (S22). |
+| D4 | Done (S25). A `(created_at)`-led composite was measured and left out: MySQL sometimes chose it for the all-leads count and list and ran slower. |
+| D5 | Not done, no benefit: the boot list also holds secrets and schema markers that must never autoload, so its one priming query stays either way. |
+| D6 | Done (S23). Three handlers keep their own checks on purpose: the lead CSV export (a download link, refuses with a page), JS error logging (any signed-in user) and the task router (delegates per operation). |
+| D7 | Done (S21). |
+| D8 | Done (S20). |
+| D9 | Done (S19). |
+| D10 | Done (S18). |
+| D11 | Done (S14). |
+| D12 | Handlers done (S20). The `is_admin()` branches in quotation URLs stay: every AJAX request is `is_admin()` and live search builds its links through them. |
 
 ---
 
@@ -173,13 +143,17 @@ The release ZIP contains no test files. Local runs used WordPress 7.1.4; CI uses
 
 ## Live update safety
 
-No migration runs and no stored data changes: no change to tables, schedules, roles, capabilities, option writes or the plugin and schema versions. REST routes, shortcodes and AJAX actions are unchanged.
+No lead, quotation, payment or setting value is changed on update. REST routes and shortcodes are unchanged.
 
 What does change on update:
-- **The design.** Sites already on the CRM design (the default) see the same pages. A site that switched to the previous design, by the Utilities switch or `IDLM_DESIGN_LAYER` in `wp-config.php`, will show the CRM design; the stored option is left in place but not read, and the constant can be removed.
-- **Download OCI CSV.** The Settings button works as before; a saved copy of the old link without its token returns 403.
-- **Retired entry points.** `?idlm_design=…` is ignored; the Utilities "Interface design" form and `admin_post_idlm_set_design_layer` are gone; `admin_post_idlm_payment_upload` is gone (Record payment takes the screenshot); wp-admin → Lead Manager → Payments opens the workspace page.
-- **Public code kept.** `IDLM_Admin_Assets::design_layer_enabled()` and every `IDLM_Admin`/`IDLM_Admin_Ajax` method remain callable.
+- **Two indexes are added once** to `idlm_leads` by the new migration marker `idlm_lead_index_version`. It only runs `ALTER TABLE … ADD KEY` for a missing index; it reads and writes no row, and the schema version is not bumped, so no older repair re-runs. On 200,000 rows adding them took under a second. The database user needs the ALTER privilege, as for any plugin schema update. Take a backup before updating, as with any schema change.
+- **One new option** `idlm_maintenance_checks` (autoloaded) records when schedules and the legacy queue scrub last ran.
+- **The design.** Sites on the CRM design (the default) see the same pages. A site switched to the previous design by the Utilities switch or `IDLM_DESIGN_LAYER` will show the CRM design; the stored option is left in place but not read.
+- **Each workspace view loads fewer files.** Browsers fetch only the changed files.
+- **Retired entry points.** `?idlm_design=…` is ignored; the Utilities "Interface design" form, `admin_post_idlm_set_design_layer`, `admin_post_idlm_payment_upload`, `admin_post_idlm_update_role_scopes` and `admin_post_idlm_update_role_permissions` are gone; wp-admin → Lead Manager → Payments opens the workspace page; a saved Download OCI CSV link without its token returns 403.
+- **Removed public methods** (no caller in the plugin): listed in S20. Site code calling them would need updating.
+- **Refusal text.** Generic AJAX refusals now read "Permission denied." instead of "Access denied"/"Access Denied".
+- **Public code kept.** `IDLM_Admin_Assets::design_layer_enabled()` and every other `IDLM_Admin`/`IDLM_Admin_Ajax` method remain callable.
 
 ## Verification environment
 
