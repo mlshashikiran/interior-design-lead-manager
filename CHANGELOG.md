@@ -1,9 +1,16 @@
 # Changelog
 
-## [Unreleased]
+## [1.104.0] - 2026-11-07
+
+### Added
+
+- Reopen for qualification: an Unqualified lead can return to the qualification queue with a reason and a note, logged as `lead_reopened`; outreach is counted again from the reopen. Builder: Shashi.
 
 ### Changed
 
+- Pre-sales Leads view: clearing filters returns to Action required, decided leads show View, the drawer puts outreach first and says what unlocks Qualify, and the project type starts empty so Qualify waits for a choice. Builder: Shashi.
+- White label: the sidebar colour reaches the workspace sidebar, accents and the brand letter stay readable (WCAG AA) for any colour, new brand colours must be readable as link and navigation text, and sign-in, notification subjects and the admin menu use the workspace title. Builder: Shashi.
+- Access (owner decisions): audience sync queue bulk actions are for administrators only; pre-sales bulk stages are New and Contacted only, with no bulk qualify or unqualify; early close of an Unqualified lead is refused, so a closure changes only through a reopen. Builder: Shashi.
 - The CRM design is now the only design. The previous design, its `?idlm_design=legacy` preview, the Utilities "Interface design" switch and the `IDLM_DESIGN_LAYER` constant are retired; the stored `idlm_design_layer` option is no longer read. Every workspace page and AJAX response renders the same markup as the CRM design did before. Builder: Shashi.
 - Payments: the dialog page is the only payment page. It now also shows the quotation and plan version, who entered recovered terms and why, the advance received, and for each payment its receipt number, recorder and duplicate-reference review. The wp-admin Payments entry opens the workspace page. Builder: Shashi.
 - Labels and inline styles that were rewritten at render time on the Leads page, lead drawer, leads table, activity log and Settings are now written that way in the templates. Builder: Shashi.
