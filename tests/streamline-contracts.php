@@ -234,3 +234,10 @@ idlm_test('STREAMLINE Google conversions download needs the Settings button toke
     assert_true(false !== $capability && false !== $nonce && $capability < $nonce && $nonce < $stream, 'Capability, then token, then the CSV.');
     assert_contains("wp_nonce_url(admin_url('admin-ajax.php?action=idlm_export_google_conversions'), 'idlm_export_google_conversions')", (string) file_get_contents($root . '/templates/admin/settings/capi.php'));
 });
+
+idlm_test('STREAMLINE test suites never write into tracked docs', static function (): void {
+    foreach (glob(dirname(__DIR__) . '/tests/integration/*.php') as $file) {
+        $source = (string) file_get_contents($file);
+        assert_false((bool) preg_match('#file_put_contents\([^;]*/docs/#', $source), basename($file) . ' writes into docs/.');
+    }
+});
