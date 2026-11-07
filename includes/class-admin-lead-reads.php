@@ -191,10 +191,27 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         $missing_qualification_fields = array();
         foreach ($qualification_fields as $field => $label) {
             if (empty($lead->$field)) {
-                $missing_qualification_fields[] = $label;
+                $missing_qualification_fields[$field] = $label;
             }
         }
         $qualification_ready = !$missing_qualification_fields && IDLM_DB::budget_to_rupees($lead->budget) >= 400000;
+        $is_pre_sales_user = self::current_user_is_pre_sales();
+        $decision_complete = in_array($lead->lead_quality, array('Qualified', 'Unqualified'), true);
+        // Unqualified leads come back through Reopen for qualification, never through a second close.
+        $can_reopen = 'Unqualified' === $lead->lead_quality && '' === IDLM_Admin_Ajax::reopen_refusal($lead);
+        // Pre-sales sees which saved details still block the Qualify decision, beside each field.
+        $qualification_needs = array();
+        if ($show_presales_compliance && !$decision_complete) {
+            foreach (array_keys($missing_qualification_fields) as $field) {
+                $qualification_needs[$field] = 'Needed to qualify';
+            }
+            if (!empty($lead->budget) && IDLM_DB::budget_to_rupees($lead->budget) < 400000) {
+                $qualification_needs['budget'] = 'Needs ₹4L or above to qualify';
+            }
+        }
+        $need_note = static function ($field) use ($qualification_needs) {
+            return isset($qualification_needs[$field]) ? '<small class="idlm-drawer-field-needed">' . esc_html($qualification_needs[$field]) . '</small>' : '';
+        };
         $attribution_rows = array(
             'UTM Source' => $lead->utm_source, 'UTM Medium' => $lead->utm_medium, 'UTM Campaign' => $lead->utm_campaign, 'UTM Adgroup' => $lead->utm_adgroup,
             'UTM Term' => $lead->utm_term, 'UTM Content' => $lead->utm_content, 'GCLID' => $lead->gclid, 'GBRAID' => isset($lead->gbraid) ? $lead->gbraid : '',
@@ -294,6 +311,31 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                         <h3 class="idlm-drawer-panel-title">Pre-sales follow-up</h3>
                         <span><?php echo esc_html($followup['message']); ?></span>
                         <?php if ($is_administrator): ?><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span></summary><?php else: ?></div><?php endif; ?>
+                    <?php if (!$decision_complete): ?>
+                    <div class="idlm-presales-actions">
+                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-log-presales-touch" data-kind="call">Log outbound call</button>
+                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-log-presales-touch" data-kind="whatsapp">Log WhatsApp</button>
+                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-log-presales-touch" data-kind="closure" <?php disabled($followup['complete_days'] < 6); ?><?php echo $followup['complete_days'] < 6 ? ' aria-describedby="idlm-presales-closure-hint"' : ''; ?>>Log final closure</button>
+                        <?php if ($followup['complete_days'] < 6): ?><small class="idlm-presales-actions-hint" id="idlm-presales-closure-hint">Final closure unlocks after all six cycles are complete.</small><?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+                    <div class="idlm-presales-decision-box" id="idlm-presales-decision-box">
+                        <div>
+                            <strong>Lead decision</strong>
+                            <?php if ($decision_complete): ?>
+                            <small><span class="idlm-decision-guidance">Decision recorded: <?php echo esc_html(self::get_qualification_status_label($lead)); ?>. Outreach is closed for this lead.<?php echo $can_reopen ? ' If the customer is back in touch, reopen it below.' : ''; ?></span></small>
+                            <?php else: ?>
+                            <small>Choose an outcome after logging the required evidence. <span class="idlm-decision-guidance"><?php if (!$qualification_ready): ?>Qualification needs: <?php echo esc_html(implode(', ', $missing_qualification_fields ?: array('Budget of ₹4L or above'))); ?>. Save the details, then qualify.
+                            <?php elseif (empty($followup['eligible'])): ?>Qualify now, use structured Early Close, or continue follow-up.
+                            <?php else: ?>This lead is ready for a final decision.<?php endif; ?></span>
+                            <?php if (empty($followup['eligible'])): ?><span class="idlm-decision-guidance">Close as unreachable unlocks after six cycles and the final closure.</span><?php endif; ?></small>
+                            <?php endif; ?>
+                        </div>
+<?php if (!$decision_complete): ?>
+                        <button type="button" class="idlm-btn idlm-btn-primary idlm-presales-decision" data-decision="qualify" <?php disabled(!$qualification_ready || in_array($lead->lead_quality, array('Qualified', 'Unqualified'), true)); ?>>Qualify lead</button>
+                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-decision" data-decision="unreachable" <?php disabled(empty($followup['eligible']) || 'Unqualified' === $lead->lead_quality); ?>>Close as unreachable</button>
+                        <?php endif; ?>
+                    </div>
                     <div class="idlm-presales-day-grid">
                         <?php foreach ($followup['days'] as $index => $day): ?>
                             <div class="idlm-presales-day <?php echo $day['complete'] ? 'is-complete' : ''; ?>">
@@ -303,21 +345,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                             </div>
                         <?php endforeach; ?>
                     </div>
-                    <div class="idlm-presales-actions">
-                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-log-presales-touch" data-kind="call">Log outbound call</button>
-                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-log-presales-touch" data-kind="whatsapp">Log WhatsApp</button>
-                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-log-presales-touch" data-kind="closure" <?php disabled($followup['complete_days'] < 6); ?>>Log final closure</button>
-                    </div>
-                    <div class="idlm-presales-decision-box" id="idlm-presales-decision-box">
-                        <div>
-                            <strong>Lead decision</strong>
-                            <small>Choose an outcome after logging the required evidence. <span class="idlm-decision-guidance"><?php if (!$qualification_ready): ?>Qualification needs: <?php echo esc_html(implode(', ', $missing_qualification_fields ?: array('Budget of ₹4L or above'))); ?>.
-                            <?php elseif (empty($followup['eligible'])): ?>Qualify now, use structured Early Close, or continue follow-up.
-                            <?php else: ?>This lead is ready for a final decision.<?php endif; ?></span></small>
-                        </div>
-                        <button type="button" class="idlm-btn idlm-btn-primary idlm-presales-decision" data-decision="qualify" <?php disabled(!$qualification_ready || in_array($lead->lead_quality, array('Qualified', 'Unqualified'), true)); ?>>Qualify lead</button>
-                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-decision" data-decision="unreachable" <?php disabled(empty($followup['eligible']) || 'Unqualified' === $lead->lead_quality); ?>>Close as unreachable</button>
-                    </div>
+                    <?php if (!$decision_complete || ($is_administrator && 'Unqualified' !== $lead->lead_quality)): ?>
                     <details class="idlm-early-close-box">
                         <?php echo '<summary>Close early: confirmed junk or mismatch</summary><div class="idlm-early-close-fields">'; ?>
                         <select class="idlm-input idlm-early-close-reason" aria-label="Early close reason">
@@ -338,7 +366,29 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                         <textarea class="idlm-input idlm-early-close-note" rows="2" maxlength="1000" placeholder="Document the evidence and specific reason (required)"></textarea>
                         <button type="button" class="idlm-btn idlm-btn-danger idlm-log-presales-touch" data-kind="early_close">Close lead early</button>
                     <?php echo '</div></details>'; ?>
+                    <?php endif; ?>
                     <?php if ($is_administrator): ?></details><?php endif; ?>
+                </section>
+                <?php endif; ?>
+                <?php if ($can_reopen): ?>
+                <section class="idlm-drawer-panel idlm-reopen-panel" data-lead-id="<?php echo esc_attr($lead->id); ?>" aria-labelledby="idlm-reopen-title">
+                    <div class="idlm-drawer-panel-head"><h3 class="idlm-drawer-panel-title" id="idlm-reopen-title">Reopen for qualification</h3></div>
+                    <div class="idlm-reopen-body">
+                    <p class="idlm-reopen-help">Use this when the customer is interested again. The lead returns to Contacted and outreach restarts at cycle 1. The earlier closure stays in the activity history.</p>
+                    <div class="idlm-reopen-fields">
+                        <label for="idlm-reopen-reason">Why reopen?</label>
+                        <select class="idlm-input idlm-reopen-reason" id="idlm-reopen-reason">
+                            <option value="">Choose a reason</option>
+                            <?php foreach (IDLM_Admin_Ajax::reopen_reasons() as $idlm_reason => $idlm_label): ?>
+                                <option value="<?php echo esc_attr($idlm_reason); ?>"><?php echo esc_html($idlm_label); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <label for="idlm-reopen-note">What changed?</label>
+                        <textarea class="idlm-input idlm-reopen-note" id="idlm-reopen-note" rows="2" maxlength="1000" placeholder="For example: customer called back, budget now ₹6L"></textarea>
+                        <p class="idlm-reopen-error" role="alert" hidden></p>
+                        <button type="button" class="idlm-btn idlm-btn-primary idlm-reopen-submit">Reopen lead</button>
+                    </div>
+                    </div>
                 </section>
                 <?php endif; ?>
                 <form id="idlm-edit-lead-form">
@@ -371,13 +421,13 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                         <label for="idlm-edit-phone">Phone</label>
                                         <input type="tel" name="phone" class="idlm-drawer-control" id="idlm-edit-phone" value="<?php echo esc_attr($lead->phone); ?>" required />
                                     </div>
-                                    <h3 class="idlm-drawer-group-title">Qualification and deal</h3>
+                                    <h3 class="idlm-drawer-group-title"><?php echo $is_pre_sales_user ? 'Qualification' : 'Qualification and deal'; ?></h3>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-lead-quality">Lead quality</label>
                                         <?php if (self::current_user_is_pre_sales()): ?>
                                             <input type="hidden" name="lead_quality" value="<?php echo esc_attr($lead->lead_quality); ?>">
                                             <div class="idlm-drawer-control idlm-readonly-quality" id="idlm-edit-lead-quality" data-idlm-quality="<?php echo esc_attr('Qualified' === $lead->lead_quality && empty($lead->floor_plan_received) ? 'plan-pending' : (string) $lead->lead_quality); ?>"><?php echo esc_html(self::get_qualification_status_label($lead)); ?></div>
-                                            <small>Use the Lead Decision controls above to qualify or close this lead.</small>
+                                            <small><?php echo $decision_complete ? 'Decision recorded in Lead decision above.' : 'Use Lead decision above to qualify or close this lead.'; ?></small>
                                         <?php else: ?>
                                         <select name="lead_quality" class="idlm-drawer-control" id="idlm-edit-lead-quality"<?php echo empty($lead->floor_plan_received) ? ' data-idlm-plan-pending="1"' : ''; ?>>
                                             <option value="" <?php selected($lead->lead_quality, ''); ?>><?php echo esc_html('Pending qualification'); ?></option>
@@ -389,11 +439,14 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-project-name">Project name</label>
                                         <input type="text" name="project_name" class="idlm-drawer-control" id="idlm-edit-project-name" value="<?php echo esc_attr($lead->project_name); ?>" />
+                                        <?php echo $need_note('project_name'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in the closure. ?>
                                     </div>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-lead-budget">Lead budget</label>
                                         <input type="text" name="budget" class="idlm-drawer-control" id="idlm-edit-lead-budget" value="<?php echo esc_attr($lead->budget); ?>" placeholder="e.g. <?php echo esc_attr($currency_symbol); ?>15-25 Lakhs" />
+                                        <?php echo $need_note('budget'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in the closure. ?>
                                     </div>
+                                    <?php if (!$is_pre_sales_user): // Deal and quote values belong to sales; pre-sales never submitted them. ?>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-deal-value">Deal value (<?php echo esc_html($currency_code); ?>)</label>
                                         <input <?php disabled(self::current_user_is_pre_sales()); ?> type="number" step="0.01" min="0" name="deal_value" class="idlm-drawer-control" id="idlm-edit-deal-value" value="<?php echo esc_attr($lead->deal_value ? $lead->deal_value : ''); ?>" placeholder="e.g. 150000" />
@@ -402,27 +455,33 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                         <label for="idlm-edit-discount-percentage">Discount %</label>
                                         <input <?php disabled(self::current_user_is_pre_sales()); ?> type="number" step="0.01" min="0" max="100" name="discount_percentage" class="idlm-drawer-control" id="idlm-edit-discount-percentage" value="<?php echo esc_attr(isset($lead->discount_percentage) ? $lead->discount_percentage : '0.00'); ?>" placeholder="e.g. 10" />
                                     </div>
+                                    <?php endif; ?>
                                     <h3 class="idlm-drawer-group-title">Project</h3>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-timeline">Project timeline</label>
                                         <input type="text" name="project_timeline" class="idlm-drawer-control" id="idlm-edit-timeline" value="<?php echo esc_attr($lead->project_timeline); ?>" placeholder="Immediately" />
+                                        <?php echo $need_note('project_timeline'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in the closure. ?>
                                     </div>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-possession-date">Possession date</label>
                                         <input type="date" name="possession_date" class="idlm-drawer-control" id="idlm-edit-possession-date" value="<?php echo esc_attr($lead->possession_date); ?>" />
+                                        <?php echo $need_note('possession_date'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in the closure. ?>
                                     </div>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-location">Property location or pincode</label>
                                         <input type="text" name="property_location" class="idlm-drawer-control" id="idlm-edit-location" value="<?php echo esc_attr($lead->property_location); ?>" placeholder="North Bangalore" />
+                                        <?php echo $need_note('property_location'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in the closure. ?>
                                     </div>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-property-type">Property type</label>
                                         <select name="property_type" class="idlm-drawer-control" id="idlm-edit-property-type">
+                                            <option value="" <?php selected((string) $lead->property_type, ''); ?>>Choose a project type</option>
                                             <option value="Apartment" <?php selected($lead->property_type, 'Apartment'); ?>>Apartment</option>
                                             <option value="Villa" <?php selected($lead->property_type, 'Villa'); ?>>Villa</option>
                                             <option value="Independent House" <?php selected($lead->property_type, 'Independent House'); ?>>Independent House</option>
                                             <option value="Commercial" <?php selected($lead->property_type, 'Commercial'); ?>>Commercial</option>
                                         </select>
+                                        <?php echo $need_note('property_type'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in the closure. ?>
                                     </div>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-rooms">Rooms (BHK)</label>
@@ -467,7 +526,8 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
 
                             <section class="idlm-drawer-panel">
                                 <div class="idlm-drawer-form-grid idlm-drawer-form-grid-two">
-                                    <h3 class="idlm-drawer-group-title">Quote and studio</h3>
+                                    <h3 class="idlm-drawer-group-title"><?php echo $is_pre_sales_user ? 'Studio' : 'Quote and studio'; ?></h3>
+                                    <?php if (!$is_pre_sales_user): ?>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-quote-shared">Quote shared</label>
                                         <select <?php disabled(self::current_user_is_pre_sales()); ?> name="quote_shared" class="idlm-drawer-control" id="idlm-edit-quote-shared">
@@ -497,6 +557,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                             <a class="idlm-drawer-btn-file" href="<?php echo esc_url($quote_url); ?>">Open quotations</a>
                                         <?php endif; ?>
                                     </div>
+                                    <?php endif; ?>
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-studio-location">Studio location</label>
                                         <?php $studios = get_option('idlm_custom_studios', array('Downtown Studio', 'North Studio', 'South Studio')); ?>

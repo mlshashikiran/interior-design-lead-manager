@@ -182,7 +182,8 @@ idlm_test('clickable lead and Kanban filter pills toggle their filters off', sta
 
     foreach (array('pending_calls', 'unread_whatsapp', 'stale_updates') as $filter) {
         assert_contains("=== '" . $filter . "'", $admin_script);
-        assert_contains("$('#filter-followup').val('').change()", $admin_script);
+        // Toggling a pill off returns to the resting queue (Action required for pre-sales), not All leads.
+        assert_contains("resetLeadFilter('#filter-followup').change()", $admin_script);
     }
     assert_contains('var filterTargets = {', $admin_script);
     assert_contains("$(target[0]).val(isActive ? '' : target[1])", $admin_script);

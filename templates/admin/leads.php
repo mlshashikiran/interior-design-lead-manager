@@ -138,7 +138,10 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
                     $idlm_metric_cards[] = array('Unassigned', 'Unassigned', 'unassigned', $idlm_unassigned_count, 'needs owner', false);
                 }
                 $idlm_metric_cards[] = array('New', 'New leads', 'new', $idlm_new_leads_count, 'filtered', false);
-                $idlm_metric_cards[] = array('Qualified', 'Qualified leads', 'qualified', $idlm_qualified_count, 'active', false);
+                // Pre-sales works the Action required queue, which never holds a decided lead, so a Qualified card would always read 0 there.
+                if (!$idlm_is_pre_sales) {
+                    $idlm_metric_cards[] = array('Qualified', 'Qualified leads', 'qualified', $idlm_qualified_count, 'active', false);
+                }
             ?>
             <section class="idlm-metric-grid" aria-label="Lead summary">
                 <?php foreach ($idlm_metric_cards as $idlm_metric_card): ?>
@@ -315,10 +318,12 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
                             <option value="bulk_assign">Assign to rep</option>
                         <?php endif; ?>
                         <option value="bulk_stage">Change stage</option>
-                        <option value="bulk_unqualified">Mark unqualified</option>
-                        <option value="bulk_audience_queue">Add to audience sync queue</option>
-                        <option value="bulk_audience_cancel">Remove from audience sync queue</option>
+                        <?php if (!$idlm_is_pre_sales): // Pre-sales qualifies and closes one lead at a time, through Lead decision. ?>
+                            <option value="bulk_unqualified">Mark unqualified</option>
+                        <?php endif; ?>
                         <?php if ($idlm_can_manage_options): ?>
+                            <option value="bulk_audience_queue">Add to audience sync queue</option>
+                            <option value="bulk_audience_cancel">Remove from audience sync queue</option>
                             <option value="bulk_delete">Delete leads</option>
                         <?php endif; ?>
                     </select>
@@ -341,6 +346,7 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
                         <option value="">Choose a stage</option>
                         <?php foreach ($idlm_stages as $idlm_stage): ?>
                             <?php if ('Won' === $idlm_stage) { continue; } // Won is set per lead with its deal value. ?>
+                            <?php if ($idlm_is_pre_sales && !in_array($idlm_stage, array('New', 'Contacted'), true)) { continue; } // Pre-sales qualifies one lead at a time; the server rejects other bulk stages. ?>
                             <option value="<?php echo esc_attr($idlm_stage); ?>"><?php echo esc_html($idlm_stage); ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -455,6 +461,7 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
                         <div class="idlm-form-group">
                             <label for="idlm-add-lead-property-type">Property type</label>
                             <select id="idlm-add-lead-property-type" name="property_type" class="idlm-input">
+                                <option value="">Choose a project type</option>
                                 <option value="Apartment">Apartment</option>
                                 <option value="Villa">Villa</option>
                                 <option value="Independent House">Independent House</option>
