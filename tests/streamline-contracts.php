@@ -222,3 +222,15 @@ idlm_test('STREAMLINE AJAX hooks reach their controller in one hop and the old A
         }
     }
 });
+
+idlm_test('STREAMLINE Google conversions download needs the Settings button token', static function (): void {
+    $root = dirname(__DIR__);
+    $ajax = (string) file_get_contents($root . '/includes/class-admin-ajax.php');
+    $start = strpos($ajax, 'public static function ajax_export_google_conversions()');
+    $body = substr($ajax, $start, strpos($ajax, 'public static function ajax_export_leads()') - $start);
+    $capability = strpos($body, "current_user_can('manage_options')");
+    $nonce = strpos($body, "check_ajax_referer('idlm_export_google_conversions');");
+    $stream = strpos($body, 'generate_google_ads_conversions_csv_response');
+    assert_true(false !== $capability && false !== $nonce && $capability < $nonce && $nonce < $stream, 'Capability, then token, then the CSV.');
+    assert_contains("wp_nonce_url(admin_url('admin-ajax.php?action=idlm_export_google_conversions'), 'idlm_export_google_conversions')", (string) file_get_contents($root . '/templates/admin/settings/capi.php'));
+});

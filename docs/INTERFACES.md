@@ -46,7 +46,7 @@ In 1.101.63, `idlm_upload_lead_file` additionally requires `lead_id` and current
 | `idlm_save_activity_comment`, `idlm_edit_activity_comment`, `idlm_delete_activity_comment` | `class-admin.php` → `class-admin-ajax.php` → `class-admin-activity-controller.php` | CRM + lead/activity ownership rules; mutate activity comments |
 | `idlm_add_lead_manual` | `class-admin.php` | CRM; create manual lead |
 | `idlm_export_leads` | `class-admin.php` → `IDLM_Admin_Ajax` | `manage_options` and admin nonce; existing visibility/GET filters; 40-column CSV with shared text-cell formula protection and numeric ID/quote value |
-| `idlm_export_google_conversions` | `class-admin.php` | Administrator; stream Google conversion CSV |
+| `idlm_export_google_conversions` | `class-admin.php` | Administrator and `_wpnonce` for `idlm_export_google_conversions` (the Settings button carries it); stream Google conversion CSV |
 | `idlm_trigger_manual_audience_sync` | `class-admin.php` | Administrator; queue/run audience sync |
 | `idlm_get_capi_log_payload`, `idlm_get_audience_log_payload` | `class-admin.php` → `class-admin-logs-renderer.php` | Administrator; nonce-protected on-demand reads of one redacted request/response pair |
 | `idlm_test_api_connection`, `idlm_retry_capi_events`, `idlm_save_routing_settings`, `idlm_run_fallback_now`, `idlm_get_mapped_past_leads`, `idlm_sync_mapped_past_batch` | `class-admin.php` | Administrator; integration/diagnostic/routing operations |

@@ -349,6 +349,8 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         if (!current_user_can('manage_options')) {
             wp_die('Unauthorized access');
         }
+        // The Settings button carries this token, so another site cannot start the download.
+        check_ajax_referer('idlm_export_google_conversions');
 
         if (class_exists('IDLM_CAPI')) {
             IDLM_CAPI::generate_google_ads_conversions_csv_response();

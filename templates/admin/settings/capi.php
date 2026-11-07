@@ -135,7 +135,7 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                                 </div>
                                 <div class="idlm-table-actions">
                                     <button type="button" class="idlm-btn idlm-btn-secondary" onclick="idlmCopyToClipboard(this, document.getElementById('idlm-google-oci-feed-url').value);">Copy URL</button>
-                                    <a href="<?php echo esc_url(admin_url('admin-ajax.php?action=idlm_export_google_conversions')); ?>" class="idlm-btn idlm-btn-secondary idlm-link-plain">Download OCI CSV</a>
+                                    <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-ajax.php?action=idlm_export_google_conversions'), 'idlm_export_google_conversions')); ?>" class="idlm-btn idlm-btn-secondary idlm-link-plain">Download OCI CSV</a>
                                 </div>
                             </article>
                         </div>
