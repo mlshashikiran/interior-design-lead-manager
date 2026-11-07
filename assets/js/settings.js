@@ -527,46 +527,15 @@
         return /^#[0-9A-F]{6}$/.test(value) ? value : '';
     }
 
-    function luminance(hex) {
+    function contrastRatio(hex) {
+        hex = normalizeHex(hex);
+        if (!hex) return 0;
         var channels = [1, 3, 5].map(function(index) {
             var value = parseInt(hex.slice(index, index + 2), 16) / 255;
             return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
         });
-        return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-    }
-
-    function contrastRatio(hex, background) {
-        hex = normalizeHex(hex);
-        background = normalizeHex(background || '#FFFFFF');
-        if (!hex || !background) return 0;
-        var a = luminance(hex) + 0.05;
-        var b = luminance(background) + 0.05;
-        return Math.max(a, b) / Math.min(a, b);
-    }
-
-    // Mirrors IDLM_Settings::lighten_hex(): mix toward white by percent.
-    function lightenHex(hex, percent) {
-        return '#' + [1, 3, 5].map(function(index) {
-            var value = parseInt(hex.slice(index, index + 2), 16);
-            return ('0' + Math.round(value + (255 - value) * percent / 100).toString(16)).slice(-2);
-        }).join('').toUpperCase();
-    }
-
-    /**
-     * Mirrors IDLM_Settings::validate_white_label(). Colours already saved keep the
-     * 4.5:1-with-white rule; a changed primary must also read as link text on the
-     * page backgrounds and its soft tint, and a changed sidebar must reach 7:1.
-     */
-    function brandContrastRule(field, hex, changed) {
-        var white = contrastRatio(hex);
-        if (field === 'primary_color' && changed) {
-            var ratio = Math.min(white, contrastRatio(hex, '#F5F3EF'), contrastRatio(hex, '#EEF2F6'), contrastRatio(hex, lightenHex(hex, 90)));
-            return {ratio: ratio, min: 4.5, against: 'white text and as link text on page backgrounds'};
-        }
-        if (field === 'sidebar_color' && changed) {
-            return {ratio: white, min: 7, against: 'white so navigation text stays readable'};
-        }
-        return {ratio: white, min: 4.5, against: 'white text'};
+        var luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+        return 1.05 / (luminance + 0.05);
     }
 
     function updateBrandColour($control) {
@@ -584,10 +553,9 @@
         $value.val(normalized);
         $control.find('[data-idlm-brand-colour-picker]').val(normalized);
         if ($control.attr('data-contrast-required') === 'true') {
-            var input = $value.get(0);
-            var rule = brandContrastRule($value.attr('data-idlm-brand-field'), normalized, normalizeHex(input.defaultValue) !== normalized);
-            var passes = rule.ratio >= rule.min;
-            $contrast.text((passes ? 'Pass' : 'Does not pass') + ': ' + rule.ratio.toFixed(2) + ':1 contrast with ' + rule.against + ' (needs ' + rule.min + ':1).');
+            var ratio = contrastRatio(normalized);
+            var passes = ratio >= 4.5;
+            $contrast.text((passes ? 'Pass' : 'Does not pass') + ': ' + ratio.toFixed(2) + ':1 contrast with white text.');
             $control.toggleClass('has-error', !passes).toggleClass('has-valid-colour', passes);
             $value.attr('aria-invalid', passes ? 'false' : 'true');
             return passes;

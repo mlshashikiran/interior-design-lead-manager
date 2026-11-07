@@ -43,13 +43,13 @@ Use the existing `--idlm-*` CSS custom properties. Do not introduce a near-dupli
 | Token | Value | Use |
 |---|---:|---|
 | `--idlm-brand-gold` | `#c99644` | Decorative accents, selected indicators, labelled charts |
-| `--idlm-action` | `#7a5017` | Primary actions, actionable text, focus ring |
-| `--idlm-action-hover` | `#603d10` | Primary hover/pressed state |
+| `--idlm-action` / `--idlm-primary` | `#7a5017` | Primary actions, actionable text, focus ring |
+| `--idlm-action-hover` / `--idlm-primary-hover` | `#603d10` | Primary hover/pressed state |
 | `--idlm-secondary` / `--idlm-info` | `#176a9e` | Informational accents, links, New-stage Kanban accent |
 | `--idlm-success` | `#177c51` | Success, Qualified/Won, completed states |
 | `--idlm-warning` | `#855a00` | Warnings and attention states |
 | `--idlm-danger` | `#c84635` | Destructive actions, failures, Lost |
-| `--idlm-sidebar` | `#111a24` | Sidebar (white-label `sidebar_color`); never alias it at `:root` |
+| `--idlm-dark` | `#111a24` | Sidebar and strong dark surfaces |
 
 Soft state backgrounds are `--idlm-success-soft`, `--idlm-warning-soft`, `--idlm-danger-soft`, and `--idlm-info-soft`.
 

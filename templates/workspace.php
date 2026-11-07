@@ -11,8 +11,7 @@ $idlm_white_label = isset($context['white_label']) && is_array($context['white_l
 $idlm_compact_logo = IDLM_Settings::brand_asset($idlm_white_label['compact_logo_id']);
 $idlm_brand_name = isset($idlm_white_label['brand_name']) ? (string) $idlm_white_label['brand_name'] : '';
 $idlm_workspace_title = isset($idlm_white_label['workspace_title']) ? (string) $idlm_white_label['workspace_title'] : '';
-$idlm_brand_mark_source = $idlm_brand_name ?: $idlm_workspace_title ?: 'L';
-$idlm_brand_mark = function_exists('mb_substr') ? mb_strtoupper(mb_substr($idlm_brand_mark_source, 0, 1, 'UTF-8'), 'UTF-8') : strtoupper(substr($idlm_brand_mark_source, 0, 1));
+$idlm_brand_mark = strtoupper(substr($idlm_brand_name ?: $idlm_workspace_title ?: 'L', 0, 1));
 $idlm_active_label = isset($idlm_sections[$idlm_active][0]) ? (string) $idlm_sections[$idlm_active][0] : $idlm_workspace_title;
 // Design layer: needs-action counts, Work and Admin groups and the signed-in person.
 $idlm_nav_counts = isset($context['nav_counts']) && is_array($context['nav_counts']) ? $context['nav_counts'] : array();

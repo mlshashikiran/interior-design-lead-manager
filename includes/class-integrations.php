@@ -701,7 +701,7 @@ class IDLM_Integrations {
         if (IDLM_Settings::notification_enabled('idlm_routing_exception_notifications_enabled')) {
             $admin_email = get_option('admin_email');
             if (is_email($admin_email)) {
-                wp_mail($admin_email, IDLM_Settings::mail_subject_prefix() . ' Routing exception requires attention', $message);
+                wp_mail($admin_email, '[Lead Manager] Routing exception requires attention', $message);
             }
         }
     }

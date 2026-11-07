@@ -124,8 +124,7 @@ class IDLM_Admin_Settings_Controller {
         // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0091: process_request(): process_request requires manage_options and idlm_settings_save_action before helper calls; vocabulary/label/studio/role/event arrays are type checked and individually sanitized/allowlisted, White_Label validates its own structure, and secrets are string checked/sanitized after one unslash; helper reads cannot bypass that authority.
         $white_label_raw = (isset($_POST['white_label']) && is_array($_POST['white_label'])) ? wp_unslash($_POST['white_label']) : array();
         // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-        $saved_white_label = IDLM_Settings::get_white_label();
-        $white_label_validation = IDLM_Settings::validate_white_label($white_label_raw, $saved_white_label);
+        $white_label_validation = IDLM_Settings::validate_white_label($white_label_raw);
         self::$white_label_values = $white_label_validation['settings'];
         self::$white_label_errors = $white_label_validation['errors'];
         // A settings save posts every tab. Administrators who cannot edit an
@@ -133,6 +132,7 @@ class IDLM_Admin_Settings_Controller {
         // retain that unchanged white-label asset while saving unrelated
         // settings such as pipeline stages. Changed asset IDs remain subject
         // to the normal access validation above.
+        $saved_white_label = IDLM_Settings::get_white_label();
         foreach (array('logo_id', 'compact_logo_id', 'favicon_id') as $asset_field) {
             $submitted_asset_id = absint($white_label_validation['settings'][$asset_field] ?? 0);
             $saved_asset_id = absint($saved_white_label[$asset_field] ?? 0);

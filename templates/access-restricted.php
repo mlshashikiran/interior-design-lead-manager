@@ -31,10 +31,10 @@ $idlm_brand_logo = IDLM_Settings::brand_asset($idlm_white_label['logo_id']);
 <div class="<?php echo esc_attr($idlm_wrapper_class); ?>" style="<?php echo esc_attr(IDLM_Settings::white_label_style($idlm_white_label)); ?>">
     <?php if (!$idlm_is_logged_in) : ?>
         <main class="idlm-login-shell idlm-access-restricted" aria-labelledby="idlm-login-title">
-            <section class="idlm-login-context" aria-label="<?php echo esc_attr(sprintf('%s overview', $idlm_white_label['workspace_title'])); ?>">
+            <section class="idlm-login-context" aria-label="Lead Manager overview">
                 <div class="idlm-login-brand"><?php if ($idlm_brand_logo['url']): ?><img src="<?php echo esc_url($idlm_brand_logo['url']); ?>" alt=""><?php else: ?><span class="dashicons dashicons-admin-home" aria-hidden="true"></span><?php endif; ?><span><?php echo esc_html($idlm_white_label['brand_name']); ?></span></div>
                 <div class="idlm-login-context-copy">
-                    <p class="idlm-login-product"><?php echo esc_html($idlm_white_label['workspace_title']); ?></p>
+                    <p class="idlm-login-product">Lead Manager</p>
                     <h1><?php echo esc_html($idlm_white_label['login_heading']); ?></h1>
                     <p>Review new enquiries, coordinate follow-ups, and move interior projects forward with your team.</p>
                 </div>
@@ -112,7 +112,7 @@ $idlm_brand_logo = IDLM_Settings::brand_asset($idlm_white_label['logo_id']);
                     </form>
                     <a class="idlm-login-reset" href="<?php echo esc_url(add_query_arg('idlm_auth', 'forgot', $idlm_return_url)); ?>">Forgot your password?</a>
                 <?php endif; ?>
-                <p class="idlm-login-help">Need access? <?php if ($idlm_white_label['support_email']): ?><a href="<?php echo esc_url('mailto:' . $idlm_white_label['support_email']); ?>">Contact support</a><?php else: ?>Contact your CRM administrator.<?php endif; ?></p>
+                <p class="idlm-login-help">Need access? <?php if ($idlm_white_label['support_email']): ?><a href="mailto:<?php echo esc_attr($idlm_white_label['support_email']); ?>">Contact support</a><?php else: ?>Contact your CRM administrator.<?php endif; ?></p>
                 <?php if ($idlm_white_label['footer_text']): ?><p class="idlm-login-footer-text"><?php echo esc_html($idlm_white_label['footer_text']); ?></p><?php endif; ?>
                 <?php if ('1' === $idlm_white_label['show_plugin_attribution']): ?><p class="idlm-login-attribution">Powered by Interior Design Lead Manager</p><?php endif; ?>
             </section>

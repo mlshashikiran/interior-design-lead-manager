@@ -294,8 +294,8 @@ class IDLM_Admin {
     /** Register the deliberately small wp-admin utility page. */
     public static function register_admin_menus() {
         add_menu_page(
-            IDLM_Settings::get_white_label()['workspace_title'] . ' utilities',
-            IDLM_Settings::get_white_label()['workspace_title'],
+            'Lead Manager utilities',
+            'Lead Manager',
             'manage_options',
             'idlm_utilities',
             array(__CLASS__, 'render_admin_utility_page'),
@@ -365,7 +365,7 @@ class IDLM_Admin {
         $workspace_url = IDLM_Admin_Shortcodes::workspace_url();
         ?>
         <div class="wrap">
-            <h1><?php echo esc_html(IDLM_Settings::get_white_label()['workspace_title']); ?></h1>
+            <h1>Lead Manager</h1>
             <p>Version <?php echo esc_html(IDLM_VERSION); ?>. Daily CRM work happens in the frontend workspace.</p>
             <?php if ($workspace_url) : ?>
                 <p><a class="button button-primary" href="<?php echo esc_url($workspace_url); ?>">Open workspace</a></p>

@@ -1750,7 +1750,6 @@ idlm_test('operational health marks critical gates and renders the administrator
 
 require_once __DIR__ . '/admin-refactor-contracts.php';
 require_once __DIR__ . '/ui-regression-contracts.php';
-require_once __DIR__ . '/white-label-contracts.php';
 require_once __DIR__ . '/access-flow-contracts.php';
 require_once __DIR__ . '/quotation-authorization-contracts.php';
 require_once __DIR__ . '/lead-read-authorization-contracts.php';
