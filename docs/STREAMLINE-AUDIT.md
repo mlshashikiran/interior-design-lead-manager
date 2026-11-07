@@ -79,6 +79,10 @@ Each item is one commit. Each was verified with the fast suite, runtime prerequi
 | S11 | 50a089f | 84 CSS rules (12 KB) were exact copies of a later rule in the same file and media context, left by layered fixes | `assets/css/admin-style.css`, `assets/css/quotations.css` | Size: −12 KB CSS; clarity | None: the later copy always wins; computed styles of every element on 14 screens, CRM and legacy, 1440 and 390 px, identical | Earlier copies removed; contract keeps every stylesheet free of dead duplicates |
 | S12 | 117dc9f | `admin-app.js` painted a glow on the Today's work button and `workspace.js` watched the button's style to strip it | `assets/js/admin-app.js:4149`, `assets/js/workspace.js:207` | One MutationObserver less; no paint-then-undo | None: computed styles identical; legacy button still glows | `admin-app.js` skips the glow on the workspace entry |
 | S13 | 7524060 | The dashboard's business-mix table and segment switch were copied in the pre-sales and sales renderers | `assets/js/dashboard.js:233,280` | Maintainability | None: rendered dashboards identical | One `renderBusinessMix()` |
+| S14 | c4a850a | 17 `IDLM_Admin_Ajax` methods only forwarded to a controller (D11) | `includes/class-admin-ajax.php`, `includes/class-admin.php:434` | One hop instead of three | None: hooks unchanged; `IDLM_Admin_Ajax` inherits the facade method, so old names still work | Facade calls controllers directly |
+| S15 | c16aa59 | Two designs behind a switch; Payments kept a second, older page (D2) | `includes/class-admin-assets.php`, `includes/class-lead-payment-controller.php` | One design; −295 lines in Payments | Low: CRM markup unchanged; see Live update safety | Switch retired; old payment page and upload step removed; details only the old page showed added to the dialog page |
+| S16 | 226ae9b | About 270 old-design branches in templates, controllers and scripts, plus six render-time rewrites of labels and inline styles | templates, `includes/class-admin-*`, `assets/js/*` | One rendering path | Low: byte-compared with the CRM baseline | Kept the CRM branch; rewrites moved into the templates |
+| S17 | 77b75a0 | ~115 stylesheet rules matched only removed markup | `assets/css/*` | Size: −12 KB CSS | None: computed styles unchanged | Removed |
 
 `tests/streamline-contracts.php` holds the drift guards for S2 to S13 and runs in the fast suite.
 
@@ -97,11 +101,11 @@ Ordered by value. None of these was started.
 - **Risk.** Medium. `kanban.js` binds a global `ajaxSuccess.idlmKanban` handler (`assets/js/kanban.js:585`) that reacts to drawer saves on any view. The lead drawer's styles live in `crm-design-leads.css` but the drawer opens from the dashboard and the board. Needs a browser pass per view and role.
 - **Proposed.** A per-view manifest in `IDLM_Admin_Assets`: always load dialog, admin-app, workspace and the base layer, and add view-specific bundles. First move cross-view behaviour (the drawer-save handler and drawer styles) into the shared files.
 
-### D2. Merge the legacy UI and the CRM design layer
-- **What.** CRM mode ships the legacy stylesheet set (admin-style 230 KB, dashboard, kanban, workspace and quotations CSS) plus about 350 KB of overrides. There are about 140 `design_layer_enabled`/`idlm-crm-design` branches in PHP and JS: 21 in `admin-app.js`, 31 in `kanban.js`, 41 in `quotations.js` and 11 in the lead payment controller. No template file is duplicated; the split lives inside shared templates.
-- **Impact.** Roughly halves CSS and removes the second code path.
-- **Risk.** High. It is a large structural move, and `?idlm_design=legacy`, `IDLM_DESIGN_LAYER` and the Utilities toggle are documented rollback paths.
-- **Proposed.** Decide whether the legacy design is still a supported rollback. If not, remove it area by area (payments → settings → quotations → board → leads), deleting the overridden legacy rules each time.
+### D2. Merge the legacy UI and the CRM design layer — done (S15–S17), one part left
+- **Done.** The CRM design is the only design: `design_layer_enabled()` is true on every front-end and AJAX request; the `?idlm_design` preview, the Utilities switch, `IDLM_DESIGN_LAYER` and the `idlm_design_layer` option are no longer read. All old-design branches in PHP and JS are gone, and the six render-time rewrites (Leads page, drawer, table rows, activity log, Settings headings) are written into the templates.
+- **Verified.** Every workspace page and AJAX read for administrator, manager and representative renders the same markup as the CRM design did before (whitespace runs aside), and computed styles of 39,598 element views are unchanged. One deliberate fix: the drawer's stage list shows "Quote Shared" like the table and board; the old rewrite lowercased it there by accident.
+- **Payments gaps closed.** The dialog page now also shows the quotation and plan version, who entered recovered terms, when and why, the advance received of expected, and for each payment its receipt number, recorder and duplicate-reference review. The wp-admin Payments entry redirects to the workspace page.
+- **D2b, left: consolidate overridden CSS.** `admin-style.css` (≈210 KB) still holds old rules that the `crm-design*.css` layer overrides on shared classes. Removing overridden declarations needs every dialog, drawer, hover and error state checked visually, not just page loads, so it was not done here.
 
 ### D3. Stop running maintenance work on every request
 - `IDLM_Integrations::init()` runs `maybe_migrate_api_credentials()`, `migrate_platforms()` and `scrub_legacy_queues()` on every request (`includes/class-integrations.php:9-22`). With Action Scheduler installed, `scrub_legacy_queues()` adds `SHOW TABLES`, `SHOW COLUMNS`, `MAX(action_id)`, a 100-row select, an option write check and a live read on every request (`includes/class-secret-store.php:135-195`).
@@ -134,12 +138,15 @@ Ordered by value. None of these was started.
 - **Proposed.** Write to `IDLM_TEST_*_EVIDENCE_DIR` like the document cases do.
 
 ### D10. Google conversions export has no nonce
-- `idlm_export_google_conversions` (`includes/class-admin-ajax.php:380`) checks `manage_options` but not a nonce. It only reads and streams a CSV, so a forged request cannot change data or read the file cross-site. Nothing in the plugin UI links to it.
-- **Proposed.** Either add a nonce (any saved link or script that calls it would then need one) or remove the endpoint if nothing outside the plugin uses it. It changes an AJAX action's contract, so it needs your call.
+- `idlm_export_google_conversions` (`includes/class-admin-ajax.php:380`) is the **Download OCI CSV** button under the feed URL in Settings → Conversion tracking (`templates/admin/settings/capi.php:138`). It checks `manage_options` but not a nonce. It only reads and streams a CSV.
+- The **feed URL** Google fetches is a separate REST route (`/wp-json/interior-design-lead-manager/v1/google-ads-conversions.csv`, `permission_google_feed`) and is not affected either way.
+- **Proposed.** Add a nonce to the button link and check it. The button keeps working; only a bookmarked copy of the old download link would stop.
 
-### D11. Three-hop delegation for AJAX handlers
-- Many hooks go `IDLM_Admin::ajax_x()` → `IDLM_Admin_Ajax::ajax_x()` → `IDLM_Admin_*_Controller::ajax_x()`. The middle hop adds nothing. All guards are in the final controller and every handler checks a nonce and a capability (D10 aside).
-- **Risk.** These are public static methods kept as compatibility contracts (`tests/admin-refactor-contracts.php`). Pointing the hooks straight at the controllers is safe for the plugin, but outside code calling the middle methods would still need them.
+### D11. Three-hop delegation for AJAX handlers — done (S14)
+
+### D12. Endpoints and wp-admin branches the single design no longer uses
+- `admin_post_idlm_update_role_scopes` and `admin_post_idlm_update_role_permissions` (`includes/class-admin.php:17-18`) only served the old Users page. The Roles tab saves scope and permissions per role through `idlm_update_role_access`. Removing them changes public action names.
+- `is_admin()` branches for wp-admin quotation, users and log URLs (`includes/class-quotations.php:106,111`, `includes/class-quotation-renderer.php:172,256`, `templates/admin/users.php:132`, `templates/admin/logs/*.php`). Those wp-admin pages redirect to the workspace, so the branches only run in the HTTP test harness.
 
 ---
 
@@ -168,7 +175,12 @@ The release ZIP contains no test files. Local runs used WordPress 7.1.4; CI uses
 
 ## Live update safety
 
-Across the whole branch (`release/1.103.0..streamline/plugin`) there is no change to hooks, filters, REST routes, AJAX action names, shortcodes, option names or writes, tables, schedules, roles, capabilities or the plugin and schema versions. The only removed method is a private, unused one. Updating a live site runs no migration and changes no stored data. Asset version strings are the same file modification times as before, so browsers refetch only the files that changed.
+No migration runs and no stored data changes: no change to tables, schedules, roles, capabilities, option writes or the plugin and schema versions. REST routes, shortcodes and AJAX actions are unchanged.
+
+What does change on update:
+- **The design.** Sites already on the CRM design (the default) see the same pages. A site that switched to the previous design, by the Utilities switch or `IDLM_DESIGN_LAYER` in `wp-config.php`, will show the CRM design; the stored option is left in place but not read, and the constant can be removed.
+- **Retired entry points.** `?idlm_design=…` is ignored; the Utilities "Interface design" form and `admin_post_idlm_set_design_layer` are gone; `admin_post_idlm_payment_upload` is gone (Record payment takes the screenshot); wp-admin → Lead Manager → Payments opens the workspace page.
+- **Public code kept.** `IDLM_Admin_Assets::design_layer_enabled()` and every `IDLM_Admin`/`IDLM_Admin_Ajax` method remain callable.
 
 ## Verification environment
 

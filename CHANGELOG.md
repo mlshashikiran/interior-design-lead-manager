@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- The CRM design is now the only design. The previous design, its `?idlm_design=legacy` preview, the Utilities "Interface design" switch and the `IDLM_DESIGN_LAYER` constant are retired; the stored `idlm_design_layer` option is no longer read. Every workspace page and AJAX response renders the same markup as the CRM design did before. Builder: Shashi.
+- Payments: the dialog page is the only payment page. It now also shows the quotation and plan version, who entered recovered terms and why, the advance received, and for each payment its receipt number, recorder and duplicate-reference review. The wp-admin Payments entry opens the workspace page. Builder: Shashi.
+- Labels and inline styles that were rewritten at render time on the Leads page, lead drawer, leads table, activity log and Settings are now written that way in the templates. Builder: Shashi.
+
+### Removed
+
+- The previous design's markup, scripts and the stylesheet rules that only matched it; the separate payment screenshot upload step (`admin_post_idlm_payment_upload`), now part of Record payment. Builder: Shashi.
+
+### Security
+
+- Stored plugin settings and log rows are decoded without building PHP objects. Builder: Shashi.
+
 ## [1.103.0] - 2026-11-06
 
 ### Added
