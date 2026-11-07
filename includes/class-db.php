@@ -18,6 +18,13 @@ class IDLM_DB {
         'idlm_attribution_touchpoint_backfill_version' => 'backfill_duplicate_touchpoints',
         'idlm_conversion_time_integrity_version' => 'clear_non_won_conversion_times',
         'idlm_task_queue_cleanup_version' => 'cleanup_stale_pending_tasks',
+        'idlm_lead_index_version' => 'add_lead_query_indexes',
+    );
+
+    /** Composite indexes for a representative's board columns and the qualified handoff queue. */
+    const LEAD_QUERY_INDEXES = array(
+        'rep_duplicate_stage' => 'assigned_rep_id, is_duplicate, stage',
+        'quality_handoff_qualified' => 'lead_quality, handoff_status, qualified_at',
     );
 
     public static function init() {
@@ -45,6 +52,23 @@ class IDLM_DB {
             }
             return true;
         });
+    }
+
+    /**
+     * Add any missing lead query index. Structure only: no lead row is read or written, and an
+     * index that already exists is left alone, so the step is safe to repeat.
+     */
+    public static function add_lead_query_indexes() {
+        global $wpdb;
+        $leads = $wpdb->prefix . 'idlm_leads';
+        foreach (self::LEAD_QUERY_INDEXES as $name => $columns) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Plugin-owned prefixed table; index names and columns are fixed constants above. Builder: Shashi.
+            $exists = $wpdb->get_var($wpdb->prepare("SHOW INDEX FROM {$leads} WHERE Key_name = %s", $name));
+            if (null === $exists && '' !== (string) $wpdb->last_error) { return false; }
+            if (null === $exists && false === $wpdb->query("ALTER TABLE {$leads} ADD KEY {$name} ({$columns})")) { return false; }
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
+        }
+        return true;
     }
 
     /** Archive pending work which cannot be actioned safely. */
@@ -502,7 +526,9 @@ class IDLM_DB {
             KEY qualified_by_user_id (qualified_by_user_id),
             KEY intake_owner_id (intake_owner_id),
             KEY handoff_status (handoff_status),
-            KEY duplicate_of_id (duplicate_of_id)
+            KEY duplicate_of_id (duplicate_of_id),
+            KEY rep_duplicate_stage (assigned_rep_id,is_duplicate,stage),
+            KEY quality_handoff_qualified (lead_quality,handoff_status,qualified_at)
         ) ENGINE=InnoDB $charset_collate;";
 
         $statements[] = $sql_leads;
