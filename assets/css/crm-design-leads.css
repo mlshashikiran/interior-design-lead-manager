@@ -860,13 +860,14 @@ body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-col-today 
     display: none;
 }
 
+/* Call outcomes are short configured labels: wrap inside the cell instead of clamping. */
 body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-response-chip {
-    display: -webkit-box;
-    overflow: hidden;
+    display: block;
+    width: auto;
+    max-width: 100%;
     color: var(--idlm-text);
     white-space: normal;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    overflow-wrap: anywhere;
 }
 
 body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-budget-check {
@@ -2585,6 +2586,11 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
     /* The studio repeats in its own detail row, so the card shows it once. */
     body.idlm-crm-design #idlm-leads-table .idlm-lead-row-studio {
         display: none;
+    }
+
+    /* On a card the next step has the full width, so it wraps instead of trailing off. */
+    body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-lead-next-action {
+        white-space: normal;
     }
 
     body.idlm-crm-design #idlm-leads-table .idlm-table-select {

@@ -386,6 +386,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
         ));
         $active_rep_ids = get_option('idlm_active_assignment_reps', array());
         $whatsapp_read_ids = self::get_whatsapp_read_activity_ids();
+        $outreach_targets = $is_pre_sales ? IDLM_DB::get_presales_outreach_targets() : array();
         ob_start();
         if (empty($leads)) {
             echo '<tr class="idlm-leads-empty-row"><td colspan="12"><div class="idlm-state is-empty"><strong class="idlm-leads-empty-title">No leads match these filters</strong><span class="idlm-leads-empty-text">Change or clear the filters to see more leads.</span><div class="idlm-state__actions"><button type="button" class="idlm-btn idlm-btn-secondary idlm-active-filters-clear">Clear filters</button></div></div></td></tr>';
@@ -402,7 +403,6 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                 $has_unread_whatsapp = !empty($l->latest_whatsapp_reply_id) && absint($l->latest_whatsapp_reply_id) > $last_read_whatsapp_id;
                 $responsive_row_id = 'idlm-lead-row-' . absint($l->id);
                 if ($is_pre_sales) {
-                    $outreach_targets = IDLM_DB::get_presales_outreach_targets();
                     $calculated_progress = IDLM_DB::calculate_presales_outreach_progress(
                         array_values($outreach_by_lead[absint($l->id)] ?? array()),
                         $outreach_targets
@@ -492,7 +492,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                         <td class="idlm-col-budget idlm-col-priority-secondary" data-label="Budget"<?php echo $l->budget ? ' title="' . esc_attr($l->budget) . '"' : ''; ?>><strong><?php echo esc_html($l->budget ?: 'Missing'); ?></strong><span class="idlm-budget-check <?php echo $budget_pass ? 'is-pass' : 'is-review'; ?>"><?php echo $budget_pass ? '₹4L+' : 'Review'; ?></span></td>
                         <td class="idlm-col-details idlm-col-priority-low" data-label="Project details"><strong><?php echo esc_html($details_complete); ?>/6</strong><small><?php echo empty($l->floor_plan_received) ? 'Plan pending' : 'Plan received'; ?></small></td>
                         <td class="idlm-col-quality idlm-col-priority-primary" data-label="Follow-up status"><span class="idlm-sla-chip <?php echo esc_attr($sla_class); ?>"><?php echo esc_html($sla_label); ?></span><small class="idlm-lead-next-action" title="<?php echo esc_attr($next_action); ?>"><?php echo esc_html($next_action); ?></small></td>
-                        <td class="idlm-col-actions idlm-col-priority-primary idlm-lead-row-actions" data-label="Actions"><div class="idlm-queue-actions"><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="call" data-lead-id="<?php echo esc_attr($l->id); ?>" <?php disabled($decision_complete); ?>>Log call</button><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="whatsapp" data-lead-id="<?php echo esc_attr($l->id); ?>" <?php disabled($decision_complete); ?>>Log WA</button><?php if ($decision_ready): ?><button type="button" class="idlm-btn idlm-btn-primary" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)">Decide</button><?php endif; ?></div></td>
+                        <td class="idlm-col-actions idlm-col-priority-primary idlm-lead-row-actions" data-label="Actions"><div class="idlm-queue-actions"><?php if ($decision_complete): ?><button type="button" class="idlm-btn idlm-btn-secondary" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)" aria-label="View <?php echo esc_attr($name); ?>">View</button><?php else: ?><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="call" data-lead-id="<?php echo esc_attr($l->id); ?>" aria-label="Log call for <?php echo esc_attr($name); ?>">Log call</button><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="whatsapp" data-lead-id="<?php echo esc_attr($l->id); ?>" aria-label="Log WhatsApp for <?php echo esc_attr($name); ?>">Log WA</button><?php if ($decision_ready): ?><button type="button" class="idlm-btn idlm-btn-primary" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)" aria-label="Decide on <?php echo esc_attr($name); ?>">Decide</button><?php endif; ?><?php endif; ?></div></td>
                     </tr>
                     <?php
                     continue;
