@@ -87,25 +87,46 @@ Each item is one commit. Each was verified with the fast suite, runtime prerequi
 | S19 | 4d0efcd | HTTP suite appended to a committed log (D9) | `tests/integration/quotation-engine-http-cases.php` | Clean tree after tests | None: test-only | Writes to `IDLM_TEST_ENGINE_EVIDENCE_DIR`; contract stops writes into `docs/` |
 | S20 | 55886c4 | 9 unused public methods and 2 old all-roles handlers (D8, D12) | `class-admin`, `class-date-ranges`, `class-db`, `class-integrations`, `class-interakt`, `class-quotation-repository`, `class-quotations`, `class-admin-users-controller` | −80 lines; two fewer admin-post actions | Low: no plugin caller; the Roles tab uses `idlm_update_role_access`, whose tests now cover the same denials and grant rules | Removed |
 | S21 | c730641 | Leads and Settings read 28 and 57 options one at a time (D7) | `class-admin-leads-renderer.php`, `class-admin-settings-renderer.php` | One query per screen for those options | None: same values and defaults | `SCREEN_OPTIONS` primed; drift contract |
-| S22 | 3e5210c | Schedule lookups on every page view and a multi-table legacy queue scrub on every request (D3) | `class-scheduler.php`, `class-integrations.php` | Both at most every 10 minutes and on the first request after an update | Low: secret encryption still runs every request; the minute cron interval is now registered on every request, cron included | `IDLM_Scheduler::maintenance_due()`, one autoloaded option |
+| S22 | 3e5210c | Schedule lookups on every page view and a multi-table legacy queue scrub on every request (D3) | `class-scheduler.php`, `class-integrations.php` | Both at most every 10 minutes and on the first request after an update | Low: the minute cron interval is now registered on every request, cron included. S27 throttles the rest of the upkeep | `IDLM_Scheduler::maintenance_due()`, one autoloaded option |
 | S23 | e02261a, 8fcda74 | 34 copies of nonce + permission checks with five refusal spellings; five bare-string errors (D6) | `IDLM_Admin::require_ajax_access()` after each handler's own nonce check, 8 controllers | One gate; every error is `{message}` | Low: nonce still first; specific refusal texts and 403s kept, generic ones now read "Permission denied." | Routing save and past-lead sync scripts read `{message}` (routing errors used to show a generic line) |
-| S24 | 9205249 | Every workspace view loaded every view's scripts and styles (D1) | `IDLM_Admin_Assets::VIEW_ASSETS`, `IDLM_Admin_Shortcodes::workspace_sections()` | Plugin assets per view: Leads 1,159 → 667 KB, Pipeline → 761, Dashboard → 953, Quotations 1,303 → 861, Settings → 764 | Low: unknown views and pages with other CRM shortcodes still load everything; computed styles unchanged | Per-view manifest |
+| S24 | 9205249 | Every workspace view loaded every view's scripts and styles (D1) | `IDLM_Admin_Assets::VIEW_ASSETS`, `IDLM_Admin_Shortcodes::workspace_sections()` | Plugin assets per view: Leads 1,159 → 667 KB, Pipeline → 761, Dashboard → 953, Quotations 1,303 → 861, Settings → 764 | Low: pages with other CRM shortcodes still load everything; computed styles unchanged; drawer behaviour checked in S28 | Per-view manifest |
 | S25 | cfb25b8 | Rep board columns and the handoff queue scanned large index ranges (D4) | `class-db.php` | 200k synthetic leads: rep board column 26 → 0.04 ms, handoff queue 150 → 0.05 ms; other queries unchanged | Low: structure only, one-time; see Live update safety | Two composite indexes via migration marker `idlm_lead_index_version`; native test proves no row changes |
 | S26 | 81c8c8a | Old declarations the CRM layer always overrides (D2b) | `admin-style`, `workspace`, `dashboard`, `kanban`, `quotations` CSS | −15.8 KB CSS (428 declarations) | None: removed only where the same selector behind the always-on gate sets the same property; computed styles unchanged | Removed |
+| S27 | 61aae58 | `IDLM_Integrations::init()` still generated API credentials and swept platform secrets on every request, with uncached option reads; schedules were only checked on front-end page views (D3) | `class-integrations.php`, `class-scheduler.php`, activation | 5 fewer queries on every screen and AJAX request (table below); a throttled request makes no queries for upkeep | Low: in the 10 minutes between sweeps every use still repairs itself (credential checks migrate credentials first; `IDLM_Secret_Store::get()` encrypts plaintext before returning it). Admin, AJAX, REST and cron requests now repair schedules too | `IDLM_Integrations::run_upkeep()` on the throttle, on the first request after an update and on activation; native test `maintenance-contracts.php` covers fresh install, throttle window, repair after it and repair after an update |
+| S28 | 6026cad | The D1 contract pinned 4 of 11 views (D1) | `tests/streamline-contracts.php` | Every view's exact styles and scripts are pinned, plus the unknown-view fallback | None: test-only | Browser check below |
 
 `tests/streamline-contracts.php` holds the drift guards for S2 to S13 and runs in the fast suite.
 
 S11 to S13 change front-end files, so each was also checked in headless Chrome against a disposable HTTP fixture: computed styles of every element and `::before`/`::after` on 14 screens (six workspace views, the tasks, leads, settings and quotation fixtures, and four legacy-design views), at 1440 and 390 px, before and after. All 36,899 element views matched, with no script errors. A deliberate 1px change was caught on 331 elements, so the comparison is sensitive.
 
+
+### D1 and D3, before and after
+
+Measured with `php tests/performance/measure-screens.php --runs=5` (median of 5, same synthetic data) on c730641, just before D3 and D1, and on 61aae58 with both. The asset columns are every stylesheet and script on the page, WordPress core included.
+
+| Screen | Queries | Plugin queries | CSS KB | JS KB | Wall ms |
+|---|---:|---:|---:|---:|---:|
+| Workspace: dashboard | 42 → 37 | 33 → 28 | 648 → 515 | 730 → 587 | 107 → 112 |
+| Workspace: leads | 58 → 53 | 49 → 44 | 648 → 482 | 730 → 336 | 110 → 112 |
+| Workspace: pipeline | 43 → 38 | 34 → 29 | 648 → 512 | 730 → 394 | 106 → 105 |
+| Workspace: quotations | 41 → 36 | 32 → 27 | 707 → 590 | 815 → 421 | 112 → 108 |
+| Workspace: settings | 88 → 83 | 79 → 74 | 721 → 592 | 1,258 → 922 | 115 → 115 |
+| AJAX: dashboard stats | 35 → 30 | 27 → 22 | – | – | 113 → 103 |
+| AJAX: leads table | 40 → 35 | 32 → 27 | – | – | 123 → 116 |
+| AJAX: board columns | 38 → 33 | 30 → 25 | – | – | 116 → 112 |
+
+Wall time is within this machine's run-to-run noise. These query counts are lower than the table above because that table's "before" is the 1.103.0 release and the fixture differs (5 runs here, 3 there).
+
+**Browser check for D1.** On a disposable HTTP fixture, headless Chrome opened eight views (dashboard, leads, pipeline, quotations, settings, design team, CAPI logs, payments) as administrator, sales manager, sales executive, pre-sales and design, at 1440 and 390 px, before D1 and after it: 80 page loads each. On each it opened the lead drawer where the view offers one, saved it at 1440 px and recorded the requests that followed. Every case matched before and after: the drawer opened and saved, then reloaded itself and the leads table, and on the pipeline also the board. There were no console errors. The drawer did not open for pre-sales on the fixture's leads, and the design role and the administrator's quotations, settings, design-team, logs and payments views render no drawer; both were the same before D1.
 ---
 
 ## Decisions (all resolved)
 
 | # | Outcome |
 |---|---|
-| D1 | Done (S24). |
+| D1 | Done (S24, S28). No view script held cross-view behaviour: the `ajaxSuccess.idlmKanban` handler in `kanban.js` only reloads the board and returns early when there is none, and the dashboard's drawer code is scoped to its own cards. The lead-drawer styles stay in the `leads` and `payments` design areas, which every view loads. Splitting them into their own file would save at most about 17 KB gzipped (cached after the first view) and risks unstyled states in rarely opened overlays, so it was left out. |
 | D2 | Done (S15–S17, S26). Of the old stylesheet, only declarations provably overridden in every state were removed. The rest of `admin-style.css` still styles shared classes the CRM layer builds on; removing more needs a state-by-state visual pass. |
-| D3 | Done (S22). |
+| D3 | Done (S22, S27). One autoloaded option read per request; the throttle is an option rather than a transient so an object-cache eviction cannot make it run on every request. |
 | D4 | Done (S25). A `(created_at)`-led composite was measured and left out: MySQL sometimes chose it for the all-leads count and list and ran slower. |
 | D5 | Not done, no benefit: the boot list also holds secrets and schema markers that must never autoload, so its one priming query stays either way. |
 | D6 | Done (S23). Three handlers keep their own checks on purpose: the lead CSV export (a download link, refuses with a page), JS error logging (any signed-in user) and the task router (delegates per operation). |

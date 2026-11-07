@@ -10,7 +10,7 @@
 
 - Each workspace view loads only its own scripts and styles; the Leads view drops from about 1.16 MB to 0.67 MB of plugin assets. Builder: Shashi.
 - Two composite lead indexes speed up a representative's board columns and the qualified handoff queue; they are added once on update without touching lead rows. Builder: Shashi.
-- Schedule checks and the legacy queue scrub run at most every ten minutes instead of on every request. Builder: Shashi.
+- API credential, secret and legacy queue upkeep and schedule checks run at most every ten minutes, on the first request after an update and on activation, instead of on every request; admin, AJAX, REST and cron requests now repair missing schedules too. Every screen and AJAX request makes 5 fewer database queries. Builder: Shashi.
 - CRM AJAX handlers share one permission gate; refusals always return a message, and generic ones read "Permission denied.". Builder: Shashi.
 
 ### Removed
