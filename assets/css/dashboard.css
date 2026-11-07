@@ -57,7 +57,6 @@ button.idlm-dashboard-bar { cursor: pointer; }
 .idlm-dashboard-mini-grid span, .idlm-dashboard-mini-grid small { display: block; color: var(--idlm-text-muted); font-size: 10px; }
 .idlm-dashboard-mini-grid strong { display: block; margin: 4px 0; font-size: 21px; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .idlm-dashboard-period-panel > .idlm-dashboard-note { padding: 0 16px 16px; }
-.idlm-dashboard-big-value { display: block; font-size: 30px; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .idlm-dashboard-segment-tabs { display: flex; gap: 7px; flex-wrap: wrap; padding: 16px 16px 3px; }
 .idlm-dashboard-chip { padding: 6px 10px; color: var(--idlm-text-muted); background: var(--idlm-surface); border: 1px solid var(--idlm-border); border-radius: 999px; font-size: 11px; cursor: pointer; }
 .idlm-dashboard-chip.active { color: var(--idlm-action); background: var(--idlm-action-soft, var(--idlm-surface-soft)); border-color: var(--idlm-action); }
@@ -92,9 +91,6 @@ button.idlm-dashboard-bar { cursor: pointer; }
 .idlm-dashboard .idlm-table th, .idlm-dashboard .idlm-table td { padding: 10px 16px; }
 .idlm-dashboard .idlm-table th { color: var(--idlm-text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .045em; white-space: nowrap; }
 .idlm-dashboard .idlm-table td, .idlm-dashboard .idlm-table tbody th { font-size: 12px; white-space: nowrap; }
-.idlm-dashboard-daily { margin: 0 0 16px; color: var(--idlm-text-muted); font-size: 12px; }
-.idlm-dashboard-daily summary { cursor: pointer; }
-.idlm-dashboard-daily .idlm-table-wrapper { margin-top: 10px; background: var(--idlm-surface); border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); }
 .idlm-dashboard-empty { color: var(--idlm-text-muted); font-size: 12px; }
 .idlm-dashboard-records { margin-top: 22px; }
 .idlm-dashboard-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 16px; }

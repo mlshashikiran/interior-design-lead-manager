@@ -1404,10 +1404,6 @@ body.idlm-crm-design :is(.idlm-spinner, .spinner.is-active, .idlm-state__spinner
     animation: idlm-state-spin 800ms linear infinite;
 }
 
-body.idlm-crm-design .idlm-state__spinner {
-    width: 20px;
-    height: 20px;
-}
 
 /* Skeleton: set the size with width and height, or use the row and text helpers. */
 body.idlm-crm-design .idlm-skeleton {

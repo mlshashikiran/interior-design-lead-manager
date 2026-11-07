@@ -859,14 +859,6 @@
     cursor: progress;
 }
 
-.idlm-state__spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid var(--idlm-border);
-    border-top-color: var(--idlm-action);
-    border-radius: var(--idlm-radius-pill);
-    animation: idlm-state-spin 800ms linear infinite;
-}
 
 @keyframes idlm-state-spin {
     to { transform: rotate(360deg); }
@@ -955,11 +947,6 @@
     white-space: nowrap;
 }
 
-.idlm-col-25 { width: 25%; }
-.idlm-col-40 { width: 40%; }
-.idlm-col-60 { width: 60%; }
-.idlm-col-120 { width: 120px; }
-.idlm-col-140 { width: 140px; }
 
 .idlm-btn-compact {
     min-height: var(--idlm-control-height);
@@ -967,10 +954,6 @@
     font-size: 11px;
 }
 
-.idlm-btn-action-outline {
-    border-color: var(--idlm-brand-gold);
-    color: var(--idlm-action);
-}
 
 .idlm-text-link,
 .idlm-action-link {
@@ -1019,7 +1002,6 @@
 }
 
 .idlm-table-cell-nowrap { white-space: nowrap; }
-.idlm-table-cell-strong { color: var(--idlm-text); font-weight: 600; }
 .idlm-table-cell-truncate { max-width: 300px; overflow: hidden; color: var(--idlm-text); text-overflow: ellipsis; white-space: nowrap; }
 .idlm-table-cell-code { max-width: 200px; overflow: hidden; color: var(--idlm-text-muted); font-family: monospace; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -1066,18 +1048,8 @@
     color: var(--idlm-danger);
 }
 
-.idlm-mt-1 { margin-top: var(--idlm-space-1); }
-.idlm-mt-2 { margin-top: var(--idlm-space-2); }
 .idlm-mt-3 { margin-top: var(--idlm-space-3); }
-.idlm-mt-4 { margin-top: var(--idlm-space-4); }
-.idlm-mt-5 { margin-top: var(--idlm-space-5); }
-.idlm-mt-6 { margin-top: var(--idlm-space-6); }
-.idlm-mb-0 { margin-bottom: 0; }
-.idlm-mb-2 { margin-bottom: var(--idlm-space-2); }
-.idlm-mb-3 { margin-bottom: var(--idlm-space-3); }
 .idlm-mb-4 { margin-bottom: var(--idlm-space-4); }
-.idlm-mb-5 { margin-bottom: var(--idlm-space-5); }
-.idlm-mb-6 { margin-bottom: var(--idlm-space-6); }
 
 [data-idlm-ui~="w-full"] { width: 100%; }
 [data-idlm-ui~="control-full"] { width: 100%; min-height: var(--idlm-control-height); }
@@ -1169,10 +1141,8 @@
 .idlm-link-plain { text-decoration: none; }
 .idlm-settings-description { margin: 0 0 var(--idlm-space-3); font-size: 12px; }
 .idlm-settings-divider { margin-top: var(--idlm-space-6); padding-top: var(--idlm-space-5); border-top: 1px solid var(--idlm-border); }
-.idlm-settings-inline-grid { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(180px, 1fr); align-items: center; gap: var(--idlm-space-3); }
 .idlm-settings-wrap { display: flex; flex-wrap: wrap; gap: var(--idlm-space-3); margin-top: var(--idlm-space-2); }
 .idlm-settings-working-hours { display: flex; align-items: center; gap: var(--idlm-space-3); }
-.idlm-settings-weekdays { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--idlm-space-2); margin-top: var(--idlm-space-1); }
 .idlm-table-soft { margin-bottom: var(--idlm-space-4); border: 1px solid var(--idlm-border); background: var(--idlm-surface-soft); }
 .idlm-help-step-title { margin: 0 0 var(--idlm-space-1); color: var(--idlm-action); font-weight: 600; }
 .idlm-mcp-status { margin: var(--idlm-space-3) 0; }
@@ -1183,10 +1153,6 @@
 .idlm-security-list { margin: 0 0 0 var(--idlm-space-5); color: var(--idlm-text); font-size: 13px; line-height: 1.5; list-style: disc; }
 
 @media (max-width: 782px) {
-    .idlm-settings-inline-grid,
-    .idlm-settings-weekdays {
-        grid-template-columns: 1fr;
-    }
 
     .idlm-settings-working-hours,
     .idlm-mcp-copy-row {
@@ -1373,8 +1339,6 @@ select.idlm-table-select {
 }
 
 .idlm-users-form, .idlm-users-filter { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.idlm-users-table td { vertical-align: middle; }
-.idlm-users-table .idlm-users-form { min-width: 180px; }
 
 /* Keep directory controls on a dedicated full-width row. */
 .idlm-users-filter { display: inline-flex; width: auto; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; }
@@ -1427,18 +1391,8 @@ select.idlm-table-select {
 
 
 /* Role-level lead visibility controls on Users & Access. */
-.idlm-role-scopes-form { display: grid; gap: 14px; }
-.idlm-role-scopes-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.idlm-role-scopes-form > .idlm-btn { justify-self: end; }
-.idlm-permissions-list { display: grid; gap: 10px; min-width: 0; }
-.idlm-users-create .idlm-permissions-note { margin-top: 14px; }
 .idlm-permission-role { min-width: 0; border: 1px solid var(--idlm-border); border-radius: 10px; background: var(--idlm-surface); overflow: hidden; }
-.idlm-permission-summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 18px; cursor: pointer; list-style: none; }
-.idlm-permission-summary::-webkit-details-marker { display: none; }
-.idlm-permission-summary:hover, .idlm-permission-role[open] .idlm-permission-summary { background: var(--idlm-surface-soft); }
 .idlm-permission-summary:focus-visible, .idlm-permission-option:focus-within { outline: 2px solid var(--idlm-action); outline-offset: -2px; }
-.idlm-permission-heading { display: grid; gap: 4px; min-width: 0; }
-.idlm-permission-heading strong { color: var(--idlm-text); font-size: 14px; }
 .idlm-permission-heading > span, .idlm-permission-actions > span { color: var(--idlm-text-muted); font-size: 12px; }
 .idlm-permission-edit { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; color: var(--idlm-action-hover); font-size: 12px; font-weight: 700; }
 .idlm-permission-edit .dashicons { transition: transform .18s ease; }
@@ -1453,15 +1407,9 @@ select.idlm-table-select {
 .idlm-permission-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; border-top: 1px solid var(--idlm-border); }
 @media (max-width: 782px) {
     .idlm-permission-options { grid-template-columns: 1fr; }
-    .idlm-permission-summary { padding: 14px; }
     .idlm-permission-edit { font-size: 0; }
     .idlm-permission-actions { align-items: stretch; flex-direction: column; }
     .idlm-permission-actions .idlm-btn { width: 100%; }
-}
-@media (max-width: 1100px) { .idlm-role-scopes-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 782px) {
-    .idlm-role-scopes-grid { grid-template-columns: 1fr; }
-    .idlm-role-scopes-form > .idlm-btn { width: 100%; }
 }
 
 /* Final CRM density precedence over legacy component declarations. */
@@ -1621,9 +1569,6 @@ select.idlm-table-select {
 
 @media (min-width: 1024px) {
     .idlm-filters-primary-row { grid-template-columns: minmax(220px, 2fr) repeat(2, minmax(130px, 1fr)) auto; }
-    .idlm-filters-primary-row .idlm-filter-group-search, .idlm-filters-primary-row .idlm-filter-buttons-group { grid-column: auto; }
-    .idlm-filters-primary-row .idlm-filter-buttons-group { display: flex; width: auto; gap: 8px; }
-    .idlm-filters-primary-row .idlm-filter-buttons-group .idlm-btn { width: auto; white-space: nowrap; }
 }
 
 @media (max-width: 782px) {
@@ -1961,35 +1906,10 @@ body.idlm-filters-open {
 }
 
 /* Compact Filter Layout */
-.idlm-filters-panel.idlm-filters-compact {
-    padding: 12px 16px;
-    margin-bottom: 20px;
-}
 
-.idlm-filters-compact-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 10px;
-    align-items: flex-end;
-    width: 100%;
-}
 
-.idlm-filters-compact .idlm-filter-group {
-    gap: 3px;
-}
 
-.idlm-filters-compact .idlm-filter-group label {
-    font-size: 10px;
-    letter-spacing: 0.3px;
-    margin-bottom: 0;
-}
 
-.idlm-filters-compact .idlm-input {
-    padding: 5px 8px;
-    font-size: 12px;
-    height: 29px;
-    line-height: normal;
-}
 
 .idlm-filter-group label {
     font-size: 11px;
@@ -3552,19 +3472,6 @@ body.idlm-filters-open {
     grid-column: 1 / -1;
 }
 
-#idlm-routing-modal .idlm-routing-step {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 24px;
-    width: 24px;
-    height: 24px;
-    border-radius: 7px;
-    background: var(--idlm-action-soft);
-    color: var(--idlm-action);
-    font-size: 11px;
-    font-weight: 700;
-}
 
 #idlm-routing-modal .idlm-routing-section-heading h3 {
     margin: 1px 0 2px;
@@ -3680,81 +3587,16 @@ body.idlm-filters-open {
     display: block;
 }
 
-#idlm-routing-modal .idlm-routing-status-strip {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    margin: 16px 0;
-}
 
-#idlm-routing-modal .idlm-routing-status-card {
-    position: relative;
-    display: grid;
-    gap: 3px;
-    min-width: 0;
-    padding: 11px 12px 11px 15px;
-    border: 1px solid var(--idlm-border);
-    border-radius: 8px;
-    background: var(--idlm-surface);
-    overflow: hidden;
-}
 
-#idlm-routing-modal .idlm-routing-status-card::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background: var(--idlm-action);
-}
 
-#idlm-routing-modal .idlm-routing-status-card.is-ready::before {
-    background: var(--idlm-success);
-}
 
-#idlm-routing-modal .idlm-routing-status-card.is-warning::before {
-    background: var(--idlm-warning);
-}
 
-#idlm-routing-modal .idlm-routing-status-card.is-inactive::before {
-    background: var(--idlm-border-strong);
-}
 
-#idlm-routing-modal .idlm-routing-status-card > span {
-    color: var(--idlm-text-muted);
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    line-height: 1.3;
-    text-transform: uppercase;
-}
 
-#idlm-routing-modal .idlm-routing-status-card > strong {
-    color: var(--idlm-text);
-    font-size: 13px;
-    line-height: 1.35;
-}
 
-#idlm-routing-modal .idlm-routing-status-card > small {
-    color: var(--idlm-text-muted);
-    font-size: 10px;
-    line-height: 1.4;
-}
 
-#idlm-routing-modal .idlm-routing-control-card {
-    display: grid;
-    grid-template-columns: minmax(220px, 0.8fr) minmax(300px, 1.2fr);
-    gap: 18px;
-    align-items: center;
-    margin-top: 10px;
-    padding: 14px;
-    border: 1px solid var(--idlm-border);
-    border-radius: 9px;
-    background: var(--idlm-surface-soft);
-}
 
-#idlm-routing-modal .idlm-routing-team-card {
-    align-items: start;
-}
 
 #idlm-routing-modal .idlm-routing-control-heading {
     display: flex;
@@ -3779,22 +3621,7 @@ body.idlm-filters-open {
     line-height: 1.45;
 }
 
-#idlm-routing-modal .idlm-routing-control-number {
-    display: inline-grid;
-    flex: 0 0 22px;
-    width: 22px;
-    height: 22px;
-    place-items: center;
-    border-radius: 7px;
-    background: var(--idlm-action-soft);
-    color: var(--idlm-action);
-    font-size: 10px;
-    font-weight: 700;
-}
 
-#idlm-routing-modal .idlm-routing-control-card > .idlm-form-group {
-    margin: 0;
-}
 
 #idlm-routing-modal .idlm-routing-switch-row {
     display: flex;
@@ -4089,14 +3916,7 @@ body.idlm-filters-open {
         grid-template-columns: 1fr;
     }
 
-    #idlm-routing-modal .idlm-routing-status-strip {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
 
-    #idlm-routing-modal .idlm-routing-control-card {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
 
     #idlm-routing-modal .idlm-routing-rep-head {
         display: none;
@@ -4113,9 +3933,6 @@ body.idlm-filters-open {
 }
 
 @media (max-width: 480px) {
-    #idlm-routing-modal .idlm-routing-status-strip {
-        grid-template-columns: 1fr;
-    }
 
     #idlm-routing-modal .idlm-routing-advanced > summary {
         grid-template-columns: 1fr;
@@ -4314,9 +4131,6 @@ body.idlm-filters-open {
 }
 
 /* Follow-up Reminders Overdue highlights */
-.idlm-overdue-alert {
-    font-weight: 600;
-}
 
 @keyframes idlm-pulse {
     0% {
@@ -4875,14 +4689,7 @@ body.idlm-modal-open {
     min-width: 0;
 }
 
-.idlm-filters-primary-row .idlm-filter-group-search {
-    grid-column: 1 / -1;
-}
 
-.idlm-filters-primary-row .idlm-filter-buttons-group {
-    grid-column: 1 / -1;
-    margin-left: 0;
-}
 
 .idlm-filters-secondary-row {
     display: grid;
@@ -4950,9 +4757,6 @@ body.idlm-modal-open {
     .idlm-filters-primary-row .idlm-filter-group {
         flex: 1 1 auto;
         width: 100%;
-    }
-    .idlm-filters-primary-row .idlm-filter-buttons-group {
-        margin-left: 0;
     }
     .idlm-filters-secondary-row {
         grid-template-columns: 1fr;
@@ -6113,15 +5917,6 @@ div.wrap.idlm-wrap {
   color: var(--idlm-danger);
 }
 
-.idlm-wrap .idlm-chip-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  padding: 8px;
-  border: 1px solid var(--idlm-border);
-  border-radius: 5px;
-  background: var(--idlm-surface);
-}
 
 .idlm-wrap .idlm-token-editor {
   display: grid;
@@ -6227,11 +6022,6 @@ div.wrap.idlm-wrap {
   font-weight: 700;
 }
 
-.idlm-wrap .idlm-pipeline-stage-editor__value {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 13px;
-}
 
 .idlm-wrap .idlm-token-editor__item--movable .idlm-token-editor__alias {
   width: 100%;
@@ -6426,18 +6216,6 @@ div.wrap.idlm-wrap {
 .idlm-wrap .idlm-meta-connector__connection-heading span, .idlm-wrap .idlm-meta-manual summary small { font-size: 13px; font-weight: 400; }
 .idlm-wrap .idlm-meta-connector__connection .idlm-alert { margin-top: 14px; }
 .idlm-wrap .idlm-meta-connector__connection [data-idlm-facebook-status]:empty { display: none; }
-.idlm-wrap .idlm-meta-manual { border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); padding: 16px; }
-.idlm-wrap .idlm-meta-manual > summary { cursor: pointer; }
-.idlm-wrap .idlm-meta-manual > summary span { display: inline-flex; flex-direction: column; gap: 4px; vertical-align: top; }
-.idlm-wrap .idlm-meta-manual > details { margin-top: 10px; padding: 0 14px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); }
-.idlm-wrap .idlm-meta-manual > details > summary { display: flex; align-items: center; gap: 12px; min-height: 66px; cursor: pointer; list-style: none; }
-.idlm-wrap .idlm-meta-manual > details > summary::-webkit-details-marker { display: none; }
-.idlm-wrap .idlm-meta-manual > details > summary::after { content: '+'; margin-left: auto; font-size: 20px; }
-.idlm-wrap .idlm-meta-manual > details[open] > summary::after { content: '−'; }
-.idlm-wrap .idlm-meta-step-number { display: inline-flex; justify-content: center; align-items: center; flex: 0 0 32px; height: 32px; border-radius: 50%; background: var(--idlm-action-soft); color: var(--idlm-action); font-weight: 700; }
-.idlm-wrap .idlm-meta-step-label { display: flex; flex: 1; flex-direction: column; gap: 3px; }
-.idlm-wrap .idlm-meta-manual > details[open] { padding-bottom: 16px; }
-.idlm-wrap .idlm-meta-manual summary:focus-visible { outline: 2px solid var(--idlm-action); outline-offset: 2px; }
 .idlm-wrap .idlm-interakt-capture__panel { margin-top: 16px; padding: 16px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface-soft); }
 .idlm-wrap .idlm-interakt-capture__option { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
 .idlm-wrap .idlm-interakt-capture__option input { flex: 0 0 auto; margin: 2px 0 0; }
@@ -6448,7 +6226,7 @@ div.wrap.idlm-wrap {
 .idlm-wrap .idlm-interakt-capture__details { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--idlm-border); }
 .idlm-wrap .idlm-interakt-capture__details summary { cursor: pointer; font-weight: 600; }
 .idlm-wrap .idlm-interakt-capture__details summary:focus-visible { outline: 2px solid var(--idlm-action); outline-offset: 2px; }
-@media (max-width: 600px) { .idlm-wrap .idlm-meta-connector__header, .idlm-wrap .idlm-meta-connector__connection-row { flex-direction: column; align-items: flex-start; } .idlm-wrap .idlm-meta-step-state { font-size: 11px; } }
+@media (max-width: 600px) { .idlm-wrap .idlm-meta-connector__header, .idlm-wrap .idlm-meta-connector__connection-row { flex-direction: column; align-items: flex-start; } }
 
 .idlm-wrap .idlm-mapping-tab-content.active {
   display: block;
@@ -7174,23 +6952,6 @@ div.wrap.idlm-wrap {
 }
 
 /* Sidebar tasks grouping */
-.idlm-sidebar-group {
-    margin-bottom: 20px;
-}
-.idlm-sidebar-group-title {
-    font-size: 11px;
-    text-transform: uppercase;
-    font-weight: 700;
-    color: var(--idlm-action);
-    margin: 0 0 8px 0;
-    letter-spacing: 0.5px;
-    padding-bottom: 4px;
-    border-bottom: 1px dashed var(--idlm-border);
-    cursor: pointer;
-}
-.idlm-sidebar-group-title:hover {
-    color: var(--idlm-action);
-}
 
 /* Daily work queue: compact, time-oriented actions rather than a lead backlog. */
 .idlm-queue-summary { display: flex; justify-content: space-between; gap: var(--idlm-space-2); margin-bottom: var(--idlm-space-4); padding: var(--idlm-space-3); border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface-soft); font-size: var(--idlm-type-meta); }
@@ -7199,7 +6960,6 @@ div.wrap.idlm-wrap {
 .idlm-queue-group { margin: 0 0 var(--idlm-space-5); }
 .idlm-queue-group > h3 { display: flex; align-items: center; justify-content: space-between; margin: 0 0 var(--idlm-space-2); color: var(--idlm-text); font-size: var(--idlm-type-meta); text-transform: uppercase; letter-spacing: .04em; }
 .idlm-queue-group > h3 span { display: inline-grid; min-width: 20px; height: 20px; padding: 0 5px; place-items: center; border-radius: 10px; background: var(--idlm-surface-tint); font-size: 11px; }
-.idlm-queue-group--overdue > h3 { color: var(--idlm-danger); }
 .idlm-queue-task { gap: var(--idlm-space-2); padding: var(--idlm-space-3); }
 .idlm-queue-lead { display: block; max-width: 100%; padding: 0; overflow: hidden; border: 0; background: transparent; color: var(--idlm-action); font: inherit; font-size: var(--idlm-type-meta); line-height: 1.3; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 .idlm-queue-action { min-height: 28px; padding: 4px 7px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius-compact); background: var(--idlm-surface); color: var(--idlm-action); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
@@ -7521,19 +7281,6 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
     min-width: 0;
 }
 
-#idlm-routing-modal .idlm-routing-modal-kicker {
-    display: inline-flex;
-    margin: 0 0 4px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    background: var(--idlm-action-soft);
-    color: var(--idlm-action);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    line-height: 1.3;
-    text-transform: uppercase;
-}
 
 #idlm-routing-modal .idlm-routing-modal-intro {
     max-width: 60ch;

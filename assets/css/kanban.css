@@ -2,11 +2,6 @@
    Interior Design Lead Manager - Kanban Board Styles
    ========================================================================== */
 
-.idlm-kanban-wrap {
-    width: 100%;
-    margin-top: 15px;
-    box-sizing: border-box;
-}
 
 .idlm-kanban-stats {
     margin-top: 0;
@@ -146,12 +141,6 @@
 .idlm-kanban-column[data-stage="Won"] .idlm-kanban-column-header::before { background-color: var(--idlm-success); }
 .idlm-kanban-column[data-stage="Lost"] .idlm-kanban-column-header::before { background-color: var(--idlm-danger); }
 
-.idlm-kanban-column-subtitle {
-    margin: 3px 0 0;
-    color: var(--idlm-text-muted);
-    font-size: 10px;
-    line-height: 1.3;
-}
 
 .idlm-kanban-column-title {
     font-size: 14px;
