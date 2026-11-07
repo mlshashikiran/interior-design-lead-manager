@@ -112,7 +112,7 @@ $idlm_brand_logo = IDLM_Settings::brand_asset($idlm_white_label['logo_id']);
                     </form>
                     <a class="idlm-login-reset" href="<?php echo esc_url(add_query_arg('idlm_auth', 'forgot', $idlm_return_url)); ?>">Forgot your password?</a>
                 <?php endif; ?>
-                <p class="idlm-login-help">Need access? <?php if ($idlm_white_label['support_email']): ?><a href="mailto:<?php echo esc_attr($idlm_white_label['support_email']); ?>">Contact support</a><?php else: ?>Contact your CRM administrator.<?php endif; ?></p>
+                <p class="idlm-login-help">Need access? <?php if ($idlm_white_label['support_email']): ?><a href="<?php echo esc_url('mailto:' . $idlm_white_label['support_email']); ?>">Contact support</a><?php else: ?>Contact your CRM administrator.<?php endif; ?></p>
                 <?php if ($idlm_white_label['footer_text']): ?><p class="idlm-login-footer-text"><?php echo esc_html($idlm_white_label['footer_text']); ?></p><?php endif; ?>
                 <?php if ('1' === $idlm_white_label['show_plugin_attribution']): ?><p class="idlm-login-attribution">Powered by Interior Design Lead Manager</p><?php endif; ?>
             </section>
