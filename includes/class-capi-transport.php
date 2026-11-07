@@ -16,8 +16,24 @@ final class IDLM_CAPI_Transport {
         return empty($lead->fb_lead_id) && ($attribution['channel'] ?? '') === 'whatsapp';
     }
 
+    /** Meta user_data keys whose hashed values identify a person; logs keep only the key. */
+    const LOGGED_HASH_KEYS = array('em', 'ph', 'fn', 'ln', 'ct', 'st', 'zp', 'country', 'external_id', 'db', 'ge');
+
+    /** A phone or email hash is reversible by enumeration, so stored diagnostics show which keys were sent, not their values. */
+    public static function mask_logged_identifiers($payload) {
+        if (!is_array($payload) || !isset($payload['data']) || !is_array($payload['data'])) { return $payload; }
+        foreach ($payload['data'] as $index => $event) {
+            if (!is_array($event) || !isset($event['user_data']) || !is_array($event['user_data'])) { continue; }
+            foreach (array_keys($event['user_data']) as $key) {
+                if (in_array($key, self::LOGGED_HASH_KEYS, true)) { $payload['data'][$index]['user_data'][$key] = '[HASHED]'; }
+            }
+        }
+        return $payload;
+    }
+
     public static function record_attempt($lead_id,$platform,$delivery,$payload,$response,$status,$attempted,$retryable,$outcome = null) {
         unset($delivery['credential']);
+        $payload = self::mask_logged_identifiers($payload);
         $delivery['attempted']=$attempted;$delivery['retryable']=$retryable;$delivery['outcome']=$outcome ?? $status;
         $claimed = !empty($delivery['_durable_claim']);
         unset($delivery['_durable_claim']); $payload['_idlm_delivery']=$delivery;
