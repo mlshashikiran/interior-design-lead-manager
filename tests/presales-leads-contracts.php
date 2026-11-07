@@ -29,3 +29,17 @@ idlm_test('PRESALES queue cells fit their columns', static function(): void {
         assert_contains('body.idlm-crm-design #idlm-lead-drawer ' . $selector, $css);
     }
 });
+
+idlm_test('Popups keep the page behind them from shifting when they lock scroll', static function(): void {
+    $dialog = (string) file_get_contents(dirname(__DIR__) . '/assets/js/dialog.js');
+    foreach (array("'idlm-modal-open', 'idlm-filters-open', 'idlm-catalogue-editor-open', 'idlm-bulk-items-open'", "window.innerWidth - document.documentElement.clientWidth", "document.body.style.setProperty('padding-right', scrollbarWidth + 'px')", "document.body.style.removeProperty('padding-right')", "attributeFilter: ['class']") as $contract) {
+        assert_contains($contract, $dialog);
+    }
+    // Every class that locks scroll in CSS must be one the compensation watches.
+    $css = '';
+    foreach (glob(dirname(__DIR__) . '/assets/css/*.css') as $file) { $css .= (string) file_get_contents($file); }
+    preg_match_all('/body\.(idlm-[a-z-]+-open)\s*\{\s*overflow\s*:\s*hidden/', $css, $locks);
+    foreach (array_unique($locks[1]) as $lock) {
+        assert_contains("'" . $lock . "'", $dialog, 'Scroll lock without shift compensation: ' . $lock);
+    }
+});

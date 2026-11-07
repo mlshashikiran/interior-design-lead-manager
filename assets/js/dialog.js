@@ -28,6 +28,38 @@
         }
     }, true);
 
+    // Popups lock page scroll with overflow: hidden on body. That removes a classic scrollbar, so the
+    // page behind would widen and shift. While locked, pad the body by the scrollbar's width, measured
+    // just before the popup opens (on the click or key that opens it). Overlay scrollbars measure 0.
+    var scrollLockClasses = ['idlm-modal-open', 'idlm-filters-open', 'idlm-catalogue-editor-open', 'idlm-bulk-items-open'];
+    var scrollbarWidth = 0;
+    var scrollPadded = false;
+    var isScrollLocked = function () {
+        return scrollLockClasses.some(function (name) { return document.body.classList.contains(name); });
+    };
+    var measureScrollbar = function () {
+        if (!isScrollLocked()) {
+            scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+        }
+    };
+    var keepScrollbarSpace = function () {
+        if (isScrollLocked()) {
+            if (!scrollPadded && scrollbarWidth > 0) {
+                document.body.style.setProperty('padding-right', scrollbarWidth + 'px');
+                scrollPadded = true;
+            }
+        } else if (scrollPadded) {
+            document.body.style.removeProperty('padding-right');
+            scrollPadded = false;
+        }
+    };
+    ['pointerdown', 'keydown'].forEach(function (type) { document.addEventListener(type, measureScrollbar, true); });
+    window.addEventListener('resize', measureScrollbar);
+    measureScrollbar();
+    if (window.MutationObserver) {
+        new MutationObserver(keepScrollbarSpace).observe(document.body, {attributes: true, attributeFilter: ['class']});
+    }
+
     var activeDialog = null;
     var toastStack = null;
     var toastIcons = {success: 'dashicons-yes-alt', error: 'dashicons-dismiss', warning: 'dashicons-warning', info: 'dashicons-info'};
