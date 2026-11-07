@@ -1026,8 +1026,8 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             case 'bulk_stage':
                 $stage = isset($_POST['stage']) ? sanitize_text_field(wp_unslash($_POST['stage'])) : '';
                 if (!empty($stage)) {
-                    if (self::current_user_is_pre_sales() && !in_array($stage, array('New', 'Contacted', 'Qualified'), true)) {
-                        wp_send_json_error(array('message' => 'Pre-sales users can progress leads only through the Qualified stage.'));
+                    if (self::current_user_is_pre_sales() && !in_array($stage, array('New', 'Contacted'), true)) {
+                        wp_send_json_error(array('message' => 'Pre-sales qualifies leads one at a time from Lead decision. Bulk stage changes are limited to New and Contacted.'));
                     }
                     // Won needs each lead's own final deal value and discount, so it is never a bulk move.
                     if ('Won' === $stage) {
@@ -1061,6 +1061,9 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 break;
 
             case 'bulk_unqualified':
+                if (self::current_user_is_pre_sales()) {
+                    wp_send_json_error(array('message' => 'Pre-sales closes leads one at a time from Lead decision, so each closure records its reason.'));
+                }
                 foreach ($ids as $id) {
                     $compliance = IDLM_DB::get_followup_compliance($id);
                     if (!$compliance['eligible']) {
@@ -1080,12 +1083,18 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
                 break;
 
             case 'bulk_audience_cancel':
+                if (!current_user_can('manage_options')) {
+                    wp_send_json_error(array('message' => 'Only administrators can manage the audience sync queue.'));
+                }
                 $result = IDLM_Audience_Dispatch::cancel($ids);
                 if (is_wp_error($result) || false === $result) { wp_send_json_error(array('message'=>is_wp_error($result) ? $result->get_error_message() : 'Audience work is busy. Retry shortly.'), 409); }
                 wp_send_json_success(array('message'=>'Selected manual audience work removed. Unknown delivery outcomes remain blocked.', 'removed_count'=>$result['removed']));
                 break;
 
             case 'bulk_audience_queue':
+                if (!current_user_can('manage_options')) {
+                    wp_send_json_error(array('message' => 'Only administrators can manage the audience sync queue.'));
+                }
                 $result = IDLM_Audience_Dispatch::enqueue($ids);
                 if (is_wp_error($result) || false === $result) { wp_send_json_error(array('message'=>is_wp_error($result) ? $result->get_error_message() : 'Audience queue is busy. Retry shortly.'), 409); }
                 wp_send_json_success(array('message'=>'Selected leads queued. Current audience exclusions apply at dispatch.', 'queued_count'=>$result['queued']));

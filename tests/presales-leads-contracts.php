@@ -16,9 +16,17 @@ idlm_test('PRESALES leads filters return to the resting Action required queue, n
 idlm_test('PRESALES leads controls match what the server lets pre-sales do', static function(): void {
     $template = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/leads.php');
     $ajax = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-ajax.php');
-    $allowed = "array('New', 'Contacted', 'Qualified')";
+    $allowed = "array('New', 'Contacted')";
     assert_contains("if (\$idlm_is_pre_sales && !in_array(\$idlm_stage, {$allowed}, true)) { continue; }", $template);
     assert_contains("self::current_user_is_pre_sales() && !in_array(\$stage, {$allowed}, true)", $ajax, 'Bulk stage list and server rule must stay in step.');
+    // Pre-sales never qualifies or closes in bulk: each decision goes through Lead decision and its log.
+    assert_true(1 === preg_match('/<\?php if \(!\$idlm_is_pre_sales\):[^\n]*\?>\s*<option value="bulk_unqualified">/', $template), 'Bulk Mark unqualified must be hidden from pre-sales.');
+    assert_true(1 === preg_match("/case 'bulk_unqualified':\s*if \(self::current_user_is_pre_sales\(\)\) \{\s*wp_send_json_error/", $ajax), 'The server must refuse bulk Unqualified from pre-sales.');
+    // The audience sync queue is administrator-only, in the menu and on the server.
+    assert_true(1 === preg_match('/<\?php if \(\$idlm_can_manage_options\): \?>\s*<option value="bulk_audience_queue">[^<]*<\/option>\s*<option value="bulk_audience_cancel">/', $template), 'Audience queue actions must be shown to administrators only.');
+    foreach (array('bulk_audience_cancel', 'bulk_audience_queue') as $op) {
+        assert_true(1 === preg_match("/case '{$op}':\s*if \(!current_user_can\('manage_options'\)\)/", $ajax), 'The server must refuse ' . $op . ' from non-administrators.');
+    }
     assert_true(1 === preg_match("/if \\(!\\\$idlm_is_pre_sales\\) \\{\\s*\\\$idlm_metric_cards\\[\\] = array\\('Qualified'/", $template), 'The Qualified card always reads 0 in the pre-sales queue and stays hidden there.');
 });
 
@@ -42,4 +50,12 @@ idlm_test('Popups keep the page behind them from shifting when they lock scroll'
     foreach (array_unique($locks[1]) as $lock) {
         assert_contains("'" . $lock . "'", $dialog, 'Scroll lock without shift compensation: ' . $lock);
     }
+});
+
+idlm_test('Project type starts empty instead of pretending Apartment was chosen', static function(): void {
+    $drawer = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-lead-reads.php');
+    assert_contains('<option value="" <?php selected((string) $lead->property_type, \'\'); ?>>Choose a project type</option>', $drawer);
+    assert_false(false !== strpos($drawer, 'Not saved yet'), 'The placeholder replaces the "Not saved yet" workaround.');
+    $template = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/leads.php');
+    assert_contains('<option value="">Choose a project type</option>', $template, 'Add lead must not default to Apartment either.');
 });

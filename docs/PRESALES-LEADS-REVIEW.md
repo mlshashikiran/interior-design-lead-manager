@@ -29,7 +29,7 @@ Severity: **High** is a dead end or wrong result in the daily loop. **Medium** i
 | F4 | Drawer | Pre-sales could open Early close on a lead they had already closed as Unqualified. | Medium | Hidden in UI; server question Q4 |
 | F5 | Drawer | Log final closure and Close as unreachable were disabled with no reason given. | Medium | Fixed |
 | F6 | Drawer | Qualify is enabled only from saved details. The guidance listed what was missing, but the fields themselves did not say so, and it never said to save first. | Medium | Fixed |
-| F7 | Drawer | An empty Project type shows the first choice (Apartment) as if it were set. It counts as missing until the form is saved, and saving writes Apartment. | Medium | Marked "Not saved yet"; data question Q5 |
+| F7 | Drawer | An empty Project type shows the first choice (Apartment) as if it were set. It counts as missing until the form is saved, and saving writes Apartment. | Medium | Fixed (Q5): "Choose a project type" placeholder in the drawer and in Add lead |
 | F8 | Drawer | The Deal value, Discount, Quote shared, Quote value and quote upload fields were shown disabled to pre-sales. They are sales-only noise, and a disabled field never submits. The group titles said "Qualification and deal" and "Quote and studio". | Low | Fixed (not rendered; titles "Qualification", "Studio") |
 | F9 | Drawer, phone | Six cycle cards came before the Log buttons, so on a phone the call → log step needed a scroll every time. | Medium | Fixed (actions and decision first, history after) |
 | F10 | Rows | Decided rows (seen under My qualified history) showed two disabled buttons and no way to open the lead from Actions. | Medium | Fixed ("View") |
@@ -38,7 +38,7 @@ Severity: **High** is a dead end or wrong result in the daily loop. **Medium** i
 | F13 | Rows, phone | The next step was cut off on cards ("Qualified — …"). | Low | Fixed (wraps) |
 | F14 | Bulk | The bulk Change stage list offered every stage except Won. The server rejects anything after Qualified for pre-sales. | Medium | Fixed (New, Contacted, Qualified only) |
 | F15 | Rows | Outreach targets were read once per row. | Low | Fixed (read once per page) |
-| F16 | Bulk | Pre-sales can add leads to or remove them from the audience sync queue, and can mark leads Unqualified in bulk. Bulk Unqualified skips the decision log entry that the drawer writes. | Medium | Question Q2, Q3 |
+| F16 | Bulk | Pre-sales can add leads to or remove them from the audience sync queue, and can mark leads Unqualified in bulk. Bulk Unqualified skips the decision log entry that the drawer writes. | Medium | Fixed (Q2, Q3): audience queue actions are administrator-only; pre-sales has no bulk Unqualified and no bulk Qualified |
 | F17 | Security | `ajax_presales_decision` checks the nonce and the pre-sales or admin role, but it does not call `IDLM_Admin::require_ajax_access('rep')` the way the other CRM handlers do. Pre-sales users pass it today. | Low | Question Q1 |
 | F18 | Wording | The "Today" column counts the active outreach cycle, which can be older than today. The Follow-up card counts all Call back requested leads, not only those due. | Low | Proposal |
 | F20 | All popups | Every scroll lock (dialogs, the lead drawer, Filters, and the catalogue and bulk-item editors) set `overflow: hidden` on `body`. That removed a classic scrollbar (about 15px on Windows, or on a Mac set to always show scrollbars), so the page behind widened and shifted. Measured: Add lead moved 1398→1404px and the table widened 1114→1120px at 1440. | Medium | Fixed: `dialog.js` pads `body` by the scrollbar width, measured on the opening click or key, while locked |
@@ -52,7 +52,7 @@ None of these change a permission, an AJAX action, an option, a stored value or 
 2. **Summary reconciles** (F2). Pre-sales no longer sees the Qualified leads card. Their history stays in Engagement → My qualified history. File: `templates/admin/leads.php`.
 3. **Decided leads stop offering outreach** (F3, F4, F10). The drawer hides the Log buttons for decided leads. It also hides Early close from pre-sales (administrators keep it, because they may still early-close a qualified lead) and states "Decision recorded: …". Decided rows show View. Files: `includes/class-admin-lead-reads.php`, `includes/class-admin-collection-reads.php`.
 4. **Locked controls say why** (F5). "Final closure unlocks after all six cycles are complete." "Close as unreachable unlocks after six cycles and the final closure."
-5. **Fields say what blocks Qualify** (F6, F7). "Needed to qualify" sits under each missing saved detail, "Needs ₹4L or above to qualify" under a low budget, and "Not saved yet: save to record it" under an empty project type. The guidance adds "Save the details, then qualify."
+5. **Fields say what blocks Qualify** (F6, F7). "Needed to qualify" sits under each missing saved detail, "Needs ₹4L or above to qualify" under a low budget, and an empty project type now shows "Choose a project type" with "Needed to qualify". The guidance adds "Save the details, then qualify."
 6. **Call → log → decide comes first** (F9). In the drawer the order is Log actions, then Lead decision, then cycle history, then Early close.
 7. **Sales-only fields not rendered** (F8). The drawer no longer renders deal value, discount, quote shared, quote value or the quote upload for pre-sales. The server still rejects them, and the existing native contract checks that.
 8. **Controls match server rules** (F14). The bulk stage list for pre-sales holds New, Contacted and Qualified, the same list as `ajax_bulk_action`.
@@ -62,7 +62,14 @@ None of these change a permission, an AJAX action, an option, a stored value or 
 
 Tests: `tests/presales-leads-contracts.php` (fast source contracts) and `tests/integration/presales-leads-contracts.php` (rendered queue and drawer as a real pre-sales user). `tests/integration/high-priority-contracts.php` and `tests/admin-refactor-contracts.php` were updated, because the old "renders disabled" and "blank on toggle-off" behaviour was deliberately removed.
 
-## Needs the owner's decision
+## Owner decisions (2026-11-07)
+
+- **Q2, audience sync queue:** administrators only. The bulk menu shows Add to and Remove from audience sync queue only to administrators, and `ajax_bulk_action` refuses `bulk_audience_queue` and `bulk_audience_cancel` from anyone else. This also removes them from sales executives and sales managers. The INT-009 HTTP cases now queue as an administrator and check that a sales executive is refused and sees no option.
+- **Q3, bulk decisions:** pre-sales has no bulk qualify or unqualify. The bulk stage list for pre-sales holds New and Contacted only, Mark unqualified is hidden, and the server refuses `bulk_unqualified` and a bulk move to any other stage from pre-sales. Other roles are unchanged.
+- **Q5, project type:** both selects start with an empty "Choose a project type" choice. An untouched save keeps the field empty, so Qualify stays blocked until a type is chosen.
+- **Q1 and Q4:** answered in the session and still open.
+
+## Needs the owner's decision (original questions)
 
 These change access, writes or stored values, so they are not done.
 

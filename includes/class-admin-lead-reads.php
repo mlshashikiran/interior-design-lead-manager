@@ -203,10 +203,6 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
             foreach (array_keys($missing_qualification_fields) as $field) {
                 $qualification_needs[$field] = 'Needed to qualify';
             }
-            // An empty project type still shows the list's first choice, which is stored only on save.
-            if (isset($qualification_needs['property_type'])) {
-                $qualification_needs['property_type'] = 'Not saved yet: save to record it';
-            }
             if (!empty($lead->budget) && IDLM_DB::budget_to_rupees($lead->budget) < 400000) {
                 $qualification_needs['budget'] = 'Needs ₹4L or above to qualify';
             }
@@ -454,6 +450,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                     <div class="idlm-drawer-field">
                                         <label for="idlm-edit-property-type">Property type</label>
                                         <select name="property_type" class="idlm-drawer-control" id="idlm-edit-property-type">
+                                            <option value="" <?php selected((string) $lead->property_type, ''); ?>>Choose a project type</option>
                                             <option value="Apartment" <?php selected($lead->property_type, 'Apartment'); ?>>Apartment</option>
                                             <option value="Villa" <?php selected($lead->property_type, 'Villa'); ?>>Villa</option>
                                             <option value="Independent House" <?php selected($lead->property_type, 'Independent House'); ?>>Independent House</option>
