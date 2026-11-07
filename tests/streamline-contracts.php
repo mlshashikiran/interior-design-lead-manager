@@ -256,7 +256,7 @@ idlm_test('STREAMLINE maintenance checks run once per interval and again right a
     unset($GLOBALS['idlm_test_options'][IDLM_Scheduler::MAINTENANCE_OPTION]);
     assert_true(IDLM_Scheduler::maintenance_due('schedules'), 'First request runs the check.');
     assert_false(IDLM_Scheduler::maintenance_due('schedules'), 'The next request inside the interval skips it.');
-    assert_true(IDLM_Scheduler::maintenance_due('legacy_queue_scrub'), 'Tasks are throttled separately.');
+    assert_true(IDLM_Scheduler::maintenance_due('integration_upkeep'), 'Tasks are throttled separately.');
     $GLOBALS['idlm_test_options'][IDLM_Scheduler::MAINTENANCE_OPTION]['schedules'] = IDLM_VERSION . '|' . (time() - 1);
     assert_true(IDLM_Scheduler::maintenance_due('schedules'), 'An expired interval runs again.');
     $GLOBALS['idlm_test_options'][IDLM_Scheduler::MAINTENANCE_OPTION]['schedules'] = '0.0.1|' . (time() + 3600);
@@ -265,11 +265,19 @@ idlm_test('STREAMLINE maintenance checks run once per interval and again right a
     assert_true(IDLM_Scheduler::maintenance_due('schedules'), 'A damaged value fails open and runs the check.');
 
     $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-integrations.php');
-    assert_contains("IDLM_Secret_Store::migrate_platforms();\n        if (IDLM_Scheduler::maintenance_due('legacy_queue_scrub')) {", $source, 'Secret encryption stays on every request.');
+    assert_contains("if (IDLM_Scheduler::maintenance_due('integration_upkeep')) {\n            self::run_upkeep();", $source, 'Credential, secret and queue upkeep is throttled.');
+    $start = strpos($source, 'public static function init()');
+    $init = substr($source, $start, strpos($source, 'public static function run_upkeep') - $start);
+    foreach (array('maybe_migrate_api_credentials()', 'migrate_platforms()', 'scrub_legacy_queues()') as $call) {
+        assert_false(false !== strpos($init, $call), $call . ' runs on every request again.');
+    }
+    $plugin = (string) file_get_contents(dirname(__DIR__) . '/interior-design-lead-manager.php');
+    assert_contains("IDLM_Scheduler::setup_schedules();\n    IDLM_Integrations::run_upkeep();", $plugin, 'Activation sets everything up at once.');
     $GLOBALS['idlm_test_hooks'] = array();
     IDLM_Scheduler::init();
     $hooks = array_column($GLOBALS['idlm_test_hooks'], 'hook');
     assert_true(in_array('cron_schedules', $hooks, true), 'The minute interval is registered on every request.');
+    assert_true(in_array('init', $hooks, true) && !in_array('wp', $hooks, true), 'Schedules are checked on every kind of request, not only page views.');
     unset($GLOBALS['idlm_test_options'][IDLM_Scheduler::MAINTENANCE_OPTION]);
 });
 

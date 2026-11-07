@@ -136,6 +136,7 @@ function idlm_activate_plugin($network_wide = false) {
 
     // 2. Set up background Action Scheduler or WP Cron schedules
     IDLM_Scheduler::setup_schedules();
+    IDLM_Integrations::run_upkeep();
 
     // 3. Register CRM roles and assignment capabilities.
     idlm_register_crm_roles_and_capabilities();

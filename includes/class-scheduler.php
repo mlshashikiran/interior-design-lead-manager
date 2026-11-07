@@ -11,8 +11,9 @@ class IDLM_Scheduler {
     public static function init() {
         // The custom interval must exist on every request, including cron, or recurring events cannot be rescheduled.
         add_filter('cron_schedules', array(__CLASS__, 'cron_schedules'));
-        // Schedules are checked on page views at most every ten minutes, and right after an update.
-        add_action('wp', array(__CLASS__, 'maybe_setup_schedules'));
+        // Schedules are checked on every kind of request (page, admin, AJAX, REST, cron) at most every ten minutes,
+        // and on the first request after an update.
+        add_action('init', array(__CLASS__, 'maybe_setup_schedules'));
 
         add_action(IDLM_Audience_Dispatch::HOOK, array('IDLM_Audience_Dispatch', 'resume'), 10, 3);
 

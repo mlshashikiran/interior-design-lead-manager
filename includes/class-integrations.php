@@ -8,11 +8,11 @@ class IDLM_Integrations {
 
     public static function init() {
         add_action('idlm_qualified_handoff_notification', array(__CLASS__, 'send_handoff_notifications'), 10, 4);
-        self::maybe_migrate_api_credentials();
-        // Encrypting plaintext secrets stays on every request; the legacy queue scrub reads several tables, so it is throttled.
-        IDLM_Secret_Store::migrate_platforms();
-        if (IDLM_Scheduler::maintenance_due('legacy_queue_scrub')) {
-            IDLM_Secret_Store::scrub_legacy_queues();
+        // Credential, secret and queue upkeep reads several rows uncached, so it runs at most every ten minutes and on the
+        // first request after an update. Every use still repairs its own value: each credential check migrates
+        // credentials first, and IDLM_Secret_Store::get() encrypts a plaintext secret before returning it.
+        if (IDLM_Scheduler::maintenance_due('integration_upkeep')) {
+            self::run_upkeep();
         }
         add_action('wp_head', array(__CLASS__, 'inject_utm_tracker_script'));
         add_action('rest_api_init', array(__CLASS__, 'register_webhook_routes'));
@@ -23,6 +23,13 @@ class IDLM_Integrations {
             self::reconcile_legacy_qualified_handoffs();
             update_option('idlm_handoff_reconciliation_version', '1.0.1');
         }
+    }
+
+    /** Generate missing API credentials, encrypt plaintext platform secrets and scrub legacy queues. Repeatable. */
+    public static function run_upkeep() {
+        self::maybe_migrate_api_credentials();
+        IDLM_Secret_Store::migrate_platforms();
+        IDLM_Secret_Store::scrub_legacy_queues();
     }
 
     /** Preserve the Basic Auth challenge on permission-callback failures. */
