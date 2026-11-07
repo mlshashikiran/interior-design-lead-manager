@@ -23,6 +23,8 @@ idlm_test('white-label derived tokens keep sidebar accents at 3:1 and accent fil
     // The default brand keeps its gold on the sidebar; the letter on gold becomes the sidebar colour (white is 2.6:1).
     assert_same('#C99644', idlm_white_label_test_token($defaults, '--idlm-sidebar-accent'));
     assert_same('#111A24', idlm_white_label_test_token($defaults, '--idlm-on-accent'));
+    assert_same('#C99644', idlm_white_label_test_token($defaults, '--idlm-sidebar-accent-text'));
+    assert_contains('.idlm-login-product { margin: 0 0 14px; color: var(--idlm-sidebar-accent-text, #e5c28a);', (string) file_get_contents(dirname(__DIR__) . '/assets/css/admin-style.css'));
 
     $dark = IDLM_Settings::white_label_style(array('primary_color' => '#1E1B4B', 'accent_color' => '#3B2F80', 'sidebar_color' => '#0B0A1F'));
     assert_same('#FFFFFF', idlm_white_label_test_token($dark, '--idlm-sidebar-accent'));
@@ -40,6 +42,7 @@ idlm_test('white-label derived tokens keep sidebar accents at 3:1 and accent fil
             $label = $accent . ' on ' . $sidebar;
             assert_true(idlm_white_label_test_ratio($sidebar_accent, $sidebar) >= 3, 'Sidebar accent below 3:1 for ' . $label);
             assert_true(idlm_white_label_test_ratio($on_accent, $accent) >= 4.5, 'Accent fill text below 4.5:1 for ' . $label);
+            assert_true(idlm_white_label_test_ratio(idlm_white_label_test_token($tokens, '--idlm-sidebar-accent-text'), $sidebar) >= 4.5, 'Sidebar accent text below 4.5:1 for ' . $label);
         }
     }
     // Stored values are untouched: the derived tokens only exist in the emitted style.

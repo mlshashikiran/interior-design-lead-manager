@@ -156,7 +156,8 @@ class IDLM_Settings {
             . '--idlm-brand-gold:' . self::normalize_hex($settings['accent_color']) . ';'
             . '--idlm-sidebar:' . self::normalize_hex($settings['sidebar_color']) . ';'
             . '--idlm-sidebar-accent:' . self::sidebar_accent($settings) . ';'
-            . '--idlm-on-accent:' . self::on_accent($settings) . ';';
+            . '--idlm-on-accent:' . self::on_accent($settings) . ';'
+            . '--idlm-sidebar-accent-text:' . self::sidebar_accent_text($settings) . ';';
     }
 
     /**
@@ -169,6 +170,12 @@ class IDLM_Settings {
         // The active item is filled with 14% white over the sidebar (--idlm-sidebar-active).
         $active = self::lighten_hex($sidebar, 14);
         return min(self::contrast_ratio($accent, $sidebar), self::contrast_ratio($accent, $active)) >= 3 ? $accent : '#FFFFFF';
+    }
+
+    /** Small accent-coloured text on the sidebar (the sign-in label): the accent at 4.5:1, otherwise white. */
+    private static function sidebar_accent_text($settings) {
+        list($accent, $sidebar) = self::accent_pair($settings);
+        return self::contrast_ratio($accent, $sidebar) >= 4.5 ? $accent : '#FFFFFF';
     }
 
     /** Text on an accent fill: white, else the sidebar colour, else black, whichever first reaches 4.5:1. */

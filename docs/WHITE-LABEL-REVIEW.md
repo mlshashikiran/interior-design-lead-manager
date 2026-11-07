@@ -42,7 +42,7 @@ Severity: **High** means it breaks the feature or a WCAG AA requirement for a re
 | W10 | Low | **The quotations page had no CRM favicon.** `render_frontend_favicon()` skipped `[idlm_quotations]`. | **Fixed** (`d35c27e`): the shortcode was added to the list. |
 | W11 | Low | **Notification emails carry fixed product branding.** Subjects start with `[Lead Manager]` (`class-handoff-notifications.php`, `class-design-handoffs.php` ×4, `class-integrations.php`). Bodies are plain text with no brand. | **Fixed** (`a82e661`): subjects use `IDLM_Settings::mail_subject_prefix()`, `[` + workspace title + `]`. The default title is "Lead Manager", so unconfigured sites keep `[Lead Manager]` and existing mail filters still match. |
 | W12 | Low | **The wp-admin menu and utilities page are titled "Lead Manager"** (`class-admin.php`). They are seen only by administrators. | **Fixed** (`a82e661`): the menu, page title and utilities heading use the workspace title. |
-| W13 | Low | **The login panel has a fixed gold label colour `#e5c28a`** (`.idlm-login-product`) instead of a brand token. | Open. Tied to W5. It needs a text-safe sidebar token, and 3:1 is not enough for 12px text. |
+| W13 | Low | **The login panel has a fixed gold label colour `#e5c28a`** (`.idlm-login-product`) instead of a brand token. | **Fixed** (see Applied proposals): new `--idlm-sidebar-accent-text` is the accent when it reaches 4.5:1 on the sidebar, otherwise white. The default brand shows `#C99644` (about 6.7:1). |
 | W14 | Low | **The settings preview does not show the derived tokens.** `settings.js` previews `--idlm-brand-gold` on the mock sidebar, so a low-contrast accent looks gold in the preview but renders white live. | **Fixed** (`d3a6675`): the in-form contrast message now applies the same rules as the save, so it no longer says Pass for a colour the save rejects. The mock sidebar does not draw the accent, so no derived token is needed there. |
 | W15 | Low | **Dead aliases.** `--idlm-primary`, `--idlm-primary-hover`, `--idlm-gold`, `--idlm-gold-dark` and `--idlm-gold-soft` in `admin-style.css :root` have no users and would freeze at the defaults like W1 if used. | **Fixed** (`36a013d`): these and the now-unused `--idlm-dark` are deleted; `docs/DESIGN.md` updated. |
 | W16 | Info | **Quotation print and PDF** use their own Quotation Setup accent (default: the white-label accent), and only as a 3px header rule. `sanitize_hex_color` runs on save. The company name falls back from the brand name. This complies with STD-CSS-8. | No change. |
@@ -81,4 +81,6 @@ Browser check: `/crm-workspace?idlm_view=leads` as a sales rep at 1440 and 390 p
 - **P3** applied with the workspace title, whose default keeps today's `[Lead Manager]` prefix.
 - **P4** applied.
 
-Still open: **W13**, the fixed login label colour `#e5c28a`. On a sidebar at the new 7:1 minimum it is about 4.2:1, below 4.5:1 for 12px text, so it needs a text-safe derived token. **W18** (Meta CAPI source name) is outbound data and stays unchanged.
+- **W13** fixed the same way as W3, with a 4.5:1 text threshold.
+
+Still open: **W18** (Meta CAPI source name) is outbound data and stays unchanged.
