@@ -12,9 +12,7 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
 
     public static function ajax_get_lead_activity() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
         
         $lead_id = isset($_POST['lead_id']) ? intval(wp_unslash($_POST['lead_id'])) : 0;
         if (!$lead_id) {
@@ -51,23 +49,23 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
         // 1. Render all activities & comments (Full Timeline)
         ob_start();
         ?>
-        <div class="idlm-timeline" style="margin-top:0;">
+        <div class="idlm-timeline">
             <?php if (empty($logs)): ?>
-                <div style="text-align: center; color: #64748b; padding: 20px 0;">No activity logs found for this lead.</div>
+                <div>No activity recorded yet.</div>
             <?php else: ?>
                 <?php foreach ($logs as $log): 
                     $author = $log->display_name ? $log->display_name : 'System Pipeline';
                 ?>
                     <div class="idlm-timeline-item">
-                        <div class="idlm-timeline-meta" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="idlm-timeline-meta">
                             <div>
                                 <strong><?php echo esc_html($author); ?></strong>
                                 <span><?php echo esc_html(self::format_datetime($log->created_at)); ?></span>
                             </div>
                             <?php if ($log->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $log->user_id)): ?>
-                                <div class="idlm-timeline-actions" style="font-size: 11px;">
-                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
-                                    <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
+                                <div class="idlm-timeline-actions">
+                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>">Edit</a>
+                                    <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>">Delete</a>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -85,23 +83,23 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
         // 2. Render only recent comments
         ob_start();
         ?>
-        <div class="idlm-timeline" style="margin-top:0;">
+        <div class="idlm-timeline">
             <?php if (empty($recent_comments)): ?>
-                <div style="text-align: center; color: #64748b; padding: 20px 0;">No comments found for this lead.</div>
+                <div>No comments yet.</div>
             <?php else: ?>
                 <?php foreach ($recent_comments as $log): 
                     $author = $log->display_name ? $log->display_name : 'System Pipeline';
                 ?>
                     <div class="idlm-timeline-item">
-                        <div class="idlm-timeline-meta" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="idlm-timeline-meta">
                             <div>
                                 <strong><?php echo esc_html($author); ?></strong>
                                 <span><?php echo esc_html(self::format_datetime($log->created_at)); ?></span>
                             </div>
                             <?php if ($log->activity_type === 'comment' && (current_user_can('manage_options') || get_current_user_id() == $log->user_id)): ?>
-                                <div class="idlm-timeline-actions" style="font-size: 11px;">
-                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: var(--idlm-brand-gold); text-decoration: none; margin-right: 8px;">Edit</a>
-                                    <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>" style="color: #b5472e; text-decoration: none;">Delete</a>
+                                <div class="idlm-timeline-actions">
+                                    <a href="#" class="idlm-edit-comment-link" data-id="<?php echo esc_attr($log->id); ?>">Edit</a>
+                                    <a href="#" class="idlm-delete-comment-link" data-id="<?php echo esc_attr($log->id); ?>">Delete</a>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -116,17 +114,6 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
         <?php
         $comments_html = ob_get_clean();
 
-        if (isset($_POST['idlm_design']) ? 'crm' === sanitize_key(wp_unslash($_POST['idlm_design'])) : IDLM_Admin_Assets::design_layer_enabled()) {
-            // Timeline presentation lives in crm-design-leads.css.
-            $strip_and_label = static function ($markup) {
-                return strtr((string) preg_replace('/\sstyle="[^"]*"/i', '', $markup), array(
-                    '>No activity logs found for this lead.<' => '>No activity recorded yet.<',
-                    '>No comments found for this lead.<' => '>No comments yet.<',
-                ));
-            };
-            $full_html = $strip_and_label($full_html);
-            $comments_html = $strip_and_label($comments_html);
-        }
 
         wp_send_json_success(array(
             'html' => $full_html,
@@ -136,9 +123,7 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
 
     public static function ajax_save_activity_comment() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
 
         $lead_id = isset($_POST['lead_id']) ? intval(wp_unslash($_POST['lead_id'])) : 0;
         $comment = isset($_POST['comment']) ? sanitize_textarea_field(wp_unslash($_POST['comment'])) : '';
@@ -182,9 +167,7 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
 
     public static function ajax_edit_activity_comment() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
 
         $log_id = isset($_POST['log_id']) ? intval(wp_unslash($_POST['log_id'])) : 0;
         $comment = isset($_POST['comment']) ? sanitize_textarea_field(wp_unslash($_POST['comment'])) : '';
@@ -222,9 +205,7 @@ final class IDLM_Admin_Activity_Controller extends IDLM_Admin {
 
     public static function ajax_delete_activity_comment() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
 
         $log_id = isset($_POST['log_id']) ? intval(wp_unslash($_POST['log_id'])) : 0;
         if (!$log_id) {

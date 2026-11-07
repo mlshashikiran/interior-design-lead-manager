@@ -48,7 +48,7 @@ $idlm_email_cleared = isset($context['email_cleared']) ? $context['email_cleared
 
                         <!-- Telemetry Settings Card -->
                         <article class="idlm-card">
-                            <h3>Telemetry & Logging Configuration</h3>
+                            <h3>Telemetry and logging configuration</h3>
                             <p class="idlm-card-desc">Configure the error tracking log level. Higher levels record more details but may write more rows if errors occur.</p>
                             
                             <div class="idlm-form-grid two">
@@ -74,7 +74,7 @@ $idlm_email_cleared = isset($context['email_cleared']) ? $context['email_cleared
 
                         <!-- System Diagnostics Overview Card -->
                         <article class="idlm-card">
-                            <h3>System Diagnostics Overview</h3>
+                            <h3>System diagnostics overview</h3>
                             <p class="idlm-card-desc">Key environment metrics for debugging. Share these details when reporting a bug.</p>
                             
                             <div class="idlm-health-grid">
@@ -140,7 +140,7 @@ $idlm_email_cleared = isset($context['email_cleared']) ? $context['email_cleared
 
                         <!-- Horizontal Deployment Readiness Card -->
                         <article class="idlm-card idlm-horizontal-readiness">
-                            <h3>Horizontal Deployment Readiness</h3>
+                            <h3>Horizontal deployment readiness</h3>
                             <?php if ('multi_node' === ($idlm_horizontal_readiness['mode'] ?? 'single_node')): ?>
                                 <p class="idlm-card-desc">
                                     <?php if ('ready' === ($idlm_horizontal_readiness['status'] ?? 'blocked')): ?>
@@ -172,7 +172,7 @@ $idlm_email_cleared = isset($context['email_cleared']) ? $context['email_cleared
                         <!-- Telemetry Logs Table Card -->
                         <article class="idlm-card">
                             <div class="idlm-shortcode-head idlm-mb-4">
-                                <h3 class="idlm-heading-flush">Recent Telemetry & Bug Logs</h3>
+                                <h3 class="idlm-heading-flush">Recent telemetry and bug logs</h3>
                                 <button type="button" id="idlm-clear-telemetry-btn" class="idlm-btn idlm-btn-secondary idlm-btn-danger-outline">
                                     Clear Telemetry Logs
                                 </button>

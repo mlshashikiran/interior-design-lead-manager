@@ -177,6 +177,7 @@ final class IDLM_Test_WPDB {
     public array $custom_query_results = array();
     public $custom_get_var_result = null;
     public string $last_get_results_query = '';
+    public array $get_results_calls = array();
     public array $failed_writes = array();
     public string $query_fail_contains = '';
     public bool $deny_schema_lock = false;
@@ -196,6 +197,7 @@ final class IDLM_Test_WPDB {
         $this->custom_query_results = array();
         $this->custom_get_var_result = null;
         $this->last_get_results_query = '';
+        $this->get_results_calls = array();
         $this->failed_writes = array();
         $this->query_fail_contains = '';
         $this->deny_schema_lock = false;
@@ -636,7 +638,12 @@ final class IDLM_Test_WPDB {
         $this->last_get_results_query = preg_replace('/\s+/', ' ', trim($query));
         $query = $this->last_get_results_query;
         if (strpos($query, 'SELECT option_name, option_value FROM wp_options WHERE option_name IN') === 0) {
-            $rows=array();foreach(array('idlm_max_active_leads_per_rep',IDLM_Settings::ROUTING_OPTION) as $key) {
+            // Rows for the bound names, read like get_var(): table rows first, then stored options.
+            $this->get_results_calls[] = $query;
+            if ($this->query_fail_contains && strpos($query, $this->query_fail_contains) !== false) { $this->last_error = 'Synthetic query failure'; return array(); }
+            preg_match('/option_name IN \\(([^)]*)\\)/', $query, $list); preg_match_all("/'([^']*)'/", $list[1] ?? '', $names);
+            $rows=array();foreach(array_unique($names[1]) as $key) {
+                foreach ($this->tables['wp_options'] ?? array() as $row) { if ($row['option_name']===$key) { $rows[]=(object)array('option_name'=>$key,'option_value'=>$row['option_value']); continue 2; } }
                 if (array_key_exists($key,$GLOBALS['idlm_test_options'])) { $value=$GLOBALS['idlm_test_options'][$key];$rows[]=(object)array('option_name'=>$key,'option_value'=>is_array($value)?serialize($value):$value); }
             }return $rows;
         }
@@ -1109,6 +1116,10 @@ function wp_get_current_user(): object {
     );
 }
 
+function apply_filters(string $hook_name, $value, ...$args) {
+    return $value;
+}
+
 function is_user_logged_in(): bool {
     return (bool) $GLOBALS['idlm_test_logged_in'];
 }
@@ -1158,6 +1169,34 @@ function user_can($user, string $cap): bool {
     $caps=array_merge($caps,(array)($user->caps ?? array()));return !empty($caps[$cap]);
 }
 function maybe_unserialize($value) { $decoded=is_string($value)?@unserialize($value):false;return false === $decoded ? $value : $decoded; }
+/** WordPress core is_serialized(), strict mode, copied so decode() behaves as it does in production. */
+function is_serialized($data, $strict = true) {
+    if (!is_string($data)) { return false; }
+    $data = trim($data);
+    if ('N;' === $data) { return true; }
+    if (strlen($data) < 4 || ':' !== $data[1]) { return false; }
+    if ($strict) {
+        $last = substr($data, -1);
+        if (';' !== $last && '}' !== $last) { return false; }
+    } else {
+        $semicolon = strpos($data, ';'); $brace = strpos($data, '}');
+        if (false === $semicolon && false === $brace) { return false; }
+        if ((false !== $semicolon && $semicolon < 3) || (false !== $brace && $brace < 4)) { return false; }
+    }
+    $token = $data[0];
+    switch ($token) {
+        case 's':
+            if ($strict) { if ('"' !== substr($data, -2, 1)) { return false; } }
+            elseif (false === strpos($data, '"')) { return false; }
+            // Fall through.
+        case 'a': case 'O': case 'E':
+            return (bool) preg_match("/^{$token}:[0-9]+:/s", $data);
+        case 'b': case 'i': case 'd':
+            $end = $strict ? '$' : '';
+            return (bool) preg_match("/^{$token}:[0-9.E+-]+;$end/", $data);
+    }
+    return false;
+}
 
 function current_user_can(string $capability, ...$args): bool {
     return !empty($GLOBALS['idlm_test_caps'][$capability]);

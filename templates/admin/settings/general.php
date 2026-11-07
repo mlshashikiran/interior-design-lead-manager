@@ -37,7 +37,7 @@ $idlm_value_labels = isset($context['value_labels']) ? $context['value_labels'] 
                                 <p class="description">Notifications already being delivered cannot be recalled. CRM records, assignments and on-screen reminders work with these switches off.</p>
                             </article>
                             <article class="idlm-card idlm-settings-general-metrics">
-                                <h3>Firm Metrics & Targets</h3>
+                                <h3>Firm metrics and targets</h3>
                                 <div class="idlm-form-grid three" data-idlm-ui="grid-three">
                                     <div class="idlm-form-group">
                                         <label for="idlm-lead-target">Monthly lead volume target</label>
@@ -126,12 +126,12 @@ $idlm_value_labels = isset($context['value_labels']) ? $context['value_labels'] 
                         </div>
 
                         <article class="idlm-card idlm-card-muted" data-idlm-ui="mt-6">
-                            <h3>Frontend Shortcode Integrations</h3>
+                            <h3>Frontend shortcode integrations</h3>
                             <p class="idlm-card-desc">Display the Leads Database Workspace and Analytics Dashboard on any frontend page or post. Access is strictly restricted to logged-in users with authorized roles (e.g. Sales Reps, Editors, Administrators) to preserve CRM security.</p>
                             <div class="idlm-shortcode-grid">
                                 <div class="idlm-shortcode-card">
                                     <div class="idlm-shortcode-head">
-                                        <h4>Complete CRM Workspace</h4>
+                                        <h4>Complete CRM workspace</h4>
                                         <button class="idlm-btn idlm-btn-secondary" type="button" onclick="idlmCopyToClipboard(this, '[idlm_workspace]');">Copy</button>
                                     </div>
                                     <code class="idlm-code"><span aria-hidden="true">[</span>idlm_workspace<span aria-hidden="true">]</span></code>
@@ -139,7 +139,7 @@ $idlm_value_labels = isset($context['value_labels']) ? $context['value_labels'] 
                                 </div>
                                 <div class="idlm-shortcode-card">
                                     <div class="idlm-shortcode-head">
-                                        <h4>Leads Database Workspace</h4>
+                                        <h4>Leads database workspace</h4>
                                         <button class="idlm-btn idlm-btn-secondary" type="button" onclick="idlmCopyToClipboard(this, '[idlm_leads_list]');">Copy</button>
                                     </div>
                                     <code class="idlm-code"><span aria-hidden="true">[</span>idlm_leads_list<span aria-hidden="true">]</span></code>
@@ -147,7 +147,7 @@ $idlm_value_labels = isset($context['value_labels']) ? $context['value_labels'] 
                                 </div>
                                 <div class="idlm-shortcode-card">
                                     <div class="idlm-shortcode-head">
-                                        <h4>Analytics Dashboard Widgets</h4>
+                                        <h4>Analytics dashboard widgets</h4>
                                         <button class="idlm-btn idlm-btn-secondary" type="button" onclick="idlmCopyToClipboard(this, '[idlm_dashboard]');">Copy</button>
                                     </div>
                                     <code class="idlm-code"><span aria-hidden="true">[</span>idlm_dashboard<span aria-hidden="true">]</span></code>
@@ -155,7 +155,7 @@ $idlm_value_labels = isset($context['value_labels']) ? $context['value_labels'] 
                                 </div>
                                 <div class="idlm-shortcode-card">
                                     <div class="idlm-shortcode-head">
-                                        <h4>Kanban Board Workspace</h4>
+                                        <h4>Kanban board workspace</h4>
                                         <button class="idlm-btn idlm-btn-secondary" type="button" onclick="idlmCopyToClipboard(this, '[idlm_kanban]');">Copy</button>
                                     </div>
                                     <code class="idlm-code"><span aria-hidden="true">[</span>idlm_kanban<span aria-hidden="true">]</span></code>

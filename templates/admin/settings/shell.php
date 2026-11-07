@@ -61,10 +61,9 @@ $idlm_return_url = remove_query_arg('idlm_credential_rotated');
                 <?php endif; ?>
                 <header class="idlm-header">
                     <div class="idlm-header-meta">
-                        <h1><?php echo IDLM_Admin_Assets::design_layer_enabled() ? 'Settings' : 'System settings and mappings'; ?></h1>
+                        <h1>Settings</h1>
                     </div>
                 </header>
-                <?php if (IDLM_Admin_Assets::design_layer_enabled()): ?>
                 <?php
                 // Grouped order: workspace setup, connections, upkeep, then the isolated destructive tab.
                 $idlm_settings_tab_groups = array(
@@ -82,26 +81,10 @@ $idlm_return_url = remove_query_arg('idlm_credential_rotated');
                         <?php endforeach; ?>
                     <?php endforeach; ?>
                 </nav>
-                <?php else: ?>
-                <nav class="idlm-tabs idlm-settings-tabs" role="tablist" aria-label="System settings tabs">
-                    <button type="button" id="idlm-settings-tab-general" class="idlm-tab-link <?php echo $idlm_active_tab === 'general' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'general' ? 'true' : 'false'; ?>" aria-controls="settings-general" tabindex="<?php echo $idlm_active_tab === 'general' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-general')">General</button>
-                    <button type="button" id="idlm-settings-tab-white-label" class="idlm-tab-link <?php echo $idlm_active_tab === 'white-label' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'white-label' ? 'true' : 'false'; ?>" aria-controls="settings-white-label" tabindex="<?php echo $idlm_active_tab === 'white-label' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-white-label')">White label</button>
-                    <button type="button" id="idlm-settings-tab-routing" class="idlm-tab-link <?php echo $idlm_active_tab === 'routing' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'routing' ? 'true' : 'false'; ?>" aria-controls="settings-routing" tabindex="<?php echo $idlm_active_tab === 'routing' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-routing')">Routing</button>
-                    <button type="button" id="idlm-settings-tab-webhooks" class="idlm-tab-link <?php echo $idlm_active_tab === 'webhooks' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'webhooks' ? 'true' : 'false'; ?>" aria-controls="settings-webhooks" tabindex="<?php echo $idlm_active_tab === 'webhooks' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-webhooks')">Lead capture</button>
-                    <button type="button" id="idlm-settings-tab-capi" class="idlm-tab-link <?php echo $idlm_active_tab === 'capi' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'capi' ? 'true' : 'false'; ?>" aria-controls="settings-capi" tabindex="<?php echo $idlm_active_tab === 'capi' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-capi')">Conversion tracking</button>
-                    <button type="button" id="idlm-settings-tab-audience-reminders" class="idlm-tab-link <?php echo $idlm_active_tab === 'audience-reminders' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'audience-reminders' ? 'true' : 'false'; ?>" aria-controls="settings-audience-reminders" tabindex="<?php echo $idlm_active_tab === 'audience-reminders' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-audience-reminders')">Automation</button>
-                    <button type="button" id="idlm-settings-tab-health" class="idlm-tab-link <?php echo $idlm_active_tab === 'health' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'health' ? 'true' : 'false'; ?>" aria-controls="settings-health" tabindex="<?php echo $idlm_active_tab === 'health' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-health')">Health</button>
-                    <button type="button" id="idlm-settings-tab-help" class="idlm-tab-link <?php echo $idlm_active_tab === 'help' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'help' ? 'true' : 'false'; ?>" aria-controls="settings-help" tabindex="<?php echo $idlm_active_tab === 'help' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-help')">Help</button>
-                    <button type="button" id="idlm-settings-tab-mcp" class="idlm-tab-link <?php echo $idlm_active_tab === 'mcp' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'mcp' ? 'true' : 'false'; ?>" aria-controls="settings-mcp" tabindex="<?php echo $idlm_active_tab === 'mcp' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-mcp')">AI access</button>
-                    <button type="button" id="idlm-settings-tab-backup" class="idlm-tab-link <?php echo $idlm_active_tab === 'backup' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'backup' ? 'true' : 'false'; ?>" aria-controls="settings-backup" tabindex="<?php echo $idlm_active_tab === 'backup' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-backup')">Backup &amp; restore</button>
-                    <button type="button" id="idlm-settings-tab-danger-zone" class="idlm-tab-link idlm-tab-link-danger <?php echo $idlm_active_tab === 'danger-zone' ? 'active' : ''; ?>" role="tab" aria-selected="<?php echo $idlm_active_tab === 'danger-zone' ? 'true' : 'false'; ?>" aria-controls="settings-danger-zone" tabindex="<?php echo $idlm_active_tab === 'danger-zone' ? '0' : '-1'; ?>" onclick="switchSettingsTab(this, 'settings-danger-zone')">Danger Zone</button>
-                </nav>
-                <?php endif; ?>
                 <form method="POST" action="" id="idlm-settings-form" class="idlm-settings-form">
                     <?php wp_nonce_field('idlm_settings_save_action'); ?>
                     <input type="hidden" name="idlm_save_settings" value="1">
                     <input type="hidden" name="active_tab" id="idlm-active-tab-input" value="<?php echo esc_attr($idlm_active_tab); ?>">
-<?php $idlm_settings_design = IDLM_Admin_Assets::design_layer_enabled(); if ($idlm_settings_design) { ob_start(); } ?>
 <?php IDLM_View::display('admin/settings/general.php', $context); ?>
 <?php IDLM_View::display('admin/settings/white-label.php', $context); ?>
 <?php IDLM_View::display('admin/settings/routing.php', $context); ?>
@@ -113,34 +96,11 @@ $idlm_return_url = remove_query_arg('idlm_credential_rotated');
 <?php IDLM_View::display('admin/settings/mcp.php', $context); ?>
 <?php IDLM_View::display('admin/settings/backup.php', $context); ?>
 <?php IDLM_View::display('admin/settings/danger-zone.php', $context); ?>
-<?php
-if ($idlm_settings_design) {
-    // Card titles are sentence case in the design layer. Display only: only these fixed headings are reworded.
-    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Guarded template output; only fixed headings are rewritten.
-    echo strtr((string) ob_get_clean(), array(
-        '>Danger Zone: Reset CRM Leads &amp; Analytics<' => '>Danger zone: reset CRM leads and analytics<',
-        '>Firm Metrics & Targets<' => '>Firm metrics and targets<', '>Frontend Shortcode Integrations<' => '>Frontend shortcode integrations<',
-        '>Complete CRM Workspace<' => '>Complete CRM workspace<', '>Leads Database Workspace<' => '>Leads database workspace<',
-        '>Analytics Dashboard Widgets<' => '>Analytics dashboard widgets<', '>Kanban Board Workspace<' => '>Kanban board workspace<',
-        '>Platform Conversion APIs (CAPI) Settings<' => '>Platform conversion APIs (CAPI) settings<', '>Google Ads Offline Conversions<' => '>Google Ads offline conversions<',
-        '>Custom Audience Batch Sync Rules<' => '>Custom audience batch sync rules<', '>Google Ads Data Manager (HTTPS Pull Feeds)<' => '>Google Ads Data Manager (HTTPS pull feeds)<',
-        '>Followup Reminder Settings<' => '>Follow-up reminder settings<', '>WhatsApp Automation (Interakt) Integration<' => '>WhatsApp automation (Interakt) integration<',
-        '>Bulk Sync Progress<' => '>Bulk sync progress<', '>Meta Direct WhatsApp Webhook Configuration<' => '>Meta direct WhatsApp webhook configuration<',
-        '>Telemetry & Logging Configuration<' => '>Telemetry and logging configuration<', '>System Diagnostics Overview<' => '>System diagnostics overview<',
-        '>Horizontal Deployment Readiness<' => '>Horizontal deployment readiness<', '>Recent Telemetry & Bug Logs<' => '>Recent telemetry and bug logs<',
-        '>Cloudflare "Under Attack" Mode & Security Blocks Guidance<' => '>Cloudflare “Under Attack” mode and security blocks guidance<',
-        '>Obtaining Google Ads Data Manager Credentials<' => '>Obtaining Google Ads Data Manager credentials<', '>Frequently Asked Questions (FAQs)<' => '>Frequently asked questions (FAQs)<',
-        '>Model Context Protocol (MCP) Server Configuration<' => '>Model Context Protocol (MCP) server configuration<', '>Claude Desktop Settings<' => '>Claude Desktop settings<',
-        '>Antigravity / Gemini Code Assist Setup<' => '>Antigravity / Gemini Code Assist setup<', '>Cursor Editor Setup<' => '>Cursor editor setup<',
-        '>Security &amp; Access Sandbox<' => '>Security and access sandbox<',
-    ));
-}
-?>
                     <footer class="idlm-footer-actions idlm-settings-savebar" aria-label="Settings save actions">
                         <p class="idlm-settings-savebar__status" role="status" aria-live="polite" data-idlm-save-status><?php echo $idlm_settings_saved ? 'Settings saved' : 'No unsaved changes'; ?></p>
-                        <?php if ($idlm_settings_design): ?><span class="idlm-settings-savebar__actions"><button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-quiet" data-idlm-discard-settings hidden>Discard changes</button><?php endif; ?>
+                        <span class="idlm-settings-savebar__actions"><button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-quiet" data-idlm-discard-settings hidden>Discard changes</button>
                         <button type="submit" form="idlm-settings-form" class="idlm-btn idlm-btn-primary idlm-save-settings-btn" aria-busy="false"><span data-idlm-save-label>Save settings</span></button>
-                        <?php if ($idlm_settings_design): ?></span><?php endif; ?>
+                        </span>
                     </footer>
                 </form>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-rotate-webhook-form">
@@ -261,7 +221,7 @@ if ($idlm_settings_design) {
                 var trace = btn.attr('data-trace');
                 var msg = btn.attr('data-message');
                 
-                $('#idlm-trace-modal-title').text('<?php echo IDLM_Admin_Assets::design_layer_enabled() ? 'Stack trace: ' : 'Stack Trace: '; ?>' + msg);
+                $('#idlm-trace-modal-title').text('Stack trace: ' + msg);
                 $('#idlm-trace-content').text(trace);
                 if (window.IDLMDialog) {
                     window.IDLMDialog.open(document.getElementById('idlm-trace-modal'), {trigger: btn.get(0)});

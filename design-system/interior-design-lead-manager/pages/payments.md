@@ -23,7 +23,7 @@ Local browser checks cover 375, 768, 1024 and 1440 px. No page-level horizontal 
 - Search and outstanding figures are not on the list because the renderer holds no balance data without per-lead queries. Follow-up: add a balance read for the page of leads, then a search field.
 - Summary cards drop the quotation stripe and uppercase 10px labels; values scale down on phones instead of truncating.
 - Revision choices in setup read as one bordered list. Revoked receipts use the neutral badge. The receipt panel is sticky on desktop only.
-- All markup changes are gated on `IDLM_Admin_Assets::design_layer_enabled()`; legacy output is unchanged.
+- This is the only payment page. The previous page, its upload step and its styles were removed with the previous design (streamline D2).
 
 ## Design handoff
 

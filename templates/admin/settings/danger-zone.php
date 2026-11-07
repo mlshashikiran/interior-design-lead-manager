@@ -11,7 +11,7 @@ $idlm_can_manage_options = !empty($context['can_manage_options']);
                 <div id="settings-danger-zone" class="idlm-settings-tab-content <?php echo $idlm_active_tab === 'danger-zone' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-danger-zone" <?php echo $idlm_active_tab === 'danger-zone' ? '' : 'hidden'; ?>>
                     <!-- Danger Zone: Reset CRM Data -->
                     <article class="idlm-card idlm-card-danger">
-                        <h3>Danger Zone: Reset CRM Leads &amp; Analytics</h3>
+                        <h3>Danger zone: reset CRM leads and analytics</h3>
                         <p class="idlm-danger-copy">
                             This operation will permanently delete all leads, activity logs, Conversions API logs, and marketing cost spent records from the database. All performance analytics and conversion pipelines will start from scratch. Your plugin configuration settings (API keys, stages, routing rules) will remain untouched.
                         </p>

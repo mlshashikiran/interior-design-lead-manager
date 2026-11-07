@@ -27,7 +27,7 @@ Interior-design sales staff work a queue all day: a lead arrives, pre-sales call
 - **STD-CRM-11 Stage and quality tones.** Every Stage and Quality value uses one tone everywhere, always beside its label. Stage: New and Contacted neutral; Pre-Qualified, Sales Connected, EC/VC Planned, QS - Visit Pending and EC Completed blue; Quote Shared and Negotiation green; Won green and bold; RNR and On Hold amber; Lost red. Quality: Pending neutral; Qualified with plan received green; Qualified with plan pending amber; Unqualified red. Tones are matched on stored values in `crm-design.css`, section 15; a custom stage stays neutral until added there.
 - **STD-CRM-12 Access is stated, not implied.** Role pick lists never default to a role. Show real outcomes ("Sees only assigned leads"), not "default". Access screens state how many people a change affects. Access saves stay explicit: nothing on update, activation or page load may change roles, capabilities or lead visibility.
 - **STD-CRM-13 Notices are toasts.** Feedback appears in one stack in the bottom right corner, newest lowest. Each toast has a dismiss button and closes by itself: success and information after 5s, warnings after 8s, errors after 10s, pausing on hover or focus. `dialog.js` converts `.notice` and `.idlm-alert` automatically. A notice stays inline only if it has a link or control, sits in a dialog or drawer, or carries `data-idlm-notice-inline` because it is standing context about the record or a problem with a form field. **[test]**
-- **STD-CRM-14 One list of date periods.** Every date filter offers Today, Yesterday, Last 7 days, Last 14 days, Last 30 days, This week, This month, This quarter, This year and Custom range, in that order, from `IDLM_Date_Ranges` (`options_html()` for the list, `resolve()`, `where()` or `date_bounds()` for the window). Lists may add "All time" first. Windows run from midnight to now in the site timezone, and comparisons use the same stretch of the period before. Never hard-code a period list or a date window. **[test]**
+- **STD-CRM-14 One list of date periods.** Every date filter offers Today, Yesterday, Last 7 days, Last 14 days, Last 30 days, This week, This month, This quarter, This year and Custom range, in that order, from `IDLM_Date_Ranges` (`print_options()` for the list, `resolve()`, `where()` or `date_bounds()` for the window). Lists may add "All time" first. Windows run from midnight to now in the site timezone, and comparisons use the same stretch of the period before. Never hard-code a period list or a date window. **[test]**
 - **STD-CRM-5 Numbers must reconcile.** A metric or column count equals the population shown when clicked. Say the scope ("this month", "active only") wherever it could be misread.
 - **STD-CRM-6 Inline edits stay quiet but visible.** Editable dropdowns in tables and status strips keep a thin border and their arrow at rest, so people can tell they are dropdowns; hover and focus strengthen the border. On phones they keep the full control border.
 - **STD-CRM-7 One format per data type.** Dates, money and phone numbers use one display format across screens. Quote numbers and IDs keep proportional figures; Inter's tabular figures widen their hyphens.
@@ -69,22 +69,14 @@ The redesign lives in switchable stylesheets: `assets/css/crm-design.css` (token
 - **STD-CSS-5** Breakpoints are `480`, `782`, `1024`, `1280` (`min-width` uses the value plus 1). **[test]**
 - **STD-CSS-6** Style through existing classes. Do not rename classes, IDs or `data-*` hooks: `assets/js/` and the contract tests depend on them. Do not change behaviour, handlers or stored values for a visual reason.
 - **STD-CSS-7** New UI uses shared components and adds its rules to the layer or its own gated section. New inline `style=` attributes are not allowed.
-- **STD-CSS-9** Markup changes must keep every existing class, ID, `name`, `data-*` and handler. A change that alters structure, order or wording is wrapped in `IDLM_Admin_Assets::design_layer_enabled()`, so the previous design still renders as it was.
+- **STD-CSS-9** Markup changes must keep every existing class, ID, `name`, `data-*` and handler that `assets/js/` or the contract tests use. The CRM design is the only design, so change markup directly; never add a second rendering path or a design switch.
 - **STD-CSS-8** The quotation editor stays free of the document-content review panel, and printed or PDF quotations are not restyled by this layer.
 
-## Reverting the design
+## One design
 
-Any one of these restores the previous design. Data is never affected.
+The CRM design is the only front-end design. The previous design, its `?idlm_design=legacy` preview, the Utilities switch and the `IDLM_DESIGN_LAYER` constant were retired in the streamline work (see `docs/STREAMLINE-AUDIT.md`, D2). The stored `idlm_design_layer` option is no longer read. wp-admin keeps plain WordPress markup and loads no design stylesheet.
 
-| Situation | Action |
-|---|---|
-| Compare one page | Add `?idlm_design=legacy` to the URL (`?idlm_design=crm` shows the new one) |
-| Switch for everyone | wp-admin → **Lead Manager** → Interface design → *Switch to previous design* |
-| The site or wp-admin is unusable | Add `define('IDLM_DESIGN_LAYER', false);` to `wp-config.php` |
-| Remove it from the code | Delete the `assets/css/crm-design*.css` files and the enqueue in `IDLM_Admin_Assets::maybe_enqueue_design_layer()`, then remove the `design_layer_enabled()` branches |
-| Inspect the old source | Git tags `design-baseline-head` (last commit) and `design-baseline-worktree` (tracked files as they stood before this work) |
-
-Removing status emoji from the lead-quality options is the one change outside the layer. It is text only and does not switch back; it is recoverable from the tags.
+To inspect the old source, use the git tags `design-baseline-head` (last commit) and `design-baseline-worktree` (tracked files as they stood before this work), or any release before the retirement.
 
 ## Before you finish a UI change
 
@@ -93,7 +85,6 @@ Removing status emoji from the lead-quality options is the one change outside th
 - [ ] Checked as administrator, pre-sales and representative where the screen differs.
 - [ ] Empty, loading, error and success states exist.
 - [ ] Keyboard path and visible focus work.
-- [ ] `?idlm_design=legacy` still renders the old design correctly.
 - [ ] A new reusable rule is recorded here or in `MASTER.md`.
 
 ## Known gaps

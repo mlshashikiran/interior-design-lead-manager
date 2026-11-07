@@ -221,10 +221,6 @@ body.idlm-crm-design .idlm-users-page .idlm-users-fold > :is(form, .idlm-permiss
     margin: var(--idlm-space-4);
 }
 
-body.idlm-crm-design .idlm-users-page .idlm-users-fold > .idlm-permissions-note {
-    margin-bottom: 0;
-    font-size: 0.75rem;
-}
 
 body.idlm-crm-design .idlm-users-page .idlm-users-fold > form {
     border-top: 0;
@@ -234,9 +230,6 @@ body.idlm-crm-design .idlm-users-page .idlm-permission-role {
     border-radius: var(--idlm-radius);
 }
 
-body.idlm-crm-design .idlm-users-page .idlm-permission-heading strong {
-    font-size: 0.8125rem;
-}
 
 @media (max-width: 782px) {
     body.idlm-crm-design .idlm-users-page .idlm-users-directory-top {
@@ -480,12 +473,6 @@ body.idlm-crm-design .idlm-users-page .idlm-users-tabs a.is-active {
     color: var(--idlm-action);
 }
 
-body.idlm-crm-design .idlm-users-page .idlm-users-create.idlm-role-scopes,
-body.idlm-crm-design .idlm-users-page .idlm-users-create.idlm-permissions {
-    display: block;
-    margin-bottom: var(--idlm-space-4);
-    padding: var(--idlm-space-4);
-}
 
 body.idlm-crm-design .idlm-users-page .idlm-users-section-head {
     max-width: 46rem;
@@ -504,28 +491,9 @@ body.idlm-crm-design .idlm-users-page .idlm-users-section-head p {
     font-size: 0.8125rem;
 }
 
-body.idlm-crm-design .idlm-users-page .idlm-role-scopes-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-    gap: var(--idlm-space-3);
-    margin-bottom: var(--idlm-space-3);
-}
 
-body.idlm-crm-design .idlm-users-page .idlm-users-role-people {
-    color: var(--idlm-text-muted);
-    font-size: 0.6875rem;
-    font-weight: 400;
-}
 
-body.idlm-crm-design .idlm-users-page .idlm-permission-heading {
-    display: grid;
-    gap: 2px;
-}
 
-body.idlm-crm-design .idlm-users-page .idlm-permission-breakdown {
-    color: var(--idlm-text-muted);
-    font-size: 0.6875rem;
-}
 
 body.idlm-crm-design .idlm-users-page .idlm-permission-group {
     position: relative;

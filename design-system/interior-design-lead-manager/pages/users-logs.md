@@ -12,7 +12,7 @@ Phase 7 is implemented. Users & Access and both operational log views now follow
 
 - Users & Access order: header with the one primary action (Invite team member) → "Showing N of T people" → directory with an always-visible search/role/access toolbar → folded setup (Invite, Role lead visibility, Role permissions). Setup folds are `details`; Invite opens from the header button and when invite validation fails.
 - Directory rows are one line: name, "You" tag, role, Active/Suspended badge (text first), Edit. Suspended rows are dimmed. A pager appears only when the unfiltered total exceeds one page.
-- Suspending someone asks for confirmation through `IDLMDialog.confirm` (design layer only); the server safeguards are unchanged.
+- Suspending someone asks for confirmation through `IDLMDialog.confirm`; the server safeguards are unchanged.
 - Logs: status tabs (All / Failed / Succeeded, server filter links) → counts from the rows on the page only, labelled "Latest 50 matching entries" → table. Failed rows are tinted, phone cards lead with status. "Select failed" selects rows only; retry now confirms with the count and warns that events may be counted twice, then toasts the result.
 - Monospace is for tokens, event names, audience IDs and payloads only.
 - The wp-admin Identity reviews page does not load the design layer (no body class, no stylesheet), so it keeps WordPress styling.
@@ -30,7 +30,7 @@ Phase 7 is implemented. Users & Access and both operational log views now follow
 - Job-role names are display only and come from `IDLM_Admin_Users_Controller::role_label()`. Stored slugs never change, and the old design shows stored names.
 - Pick lists show Administrator last. Website roles stay out unless the person holds one, and "Show website roles" adds them from a `template`. Filters keep every role, so anyone can be found.
 - A person with no managed role gets a required "Choose a role" instead of silently taking the first option.
-- Never say "Use CRM default" in the design layer. State the real outcome through `default_scope_outcome()`, and link the setting when the outcome depends on it. "Reps see all leads" sits on Settings > General.
+- Never say "Use CRM default". State the real outcome through `default_scope_outcome()`, and link the setting when the outcome depends on it. "Reps see all leads" sits on Settings > General.
 - Say how many people a save affects before saving. Warnings about permissions that need another never block the save. Removing Access CRM leads from a role with people asks through `IDLMDialog.confirm`, naming the role and count.
 - The access summary in a person's disclosure is read-only and comes from `IDLM_Lead_Access_Policy::describe_user_access()`, which must keep matching the live policy. A test runs both across every branch.
 - Suspending never reassigns leads, because assignment has lifecycle and outbound effects. The row, the inline note and the confirmation give the open count (not Won or Lost, not duplicates), and the note links to `?idlm_view=leads&rep=<id>`. That link is a read-only filter preset, and the server still applies the viewer's scope. Administrators can see duplicate rows on Leads, so its total can be higher than the count.

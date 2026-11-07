@@ -13,7 +13,7 @@ idlm_http_case('M6-H-connection-nonce-and-administrator-denials-have-no-side-eff
     idlm_http_check(idlm_connection_http($fields, 'admin', 'bad-nonce')['status'] === 403, 'Invalid nonce was accepted');
     idlm_http_check($before === idlm_http_snapshot(), 'Invalid-nonce request changed snapshot');
     $response = idlm_connection_http($fields, 'owner'); $json = json_decode($response['body'], true);
-    idlm_http_check($response['status'] === 200 && $json === array('success'=>false,'data'=>array('message'=>'Access denied')), 'Representative denial changed');
+    idlm_http_check($response['status'] === 200 && $json === array('success'=>false,'data'=>array('message'=>'Permission denied.')), 'Representative denial changed');
     idlm_http_check($before === idlm_http_snapshot(), 'Representative request changed snapshot');
     idlm_http_check(idlm_connection_http($fields, 'anonymous')['status'] === 400, 'Anonymous action became callable');
     idlm_http_check($before === idlm_http_snapshot(), 'Denied connection test wrote CRM/jobs or contacted a provider');

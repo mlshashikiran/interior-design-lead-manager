@@ -3,86 +3,26 @@ body.idlm-crm-design .idlm-payments .idlm-payment-context { margin: 0 0 16px; co
 body.idlm-crm-design .idlm-payments h2 { margin: 0; font-size: var(--idlm-type-section); line-height: 1.4; }
 body.idlm-crm-design .idlm-payments .idlm-payment-panel-heading { margin-bottom: 12px; }
 body.idlm-crm-design .idlm-payments .idlm-payment-panel-heading p { margin: 4px 0 0; font-size: 12px; color: var(--idlm-text-muted); }
-body.idlm-crm-design .idlm-payment-layout:not(.has-entry) { grid-template-columns: 1fr; }
-body.idlm-crm-design .idlm-payment-main { min-width: 0; }
-body.idlm-crm-design .idlm-payment-entry { min-width: 0; }
 body.idlm-crm-design .idlm-payments .idlm-payment-panel { min-width: 0; margin-bottom: 18px; }
 body.idlm-crm-design .idlm-payment-form { display: grid; gap: 12px; }
-body.idlm-crm-design .idlm-payment-field { display: grid; gap: 5px; align-content: start; min-width: 0; }
-body.idlm-crm-design .idlm-payment-field small, body.idlm-crm-design .idlm-payment-muted { color: var(--idlm-text-muted); font-size: 11px; line-height: 1.5; }
-body.idlm-crm-design .idlm-payment-form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
-body.idlm-crm-design .idlm-payments .idlm-payment-field textarea { min-height: 64px; }
 body.idlm-crm-design .idlm-payments input[type=checkbox] { width: auto; flex-shrink: 0; }
 body.idlm-crm-design .idlm-payment-checkbox { display: flex; align-items: center; gap: 6px; }
-body.idlm-crm-design .idlm-payment-required { color: var(--idlm-action); }
 body.idlm-crm-design .idlm-payments .dashicons { font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; }
 body.idlm-crm-design .idlm-payments summary { cursor: pointer; color: var(--idlm-info); font-size: 12px; font-weight: 600; padding: 8px 0; }
-body.idlm-crm-design .idlm-payment-settings > summary { padding: 0; }
-body.idlm-crm-design .idlm-payment-settings-body { margin-top: 16px; }
-body.idlm-crm-design .idlm-payment-settings-body > p { color: var(--idlm-text-muted); font-size: 12px; }
-body.idlm-crm-design .idlm-payment-revisions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-body.idlm-crm-design .idlm-payment-revision { display: inline-flex; gap: 5px; align-items: center; font-size: 12px; }
-body.idlm-crm-design .idlm-payment-revision.is-selected { font-weight: 700; }
 body.idlm-crm-design .idlm-payment-form fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 body.idlm-crm-design .idlm-payment-form legend { margin-bottom: 8px; font-size: 13px; font-weight: 700; }
-body.idlm-crm-design .idlm-payment-mapping { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--idlm-border); }
-body.idlm-crm-design .idlm-payment-mapping > span { flex: 1; }
-body.idlm-crm-design .idlm-payment-mapping small { display: block; font-weight: 400; }
 body.idlm-crm-design .idlm-payment-legacy-row { display: grid; grid-template-columns: minmax(0,2fr) minmax(90px,1fr) auto; align-items: center; gap: 12px; margin-bottom: 12px; }
 body.idlm-crm-design .idlm-payment-legacy-row .idlm-payment-checkbox { margin-top: 20px; white-space: nowrap; }
-body.idlm-crm-design .idlm-payment-upload { margin-bottom: 16px; border-bottom: 1px solid var(--idlm-border); padding-bottom: 12px; }
-body.idlm-crm-design .idlm-payment-upload > summary > .dashicons:last-child, body.idlm-crm-design .idlm-payment-settings > summary > .dashicons:last-child, body.idlm-crm-design .idlm-payment-more > summary > .dashicons { display: none; }
-body.idlm-crm-design .idlm-payment-separator { margin: 0 6px; }
-body.idlm-crm-design .idlm-payment-upload > summary > span:not(.dashicons) { display: inline; }
-body.idlm-crm-design .idlm-payment-upload small { display: block; margin-top: 4px; color: var(--idlm-text-muted); font-size: 11px; font-weight: 400; }
-body.idlm-crm-design .idlm-payment-upload form { display: grid; gap: 12px; margin-top: 12px; }
-body.idlm-crm-design .idlm-payment-upload input[type=file] { font-size: 11px; max-width: 100%; }
-body.idlm-crm-design .idlm-payment-upload .idlm-btn { justify-self: start; }
-body.idlm-crm-design .idlm-payment-form-footer { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-body.idlm-crm-design .idlm-payment-form-footer p { margin: 0; font-size: 11px; color: var(--idlm-text-muted); }
-body.idlm-crm-design .idlm-payment-selected-proof, body.idlm-crm-design .idlm-payment-proof-link { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; }
 body.idlm-crm-design .idlm-payment-timeline { min-width: 440px; }
 body.idlm-crm-design .idlm-payment-timeline td:not(:first-child), body.idlm-crm-design .idlm-payment-timeline thead th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
 body.idlm-crm-design .idlm-payment-timeline .idlm-payment-milestone small { display: block; margin-top: 4px; color: var(--idlm-text-muted); }
 body.idlm-crm-design .idlm-payment-pending-amount { font-weight: 600; }
-body.idlm-crm-design .idlm-payment-more { margin-top: 12px; }
-body.idlm-crm-design .idlm-payment-more dl > div { display: flex; justify-content: space-between; gap: 12px; margin: 8px 0; font-size: 12px; }
-body.idlm-crm-design .idlm-payment-more dd { margin: 0; font-variant-numeric: tabular-nums; }
-body.idlm-crm-design .idlm-payment-more p { font-size: 11px; color: var(--idlm-text-muted); }
-body.idlm-crm-design .idlm-payment-receipt { border-top: 1px solid var(--idlm-border); }
-body.idlm-crm-design .idlm-payment-receipt > summary { display: flex; align-items: center; gap: 12px; padding: 12px 0; color: var(--idlm-text); }
-body.idlm-crm-design .idlm-payment-receipt-icon { display: none; }
-body.idlm-crm-design .idlm-payment-receipt-title { min-width: 0; }
-body.idlm-crm-design .idlm-payment-receipt-title strong { display: block; font-size: 12px; }
-body.idlm-crm-design .idlm-payment-receipt-title small { display: block; margin-top: 4px; color: var(--idlm-text-muted); font-size: 11px; }
-body.idlm-crm-design .idlm-payment-receipt-value { margin-left: auto; display: grid; justify-items: end; gap: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
-body.idlm-crm-design .idlm-payment-status.is-success { background: var(--idlm-success-soft); color: var(--idlm-success); }
-body.idlm-crm-design .idlm-payment-status.is-revoked { background: var(--idlm-readonly); color: var(--idlm-text-muted); }
-body.idlm-crm-design .idlm-payment-receipt-body { padding: 4px 0 16px; }
-body.idlm-crm-design .idlm-payment-receipt-meta { display: grid; gap: 10px; margin: 0 0 12px; }
-body.idlm-crm-design .idlm-payment-receipt-meta > div { display: grid; grid-template-columns: 125px minmax(0,1fr); gap: 12px; font-size: 12px; }
-body.idlm-crm-design .idlm-payment-receipt-meta dt { color: var(--idlm-text-muted); }
-body.idlm-crm-design .idlm-payment-receipt-meta dd { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
 body.idlm-crm-design .idlm-payment-audit, body.idlm-crm-design .idlm-payment-correction, body.idlm-crm-design .idlm-payment-revoke { margin-top: 12px; }
 body.idlm-crm-design .idlm-payment-audit p, body.idlm-crm-design .idlm-payment-revoke p { font-size: 12px; overflow-wrap: anywhere; }
-body.idlm-crm-design .idlm-payment-audit-version { margin-top: 12px; }
-body.idlm-crm-design .idlm-payment-audit-version > strong { display: block; margin-bottom: 12px; font-size: 12px; }
 body.idlm-crm-design .idlm-payment-revoke > summary { color: var(--idlm-danger); }
-body.idlm-crm-design .idlm-payment-setup-intro { margin-bottom: 16px; }
-body.idlm-crm-design .idlm-payment-setup-intro > .dashicons { display: none; }
-body.idlm-crm-design .idlm-payment-setup-intro h2 { font-size: var(--idlm-type-section); }
-body.idlm-crm-design .idlm-payment-setup-intro p { font-size: 12px; color: var(--idlm-text-muted); }
-body.idlm-crm-design .idlm-payment-footnote { margin: 0; font-size: 11px; color: var(--idlm-text-muted); }
-body.idlm-crm-design .idlm-payment-currency, body.idlm-crm-design .idlm-payment-count { font-size: 11px; color: var(--idlm-text-muted); }
 body.idlm-crm-design .idlm-payments .idlm-pagination { display: flex; gap: 8px; }
 body.idlm-crm-design .idlm-payments .idlm-pagination a { display: inline-flex; }
 @media(max-width:782px) {
-    body.idlm-crm-design .idlm-payments.idlm-quotes-wrap .idlm-payment-field input, body.idlm-crm-design .idlm-payments.idlm-quotes-wrap .idlm-payment-field textarea { font-size: 16px; }
     body.idlm-crm-design .idlm-payment-legacy-row { grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); gap: 8px; }
     body.idlm-crm-design .idlm-payment-legacy-row .idlm-payment-checkbox { grid-column: 1 / -1; margin: 0; }
-}
-@media(max-width:480px) {
-    body.idlm-crm-design .idlm-payment-form-grid { grid-template-columns: 1fr; }
-    body.idlm-crm-design .idlm-payment-receipt-meta > div { grid-template-columns: 1fr; gap: 4px; }
-
 }

@@ -1,6 +1,6 @@
 # Shared Foundation — Rules
 
-Owner: Shashi. Applies to every screen in the design layer. `STANDARD.md` wins any conflict. Styles live in `assets/css/crm-design.css`.
+Owner: Shashi. Applies to every CRM screen. `STANDARD.md` wins any conflict. Styles live in `assets/css/crm-design.css`.
 
 ## Shell
 - Desktop: `248px` sidebar, `64px` rail. Active is a calm fill plus a gold icon, with no edge stripe. Rail labels are clipped, not removed, so links keep their names; `workspace.js` adds the hover title.

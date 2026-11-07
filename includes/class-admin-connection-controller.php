@@ -5,9 +5,7 @@ if (!defined('ABSPATH')) { exit; }
 final class IDLM_Admin_Connection_Controller {
     public static function ajax_test_api_connection() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Access denied'));
-        }
+        IDLM_Admin::require_ajax_access('admin');
 
         $platform = isset($_POST['platform']) ? sanitize_key(wp_unslash($_POST['platform'])) : '';
         $test_type = isset($_POST['test_type']) ? sanitize_key(wp_unslash($_POST['test_type'])) : '';

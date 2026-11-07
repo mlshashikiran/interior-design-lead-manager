@@ -10,9 +10,8 @@ function idlm_payment_http_form($html, $operation): array {
     $data['return_url']='/crm-workspace?idlm_view=payments'; return $data;
 }
 function idlm_payment_http_page($lead, $extra=array(), $actor='owner'): array {
-    // These cases read the full payment page (schedule, upload, legacy recovery and balance text).
-    // The CRM design layer shows a simpler page, so pin the previous design; the server rules are the same.
-    return idlm_http_request('/crm-workspace',array_merge(array('idlm_view'=>'payments','payment_lead_id'=>$lead,'idlm_design'=>'legacy'),$extra),$actor,false);
+    // The payment page: summary, milestones, payments list and every form in a dialog.
+    return idlm_http_request('/crm-workspace',array_merge(array('idlm_view'=>'payments','payment_lead_id'=>$lead),$extra),$actor,false);
 }
 function idlm_payment_http_multipart($form, $file, $actor='owner'): array {
     global $config; $body=tempnam($config['content_dir'],'payment-proof-');$head=$body.'.headers';
@@ -45,7 +44,7 @@ idlm_http_case('PAYMENT HTTP saved timeline publication and URN partial receipt'
     idlm_http_check(idlm_http_request('/wp-admin/admin-post.php',$payment_form)['status']===302,'Schedule did not publish');
     $page=idlm_payment_http_page($payment_lead);$form=idlm_payment_http_form($page['body'],'record');$form+=array('amount'=>'99000','currency'=>'INR','received_date'=>'2026-11-05','method'=>'UPI','reference'=>'SYNTHETIC-URN-1');
     idlm_http_check(idlm_http_request('/wp-admin/admin-post.php',$form)['status']===302,'Partial receipt rejected');
-    $page=idlm_payment_http_page($payment_lead);foreach(array('1000.00','901000.00','Partial','Saved advance')as$text){idlm_http_check(strpos(str_replace(',', '', $page['body']),$text)!==false,'Missing pending summary '.$text);}
+    $page=idlm_payment_http_page($payment_lead);foreach(array('1000.00','901000.00','Advance partly paid','Saved advance')as$text){idlm_http_check(strpos(str_replace(',', '', $page['body']),$text)!==false,'Missing pending summary '.$text);}
     $before=idlm_http_snapshot();idlm_http_check(idlm_http_request('/wp-admin/admin-post.php',$form)['status']===302,'Retry failed');idlm_http_check($before===idlm_http_snapshot(),'Retry counted receipt twice');
 });
 idlm_http_case('PAYMENT HTTP missing proof date amount and forged cross lead file rejected',static function()use($payment_lead):void{
@@ -56,10 +55,10 @@ $payment_png=base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lE
 $payment_attachment=0;
 idlm_http_case('PAYMENT HTTP private screenshot upload and screenshot only receipt',static function()use($payment_lead,$payment_png,&$payment_attachment):void{
     global $config,$wpdb;
-    $form=idlm_payment_http_form(idlm_payment_http_page($payment_lead)['body'],'upload');$uploaded=idlm_payment_http_multipart($form,$config['content_dir'].'/payment.png');idlm_http_check($uploaded['status']===302,'Payment upload failed '.$uploaded['body']);
+    // The record dialog sends the screenshot with the receipt, so no reference is needed.
+    $form=idlm_payment_http_form(idlm_payment_http_page($payment_lead)['body'],'record');$form=array_merge($form,array('amount'=>'1000','currency'=>'INR','received_date'=>'2026-11-05','method'=>'Bank'));
+    $recorded=idlm_payment_http_multipart($form,$config['content_dir'].'/payment.png');idlm_http_check($recorded['status']===302,'SS-only receipt rejected '.$recorded['body']);
     $payment_attachment=(int)$wpdb->get_var($wpdb->prepare("SELECT attachment_id FROM {$wpdb->prefix}idlm_private_files WHERE lead_id=%d AND purpose='payment' ORDER BY id DESC LIMIT 1",$payment_lead));idlm_http_check($payment_attachment>0,'No private screenshot identity');
-    $form=idlm_payment_http_form(idlm_payment_http_page($payment_lead)['body'],'record');$form=array_merge($form,array('amount'=>'1000','currency'=>'INR','received_date'=>'2026-11-05','method'=>'Bank','attachment_id'=>$payment_attachment));
-    idlm_http_check(idlm_http_request('/wp-admin/admin-post.php',$form)['status']===302,'SS-only receipt rejected');
     // A referenced screenshot stays available beyond the temporary seven-day window.
     $wpdb->update($wpdb->prefix.'idlm_private_files',array('created_at'=>'2020-01-01 00:00:00'),array('attachment_id'=>$payment_attachment));IDLM_Private_Files::reconcile_lead($payment_lead);
     $path='/wp-admin/admin-post.php?action=idlm_download_lead_file&attachment_id='.$payment_attachment;$r=idlm_http_request($path,array(),'owner',false);
@@ -81,7 +80,7 @@ idlm_http_case('PAYMENT HTTP correction grant appends proof history and revocati
 });
 idlm_http_case('PAYMENT HTTP rendered labels unique and read scope excludes foreign receipt history',static function()use($payment_lead):void{
     $before=idlm_http_snapshot();$page=idlm_payment_http_page($payment_lead);$dom=new DOMDocument();libxml_use_internal_errors(true);$dom->loadHTML($page['body']);libxml_clear_errors();libxml_use_internal_errors(false);$xpath=new DOMXPath($dom);$ids=array();
-    foreach($xpath->query('//input[starts-with(@id,"payment-")]')as$input){$id=$input->getAttribute('id');idlm_http_check(!isset($ids[$id]),'Duplicate payment input ID');$ids[$id]=true;idlm_http_check($xpath->query('//label[@for="'.$id.'"]')->length===1,'Missing input label');}
+    foreach($xpath->query('//input[starts-with(@id,"idlm-payment-")][not(@type="hidden")]')as$input){$id=$input->getAttribute('id');idlm_http_check(!isset($ids[$id]),'Duplicate payment input ID');$ids[$id]=true;idlm_http_check($xpath->query('//label[@for="'.$id.'"]')->length===1,'Missing input label');}
     $foreign=idlm_payment_http_page($payment_lead,array(),'other');idlm_http_check(strpos($foreign['body'],'SYNTHETIC-URN-1')===false,'Foreign receipt disclosed');idlm_http_check($before===idlm_http_snapshot(),'Read changed ledger or business state');
 });
 // Existing Won lead with a saved revision that predates contractual timeline snapshots.
@@ -89,10 +88,10 @@ $wpdb->insert($wpdb->prefix.'idlm_leads',array('first_name'=>'Historic Customer'
 $wpdb->insert($wpdb->prefix.'idlm_quotes',array('lead_id'=>$payment_legacy_lead,'quote_number'=>'LEGACY-'.wp_generate_uuid4(),'title'=>'Historic agreed quote','created_by'=>$users['owner'],'created_at'=>'2024-01-01 10:00:00','updated_at'=>'2024-01-01 10:00:00'));$payment_legacy_quote=(int)$wpdb->insert_id;
 $wpdb->insert($wpdb->prefix.'idlm_quote_revisions',array('quote_id'=>$payment_legacy_quote,'revision_name'=>'Historic R01','document_terms'=>null,'grand_total'=>'1000000','currency_code'=>'INR','created_by'=>$users['owner'],'created_at'=>'2024-01-01 10:00:00','updated_at'=>'2024-01-01 10:00:00'));$payment_legacy_revision=(int)$wpdb->insert_id;$wpdb->update($wpdb->prefix.'idlm_quotes',array('current_revision_id'=>$payment_legacy_revision),array('id'=>$payment_legacy_quote));
 $legacy_payload=idlm_payment_http_form(idlm_payment_http_page($payment_legacy_lead,array('payment_revision_id'=>$payment_legacy_revision),'manager')['body'],'resolve_legacy');
-$legacy_payload+=array('legacy_milestones'=>array(array('name'=>'Archived advance','percentage'=>'10','advance'=>'1'),array('name'=>'Archived final','percentage'=>'90')),'source_reference'=>'Signed legacy quote PDF archive 2024-17','reason'=>'Historic payment terms confirmed against signed quote','legacy_confirmed'=>'1');
+$legacy_payload+=array('payment_revision_id'=>$payment_legacy_revision,'legacy_milestones'=>array(array('name'=>'Archived advance','percentage'=>'10','advance'=>'1'),array('name'=>'Archived final','percentage'=>'90')),'source_reference'=>'Signed legacy quote PDF archive 2024-17','reason'=>'Historic payment terms confirmed against signed quote','legacy_confirmed'=>'1');
 idlm_http_case('PAYMENT HTTP legacy resolution rejects bad nonce ordinary sales and invalid agreed terms',static function()use($legacy_payload,$payment_legacy_lead,$payment_legacy_revision):void{
     global $sessions;
-    $owner_page=idlm_payment_http_page($payment_legacy_lead,array('payment_revision_id'=>$payment_legacy_revision));idlm_http_check(strpos($owner_page['body'],'must resolve this legacy quotation')!==false,'Owner lacks recovery guidance');idlm_http_check(strpos($owner_page['body'],'value="idlm_payment_resolve_legacy"')===false,'Recovery action exposed to ordinary sales');
+    $owner_page=idlm_payment_http_page($payment_legacy_lead,array('payment_revision_id'=>$payment_legacy_revision));idlm_http_check(strpos($owner_page['body'],'A manager with payment-correction permission can enter its percentages')!==false,'Owner lacks recovery guidance');idlm_http_check(strpos($owner_page['body'],'value="idlm_payment_resolve_legacy"')===false,'Recovery action exposed to ordinary sales');
     $bad=$legacy_payload;$bad['_wpnonce']='invalid';idlm_http_denied(static function()use($bad){return idlm_http_request('/wp-admin/admin-post.php',$bad,'manager');},array(403));
     $owner=$legacy_payload;$owner['_wpnonce']=$sessions['owner']['payment_resolve_legacy'];idlm_http_denied(static function()use($owner){return idlm_http_request('/wp-admin/admin-post.php',$owner);},array(422));
     foreach(array(array('legacy_confirmed'=>''),array('source_reference'=>' '),array('legacy_milestones'=>array(array('name'=>'Too much','percentage'=>'101','advance'=>'1'))),array('legacy_milestones'=>array(array('name'=>'No advance selected','percentage'=>'10'))))as$invalid){$p=array_merge($legacy_payload,$invalid);idlm_http_denied(static function()use($p){return idlm_http_request('/wp-admin/admin-post.php',$p,'manager');},array(422));}
@@ -102,7 +101,7 @@ idlm_http_case('PAYMENT HTTP explicit historic timeline is versioned retry safe 
     $before=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_quote_revisions WHERE id=%d",$payment_legacy_revision),ARRAY_A);
     idlm_http_check(idlm_http_request('/wp-admin/admin-post.php',$legacy_payload,'manager')['status']===302,'Authorized legacy recovery failed');$snapshot=idlm_http_snapshot();idlm_http_check(idlm_http_request('/wp-admin/admin-post.php',$legacy_payload,'manager')['status']===302,'Legacy retry rejected');idlm_http_check($snapshot===idlm_http_snapshot(),'Legacy retry appended schedule twice');
     idlm_http_check($before===$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_quote_revisions WHERE id=%d",$payment_legacy_revision),ARRAY_A),'Historic quotation was rewritten');
-    $page=idlm_payment_http_page($payment_legacy_lead);foreach(array('Recovered historic terms','Signed legacy quote PDF archive 2024-17','Archived advance','100000.00')as$token){idlm_http_check(strpos(str_replace(',','',$page['body']),$token)!==false,'Recovery details missing '.$token);}
+    $page=idlm_payment_http_page($payment_legacy_lead);foreach(array('Entered by','Historic payment terms confirmed against signed quote','Signed legacy quote PDF archive 2024-17','Archived advance','100000.00')as$token){idlm_http_check(strpos(str_replace(',','',$page['body']),$token)!==false,'Recovery details missing '.$token);}
 });
 idlm_http_case('PAYMENT HTTP existing Won lead accepts a past positive short receipt with original ownership',static function()use($payment_legacy_lead):void{
     global $wpdb;

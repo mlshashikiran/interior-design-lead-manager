@@ -8,9 +8,12 @@ class IDLM_Integrations {
 
     public static function init() {
         add_action('idlm_qualified_handoff_notification', array(__CLASS__, 'send_handoff_notifications'), 10, 4);
-        self::maybe_migrate_api_credentials();
-        IDLM_Secret_Store::migrate_platforms();
-        IDLM_Secret_Store::scrub_legacy_queues();
+        // Credential, secret and queue upkeep reads several rows uncached, so it runs at most every ten minutes and on the
+        // first request after an update. Every use still repairs its own value: each credential check migrates
+        // credentials first, and IDLM_Secret_Store::get() encrypts a plaintext secret before returning it.
+        if (IDLM_Scheduler::maintenance_due('integration_upkeep')) {
+            self::run_upkeep();
+        }
         add_action('wp_head', array(__CLASS__, 'inject_utm_tracker_script'));
         add_action('rest_api_init', array(__CLASS__, 'register_webhook_routes'));
         add_filter('rest_authentication_errors', array(__CLASS__, 'bypass_rest_auth_for_webhook'), 99999);
@@ -20,6 +23,13 @@ class IDLM_Integrations {
             self::reconcile_legacy_qualified_handoffs();
             update_option('idlm_handoff_reconciliation_version', '1.0.1');
         }
+    }
+
+    /** Generate missing API credentials, encrypt plaintext platform secrets and scrub legacy queues. Repeatable. */
+    public static function run_upkeep() {
+        self::maybe_migrate_api_credentials();
+        IDLM_Secret_Store::migrate_platforms();
+        IDLM_Secret_Store::scrub_legacy_queues();
     }
 
     /** Preserve the Basic Auth challenge on permission-callback failures. */
@@ -494,33 +504,6 @@ class IDLM_Integrations {
         return array_values(array_filter($rep_ids, static function($rep_id) use ($counts, $maximum) {
             return ($counts[$rep_id] ?? 0) < $maximum;
         }));
-    }
-
-    /** Advisory capacity for selection; canonical persistence checks current admission. */
-    public static function rep_has_capacity($rep_id) {
-        $rep_id = absint($rep_id);
-        return 0 === $rep_id || in_array($rep_id, self::filter_pool_by_capacity(array($rep_id)), true);
-    }
-
-    public static function get_rep_capacity_status($rep_id) {
-        global $wpdb;
-        $rep_id = absint($rep_id);
-        $maximum = max(0, absint(IDLM_Settings::get('idlm_max_active_leads_per_rep', 30)));
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0432: get_rep_capacity_status(): prefixed lead/task tables; fixed assignment SET/qualification branches, matching parameter arrays and absint rep lists; assignment capacity/ownership reads are live under existing locks.
-        $active = $rep_id ? (int) $wpdb->get_var($wpdb->prepare(
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-            "SELECT COUNT(*) FROM {$wpdb->prefix}idlm_leads
-             WHERE assigned_rep_id = %d AND is_duplicate = 0
-               AND COALESCE(stage, '') NOT IN ('Won', 'Lost')
-               AND COALESCE(lead_quality, '') != 'Unqualified'",
-            $rep_id
-        )) : 0;
-        $failed = $rep_id && (bool) $wpdb->last_error;
-        return array(
-            'maximum' => $maximum,
-            'active' => $active,
-            'remaining' => $failed ? 0 : (0 === $maximum ? PHP_INT_MAX : max(0, $maximum - $active)),
-        );
     }
 
     /**

@@ -63,26 +63,29 @@ idlm_test('PAYMENT legacy recovery requires confirmation source valid percentage
     foreach(array(array('confirmed'=>false),array('source_reference'=>' '),array('milestones'=>array(array('name'=>'Advance','percentage'=>'101','advance'=>'1'))),array('milestones'=>array(array('name'=>'Advance','percentage'=>'10'))),array('milestones'=>array(array('name'=>'Advance','percentage'=>array(),'advance'=>'1'))))as$bad){assert_true(is_wp_error(IDLM_Lead_Payment_Ledger::legacy_schedule($revision,array_merge(idlm_payment_legacy_input(),$bad))));}
     $revision->document_terms=IDLM_Quotation_Document::capture(array('payment_structure'=>'[{"name":"Original advance","percentage":10}]'),'1000');assert_true(is_wp_error(IDLM_Lead_Payment_Ledger::legacy_schedule($revision,idlm_payment_legacy_input())));
 });
-idlm_test('PAYMENT tab is retired in the design layer while each lead page, data and grants stay',static function():void {
+idlm_test('PAYMENT tab is retired while each lead page, data and grants stay',static function():void {
     $root=dirname(__DIR__).'/';$read=static function(string $path)use($root):string{return (string)file_get_contents($root.$path);};
     $controller=$read('includes/class-lead-payment-controller.php');$nav=$read('includes/class-admin-shortcodes.php');$template=$read('templates/workspace.php');
-    assert_contains("return !IDLM_Admin_Assets::design_layer_enabled() || (bool) apply_filters('idlm_show_payments_tab', false);",$controller);
+    assert_contains("return (bool) apply_filters('idlm_show_payments_tab', false);",$controller);
     assert_contains("array('IDLM_Lead_Payment_Controller', 'render'), !IDLM_Lead_Payment_Controller::tab_shown())",$nav);
     assert_contains("if (!empty(\$idlm_section[3])) { continue; }",$template);
     // The per-lead page keeps its own checks; the drawer and Design links reuse them.
     assert_contains("return self::visible() && IDLM_Lead_Access_Policy::can_access((int) \$lead_id, true);",$controller);
     assert_contains("if (!\$lead || !self::can_open(\$lead->id)) { return ''; }",$controller);
-    assert_contains("if (\$design_layer) { echo IDLM_Lead_Payment_Controller::drawer_summary(\$lead); }",$read('includes/class-admin-lead-reads.php'));
+    assert_contains("echo IDLM_Lead_Payment_Controller::drawer_summary(\$lead);",$read('includes/class-admin-lead-reads.php'));
     assert_contains("if (!IDLM_Lead_Payment_Controller::can_open(\$lead_id)) { return ''; }",$read('includes/class-design-handoff-controller.php'));
     assert_contains("IDLM_Lead_Payment_Controller::tab_shown() ? 'payments' : 'leads'",$read('includes/class-design-dashboard.php'));
     // Retirement writes nothing: handlers, grants and tables are unchanged.
-    foreach(array('schedule','resolve_legacy','record','correct','revoke','upload') as $operation){assert_contains("'".$operation."'",$controller);}
+    foreach(array('schedule','resolve_legacy','record','correct','revoke') as $operation){assert_contains("'".$operation."'",$controller);}
     assert_contains("'Payments' => array('idlm_record_lead_payments', 'idlm_correct_lead_payments')",$read('includes/class-admin-users-controller.php'));
     assert_contains('IDLM_Lead_Payment_Schema::statements()',$read('includes/class-db.php'));
 });
-idlm_test('PAYMENT simple page is design-layer only, posts to the same handlers, and checks before storing a screenshot',static function():void {
+idlm_test('PAYMENT page is the only payment page, posts to the same handlers, and checks before storing a screenshot',static function():void {
     $root=dirname(__DIR__).'/';$c=(string)file_get_contents($root.'includes/class-lead-payment-controller.php');
-    assert_contains("if (IDLM_Admin_Assets::design_layer_enabled()) {\n            // One summary, one milestone table, one payments list",$c);
+    assert_contains("// One summary, one milestone table, one payments list; every form in a dialog.",$c);
+    // The retired page, its separate screenshot upload step and its wp-admin copy are gone.
+    foreach(array('render_history','render_entry','render_timeline','render_schedule(','idlm_payment_upload',"'upload'",'design_active','design_layer_enabled') as $retired){assert_true(false===strpos($c,$retired),'Retired payment page code is back: '.$retired);}
+    assert_contains("'idlm-payments' => array('view' => 'payments', 'capability' => 'manage_options')",(string)file_get_contents(dirname(__DIR__).'/includes/class-admin.php'));
     foreach(array("'record', \$lead_id","'correct', \$lead_id","'revoke', \$lead_id","'schedule', \$lead_id","'resolve_legacy', \$lead_id") as $form){assert_contains($form,$c);}
     $check=strpos($c,"\$checked = IDLM_Lead_Payment_Ledger::receipt(array_merge(\$data, array('attachment_id' => 1)));");$grant=strpos($c,"if (!IDLM_Lead_Payments::permitted(\$lead_id, 'correct' === \$operation))");$store=strpos($c,"\$upload = IDLM_Private_Files::upload(\$file, \$lead_id, 'payment');");
     assert_true(false!==$check&&false!==$grant&&false!==$store&&$check<$grant&&$grant<$store,'Screenshot stored before checks');
@@ -110,7 +113,7 @@ idlm_test('PAYMENT Won-amount plan writes no quotation, keeps first-plan and cha
     assert_contains("if (\$prior && IDLM_Design_Handoffs::locks_schedule(\$lead_id))",$p);
     assert_contains("if (!\$prior && IDLM_Design_Handoffs::basis(\$lead_id))",$p);
     assert_contains("return self::operate(\$lead_id, false, static function(\$lead) use (\$lead_id, \$milestones",$p);
-    assert_contains("'won_plan', 'record', 'correct', 'revoke', 'upload'",$c);
+    assert_contains("'won_plan', 'record', 'correct', 'revoke'",$c);
     assert_contains("if (\$won && \$can_record) {",$c);
-    assert_contains("(int) \$schedule['revision_id'] ? (string) \$wpdb->get_var(",$c);
+    assert_contains('IDLM_Quotation_Repository::get_revision((int) $schedule[\'revision_id\']) : null;',$c);
 });

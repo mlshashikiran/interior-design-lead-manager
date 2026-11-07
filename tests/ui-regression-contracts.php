@@ -40,7 +40,7 @@ idlm_test('Phase 4 settings remove inline presentation and expose accessible tab
     assert_contains('role="tab"', $shell);
     assert_contains('role="tabpanel"', $settings);
     assert_contains("event.key === 'ArrowRight'", $shell);
-    foreach (array('idlm-settings-tabs', 'idlm-settings-tab-general', 'idlm-settings-tab-danger-zone', 'settings-danger-zone', 'idlm-rotate-webhook-form', 'idlm-rotate-mcp-form') as $contract) {
+    foreach (array('idlm-settings-tabs', 'id="idlm-settings-tab-<?php echo esc_attr($idlm_tab_key); ?>"', "'general' => 'General'", "'danger' => array('danger-zone' => 'Danger zone')", 'idlm-rotate-webhook-form', 'idlm-rotate-mcp-form') as $contract) {
         assert_contains($contract, $shell);
     }
     assert_contains('window.IDLMDialog.open', $shell);
@@ -51,7 +51,7 @@ idlm_test('settings keep horizontal tab contracts without a secondary sidebar', 
     $root = dirname(__DIR__);
     $shell = (string) file_get_contents($root . '/templates/admin/settings/shell.php');
 
-    foreach (array('idlm-settings-tabs', 'role="tablist" aria-label="System settings tabs"', 'idlm-settings-tab-general', 'idlm-settings-tab-danger-zone', 'switchSettingsTab(this, \'settings-general\')', 'switchSettingsTab(this, \'settings-danger-zone\')') as $contract) {
+    foreach (array('idlm-settings-tabs', 'role="tablist" aria-label="System settings tabs"', 'id="idlm-settings-tab-<?php echo esc_attr($idlm_tab_key); ?>"', 'onclick="switchSettingsTab(this, \'settings-<?php echo esc_attr($idlm_tab_key); ?>\')"', "'danger' => array('danger-zone' => 'Danger zone')") as $contract) {
         assert_contains($contract, $shell);
     }
     assert_false(false !== strpos($shell, 'idlm-settings-sidebar'), 'Settings must not render a second sidebar.');
@@ -67,7 +67,7 @@ idlm_test('Phase 4 visual matrix keeps canonical responsive, role, motion, and s
         assert_contains($viewport, $admin_css . idlm_ui_css_sources($root . '/assets/css'));
     }
     foreach (array('.idlm-state.is-empty', '.idlm-state.is-loading', '.idlm-state.is-error', '.idlm-state.is-success') as $state) {
-        assert_contains($state, $admin_css);
+        assert_contains($state, $admin_css . idlm_ui_css_sources($root . '/assets/css'));
     }
     assert_contains('@media (prefers-reduced-motion: reduce)', $admin_css);
     assert_contains('data-idlm-role=', $workspace);
@@ -163,7 +163,7 @@ idlm_test('settings notices use accessible non-duplicating floating toasts with 
     $shell = (string) file_get_contents($root . '/templates/admin/settings/shell.php');
     $backup = (string) file_get_contents($root . '/templates/admin/settings/backup.php');
     $script = (string) file_get_contents($root . '/assets/js/settings.js');
-    $css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $css = (string) file_get_contents($root . '/assets/css/admin-style.css') . idlm_ui_css_sources($root . '/assets/css');
 
     foreach (array('data-idlm-settings-toast', 'data-idlm-toast-autoclose="4000"', 'notice-success', 'is-dismissible') as $contract) {
         assert_contains($contract, $shell);
@@ -175,7 +175,7 @@ idlm_test('settings notices use accessible non-duplicating floating toasts with 
         assert_contains($contract, $script);
     }
     assert_false(false !== strpos($script, 'notice.focus();'), 'Saved notices should not receive focus or duplicate their status announcement.');
-    foreach (array('.idlm-settings-toast-stack', '.notice.idlm-settings-toast', 'pointer-events: none', 'top: max(48px', 'left: 50%', 'width: fit-content', 'max-width: min(520px, calc(100vw - (var(--idlm-space-4) * 2)))', 'background: var(--idlm-success)', 'font-family: Inter, ui-sans-serif, system-ui', 'font-size: 13px', 'font-weight: 400', 'content: none', 'display: none', '.idlm-settings-toast__dismiss-icon', 'stroke-width: 1.75', '@media (prefers-reduced-motion: reduce)', 'max-height: calc(100dvh - 128px)') as $contract) {
+    foreach (array('.idlm-settings-toast-stack', '.notice.idlm-settings-toast', 'pointer-events: none', 'left: 50%', 'width: fit-content', 'max-width: min(520px, calc(100vw - (var(--idlm-space-4) * 2)))', 'background: var(--idlm-success)', 'font-family: Inter, ui-sans-serif, system-ui', 'font-size: 13px', 'font-weight: 400', 'content: none', 'display: none', '.idlm-settings-toast__dismiss-icon', 'stroke-width: 1.75', '@media (prefers-reduced-motion: reduce)', 'max-height: calc(100dvh - 128px)') as $contract) {
         assert_contains($contract, $css);
     }
     assert_false(false !== strpos($css, 'border-top: 1.5px solid currentColor'), 'Settings toast close control must not fall back to a CSS-drawn glyph.');
@@ -261,7 +261,7 @@ idlm_test('frontend workspace uses the shared strip, white-label mark, and indep
     $script = (string) file_get_contents($root . '/assets/js/workspace.js');
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
 
-    foreach (array('idlm-workspace-mobile-toggle', 'idlm-workspace-backdrop', 'idlm-workspace-brand-mark', '$idlm_brand_name', '$idlm_workspace_title', 'idlm-workspace-account-trigger', 'idlm-workspace-account-menu', '>Profile</span>', '>Logout</span>', 'wp_logout_url($idlm_base_url)') as $contract) {
+    foreach (array('idlm-workspace-mobile-toggle', 'idlm-workspace-backdrop', 'idlm-workspace-brand-mark', '$idlm_brand_name', '$idlm_workspace_title', 'idlm-workspace-account-trigger', 'idlm-workspace-account-menu', '>Profile</span>', '>Sign out</span>', 'wp_logout_url($idlm_base_url)') as $contract) {
         assert_contains($contract, $template);
     }
     foreach (array('--idlm-workspace-sidebar:248px', '--idlm-workspace-sidebar:64px', 'min-height:64px', 'border-radius:0', 'position:fixed', 'transform:translateX(-100%)', 'idlm-workspace .idlm-pending-calls-pill') as $contract) {
@@ -508,17 +508,19 @@ idlm_test('CRM design layer stays fully gated, token-led and reversible', static
     }
     assert_true($rule_count > 20, 'The design layer rules must be parseable by this contract.');
 
-    foreach (array("defined('IDLM_DESIGN_LAYER')", "'idlm_design_layer'", "check_admin_referer('idlm_set_design_layer')", "current_user_can('manage_options')", "'idlm-crm-design'", 'DESIGN_AREAS') as $contract) {
+    // One design: the switch, preview parameter and rollback constant are retired.
+    foreach (array("'idlm-crm-design'", 'DESIGN_AREAS') as $contract) {
         assert_contains($contract, $assets);
     }
-    assert_contains('IDLM_Admin_Assets::render_design_layer_control()', $admin);
-    assert_contains("add_action('admin_post_idlm_set_design_layer'", $assets);
+    foreach (array('IDLM_DESIGN_LAYER', 'idlm_design_layer', 'idlm_set_design_layer', "\$_GET['idlm_design']", 'render_design_layer_control') as $retired) {
+        assert_true(false === strpos($assets . $admin, $retired), 'Retired design switch is back: ' . $retired);
+    }
 });
 
 idlm_test('design standard stays the entry point for agents and status options stay free of emoji', static function(): void {
     $root = dirname(__DIR__);
     $standard = (string) file_get_contents($root . '/design-system/interior-design-lead-manager/STANDARD.md');
-    foreach (array('STD-CSS-1', 'STD-CRM-1', 'STD-TYPE-1', 'IDLM_DESIGN_LAYER', 'design-baseline-worktree') as $contract) {
+    foreach (array('STD-CSS-1', 'STD-CRM-1', 'STD-TYPE-1', 'STD-CSS-9', 'design-baseline-worktree') as $contract) {
         assert_contains($contract, $standard);
     }
     assert_contains('design-system/interior-design-lead-manager/STANDARD.md', (string) file_get_contents($root . '/AGENTS.md'));
@@ -530,26 +532,31 @@ idlm_test('design standard stays the entry point for agents and status options s
 idlm_test('Users and permissions views stay presentation only and keep every saved field', static function(): void {
     $users = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/users.php');
     assert_false((bool) preg_match('/\b(?:update_option|add_option|delete_option|add_cap|remove_cap|add_role|remove_role|update_user_meta)\s*\(/', $users), 'The users template must not write settings.');
-    foreach (array('name="action" value="idlm_update_role_scopes"', 'name="role_scopes[', 'name="action" value="idlm_update_role_permissions"', 'name="permission_role"', 'name="permissions[', "wp_nonce_field('idlm_update_role_scopes')", "wp_nonce_field('idlm_update_role_permissions')", 'name="action" value="idlm_create_user"', 'name="action" value="idlm_update_user"', 'name="crm_access_disabled"') as $contract) {
+    $roles = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/users-roles.php');
+    // Lead visibility and permissions are saved per role from the Roles tab.
+    foreach (array('name="action" value="idlm_update_role_access"', 'name="access_role"', 'name="role_scope"', 'name="permissions[', "wp_nonce_field('idlm_update_role_access')") as $contract) {
+        assert_contains($contract, $roles);
+    }
+    foreach (array('name="action" value="idlm_create_user"', 'name="action" value="idlm_update_user"', 'name="crm_access_disabled"') as $contract) {
         assert_contains($contract, $users);
     }
-    // Saving scopes resets any role left out of the form, so the loop must always render every managed role.
-    assert_contains('foreach ($idlm_roles as $idlm_slug => $idlm_data):', $users);
-    assert_contains('name="role_scopes[<?php echo esc_attr($idlm_slug); ?>]"', $users);
 });
 
 idlm_test('design layer shows page notices as dismissible bottom-right toasts and keeps standing context inline', static function(): void {
     $root = dirname(__DIR__);
     $dialog = (string) file_get_contents($root . '/assets/js/dialog.js');
     $css = (string) file_get_contents($root . '/assets/css/crm-design.css');
-    foreach (array('promoteNotices', 'if (!designLayerActive()) {', '[data-idlm-notice-inline]', "a, button:not(.notice-dismiss), input, select, textarea", 'MutationObserver', 'idlm-toast__dismiss', 'idlm-toast-stack') as $contract) {
+    foreach (array('promoteNotices', '[data-idlm-notice-inline]', "a, button:not(.notice-dismiss), input, select, textarea", 'MutationObserver', 'idlm-toast__dismiss', 'idlm-toast-stack') as $contract) {
         assert_contains($contract, $dialog);
     }
     assert_false(false !== strpos($css, 'left: calc(248px + var(--idlm-space-4))'), 'Toasts must stay in the bottom right corner on desktop.');
     foreach (array('includes/class-quotation-renderer.php', 'includes/class-design-handoff-controller.php', 'templates/admin/settings/lead-connector.php', 'templates/admin/settings/white-label.php', 'templates/admin/settings/mcp.php', 'assets/js/admin-app.js', 'assets/js/users-logs.js') as $file) {
         assert_contains('data-idlm-notice-inline', (string) file_get_contents($root . '/' . $file), $file);
     }
-    assert_contains("classList.contains('idlm-crm-design')", (string) file_get_contents($root . '/assets/js/settings.js'));
+    // One design: no script branches on the retired design switch.
+    foreach (glob($root . '/assets/js/*.js') as $script) {
+        assert_true(false === strpos((string) file_get_contents($script), "classList.contains('idlm-crm-design')"), basename($script) . ' still tests for the CRM design.');
+    }
 });
 
 idlm_test('design layer sidebar groups work and admin, shows needs-action counts and the signed-in person', static function(): void {
@@ -564,8 +571,8 @@ idlm_test('design layer sidebar groups work and admin, shows needs-action counts
     // Search and Add lead stay on the Leads page, not in the sidebar.
     assert_false(false !== strpos($template, 'data-idlm-workspace-search'), 'The sidebar has no search field.');
     assert_false(false !== strpos($template, 'data-idlm-add-lead'), 'The sidebar has no Add lead entry.');
-    assert_contains("'Ad conversions' : 'CAPI Audit'", $shortcodes);
-    assert_contains("'Ad audiences' : 'Audience Sync'", $shortcodes);
+    assert_contains("array('Ad conversions', 'dashicons-shield-alt'", $shortcodes);
+    assert_contains("array('Ad audiences', 'dashicons-update'", $shortcodes);
     assert_contains('private static function nav_counts($sections)', $shortcodes);
     assert_contains("handoff_status = 'awaiting_manager'", $shortcodes);
     assert_contains('IDLM_Lead_Access_Policy::scope_sql(', $shortcodes);

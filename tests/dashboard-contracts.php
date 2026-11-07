@@ -169,14 +169,6 @@ idlm_test('dashboard renders standard header and only authorized body tabs', sta
     assert_contains('Lead quality by source', $html);
     assert_contains('Disqualification reasons', $html);
     assert_false(strpos($html, 'Channel performance') !== false);
-    // The previous design keeps its Title Case headings.
-    $_GET['idlm_design'] = 'legacy';
-    $legacy_html = IDLM_View::render('admin/dashboard.php', array('access' => IDLM_Dashboard::access_context()));
-    unset($_GET['idlm_design']);
-    foreach (array('Open &amp; Closed Pipeline by Channel', 'Business Mix', 'Lead Volume &amp; Quality Trend', 'Lead Quality by Source', 'Disqualification Reasons') as $legacy_heading) {
-        assert_contains($legacy_heading, $legacy_html);
-    }
-    assert_false(strpos($legacy_html, 'Channel Performance') !== false);
     assert_false(strpos($html, 'Value still in the pipeline') !== false);
 });
 
@@ -235,7 +227,7 @@ idlm_test('every date filter offers the same periods from one definition', stati
     assert_same(array('today', 'yesterday', 'last_7_days', 'last_14_days', 'last_30_days', 'this_week', 'this_month', 'this_quarter', 'this_year', 'custom'), array_keys(IDLM_Date_Ranges::OPTIONS));
     foreach (array('templates/admin/dashboard.php', 'templates/admin/leads.php', 'templates/admin/kanban.php', 'templates/admin/logs/capi.php', 'templates/admin/logs/audience.php', 'includes/class-quotation-renderer.php', 'includes/class-design-dashboard.php') as $file) {
         $source = (string) file_get_contents($root . '/' . $file);
-        assert_true(false !== strpos($source, 'IDLM_Date_Ranges::print_options(') || false !== strpos($source, 'IDLM_Date_Ranges::options_html('), $file . ' must use the shared period list.');
+        assert_true(false !== strpos($source, 'IDLM_Date_Ranges::print_options('), $file . ' must use the shared period list.');
         assert_false((bool) preg_match('/<option value="(?:week|month|year|last_month|last_7_days)"/', $source), $file . ' still hard-codes its own periods.');
     }
     foreach (array('includes/class-admin-collection-reads.php', 'includes/class-admin-ajax.php', 'includes/class-dashboard.php', 'includes/class-admin-logs-renderer.php', 'includes/class-quotation-controller.php') as $file) {

@@ -7,28 +7,26 @@
     'use strict';
 
     // Mouse and touch users get no lingering focus ring; the keyboard keeps it. Design layer only.
-    if (document.body && document.body.classList.contains('idlm-crm-design')) {
-        // A click that loads a new page (for example "Add item") must not show a ring on the field it focuses, so the pointer state survives one navigation.
-        var pointerFlag = function (value) {
-            try {
-                if (null === value) { window.sessionStorage.removeItem('idlmPointerInput'); } else if (undefined === value) { return '1' === window.sessionStorage.getItem('idlmPointerInput'); } else { window.sessionStorage.setItem('idlmPointerInput', value); }
-            } catch (error) { /* Storage can be unavailable; the ring then simply shows. */ }
-            return false;
-        };
-        if (pointerFlag()) {
-            document.body.classList.add('idlm-pointer-input');
-        }
-        document.addEventListener('pointerdown', function () {
-            document.body.classList.add('idlm-pointer-input');
-            pointerFlag('1');
-        }, true);
-        document.addEventListener('keydown', function (event) {
-            pointerFlag(null);
-            if ('Tab' === event.key) {
-                document.body.classList.remove('idlm-pointer-input');
-            }
-        }, true);
+    // A click that loads a new page (for example "Add item") must not show a ring on the field it focuses, so the pointer state survives one navigation.
+    var pointerFlag = function (value) {
+        try {
+            if (null === value) { window.sessionStorage.removeItem('idlmPointerInput'); } else if (undefined === value) { return '1' === window.sessionStorage.getItem('idlmPointerInput'); } else { window.sessionStorage.setItem('idlmPointerInput', value); }
+        } catch (error) { /* Storage can be unavailable; the ring then simply shows. */ }
+        return false;
+    };
+    if (pointerFlag()) {
+        document.body.classList.add('idlm-pointer-input');
     }
+    document.addEventListener('pointerdown', function () {
+        document.body.classList.add('idlm-pointer-input');
+        pointerFlag('1');
+    }, true);
+    document.addEventListener('keydown', function (event) {
+        pointerFlag(null);
+        if ('Tab' === event.key) {
+            document.body.classList.remove('idlm-pointer-input');
+        }
+    }, true);
 
     var activeDialog = null;
     var toastStack = null;
@@ -49,10 +47,6 @@
         '[contenteditable="true"]',
         '[tabindex]:not([tabindex="-1"])'
     ].join(',');
-
-    function designLayerActive() {
-        return document.body.classList.contains('idlm-crm-design');
-    }
 
     function resolveDialog(target) {
         if (!target) {
@@ -271,12 +265,10 @@
                 '</div>' +
             '</div>';
         document.body.appendChild(dialog);
-        if (designLayerActive()) {
-            // A confirmation has no form body, so its actions belong in the shared dialog footer.
-            var actions = dialog.querySelector('.idlm-dialog__actions');
-            actions.classList.add('idlm-dialog__footer');
-            dialog.querySelector('.idlm-dialog__panel').appendChild(actions);
-        }
+        // A confirmation has no form body, so its actions belong in the shared dialog footer.
+        var actions = dialog.querySelector('.idlm-dialog__actions');
+        actions.classList.add('idlm-dialog__footer');
+        dialog.querySelector('.idlm-dialog__panel').appendChild(actions);
         return dialog;
     }
 
@@ -312,11 +304,9 @@
         error.textContent = '';
         confirmButton.textContent = options.confirmLabel || (promptMode ? 'Continue' : 'Confirm');
         confirmButton.classList.toggle('idlm-btn-danger', !!options.destructive);
-        if (designLayerActive()) {
-            dialog.querySelector('.idlm-dialog__body').hidden = !promptMode;
-            dialog.classList.toggle('idlm-dialog--destructive', !!options.destructive);
-            cancelButton.textContent = options.cancelLabel || 'Cancel';
-        }
+        dialog.querySelector('.idlm-dialog__body').hidden = !promptMode;
+        dialog.classList.toggle('idlm-dialog--destructive', !!options.destructive);
+        cancelButton.textContent = options.cancelLabel || 'Cancel';
 
         return new Promise(function(resolve) {
             var settled = false;
@@ -359,7 +349,7 @@
             confirmButton.addEventListener('click', onConfirm);
             cancelButton.addEventListener('click', onCancel);
             // Enter on a destructive confirmation must not complete it by accident.
-            var safeFocus = designLayerActive() && options.destructive ? '[data-idlm-action-cancel]' : '[data-idlm-action-confirm]';
+            var safeFocus = options.destructive ? '[data-idlm-action-cancel]' : '[data-idlm-action-confirm]';
             open(dialog, {trigger: options.trigger, initialFocus: promptMode ? '#' + control.id : safeFocus});
         });
     }
@@ -453,10 +443,8 @@
     }
 
     function notify(message, type, options) {
-        if (designLayerActive()) {
-            stackedToast(message, type, options || {});
-            return;
-        }
+        stackedToast(message, type, options || {});
+        return;
         var toast = document.createElement('div');
         toast.className = 'idlm-toast ' + (type || 'info');
         toast.setAttribute('role', 'status');
@@ -513,9 +501,6 @@
     }
 
     function watchNotices() {
-        if (!designLayerActive()) {
-            return;
-        }
         promoteNotices(document);
         new MutationObserver(function (mutations) {
             mutations.forEach(function (mutation) {

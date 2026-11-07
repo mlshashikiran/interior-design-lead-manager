@@ -69,7 +69,7 @@ final class IDLM_Design_Projects_Table {
         $rows = (array) $wpdb->get_results($wpdb->prepare("SELECT h.*, l.first_name, l.last_name, l.phone, l.project_name, l.stage AS lead_stage FROM $table h INNER JOIN $leads l ON l.id = h.lead_id WHERE $where ORDER BY FIELD(h.status, %s, %s, %s), CASE WHEN h.status = %s THEN h.sent_at END ASC, h.target_date IS NULL, h.target_date ASC, h.id ASC LIMIT %d OFFSET %d", IDLM_Design_Handoffs::STATUS_NEW, IDLM_Design_Handoffs::STATUS_ACCEPTED, IDLM_Design_Handoffs::STATUS_SENT_BACK, IDLM_Design_Handoffs::STATUS_NEW, self::PER_PAGE, ($page - 1) * self::PER_PAGE));
         if (!$rows) { self::empty_state($queue, (bool) array_filter($filters)); return; }
         $contexts = IDLM_Design_Stages::contexts($rows); $designers = $manager ? IDLM_Design_Handoffs::designers() : array();
-        wp_enqueue_script('idlm-design-table', IDLM_URL . 'assets/js/design-table.js', array('idlm-dialog'), (string) filemtime(IDLM_PATH . 'assets/js/design-table.js'), true);
+        wp_enqueue_script('idlm-design-table', IDLM_URL . 'assets/js/design-table.js', array('idlm-dialog'), IDLM_Admin_Assets::version('js/design-table.js'), true);
         $nonces = array(); foreach (array('accept', 'assign', 'send_back') as $operation) { $nonces[$operation] = wp_create_nonce('idlm_design_handoff_' . $operation); }
         $return = remove_query_arg(array('design_notice', 'design_error', 'handoff', 'project'), wp_unslash($_SERVER['REQUEST_URI'] ?? ''));
         echo '<p class="idlm-design-muted">' . esc_html($total . (1 === $total ? ' project' : ' projects')) . '</p>';

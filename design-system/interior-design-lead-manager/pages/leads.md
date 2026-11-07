@@ -21,7 +21,7 @@ Phase 3 responsive workflow is implemented: primary/secondary/low column priorit
 
 ## Design layer decisions (Shashi, 2026-11-05)
 
-These apply when `IDLM_Admin_Assets::design_layer_enabled()` is on. Styles live in `assets/css/crm-design-leads.css`.
+The CRM design is the only design. Styles live in `assets/css/crm-design-leads.css`.
 
 - **Header.** Title matches the navigation label ("Leads") for every role. Order: search, Filters, quiet attention counts, More, Add lead. Import, Export and Routing settings sit in the More menu for the roles that already had them. Attention counts are text with a coloured number and show pressed state; they stay on their own row at `1280px` and below.
 - **Summary strip.** Needs-attention counts come first. One line above `1280px`, four columns up to `782px`, a self-scrolling strip on phones. Selected uses `aria-pressed` plus an action border; alert colours the number only. Scope stays visible in the hint.
@@ -32,4 +32,4 @@ These apply when `IDLM_Admin_Assets::design_layer_enabled()` is on. Styles live 
 - **States.** Skeleton on first load, dimmed table on refresh, retry on error. Empty wording distinguishes "no matches" (Clear filters), "no leads yet" and a clear pre-sales queue.
 - **Drawer.** Fixed height, top-aligned frame. Previous, next and position sit beside close, never over the page or footer. Identity then contact, then the four status values, then created and assigned dates. Form groups are Contact, Qualification and deal, Project, Quote and studio. Attribution collapses and lists recorded values only. Early close is a disclosure. Comments stay beside the form above `1024px`.
 - **Footers.** Delete is quiet and far left, primary last. Phones keep one row so the form keeps the screen. A quiet "Unsaved changes" appears as soon as a field changes.
-- **Inline presentation.** In the design layer, the Leads template, row, drawer and activity markup drop `style` attributes at render, except `display:none`, which scripts toggle. Labels are rewritten to sentence case at the same point, so the legacy source stays unchanged.
+- **Inline presentation.** The Leads template, row, drawer and activity markup carry no `style` attributes except `display:none`, which scripts toggle, and their labels are written in sentence case in the source. Nothing rewrites markup at render time.

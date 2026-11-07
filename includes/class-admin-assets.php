@@ -10,10 +10,46 @@ if (!defined('ABSPATH')) {
 }
 
 final class IDLM_Admin_Assets {
-    const DESIGN_OPTION = 'idlm_design_layer';
-    const DESIGN_CRM = 'crm';
-    const DESIGN_LEGACY = 'legacy';
     const DESIGN_AREAS = array('leads', 'pipeline', 'dashboard', 'quotations', 'settings', 'admin', 'payments');
+
+    /**
+     * What each workspace view needs beyond the shared shell: dialog, admin-app, workspace and the
+     * design areas in SHARED_AREAS (the lead drawer and the send-to-design dialog open from any view).
+     * A view not listed here loads everything.
+     */
+    const SHARED_AREAS = array('leads', 'payments');
+    const VIEW_ASSETS = array(
+        'dashboard'     => array('styles' => array('idlm-dashboard-styles'), 'scripts' => array('idlm-chartjs', 'idlm-dashboard-app'), 'areas' => array('dashboard')),
+        'leads'         => array('styles' => array(), 'scripts' => array(), 'areas' => array()),
+        'pipeline'      => array('styles' => array('idlm-kanban-styles'), 'scripts' => array('idlm-kanban-app'), 'areas' => array('pipeline')),
+        'quotations'    => array('styles' => array(), 'scripts' => array(), 'areas' => array('quotations')),
+        'payments'      => array('styles' => array(), 'scripts' => array(), 'areas' => array('payments')),
+        'design-team'   => array('styles' => array(), 'scripts' => array(), 'areas' => array('payments')),
+        'capi-logs'     => array('styles' => array(), 'scripts' => array('idlm-users-logs'), 'areas' => array('admin')),
+        'audience-logs' => array('styles' => array(), 'scripts' => array('idlm-users-logs'), 'areas' => array('admin')),
+        'users'         => array('styles' => array(), 'scripts' => array('idlm-users-logs'), 'areas' => array('admin')),
+        'settings'      => array('styles' => array(), 'scripts' => array('idlm-settings'), 'areas' => array('settings', 'admin')),
+        'my-account'    => array('styles' => array(), 'scripts' => array(), 'areas' => array('admin')),
+    );
+
+    /** The active workspace view's extra assets, or null to load every view's assets. */
+    private static function workspace_view_assets() {
+        $workspace = class_exists('IDLM_Admin_Shortcodes') ? IDLM_Admin_Shortcodes::workspace_sections() : null;
+        $view = is_array($workspace) ? $workspace['active'] : '';
+        return isset(self::VIEW_ASSETS[$view]) ? self::VIEW_ASSETS[$view] : null;
+    }
+
+    /** Enqueue the workspace shell plus the active view's assets (all of them when the view is unknown). */
+    private static function enqueue_workspace_assets() {
+        wp_enqueue_style('idlm-workspace-styles');
+        wp_enqueue_script('idlm-workspace-app');
+        $view = self::workspace_view_assets();
+        $styles = null === $view ? array('idlm-dashboard-styles', 'idlm-kanban-styles') : $view['styles'];
+        $scripts = null === $view ? array('idlm-users-logs', 'idlm-settings', 'idlm-chartjs', 'idlm-dashboard-app', 'idlm-kanban-app') : $view['scripts'];
+        foreach ($styles as $handle) { wp_enqueue_style($handle); }
+        foreach ($scripts as $handle) { wp_enqueue_script($handle); }
+        return null === $view ? null : array_values(array_unique(array_merge(self::SHARED_AREAS, $view['areas'])));
+    }
 
     private static $white_label_style_added = false;
 
@@ -21,6 +57,11 @@ final class IDLM_Admin_Assets {
     private static function asset_version($relative_path) {
         $path = dirname(__DIR__) . '/assets/' . ltrim((string) $relative_path, '/');
         return is_file($path) ? (string) filemtime($path) : IDLM_VERSION;
+    }
+
+    /** Cache-busting version for any plugin asset, relative to assets/: its modification time. */
+    public static function version($relative_path) {
+        return self::asset_version($relative_path);
     }
 
     /** Apply saved brand tokens only to plugin-owned CRM roots and dialogs. */
@@ -93,35 +134,22 @@ final class IDLM_Admin_Assets {
     }
 
     /**
-     * Whether the switchable CRM design layer applies to this request.
-     *
-     * Order: IDLM_DESIGN_LAYER constant (wp-config rollback), then the read-only
-     * ?idlm_design=legacy|crm comparison parameter, then the saved option.
+     * Whether the CRM design applies to this request. It is the only front-end design;
+     * wp-admin pages load no design stylesheet, so they keep plain WordPress markup.
+     * Kept as a public method because templates, controllers and site code ask it.
      */
     public static function design_layer_enabled() {
-        // wp-admin pages load no layer stylesheet, so they keep the markup their CSS expects.
-        if (function_exists('is_admin') && is_admin() && !(function_exists('wp_doing_ajax') && wp_doing_ajax())) {
-            return false;
-        }
-        if (defined('IDLM_DESIGN_LAYER')) {
-            return (bool) IDLM_DESIGN_LAYER;
-        }
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only presentation preference.
-        $preview = isset($_GET['idlm_design']) ? sanitize_key(wp_unslash($_GET['idlm_design'])) : '';
-        if ('legacy' === $preview || 'crm' === $preview) {
-            return 'crm' === $preview;
-        }
-        return self::DESIGN_LEGACY !== get_option(self::DESIGN_OPTION, self::DESIGN_CRM);
+        return !(function_exists('is_admin') && is_admin() && !(function_exists('wp_doing_ajax') && wp_doing_ajax()));
     }
 
     /** Load the design layer last and expose the body class that gates every rule. */
-    private static function maybe_enqueue_design_layer() {
+    private static function maybe_enqueue_design_layer($areas = null) {
         if (!self::design_layer_enabled()) {
             return;
         }
         $asset_url = plugin_dir_url(dirname(__FILE__)) . 'assets/';
         wp_enqueue_style('idlm-crm-design', $asset_url . 'css/crm-design.css', array('idlm-admin-styles'), self::asset_version('css/crm-design.css'));
-        foreach (self::DESIGN_AREAS as $area) {
+        foreach (null === $areas ? self::DESIGN_AREAS : array_intersect(self::DESIGN_AREAS, $areas) as $area) {
             wp_enqueue_style('idlm-crm-design-' . $area, $asset_url . 'css/crm-design-' . $area . '.css', array('idlm-crm-design'), self::asset_version('css/crm-design-' . $area . '.css'));
         }
         add_filter('body_class', array(__CLASS__, 'add_design_body_class'));
@@ -131,37 +159,6 @@ final class IDLM_Admin_Assets {
     public static function add_design_body_class($classes) {
         $classes[] = 'idlm-crm-design';
         return $classes;
-    }
-
-    /** Administrator rollback control, rendered on the asset-free wp-admin utility page. */
-    public static function render_design_layer_control() {
-        $locked = defined('IDLM_DESIGN_LAYER');
-        $active = $locked ? (bool) IDLM_DESIGN_LAYER : self::DESIGN_LEGACY !== get_option(self::DESIGN_OPTION, self::DESIGN_CRM);
-        ?>
-        <h2>Interface design</h2>
-        <p>Currently using the <strong><?php echo $active ? 'CRM design' : 'previous design'; ?></strong>. Switching changes appearance only; leads, quotations and settings are not affected.</p>
-        <?php if ($locked) : ?>
-            <p>This is set by the <code>IDLM_DESIGN_LAYER</code> constant in <code>wp-config.php</code>. Remove the constant to switch here.</p>
-        <?php else : ?>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                <input type="hidden" name="action" value="idlm_set_design_layer">
-                <input type="hidden" name="design" value="<?php echo esc_attr($active ? self::DESIGN_LEGACY : self::DESIGN_CRM); ?>">
-                <?php wp_nonce_field('idlm_set_design_layer'); ?>
-                <button type="submit" class="button"><?php echo $active ? 'Switch to previous design' : 'Switch to CRM design'; ?></button>
-            </form>
-        <?php endif;
-    }
-
-    /** Save the administrator's design layer choice. */
-    public static function handle_set_design_layer() {
-        if (!current_user_can('manage_options')) {
-            wp_die('You do not have permission to manage Lead Manager.', 403);
-        }
-        check_admin_referer('idlm_set_design_layer');
-        $design = isset($_POST['design']) ? sanitize_key(wp_unslash($_POST['design'])) : '';
-        update_option(self::DESIGN_OPTION, self::DESIGN_LEGACY === $design ? self::DESIGN_LEGACY : self::DESIGN_CRM, false);
-        wp_safe_redirect(admin_url('admin.php?page=idlm_utilities'));
-        exit;
     }
 
     /** Conditionally enqueue the established frontend shortcode asset sets. */
@@ -192,22 +189,18 @@ final class IDLM_Admin_Assets {
         wp_enqueue_script('idlm-admin-app');
         wp_enqueue_script('idlm-access-account');
 
-        if ($has_workspace) {
-            wp_enqueue_style('idlm-workspace-styles');
-            wp_enqueue_script('idlm-workspace-app');
-            wp_enqueue_script('idlm-users-logs');
-            wp_enqueue_script('idlm-settings');
-        }
-        if ($has_dashboard || $has_workspace) {
+        $areas = $has_workspace ? self::enqueue_workspace_assets() : null;
+        if ($has_dashboard) {
             wp_enqueue_style('idlm-dashboard-styles');
             wp_enqueue_script('idlm-chartjs');
             wp_enqueue_script('idlm-dashboard-app');
         }
-        if ($has_kanban || $has_workspace) {
+        if ($has_kanban) {
             wp_enqueue_style('idlm-kanban-styles');
             wp_enqueue_script('idlm-kanban-app');
         }
-        self::maybe_enqueue_design_layer();
+        // A workspace alone loads only its view's design areas; any other CRM shortcode on the page needs them all.
+        self::maybe_enqueue_design_layer($has_leads_list || $has_dashboard || $has_kanban ? null : $areas);
     }
 
     /** Force the asset set required by a direct shortcode render. */
@@ -220,29 +213,26 @@ final class IDLM_Admin_Assets {
         wp_enqueue_script('idlm-admin-app');
         wp_enqueue_script('idlm-access-account');
 
-        if ('dashboard' === $context || 'workspace' === $context) {
+        $areas = null;
+        if ('dashboard' === $context) {
             wp_enqueue_style('idlm-dashboard-styles');
             wp_enqueue_script('idlm-chartjs');
             wp_enqueue_script('idlm-dashboard-app');
         }
-        if ('kanban' === $context || 'workspace' === $context) {
+        if ('kanban' === $context) {
             wp_enqueue_style('idlm-kanban-styles');
             wp_enqueue_script('idlm-kanban-app');
         }
         if ('workspace' === $context) {
             wp_enqueue_style('dashicons');
-            wp_enqueue_style('idlm-workspace-styles');
-            wp_enqueue_script('idlm-workspace-app');
-            wp_enqueue_script('idlm-users-logs');
+            $areas = self::enqueue_workspace_assets();
         }
         // A shortcode the post content does not show (block template, page builder) reaches here without
         // enqueue_frontend_assets(). Its templates render the design markup, so the layer must load with it.
         if (!is_admin() && self::design_layer_enabled()) {
-            self::maybe_enqueue_design_layer();
+            self::maybe_enqueue_design_layer($areas);
             // <body> may already be printed, so set the gate class before the first script reads it.
             wp_add_inline_script('idlm-dialog', "document.body.classList.add('idlm-crm-design');", 'before');
         }
     }
 }
-
-add_action('admin_post_idlm_set_design_layer', array('IDLM_Admin_Assets', 'handle_set_design_layer'));

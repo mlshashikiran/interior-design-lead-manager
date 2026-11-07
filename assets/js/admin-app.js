@@ -10,7 +10,6 @@ jQuery(document).ready(function($) {
             aliases[value] = groups[group][value];
             if ('custom_stages' === group) stageAliases[value] = true;
         }); });
-        var designLayer = document.body.classList.contains('idlm-crm-design');
         var walker = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT);
         var node;
         while ((node = walker.nextNode())) {
@@ -18,7 +17,7 @@ jQuery(document).ready(function($) {
             var original = node.nodeValue;
             var label = original.trim();
             if (!label || !Object.prototype.hasOwnProperty.call(aliases, label) || !aliases[label]) continue;
-            if (designLayer && stageAliases[label] && $(node.parentNode).closest('select[id*="quality"], select[name*="quality"], select[data-field="lead_quality"]').length) continue;
+            if (stageAliases[label] && $(node.parentNode).closest('select[id*="quality"], select[name*="quality"], select[data-field="lead_quality"]').length) continue;
             node.nodeValue = original.replace(label, aliases[label]);
         }
     }
@@ -29,7 +28,6 @@ jQuery(document).ready(function($) {
     var filtersReturnFocus = null;
     var pendingBulkDelete = null;
     var exportCountRequest = null;
-    var isCrmDesign = document.body.classList.contains('idlm-crm-design');
 
     function openAccessibleDialog(selector, trigger) {
         var dialog = document.querySelector(selector);
@@ -116,7 +114,7 @@ jQuery(document).ready(function($) {
             if (value && !isDefault) count += 1;
         });
         $count.text(count).attr('aria-label', count + ' active filter' + (count === 1 ? '' : 's')).prop('hidden', count === 0);
-        if (isCrmDesign) renderActiveFilters();
+        renderActiveFilters();
     }
 
     // Design layer: active filters read as removable chips, and every quick filter shows whether it is on.
@@ -611,7 +609,7 @@ jQuery(document).ready(function($) {
     // Load table on start if present
     if ($('#idlm-leads-table').length > 0) {
         // Read-only link from Users & access: open one person's open leads. The server still applies this viewer's scope.
-        var urlRepId = isCrmDesign ? new URLSearchParams(window.location.search).get('rep') : null;
+        var urlRepId = new URLSearchParams(window.location.search).get('rep');
         if (urlRepId && /^[1-9][0-9]*$/.test(urlRepId) && $('#filter-rep option[value="' + urlRepId + '"]').length) {
             $('#filter-rep').val(urlRepId);
             leadsActiveOnly = true;
@@ -691,74 +689,72 @@ jQuery(document).ready(function($) {
         loadLeadsTable(1);
     });
 
-    if (isCrmDesign) {
-        $(document).on('click', '.idlm-active-filter-remove', function() {
-            var id = $(this).attr('data-filter-id');
-            if (id === 'filter-search') {
-                $('#filter-search').val('').trigger('input');
-            } else {
-                $('#' + id).val(id === 'filter-date-basis' ? 'assigned_at' : '').trigger('change');
-            }
-            var $next = $('.idlm-active-filter-remove').first();
-            ($next.length ? $next : $('#filter-search')).trigger('focus');
-        });
-        $(document).on('click', '.idlm-active-filters-clear', function() {
-            $('#btn-clear-filters').trigger('click');
-            $('#filter-search').trigger('focus');
-        });
-        $('#idlm-filters-done').on('click', closeFiltersPanel);
-
-        // More menu: Enter or arrow opens, arrows move, Escape returns to the button, Tab leaves.
-        var $moreButton = $('#idlm-leads-more-btn');
-        var $moreMenu = $('#idlm-leads-more-menu');
-        var setMoreMenu = function(open, focusFirst) {
-            $moreMenu.prop('hidden', !open);
-            $moreButton.attr('aria-expanded', open ? 'true' : 'false');
-            if (open && focusFirst) $moreMenu.find('[role="menuitem"]').first().trigger('focus');
-        };
-        $moreButton.on('click', function() { setMoreMenu($moreMenu.prop('hidden'), true); });
-        $moreButton.on('keydown', function(event) {
-            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                event.preventDefault();
-                setMoreMenu(true, true);
-            }
-        });
-        $moreMenu.on('keydown', function(event) {
-            var $items = $moreMenu.find('[role="menuitem"]');
-            var index = $items.index(document.activeElement);
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                event.stopPropagation();
-                setMoreMenu(false);
-                $moreButton.trigger('focus');
-            } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                event.preventDefault();
-                $items.eq((index + (event.key === 'ArrowDown' ? 1 : -1) + $items.length) % $items.length).trigger('focus');
-            } else if (event.key === 'Home' || event.key === 'End') {
-                event.preventDefault();
-                $items.eq(event.key === 'Home' ? 0 : $items.length - 1).trigger('focus');
-            } else if (event.key === 'Tab') {
-                setMoreMenu(false);
-            }
-        });
-        $moreMenu.on('click', '[role="menuitem"]', function() { setMoreMenu(false); });
-        $(document).on('click', function(event) {
-            if (!$moreMenu.prop('hidden') && !$(event.target).closest('.idlm-leads-menu').length) setMoreMenu(false);
-        });
-        // The menu is closed by the time a dialog returns focus, so hand focus to its button.
-        $(document).on('idlm:dialogclose', '#idlm-import-modal, #idlm-export-modal, #idlm-routing-modal', function() {
-            window.setTimeout(function() {
-                if (document.activeElement === document.body || !$(document.activeElement).is(':visible')) $moreButton.trigger('focus');
-            }, 20);
-        });
-
-        // Sticky table headers need the height of the sticky page header above them.
-        var leadsHeader = document.querySelector('.idlm-leads-page .idlm-header');
-        if (leadsHeader && window.ResizeObserver) {
-            new ResizeObserver(function() {
-                document.documentElement.style.setProperty('--idlm-leads-header-height', Math.round(leadsHeader.getBoundingClientRect().height) + 'px');
-            }).observe(leadsHeader);
+    $(document).on('click', '.idlm-active-filter-remove', function() {
+        var id = $(this).attr('data-filter-id');
+        if (id === 'filter-search') {
+            $('#filter-search').val('').trigger('input');
+        } else {
+            $('#' + id).val(id === 'filter-date-basis' ? 'assigned_at' : '').trigger('change');
         }
+        var $next = $('.idlm-active-filter-remove').first();
+        ($next.length ? $next : $('#filter-search')).trigger('focus');
+    });
+    $(document).on('click', '.idlm-active-filters-clear', function() {
+        $('#btn-clear-filters').trigger('click');
+        $('#filter-search').trigger('focus');
+    });
+    $('#idlm-filters-done').on('click', closeFiltersPanel);
+
+    // More menu: Enter or arrow opens, arrows move, Escape returns to the button, Tab leaves.
+    var $moreButton = $('#idlm-leads-more-btn');
+    var $moreMenu = $('#idlm-leads-more-menu');
+    var setMoreMenu = function(open, focusFirst) {
+        $moreMenu.prop('hidden', !open);
+        $moreButton.attr('aria-expanded', open ? 'true' : 'false');
+        if (open && focusFirst) $moreMenu.find('[role="menuitem"]').first().trigger('focus');
+    };
+    $moreButton.on('click', function() { setMoreMenu($moreMenu.prop('hidden'), true); });
+    $moreButton.on('keydown', function(event) {
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            setMoreMenu(true, true);
+        }
+    });
+    $moreMenu.on('keydown', function(event) {
+        var $items = $moreMenu.find('[role="menuitem"]');
+        var index = $items.index(document.activeElement);
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            setMoreMenu(false);
+            $moreButton.trigger('focus');
+        } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            $items.eq((index + (event.key === 'ArrowDown' ? 1 : -1) + $items.length) % $items.length).trigger('focus');
+        } else if (event.key === 'Home' || event.key === 'End') {
+            event.preventDefault();
+            $items.eq(event.key === 'Home' ? 0 : $items.length - 1).trigger('focus');
+        } else if (event.key === 'Tab') {
+            setMoreMenu(false);
+        }
+    });
+    $moreMenu.on('click', '[role="menuitem"]', function() { setMoreMenu(false); });
+    $(document).on('click', function(event) {
+        if (!$moreMenu.prop('hidden') && !$(event.target).closest('.idlm-leads-menu').length) setMoreMenu(false);
+    });
+    // The menu is closed by the time a dialog returns focus, so hand focus to its button.
+    $(document).on('idlm:dialogclose', '#idlm-import-modal, #idlm-export-modal, #idlm-routing-modal', function() {
+        window.setTimeout(function() {
+            if (document.activeElement === document.body || !$(document.activeElement).is(':visible')) $moreButton.trigger('focus');
+        }, 20);
+    });
+
+    // Sticky table headers need the height of the sticky page header above them.
+    var leadsHeader = document.querySelector('.idlm-leads-page .idlm-header');
+    if (leadsHeader && window.ResizeObserver) {
+        new ResizeObserver(function() {
+            document.documentElement.style.setProperty('--idlm-leads-header-height', Math.round(leadsHeader.getBoundingClientRect().height) + 'px');
+        }).observe(leadsHeader);
     }
 
     $('#idlm-open-filters').on('click', openFiltersPanel);
@@ -818,7 +814,6 @@ jQuery(document).ready(function($) {
     // Pagination events
     // A new page starts at its first row, not wherever the previous page's pager was.
     function scrollLeadsTableToTop() {
-        if (!isCrmDesign) return;
         var table = document.getElementById('idlm-leads-table');
         if (!table) return;
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1653,7 +1648,6 @@ jQuery(document).ready(function($) {
 
         var requestData = {
             action: 'idlm_get_leads_table',
-            idlm_design: isCrmDesign ? 'crm' : 'legacy',
             nonce: idlm_vars.nonce,
             page: page,
             date_range: dateRange,
@@ -1676,10 +1670,8 @@ jQuery(document).ready(function($) {
             requestData.cursor = leadsPageCursors[page];
         }
 
-        if (isCrmDesign) {
-            fitLeadsStateRows();
-            $('.idlm-leads-table-wrapper').addClass('is-refreshing').attr('aria-busy', 'true');
-        }
+        fitLeadsStateRows();
+        $('.idlm-leads-table-wrapper').addClass('is-refreshing').attr('aria-busy', 'true');
 
         leadsTableRequest = $.ajax({
             url: idlm_vars.ajax_url,
@@ -1688,11 +1680,9 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success) {
                     $('#idlm-leads-table tbody').html(response.data.html);
-                    if (isCrmDesign) {
-                        fitLeadsStateRows();
-                        renderLeadsSummary(response.data);
-                        if (response.data.hasOwnProperty('stale_lead_count')) updateStaleLeadsPill(response.data.stale_lead_count);
-                    }
+                    fitLeadsStateRows();
+                    renderLeadsSummary(response.data);
+                    if (response.data.hasOwnProperty('stale_lead_count')) updateStaleLeadsPill(response.data.stale_lead_count);
                     if (response.data.metric_stats) {
                         Object.keys(response.data.metric_stats).forEach(function(key) {
                             $('[data-metric-count="' + key + '"]').text(Number(response.data.metric_stats[key]) || 0);
@@ -1731,28 +1721,18 @@ jQuery(document).ready(function($) {
                     showToast(xhr.responseJSON.data.message, 'error');
                     leadsPageCursors = { 1: '' };
                     window.setTimeout(function() { loadLeadsTable(1); }, 0);
-                } else if (isCrmDesign && xhr.statusText !== 'abort') {
+                } else if (xhr.statusText !== 'abort') {
                     renderLeadsLoadError(page);
                 }
             },
             complete: function(xhr) {
-                if (isCrmDesign && xhr.statusText !== 'abort') $('.idlm-leads-table-wrapper').removeClass('is-refreshing').removeAttr('aria-busy');
+                if (xhr.statusText !== 'abort') $('.idlm-leads-table-wrapper').removeClass('is-refreshing').removeAttr('aria-busy');
                 leadsTableRequest = null;
             }
         });
     }
 
     // Helper functions
-    function getCurrentDateTimeString() {
-        var now = new Date();
-        var yyyy = now.getFullYear();
-        var mm = String(now.getMonth() + 1).padStart(2, '0');
-        var dd = String(now.getDate()).padStart(2, '0');
-        var hh = String(now.getHours()).padStart(2, '0');
-        var min = String(now.getMinutes()).padStart(2, '0');
-        return yyyy + '-' + mm + '-' + dd + ' ' + hh + ':' + min;
-    }
-
     // Custom non-intrusive notification toasts
     function showToast(message, type) {
         window.IDLMDialog.notify(message, type);
@@ -2433,7 +2413,7 @@ jQuery(document).ready(function($) {
                     var previewHtml = '<a href="' + response.data.url + '" target="_blank" class="idlm-file-link" style="color: var(--idlm-action); font-weight: 500; text-decoration: none;"><span class="dashicons dashicons-media-document" aria-hidden="true"></span> View file<span class="screen-reader-text"> (opens in a new tab)</span></a>' +
                                       '<button type="button" class="idlm-remove-file-btn" data-input-id="' + inputId + '" data-preview-id="' + previewId + '" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:12px; padding:0; margin-left:5px; font-weight:500;">Remove</button>';
                     $preview.html(previewHtml);
-                    $button.text(idlmDesignLabel('Change File', 'Change file'));
+                    $button.text('Change file');
 
                     // Automatically select 'Yes' for the dropdown if a file is uploaded
                     if (inputId === 'idlm_floor_plan_file') {
@@ -2469,7 +2449,7 @@ jQuery(document).ready(function($) {
         $('#idlm_floor_plan_files').val(JSON.stringify(files));
         $('#idlm_floor_plan_file').val(files[0] || '');
         $('select[name="floor_plan_received"]').val(files.length ? '1' : '0');
-        $('.idlm-file-input[data-input-id="idlm_floor_plan_file"]').siblings('.idlm-direct-upload-trigger').text(files.length ? idlmDesignLabel('Add Floor Plans', 'Add floor plans') : idlmDesignLabel('Upload Floor Plans', 'Upload floor plans'));
+        $('.idlm-file-input[data-input-id="idlm_floor_plan_file"]').siblings('.idlm-direct-upload-trigger').text(files.length ? 'Add floor plans' : 'Upload floor plans');
         if (!files.length) {
             $list.text('No file uploaded');
             return;
@@ -2560,13 +2540,13 @@ jQuery(document).ready(function($) {
         
         var uploadBtnText = 'Upload File';
         if (inputId === 'idlm_floor_plan_file') {
-            uploadBtnText = idlmDesignLabel('Upload Floor Plan', 'Upload floor plan');
+            uploadBtnText = 'Upload floor plan';
             $('select[name="floor_plan_received"]').val('0');
         } else if (inputId === 'idlm_quote_file') {
-            uploadBtnText = idlmDesignLabel('Upload Quote', 'Upload quote');
+            uploadBtnText = 'Upload quote';
             $('select[name="quote_shared"]').val('0');
         } else if (inputId.indexOf('quote-file') !== -1) {
-            uploadBtnText = idlmDesignLabel('Upload Quote', 'Upload quote');
+            uploadBtnText = 'Upload quote';
         }
         
         // Find sibling trigger button and update text
@@ -2601,10 +2581,10 @@ jQuery(document).ready(function($) {
                 'data-preview-id': previewId
             }).css({ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px', padding: 0, marginLeft: '5px', fontWeight: 500 });
             $preview.empty().append($link, $removeButton);
-            $uploadButton.text(idlmDesignLabel('Change File', 'Change file'));
+            $uploadButton.text('Change file');
         } else {
             $preview.text('No file uploaded');
-            $uploadButton.text(idlmDesignLabel('Upload Quote', 'Upload quote'));
+            $uploadButton.text('Upload quote');
         }
     }
 
@@ -2805,7 +2785,7 @@ jQuery(document).ready(function($) {
 
         window.IDLMDialog.confirm({
             title: 'Delete comment?',
-            message: isCrmDesign ? 'This comment will be removed from the lead’s history. This can’t be undone.' : 'Are you sure you want to delete this comment?',
+            message: 'This comment will be removed from the lead’s history. This can’t be undone.',
             confirmLabel: 'Delete comment',
             destructive: true,
             trigger: $link.get(0)
@@ -2916,7 +2896,7 @@ jQuery(document).ready(function($) {
     $(document).on('input change', '#idlm-edit-lead-form :input', function() {
         var name = $(this).attr('name');
         if (name && name !== 'lead_id') {
-            var label = (isCrmDesign ? $(this).closest('.idlm-form-group, .idlm-drawer-field').find('label').first() : $(this).closest('.idlm-form-group').find('label')).text().replace('*', '').trim();
+            var label = ($(this).closest('.idlm-form-group, .idlm-drawer-field').find('label').first()).text().replace('*', '').trim();
             if (!label) {
                 label = name.replace('_', ' ');
             }
@@ -3010,11 +2990,6 @@ jQuery(document).ready(function($) {
     window.idlmShowToast = showToast;
 });
 
-// Button wording a script restores after an action, matched to the active design.
-function idlmDesignLabel(legacy, crm) {
-    return document.body.classList.contains('idlm-crm-design') ? crm : legacy;
-}
-
 // Helper function to manage body scroll lock when modals or drawers are open
 function updateBodyScrollLock() {
     var $ = jQuery;
@@ -3027,7 +3002,7 @@ function updateBodyScrollLock() {
 
 // Global modal and drawer pings available inside table scopes
 function openLeadModal() {
-    if (document.body.classList.contains('idlm-crm-design') && window.IDLMDialog) {
+    if (window.IDLMDialog) {
         window.IDLMDialog.open('#idlm-lead-modal', {trigger: document.activeElement});
         return;
     }
@@ -3036,7 +3011,7 @@ function openLeadModal() {
 }
 
 function closeLeadModal() {
-    if (document.body.classList.contains('idlm-crm-design') && window.IDLMDialog) {
+    if (window.IDLMDialog) {
         window.IDLMDialog.close('#idlm-lead-modal', {reason: 'programmatic'});
         return;
     }
@@ -3084,14 +3059,13 @@ function openLeadDrawer(leadId, startTab) {
     updateBodyScrollLock();
     updateLeadDrawerNavigation(leadId);
     
-    $('#idlm-drawer-content-wrapper-inner').html('<div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> ' + (document.body.classList.contains('idlm-crm-design') ? 'Loading lead details…' : 'Loading Detailed Profile...') + '</div>');
+    $('#idlm-drawer-content-wrapper-inner').html('<div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> ' + ('Loading lead details…') + '</div>');
     
     $.ajax({
         url: idlm_vars.ajax_url,
         type: 'POST',
         data: {
             action: 'idlm_get_lead_details',
-            idlm_design: document.body.classList.contains('idlm-crm-design') ? 'crm' : 'legacy',
             nonce: idlm_vars.nonce,
             lead_id: leadId,
             workspace_url: $('[data-idlm-workspace]').length ? window.location.href : ''
@@ -3283,7 +3257,6 @@ function loadLeadActivityLog(leadId, forceRefresh) {
         type: 'POST',
         data: {
             action: 'idlm_get_lead_activity',
-            idlm_design: document.body.classList.contains('idlm-crm-design') ? 'crm' : 'legacy',
             nonce: idlm_vars.nonce,
             lead_id: leadId
         },
@@ -3339,7 +3312,7 @@ function saveActivityComment(btn, leadId) {
             }
         },
         complete: function() {
-            $btn.prop('disabled', false).text(idlmDesignLabel('Add Comment', 'Add comment'));
+            $btn.prop('disabled', false).text('Add comment');
         }
     });
 }
@@ -3368,7 +3341,7 @@ function saveActivityCommentDetails(btn, leadId) {
             }
         },
         complete: function() {
-            $btn.prop('disabled', false).text(idlmDesignLabel('Add Comment', 'Add comment'));
+            $btn.prop('disabled', false).text('Add comment');
         }
     });
 }
@@ -3697,9 +3670,9 @@ jQuery(document).ready(function($) {
                     // Reload the page or list to reflect settings changes (like active reps dropdown updates)
                     location.reload();
                 } else {
-                    var error = response.data || 'Failed to save routing settings.';
-                    setRoutingFormError(typeof error === 'string' ? error : 'Failed to save routing settings.');
-                    window.IDLMDialog.notify(typeof error === 'string' ? error : 'Failed to save routing settings.', 'error');
+                    var error = (response.data && response.data.message) || 'Failed to save routing settings.';
+                    setRoutingFormError(error);
+                    window.IDLMDialog.notify(error, 'error');
                 }
             },
             error: function() {
@@ -3789,7 +3762,7 @@ function renderLeadTasks(tasks, $container) {
         .attr('aria-label', overdueCount + ' overdue task' + (overdueCount === 1 ? '' : 's'))
         .prop('hidden', overdueCount === 0);
 
-    if (tasks.length === 0 && document.body.classList.contains('idlm-crm-design')) {
+    if (tasks.length === 0) {
         $container.html('<div class="idlm-drawer-empty-note" id="idlm-tasks-empty-state">No active tasks for this lead.</div>');
         return;
     }
@@ -4156,11 +4129,11 @@ function updateFloatingTasksCount() {
                     var label = queueCount(attention.due_today) + ' today · ' + queueCount(attention.overdue) + ' overdue';
                     $badge.text(label).show();
                     $('#idlm-floating-tasks-btn').attr('aria-label', label + '. Open today’s work.').attr('title', label);
-                    $('#idlm-floating-tasks-btn').css('box-shadow', '0 6px 20px rgba(239, 68, 68, 0.35)');
                 } else {
                     $badge.hide();
-                    $('#idlm-floating-tasks-btn').css('box-shadow', '0 6px 20px color-mix(in srgb, var(--idlm-action) 35%, transparent)');
                 }
+                // The floating button glows; the workspace navigation entry stays flat.
+                $('#idlm-floating-tasks-btn').not('.idlm-workspace-today').css('box-shadow', count > 0 ? '0 6px 20px rgba(239, 68, 68, 0.35)' : '0 6px 20px color-mix(in srgb, var(--idlm-action) 35%, transparent)');
             }
         }
     });

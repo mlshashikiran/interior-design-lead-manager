@@ -141,13 +141,4 @@ final class IDLM_Date_Ranges {
         }
     }
 
-    /** Escaped <option> list in the standard order, with an optional "All time" first. */
-    public static function options_html($selected = '', $all_label = '') {
-        $selected = self::normalize($selected);
-        $html = '' !== $all_label ? '<option value=""' . selected('', $selected, false) . '>' . esc_html($all_label) . '</option>' : '';
-        foreach (self::OPTIONS as $value => $label) {
-            $html .= '<option value="' . esc_attr($value) . '"' . selected($value, $selected, false) . '>' . esc_html($label) . '</option>';
-        }
-        return $html;
-    }
 }

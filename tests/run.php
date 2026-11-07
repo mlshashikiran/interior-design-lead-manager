@@ -137,7 +137,7 @@ idlm_test('heavy CRM log reads are bounded and audience payloads are lazy loaded
     assert_contains('ORDER BY a.id DESC LIMIT 100', $activity_reads);
     assert_contains('SELECT id, platform, audience_id, lead_count, status, created_at', $log_renderer);
     assert_false(false !== strpos($log_renderer, 'SELECT *\n            FROM {$wpdb->prefix}idlm_audience_sync_logs'));
-    assert_contains("check_ajax_referer('idlm_admin_nonce', 'nonce')", $log_renderer);
+    assert_contains("IDLM_Admin::require_ajax_access('admin', 'Permission denied.', 403);", $log_renderer);
     assert_contains("current_user_can('manage_options')", $log_renderer);
     assert_contains("add_action('wp_ajax_idlm_get_audience_log_payload'", $admin);
     assert_contains("'idlm_get_audience_log_payload'", $log_script);
@@ -1396,7 +1396,7 @@ idlm_test('white-label runtime surfaces do not retain fixed default accent color
     assert_false((bool) preg_match('/(?:201\s*,\s*150\s*,\s*68|225\s*,\s*182\s*,\s*109|#e1b66d)/i', $workspace . $dashboard . $kanban . $lead_markup));
     assert_false(false !== strpos($lead_markup, 'var(--gold)'));
     assert_false(false !== strpos($lead_markup, 'var(--red)'));
-    assert_contains("dashboardToken('--idlm-brand-gold'", $dashboard);
+    assert_contains("dashboardToken('--idlm-success'", $dashboard);
 });
 
 idlm_test('guarded view renderer rejects traversal and renders the correct authentication state', static function(): void {
@@ -1788,6 +1788,7 @@ require_once __DIR__ . '/quotation-document-contracts.php';
 require_once __DIR__ . '/lead-payment-contracts.php';
 require_once __DIR__ . '/design-handoff-contracts.php';
 require_once __DIR__ . '/manual-lead-contracts.php';
+require_once __DIR__ . '/streamline-contracts.php';
 require_once __DIR__ . '/quotation-paper-contracts.php';
 
 $passed = 0;

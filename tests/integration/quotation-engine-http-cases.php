@@ -23,7 +23,8 @@ function idlm_engine_http_fault(string $needle,callable $callback): void {
             foreach(explode("\n",trim($messages)) as $message) {
                 idlm_http_check((bool)preg_match('/^\[[^\]]+\] \[IDLM Quotations\] (Revision item insert failed|Quotation history insert failed|Quotation transaction commit failed): Table .*idlm_absent_table.*doesn.t exist$/',$message),'Unexpected fault-request diagnostic: '.$message);
             }
-            file_put_contents(__DIR__.'/../../docs/remediation-2026-10-07/quotation-engine-slice/expected-http-fault-diagnostics.log',$messages,FILE_APPEND);
+            // Evidence goes to a caller-chosen directory, never into the tracked docs tree.
+            $evidence=getenv('IDLM_TEST_ENGINE_EVIDENCE_DIR');if($evidence){file_put_contents($evidence.'/expected-http-fault-diagnostics.log',$messages,FILE_APPEND);}
             unlink($log);
         }
     }

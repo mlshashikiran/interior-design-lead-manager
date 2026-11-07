@@ -2,7 +2,7 @@
 
 Authentication notation: **CRM** = effective `manage_options` or `idlm_access_leads`, without CRM suspension, as implemented by `IDLM_Admin`; **object** = ownership/visibility check; all AJAX actions are logged-in-only and use `idlm_admin_nonce` unless noted.
 
-`idlm_create_user`, `idlm_update_user`, and `idlm_update_role_scopes`: administrator-only admin-post actions with their own nonces. They create or update only managed CRM roles, preserve historical CRM ownership, configure allowlisted role visibility scopes, and reject an administrator self-lockout or removal of the final administrator.
+`idlm_create_user` and `idlm_update_user`: administrator-only admin-post actions with their own nonces. They create or update only managed CRM roles, preserve historical CRM ownership, and reject an administrator self-lockout or removal of the final administrator.
 
 `idlm_update_role_access`: administrator-only, POST-only admin-post action with its own nonce, registered in `includes/class-admin-users-controller.php`. It takes `access_role`, `role_scope` (`default`, `all` or `assigned`) and `permissions[]`, changes only that role's key in `idlm_role_lead_scopes`, and applies `idlm_update_role_permissions` semantics to dedicated CRM roles. Administrator is refused and website roles change scope only. Builder: Shashi.
 
@@ -46,7 +46,7 @@ In 1.101.63, `idlm_upload_lead_file` additionally requires `lead_id` and current
 | `idlm_save_activity_comment`, `idlm_edit_activity_comment`, `idlm_delete_activity_comment` | `class-admin.php` → `class-admin-ajax.php` → `class-admin-activity-controller.php` | CRM + lead/activity ownership rules; mutate activity comments |
 | `idlm_add_lead_manual` | `class-admin.php` | CRM; create manual lead |
 | `idlm_export_leads` | `class-admin.php` → `IDLM_Admin_Ajax` | `manage_options` and admin nonce; existing visibility/GET filters; 40-column CSV with shared text-cell formula protection and numeric ID/quote value |
-| `idlm_export_google_conversions` | `class-admin.php` | Administrator; stream Google conversion CSV |
+| `idlm_export_google_conversions` | `class-admin.php` | Administrator and `_wpnonce` for `idlm_export_google_conversions` (the Settings button carries it); stream Google conversion CSV |
 | `idlm_trigger_manual_audience_sync` | `class-admin.php` | Administrator; queue/run audience sync |
 | `idlm_get_capi_log_payload`, `idlm_get_audience_log_payload` | `class-admin.php` → `class-admin-logs-renderer.php` | Administrator; nonce-protected on-demand reads of one redacted request/response pair |
 | `idlm_test_api_connection`, `idlm_retry_capi_events`, `idlm_save_routing_settings`, `idlm_run_fallback_now`, `idlm_get_mapped_past_leads`, `idlm_sync_mapped_past_batch` | `class-admin.php` | Administrator; integration/diagnostic/routing operations |

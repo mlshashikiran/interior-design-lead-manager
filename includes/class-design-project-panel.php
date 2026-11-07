@@ -20,7 +20,7 @@ final class IDLM_Design_Project_Panel {
         static $printed = false;
         if ($printed) { return; }
         $printed = true;
-        wp_enqueue_script('idlm-design-panel', IDLM_URL . 'assets/js/design-panel.js', array('idlm-dialog'), (string) filemtime(IDLM_PATH . 'assets/js/design-panel.js'), true);
+        wp_enqueue_script('idlm-design-panel', IDLM_URL . 'assets/js/design-panel.js', array('idlm-dialog'), IDLM_Admin_Assets::version('js/design-panel.js'), true);
         echo '<div class="idlm-drawer idlm-design-project-drawer" id="' . esc_attr(self::DIALOG) . '" role="dialog" aria-modal="true" aria-labelledby="' . esc_attr(self::DIALOG) . '-title" aria-hidden="true" hidden tabindex="-1" data-idlm-dialog data-idlm-backdrop-close="true" data-ajax-url="' . esc_url(admin_url('admin-ajax.php')) . '" data-nonce="' . esc_attr(wp_create_nonce(self::NONCE)) . '" data-move-nonce="' . esc_attr(wp_create_nonce('idlm_design_stage_action')) . '"><div class="idlm-drawer-content-wrapper" tabindex="-1" data-design-panel-content></div></div>';
     }
 

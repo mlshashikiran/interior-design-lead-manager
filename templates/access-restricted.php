@@ -27,7 +27,6 @@ $idlm_reset_login = isset($_GET['login']) ? sanitize_user(wp_unslash($_GET['logi
 $idlm_reset_user = 'reset' === $idlm_auth_view ? IDLM_Auth::reset_user($idlm_reset_key, $idlm_reset_login) : false;
 $idlm_white_label = IDLM_Settings::get_white_label();
 $idlm_brand_logo = IDLM_Settings::brand_asset($idlm_white_label['logo_id']);
-$idlm_design_layer = IDLM_Admin_Assets::design_layer_enabled();
 ?>
 <div class="<?php echo esc_attr($idlm_wrapper_class); ?>" style="<?php echo esc_attr(IDLM_Settings::white_label_style($idlm_white_label)); ?>">
     <?php if (!$idlm_is_logged_in) : ?>
@@ -84,7 +83,7 @@ $idlm_design_layer = IDLM_Admin_Assets::design_layer_enabled();
                             </div>
                             <p class="idlm-field-error" id="idlm-reset-password-match-error" role="alert" hidden data-idlm-password-error>The passwords do not match.</p>
                         </div>
-                        <p class="login-submit"><button class="button-primary" type="submit"><?php echo $idlm_design_layer ? 'Save new password' : 'Save New Password'; ?></button></p>
+                        <p class="login-submit"><button class="button-primary" type="submit">Save new password</button></p>
                     </form>
                 <?php elseif ('forgot' === $idlm_auth_view) : ?>
                     <form class="idlm-login-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" data-idlm-pending-label="Sending reset link…">
@@ -92,7 +91,7 @@ $idlm_design_layer = IDLM_Admin_Assets::design_layer_enabled();
                         <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($idlm_return_url); ?>">
                         <?php wp_nonce_field('idlm_request_password_reset'); ?>
                         <p><label for="idlm-reset-email">Email address <span class="idlm-required">(required)</span></label><input class="input" type="email" name="idlm_email" id="idlm-reset-email" autocomplete="email" required></p>
-                        <p class="login-submit"><button class="button-primary" type="submit"><?php echo $idlm_design_layer ? 'Send reset link' : 'Send Reset Link'; ?></button></p>
+                        <p class="login-submit"><button class="button-primary" type="submit">Send reset link</button></p>
                     </form>
                     <a class="idlm-login-reset" href="<?php echo esc_url($idlm_return_url); ?>">Back to sign in</a>
                 <?php else : ?>
@@ -109,7 +108,7 @@ $idlm_design_layer = IDLM_Admin_Assets::design_layer_enabled();
                             </div>
                         </div>
                         <p class="login-remember"><label><input name="idlm_remember" type="checkbox" value="1"> Remember me</label></p>
-                        <p class="login-submit"><button class="button-primary" type="submit"><?php echo $idlm_design_layer ? 'Sign in' : 'Sign In'; ?></button></p>
+                        <p class="login-submit"><button class="button-primary" type="submit">Sign in</button></p>
                     </form>
                     <a class="idlm-login-reset" href="<?php echo esc_url(add_query_arg('idlm_auth', 'forgot', $idlm_return_url)); ?>">Forgot your password?</a>
                 <?php endif; ?>

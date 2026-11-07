@@ -151,7 +151,7 @@ idlm_test('dashboard keeps pipeline and Won reporting separate without exposing 
     assert_contains('id="idlm-pipeline-title">Open pipeline</h3>', $template);
     assert_contains('id="idlm-attention-title">Act next</h3>', $template);
     assert_contains('id="idlm-sales-trend-chart"', $template);
-    assert_contains('Won Deals &amp; Revenue Trend', $template);
+    assert_contains('Won deals &amp; revenue trend', $template);
     assert_contains("'open_pipeline_health' => array(", $dashboard);
     assert_contains("'estimated_pipeline_covered_leads'", $dashboard);
     assert_contains("'cohort_won_current'", $dashboard);

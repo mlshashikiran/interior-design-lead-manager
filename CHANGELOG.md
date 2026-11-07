@@ -1,5 +1,27 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- The CRM design is now the only design. The previous design, its `?idlm_design=legacy` preview, the Utilities "Interface design" switch and the `IDLM_DESIGN_LAYER` constant are retired; the stored `idlm_design_layer` option is no longer read. Every workspace page and AJAX response renders the same markup as the CRM design did before. Builder: Shashi.
+- Payments: the dialog page is the only payment page. It now also shows the quotation and plan version, who entered recovered terms and why, the advance received, and for each payment its receipt number, recorder and duplicate-reference review. The wp-admin Payments entry opens the workspace page. Builder: Shashi.
+- Labels and inline styles that were rewritten at render time on the Leads page, lead drawer, leads table, activity log and Settings are now written that way in the templates. Builder: Shashi.
+
+- Each workspace view loads only its own scripts and styles; the Leads view drops from about 1.16 MB to 0.67 MB of plugin assets. Builder: Shashi.
+- Two composite lead indexes speed up a representative's board columns and the qualified handoff queue; they are added once on update without touching lead rows. Builder: Shashi.
+- API credential, secret and legacy queue upkeep and schedule checks run at most every ten minutes, on the first request after an update and on activation, instead of on every request; admin, AJAX, REST and cron requests now repair missing schedules too. Every screen and AJAX request makes 5 fewer database queries. Builder: Shashi.
+- CRM AJAX handlers share one permission gate; refusals always return a message, and generic ones read "Permission denied.". Builder: Shashi.
+
+### Removed
+
+- The previous design's markup, scripts and the stylesheet rules that only matched it; the separate payment screenshot upload step (`admin_post_idlm_payment_upload`), now part of Record payment; the old all-roles admin actions `idlm_update_role_scopes` and `idlm_update_role_permissions`; nine unused public methods. Builder: Shashi.
+
+### Security
+
+- Stored plugin settings and log rows are decoded without building PHP objects. Builder: Shashi.
+- The Google conversions CSV download in Settings needs a request token. The Google Ads feed URL is unchanged. Builder: Shashi.
+
 ## [1.103.0] - 2026-11-06
 
 ### Added

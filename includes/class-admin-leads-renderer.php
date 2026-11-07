@@ -27,7 +27,11 @@ class IDLM_Admin_Leads_Renderer {
         IDLM_View::display('admin/common-overlays.php', self::build_common_overlays_context());
     }
 
+    /** Options this screen reads, primed in one query instead of one query each. */
+    const SCREEN_OPTIONS = array('idlm_active_assignment_reps', 'idlm_active_pre_sales_reps', 'idlm_assignment_mode', 'idlm_currency_code', 'idlm_custom_call_statuses', 'idlm_custom_lost_reasons', 'idlm_custom_num_rooms', 'idlm_custom_stages', 'idlm_custom_studios', 'idlm_fallback_assignment_enabled', 'idlm_fallback_assignment_hours', 'idlm_fallback_last_completed_at', 'idlm_fallback_last_status', 'idlm_handoff_notifications_enabled', 'idlm_handoff_task_policy', 'idlm_max_active_leads_per_rep', 'idlm_qualified_fallback_enabled', 'idlm_qualified_fallback_end_at', 'idlm_qualified_fallback_hours', 'idlm_qualified_fallback_include_existing', 'idlm_rep_studio_assignments', 'idlm_reps_see_all_leads', 'idlm_routing_exception_notifications_enabled', 'idlm_source_assignment_mappings', 'idlm_studio_mismatch_behavior', 'idlm_working_days', 'idlm_working_hours_end', 'idlm_working_hours_start');
+
     private static function build_context() {
+        wp_prime_option_caches(self::SCREEN_OPTIONS);
         global $wpdb;
 
         $stages = get_option('idlm_custom_stages', array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'));

@@ -415,12 +415,6 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         self::redirect(array('action' => 'view', 'quote_id' => absint($quote->id), 'idlm_notice' => 'This quotation save was already completed.'));
     }
 
-    private static function clean_date($value) {
-        $value = sanitize_text_field($value);
-        $date = DateTime::createFromFormat('Y-m-d', $value, wp_timezone());
-        return $date && $date->format('Y-m-d') === $value ? $value : null;
-    }
-
     /*
      * Legacy final-state revision entry points intentionally have no handler.
      * Revisions are created exclusively by handle_save() from the current draft.

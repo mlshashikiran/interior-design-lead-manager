@@ -9,16 +9,26 @@ class IDLM_DB {
     public static function get_last_validation_error() {
         return self::$last_validation_error;
     }
+    /** Completion marker option => idempotent backfill run by init(). */
+    const MIGRATION_STEPS = array(
+        'idlm_handoff_state_version' => 'backfill_handoff_state',
+        'idlm_duplicate_quality_version' => 'backfill_duplicate_early_close_quality',
+        'idlm_workflow_integrity_version' => 'repair_workflow_integrity',
+        'idlm_assignment_timestamp_version' => 'backfill_assignment_timestamps',
+        'idlm_attribution_touchpoint_backfill_version' => 'backfill_duplicate_touchpoints',
+        'idlm_conversion_time_integrity_version' => 'clear_non_won_conversion_times',
+        'idlm_task_queue_cleanup_version' => 'cleanup_stale_pending_tasks',
+        'idlm_lead_index_version' => 'add_lead_query_indexes',
+    );
+
+    /** Composite indexes for a representative's board columns and the qualified handoff queue. */
+    const LEAD_QUERY_INDEXES = array(
+        'rep_duplicate_stage' => 'assigned_rep_id, is_duplicate, stage',
+        'quality_handoff_qualified' => 'lead_quality, handoff_status, qualified_at',
+    );
+
     public static function init() {
-        $steps = array(
-            'idlm_handoff_state_version' => 'backfill_handoff_state',
-            'idlm_duplicate_quality_version' => 'backfill_duplicate_early_close_quality',
-            'idlm_workflow_integrity_version' => 'repair_workflow_integrity',
-            'idlm_assignment_timestamp_version' => 'backfill_assignment_timestamps',
-            'idlm_attribution_touchpoint_backfill_version' => 'backfill_duplicate_touchpoints',
-            'idlm_conversion_time_integrity_version' => 'clear_non_won_conversion_times',
-            'idlm_task_queue_cleanup_version' => 'cleanup_stale_pending_tasks',
-        );
+        $steps = self::MIGRATION_STEPS;
         $complete = IDLM_DB_VERSION === get_option('idlm_schema_version', '');
         foreach ($steps as $option => $method) { $complete = $complete && '1.0.1' === get_option($option, ''); }
         if ($complete) { return true; }
@@ -42,6 +52,23 @@ class IDLM_DB {
             }
             return true;
         });
+    }
+
+    /**
+     * Add any missing lead query index. Structure only: no lead row is read or written, and an
+     * index that already exists is left alone, so the step is safe to repeat.
+     */
+    public static function add_lead_query_indexes() {
+        global $wpdb;
+        $leads = $wpdb->prefix . 'idlm_leads';
+        foreach (self::LEAD_QUERY_INDEXES as $name => $columns) {
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Plugin-owned prefixed table; index names and columns are fixed constants above. Builder: Shashi.
+            $exists = $wpdb->get_var($wpdb->prepare("SHOW INDEX FROM {$leads} WHERE Key_name = %s", $name));
+            if (null === $exists && '' !== (string) $wpdb->last_error) { return false; }
+            if (null === $exists && false === $wpdb->query("ALTER TABLE {$leads} ADD KEY {$name} ({$columns})")) { return false; }
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
+        }
+        return true;
     }
 
     /** Archive pending work which cannot be actioned safely. */
@@ -499,7 +526,9 @@ class IDLM_DB {
             KEY qualified_by_user_id (qualified_by_user_id),
             KEY intake_owner_id (intake_owner_id),
             KEY handoff_status (handoff_status),
-            KEY duplicate_of_id (duplicate_of_id)
+            KEY duplicate_of_id (duplicate_of_id),
+            KEY rep_duplicate_stage (assigned_rep_id,is_duplicate,stage),
+            KEY quality_handoff_qualified (lead_quality,handoff_status,qualified_at)
         ) ENGINE=InnoDB $charset_collate;";
 
         $statements[] = $sql_leads;
@@ -990,10 +1019,6 @@ class IDLM_DB {
 
     /** Reconcile qualification cycles from outreach evidence, then roll pending dates. */
     public static function sync_presales_task_status($lead_id) {
-        return IDLM_Presales_Task_Plan::sync($lead_id);
-    }
-
-    public static function reschedule_pending_presales_tasks($lead_id) {
         return IDLM_Presales_Task_Plan::sync($lead_id);
     }
 

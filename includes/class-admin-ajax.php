@@ -10,25 +10,12 @@ if (!defined('ABSPATH')) {
 }
 
 final class IDLM_Admin_Ajax extends IDLM_Admin {
-    public static function ajax_get_lead_details() {
-        return IDLM_Admin_Lead_Reads::ajax_get_lead_details();
-    }
-
-    /**
-     * AJAX Endpoint: Get lead activity log history for lazy-loading
-     */
-    public static function ajax_get_lead_activity() {
-        return IDLM_Admin_Activity_Controller::ajax_get_lead_activity();
-    }
-
     /**
      * AJAX Endpoint: Inline Quick-Edit row changes
      */
     public static function ajax_quick_edit_lead() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
         
         $lead_id = isset($_POST['lead_id']) ? intval(wp_unslash($_POST['lead_id'])) : 0;
         $field = isset($_POST['field']) ? sanitize_key(wp_unslash($_POST['field'])) : '';
@@ -154,9 +141,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
     /** Log auditable pre-sales outreach or a policy-controlled early close. */
     public static function ajax_log_presales_touch() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
         if (!self::current_user_is_pre_sales() && !current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Only pre-sales representatives and administrators can log pre-sales follow-up.'));
         }
@@ -354,33 +339,14 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
     }
 
     /**
-     * AJAX Endpoint: Add comment notes in drawer
-     */
-    public static function ajax_save_activity_comment() {
-        return IDLM_Admin_Activity_Controller::ajax_save_activity_comment();
-    }
-
-    /**
-     * AJAX Endpoint: Edit activity comment
-     */
-    public static function ajax_edit_activity_comment() {
-        return IDLM_Admin_Activity_Controller::ajax_edit_activity_comment();
-    }
-
-    /**
-     * AJAX Endpoint: Delete activity comment
-     */
-    public static function ajax_delete_activity_comment() {
-        return IDLM_Admin_Activity_Controller::ajax_delete_activity_comment();
-    }
-
-    /**
      * AJAX Endpoint: Export Google Ads Offline Conversions CSV
      */
     public static function ajax_export_google_conversions() {
         if (!current_user_can('manage_options')) {
             wp_die('Unauthorized access');
         }
+        // The Settings button carries this token, so another site cannot start the download.
+        check_ajax_referer('idlm_export_google_conversions');
 
         if (class_exists('IDLM_CAPI')) {
             IDLM_CAPI::generate_google_ads_conversions_csv_response();
@@ -664,9 +630,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      */
     public static function ajax_add_lead_manual() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $form_data_raw = isset($_POST['form_data']) ? wp_unslash($_POST['form_data']) : '';
         parse_str($form_data_raw, $form_fields);
@@ -781,9 +745,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      */
     public static function ajax_trigger_manual_audience_sync() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Access denied'));
-        }
+        IDLM_Admin::require_ajax_access('admin');
 
         // Trigger the batch sync immediately
         $result = IDLM_Audiences::run_batch_sync(true);
@@ -792,20 +754,11 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
     }
 
     /**
-     * AJAX Endpoint: Test platform connection and credentials
-     */
-    public static function ajax_test_api_connection() {
-        return IDLM_Admin_Connection_Controller::ajax_test_api_connection();
-    }
-
-    /**
      * AJAX Endpoint: Bulk retry Conversions API events
      */
     public static function ajax_retry_capi_events() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Access denied'));
-        }
+        IDLM_Admin::require_ajax_access('admin');
 
         // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0043: ajax_retry_capi_events(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers.
         $raw_ids = isset($_POST['log_ids']) && is_array($_POST['log_ids']) ? wp_unslash($_POST['log_ids']) : array();
@@ -843,34 +796,11 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
     }
 
     /**
-     * AJAX Endpoint: Log Javascript errors to telemetry
-     */
-    public static function ajax_log_js_error() {
-        return IDLM_Admin_Telemetry_Controller::ajax_log_js_error();
-    }
-
-    /**
-     * AJAX Endpoint: Clear telemetry logs table
-     */
-    public static function ajax_clear_telemetry_logs() {
-        return IDLM_Admin_Telemetry_Controller::ajax_clear_telemetry_logs();
-    }
-
-    /**
-     * AJAX/GET Endpoint: Download diagnostic report
-     */
-    public static function ajax_download_diagnostic_report() {
-        return IDLM_Admin_Telemetry_Controller::ajax_download_diagnostic_report();
-    }
-
-    /**
      * AJAX POST Handler: Save Lead Routing settings from the frontend workspace modal
      */
     public static function ajax_save_routing_settings() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Access Denied');
-        }
+        IDLM_Admin::require_ajax_access('admin');
         $previous_presales_targets = IDLM_DB::get_presales_outreach_targets();
 
         // Save strategy
@@ -963,9 +893,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      */
     public static function ajax_run_fallback_now() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Access denied.'));
-        }
+        IDLM_Admin::require_ajax_access('admin');
 
         IDLM_Integrations::run_assignment_fallback();
         global $wpdb;
@@ -990,14 +918,12 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      */
     public static function ajax_get_mapped_past_leads() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Access Denied');
-        }
+        IDLM_Admin::require_ajax_access('admin');
 
         $allowed_types = array('call_status', 'stage', 'lead_quality');
         $trigger_type = isset($_POST['trigger_type']) ? sanitize_key($_POST['trigger_type']) : '';
         if (!in_array($trigger_type, $allowed_types)) {
-            wp_send_json_error('Invalid trigger type');
+            wp_send_json_error(array('message' => 'Invalid trigger type'));
         }
 
         $trigger_value = isset($_POST['trigger_value']) ? sanitize_text_field(wp_unslash($_POST['trigger_value'])) : '';
@@ -1021,25 +947,23 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      */
     public static function ajax_sync_mapped_past_batch() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Access Denied');
-        }
+        IDLM_Admin::require_ajax_access('admin');
         // phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- REL007-BOUNDARY-0045: ajax_sync_mapped_past_batch(): the registered authenticated handler checks the shared admin nonce/capabilities and live object policy; IDs are normalized/bounded, rep-studio maps filtered to eligible IDs, signed cursor decoded by Task_Queue_Service and uploads validated by Private_Files; CSV streams are bounded and staged before headers.
         $raw_ids = isset($_POST['lead_ids']) ? wp_unslash($_POST['lead_ids']) : array();
         // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if (!is_array($raw_ids) || !$raw_ids || count($raw_ids) > 50 || count(array_filter($raw_ids, 'is_scalar')) !== count($raw_ids)) {
-            wp_send_json_error('Select between 1 and 50 leads per batch.');
+            wp_send_json_error(array('message' => 'Select between 1 and 50 leads per batch.'));
         }
         $event = isset($_POST['event_name']) && is_scalar($_POST['event_name']) ? sanitize_text_field(wp_unslash($_POST['event_name'])) : '';
         $request_id = isset($_POST['request_id']) && is_scalar($_POST['request_id']) ? sanitize_text_field(wp_unslash($_POST['request_id'])) : '';
         if (!preg_match('/^[a-zA-Z0-9_-]{8,80}$/D', $request_id)) {
-            wp_send_json_error('A valid sync request ID is required. Refresh the page and retry.');
+            wp_send_json_error(array('message' => 'A valid sync request ID is required. Refresh the page and retry.'));
         }
         if (!IDLM_Interakt_Batch::allowed_event($event)) {
-            wp_send_json_error('Save a valid Interakt event mapping before syncing.');
+            wp_send_json_error(array('message' => 'Save a valid Interakt event mapping before syncing.'));
         }
         if (!IDLM_Settings::notification_enabled('idlm_whatsapp_notifications_enabled') || '1' !== get_option('idlm_interakt_enabled', '0') || !IDLM_Secret_Store::get('idlm_interakt_api_key', '', true)) {
-            wp_send_json_error('Interakt automation is disabled or API key is missing.');
+            wp_send_json_error(array('message' => 'Interakt automation is disabled or API key is missing.'));
         }
         $queued = 0;
         $existing = 0;
@@ -1058,9 +982,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      */
     public static function ajax_bulk_action() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
         
         $ids = (isset($_POST['ids']) && is_array($_POST['ids'])) ? array_map('intval', wp_unslash($_POST['ids'])) : array();
         $action = isset($_POST['bulk_action']) ? sanitize_key(wp_unslash($_POST['bulk_action'])) : '';
@@ -1185,27 +1107,11 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
     }
 
     /**
-     * AJAX Endpoint: Server-side search, paginate and filter leads table
-     */
-    public static function ajax_get_leads_table() {
-        return IDLM_Admin_Collection_Reads::ajax_get_leads_table();
-    }
-
-    /**
-     * AJAX Endpoint: Fetch leads grouped by stage for Kanban board view
-     */
-    public static function ajax_get_kanban_leads() {
-        return IDLM_Admin_Collection_Reads::ajax_get_kanban_leads();
-    }
-
-    /**
      * AJAX Endpoint: Fetch JSON dataset for dashboard widgets & ChartJS
      */
     public static function ajax_get_dashboard_stats() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
 
         $period = isset($_POST['period']) ? sanitize_key(wp_unslash($_POST['period'])) : 'this_month';
         $custom_start = isset($_POST['start_date']) ? sanitize_text_field(wp_unslash($_POST['start_date'])) : '';
@@ -1248,9 +1154,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      */
     public static function ajax_save_lead_details() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
 
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $form_raw = isset($_POST['form_data']) && is_string($_POST['form_data']) ? wp_unslash($_POST['form_data']) : '';
@@ -1356,10 +1260,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      */
     public static function ajax_upload_lead_file() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-
-        if (!self::current_user_has_rep_access()) {
-            wp_send_json_error(array('message' => 'Permission denied.'));
-        }
+        IDLM_Admin::require_ajax_access('rep');
 
         $lead_id = isset($_POST['lead_id']) ? absint($_POST['lead_id']) : 0;
         if (!$lead_id || !IDLM_Private_Files::allowed($lead_id, true)) {
@@ -1388,21 +1289,11 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
     }
 
     /**
-     * AJAX Endpoint: Get the total number of leads in the database for reset verification
-     */
-    public static function ajax_get_total_leads_count() {
-        return IDLM_Admin_Collection_Reads::ajax_get_total_leads_count();
-    }
-
-    /**
      * AJAX Endpoint: Reset all CRM lead tables & analytics
      */
     public static function ajax_reset_crm_data() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Permission denied. Only administrators can reset data.'));
-        }
+        IDLM_Admin::require_ajax_access('admin', 'Permission denied. Only administrators can reset data.');
 
         $input_count = isset($_POST['confirm_count']) ? sanitize_text_field(wp_unslash($_POST['confirm_count'])) : '';
         if ('' === $input_count || !ctype_digit($input_count)) {
@@ -1425,10 +1316,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      */
     public static function ajax_delete_lead() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Permission denied. Only administrators can delete leads.'));
-        }
+        IDLM_Admin::require_ajax_access('admin', 'Permission denied. Only administrators can delete leads.');
 
         $lead_id = isset($_POST['lead_id']) ? intval(wp_unslash($_POST['lead_id'])) : 0;
         if ($lead_id <= 0) {
@@ -1447,10 +1335,7 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
      */
     public static function ajax_import_leads_batch() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Permission denied. Only administrators can import leads.'));
-        }
+        IDLM_Admin::require_ajax_access('admin', 'Permission denied. Only administrators can import leads.');
 
         // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $leads = isset($_POST['leads']) ? (array) wp_unslash($_POST['leads']) : array();
@@ -1638,33 +1523,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         return 1 === count(array_unique(array_filter($matching_ids)));
     }
 
-    /**
-     * AJAX Endpoint: Get tasks for a specific lead
-     */
-    public static function ajax_get_lead_tasks() {
-        return IDLM_Admin_Task_Controller::ajax_get_lead_tasks();
-    }
-
-    /**
-     * AJAX Endpoint: Add task for a lead
-     */
-    public static function ajax_add_lead_task() {
-        return IDLM_Admin_Task_Controller::ajax_add_lead_task();
-    }
-
-    /**
-     * AJAX Endpoint: Toggle task completion status
-     */
-    public static function ajax_toggle_task_status() {
-        return IDLM_Admin_Task_Controller::ajax_toggle_task_status();
-    }
-
-    /**
-     * AJAX Endpoint: Delete task
-     */
-    public static function ajax_delete_lead_task() {
-        return IDLM_Admin_Task_Controller::ajax_delete_lead_task();
-    }
     private static function manual_task_types() {
         return IDLM_Admin_Task_Controller::manual_task_types();
     }
@@ -1679,9 +1537,5 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
 
     private static function is_system_qualification_task($task) {
         return IDLM_Admin_Task_Controller::is_system_qualification_task($task);
-    }
-
-    public static function ajax_get_rep_tasks() {
-        return IDLM_Admin_Task_Controller::ajax_get_rep_tasks();
     }
 }

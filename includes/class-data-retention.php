@@ -125,7 +125,7 @@ final class IDLM_Data_Retention {
             $raw = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::STATUS_OPTION));
             // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             if ($wpdb->last_error) { return new WP_Error('idlm_retention_read', 'Unable to read retention progress.'); }
-            $state = maybe_unserialize($raw);
+            $state = IDLM_Schema_Migration::decode($raw);
             $generation = IDLM_Recovery_Guard::generation();
             if (!is_array($state) || !empty($state['complete']) || ($state['generation'] ?? null) !== $generation) {
                 $state = array('generation' => $generation, 'stage' => 0, 'processed' => 0, 'cutoff' => current_time('mysql'), 'complete' => false, 'remaining' => array_fill(0, 7, true));
@@ -222,7 +222,7 @@ final class IDLM_Data_Retention {
             // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                 // The committed checkpoint remains authoritative. Only publish a
                 // generic fault code; never retain SQL, contacts, or payloads.
-                $saved = maybe_unserialize($wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::STATUS_OPTION)));
+                $saved = IDLM_Schema_Migration::decode($wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::STATUS_OPTION)));
                 $fault = is_array($saved) ? $saved : array('generation'=>$generation, 'stage'=>0, 'processed'=>0, 'cutoff'=>$state['cutoff'], 'complete'=>false);
                 $fault['last_error'] = 'batch_failed'; $fault['updated_at'] = current_time('mysql', true);
                 IDLM_Lead_Transaction::run(static function() use ($fault) { return self::save_status($fault); });

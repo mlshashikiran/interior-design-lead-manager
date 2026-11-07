@@ -105,7 +105,7 @@ final class IDLM_Design_Stage_Controller {
         return '<button type="button" class="idlm-btn idlm-btn-secondary" data-design-dialog="' . esc_attr($id) . '" aria-haspopup="dialog">' . esc_html($label) . '</button>';
     }
     public static function dialog_open($id, $title, $description, $action, $row, $multipart = false) {
-        wp_enqueue_script('idlm-design-detail', IDLM_URL . 'assets/js/design-detail.js', array('idlm-dialog'), (string) filemtime(IDLM_PATH . 'assets/js/design-detail.js'), true);
+        wp_enqueue_script('idlm-design-detail', IDLM_URL . 'assets/js/design-detail.js', array('idlm-dialog'), IDLM_Admin_Assets::version('js/design-detail.js'), true);
         echo '<div class="idlm-modal idlm-dialog idlm-design-dialog" id="' . esc_attr($id) . '" role="dialog" aria-modal="true" aria-labelledby="' . esc_attr($id . '-title') . '"' . ('' !== $description ? ' aria-describedby="' . esc_attr($id . '-description') . '"' : '') . ' aria-hidden="true" hidden data-idlm-dialog data-idlm-initial-focus=".idlm-dialog__body :is(textarea, select, input:not([type=hidden]))"><div class="idlm-modal-content idlm-dialog__panel"><header class="idlm-modal-header idlm-dialog__header"><div><h2 class="idlm-dialog__title" id="' . esc_attr($id . '-title') . '">' . esc_html($title) . '</h2>' . ('' !== $description ? '<p class="idlm-dialog__description" id="' . esc_attr($id . '-description') . '">' . esc_html($description) . '</p>' : '') . '</div><button type="button" class="idlm-dialog__close" data-idlm-dialog-close aria-label="Close dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button></header>';
         self::open_form($action, $row, 'idlm-design-dialog-form', $multipart);
         echo '<div class="idlm-dialog__body">';
@@ -247,7 +247,7 @@ final class IDLM_Design_Stage_Controller {
     /** Stages, their order and what each requires, for administrators. */
     public static function render_settings() {
         if (!current_user_can('manage_options')) { return false; }
-        wp_enqueue_script('idlm-design-stage-settings', IDLM_URL . 'assets/js/design-stage-settings.js', array(), (string) filemtime(IDLM_PATH . 'assets/js/design-stage-settings.js'), true);
+        wp_enqueue_script('idlm-design-stage-settings', IDLM_URL . 'assets/js/design-stage-settings.js', array(), IDLM_Admin_Assets::version('js/design-stage-settings.js'), true);
         $back = add_query_arg('idlm_view', IDLM_Design_Handoff_Controller::VIEW, IDLM_Admin_Shortcodes::workspace_url());
         $stages = IDLM_Design_Stages::stages(); $first = IDLM_Design_Stages::first(); $documents = IDLM_Design_Stages::custom_documents();
         echo '<header class="idlm-header"><div><h1>Design stages</h1></div><div class="idlm-header-actions"><a class="idlm-btn idlm-btn-secondary" href="' . esc_url($back) . '">Back to Design team</a></div></header>';

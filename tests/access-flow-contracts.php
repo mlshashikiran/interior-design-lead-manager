@@ -269,24 +269,22 @@ idlm_test('role access handler removes unticked capabilities and stays inside se
     assert_false(get_role('idlm_pre_sales')->has_cap('idlm_approve_quotes'));
 });
 
-idlm_test('legacy role handlers still save, with the same semantics, and log changes', static function(): void {
+idlm_test('the role editor saves scope and permissions for one role and logs only real changes', static function(): void {
     idlm_access_fixture();
     update_option(IDLM_Admin_Users_Controller::ROLE_SCOPES_OPTION, array('sales_manager' => 'assigned'));
-    idlm_access_run(array('IDLM_Admin_Users_Controller', 'handle_update_role_scopes'), array('role_scopes' => array('sales_executive' => 'all')));
-    assert_same(array('sales_executive' => 'all'), get_option(IDLM_Admin_Users_Controller::ROLE_SCOPES_OPTION));
-    $events = idlm_access_events();
-    assert_same(array('role_scope_changed', 'role_scope_changed'), $events);
-
     $GLOBALS['idlm_test_role_cap_overrides']['sales_executive'] = array('idlm_assign_leads' => true);
-    assert_contains('role-permissions-updated', idlm_access_run(array('IDLM_Admin_Users_Controller', 'handle_update_role_permissions'), array('permission_role' => 'sales_executive', 'permissions' => array('idlm_access_leads' => '1'))));
+    assert_contains('role-access-updated', idlm_access_run(array('IDLM_Admin_Users_Controller', 'handle_update_role_access'), array('access_role' => 'sales_executive', 'role_scope' => 'all', 'permissions' => array('idlm_access_leads' => '1'))));
+    assert_same(array('sales_manager' => 'assigned', 'sales_executive' => 'all'), get_option(IDLM_Admin_Users_Controller::ROLE_SCOPES_OPTION), 'Other roles keep their scope.');
     assert_true(get_role('sales_executive')->has_cap('idlm_access_leads'));
     assert_false(get_role('sales_executive')->has_cap('idlm_assign_leads'));
-    assert_same('role_permissions_changed', idlm_access_events()[0]);
+    assert_same(array('role_permissions_changed', 'role_scope_changed'), array_slice(idlm_access_events(), 0, 2));
 
     // Saving nothing new logs nothing.
     $count = count(IDLM_Access_Change_Log::entries());
-    idlm_access_run(array('IDLM_Admin_Users_Controller', 'handle_update_role_permissions'), array('permission_role' => 'sales_executive', 'permissions' => array('idlm_access_leads' => '1')));
+    idlm_access_run(array('IDLM_Admin_Users_Controller', 'handle_update_role_access'), array('access_role' => 'sales_executive', 'role_scope' => 'all', 'permissions' => array('idlm_access_leads' => '1')));
     assert_same($count, count(IDLM_Access_Change_Log::entries()));
+    // The retired all-roles forms are gone.
+    assert_false(method_exists('IDLM_Admin_Users_Controller', 'handle_update_role_scopes') || method_exists('IDLM_Admin_Users_Controller', 'handle_update_role_permissions'));
 });
 
 idlm_test('describe_user_access matches the live policy across every branch', static function(): void {
@@ -378,7 +376,7 @@ idlm_test('default visibility sentence states the real outcome for each kind of 
     assert_same('none', IDLM_Admin_Users_Controller::default_scope_outcome('editor')['outcome']);
 });
 
-idlm_test('job-role labels and pick lists apply only under the design layer', static function(): void {
+idlm_test('job-role labels and pick lists use the CRM wording', static function(): void {
     idlm_access_fixture();
     $GLOBALS['idlm_test_extra_roles'] += array('agent' => array('name' => 'Agent'), 'agentadmin' => array('name' => 'Agent admin'));
     assert_same('Sales representative', IDLM_Admin_Users_Controller::role_label('agent'));
@@ -394,10 +392,6 @@ idlm_test('job-role labels and pick lists apply only under the design layer', st
     $held = IDLM_Admin_Users_Controller::pick_list_roles($GLOBALS['idlm_test_extra_roles'], array('author'));
     assert_true(isset($held['main']['author']), 'A held website role stays in the list.');
 
-    $_GET['idlm_design'] = 'legacy';
-    assert_same('Agent', IDLM_Admin_Users_Controller::role_label('agent'));
-    assert_same('Editor', IDLM_Admin_Users_Controller::role_label('editor'));
-    unset($_GET['idlm_design']);
 });
 
 idlm_test('access change log keeps the newest 200, names only, and never blocks a save', static function(): void {
@@ -504,7 +498,7 @@ idlm_test('role editor, invite and suspend markup keep their gated contracts', s
     $quotations = (string) file_get_contents($root . '/assets/js/quotations.js');
     assert_contains("input:not([type=\"submit\"],[type=\"button\"],[type=\"reset\"],[type=\"image\"],[type=\"file\"])", $quotations);
     $leads = (string) file_get_contents($root . '/assets/js/admin-app.js');
-    assert_contains("isCrmDesign ? new URLSearchParams(window.location.search).get('rep') : null", $leads);
+    assert_contains("var urlRepId = new URLSearchParams(window.location.search).get('rep');", $leads);
 });
 
 idlm_test('a person with no managed role can keep it, and nothing promotes them without a real choice', static function(): void {
@@ -542,8 +536,8 @@ idlm_test('a person with no managed role can keep it, and nothing promotes them 
     assert_same(array('sales_manager'), $GLOBALS['idlm_test_users'][6]->roles);
 
     $users = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/users.php');
-    assert_same(2, substr_count($users, '<option value="" selected>Keep current role</option>'), 'Both designs offer Keep.');
-    assert_same(2, substr_count($users, '<option value="">Choose a role</option>'), 'No invite form preselects a role.');
+    assert_same(1, substr_count($users, '<option value="" selected>Keep current role</option>'), 'Editing offers Keep.');
+    assert_same(1, substr_count($users, '<option value="">Choose a role</option>'), 'The invite form never preselects a role.');
     assert_contains('name="idlm_role_choice_offered"', $users);
     assert_same(array('role_changed', 'role_changed'), idlm_access_events());
 });
@@ -570,7 +564,7 @@ idlm_test('create, update and scope handlers refuse anything but POST', static f
     update_option(IDLM_Admin_Users_Controller::ROLE_SCOPES_OPTION, array('sales_manager' => 'assigned'));
     idlm_access_account(5, array('sales_executive'));
     $_SERVER['REQUEST_METHOD'] = 'GET';
-    foreach (array('handle_create', 'handle_update', 'handle_update_role_scopes', 'handle_update_role_permissions', 'handle_update_role_access') as $handler) {
+    foreach (array('handle_create', 'handle_update', 'handle_update_role_access') as $handler) {
         assert_contains('Invalid request', idlm_access_run(array('IDLM_Admin_Users_Controller', $handler), array('user_id' => 5, 'role' => 'sales_manager', 'email' => 'person5@example.test')), $handler);
     }
     $_SERVER['REQUEST_METHOD'] = 'POST';
@@ -599,8 +593,10 @@ idlm_test('crafted role access posts cannot widen a role or reach another one', 
     }
     assert_same($admin_caps, get_role('administrator')->capabilities);
     assert_same(array('sales_manager' => 'assigned'), get_option(IDLM_Admin_Users_Controller::ROLE_SCOPES_OPTION));
-    assert_contains('invalid-role', idlm_access_run(array('IDLM_Admin_Users_Controller', 'handle_update_role_permissions'), array('permission_role' => 'administrator', 'permissions' => array('idlm_assign_leads' => '1'))));
-    assert_contains('invalid-role', idlm_access_run(array('IDLM_Admin_Users_Controller', 'handle_update_role_permissions'), array('permission_role' => 'editor', 'permissions' => array('idlm_assign_leads' => '1'))));
+    // A website role can be scoped but never gains CRM permissions.
+    $editor_caps = get_role('editor')->capabilities;
+    idlm_access_run($run, array('access_role' => 'editor', 'role_scope' => 'default', 'permissions' => array('idlm_assign_leads' => '1')));
+    assert_same($editor_caps, get_role('editor')->capabilities);
 
     // Every selectable permission has a box in the role editor, or saving it would silently remove it.
     $grouped = array_merge(...array_values(IDLM_Admin_Users_Controller::permission_groups()));

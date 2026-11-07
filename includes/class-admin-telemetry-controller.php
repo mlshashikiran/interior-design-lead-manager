@@ -29,9 +29,7 @@ class IDLM_Admin_Telemetry_Controller {
 
     public static function ajax_clear_telemetry_logs() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Access denied'));
-        }
+        IDLM_Admin::require_ajax_access('admin');
 
         global $wpdb;
         $table_telemetry = $wpdb->prefix . 'idlm_telemetry_logs';

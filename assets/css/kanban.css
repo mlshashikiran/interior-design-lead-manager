@@ -2,11 +2,6 @@
    Interior Design Lead Manager - Kanban Board Styles
    ========================================================================== */
 
-.idlm-kanban-wrap {
-    width: 100%;
-    margin-top: 15px;
-    box-sizing: border-box;
-}
 
 .idlm-kanban-stats {
     margin-top: 0;
@@ -36,18 +31,10 @@
 }
 
 /* Compact kanban audit pass: more leads visible per column without losing targets. */
-.idlm-kanban-board { gap: 12px; padding-bottom: 14px; }
-.idlm-kanban-column { flex-basis: 280px; width: 280px; }
-.idlm-kanban-column-header { padding: 12px 14px 10px; }
-.idlm-kanban-column-title { font-size: var(--idlm-type-card, .875rem); }
-.idlm-kanban-column-body { gap: 8px; padding: 8px; }
-.idlm-kanban-card-open { padding: 12px; }
+.idlm-kanban-board { padding-bottom: 14px; }
+.idlm-kanban-column { flex-basis: 280px; }
 .idlm-kanban-card-meta { font-size: var(--idlm-type-meta, .5625rem); }
 
-@media (max-width: 782px) {
-    .idlm-kanban-board { padding-bottom: 0; }
-    .idlm-kanban-column-body { padding: 8px; }
-}
 
 /* Kanban filters reuse the shared leads-list drawer. */
 .idlm-kanban-filters {
@@ -74,36 +61,14 @@
 }
 
 /* Kanban Board Container */
-.idlm-kanban-board {
-    display: flex;
-    gap: 16px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 20px;
-    align-items: flex-start;
-    height: max(360px, 70dvh);
-    min-height: 360px;
-    width: 100%;
-}
+.idlm-kanban-board { display: flex; overflow-x: auto; overflow-y: hidden; padding-bottom: 20px; align-items: flex-start; width: 100%; }
 
 .idlm-kanban-stage-tabs {
     display: none;
 }
 
 /* Column Styling */
-.idlm-kanban-column {
-    flex: 0 0 310px;
-    width: 310px;
-    background: var(--idlm-surface-soft);
-    border: 1px solid var(--idlm-border);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    max-height: none;
-    transition: var(--idlm-transition);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-}
+.idlm-kanban-column { display: flex; flex-direction: column; height: 100%; max-height: none; }
 
 /* Drag hover feedback on column */
 .idlm-kanban-column.drag-over {
@@ -112,17 +77,7 @@
 }
 
 /* Column Header styling with colored top accent line */
-.idlm-kanban-column-header {
-    padding: 16px 16px 12px 16px;
-    border-bottom: 1px solid var(--idlm-border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-    background: var(--idlm-surface);
-}
+.idlm-kanban-column-header { border-bottom: 1px solid var(--idlm-border); justify-content: space-between; position: relative; border-top-left-radius: 12px; border-top-right-radius: 12px; }
 
 /* Accent strip color depending on stage rank/index */
 .idlm-kanban-column-header::before {
@@ -146,29 +101,10 @@
 .idlm-kanban-column[data-stage="Won"] .idlm-kanban-column-header::before { background-color: var(--idlm-success); }
 .idlm-kanban-column[data-stage="Lost"] .idlm-kanban-column-header::before { background-color: var(--idlm-danger); }
 
-.idlm-kanban-column-subtitle {
-    margin: 3px 0 0;
-    color: var(--idlm-text-muted);
-    font-size: 10px;
-    line-height: 1.3;
-}
 
-.idlm-kanban-column-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--idlm-text);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+.idlm-kanban-column-title { color: var(--idlm-text); margin: 0; display: flex; align-items: center; }
 
-.idlm-kanban-column-metrics {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-}
+.idlm-kanban-column-metrics { flex-direction: column; align-items: flex-end; gap: 4px; }
 
 .idlm-kanban-column-pipeline-value {
     color: #475569;
@@ -178,76 +114,21 @@
     white-space: nowrap;
 }
 
-.idlm-kanban-column-count {
-    background: var(--idlm-readonly);
-    border: 1px solid #e2e8f0;
-    color: var(--idlm-text-muted);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 20px;
-}
+.idlm-kanban-column-count { border-radius: 20px; }
 
 /* Scrollable column body */
-.idlm-kanban-column-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-height: 0;
-    overscroll-behavior-y: contain;
-    box-sizing: border-box;
-}
+.idlm-kanban-column-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-height: 0; overscroll-behavior-y: contain; box-sizing: border-box; }
 
 /* Card Styling */
-.idlm-kanban-card {
-    flex: 0 0 auto;
-    background: var(--idlm-surface);
-    border: 1px solid var(--idlm-border-strong);
-    border-radius: var(--idlm-radius);
-    padding: 0;
-    transition: var(--idlm-transition);
-    position: relative;
-    user-select: none;
-    box-sizing: border-box;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    overflow: hidden;
-}
+.idlm-kanban-card { flex: 0 0 auto; padding: 0; position: relative; user-select: none; box-sizing: border-box; overflow: hidden; }
 
-.idlm-kanban-card:hover {
-    box-shadow: var(--idlm-shadow);
-    border-color: var(--idlm-info);
-}
 
-.idlm-kanban-card-open {
-    display: block;
-    width: 100%;
-    padding: var(--idlm-space-4);
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-}
+.idlm-kanban-card-open { width: 100%; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 
 /* Card drag state style */
-.idlm-kanban-card.dragging {
-    opacity: 0.4;
-    border: 1px dashed var(--idlm-action);
-}
+.idlm-kanban-card.dragging { border: 1px dashed var(--idlm-action); }
 
-.idlm-kanban-card-title {
-    display: block;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--idlm-text);
-    margin: 0 0 var(--idlm-space-2);
-    line-height: 1.35;
-}
+.idlm-kanban-card-title { display: block; color: var(--idlm-text); }
 
 .idlm-kanban-card-open:hover .idlm-kanban-card-title,
 .idlm-kanban-card-open:focus-visible .idlm-kanban-card-title {
@@ -323,87 +204,25 @@
 }
 
 /* Task state and ownership sit in the card footer, separate from the primary lead action. */
-.idlm-kanban-card-footer-meta {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 3px;
-    min-width: 0;
-    margin-left: auto;
-}
+.idlm-kanban-card-footer-meta { display: flex; align-items: center; gap: 3px; margin-left: auto; }
 
-.idlm-kanban-card-rep {
-    font-size: 11px;
-    color: var(--idlm-text-muted);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
+.idlm-kanban-card-rep { display: flex; align-items: center; }
 
-.idlm-kanban-card-rep-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--idlm-surface-tint);
-    color: var(--idlm-text-muted);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 600;
-}
+.idlm-kanban-card-rep-icon { border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
 
-.idlm-kanban-card-rep-icon-unassigned {
-    background: var(--idlm-surface-soft);
-    color: var(--idlm-text-muted);
-}
 
-.idlm-kanban-card-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--idlm-space-1);
-    min-height: 32px;
-    padding: 3px var(--idlm-space-2);
-    border-top: 1px solid var(--idlm-border);
-    background: var(--idlm-surface);
-}
+.idlm-kanban-card-actions { display: flex; align-items: center; border-top: 1px solid var(--idlm-border); }
 
 .idlm-kanban-card-drag-handle,
-.idlm-kanban-card-move {
-    display: inline-grid;
-    box-sizing: border-box;
-    place-items: center;
-    min-height: 24px;
-    border: 1px solid var(--idlm-border);
-    border-radius: var(--idlm-radius-compact);
-    background: var(--idlm-surface);
-    color: var(--idlm-text-muted);
-    cursor: pointer;
-    transition: var(--idlm-transition);
-}
+.idlm-kanban-card-move { display: inline-grid; box-sizing: border-box; place-items: center; border-radius: var(--idlm-radius-compact); cursor: pointer; }
 
-.idlm-kanban-card-drag-handle {
-    flex: 0 0 24px;
-    width: 24px;
-    padding: 0;
-    cursor: grab;
-}
+.idlm-kanban-card-drag-handle { padding: 0; cursor: grab; }
 
 .idlm-kanban-card-drag-handle:active {
     cursor: grabbing;
 }
 
-.idlm-kanban-card-move {
-    flex: 0 0 24px;
-    width: 24px;
-    min-width: 0;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    padding: 0;
-    font-size: 10px;
-    font-weight: 600;
-}
+.idlm-kanban-card-move { min-width: 0; align-items: center; justify-content: center; gap: 0; padding: 0; font-size: 10px; font-weight: 600; }
 
 .idlm-kanban-card-move span:last-child {
     display: none;
@@ -417,54 +236,16 @@
     line-height: 14px;
 }
 
-.idlm-kanban-card-open:focus-visible,
-.idlm-kanban-card-drag-handle:focus-visible,
-.idlm-kanban-card-move:focus-visible {
-    outline: 2px solid var(--idlm-focus-ring);
-    outline-offset: -2px;
-}
 
-.idlm-kanban-card-drag-handle:hover,
-.idlm-kanban-card-move:hover {
-    border-color: var(--idlm-border-strong);
-    color: var(--idlm-info);
-    background: var(--idlm-info-soft);
-}
 
-.idlm-kanban-task-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    font-weight: 600;
-    padding: 1px 4px;
-    border-radius: 12px;
-    font-size: 9px;
-    line-height: 1.2;
-    white-space: nowrap;
-}
+.idlm-kanban-task-pill { display: inline-flex; align-items: center; white-space: nowrap; }
 
-.idlm-kanban-task-pill .dashicons {
-    width: 11px;
-    height: 11px;
-    font-size: 11px;
-    line-height: 11px;
-}
 
-.idlm-kanban-task-pill.pending {
-    background: #eff6ff;
-    color: var(--idlm-info);
-}
+.idlm-kanban-task-pill.pending { color: var(--idlm-info); }
 
-.idlm-kanban-task-pill.overdue {
-    background: var(--idlm-danger-soft);
-    color: var(--idlm-danger);
-    animation: idlm-pulse-kanban 1.5s infinite;
-}
+.idlm-kanban-task-pill.overdue { color: var(--idlm-danger); animation: idlm-pulse-kanban 1.5s infinite; }
 
-.idlm-kanban-task-pill.needs-update {
-    background: var(--idlm-warning-soft);
-    color: var(--idlm-warning);
-}
+.idlm-kanban-task-pill.needs-update { color: var(--idlm-warning); }
 
 /* Animations */
 @keyframes idlm-pulse-kanban {
@@ -474,44 +255,12 @@
 }
 
 /* Empty Column State */
-.idlm-kanban-column-empty {
-    border: 1px dashed var(--idlm-border);
-    border-radius: var(--idlm-radius);
-    padding: 20px;
-    text-align: center;
-    color: var(--idlm-text-muted);
-    font-size: 12px;
-    margin: auto 0;
-}
 
 /* Phase 3 one-dimensional stage tabs and list for narrow workspaces. */
 @media (max-width: 782px) {
-    .idlm-kanban-stage-tabs {
-        display: flex;
-        gap: var(--idlm-space-2);
-        margin: var(--idlm-space-3) 0;
-        padding: 0 0 var(--idlm-space-2);
-        overflow-x: auto;
-        scrollbar-width: thin;
-    }
+    .idlm-kanban-stage-tabs { display: flex; overflow-x: auto; }
 
-    .idlm-kanban-stage-tab {
-        display: inline-flex;
-        flex: 0 0 auto;
-        align-items: center;
-        justify-content: center;
-        gap: var(--idlm-space-2);
-        min-height: var(--idlm-target-size);
-        padding: var(--idlm-space-2) var(--idlm-space-3);
-        border: 1px solid var(--idlm-border);
-        border-radius: var(--idlm-radius-pill);
-        background: var(--idlm-surface);
-        color: var(--idlm-text-muted);
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: var(--idlm-transition);
-    }
+    .idlm-kanban-stage-tab { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; min-height: var(--idlm-target-size); cursor: pointer; transition: var(--idlm-transition); }
 
     .idlm-kanban-stage-tab:hover,
     .idlm-kanban-stage-tab:focus-visible,
@@ -520,35 +269,12 @@
         color: var(--idlm-action);
     }
 
-    .idlm-kanban-stage-tab.is-active {
-        background: var(--idlm-action-soft);
-    }
 
-    .idlm-kanban-stage-tab-count {
-        display: inline-grid;
-        min-width: 24px;
-        min-height: 24px;
-        padding: 0 var(--idlm-space-1);
-        place-items: center;
-        border-radius: var(--idlm-radius-pill);
-        background: var(--idlm-surface-soft);
-        color: var(--idlm-text);
-        font-size: 11px;
-    }
+    .idlm-kanban-stage-tab-count { display: inline-grid; place-items: center; border-radius: var(--idlm-radius-pill); }
 
-    .idlm-kanban-board {
-        display: block;
-        height: max(360px, 65dvh);
-        min-height: 360px;
-        padding-bottom: 0;
-        overflow: hidden;
-    }
+    .idlm-kanban-board { padding-bottom: 0; }
 
-    .idlm-kanban-column {
-        display: none;
-        width: 100%;
-        max-height: none;
-    }
+    .idlm-kanban-column { display: none; max-height: none; }
 
     .idlm-kanban-column.is-mobile-active {
         display: flex;
@@ -562,14 +288,7 @@
         display: none;
     }
 
-    .idlm-kanban-card-move {
-        display: inline-flex;
-        flex: 0 1 152px;
-        width: auto;
-        min-height: var(--idlm-target-size);
-        gap: var(--idlm-space-1);
-        padding: 0 var(--idlm-space-2);
-    }
+    .idlm-kanban-card-move { display: inline-flex; gap: var(--idlm-space-1); }
 
     .idlm-kanban-card-move span:last-child {
         display: inline;
@@ -583,7 +302,5 @@
     }
 }
 
-.idlm-kanban-column-loader { flex: 0 0 auto; padding: 8px; text-align: center; color: var(--idlm-text-muted); font-size: 12px; }
-.idlm-kanban-column-loader p { margin: 0 0 8px; }
+.idlm-kanban-column-loader { flex: 0 0 auto; text-align: center; color: var(--idlm-text-muted); }
 .idlm-kanban-column-loader .idlm-btn { width: 100%; }
-.idlm-kanban-column-body:focus-visible { outline: 2px solid var(--idlm-action); outline-offset: -2px; }

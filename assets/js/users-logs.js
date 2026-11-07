@@ -113,10 +113,6 @@
         }
     }
 
-    function designLayerActive() {
-        return document.body.classList.contains('idlm-crm-design');
-    }
-
     function selectFailed(button) {
         var page = button.closest('[data-idlm-log-page="capi"]');
         if (!page) {
@@ -146,7 +142,7 @@
             return;
         }
 
-        if (designLayerActive() && window.IDLMDialog && window.IDLMDialog.confirm && !button.dataset.idlmRetryConfirmed) {
+        if (window.IDLMDialog && window.IDLMDialog.confirm && !button.dataset.idlmRetryConfirmed) {
             window.IDLMDialog.confirm({
                 title: 'Retry ' + selected.length + ' conversion event' + (1 === selected.length ? '' : 's') + '?',
                 message: 'Each selected event is sent to its ad platform again. Events that already reached the platform may be counted twice.',
@@ -181,12 +177,12 @@
                 checkbox.checked = false;
             });
             updateCapiSelection(page);
-            if (designLayerActive() && window.IDLMDialog && window.IDLMDialog.notify) {
+            if (window.IDLMDialog && window.IDLMDialog.notify) {
                 window.IDLMDialog.notify(response.data.message || 'Retry complete.', 'success');
             }
         }).catch(function (error) {
             setPageStatus(page, error.message, true);
-            if (designLayerActive() && window.IDLMDialog && window.IDLMDialog.notify) {
+            if (window.IDLMDialog && window.IDLMDialog.notify) {
                 window.IDLMDialog.notify(error.message, 'error');
             }
         }).finally(function () {
@@ -203,7 +199,7 @@
     }
 
     function enhancePendingForm(form) {
-        if (designLayerActive() && form.matches('.idlm-role-editor-form')) {
+        if (form.matches('.idlm-role-editor-form')) {
             form.addEventListener('submit', function (event) {
                 var access = form.querySelector('[data-idlm-capability="idlm_access_leads"]');
                 var people = Number(form.dataset.idlmRolePeople || 0);
@@ -227,7 +223,7 @@
                 });
             });
         }
-        if (designLayerActive() && form.matches('.idlm-user-edit-form')) {
+        if (form.matches('.idlm-user-edit-form')) {
             form.addEventListener('submit', function (event) {
                 var suspend = form.querySelector('input[name="crm_access_disabled"]');
                 if (form.dataset.idlmSuspendConfirmed || !suspend || !suspend.checked || suspend.defaultChecked || !window.IDLMDialog || !window.IDLMDialog.confirm) {
@@ -375,7 +371,7 @@
             return;
         }
         var permissionToggle = event.target.closest('[data-idlm-permission-all]');
-        if (permissionToggle && designLayerActive()) {
+        if (permissionToggle) {
             var group = permissionToggle.closest('.idlm-permission-group');
             var turnOn = '1' === permissionToggle.getAttribute('data-idlm-permission-all');
             group.querySelectorAll('input[type="checkbox"]').forEach(function (box) { box.checked = turnOn; });
@@ -383,7 +379,7 @@
             return;
         }
         var showWebsite = event.target.closest('[data-idlm-show-website-roles]');
-        if (showWebsite && designLayerActive()) {
+        if (showWebsite) {
             var websiteWrap = showWebsite.closest('[data-idlm-website-roles]');
             var websiteSelect = document.getElementById(showWebsite.getAttribute('aria-controls'));
             var websiteOptions = websiteWrap.querySelector('[data-idlm-website-role-options]');
@@ -434,7 +430,7 @@
         document.querySelectorAll('[data-idlm-pending-form]').forEach(enhancePendingForm);
         document.querySelectorAll('[data-idlm-log-page="capi"]').forEach(updateCapiSelection);
         document.querySelectorAll('[data-idlm-filter-drawer]').forEach(updateFilterDrawerCount);
-        if (designLayerActive()) { document.querySelectorAll('.idlm-role-editor-form').forEach(refreshPermissionForm); }
+ document.querySelectorAll('.idlm-role-editor-form').forEach(refreshPermissionForm);
         var notice = document.querySelector('[data-idlm-users-notice]');
         if (notice) {
             notice.focus({preventScroll: false});
@@ -509,44 +505,42 @@
         if (count) { count.textContent = on + ' of ' + boxes.length + ' permissions on' + (dirty ? ' (unsaved)' : ''); }
     }
 
-    if (designLayerActive()) {
-        var submitting = false;
-        document.addEventListener('change', function (event) {
-            if (event.target.closest('.idlm-permission-option') || event.target.matches('[data-idlm-role-scope]')) { refreshPermissionForm(event.target.closest('.idlm-permission-form')); }
-            if (event.target.matches('.idlm-user-edit-form input[name="crm_access_disabled"]')) {
-                var suspendNote = event.target.closest('.idlm-user-edit-form').querySelector('[data-idlm-suspend-note]');
-                if (suspendNote) { suspendNote.hidden = !event.target.checked; }
-            }
-        });
-        document.addEventListener('submit', function () { submitting = true; }, true);
-        // A rejected invite returns to an empty page, so keep what was typed for this tab, once.
-        var inviteDraftKey = 'idlm_invite_draft';
-        var inviteFields = ['first_name', 'last_name', 'user_login', 'email', 'phone'];
-        var inviteForm = document.querySelector('[data-idlm-invite-form]');
-        if (inviteForm) {
-            try {
-                var draft = inviteForm.hasAttribute('data-idlm-invite-restore') ? JSON.parse(window.sessionStorage.getItem(inviteDraftKey) || 'null') : null;
-                window.sessionStorage.removeItem(inviteDraftKey);
-                if (draft) {
-                    inviteFields.forEach(function (name) {
-                        if (draft[name] && inviteForm.elements[name]) { inviteForm.elements[name].value = draft[name]; }
-                    });
-                    if (draft.user_login && inviteForm.querySelector('[data-idlm-login-fold]')) { inviteForm.querySelector('[data-idlm-login-fold]').open = true; }
-                }
-            } catch (ignore) {}
-            inviteForm.addEventListener('submit', function () {
-                try {
-                    var saved = {};
-                    inviteFields.forEach(function (name) { if (inviteForm.elements[name]) { saved[name] = inviteForm.elements[name].value; } });
-                    window.sessionStorage.setItem(inviteDraftKey, JSON.stringify(saved));
-                } catch (ignore) {}
-            });
+    var submitting = false;
+    document.addEventListener('change', function (event) {
+        if (event.target.closest('.idlm-permission-option') || event.target.matches('[data-idlm-role-scope]')) { refreshPermissionForm(event.target.closest('.idlm-permission-form')); }
+        if (event.target.matches('.idlm-user-edit-form input[name="crm_access_disabled"]')) {
+            var suspendNote = event.target.closest('.idlm-user-edit-form').querySelector('[data-idlm-suspend-note]');
+            if (suspendNote) { suspendNote.hidden = !event.target.checked; }
         }
-        window.addEventListener('beforeunload', function (event) {
-            if (!submitting && document.querySelector('.idlm-permission-form.is-dirty')) {
-                event.preventDefault();
-                event.returnValue = '';
+    });
+    document.addEventListener('submit', function () { submitting = true; }, true);
+    // A rejected invite returns to an empty page, so keep what was typed for this tab, once.
+    var inviteDraftKey = 'idlm_invite_draft';
+    var inviteFields = ['first_name', 'last_name', 'user_login', 'email', 'phone'];
+    var inviteForm = document.querySelector('[data-idlm-invite-form]');
+    if (inviteForm) {
+        try {
+            var draft = inviteForm.hasAttribute('data-idlm-invite-restore') ? JSON.parse(window.sessionStorage.getItem(inviteDraftKey) || 'null') : null;
+            window.sessionStorage.removeItem(inviteDraftKey);
+            if (draft) {
+                inviteFields.forEach(function (name) {
+                    if (draft[name] && inviteForm.elements[name]) { inviteForm.elements[name].value = draft[name]; }
+                });
+                if (draft.user_login && inviteForm.querySelector('[data-idlm-login-fold]')) { inviteForm.querySelector('[data-idlm-login-fold]').open = true; }
             }
+        } catch (ignore) {}
+        inviteForm.addEventListener('submit', function () {
+            try {
+                var saved = {};
+                inviteFields.forEach(function (name) { if (inviteForm.elements[name]) { saved[name] = inviteForm.elements[name].value; } });
+                window.sessionStorage.setItem(inviteDraftKey, JSON.stringify(saved));
+            } catch (ignore) {}
         });
     }
+    window.addEventListener('beforeunload', function (event) {
+        if (!submitting && document.querySelector('.idlm-permission-form.is-dirty')) {
+            event.preventDefault();
+            event.returnValue = '';
+        }
+    });
 }());

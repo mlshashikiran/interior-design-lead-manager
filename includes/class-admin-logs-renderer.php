@@ -103,9 +103,7 @@ class IDLM_Admin_Logs_Renderer {
      */
     private static function ajax_get_log_payload($table_suffix) {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => 'Permission denied.'), 403);
-        }
+        IDLM_Admin::require_ajax_access('admin', 'Permission denied.', 403);
 
         $log_id = isset($_POST['log_id']) ? absint(wp_unslash($_POST['log_id'])) : 0;
         if (!$log_id) {
@@ -197,7 +195,7 @@ class IDLM_Admin_Logs_Renderer {
 
     /** Format a serialized scalar or structure for the read-only payload viewer. */
     private static function format_payload($value) {
-        $value = maybe_unserialize($value);
+        $value = IDLM_Schema_Migration::decode($value);
         if (is_scalar($value) || null === $value) {
             $string = (string) $value;
             $decoded = json_decode($string, true);

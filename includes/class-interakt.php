@@ -268,14 +268,6 @@ class IDLM_Interakt {
     }
 
     /**
-     * Match incoming customer full phone to CRM Lead database and record comment activity
-     */
-    public static function log_customer_reply_to_lead($phone, $text, $message_id = '') {
-        $message=IDLM_WhatsApp_Inbox::message('interakt',$message_id,$phone,$text);
-        return $message ? IDLM_WhatsApp_Inbox::record($message) : new WP_Error('idlm_whatsapp_identity','A valid provider message ID is required.');
-    }
-
-    /**
      * Handle incoming Meta Webhook validation (GET)
      */
     public static function handle_meta_webhook_verification(WP_REST_Request $request) {
@@ -370,19 +362,8 @@ class IDLM_Interakt {
      * Verify Meta SHA256 HMAC Signature
      */
     public static function verify_meta_webhook_signature($payload, $signature, $secret) {
-        if (strpos($signature, 'sha256=') === 0) {
-            $signature = substr($signature, 7);
-        }
-        
-        $computed = hash_hmac('sha256', $payload, $secret);
-        return hash_equals($signature, $computed);
+        // Meta and Interakt sign the raw body the same way.
+        return self::verify_webhook_signature($payload, $signature, $secret);
     }
 
-    /**
-     * Match incoming Meta customer full phone to lead and record direct comment activity
-     */
-    public static function log_meta_customer_reply_to_lead($phone, $text, $message_id = '') {
-        $message=IDLM_WhatsApp_Inbox::message('meta',$message_id,$phone,$text);
-        return $message ? IDLM_WhatsApp_Inbox::record($message) : new WP_Error('idlm_whatsapp_identity','A valid provider message ID is required.');
-    }
 }

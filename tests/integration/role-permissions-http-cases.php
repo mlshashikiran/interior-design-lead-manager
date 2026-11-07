@@ -4,7 +4,9 @@ if ('cli' !== PHP_SAPI || strpos($config['db_name'] ?? '', 'idlm_test_') !== 0) 
 
 function idlm_role_permissions_http(array $fields, string $actor = 'admin', ?string $nonce = null, bool $post = true): array {
     global $sessions;
-    return idlm_http_request('/wp-admin/admin-post.php', array('action'=>'idlm_update_role_permissions', '_wpnonce'=>$nonce ?? ($sessions[$actor]['role_permissions'] ?? 'invalid')) + $fields, $actor, $post);
+    // The Roles tab saves one role's lead visibility and permissions together.
+    if (isset($fields['permission_role'])) { $fields['access_role'] = $fields['permission_role']; unset($fields['permission_role']); }
+    return idlm_http_request('/wp-admin/admin-post.php', array('action'=>'idlm_update_role_access', 'role_scope'=>'default', '_wpnonce'=>$nonce ?? ($sessions[$actor]['role_access'] ?? 'invalid')) + $fields, $actor, $post);
 }
 function idlm_role_permissions_stored(): string {
     global $wpdb;
@@ -28,10 +30,16 @@ idlm_http_case('RELEASE-H-role-permissions-deny-nonce-capability-and-get-before-
 
 idlm_http_case('RELEASE-H-role-permissions-reject-shared-and-malformed-role-targets', static function(): void {
     $roles = idlm_role_permissions_stored();
-    foreach (array('administrator', 'editor', 'author', 'contributor', 'unknown-role', array('sales_executive')) as $role) {
+    foreach (array('administrator', 'unknown-role', array('sales_executive')) as $role) {
         $r = idlm_role_permissions_http(array('permission_role'=>$role, 'permissions'=>array('manage_options'=>'1')));
         idlm_http_check($r['status'] === 302 && strpos($r['headers'], 'idlm_users_error=invalid-role') !== false, 'Protected role target accepted');
         idlm_http_check($roles === idlm_role_permissions_stored(), 'Protected role target changed grants');
+    }
+    // Website roles may hold a lead scope but never gain CRM or site grants here.
+    foreach (array('editor', 'author', 'contributor') as $role) {
+        $r = idlm_role_permissions_http(array('permission_role'=>$role, 'permissions'=>array('manage_options'=>'1', 'idlm_assign_leads'=>'1')));
+        idlm_http_check($r['status'] === 302, 'Website role request crashed');
+        idlm_http_check($roles === idlm_role_permissions_stored(), 'Website role gained grants');
     }
 });
 
@@ -40,7 +48,7 @@ idlm_http_case('RELEASE-H-role-permissions-apply-only-allowlisted-grants-and-cle
     try {
         $original = maybe_unserialize($before)['sales_executive']['capabilities'];
         $r = idlm_role_permissions_http(array('permission_role'=>'sales_executive', 'permissions'=>array('idlm_access_leads'=>'1', 'idlm_assign_leads'=>'1', 'manage_options'=>'1', 'unfiltered_html'=>'1', 'unknown_permission'=>'1')));
-        idlm_http_check($r['status'] === 302 && strpos($r['headers'], 'idlm_users_notice=role-permissions-updated') !== false, 'Valid grants failed');
+        idlm_http_check($r['status'] === 302 && strpos($r['headers'], 'idlm_users_notice=role-access-updated') !== false, 'Valid grants failed');
         $actual = maybe_unserialize(idlm_role_permissions_stored())['sales_executive']['capabilities'];
         foreach (IDLM_Admin_Users_Controller::selectable_permissions('sales_executive') as $cap=>$label) {
             idlm_http_check(!empty($actual[$cap]) === in_array($cap, array('idlm_access_leads', 'idlm_assign_leads'), true), 'Grant mismatch: '.$cap);

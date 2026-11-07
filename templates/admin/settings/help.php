@@ -9,7 +9,7 @@ $idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'gen
             <section id="settings-help" class="idlm-settings-tab-content <?php echo $idlm_active_tab === 'help' ? 'active' : ''; ?>" role="tabpanel" aria-labelledby="idlm-settings-tab-help" <?php echo $idlm_active_tab === 'help' ? '' : 'hidden'; ?>>
                 <div class="idlm-grid-full">
                     <article class="idlm-card">
-                        <h3>Cloudflare "Under Attack" Mode & Security Blocks Guidance</h3>
+                        <h3>Cloudflare “Under Attack” mode and security blocks guidance</h3>
                         <p class="idlm-card-desc">If you have enabled Cloudflare's "Under Attack" Mode or high security levels to mitigate bot attacks, incoming third-party ad webhooks (Meta, Google, LinkedIn) will be blocked with a "Just a moment..." (503 challenge) page because API clients cannot execute the required JavaScript challenges.</p>
                         <ol class="idlm-help-list">
                             <li>Log in to your Cloudflare Dashboard and select your website domain.</li>
@@ -21,13 +21,13 @@ $idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'gen
                     </article>
 
                     <article class="idlm-card" id="idlm-help-google-ads-creds">
-                        <h3>Obtaining Google Ads Data Manager Credentials</h3>
+                        <h3>Obtaining Google Ads Data Manager credentials</h3>
                         <p class="idlm-card-desc">Instead of complex API applications, Google Ads Data Manager pulls audience segments and conversion events from secure HTTPS CSV feeds on your server. Follow these steps to link your feeds to Google Ads:</p>
                         <div class="idlm-help-steps" data-idlm-ui="mt-4">
                             <h4 class="idlm-help-step-title">1. View HTTPS source credentials</h4>
                             <ul class="idlm-help-list" data-idlm-ui="help-list">
                                 <li>Navigate to the <strong>Automation</strong> tab.</li>
-                                <li>Under the <strong>Google Ads Data Manager (HTTPS Pull Feeds)</strong> section, configure and save your custom <strong>HTTPS Source Username</strong> and <strong>HTTPS Source Password</strong>. Keep these credentials safe as they secure your endpoints.</li>
+                                <li>Under the <strong>Google Ads Data Manager (HTTPS pull feeds)</strong> section, configure and save your custom <strong>HTTPS Source Username</strong> and <strong>HTTPS Source Password</strong>. Keep these credentials safe as they secure your endpoints.</li>
                             </ul>
 
                             <h4 class="idlm-help-step-title">2. Link Offline Conversion Import Feed</h4>
@@ -50,7 +50,7 @@ $idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'gen
                     </article>
 
                     <article class="idlm-card">
-                        <h3>Frequently Asked Questions (FAQs)</h3>
+                        <h3>Frequently asked questions (FAQs)</h3>
                         <div class="idlm-grid-full" data-idlm-ui="mt-4">
                             <div class="idlm-faq-item">
                                 <h4>Q: How does the smart duplicate detection work?</h4>

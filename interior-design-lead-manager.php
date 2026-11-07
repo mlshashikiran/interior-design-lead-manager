@@ -136,6 +136,7 @@ function idlm_activate_plugin($network_wide = false) {
 
     // 2. Set up background Action Scheduler or WP Cron schedules
     IDLM_Scheduler::setup_schedules();
+    IDLM_Integrations::run_upkeep();
 
     // 3. Register CRM roles and assignment capabilities.
     idlm_register_crm_roles_and_capabilities();
@@ -314,9 +315,26 @@ function idlm_deactivate_plugin() {
 
 // Boot up classes on WordPress init hooks
 add_action('plugins_loaded', 'idlm_boot_plugin');
+/**
+ * Options read through get_option() on every CRM request. Most are stored
+ * without autoload, so loading them together saves one query per option.
+ */
+function idlm_boot_option_names() {
+    return array_merge(array(
+        'idlm_roles_version', 'idlm_crm_access_policy_version', 'idlm_design_role_registered',
+        'idlm_telemetry_level', IDLM_Settings::VERSION_OPTION, 'idlm_schema_version', 'idlm_routing_schema_version',
+        'idlm_api_webhook_key', 'idlm_api_credentials_version', 'idlm_webhook_api_key', 'idlm_mcp_api_key', 'idlm_google_gadm_password',
+        IDLM_Production_Security::MCP_METADATA_OPTION, 'idlm_webhook_legacy_query_until', 'idlm_mcp_legacy_key_until', 'idlm_gadm_legacy_key_until',
+        'idlm_secret_queue_scrub_cursor', 'idlm_handoff_reconciliation_version',
+    ), array_keys(IDLM_DB::MIGRATION_STEPS));
+}
+
 function idlm_boot_plugin() {
     IDLM_Recovery_Guard::begin_boot();
     try {
+    if (function_exists('wp_prime_option_caches')) {
+        wp_prime_option_caches(idlm_boot_option_names());
+    }
     IDLM_Auth::init();
 
     if (get_option('idlm_roles_version') !== IDLM_VERSION || '1' !== get_option('idlm_crm_access_policy_version', '')) {

@@ -14,8 +14,7 @@ class IDLM_Quotations {
 
     /** Use local asset timestamps so quotation UI changes cannot remain cached. */
     private static function asset_version($relative_path) {
-        $path = dirname(__DIR__) . '/assets/' . ltrim((string) $relative_path, '/');
-        return is_file($path) ? (string) filemtime($path) : IDLM_VERSION;
+        return IDLM_Admin_Assets::version($relative_path);
     }
 
     public static function init() {
@@ -51,16 +50,16 @@ class IDLM_Quotations {
     public static function install() {
         return IDLM_Quotation_Schema::install();
     }
-    /**
-     * Kept as a no-op compatibility method after consolidating CRM UI in the
-     * frontend workspace. Legacy wp-admin quotation URLs redirect there.
-     */
-    public static function register_menu() {}
 
     public static function enqueue_assets($hook) {
         if (false === strpos((string) $hook, 'idlm_quotations')) {
             return;
         }
+        self::enqueue_editor_bundle();
+    }
+
+    /** The quotation editor's shared styles, scripts and settings. */
+    private static function enqueue_editor_bundle() {
         if (class_exists('IDLM_Admin')) {
             IDLM_Admin::register_core_assets();
             wp_enqueue_style('idlm-google-fonts');
@@ -120,15 +119,7 @@ class IDLM_Quotations {
     /** Editor scripts and styles, shared with the design quotation screen. */
     public static function load_editor_assets() {
         wp_enqueue_style('dashicons');
-        if (class_exists('IDLM_Admin')) {
-            IDLM_Admin::register_core_assets();
-            wp_enqueue_style('idlm-google-fonts');
-            wp_enqueue_style('idlm-admin-styles');
-            wp_enqueue_script('idlm-dialog');
-        }
-        wp_enqueue_style('idlm-quotations', IDLM_URL . 'assets/css/quotations.css', array(), self::asset_version('css/quotations.css'));
-        wp_enqueue_script('idlm-quotations', IDLM_URL . 'assets/js/quotations.js', array('idlm-dialog'), self::asset_version('js/quotations.js'), true);
-        wp_localize_script('idlm-quotations', 'idlmQuoteData', array('ajaxUrl' => admin_url('admin-ajax.php'), 'nonce' => wp_create_nonce('idlm_quote_catalogue_search'), 'autosaveNonce' => wp_create_nonce('idlm_quote_autosave'), 'currencyCode' => self::settings()['currency_code'], 'numericLimits' => array('maxAmount' => IDLM_Quotation_Calculator::MAX_AMOUNT_UNITS, 'maxMeasure' => IDLM_Quotation_Calculator::MAX_MEASURE_UNITS, 'maxRows' => IDLM_Quotation_Calculator::MAX_ROWS, 'maxSections' => IDLM_Quotation_Calculator::MAX_SECTIONS)));
+        self::enqueue_editor_bundle();
     }
 
     public static function render_shortcode() {

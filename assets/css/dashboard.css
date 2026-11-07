@@ -57,7 +57,6 @@ button.idlm-dashboard-bar { cursor: pointer; }
 .idlm-dashboard-mini-grid span, .idlm-dashboard-mini-grid small { display: block; color: var(--idlm-text-muted); font-size: 10px; }
 .idlm-dashboard-mini-grid strong { display: block; margin: 4px 0; font-size: 21px; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .idlm-dashboard-period-panel > .idlm-dashboard-note { padding: 0 16px 16px; }
-.idlm-dashboard-big-value { display: block; font-size: 30px; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .idlm-dashboard-segment-tabs { display: flex; gap: 7px; flex-wrap: wrap; padding: 16px 16px 3px; }
 .idlm-dashboard-chip { padding: 6px 10px; color: var(--idlm-text-muted); background: var(--idlm-surface); border: 1px solid var(--idlm-border); border-radius: 999px; font-size: 11px; cursor: pointer; }
 .idlm-dashboard-chip.active { color: var(--idlm-action); background: var(--idlm-action-soft, var(--idlm-surface-soft)); border-color: var(--idlm-action); }
@@ -71,9 +70,6 @@ button.idlm-dashboard-bar { cursor: pointer; }
 .idlm-dashboard-quality .is-qualified, .idlm-dashboard-legend .is-qualified::before { background: var(--idlm-success, #2f7a55); }
 .idlm-dashboard-quality .is-unqualified, .idlm-dashboard-legend .is-unqualified::before { background: var(--idlm-danger, #a64040); }
 .idlm-dashboard-quality .is-pending, .idlm-dashboard-legend .is-pending::before { background: var(--idlm-border-strong, #d9dce1); }
-.idlm-dashboard-trend-legend .is-leads::before { background: var(--idlm-action); }
-.idlm-dashboard-trend-legend .is-qualified::before { background: var(--idlm-brand-gold, #2f7a55); }
-.idlm-dashboard-trend-legend .is-won::before { background: var(--idlm-text-muted, #9aa0aa); }
 .idlm-dashboard-quality-detail { position: absolute; z-index: 1; right: 0; bottom: calc(100% + 6px); display: none; max-width: 260px; padding: 7px 9px; color: var(--idlm-action-contrast, #fff) !important; background: var(--idlm-text, #20242c); border-radius: 6px; box-shadow: 0 4px 12px rgba(20,24,32,.16); font-size: 11px; line-height: 1.35; }
 .idlm-dashboard-quality-detail::after { content: ''; position: absolute; right: 14px; bottom: -4px; width: 8px; height: 8px; background: var(--idlm-text, #20242c); transform: rotate(45deg); }
 .idlm-dashboard-quality-row:hover .idlm-dashboard-quality-detail, .idlm-dashboard-quality-row:focus-visible .idlm-dashboard-quality-detail { display: block; }
@@ -92,9 +88,6 @@ button.idlm-dashboard-bar { cursor: pointer; }
 .idlm-dashboard .idlm-table th, .idlm-dashboard .idlm-table td { padding: 10px 16px; }
 .idlm-dashboard .idlm-table th { color: var(--idlm-text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: .045em; white-space: nowrap; }
 .idlm-dashboard .idlm-table td, .idlm-dashboard .idlm-table tbody th { font-size: 12px; white-space: nowrap; }
-.idlm-dashboard-daily { margin: 0 0 16px; color: var(--idlm-text-muted); font-size: 12px; }
-.idlm-dashboard-daily summary { cursor: pointer; }
-.idlm-dashboard-daily .idlm-table-wrapper { margin-top: 10px; background: var(--idlm-surface); border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); }
 .idlm-dashboard-empty { color: var(--idlm-text-muted); font-size: 12px; }
 .idlm-dashboard-records { margin-top: 22px; }
 .idlm-dashboard-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 16px; }

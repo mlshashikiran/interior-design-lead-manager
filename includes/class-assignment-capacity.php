@@ -41,7 +41,7 @@ final class IDLM_Assignment_Capacity {
             'idlm_max_active_leads_per_rep', IDLM_Settings::ROUTING_OPTION
         )));
         $settings = array();
-        foreach ($options as $option) { $settings[$option->option_name] = maybe_unserialize($option->option_value); }
+        foreach ($options as $option) { $settings[$option->option_name] = IDLM_Schema_Migration::decode($option->option_value); }
         $group = isset($settings[IDLM_Settings::ROUTING_OPTION]) && is_array($settings[IDLM_Settings::ROUTING_OPTION]) ? $settings[IDLM_Settings::ROUTING_OPTION] : array();
         $maximum = max(0, absint($settings['idlm_max_active_leads_per_rep'] ?? ($group['idlm_max_active_leads_per_rep'] ?? 30)));
         if (0 === $maximum) { return true; }

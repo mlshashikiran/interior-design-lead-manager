@@ -31,8 +31,8 @@ function idlm_admin_asset_handles(string $type): array {
 
 idlm_test('admin facade preserves every public compatibility method and its size baseline', static function(): void {
     $expected = array(
-        'init', 'get_allowed_rep_roles', 'current_user_can_assign_leads', 'current_user_is_pre_sales',
-        'get_qualification_status_label', 'is_assignable_rep', 'get_pre_sales_user_ids',
+        'init', 'require_ajax_access', 'get_allowed_rep_roles', 'current_user_can_assign_leads', 'current_user_is_pre_sales',
+        'get_qualification_status_label', 'is_assignable_rep',
         'current_user_can_access_lead', 'current_user_can_view_lead', 'format_datetime',
         'render_activity_details', 'current_user_has_rep_access', 'get_whatsapp_read_activity_ids',
         'mark_whatsapp_reply_read', 'get_unread_whatsapp_lead_ids', 'get_unread_whatsapp_count',
@@ -40,7 +40,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
         'check_lead_overdue_status', 'get_pending_calls_count', 'register_core_assets', 'enqueue_assets',
         'enqueue_frontend_assets', 'render_leads_list_shortcode', 'render_dashboard_shortcode',
         'render_kanban_shortcode', 'render_workspace_shortcode', 'render_my_account_page',
-        'handle_update_my_account', 'handle_rotate_api_credential', 'handle_create_user', 'handle_update_user', 'handle_update_role_scopes', 'handle_update_role_permissions', 'register_admin_menus',
+        'handle_update_my_account', 'handle_rotate_api_credential', 'handle_create_user', 'handle_update_user', 'register_admin_menus',
         'redirect_legacy_admin_page', 'admin_utility_url', 'render_admin_utility_page',
         'render_dashboard_page', 'render_users_access_page', 'render_leads_list_page', 'render_common_overlays', 'render_kanban_page',
         'render_capi_logs_page', 'render_audience_sync_logs_page', 'render_settings_page',
@@ -65,7 +65,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
     })));
 
     assert_same($expected, $actual, 'The IDLM_Admin public compatibility surface changed.');
-    assert_same(87, count($actual));
+    assert_same(85, count($actual));
     assert_true(count(file(dirname(__DIR__) . '/includes/class-admin.php')) <= 3240, 'The Phase 2 admin facade exceeded its 3,240-line size contract.');
 });
 
@@ -122,8 +122,8 @@ idlm_test('Kanban header reports overall leads and filtered current-month wins b
     assert_contains("l.conversion_time < %s", $ajax_source);
     assert_contains('$monthly_won_conditions = $where;', $ajax_source);
     assert_contains("'won_revenue_current_month'", $ajax_source);
-    assert_contains('Overall Leads — Filtered', $template);
-    assert_contains('Won Revenue This Month', $template);
+    assert_contains('Leads on board', $template);
+    assert_contains('Won revenue this month', $template);
     assert_false(false !== strpos($template, 'Assigned Leads — Filtered'));
     assert_false(false !== strpos($template, 'Qualified Leads — Filtered'));
     assert_contains('stats.total_filtered', $script);
@@ -291,7 +291,7 @@ idlm_test('admin hooks, AJAX actions, shortcodes, and menu callbacks remain regi
     )));
     $expected_actions = array(
         'admin_menu', 'admin_menu', 'admin_init', 'wp_enqueue_scripts',
-        'admin_post_idlm_update_my_account', 'admin_post_idlm_rotate_api_credential', 'admin_post_idlm_create_user', 'admin_post_idlm_update_user', 'admin_post_idlm_update_role_scopes', 'admin_post_idlm_update_role_permissions',
+        'admin_post_idlm_update_my_account', 'admin_post_idlm_rotate_api_credential', 'admin_post_idlm_create_user', 'admin_post_idlm_update_user',
         'wp_ajax_idlm_get_lead_details', 'wp_ajax_idlm_get_lead_whatsapp', 'wp_ajax_idlm_mark_whatsapp_messages_read', 'wp_ajax_idlm_get_lead_activity', 'wp_ajax_idlm_get_capi_log_payload', 'wp_ajax_idlm_get_audience_log_payload',
         'wp_ajax_idlm_quick_edit_lead', 'wp_ajax_idlm_save_activity_comment',
         'wp_ajax_idlm_edit_activity_comment', 'wp_ajax_idlm_delete_activity_comment',
@@ -437,9 +437,9 @@ idlm_test('Won dialogs prefill the deal value from the quote value and stay blan
     assert_contains("\$('#idlm-kanban-deal-source').prop('hidden', !(wonQuoteValue > 0));", $open);
     assert_contains("\$('#idlm-kanban-discount-input').val('');", $open, 'Discount must still be entered at close.');
 
-    // The source note is new wording, so it renders only with the design layer.
-    assert_contains('<?php if ($idlm_design_layer): ?><p class="idlm-field-help" id="idlm-deal-value-source" hidden>', $overlays);
-    assert_contains('<?php if ($idlm_design): ?><p class="idlm-field-help" id="idlm-kanban-deal-source" hidden>', $kanban);
+    // The source note stays hidden until a quote value fills the field.
+    assert_contains('<p class="idlm-field-help" id="idlm-deal-value-source" hidden>', $overlays);
+    assert_contains('<p class="idlm-field-help" id="idlm-kanban-deal-source" hidden>', $kanban);
 });
 
 idlm_test('admin page, overlay, workspace, and account selector contracts remain present', static function(): void {
@@ -606,12 +606,12 @@ idlm_test('production scalability Phase 5 starts with a focused lead-detail AJAX
     $reads = (string) file_get_contents($root . '/includes/class-admin-lead-reads.php');
 
     assert_true(class_exists('IDLM_Admin_Lead_Reads'));
-    assert_contains('return IDLM_Admin_Ajax::ajax_get_lead_details();', $facade);
-    assert_contains('return IDLM_Admin_Lead_Reads::ajax_get_lead_details();', $ajax);
-    assert_contains("check_ajax_referer('idlm_admin_nonce', 'nonce')", $reads);
+    assert_contains('return IDLM_Admin_Lead_Reads::ajax_get_lead_details();', $facade);
+    assert_true(false === strpos($ajax, 'function ajax_get_lead_details('), 'The AJAX class inherits the facade method instead of adding a pass-through.');
+    assert_contains("IDLM_Admin::require_ajax_access('rep', 'Permission denied.', 403);", $reads);
 
     $handler = strpos($reads, 'public static function ajax_get_lead_details()');
-    $broad_access = strpos($reads, 'current_user_has_rep_access()', $handler);
+    $broad_access = strpos($reads, "IDLM_Admin::require_ajax_access('rep'", $handler);
     $object_access = strpos($reads, 'current_user_can_view_lead($lead_id)', $broad_access);
     $lead_read = strpos($reads, '$wpdb->get_row(', $object_access);
     assert_true(false !== $handler && false !== $broad_access && false !== $object_access && false !== $lead_read);
@@ -675,7 +675,7 @@ idlm_test('frontend UI UX Phase 2 preserves keyboard, selection, and data-altern
     assert_contains("{ key: 'possession_date'", $leads_script);
     assert_contains('claimedColumns', $leads_script);
     assert_contains('validateImportRows', $leads_script);
-    assert_contains('Default Preferred Studio', $leads_template);
+    assert_contains('Default preferred studio', $leads_template);
     assert_contains('Imported + Duplicates + Failed = ', $leads_script);
     assert_contains("'project_name' => isset(\$lead['project_name'])", $ajax);
     assert_contains("'possession_date' => !empty(\$lead['possession_date'])", $ajax);

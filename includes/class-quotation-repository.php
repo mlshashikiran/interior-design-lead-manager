@@ -335,18 +335,6 @@ final class IDLM_Quotation_Repository {
     }
 
     /**
-     * Update a quotation revision row.
-     *
-     * @return int|false
-     */
-    public static function update_revision($revision_id, $data) {
-        global $wpdb;
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0112: update_revision(): table() prefixes fixed suffixes; term/column and sort maps are closed allowlists; filters carry live lead scope, values/ID lists are prepared; current revision and transaction state must remain live.
-        return $wpdb->update(self::table('quote_revisions'), $data, array('id' => absint($revision_id)), null, array('%d'));
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-    }
-
-    /**
      * Mark a revision as superseded.
      *
      * @return int|false

@@ -27,7 +27,6 @@
             var compactQuery = window.matchMedia('(max-width: 782px)');
             var collapsed = false;
             var mobileOpen = false;
-            var designLayer = document.body.classList.contains('idlm-crm-design');
             var content = workspace.querySelector('.idlm-workspace-content');
             var topbar = workspace.querySelector('.idlm-workspace-topbar');
             var drawerClose = workspace.querySelector('.idlm-workspace-drawer-close');
@@ -54,9 +53,7 @@
                 mobileToggle.querySelector('.dashicons').className = 'dashicons ' + (mobileOpen ? 'dashicons-no-alt' : 'dashicons-menu');
                 document.documentElement.classList.remove('idlm-workspace-sidebar-precollapsed');
                 positionAccountMenu();
-                if (designLayer) {
-                    renderDesignShell(mobile);
-                }
+                renderDesignShell(mobile);
             }
 
             // Design layer only: the phone drawer behaves as a modal, and the icon rail keeps its names.
@@ -91,7 +88,7 @@
                 return item.getAttribute('data-idlm-tip') || (label ? label.textContent.trim() : '');
             }
             function showTip(item) {
-                if (!designLayer || compactQuery.matches || !collapsed) { return; }
+                if (compactQuery.matches || !collapsed) { return; }
                 var text = tipText(item);
                 if (!text) { return; }
                 if (!tip) {
@@ -113,14 +110,12 @@
                 if (tipOwner && tipOwner.dataset.idlmTitle) { tipOwner.setAttribute('title', tipOwner.dataset.idlmTitle); delete tipOwner.dataset.idlmTitle; }
                 tipOwner = null;
             }
-            if (designLayer) {
-                sidebar.addEventListener('mouseover', function (event) { var item = event.target.closest('.idlm-workspace-nav-item, .idlm-workspace-toggle'); if (item && item !== tipOwner) { showTip(item); } });
-                sidebar.addEventListener('mouseleave', hideTip);
-                sidebar.addEventListener('focusin', function (event) { var item = event.target.closest('.idlm-workspace-nav-item, .idlm-workspace-toggle'); if (item) { showTip(item); } });
-                sidebar.addEventListener('focusout', hideTip);
-                sidebar.addEventListener('scroll', hideTip, {passive: true});
-                document.addEventListener('keydown', function (event) { if ('Escape' === event.key) { hideTip(); } });
-            }
+            sidebar.addEventListener('mouseover', function (event) { var item = event.target.closest('.idlm-workspace-nav-item, .idlm-workspace-toggle'); if (item && item !== tipOwner) { showTip(item); } });
+            sidebar.addEventListener('mouseleave', hideTip);
+            sidebar.addEventListener('focusin', function (event) { var item = event.target.closest('.idlm-workspace-nav-item, .idlm-workspace-toggle'); if (item) { showTip(item); } });
+            sidebar.addEventListener('focusout', hideTip);
+            sidebar.addEventListener('scroll', hideTip, {passive: true});
+            document.addEventListener('keydown', function (event) { if ('Escape' === event.key) { hideTip(); } });
 
             function placeTodayEntry(mobile) {
                 var entry = workspace.querySelector('.idlm-workspace-today');
@@ -198,13 +193,12 @@
                     } else {
                         button.removeAttribute('data-idlm-today-count');
                     }
-                    // admin-app.js paints a coloured glow on this button; the entry stays flat.
+                    // A glow painted before this entry existed is cleared; admin-app.js skips it from now on.
                     button.style.removeProperty('box-shadow');
                 }
                 if (badge) {
                     new MutationObserver(syncCount).observe(badge, {attributes: true, attributeFilter: ['style'], childList: true, characterData: true, subtree: true});
                 }
-                new MutationObserver(syncCount).observe(button, {attributes: true, attributeFilter: ['style']});
                 syncCount();
 
                 if (!panel) {
@@ -280,11 +274,9 @@
             function setAccountMenu(open) { if (!accountTrigger || !accountMenu) return; accountMenu.hidden = !open; accountTrigger.setAttribute('aria-expanded', open ? 'true' : 'false'); positionAccountMenu(); }
             if (accountTrigger && accountMenu) { accountTrigger.addEventListener('click', function () { setAccountMenu(accountMenu.hidden); }); document.addEventListener('click', function (event) { if (!accountMenu.hidden && !event.target.closest('.idlm-workspace-account-menu-wrap')) setAccountMenu(false); }); }
 
-            if (designLayer) {
-                // Overlays lock page scrolling; keeping the gutter stops the page jumping sideways.
-                document.documentElement.style.scrollbarGutter = 'stable';
-                initTodayEntry();
-            }
+            // Overlays lock page scrolling; keeping the gutter stops the page jumping sideways.
+            document.documentElement.style.scrollbarGutter = 'stable';
+            initTodayEntry();
             render();
 
             desktopToggle.addEventListener('click', function () {
@@ -301,7 +293,7 @@
             mobileToggle.addEventListener('click', function () {
                 mobileOpen = !mobileOpen;
                 render();
-                if (designLayer && mobileOpen) {
+                if (mobileOpen) {
                     (drawerClose || sidebar).focus();
                 }
             });
@@ -312,7 +304,7 @@
                 });
             }
 
-            if (designLayer && accountTrigger && accountMenu) {
+            if (accountTrigger && accountMenu) {
                 accountTrigger.addEventListener('click', function () {
                     var items = accountMenuItems();
                     if (!accountMenu.hidden && items.length) {

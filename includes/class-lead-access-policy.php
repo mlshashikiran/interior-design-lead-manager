@@ -158,7 +158,7 @@ final class IDLM_Lead_Access_Policy {
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
             "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s FOR UPDATE", $roles->role_key
         )));
-        $definitions = maybe_unserialize($raw_roles);
+        $definitions = IDLM_Schema_Migration::decode($raw_roles);
         if (!is_array($definitions)) { return false; }
         $roles->roles = $definitions; $roles->role_objects = array(); $roles->role_names = array();
         foreach ($definitions as $name => $definition) {

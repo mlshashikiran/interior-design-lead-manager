@@ -847,6 +847,8 @@ try {
     require_once __DIR__ . '/task-plan-repair-contracts.php';
     require_once __DIR__ . '/assignment-eligibility-contracts.php';
     require_once __DIR__ . '/capacity-contracts.php';
+    require_once __DIR__ . '/lead-index-contracts.php';
+    require_once __DIR__ . '/maintenance-contracts.php';
     require_once __DIR__ . '/identity-review-contracts.php';
     require_once __DIR__ . '/bounded-work-contracts.php';
     require_once __DIR__ . '/state-policy-contracts.php';
