@@ -204,3 +204,21 @@ idlm_test('STREAMLINE no stylesheet keeps a rule that an identical later rule al
         assert_same(array(), array_map(static function ($rule) { return strtok($rule['key'], "\n") . ' ' . substr($rule['key'], strpos($rule['key'], "\n") + 1, 80); }, $dead), basename($file));
     }
 });
+
+idlm_test('STREAMLINE AJAX hooks reach their controller in one hop and the old AJAX class names still answer', static function (): void {
+    $facade = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin.php');
+    $ajax = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-ajax.php');
+    preg_match_all('/add_action\(\'wp_ajax_idlm_(\w+)\', array\(__CLASS__, \'(ajax_\w+)\'\)\);/', $facade, $hooks, PREG_SET_ORDER);
+    assert_same(40, count($hooks), 'Every AJAX hook is still registered on the facade.');
+    foreach ($hooks as $hook) {
+        assert_same('ajax_' . $hook[1], $hook[2]);
+        assert_true(is_callable(array('IDLM_Admin', $hook[2])) && is_callable(array('IDLM_Admin_Ajax', $hook[2])), $hook[2] . ' stays callable on both classes.');
+        assert_true(1 === preg_match('/public static function ' . $hook[2] . '\(\) \{ return (IDLM_\w+)::' . $hook[2] . '\(\); \}/', $facade, $target), $hook[2] . ' delegates once.');
+        if ('IDLM_Admin_Ajax' !== $target[1]) {
+            assert_true(method_exists($target[1], $hook[2]), $hook[2] . ' reaches ' . $target[1]);
+            assert_true(false === strpos($ajax, 'function ' . $hook[2] . '('), $hook[2] . ' has no pass-through left in the AJAX class.');
+        } else {
+            assert_true(false !== strpos($ajax, 'function ' . $hook[2] . '('), $hook[2] . ' keeps its handler in the AJAX class.');
+        }
+    }
+});

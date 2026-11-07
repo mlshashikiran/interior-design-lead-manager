@@ -427,44 +427,44 @@ class IDLM_Admin {
     public static function render_settings_page() {
         return IDLM_Admin_Settings_Renderer::render();
     }
-    public static function ajax_get_lead_details() { return IDLM_Admin_Ajax::ajax_get_lead_details(); }
+    public static function ajax_get_lead_details() { return IDLM_Admin_Lead_Reads::ajax_get_lead_details(); }
     public static function ajax_get_lead_whatsapp() { return IDLM_Admin_Lead_Reads::ajax_get_lead_whatsapp(); }
     public static function ajax_mark_whatsapp_messages_read() { return IDLM_Admin_Lead_Reads::ajax_mark_whatsapp_messages_read(); }
-    public static function ajax_get_lead_activity() { return IDLM_Admin_Ajax::ajax_get_lead_activity(); }
+    public static function ajax_get_lead_activity() { return IDLM_Admin_Activity_Controller::ajax_get_lead_activity(); }
     public static function ajax_get_capi_log_payload() { return IDLM_Admin_Logs_Renderer::ajax_get_capi_log_payload(); }
     public static function ajax_get_audience_log_payload() { return IDLM_Admin_Logs_Renderer::ajax_get_audience_log_payload(); }
     public static function ajax_quick_edit_lead() { return IDLM_Admin_Ajax::ajax_quick_edit_lead(); }
     public static function ajax_log_presales_touch() { return IDLM_Admin_Ajax::ajax_log_presales_touch(); }
     public static function ajax_presales_decision() { return IDLM_Admin_Ajax::ajax_presales_decision(); }
-    public static function ajax_save_activity_comment() { return IDLM_Admin_Ajax::ajax_save_activity_comment(); }
-    public static function ajax_edit_activity_comment() { return IDLM_Admin_Ajax::ajax_edit_activity_comment(); }
-    public static function ajax_delete_activity_comment() { return IDLM_Admin_Ajax::ajax_delete_activity_comment(); }
+    public static function ajax_save_activity_comment() { return IDLM_Admin_Activity_Controller::ajax_save_activity_comment(); }
+    public static function ajax_edit_activity_comment() { return IDLM_Admin_Activity_Controller::ajax_edit_activity_comment(); }
+    public static function ajax_delete_activity_comment() { return IDLM_Admin_Activity_Controller::ajax_delete_activity_comment(); }
     public static function ajax_export_google_conversions() { return IDLM_Admin_Ajax::ajax_export_google_conversions(); }
     public static function ajax_export_leads() { return IDLM_Admin_Ajax::ajax_export_leads(); }
     public static function ajax_add_lead_manual() { return IDLM_Admin_Ajax::ajax_add_lead_manual(); }
     public static function ajax_trigger_manual_audience_sync() { return IDLM_Admin_Ajax::ajax_trigger_manual_audience_sync(); }
-    public static function ajax_test_api_connection() { return IDLM_Admin_Ajax::ajax_test_api_connection(); }
+    public static function ajax_test_api_connection() { return IDLM_Admin_Connection_Controller::ajax_test_api_connection(); }
     public static function ajax_retry_capi_events() { return IDLM_Admin_Ajax::ajax_retry_capi_events(); }
-    public static function ajax_log_js_error() { return IDLM_Admin_Ajax::ajax_log_js_error(); }
-    public static function ajax_clear_telemetry_logs() { return IDLM_Admin_Ajax::ajax_clear_telemetry_logs(); }
-    public static function ajax_download_diagnostic_report() { return IDLM_Admin_Ajax::ajax_download_diagnostic_report(); }
+    public static function ajax_log_js_error() { return IDLM_Admin_Telemetry_Controller::ajax_log_js_error(); }
+    public static function ajax_clear_telemetry_logs() { return IDLM_Admin_Telemetry_Controller::ajax_clear_telemetry_logs(); }
+    public static function ajax_download_diagnostic_report() { return IDLM_Admin_Telemetry_Controller::ajax_download_diagnostic_report(); }
     public static function ajax_save_routing_settings() { return IDLM_Admin_Ajax::ajax_save_routing_settings(); }
     public static function ajax_run_fallback_now() { return IDLM_Admin_Ajax::ajax_run_fallback_now(); }
     public static function ajax_get_mapped_past_leads() { return IDLM_Admin_Ajax::ajax_get_mapped_past_leads(); }
     public static function ajax_sync_mapped_past_batch() { return IDLM_Admin_Ajax::ajax_sync_mapped_past_batch(); }
     public static function ajax_bulk_action() { return IDLM_Admin_Ajax::ajax_bulk_action(); }
-    public static function ajax_get_leads_table() { return IDLM_Admin_Ajax::ajax_get_leads_table(); }
-    public static function ajax_get_kanban_leads() { return IDLM_Admin_Ajax::ajax_get_kanban_leads(); }
+    public static function ajax_get_leads_table() { return IDLM_Admin_Collection_Reads::ajax_get_leads_table(); }
+    public static function ajax_get_kanban_leads() { return IDLM_Admin_Collection_Reads::ajax_get_kanban_leads(); }
     public static function ajax_get_dashboard_stats() { return IDLM_Admin_Ajax::ajax_get_dashboard_stats(); }
     public static function ajax_save_lead_details() { return IDLM_Admin_Ajax::ajax_save_lead_details(); }
     public static function ajax_upload_lead_file() { return IDLM_Admin_Ajax::ajax_upload_lead_file(); }
-    public static function ajax_get_total_leads_count() { return IDLM_Admin_Ajax::ajax_get_total_leads_count(); }
+    public static function ajax_get_total_leads_count() { return IDLM_Admin_Collection_Reads::ajax_get_total_leads_count(); }
     public static function ajax_reset_crm_data() { return IDLM_Admin_Ajax::ajax_reset_crm_data(); }
     public static function ajax_delete_lead() { return IDLM_Admin_Ajax::ajax_delete_lead(); }
     public static function ajax_import_leads_batch() { return IDLM_Admin_Ajax::ajax_import_leads_batch(); }
-    public static function ajax_get_lead_tasks() { return IDLM_Admin_Ajax::ajax_get_lead_tasks(); }
-    public static function ajax_add_lead_task() { return IDLM_Admin_Ajax::ajax_add_lead_task(); }
-    public static function ajax_toggle_task_status() { return IDLM_Admin_Ajax::ajax_toggle_task_status(); }
-    public static function ajax_delete_lead_task() { return IDLM_Admin_Ajax::ajax_delete_lead_task(); }
-    public static function ajax_get_rep_tasks() { return IDLM_Admin_Ajax::ajax_get_rep_tasks(); }
+    public static function ajax_get_lead_tasks() { return IDLM_Admin_Task_Controller::ajax_get_lead_tasks(); }
+    public static function ajax_add_lead_task() { return IDLM_Admin_Task_Controller::ajax_add_lead_task(); }
+    public static function ajax_toggle_task_status() { return IDLM_Admin_Task_Controller::ajax_toggle_task_status(); }
+    public static function ajax_delete_lead_task() { return IDLM_Admin_Task_Controller::ajax_delete_lead_task(); }
+    public static function ajax_get_rep_tasks() { return IDLM_Admin_Task_Controller::ajax_get_rep_tasks(); }
 }

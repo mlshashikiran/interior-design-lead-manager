@@ -606,8 +606,8 @@ idlm_test('production scalability Phase 5 starts with a focused lead-detail AJAX
     $reads = (string) file_get_contents($root . '/includes/class-admin-lead-reads.php');
 
     assert_true(class_exists('IDLM_Admin_Lead_Reads'));
-    assert_contains('return IDLM_Admin_Ajax::ajax_get_lead_details();', $facade);
-    assert_contains('return IDLM_Admin_Lead_Reads::ajax_get_lead_details();', $ajax);
+    assert_contains('return IDLM_Admin_Lead_Reads::ajax_get_lead_details();', $facade);
+    assert_true(!str_contains($ajax, 'function ajax_get_lead_details('), 'The AJAX class inherits the facade method instead of adding a pass-through.');
     assert_contains("check_ajax_referer('idlm_admin_nonce', 'nonce')", $reads);
 
     $handler = strpos($reads, 'public static function ajax_get_lead_details()');

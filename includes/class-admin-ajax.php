@@ -10,17 +10,6 @@ if (!defined('ABSPATH')) {
 }
 
 final class IDLM_Admin_Ajax extends IDLM_Admin {
-    public static function ajax_get_lead_details() {
-        return IDLM_Admin_Lead_Reads::ajax_get_lead_details();
-    }
-
-    /**
-     * AJAX Endpoint: Get lead activity log history for lazy-loading
-     */
-    public static function ajax_get_lead_activity() {
-        return IDLM_Admin_Activity_Controller::ajax_get_lead_activity();
-    }
-
     /**
      * AJAX Endpoint: Inline Quick-Edit row changes
      */
@@ -351,27 +340,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
             wp_send_json_success(array('message' => 'Lead closed as Unqualified — Unable to Contact.'));
         }
         wp_send_json_error(array('message' => 'Select a valid lead decision.'));
-    }
-
-    /**
-     * AJAX Endpoint: Add comment notes in drawer
-     */
-    public static function ajax_save_activity_comment() {
-        return IDLM_Admin_Activity_Controller::ajax_save_activity_comment();
-    }
-
-    /**
-     * AJAX Endpoint: Edit activity comment
-     */
-    public static function ajax_edit_activity_comment() {
-        return IDLM_Admin_Activity_Controller::ajax_edit_activity_comment();
-    }
-
-    /**
-     * AJAX Endpoint: Delete activity comment
-     */
-    public static function ajax_delete_activity_comment() {
-        return IDLM_Admin_Activity_Controller::ajax_delete_activity_comment();
     }
 
     /**
@@ -792,13 +760,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
     }
 
     /**
-     * AJAX Endpoint: Test platform connection and credentials
-     */
-    public static function ajax_test_api_connection() {
-        return IDLM_Admin_Connection_Controller::ajax_test_api_connection();
-    }
-
-    /**
      * AJAX Endpoint: Bulk retry Conversions API events
      */
     public static function ajax_retry_capi_events() {
@@ -840,27 +801,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         }
 
         wp_send_json_success(array('message' => $msg, 'attempts'=>$attempts));
-    }
-
-    /**
-     * AJAX Endpoint: Log Javascript errors to telemetry
-     */
-    public static function ajax_log_js_error() {
-        return IDLM_Admin_Telemetry_Controller::ajax_log_js_error();
-    }
-
-    /**
-     * AJAX Endpoint: Clear telemetry logs table
-     */
-    public static function ajax_clear_telemetry_logs() {
-        return IDLM_Admin_Telemetry_Controller::ajax_clear_telemetry_logs();
-    }
-
-    /**
-     * AJAX/GET Endpoint: Download diagnostic report
-     */
-    public static function ajax_download_diagnostic_report() {
-        return IDLM_Admin_Telemetry_Controller::ajax_download_diagnostic_report();
     }
 
     /**
@@ -1185,20 +1125,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
     }
 
     /**
-     * AJAX Endpoint: Server-side search, paginate and filter leads table
-     */
-    public static function ajax_get_leads_table() {
-        return IDLM_Admin_Collection_Reads::ajax_get_leads_table();
-    }
-
-    /**
-     * AJAX Endpoint: Fetch leads grouped by stage for Kanban board view
-     */
-    public static function ajax_get_kanban_leads() {
-        return IDLM_Admin_Collection_Reads::ajax_get_kanban_leads();
-    }
-
-    /**
      * AJAX Endpoint: Fetch JSON dataset for dashboard widgets & ChartJS
      */
     public static function ajax_get_dashboard_stats() {
@@ -1385,13 +1311,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         // phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         if (is_wp_error($stored)) { wp_send_json_error(array('message' => $stored->get_error_message()), 'idlm_file_denied' === $stored->get_error_code() ? 403 : 500); }
         wp_send_json_success($stored);
-    }
-
-    /**
-     * AJAX Endpoint: Get the total number of leads in the database for reset verification
-     */
-    public static function ajax_get_total_leads_count() {
-        return IDLM_Admin_Collection_Reads::ajax_get_total_leads_count();
     }
 
     /**
@@ -1638,33 +1557,6 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         return 1 === count(array_unique(array_filter($matching_ids)));
     }
 
-    /**
-     * AJAX Endpoint: Get tasks for a specific lead
-     */
-    public static function ajax_get_lead_tasks() {
-        return IDLM_Admin_Task_Controller::ajax_get_lead_tasks();
-    }
-
-    /**
-     * AJAX Endpoint: Add task for a lead
-     */
-    public static function ajax_add_lead_task() {
-        return IDLM_Admin_Task_Controller::ajax_add_lead_task();
-    }
-
-    /**
-     * AJAX Endpoint: Toggle task completion status
-     */
-    public static function ajax_toggle_task_status() {
-        return IDLM_Admin_Task_Controller::ajax_toggle_task_status();
-    }
-
-    /**
-     * AJAX Endpoint: Delete task
-     */
-    public static function ajax_delete_lead_task() {
-        return IDLM_Admin_Task_Controller::ajax_delete_lead_task();
-    }
     private static function manual_task_types() {
         return IDLM_Admin_Task_Controller::manual_task_types();
     }
@@ -1679,9 +1571,5 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
 
     private static function is_system_qualification_task($task) {
         return IDLM_Admin_Task_Controller::is_system_qualification_task($task);
-    }
-
-    public static function ajax_get_rep_tasks() {
-        return IDLM_Admin_Task_Controller::ajax_get_rep_tasks();
     }
 }
