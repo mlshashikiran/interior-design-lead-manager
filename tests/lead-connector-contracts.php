@@ -142,3 +142,24 @@ idlm_test('CONNECTOR wizard distinguishes saved, absent and server-managed crede
     assert_false(strpos($managed,'data-idlm-secret-replace')!==false);
     assert_false(strpos($managed,'data-idlm-secret-clear')!==false);
 });
+
+idlm_test('CONNECTOR wizard leads with the system user token and keeps Facebook sign-in as an option', static function(): void {
+    idlm_test_reset_environment(); idlm_test_login(1, array('administrator'), array('manage_options'));
+    $render = static fn() => IDLM_View::render('admin/settings/lead-connector.php', array('lead_connector'=>IDLM_Lead_Connector::settings_context()));
+    $html = $render();
+    assert_contains('data-idlm-manual-step="1" open', $html);
+    assert_contains('System user access token', $html);
+    assert_contains('needs no Meta App Review', $html);
+    $other = strpos($html, 'Other way: connect with Facebook sign-in');
+    assert_true(false !== $other && strpos($html, 'name="idlm_connector_login_config_id"') > $other && strpos($html, 'data-idlm-facebook-connect') > $other, 'Facebook sign-in sits under the optional section.');
+    assert_true(strpos($html, 'name="idlm_connector_form_ids"') < strpos($html, 'data-idlm-manual-step="2"'), 'Form IDs are entered with the token in step 1.');
+    assert_contains('data-idlm-lead-connector-lines', $html);
+    update_option('idlm_meta_lead_connector', array('enabled'=>'0', 'app_id'=>'444', 'page_id'=>'111', 'forms'=>array('222')));
+    IDLM_Secret_Store::set('idlm_meta_lead_app_secret', 'synthetic-secret'); IDLM_Secret_Store::set('idlm_meta_lead_verify_token', 'synthetic-verify');
+    assert_contains('data-idlm-manual-step="3" open', $render(), 'Saved app, secret and webhook token land on the check step.');
+    update_option('idlm_meta_lead_connector', array('enabled'=>'1', 'app_id'=>'444', 'page_id'=>'111', 'forms'=>array('222')));
+    assert_contains('data-idlm-manual-step="4" open', $render());
+    $js = file_get_contents(dirname(__DIR__) . '/assets/js/settings.js');
+    assert_contains("action: 'idlm_test_lead_connector'", $js);
+    assert_false(strpos($js, "['idlm_connector_login_config_id', 'Facebook Login configuration ID']") !== false, 'The token path does not require a Facebook Login configuration ID.');
+});

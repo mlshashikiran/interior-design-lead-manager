@@ -860,8 +860,7 @@
             }
             function validateDetails() {
                 var required = [
-                    ['idlm_connector_app_id', 'Meta app ID'],
-                    ['idlm_connector_login_config_id', 'Facebook Login configuration ID']
+                    ['idlm_connector_app_id', 'Meta app ID']
                 ];
                 for (var i = 0; i < required.length; i++) {
                     var $input = $wizard.find('[name="' + required[i][0] + '"]');
@@ -896,6 +895,22 @@
             });
             $form.on('idlm-settings-will-save', function() {
                 try { window.sessionStorage.setItem(storageKey, JSON.stringify({step: current, next: $wizard.data('save-next') || current})); } catch (ignored) {}
+            });
+            // Check the saved system user connection (token, permissions, Page subscription, forms).
+            $wizard.on('click', '#idlm-test-lead-connector', function() {
+                var $btn = $(this), $result = $wizard.find('#idlm-lead-connector-result'), $lines = $wizard.find('[data-idlm-lead-connector-lines]');
+                $btn.prop('disabled', true); $result.text('Checking the saved connection with Meta…'); $lines.prop('hidden', true).empty();
+                $.ajax({url: idlm_vars.ajax_url, method: 'POST', data: {action: 'idlm_test_lead_connector', nonce: idlm_vars.nonce}})
+                    .always(function(response, status) {
+                        var body = response && response.responseJSON ? response.responseJSON : response;
+                        var ok = status === 'success' && body && body.success;
+                        var data = body && body.data ? body.data : {};
+                        var lines = $.isArray(data.lines) ? data.lines : [];
+                        $.each(lines, function(i, line) { $('<li>').text(line).appendTo($lines); });
+                        $lines.prop('hidden', !lines.length);
+                        $result.text(ok ? 'Connection checked. Enable sync and save to start.' : (lines.length ? 'Fix the item above, save, and check again.' : (data.message || 'The connection could not be checked.')));
+                        $btn.prop('disabled', false);
+                    });
             });
             $(document).on('idlm-facebook-picker-ready', function() { show(3, false); });
             $(document).on('idlm-facebook-source-saved', function() {

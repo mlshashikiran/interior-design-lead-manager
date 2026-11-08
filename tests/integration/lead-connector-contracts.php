@@ -205,7 +205,7 @@ idlm_integration_test('CONNECTOR-N hosted source survives general settings saves
         idlm_integration_assert_true(!is_wp_error($result));$saved=IDLM_Lead_Connector::config();
         idlm_integration_assert_same('111',$saved['page_id']);idlm_integration_assert_same(array('222'),$saved['forms']);idlm_integration_assert_same($config['connection'],$saved['connection']);idlm_integration_assert_same('hosted',$saved['mode']);
         $context=IDLM_Lead_Connector::settings_context();$html=IDLM_View::render('admin/settings/lead-connector.php',array('lead_connector'=>$context));
-        idlm_integration_assert_true(strpos($html,'Reconnect Facebook')!==false);idlm_integration_assert_true(strpos($html,'Advanced: connect using a Page access token')!==false);
+        idlm_integration_assert_true(strpos($html,'Reconnect Facebook')!==false);idlm_integration_assert_true(strpos($html,'System user access token')!==false);
         $user=get_current_user_id();wp_set_current_user(0);try{idlm_integration_assert_true(is_wp_error(IDLM_Facebook_Connect::operation('start',array('return_url'=>'https://example.test/'))));}finally{wp_set_current_user($user);}
     } finally { update_option('idlm_meta_lead_connector',$previous,false);IDLM_Lead_Connector::save_settings(array()); }
 });

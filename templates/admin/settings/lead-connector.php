@@ -20,53 +20,76 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
     <?php endif; ?>
     <?php
     $idlm_credentials=$idlm_connector['credentials'] ?? array();
-    $idlm_app_ready=!empty($idlm_config['app_id']) && !empty($idlm_config['login_config_id']) && !empty($idlm_credentials['app_secret']);
-    $idlm_manual_step=!$idlm_app_ready ? 1 : (empty($idlm_credentials['verify_token']) ? 2 : (empty($idlm_facebook['connected']) ? 3 : 4));
+    $idlm_app_ready=!empty($idlm_config['app_id']) && !empty($idlm_credentials['app_secret']);
+    $idlm_manual_step=!$idlm_app_ready ? 1 : (empty($idlm_credentials['verify_token']) ? 2 : (empty($idlm_config['enabled']) ? 3 : 4));
     ?>
     <div class="idlm-meta-wizard" data-idlm-manual-setup data-idlm-wizard-initial="<?php echo (int)$idlm_manual_step; ?>" data-idlm-wizard-error="<?php echo !empty($idlm_connector['error']) ? '1' : '0'; ?>">
-        <p>Connect your own Meta app in four steps. Your progress stays in this form as you move between steps.</p>
+        <p>Connect your own Meta app with a system user token. It does not expire and needs no Meta App Review for your own Page.</p>
         <nav class="idlm-meta-wizard__steps" aria-label="Meta connection setup">
-            <?php foreach (array(1=>'Meta app',2=>'Webhook',3=>'Facebook and forms',4=>'Review') as $idlm_step=>$idlm_title): ?>
+            <?php foreach (array(1=>'App and token',2=>'Webhook',3=>'Check and start',4=>'Field mapping') as $idlm_step=>$idlm_title): ?>
                 <button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-wizard-go="<?php echo (int)$idlm_step; ?>"><span><?php echo (int)$idlm_step; ?></span> <?php echo esc_html($idlm_title); ?></button>
             <?php endforeach; ?>
         </nav>
         <p role="status" aria-live="polite" data-idlm-wizard-status></p>
         <input type="hidden" name="idlm_connector_settings" value="1">
         <details data-idlm-manual-step="1" <?php echo $idlm_manual_step===1 ? 'open' : ''; ?>>
-            <summary><strong>1. Set up your Meta app</strong></summary>
-            <p>In Meta for Developers, open your app and its Facebook Login for Business configuration. Copy the two IDs below. Choose a user access token configuration with Page listing, lead retrieval and Page subscription permissions.</p>
+            <summary><strong>1. Meta app and system user token</strong></summary>
+            <ol class="idlm-meta-wizard__howto">
+                <li>In Meta for Developers, create a <strong>Business</strong> app owned by the business that owns your Facebook Page, add a privacy policy URL, and switch it to <strong>Live</strong>. No App Review is needed.</li>
+                <li>In Business Settings &gt; Users &gt; System users, add a system user. Assign it your app and your Page (full control).</li>
+                <li>Generate a token for the app with <code>leads_retrieval</code>, <code>pages_manage_metadata</code>, <code>pages_read_engagement</code>, <code>pages_show_list</code> and <code>pages_manage_ads</code>. Set expiry to <strong>Never</strong>.</li>
+                <li>In Business Settings &gt; Integrations &gt; Leads access, allow the app or system user to read leads.</li>
+            </ol>
             <div class="idlm-form-grid two">
-            <?php foreach (array('app_id'=>'Meta app ID','login_config_id'=>'Facebook Login configuration ID') as $idlm_key=>$idlm_label): ?>
                 <div class="idlm-form-group">
-                    <label for="idlm-connector-<?php echo esc_attr($idlm_key); ?>"><?php echo esc_html($idlm_label); ?></label>
-                    <input type="text" inputmode="numeric" class="idlm-input" id="idlm-connector-<?php echo esc_attr($idlm_key); ?>" name="idlm_connector_<?php echo esc_attr($idlm_key); ?>" value="<?php echo esc_attr($idlm_config[$idlm_key] ?? ''); ?>">
+                    <label for="idlm-connector-app_id">Meta app ID</label>
+                    <input type="text" inputmode="numeric" class="idlm-input" id="idlm-connector-app_id" name="idlm_connector_app_id" value="<?php echo esc_attr($idlm_config['app_id'] ?? ''); ?>">
                 </div>
-            <?php endforeach; ?>
             <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The fixed credential subtemplate escapes labels/IDs and outputs only credential-presence booleans; saved secret values are never passed.
         echo IDLM_View::render('admin/settings/connector-secret.php', array('key'=>'app_secret','label'=>'Meta app secret','saved'=>$idlm_credentials['app_secret'] ?? false,'managed'=>$idlm_connector['managed_credentials']['app_secret'] ?? false)); ?>
-            </div>
-            <div class="idlm-form-group">
-                <label for="idlm-facebook-redirect-url">Facebook Login redirect URL</label>
-                <input class="idlm-input" id="idlm-facebook-redirect-url" value="<?php echo esc_attr(IDLM_Facebook_Direct::callback_url()); ?>" readonly>
-                <p class="description">Add this exact URL to your app’s valid OAuth redirect URIs. Live sign-in requires a public HTTPS address.</p>
+            <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The fixed credential subtemplate escapes labels/IDs and outputs only credential-presence booleans; saved secret values are never passed.
+        echo IDLM_View::render('admin/settings/connector-secret.php', array('key'=>'access_token','label'=>'System user access token','saved'=>$idlm_credentials['access_token'] ?? false,'managed'=>$idlm_connector['managed_credentials']['access_token'] ?? false)); ?>
+                <div class="idlm-form-group"><label for="idlm-connector-page_id">Facebook Page ID</label><input class="idlm-input" inputmode="numeric" id="idlm-connector-page_id" name="idlm_connector_page_id" value="<?php echo esc_attr($idlm_config['page_id'] ?? ''); ?>"><p class="description">Page settings &gt; About &gt; Page transparency, or Business Settings &gt; Pages.</p></div>
+                <div class="idlm-form-group"><label for="idlm-connector-forms">Instant Form IDs (comma-separated)</label><input class="idlm-input" id="idlm-connector-forms" name="idlm_connector_form_ids" value="<?php echo esc_attr(implode(', ', $idlm_config['forms'] ?? array())); ?>"><p class="description">One to twenty form IDs from Meta Business Suite &gt; Instant forms.</p></div>
             </div>
             <div class="idlm-table-actions"><button type="button" class="idlm-btn idlm-btn-primary" data-idlm-manual-next="2">Next: webhook</button></div>
         </details>
         <details data-idlm-manual-step="2" <?php echo $idlm_manual_step===2 ? 'open' : ''; ?>>
             <summary><strong>2. Configure the lead webhook</strong></summary>
-            <p>Choose a verification token and use that same value in your Meta app’s Page webhook settings. Add the callback below and select the <code>leadgen</code> field.</p>
+            <p>In your Meta app, add the Webhooks product, choose <strong>Page</strong>, enter the callback URL and a verification token of your choice, then subscribe to the <code>leadgen</code> field. Use the same token here.</p>
             <div class="idlm-form-grid two">
                 <div class="idlm-form-group"><label for="idlm-connector-url">Meta Lead Ads callback URL</label><input class="idlm-input" id="idlm-connector-url" value="<?php echo esc_attr(get_rest_url(null,'idlm/v1/meta-leads')); ?>" readonly></div>
                 <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The fixed credential subtemplate escapes labels/IDs and outputs only credential-presence booleans; saved secret values are never passed.
         echo IDLM_View::render('admin/settings/connector-secret.php', array('key'=>'verify_token','label'=>'Webhook verification token','saved'=>$idlm_credentials['verify_token'] ?? false,'managed'=>$idlm_connector['managed_credentials']['verify_token'] ?? false)); ?>
-                <div class="idlm-form-group"><label for="idlm-connector-page_id">Facebook Page ID</label><input class="idlm-input" inputmode="numeric" id="idlm-connector-page_id" name="idlm_connector_page_id" value="<?php echo esc_attr($idlm_config['page_id'] ?? ''); ?>"><p class="description">Needed to verify the webhook before connecting. You can also select your Page in the next step, then finish webhook verification in Meta.</p></div>
             </div>
-            <p class="description">Saved verification tokens stay hidden. If you no longer know yours, replace it here and use the replacement in Meta. Saving details also saves the other settings on this page.</p>
+            <p class="description">Saved tokens stay hidden. If you no longer know yours, replace it here and use the replacement in Meta. Saving details also saves the other settings on this page.</p>
             <div class="idlm-table-actions"><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-manual-next="1">Back</button><button type="submit" class="idlm-btn idlm-btn-primary" data-idlm-wizard-save-next="3">Save details and continue</button></div>
         </details>
         <details data-idlm-manual-step="3" <?php echo $idlm_manual_step===3 ? 'open' : ''; ?>>
-            <summary><strong>3. Connect Facebook and choose forms</strong></summary>
-            <p>Sign in to Facebook, approve access, then choose your Page and the individual forms to sync. The Page access token is saved automatically.</p>
+            <summary><strong>3. Check the connection and start syncing</strong></summary>
+            <p>The check confirms the token and its permissions, subscribes your Page’s new leads to the app if needed, and confirms each form is readable. It reads one lead ID per form and imports nothing.</p>
+            <div class="idlm-table-actions">
+                <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-test-lead-connector">Check saved Meta lead connection</button>
+            </div>
+            <ul class="idlm-meta-wizard__check" data-idlm-lead-connector-lines hidden></ul>
+            <p id="idlm-lead-connector-result" role="status" aria-live="polite"></p>
+            <label><input type="checkbox" name="idlm_meta_lead_sync" value="1" <?php checked($idlm_config['enabled'] ?? '0','1'); ?>> Enable direct Instant Form sync</label>
+            <p class="description">Leads submitted from now on are imported automatically, and missed ones from the last seven days are recovered in the background. Uncheck and save to stop imports; existing CRM records stay unchanged.</p>
+            <div class="idlm-table-actions"><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-manual-next="2">Back</button><button type="submit" class="idlm-btn idlm-btn-primary">Save setup</button><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-manual-next="4">Next: field mapping</button></div>
+            <details class="idlm-meta-wizard__advanced">
+                <summary>Other way: connect with Facebook sign-in</summary>
+                <p>Instead of a system user token, an administrator can sign in with Facebook to choose the Page and forms. This needs a Facebook Login for Business configuration, and the Page token comes from that administrator’s account.</p>
+                <div class="idlm-form-grid two">
+                    <div class="idlm-form-group">
+                        <label for="idlm-connector-login_config_id">Facebook Login configuration ID</label>
+                        <input type="text" inputmode="numeric" class="idlm-input" id="idlm-connector-login_config_id" name="idlm_connector_login_config_id" value="<?php echo esc_attr($idlm_config['login_config_id'] ?? ''); ?>">
+                    </div>
+                    <div class="idlm-form-group">
+                        <label for="idlm-facebook-redirect-url">Facebook Login redirect URL</label>
+                        <input class="idlm-input" id="idlm-facebook-redirect-url" value="<?php echo esc_attr(IDLM_Facebook_Direct::callback_url()); ?>" readonly>
+                        <p class="description">Add this exact URL to your app’s valid OAuth redirect URIs. Live sign-in requires a public HTTPS address.</p>
+                    </div>
+                </div>
     <div class="idlm-meta-connector__connection" data-idlm-facebook-connect data-idlm-facebook-ready="<?php echo !empty($idlm_facebook['ready']) ? '1' : '0'; ?>">
         <div class="idlm-meta-connector__connection-row">
         <div class="idlm-meta-connector__connection-heading"><strong>Connect with Facebook</strong><span>Approve access, then choose a Page and its forms. This site connects directly to Meta.</span></div>
@@ -82,8 +105,8 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
         <?php endif; ?>
         <?php if (empty($idlm_facebook['ready'])): ?>
         <div class="idlm-alert idlm-alert-warning" data-idlm-notice-inline tabindex="-1" data-idlm-facebook-setup>
-            <p><strong>Facebook sign-in is not available yet.</strong> Save your Meta app ID, Facebook Login configuration ID and app secret in step 1. Use a public HTTPS CRM address.</p>
-            <p>Use Back to finish app setup, then save your details in step 2.</p>
+            <p><strong>Facebook sign-in is not available yet.</strong> Save your Meta app ID and app secret in step 1 and the Facebook Login configuration ID here. Use a public HTTPS CRM address.</p>
+            
         </div>
         <?php endif; ?>
         <p role="status" aria-live="polite" data-idlm-facebook-status></p>
@@ -103,20 +126,19 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
             </fieldset>
         </div>
     </div>
-            <div class="idlm-table-actions"><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-manual-next="2">Back</button><button type="button" class="idlm-btn idlm-btn-primary" data-idlm-manual-next="4">Next: review</button></div>
+            </details>
         </details>
         <details data-idlm-manual-step="4" <?php echo $idlm_manual_step===4 ? 'open' : ''; ?>>
-            <summary><strong>4. Review and test</strong></summary>
+            <summary><strong>4. Field mapping</strong></summary>
             <dl class="idlm-meta-wizard__review">
                 <dt>Saved Meta app</dt><dd><?php echo esc_html($idlm_config['app_id'] ?? ''); ?></dd>
                 <dt>Saved Facebook Page</dt><dd><?php echo esc_html($idlm_config['page_name'] ?? ($idlm_config['page_id'] ?? 'Not selected')); ?></dd>
                 <dt>Saved forms</dt><dd><?php echo esc_html(implode(', ', $idlm_config['form_names'] ?? ($idlm_config['forms'] ?? array())) ?: 'Not selected'); ?></dd>
             </dl>
-            <p>Facebook sign-in enables sync after you confirm the selected forms. You can check the saved connection or turn off importing here. This checks Page subscription and access to the first form; send a test lead for each selected form to confirm delivery and field mapping.</p>
     <details open>
         <summary>Instant Form field mappings</summary>
         <p class="description">Load a form’s Meta fields, choose a CRM destination for each, then save that form’s mapping. Previously imported leads are not remapped automatically. Unmapped answers remain in encrypted submission details.</p>
-        <?php if (empty($idlm_config['forms'])): ?><p>Select and save your forms in step 3 first.</p><?php endif; ?>
+        <?php if (empty($idlm_config['forms'])): ?><p>Save your form IDs in step 1 first.</p><?php endif; ?>
         <?php foreach (($idlm_config['forms'] ?? array()) as $idlm_index=>$idlm_form): ?>
         <fieldset class="idlm-meta-form-mapping" data-idlm-form-mapping data-idlm-form-id="<?php echo esc_attr($idlm_form); ?>">
             <legend data-idlm-form-name><?php echo esc_html($idlm_config['form_names'][$idlm_form] ?? ($idlm_config['form_names'][$idlm_index] ?? ('Form '.$idlm_form))); ?></legend>
@@ -141,13 +163,6 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
         </details>
     </details>
 
-            <div class="idlm-table-actions">
-                <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-test-lead-connector">Check saved Meta lead connection</button>
-            </div>
-            <p id="idlm-lead-connector-result" role="status" aria-live="polite"></p>
-            <label><input type="checkbox" name="idlm_meta_lead_sync" value="1" <?php checked($idlm_config['enabled'] ?? '0','1'); ?>> Enable direct Instant Form sync</label>
-            <p class="description">This is the saved on/off switch for importing leads from the selected forms. Start syncing turns it on automatically. Uncheck and save to stop imports; existing CRM records stay unchanged. Queued imports encountered by the worker while disabled are cancelled. Imports need the site’s scheduled worker to run.</p>
-            <button type="submit" class="idlm-btn idlm-btn-primary">Save setup</button>
             <details class="idlm-meta-wizard__advanced"><summary>Advanced: import recovery</summary>
             <label><input type="checkbox" name="idlm_connector_retry" value="1"> Retry failed queued imports when saving settings (up to 100 records checked)</label>
             <p class="description">Use this if a lead failed to import because of a temporary API or permission problem. It resets failed attempts among up to 100 queued records. Automatic retrieval retries up to five times, and queued data expires after seven days. This does not import historical leads.</p>
@@ -155,15 +170,7 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
                 <p class="description">Last connector result: <?php echo esc_html(($idlm_status['provider'] ?? '').' — '.($idlm_status['state'] ?? '').' — '.wp_date('Y-m-d H:i:s',(int)$idlm_status['at'])); ?></p>
             <?php endif; ?>
             </details>
-            <details class="idlm-meta-wizard__advanced"><summary>Advanced: connect using a Page access token</summary>
-                <p>An alternative to Facebook sign-in: supply your own Page token and form IDs manually. Leave this closed when using Connect Facebook; that flow obtains the token and form IDs for you.</p>
-                <div class="idlm-form-grid two">
-                    <div class="idlm-form-group"><label for="idlm-connector-forms">Instant Form IDs (comma-separated)</label><input class="idlm-input" id="idlm-connector-forms" name="idlm_connector_form_ids" value="<?php echo esc_attr(implode(', ', $idlm_config['forms'] ?? array())); ?>"><p class="description">One to twenty form IDs belonging to the Page in step 2.</p></div>
-                    <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The fixed credential subtemplate escapes labels/IDs and outputs only credential-presence booleans; saved secret values are never passed.
-        echo IDLM_View::render('admin/settings/connector-secret.php', array('key'=>'access_token','label'=>'Page access token','saved'=>$idlm_credentials['access_token'] ?? false,'managed'=>$idlm_connector['managed_credentials']['access_token'] ?? false)); ?>
-                </div>
-            </details>
-            <button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-manual-next="3">Back</button>
+            <div class="idlm-table-actions"><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-manual-next="3">Back</button><button type="submit" class="idlm-btn idlm-btn-primary">Save setup</button></div>
         </details>
     </div>
 </article>

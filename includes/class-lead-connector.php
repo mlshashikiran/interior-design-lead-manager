@@ -359,9 +359,11 @@ final class IDLM_Lead_Connector {
                 $result=$job['provider'] === 'meta' ? self::import_meta($job['payload'],$job['created_at']) : self::import_interakt($job['payload'],$job['created_at']);
                 if (is_wp_error($result) && $result->get_error_code() === 'idlm_connector_erased') { return self::finish($key,$job,'cancelled'); }
                 if ($result && !is_wp_error($result)) { return self::finish($key,$job,is_array($result) && !empty($result['requires_duplicate_review']) ? 'review' : 'imported'); }
-                $job['state']=$job['attempts'] >= self::MAX_ATTEMPTS ? 'failed' : 'queued';
+                // A mapping error waits for an admin fix and "Retry failed imports" instead of the timer.
+                $mapping=is_wp_error($result) && in_array($result->get_error_code(),self::MAPPING_ERRORS,true);
+                $job['state']=$mapping || $job['attempts'] >= self::MAX_ATTEMPTS ? 'failed' : 'queued';
                 $job['next_at']=time()+min(3600,60*(2 ** $job['attempts']));
-                self::write_job($key,$job); self::status($job['provider'],'retry_required');
+                self::write_job($key,$job); self::status($job['provider'],$mapping ? 'mapping_failed' : 'retry_required');
                 return false;
             } finally { self::unlock($lock); }
         });
@@ -395,13 +397,17 @@ final class IDLM_Lead_Connector {
     public static function graph($path,$query=array()) {
         if (IDLM_Facebook_Connect::hosted()) { return IDLM_Facebook_Connect::graph($path,$query); }
         $token=self::option('idlm_meta_lead_access_token','');
-        if (!is_string($token) || $token === '' || !preg_match('#^[1-9][0-9]{0,31}(?:/(?:leads|subscribed_apps))?$#D',$path)) { return new WP_Error('idlm_connector_config','Lead access token or resource is unavailable.'); }
+        if (!is_string($token) || $token === '' || !preg_match('#^(?:me(?:/permissions)?|[1-9][0-9]{0,31}(?:/(?:leads|subscribed_apps))?)$#D',$path)) { return new WP_Error('idlm_connector_config','Lead access token or resource is unavailable.'); }
         $url='https://graph.facebook.com/'.IDLM_CAPI_Transport::GRAPH_VERSION.'/'.$path;
         if ($query) { $url=add_query_arg($query,$url); }
         $response=IDLM_Secret_Store::request($url,array('headers'=>array('Authorization'=>'Bearer '.$token),'timeout'=>10,'limit_response_size'=>524288),array($token),'GET');
         if (is_wp_error($response)) { return new WP_Error('idlm_connector_api','Meta lead retrieval failed; check connectivity and lead permissions.'); }
         $data=json_decode(wp_remote_retrieve_body($response),true,32);
-        if (wp_remote_retrieve_response_code($response)!==200 || !is_array($data) || isset($data['error'])) { return new WP_Error('idlm_connector_api','Meta refused lead access. Check the token, Page, form and lead permissions.'); }
+        if (wp_remote_retrieve_response_code($response)!==200 || !is_array($data) || isset($data['error'])) {
+            // Keep only Meta's numeric error code; the message may echo request data.
+            $code=is_array($data) && is_array($data['error'] ?? null) && is_numeric($data['error']['code'] ?? null) ? (int)$data['error']['code'] : 0;
+            return new WP_Error('idlm_connector_api','Meta refused lead access. Check the token, Page, form and lead permissions.',array('meta_code'=>$code));
+        }
         return $data;
     }
 
@@ -424,12 +430,23 @@ final class IDLM_Lead_Connector {
         return $data;
     }
 
+    /** Retry with fewer fields only for an unsupported field (100) or an unknown error; never on throttling or token errors. Builder: Shashi. */
+    public static function field_fallback($result) {
+        if (!is_wp_error($result)) { return false; }
+        $data=$result->get_error_data();
+        $code=is_array($data) ? (int)($data['meta_code'] ?? 0) : 0;
+        return 0 === $code || 100 === $code;
+    }
+
+    /** Errors that only an admin can fix (form mapping or a malformed record); retrying on a timer cannot help. */
+    const MAPPING_ERRORS = array('idlm_connector_contact', 'idlm_connector_lead', 'idlm_connector_identity');
+
     private static function import_meta($notification,$queued_at) {
         // Optional fields may be unavailable for a particular token, API version or lead.
         // Never let enrichment failure prevent the established lead retrieval path.
         $record=self::graph($notification['id'],array('fields'=>self::META_FULL_FIELDS));
-        if (is_wp_error($record)) { $record=self::graph($notification['id'],array('fields'=>self::META_ATTRIBUTION_FIELDS)); }
-        if (is_wp_error($record)) { $record=self::graph($notification['id'],array('fields'=>self::META_BASE_FIELDS)); }
+        if (self::field_fallback($record)) { $record=self::graph($notification['id'],array('fields'=>self::META_ATTRIBUTION_FIELDS)); }
+        if (self::field_fallback($record)) { $record=self::graph($notification['id'],array('fields'=>self::META_BASE_FIELDS)); }
         if (is_wp_error($record)) { return $record; }
         if (($record['id'] ?? '') !== $notification['id'] || ($record['form_id'] ?? '') !== $notification['form_id']) { return new WP_Error('idlm_connector_identity','Retrieved lead identity differs from the notification.'); }
         $config=self::config(); $data=self::map_meta($record,self::form_mapping($notification['form_id'],$config));
@@ -591,16 +608,70 @@ final class IDLM_Lead_Connector {
             if (is_wp_error($result)) { wp_send_json_error(array('message'=>$result->get_error_message()),400); }
             wp_send_json_success(array('message'=>'Facebook Page subscription and lead access verified.'));
         }
-        if (!self::id($config['page_id'] ?? null) || !self::id($config['app_id'] ?? null) || empty($config['forms'])) { wp_send_json_error(array('message'=>'Save the Page, app, forms and lead token first.'),400); }
-        $subscription=self::graph($config['page_id'].'/subscribed_apps',array('fields'=>'id,subscribed_fields','limit'=>100));
-        if (is_wp_error($subscription)) { wp_send_json_error(array('message'=>$subscription->get_error_message()),400); }
-        $found=false;
-        foreach ($subscription['data'] ?? array() as $app) { if (($app['id'] ?? '')===$config['app_id'] && in_array('leadgen',$app['subscribed_fields'] ?? array(),true)) { $found=true; } }
-        if (!$found) { wp_send_json_error(array('message'=>'The configured app is not subscribed to this Page’s leadgen events.'),400); }
-        $form=self::graph($config['forms'][0],array('fields'=>'id,page'));
-        if (is_wp_error($form) || ($form['page']['id'] ?? '')!==$config['page_id']) { wp_send_json_error(array('message'=>'The first form is unavailable or belongs to a different Page.'),400); }
-        $result=self::graph($config['forms'][0].'/leads',array('fields'=>'id','limit'=>1));
-        if (is_wp_error($result)) { wp_send_json_error(array('message'=>$result->get_error_message()),400); }
-        wp_send_json_success(array('message'=>'Page subscription and first-form lead access verified. Send a test lead to validate mapping and delivery.'));
+        $report=self::check_connection();
+        if (!$report['ok']) { wp_send_json_error(array('message'=>implode(' ',$report['lines']),'lines'=>$report['lines']),400); }
+        wp_send_json_success(array('message'=>implode(' ',$report['lines']),'lines'=>$report['lines']));
     }
+
+    /** Permissions a system user token needs for Page lead retrieval and the leadgen webhook. */
+    const TOKEN_PERMISSIONS = array('leads_retrieval','pages_manage_metadata','pages_read_engagement','pages_show_list','pages_manage_ads');
+
+    /**
+     * Check a saved manual (system user token) connection end to end and subscribe the
+     * app to the Page's leadgen field when it is missing. Lead data is never read:
+     * only one lead ID is requested. Builder: Shashi.
+     */
+    public static function check_connection() {
+        $config=self::config(); $lines=array();
+        if (!self::id($config['page_id'] ?? null) || !self::id($config['app_id'] ?? null) || empty($config['forms'])) {
+            return array('ok'=>false,'lines'=>array('Save the Meta app ID, Page ID, form IDs and access token first.'));
+        }
+        $me=self::graph('me',array('fields'=>'id,name'));
+        if (is_wp_error($me)) { return array('ok'=>false,'lines'=>array('Meta did not accept the saved access token. Generate a new system user token and save it.')); }
+        $permissions=self::graph('me/permissions');
+        if (is_wp_error($permissions) || !is_array($permissions['data'] ?? null)) {
+            $lines[]='Token accepted (a Page token: its permissions cannot be listed).';
+        } else {
+            $granted=array();
+            foreach ($permissions['data'] as $row) { if (is_array($row) && ($row['status'] ?? '')==='granted' && is_string($row['permission'] ?? null)) { $granted[]=$row['permission']; } }
+            $missing=array_values(array_diff(self::TOKEN_PERMISSIONS,$granted));
+            $lines[]=$missing ? 'Token accepted, but it is missing: '.implode(', ',$missing).'. Regenerate it with these permissions.' : 'Token accepted with all lead permissions.';
+        }
+        $subscription=self::graph($config['page_id'].'/subscribed_apps',array('fields'=>'id,subscribed_fields','limit'=>100));
+        if (is_wp_error($subscription)) { $lines[]='The Page’s webhook subscriptions could not be read. Assign the Page to the system user with full control.'; return array('ok'=>false,'lines'=>$lines); }
+        $fields=array('leadgen'); $found=false;
+        foreach ($subscription['data'] ?? array() as $app) {
+            if (($app['id'] ?? '')!==$config['app_id']) { continue; }
+            foreach ($app['subscribed_fields'] ?? array() as $field) { if (is_string($field) && preg_match('/^[a-z_]+$/D',$field)) { $fields[]=$field; } }
+            $found=in_array('leadgen',$app['subscribed_fields'] ?? array(),true);
+        }
+        if ($found) { $lines[]='The Page sends new leads to this app.'; }
+        else {
+            $subscribed=self::subscribe_page($config['page_id'],array_values(array_unique($fields)));
+            if (is_wp_error($subscribed)) { $lines[]='The app is not subscribed to this Page’s leads, and subscribing failed. Check that the token has pages_manage_metadata and the Page is assigned to the system user.'; return array('ok'=>false,'lines'=>$lines); }
+            $lines[]='Subscribed the Page’s new leads to this app.';
+        }
+        foreach ($config['forms'] as $form) {
+            $data=self::graph($form,array('fields'=>'id,page'));
+            if (is_wp_error($data) || ($data['page']['id'] ?? '')!==$config['page_id']) { $lines[]='Form '.$form.' is unavailable or belongs to a different Page.'; return array('ok'=>false,'lines'=>$lines); }
+            $leads=self::graph($form.'/leads',array('fields'=>'id','limit'=>1));
+            if (is_wp_error($leads)) { $lines[]='Leads of form '.$form.' cannot be read. In Leads Access, allow this app or system user.'; return array('ok'=>false,'lines'=>$lines); }
+        }
+        $lines[]='All '.count($config['forms']).' form(s) are readable. Submit a test lead to confirm delivery and field mapping.';
+        return array('ok'=>true,'lines'=>$lines);
+    }
+
+    /** POST the Page's app subscription with a Page token derived from the saved token; the Page token is used once and never stored. */
+    private static function subscribe_page($page,$fields) {
+        if (IDLM_Facebook_Connect::hosted()) { return new WP_Error('idlm_connector_config','Hosted connections manage their own subscription.'); }
+        $page_data=self::graph($page,array('fields'=>'access_token'));
+        $page_token=is_array($page_data) && is_string($page_data['access_token'] ?? null) && $page_data['access_token']!=='' ? $page_data['access_token'] : '';
+        if ($page_token==='') { return new WP_Error('idlm_connector_api','Page token unavailable.'); }
+        $url='https://graph.facebook.com/'.IDLM_CAPI_Transport::GRAPH_VERSION.'/'.$page.'/subscribed_apps';
+        $response=IDLM_Secret_Store::request($url,array('headers'=>array('Authorization'=>'Bearer '.$page_token),'body'=>array('subscribed_fields'=>implode(',',$fields)),'timeout'=>10,'limit_response_size'=>65536),array($page_token,(string)self::option('idlm_meta_lead_access_token','')));
+        if (is_wp_error($response)) { return $response; }
+        $data=json_decode(wp_remote_retrieve_body($response),true,8);
+        return wp_remote_retrieve_response_code($response)===200 && is_array($data) && ($data['success'] ?? false)===true ? true : new WP_Error('idlm_connector_api','Subscription refused.');
+    }
+
 }

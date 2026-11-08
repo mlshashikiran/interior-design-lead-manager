@@ -6965,6 +6965,10 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 .idlm-wrap .idlm-meta-wizard__review { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 20px; }
 .idlm-wrap .idlm-meta-wizard__review dd { margin: 0; overflow-wrap: anywhere; }
 .idlm-wrap .idlm-meta-wizard__advanced { margin: 16px 0; }
+.idlm-wrap .idlm-meta-wizard__howto,
+.idlm-wrap .idlm-meta-wizard__check { margin: 0 0 16px; padding-inline-start: 20px; }
+.idlm-wrap .idlm-meta-wizard__howto li,
+.idlm-wrap .idlm-meta-wizard__check li { margin-block-end: 6px; overflow-wrap: anywhere; }
 @media (max-width: 600px) {
   .idlm-wrap .idlm-meta-wizard__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .idlm-wrap .idlm-meta-wizard > details { padding: 14px; }
