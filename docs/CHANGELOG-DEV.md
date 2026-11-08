@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.105.1 — Saved secret status in settings (2026-11-08)
+
+Builder: Shashi. `IDLM_Admin_Settings_Renderer::credential_saved()` reads whether a platform secret is stored or environment-managed, and `credential_saved_attribute()` prints `data-idlm-secret-configured` on the seven write-only secret inputs so `settings.js` shows "Saved securely". Values stay out of the page. Test: `INT010 saved write-only secrets report their saved state without their value`. No schema change.
+
 ## 1.105.0 — Meta Conversions API review and Meta lead sync (2026-11-08)
 
 Builder: Shashi. Releases PRs #8–#12: the CAPI review fixes and decisions in [CAPI-REVIEW.md](CAPI-REVIEW.md), the direct lead sync review and decisions L-D1 to L-D6 in [LEAD-SYNC-REVIEW.md](LEAD-SYNC-REVIEW.md), `_fbc`/`_fbp` webhook field mapping and the Qualified handoffs card fix. Core schema 1.3.18 adds the `fbc` and `fbp` lead columns. Release version and schema versions stay independent.

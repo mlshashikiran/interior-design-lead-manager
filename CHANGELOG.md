@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.105.1] - 2026-11-08
+
+### Fixed
+
+- Saved write-only credentials (Meta access token, GA4 API secret, LinkedIn access token, Interakt API key and webhook secret, Meta webhook verify token and app secret) showed "Not configured" because the page never knew a value was saved. They now show "Saved securely"; the value itself still never reaches the page. No schema change. Builder: Shashi.
+
 ## [1.105.0] - 2026-11-08
 
 Core schema 1.3.18 adds `fbc` and `fbp` lead columns; the update adds them without changing existing lead rows.

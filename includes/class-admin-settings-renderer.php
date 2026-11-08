@@ -24,6 +24,23 @@ class IDLM_Admin_Settings_Renderer {
     }
 
     /**
+     * Whether a write-only platform secret has a saved or server-managed value. The value itself
+     * never reaches the page; the settings script reads this to show "Saved securely".
+     */
+    public static function credential_saved($credential) {
+        if (!current_user_can('manage_options')) { return false; }
+        $option = 'idlm_' . sanitize_key($credential);
+        if (IDLM_Secret_Store::is_environment_managed($option)) { return true; }
+        $stored = IDLM_Secret_Store::stored($option);
+        return is_string($stored) && '' !== $stored;
+    }
+
+    /** Prints the saved-state attribute the settings script reads for a write-only secret. */
+    public static function credential_saved_attribute($credential) {
+        echo ' data-idlm-secret-configured="' . (self::credential_saved($credential) ? '1' : '0') . '"';
+    }
+
+    /**
      * Return an established credential value only inside the authorized settings view.
      *
      * Credential values deliberately remain outside the shared template context.
