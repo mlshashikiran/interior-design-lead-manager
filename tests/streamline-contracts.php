@@ -209,7 +209,7 @@ idlm_test('STREAMLINE AJAX hooks reach their controller in one hop and the old A
     $facade = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin.php');
     $ajax = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-ajax.php');
     preg_match_all('/add_action\(\'wp_ajax_idlm_(\w+)\', array\(__CLASS__, \'(ajax_\w+)\'\)\);/', $facade, $hooks, PREG_SET_ORDER);
-    assert_same(40, count($hooks), 'Every AJAX hook is still registered on the facade.');
+    assert_same(41, count($hooks), 'Every AJAX hook is still registered on the facade.');
     foreach ($hooks as $hook) {
         assert_same('ajax_' . $hook[1], $hook[2]);
         assert_true(is_callable(array('IDLM_Admin', $hook[2])) && is_callable(array('IDLM_Admin_Ajax', $hook[2])), $hook[2] . ' stays callable on both classes.');

@@ -227,6 +227,45 @@ final class IDLM_CAPI_Transport {
         }
     }
 
+    /** Meta Events Manager test code: Meta issues codes like TEST12345. */
+    public static function valid_test_event_code($code) {
+        return is_string($code) && 1 === preg_match('/^TEST[A-Za-z0-9]{1,32}$/D', $code);
+    }
+
+    /**
+     * One synthetic event to Events Manager > Test Events (CAPI review D11). It
+     * carries no lead data, writes no receipt or log, and needs the admin's
+     * short-lived test code, which is never saved. Builder: Shashi.
+     */
+    public static function send_meta_test_event($pixel_id, $access_token, $test_event_code) {
+        if (!self::valid_test_event_code($test_event_code)) { return array('success'=>false, 'message'=>'Enter the test code shown in Events Manager > Test Events (for example TEST12345).'); }
+        if ('' === (string) $pixel_id || '' === (string) $access_token) { return array('success'=>false, 'message'=>'Save the Meta Pixel ID and access token first.'); }
+        $payload = array(
+            'data' => array(array(
+                'event_name' => 'Lead',
+                'event_time' => time(),
+                'action_source' => 'system_generated',
+                'event_id' => 'idlm_test_' . bin2hex(random_bytes(8)),
+                'user_data' => array('external_id' => array(hash('sha256', 'idlm-test-event|' . wp_parse_url(home_url('/'), PHP_URL_HOST)))),
+                'custom_data' => array('stage' => 'Test'),
+            )),
+            'test_event_code' => $test_event_code,
+        );
+        $endpoint = "https://graph.facebook.com/" . self::GRAPH_VERSION . "/" . rawurlencode($pixel_id) . "/events";
+        $response = IDLM_Secret_Store::request($endpoint, array(
+            'headers' => array('Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $access_token),
+            'body' => wp_json_encode($payload),
+            'timeout' => 15,
+        ), array($access_token));
+        if (is_wp_error($response)) { return array('success'=>false, 'message'=>'Meta could not be reached: ' . $response->get_error_message()); }
+        $decoded = json_decode((string) wp_remote_retrieve_body($response), true);
+        if (200 === (int) wp_remote_retrieve_response_code($response) && is_array($decoded) && (int) ($decoded['events_received'] ?? 0) > 0 && !isset($decoded['error'])) {
+            return array('success'=>true, 'message'=>'Meta received the test event. Check Events Manager > Test Events.' . (isset($decoded['fbtrace_id']) ? ' Trace ' . $decoded['fbtrace_id'] . '.' : ''));
+        }
+        $error = is_array($decoded['error'] ?? null) ? $decoded['error'] : array();
+        return array('success'=>false, 'message'=>'Meta rejected the test event: ' . (string) ($error['error_user_msg'] ?? ($error['message'] ?? ('HTTP ' . (int) wp_remote_retrieve_response_code($response)))));
+    }
+
     public static function fire_google_capi_work($lead, $stage, $delivery) {
         $event_name = self::google_event_name($delivery['event']);
         $measurement_id = $delivery['destination'];

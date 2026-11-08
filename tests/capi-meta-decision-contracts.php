@@ -225,3 +225,35 @@ idlm_test('CAPI D13: the log screen tells rejected, retrying, uncertain and not-
     $renderer = file_get_contents(dirname(__DIR__) . '/includes/class-admin-logs-renderer.php');
     assert_true(strpos($renderer, 'unset($log->payload, $log->response)') !== false && strpos($renderer, "ORDER BY c.id DESC LIMIT 50") !== false, 'Payloads are read for at most 50 rows and not passed to the view.');
 });
+
+idlm_test('CAPI D11: a Meta test event uses the admin test code, carries no lead data and records nothing', static function(): void {
+    idlm_test_reset_environment();
+    $GLOBALS['idlm_test_http_calls'] = array(); $GLOBALS['idlm_test_http_code'] = 200; $GLOBALS['idlm_test_http_body'] = '{"events_received":1,"fbtrace_id":"synthetic-trace"}';
+    try {
+        foreach (array('', 'test123', 'TEST', 'TEST 12', 'TEST12;drop', str_repeat('TEST1', 10)) as $bad) {
+            assert_false(IDLM_CAPI_Transport::send_meta_test_event('synthetic-pixel', 'synthetic-meta-token', $bad)['success'], $bad);
+        }
+        assert_false(IDLM_CAPI_Transport::send_meta_test_event('', 'synthetic-meta-token', 'TEST12345')['success']);
+        assert_same(0, count($GLOBALS['idlm_test_http_calls']), 'Invalid input sends nothing.');
+        $ok = IDLM_CAPI_Transport::send_meta_test_event('synthetic-pixel', 'synthetic-meta-token', 'TEST12345');
+    } finally { unset($GLOBALS['idlm_test_http_body']); }
+    assert_true($ok['success'], $ok['message']);
+    assert_true(strpos($ok['message'], 'synthetic-trace') !== false);
+    [$url, $args] = $GLOBALS['idlm_test_http_calls'][0];
+    assert_same('https://graph.facebook.com/' . IDLM_CAPI_Transport::GRAPH_VERSION . '/synthetic-pixel/events', $url);
+    assert_same('Bearer synthetic-meta-token', $args['headers']['Authorization']);
+    $body = json_decode($args['body'], true);
+    assert_same('TEST12345', $body['test_event_code']);
+    assert_same(array('external_id'), array_keys($body['data'][0]['user_data']), 'No lead identifiers in a test event.');
+    assert_same(0, strpos($body['data'][0]['event_id'], 'idlm_test_'));
+    assert_same(array(), $GLOBALS['wpdb']->rows('idlm_capi_logs'), 'A test event writes no log.');
+    assert_false(get_option('idlm_meta_test_event_code', false), 'The test code is never saved.');
+    foreach ($GLOBALS['wpdb']->rows('wp_options') ?: array() as $row) { assert_false(0 === strpos((string) $row['option_name'], IDLM_CAPI_Delivery::PREFIX), 'A test event writes no receipt.'); }
+    $controller = file_get_contents(dirname(__DIR__) . '/includes/class-admin-connection-controller.php');
+    $handler = substr($controller, strpos($controller, 'function ajax_send_meta_test_event'), 900);
+    assert_true(strpos($handler, "check_ajax_referer('idlm_admin_nonce', 'nonce');") < strpos($handler, "require_ajax_access('admin')") && strpos($handler, "require_ajax_access('admin')") < strpos($handler, 'IDLM_CAPI_Transport::send_meta_test_event('), 'Nonce, then administrator access, then the request.');
+    assert_false(strpos($handler, 'update_option') !== false, 'The handler saves nothing.');
+    $GLOBALS['idlm_test_http_code'] = 400; $GLOBALS['idlm_test_http_body'] = '{"error":{"message":"Invalid parameter","error_user_msg":"Test code is not valid."}}';
+    try { $bad = IDLM_CAPI_Transport::send_meta_test_event('synthetic-pixel', 'synthetic-meta-token', 'TEST99'); } finally { unset($GLOBALS['idlm_test_http_body']); }
+    assert_false($bad['success']); assert_same('Meta rejected the test event: Test code is not valid.', $bad['message']);
+});
