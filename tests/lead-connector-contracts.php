@@ -163,3 +163,38 @@ idlm_test('CONNECTOR wizard leads with the system user token and keeps Facebook 
     assert_contains("action: 'idlm_test_lead_connector'", $js);
     assert_false(strpos($js, "['idlm_connector_login_config_id', 'Facebook Login configuration ID']") !== false, 'The token path does not require a Facebook Login configuration ID.');
 });
+
+idlm_test('CONNECTOR status panel shows sync state, counts, a paused warning and completed steps', static function(): void {
+    idlm_test_reset_environment(); idlm_test_login(1, array('administrator'), array('manage_options'));
+    $render = static fn() => IDLM_View::render('admin/settings/lead-connector.php', array('lead_connector'=>IDLM_Lead_Connector::settings_context()));
+    $fresh = $render();
+    assert_contains('Not set up', $fresh);
+    assert_false(strpos($fresh, 'data-idlm-lead-sync-summary') !== false, 'No status panel before setup.');
+    update_option('idlm_meta_lead_connector', array('enabled'=>'1', 'mode'=>'manual', 'app_id'=>'444', 'page_id'=>'111', 'forms'=>array('222')));
+    foreach (array('app_secret', 'verify_token', 'access_token') as $key) { IDLM_Secret_Store::set('idlm_meta_lead_' . $key, 'synthetic-' . $key); }
+    update_option(IDLM_Lead_Connector::LAST_IMPORT, time() - 600);
+    $on = $render();
+    assert_contains('is-on" data-idlm-lead-sync-state>Syncing', $on);
+    assert_contains('data-idlm-lead-sync-summary', $on);
+    assert_contains('10 mins ago', $on);
+    assert_same(1, preg_match('/<button[^>]*data-idlm-meta-lead-retry[^>]*hidden/', $on), 'Retry is hidden with no failures.');
+    assert_same(4, substr_count($on, 'is-done'), 'All four steps are marked done.');
+    assert_contains('data-idlm-copy-field="idlm-connector-url"', $on);
+    assert_contains('data-idlm-generate-verify-token', $on);
+    foreach (array('synthetic-app_secret', 'synthetic-verify_token', 'synthetic-access_token') as $secret) { assert_false(strpos($on, $secret) !== false); }
+    update_option(IDLM_Lead_Connector::AUTH_PAUSED, time() - 3600);
+    $paused = $render();
+    assert_contains('Paused: token stopped working', $paused);
+    assert_contains('Lead imports are paused.', $paused);
+    assert_contains('Waiting leads are kept for 30 days.', $paused);
+    $css = file_get_contents(dirname(__DIR__) . '/assets/css/admin-style.css');
+    assert_contains('.idlm-wrap .idlm-meta-connector [hidden] { display: none !important; }', $css);
+    $js = file_get_contents(dirname(__DIR__) . '/assets/js/settings.js');
+    foreach (array("action: 'idlm_meta_lead_retry'", '[data-idlm-copy-field]', 'getRandomValues', 'data.items') as $needle) { assert_contains($needle, $js); }
+});
+
+idlm_test('CONNECTOR check results mark each line passed, warning or failed', static function(): void {
+    assert_same(array(array('state'=>'ok', 'text'=>'Token accepted with all lead permissions.'), array('state'=>'ok', 'text'=>'All 1 form(s) are readable.')),
+        IDLM_Lead_Connector::check_items(array('ok'=>true, 'lines'=>array('Token accepted with all lead permissions.', 'All 1 form(s) are readable.'))));
+    assert_same(array('warn', 'fail'), array_column(IDLM_Lead_Connector::check_items(array('ok'=>false, 'lines'=>array('Token accepted, but it is missing: pages_manage_ads.', 'Leads of form 222 cannot be read.'))), 'state'));
+});

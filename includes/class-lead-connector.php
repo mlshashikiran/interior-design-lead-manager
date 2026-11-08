@@ -712,8 +712,19 @@ final class IDLM_Lead_Connector {
             wp_send_json_success(array('message'=>'Facebook Page subscription and lead access verified.'));
         }
         $report=self::check_connection();
-        if (!$report['ok']) { wp_send_json_error(array('message'=>implode(' ',$report['lines']),'lines'=>$report['lines']),400); }
-        wp_send_json_success(array('message'=>implode(' ',$report['lines']),'lines'=>$report['lines']));
+        $payload=array('message'=>implode(' ',$report['lines']),'lines'=>$report['lines'],'items'=>self::check_items($report),'summary'=>self::summary());
+        if (!$report['ok']) { wp_send_json_error($payload,400); }
+        wp_send_json_success($payload);
+    }
+
+    /** Each check line as ok, warn (missing permissions) or fail (the step that stopped the check). */
+    public static function check_items($report) {
+        $items=array(); $last=count($report['lines'])-1;
+        foreach ($report['lines'] as $i=>$line) {
+            $state=!$report['ok'] && $i===$last ? 'fail' : (false!==strpos($line,'missing:') ? 'warn' : 'ok');
+            $items[]=array('state'=>$state,'text'=>$line);
+        }
+        return $items;
     }
 
     /** Permissions a system user token needs for Page lead retrieval and the leadgen webhook. */

@@ -954,6 +954,13 @@ function current_time(string $type, bool $gmt = false) {
     return wp_date($type, strtotime('2026-08-28 12:00:00 UTC'));
 }
 
+function human_time_diff($from, $to = 0) {
+    $diff = abs(($to ?: time()) - (int) $from);
+    if ($diff < 3600) { $n = max(1, (int) round($diff / 60)); return $n . ($n === 1 ? ' min' : ' mins'); }
+    if ($diff < 86400) { $n = (int) round($diff / 3600); return $n . ($n === 1 ? ' hour' : ' hours'); }
+    $n = (int) round($diff / 86400); return $n . ($n === 1 ? ' day' : ' days');
+}
+
 function get_gmt_from_date($date, $format = 'Y-m-d H:i:s') {
     return gmdate($format, strtotime($date . ' UTC'));
 }

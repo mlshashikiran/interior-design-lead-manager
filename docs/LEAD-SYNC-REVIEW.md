@@ -95,3 +95,27 @@ The owner asked for a simpler setup that avoids App Review. A business that conn
 4. **Field mapping:** per-form mappings and import recovery.
 
 Facebook sign-in remains available under "Other way: connect with Facebook sign-in" in step 3. The "Check saved Meta lead connection" button previously had no JavaScript handler and did nothing; it is now wired up and shows each result line.
+
+## Decisions implemented (2026-11-08)
+
+The owner approved all six decisions and asked for UI/UX improvements.
+
+| Item | What changed |
+|---|---|
+| L-D1 | Meta's `created_time` is kept as the touchpoint's submission time (never the lead's Won close time), and the CAPI `New` event uses it. |
+| L-D2 | A token or permission error (190, 10, 102, 200–299) pauses Meta imports and catch-up without spending attempts, shows an admin notice and a warning on the card, and resumes as soon as a new token is saved or the check passes. Queued leads and catch-up look back 30 days instead of 7. |
+| L-D3 | Organic Instant Form leads are labelled `Meta (organic)`, route like Meta Ads in source-based assignment, are not ad sources for CAPI rules, and appear in the lead, Kanban and export source filters. |
+| L-D4 | The lead fetch requests only base and attribution fields plus `custom_disclaimer_responses`. |
+| L-D5 | A status panel shows the last import time and the waiting and failed counts, with a Retry failed imports button (administrator and nonce checked). |
+| L-D6 | Import receipts are dated and deleted after 35 days, in daily batches of 200. Erasure markers still block re-import of deleted leads. |
+
+UI/UX on the connector card:
+- A status pill (Not set up, Sync off, Syncing, Paused).
+- The status panel and paused warning.
+- Steps marked done in the step bar.
+- Copy buttons for the callback and redirect URLs.
+- A button that generates a webhook verification token.
+- Check results shown as a passed, warning and failed checklist.
+- The old "import recovery" checkbox replaced by the Retry button.
+
+Checked in a browser using a static render of the card with synthetic data, not inside WordPress.
