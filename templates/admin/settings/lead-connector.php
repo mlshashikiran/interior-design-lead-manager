@@ -7,12 +7,36 @@ $idlm_status=$idlm_connector['status'] ?? array();
 $idlm_facebook=$idlm_connector['facebook'] ?? array();
 $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_facebook['connected']);
 ?>
+<?php
+$idlm_summary=is_array($idlm_connector['summary'] ?? null) ? $idlm_connector['summary'] : array();
+$idlm_paused_at=(int)($idlm_summary['paused_at'] ?? 0);
+$idlm_enabled=!empty($idlm_config['enabled']) && '0'!==(string)$idlm_config['enabled'];
+$idlm_state=$idlm_paused_at ? array('paused','Paused: token stopped working') : ($idlm_enabled ? array('on','Syncing') : (!empty($idlm_config['app_id']) ? array('off','Sync off') : array('none','Not set up')));
+$idlm_last=(int)($idlm_summary['last_import'] ?? 0);
+?>
 <article class="idlm-card idlm-meta-connector">
     <div class="idlm-meta-connector__header">
         <div><h3>Direct Meta lead sync</h3>
         <p class="idlm-card-desc">Import leads directly from selected Facebook and Instagram Instant Forms.</p></div>
-        <span class="idlm-meta-connector__status"><?php echo !empty($idlm_config['enabled']) ? 'Sync enabled' : ($idlm_facebook_authorized ? 'Facebook connected' : 'Not connected'); ?></span>
+        <span class="idlm-meta-connector__status is-<?php echo esc_attr($idlm_state[0]); ?>" data-idlm-lead-sync-state><?php echo esc_html($idlm_state[1]); ?></span>
     </div>
+    <?php if ($idlm_paused_at): ?>
+    <div class="idlm-alert idlm-alert-warning" data-idlm-notice-inline role="alert">
+        <p><strong>Lead imports are paused.</strong> <?php echo esc_html(sprintf('Meta stopped accepting the access token on %s. Waiting leads are kept for %d days.', wp_date('j M Y, H:i', $idlm_paused_at), IDLM_Lead_Connector::WINDOW_DAYS)); ?></p>
+        <p>Generate a new system user token, replace it in step 1, save, then run the check in step 3. Imports resume as soon as the new token is saved.</p>
+    </div>
+    <?php endif; ?>
+    <?php if ($idlm_enabled || $idlm_paused_at || !empty($idlm_summary['waiting']) || !empty($idlm_summary['failed'])): ?>
+    <dl class="idlm-meta-connector__summary" data-idlm-lead-sync-summary>
+        <div><dt>Last lead imported</dt><dd><?php echo esc_html($idlm_last ? sprintf('%s ago', human_time_diff($idlm_last, time())) : 'None yet'); ?></dd></div>
+        <div><dt>Waiting</dt><dd data-idlm-lead-sync-waiting><?php echo esc_html(number_format_i18n((int)($idlm_summary['waiting'] ?? 0)).(!empty($idlm_summary['capped']) ? '+' : '')); ?></dd></div>
+        <div class="<?php echo !empty($idlm_summary['failed']) ? 'is-failed' : ''; ?>"><dt>Failed</dt><dd data-idlm-lead-sync-failed><?php echo esc_html(number_format_i18n((int)($idlm_summary['failed'] ?? 0))); ?></dd></div>
+        <div class="idlm-meta-connector__summary-action">
+            <button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-compact" data-idlm-meta-lead-retry <?php echo empty($idlm_summary['failed']) ? 'hidden' : ''; ?>>Retry failed imports</button>
+        </div>
+    </dl>
+    <p class="description" role="status" aria-live="polite" data-idlm-meta-lead-retry-status></p>
+    <?php endif; ?>
     <?php if (!empty($idlm_connector['error'])): ?>
     <div class="idlm-alert idlm-alert-warning" data-idlm-notice-inline role="alert" tabindex="-1">
         <p><strong>Connector setup was not saved.</strong> <?php echo esc_html($idlm_connector['error']); ?></p>
@@ -22,12 +46,18 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
     $idlm_credentials=$idlm_connector['credentials'] ?? array();
     $idlm_app_ready=!empty($idlm_config['app_id']) && !empty($idlm_credentials['app_secret']);
     $idlm_manual_step=!$idlm_app_ready ? 1 : (empty($idlm_credentials['verify_token']) ? 2 : (empty($idlm_config['enabled']) ? 3 : 4));
+    $idlm_done=array(
+        1=>$idlm_app_ready && (!empty($idlm_credentials['access_token']) || !empty($idlm_facebook['connected'])) && !empty($idlm_config['page_id']) && !empty($idlm_config['forms']),
+        2=>!empty($idlm_credentials['verify_token']),
+        3=>$idlm_enabled,
+        4=>$idlm_enabled && !empty($idlm_config['forms']),
+    );
     ?>
     <div class="idlm-meta-wizard" data-idlm-manual-setup data-idlm-wizard-initial="<?php echo (int)$idlm_manual_step; ?>" data-idlm-wizard-error="<?php echo !empty($idlm_connector['error']) ? '1' : '0'; ?>">
         <p>Connect your own Meta app with a system user token. It does not expire and needs no Meta App Review for your own Page.</p>
         <nav class="idlm-meta-wizard__steps" aria-label="Meta connection setup">
             <?php foreach (array(1=>'App and token',2=>'Webhook',3=>'Check and start',4=>'Field mapping') as $idlm_step=>$idlm_title): ?>
-                <button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-wizard-go="<?php echo (int)$idlm_step; ?>"><span><?php echo (int)$idlm_step; ?></span> <?php echo esc_html($idlm_title); ?></button>
+                <button type="button" class="idlm-btn idlm-btn-secondary<?php echo $idlm_done[$idlm_step] ? ' is-done' : ''; ?>" data-idlm-wizard-go="<?php echo (int)$idlm_step; ?>"><span class="idlm-meta-wizard__step-number" aria-hidden="true"><?php echo $idlm_done[$idlm_step] ? '✓' : (int)$idlm_step; ?></span> <?php echo esc_html($idlm_title); ?><?php if ($idlm_done[$idlm_step]): ?><span class="screen-reader-text"> (done)</span><?php endif; ?></button>
             <?php endforeach; ?>
         </nav>
         <p role="status" aria-live="polite" data-idlm-wizard-status></p>
@@ -58,10 +88,12 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
             <summary><strong>2. Configure the lead webhook</strong></summary>
             <p>In your Meta app, add the Webhooks product, choose <strong>Page</strong>, enter the callback URL and a verification token of your choice, then subscribe to the <code>leadgen</code> field. Use the same token here.</p>
             <div class="idlm-form-grid two">
-                <div class="idlm-form-group"><label for="idlm-connector-url">Meta Lead Ads callback URL</label><input class="idlm-input" id="idlm-connector-url" value="<?php echo esc_attr(get_rest_url(null,'idlm/v1/meta-leads')); ?>" readonly></div>
+                <div class="idlm-form-group"><label for="idlm-connector-url">Meta Lead Ads callback URL</label><div class="idlm-meta-connector__copy"><input class="idlm-input" id="idlm-connector-url" value="<?php echo esc_attr(get_rest_url(null,'idlm/v1/meta-leads')); ?>" readonly><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-copy-field="idlm-connector-url">Copy</button></div></div>
                 <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The fixed credential subtemplate escapes labels/IDs and outputs only credential-presence booleans; saved secret values are never passed.
         echo IDLM_View::render('admin/settings/connector-secret.php', array('key'=>'verify_token','label'=>'Webhook verification token','saved'=>$idlm_credentials['verify_token'] ?? false,'managed'=>$idlm_connector['managed_credentials']['verify_token'] ?? false)); ?>
             </div>
+            <div class="idlm-table-actions"><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-generate-verify-token>Generate a verification token</button></div>
+            <p class="description" role="status" aria-live="polite" data-idlm-generate-verify-status></p>
             <p class="description">Saved tokens stay hidden. If you no longer know yours, replace it here and use the replacement in Meta. Saving details also saves the other settings on this page.</p>
             <div class="idlm-table-actions"><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-manual-next="1">Back</button><button type="submit" class="idlm-btn idlm-btn-primary" data-idlm-wizard-save-next="3">Save details and continue</button></div>
         </details>
@@ -86,7 +118,7 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
                     </div>
                     <div class="idlm-form-group">
                         <label for="idlm-facebook-redirect-url">Facebook Login redirect URL</label>
-                        <input class="idlm-input" id="idlm-facebook-redirect-url" value="<?php echo esc_attr(IDLM_Facebook_Direct::callback_url()); ?>" readonly>
+                        <div class="idlm-meta-connector__copy"><input class="idlm-input" id="idlm-facebook-redirect-url" value="<?php echo esc_attr(IDLM_Facebook_Direct::callback_url()); ?>" readonly><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-copy-field="idlm-facebook-redirect-url">Copy</button></div>
                         <p class="description">Add this exact URL to your app’s valid OAuth redirect URIs. Live sign-in requires a public HTTPS address.</p>
                     </div>
                 </div>
@@ -163,13 +195,7 @@ $idlm_facebook_authorized=!empty($idlm_facebook['authorized']) || !empty($idlm_f
         </details>
     </details>
 
-            <details class="idlm-meta-wizard__advanced"><summary>Advanced: import recovery</summary>
-            <label><input type="checkbox" name="idlm_connector_retry" value="1"> Retry failed queued imports when saving settings (up to 100 records checked)</label>
-            <p class="description">Use this if a lead failed to import because of a temporary API or permission problem. It resets failed attempts among up to 100 queued records. Automatic retrieval retries up to five times, and queued data expires after seven days. This does not import historical leads.</p>
-            <?php if (is_array($idlm_status) && !empty($idlm_status['at'])): ?>
-                <p class="description">Last connector result: <?php echo esc_html(($idlm_status['provider'] ?? '').' — '.($idlm_status['state'] ?? '').' — '.wp_date('Y-m-d H:i:s',(int)$idlm_status['at'])); ?></p>
-            <?php endif; ?>
-            </details>
+            <p class="description">A failed import (for example a form field the mapping does not cover) waits in the status panel above. Fix the mapping, save, then use Retry failed imports.</p>
             <div class="idlm-table-actions"><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-manual-next="3">Back</button><button type="submit" class="idlm-btn idlm-btn-primary">Save setup</button></div>
         </details>
     </div>

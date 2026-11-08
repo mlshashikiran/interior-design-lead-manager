@@ -279,7 +279,15 @@ class IDLM_CAPI {
         global $wpdb;
         $now = time();
         $local = null;
-        if ('New' === $stage) { $local = $lead->created_at ?? null; }
+        if ('New' === $stage) {
+            // The provider's own submission time (an Instant Form's created_time) beats the import time.
+            $suppressed = $wpdb->suppress_errors(true);
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- LEADSYNC-L-D1: prefixed touchpoint table, value bound; read live.
+            $local = $wpdb->get_var($wpdb->prepare("SELECT MIN(submitted_at) FROM {$wpdb->prefix}idlm_lead_touchpoints WHERE lead_id = %d AND submitted_at IS NOT NULL", $lead->id));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            $wpdb->suppress_errors($suppressed);
+            if ($wpdb->last_error || !$local) { $local = $lead->created_at ?? null; }
+        }
         else {
             $suppressed = $wpdb->suppress_errors(true);
             // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- CAPI-D5: prefixed state-event table, values bound; the latest stage change must be read live.

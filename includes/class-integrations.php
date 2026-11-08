@@ -731,9 +731,11 @@ class IDLM_Integrations {
             $rep = $assigned_rep_id ? get_userdata($assigned_rep_id) : false;
             $message = sprintf('Lead automatically assigned to %s via initial round-robin routing.', $rep ? $rep->display_name : 'Representative');
         } elseif ('source_based' === $mode) {
+            // Organic Instant Form leads follow the Meta Ads route (lead sync review L-D3).
+            $route_source = IDLM_Lead_Connector::ORGANIC_SOURCE === (string) $source ? 'Meta Ads' : (string) $source;
             foreach ((array) IDLM_Settings::get('idlm_source_assignment_mappings', array()) as $map_source => $rep_id) {
                 $rep_id = absint($rep_id);
-                if (false !== stripos((string) $source, (string) $map_source) && in_array($rep_id, $active_reps, true)) {
+                if (false !== stripos($route_source, (string) $map_source) && in_array($rep_id, $active_reps, true)) {
                     $assigned_rep_id = $rep_id;
                     break;
                 }

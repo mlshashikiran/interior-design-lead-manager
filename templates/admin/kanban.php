@@ -112,6 +112,7 @@ $idlm_nonce = isset($context['nonce']) ? (string) $context['nonce'] : '';
                         <option value="">All channels</option>
                         <option value="Website">Website</option>
                         <option value="Meta Ads">Meta Ads</option>
+                        <option value="Meta (organic)">Meta (organic)</option>
                         <option value="Google Ads">Google Ads</option>
                         <option value="LinkedIn Ads">LinkedIn Ads</option>
                         <option value="Referral">Referral</option>

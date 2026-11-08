@@ -831,6 +831,22 @@
 
         enhanceSettingsNotices($page);
 
+        $page.on('click', '[data-idlm-meta-lead-retry]', function() {
+            var $btn = $(this), $status = $page.find('[data-idlm-meta-lead-retry-status]');
+            $btn.prop('disabled', true); $status.text('Queuing failed imports…');
+            $.ajax({url: idlm_vars.ajax_url, method: 'POST', data: {action: 'idlm_meta_lead_retry', nonce: idlm_vars.nonce}})
+                .always(function(response, status) {
+                    var body = response && response.responseJSON ? response.responseJSON : response, data = body && body.data ? body.data : {};
+                    $status.text(data.message || 'Failed imports could not be queued. Try again.');
+                    if (status === 'success' && body && body.success && data.summary) {
+                        $page.find('[data-idlm-lead-sync-waiting]').text(data.summary.waiting);
+                        $page.find('[data-idlm-lead-sync-failed]').text(data.summary.failed).closest('div').toggleClass('is-failed', data.summary.failed > 0);
+                        $btn.prop('hidden', !data.summary.failed);
+                    }
+                    $btn.prop('disabled', false);
+                });
+        });
+
         $page.find('[data-idlm-manual-setup]').each(function() {
             var $wizard = $(this), $panels = $wizard.children('[data-idlm-manual-step]');
             var current = Number($wizard.attr('data-idlm-wizard-initial')) || 1, autoLoadMapping = false;
@@ -905,12 +921,36 @@
                         var body = response && response.responseJSON ? response.responseJSON : response;
                         var ok = status === 'success' && body && body.success;
                         var data = body && body.data ? body.data : {};
-                        var lines = $.isArray(data.lines) ? data.lines : [];
-                        $.each(lines, function(i, line) { $('<li>').text(line).appendTo($lines); });
+                        var lines = $.isArray(data.items) ? data.items : $.map($.isArray(data.lines) ? data.lines : [], function(line) { return {state: 'ok', text: line}; });
+                        var marks = {ok: '✓', warn: '!', fail: '✕'}, words = {ok: 'Passed: ', warn: 'Warning: ', fail: 'Failed: '};
+                        $.each(lines, function(i, item) {
+                            var state = marks[item.state] ? item.state : 'ok';
+                            $('<li>').addClass('is-' + state)
+                                .append($('<span class="idlm-meta-wizard__mark" aria-hidden="true">').text(marks[state]))
+                                .append($('<span class="screen-reader-text">').text(words[state]))
+                                .append($('<span>').text(item.text)).appendTo($lines);
+                        });
                         $lines.prop('hidden', !lines.length);
                         $result.text(ok ? 'Connection checked. Enable sync and save to start.' : (lines.length ? 'Fix the item above, save, and check again.' : (data.message || 'The connection could not be checked.')));
                         $btn.prop('disabled', false);
                     });
+            });
+            // Copy a read-only URL field.
+            $wizard.on('click', '[data-idlm-copy-field]', function() {
+                var $btn = $(this), $field = $('#' + $btn.attr('data-idlm-copy-field')), text = $field.val() || '';
+                var done = function() { var label = $btn.text(); $btn.text('Copied'); setTimeout(function() { $btn.text(label); }, 1500); };
+                if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, function() { $field.trigger('select'); }); }
+                else { $field.trigger('focus').trigger('select'); try { if (document.execCommand('copy')) done(); } catch (ignored) {} }
+            });
+            // Fill the webhook verification token with a random value the admin then pastes into Meta.
+            $wizard.on('click', '[data-idlm-generate-verify-token]', function() {
+                var $secret = $wizard.find('[name="idlm_meta_lead_verify_token"]'), $box = $secret.closest('[data-idlm-connector-secret]');
+                if ($secret.prop('disabled')) { $wizard.find('[data-idlm-generate-verify-status]').text('This token is managed in server configuration.'); return; }
+                if ($box.find('[data-idlm-secret-editor]').prop('hidden')) { $box.find('[data-idlm-secret-replace]').trigger('click'); }
+                var bytes = new Uint8Array(24); (window.crypto || window.msCrypto).getRandomValues(bytes);
+                var token = Array.prototype.map.call(bytes, function(b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+                $secret.attr('type', 'text').val(token).trigger('input').trigger('focus');
+                $wizard.find('[data-idlm-generate-verify-status]').text('Token generated. Copy it into your Meta app’s webhook settings, then save details here.');
             });
             $(document).on('idlm-facebook-picker-ready', function() { show(3, false); });
             $(document).on('idlm-facebook-source-saved', function() {
