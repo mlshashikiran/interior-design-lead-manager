@@ -590,3 +590,15 @@ idlm_test('Qualified handoffs card never repeats its count in the overdue hint',
     assert_contains('$idlm_overdue_handoff_count >= $idlm_qualified_handoff_count ? \'all overdue\'', $template);
     assert_contains("overdueHandoffs >= qualifiedHandoffs ? 'all overdue'", $script);
 });
+
+idlm_test('webhook mapping shows every mappable field in a group, including the Meta _fbc and _fbp cookies', static function(): void {
+    $webhooks = (string) file_get_contents(dirname(__DIR__) . '/templates/admin/settings/webhooks.php');
+    preg_match_all("/'keys' => array\\(([^)]*)\\)/", $webhooks, $groups);
+    preg_match_all("/'([a-z_]+)'/", implode(',', $groups[1]), $grouped);
+    $start = strpos($webhooks, '$idlm_fields = array(');
+    $fields_src = substr($webhooks, $start, strpos($webhooks, ');', $start) - $start);
+    preg_match_all("/^\\s*'([a-z_]+)' =>/m", $fields_src, $fields);
+    assert_true(count($fields[1]) > 20, 'Field labels were found.');
+    assert_same(array(), array_values(array_diff($fields[1], $grouped[1])), 'Every labelled field belongs to a mapping group.');
+    foreach (array('fbc', 'fbp') as $cookie) { assert_true(in_array($cookie, $grouped[1], true), $cookie . ' is shown under Attribution.'); }
+});
