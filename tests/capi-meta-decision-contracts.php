@@ -64,3 +64,27 @@ idlm_test('CAPI D3: only Lead Ads leads carry the Conversion Leads CRM fields', 
     assert_same('New', $website['custom_data']['stage'], 'The event is still sent with its CRM context.');
     assert_true(isset($website['user_data']['em'], $website['user_data']['external_id']));
 });
+
+idlm_test('CAPI D5: event_time is when the stage changed, falling back to now outside Meta\'s window', static function(): void {
+    $two_hours = time() - 2 * HOUR_IN_SECONDS;
+    $new = idlm_capi_meta_event(array('created_at'=>gmdate('Y-m-d H:i:s', $two_hours)));
+    assert_same($two_hours, $new['event_time'], 'New uses the lead creation time.');
+    $stage_at = time() - 3 * HOUR_IN_SECONDS;
+    $events = array(
+        array('id'=>1, 'lead_id'=>1, 'event_type'=>'stage_change', 'to_value'=>'Won', 'occurred_at'=>gmdate('Y-m-d H:i:s', $stage_at - DAY_IN_SECONDS)),
+        array('id'=>2, 'lead_id'=>1, 'event_type'=>'stage_change', 'to_value'=>'Won', 'occurred_at'=>gmdate('Y-m-d H:i:s', $stage_at)),
+        array('id'=>3, 'lead_id'=>1, 'event_type'=>'stage_change', 'to_value'=>'Lost', 'occurred_at'=>gmdate('Y-m-d H:i:s', time() - 60)),
+    );
+    $sent = idlm_capi_meta_send(array('deal_value'=>5000), 'Won', '{"events_received":1}', $events);
+    assert_same($stage_at, json_decode($sent['calls'][0][1]['body'], true)['data'][0]['event_time'], 'The latest change into the stage wins.');
+    foreach (array(gmdate('Y-m-d H:i:s', time() - 8 * DAY_IN_SECONDS), gmdate('Y-m-d H:i:s', time() + HOUR_IN_SECONDS), 'not a date', null) as $created) {
+        $event = idlm_capi_meta_event(array('created_at'=>$created));
+        assert_true(abs(time() - $event['event_time']) < 60, 'Unknown, future or stale times fall back to now: ' . var_export($created, true));
+    }
+});
+
+idlm_test('CAPI D5: a Qualified event without a stage change uses qualified_at', static function(): void {
+    $at = time() - 5 * HOUR_IN_SECONDS;
+    $event = idlm_capi_meta_event(array('stage'=>'Contacted', 'lead_quality'=>'Qualified', 'qualified_at'=>gmdate('Y-m-d H:i:s', $at)), 'Qualified');
+    assert_same($at, $event['event_time']);
+});

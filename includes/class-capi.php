@@ -273,6 +273,26 @@ class IDLM_CAPI {
         return array_map(static function($value) { return is_string($value) ? trim($value) : ''; }, $mappings);
     }
 
+    /** When the stage really changed (UTC). Falls back to now when unknown, in the future, or older than Meta's 7-day window. Builder: Shashi. */
+    private static function stage_occurred_at($lead, $stage) {
+        global $wpdb;
+        $now = time();
+        $local = null;
+        if ('New' === $stage) { $local = $lead->created_at ?? null; }
+        else {
+            $suppressed = $wpdb->suppress_errors(true);
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- CAPI-D5: prefixed state-event table, values bound; the latest stage change must be read live.
+            $local = $wpdb->get_var($wpdb->prepare("SELECT MAX(occurred_at) FROM {$wpdb->prefix}idlm_lead_state_events WHERE lead_id = %d AND event_type = 'stage_change' AND to_value = %s", $lead->id, $stage));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            $wpdb->suppress_errors($suppressed);
+            if ($wpdb->last_error) { $local = null; }
+            if (!$local && 'Qualified' === $stage) { $local = $lead->qualified_at ?? null; }
+        }
+        if (!is_string($local) || !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/D', $local)) { return $now; }
+        $at = strtotime(get_gmt_from_date($local) . ' UTC');
+        return ($at && $at <= $now && $at > $now - 7 * DAY_IN_SECONDS + HOUR_IN_SECONDS) ? $at : $now;
+    }
+
     private static function no_attempt($message) {
         return array('success'=>false, 'message'=>$message, 'attempted'=>false, 'log_id'=>0, 'attempt_id'=>'', 'retryable'=>true, 'outcome'=>'skipped');
     }
@@ -344,7 +364,7 @@ class IDLM_CAPI {
             $keys=array('meta'=>array('idlm_meta_pixel_id','idlm_meta_access_token'), 'google'=>array('idlm_google_measurement_id','idlm_google_api_secret'), 'linkedin'=>array('idlm_linkedin_conversion_id','idlm_linkedin_access_token'));
             $destination=(string) self::runtime_option($keys[$platform][0],'');$credential=(string) self::runtime_option($keys[$platform][1],'');
             if ($expected && ($expected['event'] !== $event || (!empty($expected['destination']) && $expected['destination'] !== $destination))) { return self::no_attempt('Event mapping or destination changed. Review the original event before retrying.'); }
-            $delivery=array('version'=>1,'platform'=>$platform,'lead_id'=>(int)$lead_id,'stage'=>$stage,'event'=>$event,'destination'=>$destination,'credential'=>$credential,'attempt_id'=>$expected['_attempt_id'] ?? bin2hex(random_bytes(16)),'event_id'=>$expected['event_id'] ?? ('idlm_lead_'.$lead_id.'_'.$event),'occurred_at'=>$expected['occurred_at'] ?? time(),'value'=>$expected['value'] ?? (float)($lead->deal_value ?? 0),'currency'=>$expected['currency'] ?? self::runtime_option('idlm_currency_code','INR'),'retry_root'=>$expected['retry_root'] ?? 0);
+            $delivery=array('version'=>1,'platform'=>$platform,'lead_id'=>(int)$lead_id,'stage'=>$stage,'event'=>$event,'destination'=>$destination,'credential'=>$credential,'attempt_id'=>$expected['_attempt_id'] ?? bin2hex(random_bytes(16)),'event_id'=>$expected['event_id'] ?? ('idlm_lead_'.$lead_id.'_'.$event),'occurred_at'=>$expected['occurred_at'] ?? self::stage_occurred_at($lead,$stage),'value'=>$expected['value'] ?? (float)($lead->deal_value ?? 0),'currency'=>$expected['currency'] ?? self::runtime_option('idlm_currency_code','INR'),'retry_root'=>$expected['retry_root'] ?? 0);
             if ($platform==='meta' && $event==='Purchase' && $expected===null) {
                 $amount=self::purchase_amount($lead);$delivery['value']=$amount['value'];$delivery['currency']=$amount['currency'];
             }

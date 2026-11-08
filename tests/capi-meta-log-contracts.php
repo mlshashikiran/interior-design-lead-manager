@@ -2,10 +2,11 @@
 /** CAPI review S1: Meta delivery logs keep match-key names, never customer hashes. Synthetic data only; HTTP is captured, never sent. Builder: Shashi. */
 
 /** One synthetic Meta-enabled lead; returns the provider request body and the stored log row. */
-function idlm_capi_meta_send(array $lead_overrides = array(), string $stage = 'New', string $provider_body = '{"events_received":1,"fbtrace_id":"synthetic-trace"}'): array {
+function idlm_capi_meta_send(array $lead_overrides = array(), string $stage = 'New', string $provider_body = '{"events_received":1,"fbtrace_id":"synthetic-trace"}', array $state_events = array()): array {
     idlm_test_reset_environment();
     $GLOBALS['idlm_test_http_calls'] = array(); $GLOBALS['idlm_test_http_code'] = 200; $GLOBALS['idlm_test_http_body'] = $provider_body;
     $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array_merge(array('stage'=>$stage, 'source'=>'Meta Ads', 'fb_lead_id'=>'123456789012345', 'num_rooms'=>2), $lead_overrides))));
+    if ($state_events) { $GLOBALS['wpdb']->seed('idlm_lead_state_events', $state_events); }
     foreach (array('idlm_meta_capi_enabled'=>'1', 'idlm_meta_pixel_id'=>'synthetic-pixel', 'idlm_meta_access_token'=>'synthetic-meta-token') as $key => $value) { update_option($key, $value); }
     try { $result = IDLM_CAPI::fire_meta_capi((object) $GLOBALS['wpdb']->rows('idlm_leads')[0], $stage); }
     finally { unset($GLOBALS['idlm_test_http_body']); }

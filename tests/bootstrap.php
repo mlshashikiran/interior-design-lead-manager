@@ -489,6 +489,10 @@ final class IDLM_Test_WPDB {
         if (preg_match('/SELECT COUNT\(\*\) FROM wp_idlm_leads WHERE assigned_rep_id = ([0-9]+)/', $query, $m)) {
             return count(array_filter($this->tables['wp_idlm_leads'], static fn($r) => (int)($r['assigned_rep_id'] ?? 0) === (int)$m[1] && IDLM_Assignment_Capacity::is_active($r)));
         }
+        if (preg_match("/SELECT MAX\\(occurred_at\\) FROM wp_idlm_lead_state_events WHERE lead_id = ([0-9]+) AND event_type = 'stage_change' AND to_value = '([^']+)'/", $query, $state)) {
+            $times = array(); foreach ($this->tables['wp_idlm_lead_state_events'] ?? array() as $row) { if ((int) $row['lead_id'] === (int) $state[1] && 'stage_change' === $row['event_type'] && $row['to_value'] === $state[2]) { $times[] = $row['occurred_at']; } }
+            return $times ? max($times) : null;
+        }
         if ($query === 'SELECT CONNECTION_ID()' || $query === 'SELECT @@autocommit') { return 1; }
         if (preg_match("/SELECT lead_id FROM (wp_idlm_lead_touchpoints) WHERE platform = '([^']+)' AND external_id = '([^']+)'/", $query, $touch)) {
             foreach ($this->tables[$touch[1]] as $row) { if (($row['platform'] ?? '') === $touch[2] && ($row['external_id'] ?? '') === $touch[3]) { return $row['lead_id']; } } return null;
@@ -948,6 +952,10 @@ function current_time(string $type, bool $gmt = false) {
         return strtotime('2026-08-28 12:00:00 UTC');
     }
     return wp_date($type, strtotime('2026-08-28 12:00:00 UTC'));
+}
+
+function get_gmt_from_date($date, $format = 'Y-m-d H:i:s') {
+    return gmdate($format, strtotime($date . ' UTC'));
 }
 
 function wp_timezone(): DateTimeZone {
