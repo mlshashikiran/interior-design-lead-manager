@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.105.0] - 2026-11-08
+
+Core schema 1.3.18 adds `fbc` and `fbp` lead columns; the update adds them without changing existing lead rows.
+
+### Added
+
+- Meta Conversions API: the website webhook accepts the Pixel's `_fbc` and `_fbp` cookies (or a mapped field), keeps only values in Meta's `fb.<n>.<time>.<value>` format, stores them on the lead and sends them with every event. Builder: Shashi.
+- Meta Conversions API: a "Send test event" button sends one synthetic event with the Events Manager test code an administrator types in. It uses no lead data, and saves no log, receipt or code. Builder: Shashi.
+- Meta lead sync: a status panel shows the last import, waiting and failed counts and a Retry failed imports button, with a status pill (Not set up, Sync off, Syncing, Paused), copy buttons for the callback and redirect URLs, and a generated webhook verification token. Builder: Shashi.
+- Meta lead sync: organic Instant Form leads are labelled `Meta (organic)`. They route like Meta Ads leads but are not treated as ad sources for conversion rules, and the label is in the lead, board and export source filters. Builder: Shashi.
+
+### Changed
+
+- Meta Conversions API match quality: phones are hashed with the country code, names are lowercased in UTF-8 without punctuation, and every event carries a hashed `external_id` and, for +91 phones, a hashed `country`. Builder: Shashi.
+- Meta Conversions API: only Meta Lead Ads leads are sent with the CRM Conversion Leads fields; other leads are still sent without them. `event_time` is the time the stage changed, not the time the event was sent. Builder: Shashi.
+- Meta Conversions API: New lead events are queued instead of sent while the lead is being saved, and a stage change replaces only the same stage's pending event, so earlier funnel stages are still sent. Builder: Shashi.
+- Meta Conversions API: timeouts, server errors and rate limits are retried automatically after 5 and 30 minutes, sharing the three-attempt limit with manual retry and stopping 47 hours after the first attempt. Google and LinkedIn are unchanged. Builder: Shashi.
+- Meta Conversions API: a first-ever activation maps stages to CRM stage names (Lead, Qualified, Quote Shared, Won). Existing installs keep their saved mapping. Builder: Shashi.
+- Meta Conversions API log: each attempt shows Succeeded, Rejected, Retrying, Uncertain or Not sent, with Meta's error message and trace ID; rows that cannot be retried have no checkbox. Builder: Shashi.
+- Every Meta request uses one Graph API version setting. Builder: Shashi.
+- Value-based Meta audiences leave out leads with no deal value until they have one. Builder: Shashi.
+- Meta lead sync setup leads with a never-expiring system user token and a check that confirms the token, permissions, Page subscription and forms; Facebook sign-in remains as another way. Builder: Shashi.
+- Meta lead sync: Meta's submission time is kept as the lead's submission time and used for the CAPI New event. A token or permission error pauses imports with an admin warning until the token is fixed, and catch-up looks back 30 days. Builder: Shashi.
+- Meta lead sync: fetches fall back to fewer fields only on an unsupported field, leads that cannot be mapped go straight to failed for an admin to retry, only the needed fields are requested, and import receipts are pruned after 35 days. Builder: Shashi.
+- The Qualified handoffs card reads "N · all overdue" instead of repeating its count. Builder: Shashi.
+
+### Fixed
+
+- The "Check saved Meta lead connection" button now works; it had no handler. Builder: Shashi.
+
+### Security
+
+- Stored Meta Conversions API logs no longer keep hashed customer details. Builder: Shashi.
+
 ## [1.104.0] - 2026-11-07
 
 ### Added
