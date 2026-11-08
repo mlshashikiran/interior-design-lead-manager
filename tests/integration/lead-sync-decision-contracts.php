@@ -20,17 +20,17 @@ function idlm_leadsync_import(string $id, array $record, ?callable $answer = nul
 idlm_integration_test('LEADSYNC L-D1: Meta created_time becomes the touchpoint submission time, not a Won close', static function(): void {
     global $wpdb; idlm_connector_native_setup(); delete_option(IDLM_Lead_Connector::AUTH_PAUSED);
     $id = '920000000000000001'; $phone = '919811114001';
-    $record = idlm_connector_native_record($id, $phone); $record['created_time'] = gmdate('Y-m-d\TH:i:s+0000', time() - 3 * HOUR_IN_SECONDS);
+    $record = idlm_connector_native_record($id, $phone); $submitted_ts = time() - 3 * HOUR_IN_SECONDS; $record['created_time'] = gmdate('Y-m-d\TH:i:s+0000', $submitted_ts);
     [$result] = idlm_leadsync_import($id, $record);
     idlm_integration_assert_same(true, $result);
     $lead = idlm_connector_native_find($phone);
     idlm_integration_assert_same(null, $lead->conversion_time, 'A New lead has no Won close time.');
     $submitted = $wpdb->get_var($wpdb->prepare("SELECT submitted_at FROM {$wpdb->prefix}idlm_lead_touchpoints WHERE lead_id = %d", $lead->id));
-    idlm_integration_assert_same(wp_date('Y-m-d H:i:s', time() - 3 * HOUR_IN_SECONDS), $submitted);
+    idlm_integration_assert_same(wp_date('Y-m-d H:i:s', $submitted_ts), $submitted);
     update_option('idlm_meta_capi_enabled', '1'); update_option('idlm_meta_pixel_id', '123456'); IDLM_Secret_Store::set('idlm_meta_access_token', 'synthetic-capi-token');
     try { [$sent, $calls] = idlm_capi_native_capture(static fn() => IDLM_CAPI::fire_meta_capi($lead, 'New')); } finally { update_option('idlm_meta_capi_enabled', '0'); }
     idlm_integration_assert_true($sent['success'], $sent['message']);
-    idlm_integration_assert_same(time() - 3 * HOUR_IN_SECONDS, json_decode($calls[0]['args']['body'], true)['data'][0]['event_time'], 'CAPI New uses the submission time.');
+    idlm_integration_assert_same($submitted_ts, json_decode($calls[0]['args']['body'], true)['data'][0]['event_time'], 'CAPI New uses the submission time.');
 });
 
 idlm_integration_test('LEADSYNC L-D2: a token error pauses Meta imports and catch-up, keeps leads 30 days, and a new token resumes', static function(): void {
