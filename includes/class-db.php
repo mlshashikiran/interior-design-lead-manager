@@ -490,6 +490,8 @@ class IDLM_DB {
             wbraid varchar(255) DEFAULT '',
             fbclid varchar(255) DEFAULT '',
             li_fat_id varchar(255) DEFAULT '',
+            fbc varchar(255) DEFAULT '',
+            fbp varchar(255) DEFAULT '',
             fb_lead_id varchar(100) DEFAULT NULL,
             landing_page text DEFAULT NULL,
             conversion_time datetime DEFAULT NULL,

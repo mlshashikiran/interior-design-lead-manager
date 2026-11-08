@@ -296,7 +296,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             'first_name', 'last_name', 'email', 'phone', 'project_name', 'budget',
             'project_timeline', 'possession_date', 'property_location', 'property_type',
             'num_rooms', 'preferred_studio', 'referrer_details', 'fb_lead_id', 'fbclid',
-            'gclid', 'gbraid', 'wbraid', 'li_fat_id', 'utm_source', 'utm_medium',
+            'gclid', 'gbraid', 'wbraid', 'li_fat_id', 'fbc', 'fbp', 'utm_source', 'utm_medium',
             'utm_campaign', 'utm_adgroup', 'utm_term', 'utm_content', 'landing_page'
         );
         foreach ($fill_when_empty as $field) {
@@ -726,7 +726,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                 $original_lead = IDLM_Lead_Transaction::read($wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_leads} WHERE id = %d FOR UPDATE", $duplicate_of_id)));
                 if ($original_lead) {
                     $attribution_fields = array(
-                        'fb_lead_id', 'fbclid', 'gclid', 'gbraid', 'wbraid', 'li_fat_id',
+                        'fb_lead_id', 'fbclid', 'gclid', 'gbraid', 'wbraid', 'li_fat_id', 'fbc', 'fbp',
                         'utm_source', 'utm_medium', 'utm_campaign', 'utm_adgroup', 'utm_term', 'utm_content', 'landing_page'
                     );
                     $original_updates = array();

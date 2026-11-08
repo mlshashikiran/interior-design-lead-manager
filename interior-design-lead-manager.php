@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 
 // Define Plugin Constants
 define('IDLM_VERSION', '1.104.0');
-define('IDLM_DB_VERSION', '1.3.17');
+define('IDLM_DB_VERSION', '1.3.18');
 define('IDLM_PATH', plugin_dir_path(__FILE__));
 define('IDLM_URL', plugin_dir_url(__FILE__));
 

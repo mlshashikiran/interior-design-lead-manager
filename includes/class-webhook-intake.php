@@ -104,6 +104,8 @@ final class IDLM_Webhook_Intake {
             'wbraid'             => '',
             'fbclid'             => '',
             'li_fat_id'          => '',
+            'fbc'                => '',
+            'fbp'                => '',
             'fb_lead_id'         => '',
             'landing_page'       => '',
             'conversion_time'    => '',
@@ -142,6 +144,13 @@ final class IDLM_Webhook_Intake {
         if (empty($lead_data['li_fat_id']) && isset($flat_payload['li_fat_id'])) {
             $lead_data['li_fat_id'] = sanitize_text_field($flat_payload['li_fat_id']);
         }
+        // Meta browser cookies sent by the website integration (CAPI review D6 phase 2).
+        foreach (array('fbc' => array('fbc', '_fbc'), 'fbp' => array('fbp', '_fbp')) as $cookie => $keys) {
+            foreach ($keys as $key) {
+                if ('' === $lead_data[$cookie] && isset($flat_payload[$key]) && is_scalar($flat_payload[$key])) { $lead_data[$cookie] = sanitize_text_field((string) $flat_payload[$key]); }
+            }
+            $lead_data[$cookie] = self::meta_cookie($lead_data[$cookie]);
+        }
         if (empty($lead_data['fb_lead_id'])) {
             if (isset($flat_payload['lead_id'])) {
                 $lead_data['fb_lead_id'] = sanitize_text_field($flat_payload['lead_id']);
@@ -171,6 +180,12 @@ final class IDLM_Webhook_Intake {
         $lead_data['budget']        = self::normalize_budget($lead_data['budget']);
 
         return $lead_data;
+    }
+
+    /** A Meta _fbc/_fbp cookie value as set by the Pixel: fb.<index>.<millisecond time>.<value>; anything else is dropped. */
+    public static function meta_cookie($value) {
+        $value = trim((string) $value);
+        return 1 === preg_match('/^fb\.[0-9]\.[0-9]{10,13}\.[A-Za-z0-9_.-]{1,200}$/D', $value) ? $value : '';
     }
 
     public static function classify_lead_source($lead_data, $platform) {

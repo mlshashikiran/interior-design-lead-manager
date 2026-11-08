@@ -257,3 +257,36 @@ idlm_test('CAPI D11: a Meta test event uses the admin test code, carries no lead
     try { $bad = IDLM_CAPI_Transport::send_meta_test_event('synthetic-pixel', 'synthetic-meta-token', 'TEST99'); } finally { unset($GLOBALS['idlm_test_http_body']); }
     assert_false($bad['success']); assert_same('Meta rejected the test event: Test code is not valid.', $bad['message']);
 });
+
+idlm_test('CAPI D6 phase 2: the website webhook keeps valid _fbc/_fbp cookies and drops anything else', static function(): void {
+    idlm_test_reset_environment();
+    $fbc = 'fb.1.1762560000000.IwAR-synthetic_click.123';
+    $fbp = 'fb.1.1762560000123.1234567890';
+    $lead = IDLM_Webhook_Intake::apply_field_mappings(array('email'=>'a@example.test', 'fbc'=>$fbc, '_fbp'=>$fbp), 'website');
+    assert_same(array($fbc, $fbp), array($lead['fbc'], $lead['fbp']));
+    foreach (array('IwAR-raw-fbclid', 'fb.1.123.x', 'fb.1.1762560000000.', 'fb.1.1762560000000.a b', '<script>', str_repeat('x', 300)) as $bad) {
+        $dropped = IDLM_Webhook_Intake::apply_field_mappings(array('fbc'=>$bad, 'fbp'=>$bad), 'website');
+        assert_same(array('', ''), array($dropped['fbc'], $dropped['fbp']), $bad);
+    }
+    update_option('idlm_field_mappings_website', array('fbc'=>'meta.click_cookie'));
+    $mapped = IDLM_Webhook_Intake::apply_field_mappings(array('meta'=>array('click_cookie'=>$fbc)), 'website');
+    assert_same($fbc, $mapped['fbc'], 'An admin field mapping can name the payload key.');
+});
+
+idlm_test('CAPI D6 phase 2: stored _fbc/_fbp are sent unhashed in Meta user_data', static function(): void {
+    $fbc = 'fb.1.1762560000000.IwAR-synthetic_click';
+    $fbp = 'fb.1.1762560000123.1234567890';
+    $event = idlm_capi_meta_event(array('fb_lead_id'=>'', 'source'=>'Website', 'fbc'=>$fbc, 'fbp'=>$fbp));
+    assert_same($fbc, $event['user_data']['fbc']);
+    assert_same($fbp, $event['user_data']['fbp']);
+    $bad = idlm_capi_meta_event(array('fbc'=>'not-a-cookie', 'fbp'=>''));
+    assert_false(isset($bad['user_data']['fbc']) || isset($bad['user_data']['fbp']), 'Invalid or empty cookies are not sent.');
+});
+
+idlm_test('CAPI D6 phase 2: fbc and fbp are lead columns with a schema version bump and backup inventory', static function(): void {
+    $db = file_get_contents(dirname(__DIR__) . '/includes/class-db.php');
+    assert_true(strpos($db, "li_fat_id varchar(255) DEFAULT '',\n            fbc varchar(255) DEFAULT '',\n            fbp varchar(255) DEFAULT '',\n            fb_lead_id") !== false);
+    assert_same('1.3.18', IDLM_DB_VERSION);
+    $leads = IDLM_Backup_Validator::columns()['idlm_leads'];
+    assert_true(in_array('fbc', $leads, true) && in_array('fbp', $leads, true));
+});

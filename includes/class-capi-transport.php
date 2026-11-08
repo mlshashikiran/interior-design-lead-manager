@@ -147,6 +147,11 @@ final class IDLM_CAPI_Transport {
         // Country is sent only when the phone proves it.
         if (12 === strlen($meta_phone) && 0 === strpos($meta_phone, '91')) { $user_data['country'] = array(hash('sha256', 'in')); }
 
+        // Browser cookies captured by the website integration are sent as-is (Meta does not hash them).
+        foreach (array('fbc', 'fbp') as $cookie) {
+            $value = IDLM_Webhook_Intake::meta_cookie($lead->$cookie ?? '');
+            if ('' !== $value) { $user_data[$cookie] = $value; }
+        }
         // A bare fbclid does not establish the original _fbc cookie's timestamp.
         // Do not fabricate it from the CRM lead creation time (or send seconds in
         // place of the required millisecond cookie timestamp).

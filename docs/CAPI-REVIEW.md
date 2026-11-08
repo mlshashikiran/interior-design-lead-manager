@@ -63,7 +63,7 @@ Each of these changes what is sent, when it is sent, a setting, or the schema. T
 |---|---|---|---|
 | D1 | Done | `571c5c2` | Meta phone hashes include the country code: 10-digit and 0-prefixed 11-digit numbers get 91. CAPI and audience sync. |
 | D7 | Done | `571c5c2` | Names use UTF-8 lowercase with punctuation and symbols removed. CAPI and audience sync. |
-| D6 | Phase 1 done | `5ce3cfe` | Hashed `external_id` (site host and lead ID) on every event, hashed `country` (`in`) when the phone has the 91 prefix. Phase 2 (`fbc`/`fbp` capture) is not done: it needs form-side cookie capture and a new lead column (a schema change). |
+| D6 | Done | `5ce3cfe`, see D6 phase 2 commit | Phase 1: hashed `external_id` (site host and lead ID) on every event, hashed `country` (`in`) when the phone has the 91 prefix. Phase 2: the website webhook accepts `fbc`/`_fbc` and `fbp`/`_fbp` (or a mapped key), keeps only values in the Pixel's `fb.<n>.<time>.<value>` format, stores them in new `fbc` and `fbp` lead columns (schema 1.3.18), fills them on a repeat submission only when empty, and sends them unhashed in Meta `user_data`. |
 | D3 | Done (option c, narrowed) | `5ce3cfe` | Non-Lead-Ads leads are still sent, but without `event_source=crm` and `lead_event_source`, so only Lead Ads leads claim the Conversion Leads payload. Option (a), stopping those events, was not chosen because it drops all website-lead signal. |
 | D5 | Done | `0b77947` | `event_time` comes from the lead's creation (New), the latest `stage_change` event into the stage, or `qualified_at`; it falls back to now when unknown, in the future or older than Meta's 7-day window. |
 | D4 | Done | `0cc1238` | A stage change replaces only the same stage's pending job, so earlier funnel stages are still sent. |

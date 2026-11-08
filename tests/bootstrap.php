@@ -11,7 +11,7 @@ define('ABSPATH', __DIR__ . '/support/wp/');
 define('IDLM_TESTING', true);
 define('DB_NAME', 'idlm_test_unit');
 define('IDLM_VERSION', '1.101.75');
-define('IDLM_DB_VERSION', '1.3.17');
+define('IDLM_DB_VERSION', '1.3.18');
 define('IDLM_PATH', dirname(__DIR__) . '/');
 define('IDLM_URL', 'https://example.test/wp-content/plugins/interior-design-lead-manager/');
 define('ARRAY_A', 'ARRAY_A');
