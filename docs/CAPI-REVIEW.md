@@ -63,7 +63,7 @@ Each of these changes what is sent, when it is sent, a setting, or the schema. T
 |---|---|---|---|
 | D1 | Done | `571c5c2` | Meta phone hashes include the country code: 10-digit and 0-prefixed 11-digit numbers get 91. CAPI and audience sync. |
 | D7 | Done | `571c5c2` | Names use UTF-8 lowercase with punctuation and symbols removed. CAPI and audience sync. |
-| D6 | Phase 1 done | `5ce3cfe` | Hashed `external_id` (site host and lead ID) on every event, hashed `country` (`in`) when the phone has the 91 prefix. Phase 2 (`fbc`/`fbp` capture) is not done: it needs a schema change and the D9 consent decision. |
+| D6 | Phase 1 done | `5ce3cfe` | Hashed `external_id` (site host and lead ID) on every event, hashed `country` (`in`) when the phone has the 91 prefix. Phase 2 (`fbc`/`fbp` capture) is not done: it needs form-side cookie capture and a new lead column (a schema change). |
 | D3 | Done (option c, narrowed) | `5ce3cfe` | Non-Lead-Ads leads are still sent, but without `event_source=crm` and `lead_event_source`, so only Lead Ads leads claim the Conversion Leads payload. Option (a), stopping those events, was not chosen because it drops all website-lead signal. |
 | D5 | Done | `0b77947` | `event_time` comes from the lead's creation (New), the latest `stage_change` event into the stage, or `qualified_at`; it falls back to now when unknown, in the future or older than Meta's 7-day window. |
 | D4 | Done | `0cc1238` | A stage change replaces only the same stage's pending job, so earlier funnel stages are still sent. |
@@ -73,7 +73,7 @@ Each of these changes what is sent, when it is sent, a setting, or the schema. T
 | D14 | Done (exclude) | `128f28e` | Value-based audiences leave out leads with no deal value; the daily resync adds them once a value exists. |
 | D13 | Done | `cce08d5` | The log status shows Succeeded, Rejected, Retrying, Uncertain or Not sent with Meta's error message and `fbtrace_id`; rows that cannot be retried have no checkbox. |
 | D11 | Done | `be95035` | A "Send test event" button on the Meta CAPI card sends one synthetic event with the admin's Events Manager test code. No lead data, log, receipt or saved code. |
-| D9 | Not done | | Consent is a business and legal policy; it needs the owner to choose per-source rules or a stored consent flag before code. |
+| D9 | Closed: no consent gate | | The owner decided on 2026-11-08 that no consent gate is required. Events are sent for every eligible lead source, as today. |
 | D10 | No change (as recommended) | | Stay on v25.0 until Meta announces its expiry. |
 
 Not verified: no event was sent to a real Meta pixel, and Plugin Check was not rerun. Before release, use the new test-event button against a test pixel and set up the CRM stage funnel in Events Manager.
