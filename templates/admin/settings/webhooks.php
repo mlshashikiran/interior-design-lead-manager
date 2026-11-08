@@ -59,7 +59,7 @@ if (!empty($context['lead_connector']['error'])) { $idlm_capture_tab = 'meta'; }
                     $idlm_field_groups = array(
                         'identity' => array('title' => 'Lead identity', 'help' => 'Required: map at least one contact route (email or phone). Names are optional.', 'keys' => array('first_name', 'last_name', 'email', 'phone')),
                         'project' => array('title' => 'Project details', 'help' => 'Optional details used to qualify the lead and route it to the right team.', 'keys' => array('budget', 'project_timeline', 'property_location', 'property_type', 'num_rooms', 'preferred_studio')),
-                        'attribution' => array('title' => 'Attribution', 'help' => 'Optional campaign and click identifiers for reporting and conversion matching.', 'keys' => array('utm_source', 'utm_medium', 'utm_campaign', 'utm_adgroup', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'fbclid', 'fb_lead_id', 'li_fat_id')),
+                        'attribution' => array('title' => 'Attribution', 'help' => 'Optional campaign and click identifiers for reporting and conversion matching.', 'keys' => array('utm_source', 'utm_medium', 'utm_campaign', 'utm_adgroup', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'fbclid', 'fbc', 'fbp', 'fb_lead_id', 'li_fat_id')),
                         'advanced' => array('title' => 'Advanced metadata', 'help' => 'Optional source context retained with the lead record.', 'keys' => array('landing_page', 'conversion_time', 'referrer_details')),
                     );
                     $idlm_fields = array(
