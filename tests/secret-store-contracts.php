@@ -32,6 +32,29 @@ idlm_test('INT010 blank settings credentials stay hidden from administrators',st
     foreach(IDLM_Secret_Store::platform_options() as $name){update_option($name,'synthetic-html');assert_same('',IDLM_Admin_Settings_Renderer::credential_value(substr($name,5)));}
 });
 
+idlm_test('INT010 saved write-only secrets report their saved state without their value',static function():void {
+    idlm_test_login(1,array('administrator'),array('manage_options'));
+    foreach(IDLM_Secret_Store::platform_options() as $name){
+        $credential=substr($name,5);
+        update_option($name,'synthetic-saved');
+        assert_true(IDLM_Admin_Settings_Renderer::credential_saved($credential),$name);
+        ob_start();IDLM_Admin_Settings_Renderer::credential_saved_attribute($credential);$attribute=ob_get_clean();
+        assert_same(' data-idlm-secret-configured="1"',$attribute);assert_false(strpos($attribute,'synthetic')!==false);
+        assert_same('',IDLM_Admin_Settings_Renderer::credential_value($credential));
+        delete_option($name);
+        assert_false(IDLM_Admin_Settings_Renderer::credential_saved($credential),$name);
+    }
+    idlm_test_login(2,array('editor'),array());
+    update_option('idlm_meta_access_token','synthetic-saved');
+    assert_false(IDLM_Admin_Settings_Renderer::credential_saved('meta_access_token'));
+    delete_option('idlm_meta_access_token');
+    $root=dirname(__DIR__);
+    foreach(array('templates/admin/settings/capi.php'=>array('meta_access_token','google_api_secret','linkedin_access_token'),'templates/admin/settings/sync-reminders.php'=>array('interakt_api_key','interakt_webhook_secret','meta_webhook_verify_token','meta_webhook_app_secret')) as $file=>$credentials){
+        $template=file_get_contents($root.'/'.$file);
+        foreach($credentials as $credential){assert_contains("credential_saved_attribute('".$credential."')",$template);}
+    }
+});
+
 idlm_test('INT010 crypto absence environment ownership salt rotation and missing key fail safely',static function():void {
     foreach(array('environment','no-crypto','salt-rotation','no-key') as $mode){
         $args=array(PHP_BINARY);if($mode==='no-crypto'){$args[]='-d';$args[]='disable_functions=openssl_encrypt,openssl_decrypt';}$args[]=__DIR__.'/secret-store-runtime.php';$args[]=$mode;

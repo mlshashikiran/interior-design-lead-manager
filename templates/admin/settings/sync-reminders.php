@@ -188,7 +188,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                             
                             <div class="idlm-form-group" data-idlm-ui="mb-5">
                                 <label for="idlm-interakt-api-key" class="idlm-settings-label">Interakt write API key</label>
-                                <input type="password" id="idlm-interakt-api-key" name="idlm_interakt_api_key" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_interakt_api_key); ?>" data-idlm-ui="w-full" placeholder="e.g. key_xxxxxxxxxxxxxxxxxxxxxxxx">
+                                <input type="password" id="idlm-interakt-api-key"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('interakt_api_key'); ?> name="idlm_interakt_api_key" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_interakt_api_key); ?>" data-idlm-ui="w-full" placeholder="e.g. key_xxxxxxxxxxxxxxxxxxxxxxxx">
                                 <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="idlm_interakt_api_key_clear" value="1"> Clear saved credential</label>
                                 <span class="description idlm-settings-help">Provide the Write API key from your Interakt Developer dashboard.</span>
@@ -196,7 +196,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                             
                             <div class="idlm-form-group" data-idlm-ui="mb-5">
                                 <label for="idlm-interakt-webhook-secret" class="idlm-settings-label">Interakt webhook secret key</label>
-                                <input type="password" id="idlm-interakt-webhook-secret" name="idlm_interakt_webhook_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_interakt_webhook_secret); ?>" data-idlm-ui="w-full" placeholder="e.g. sec_xxxxxxxxxxxxxxxxxxxxxxxx">
+                                <input type="password" id="idlm-interakt-webhook-secret"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('interakt_webhook_secret'); ?> name="idlm_interakt_webhook_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_interakt_webhook_secret); ?>" data-idlm-ui="w-full" placeholder="e.g. sec_xxxxxxxxxxxxxxxxxxxxxxxx">
                                 <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="idlm_interakt_webhook_secret_clear" value="1"> Clear saved credential</label>
                                 <span class="description idlm-settings-help">Enter the secret key used by Interakt to sign webhook events.</span>
@@ -276,7 +276,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                             
                             <div class="idlm-form-group" data-idlm-ui="mb-5">
                                 <label for="idlm-meta-webhook-verify-token" class="idlm-settings-label">Verify token</label>
-                                <input type="password" id="idlm-meta-webhook-verify-token" name="idlm_meta_webhook_verify_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_webhook_verify_token); ?>" data-idlm-ui="w-full" placeholder="Enter a random verify token of your choice">
+                                <input type="password" id="idlm-meta-webhook-verify-token"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('meta_webhook_verify_token'); ?> name="idlm_meta_webhook_verify_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_webhook_verify_token); ?>" data-idlm-ui="w-full" placeholder="Enter a random verify token of your choice">
                                 <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="idlm_meta_webhook_verify_token_clear" value="1"> Clear saved credential</label>
                                 <span class="description idlm-settings-help">Define a unique secret token string here, then enter the exact same string as the 'Verify Token' in your Meta App Webhook Developer settings.</span>
@@ -284,7 +284,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
 
                             <div class="idlm-form-group" data-idlm-ui="mb-5">
                                 <label for="idlm-meta-webhook-app-secret" class="idlm-settings-label">Meta app secret</label>
-                                <input type="password" id="idlm-meta-webhook-app-secret" name="idlm_meta_webhook_app_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_webhook_app_secret); ?>" data-idlm-ui="w-full" placeholder="e.g. 5f83xxxxxxxxxxxxxxxxxxxxxxxx">
+                                <input type="password" id="idlm-meta-webhook-app-secret"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('meta_webhook_app_secret'); ?> name="idlm_meta_webhook_app_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_webhook_app_secret); ?>" data-idlm-ui="w-full" placeholder="e.g. 5f83xxxxxxxxxxxxxxxxxxxxxxxx">
                                 <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="idlm_meta_webhook_app_secret_clear" value="1"> Clear saved credential</label>
                                 <span class="description idlm-settings-help">Provide the Meta App Secret (found in your Meta App Dashboard > Settings > Basic) to verify X-Hub-Signature-256 signatures.</span>

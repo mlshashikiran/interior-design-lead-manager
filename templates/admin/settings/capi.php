@@ -51,7 +51,7 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                                     </div>
                                     <div class="idlm-form-group">
                                         <label for="idlm-meta-access-token">Meta access token</label>
-                                        <input type="password" id="idlm-meta-access-token" name="meta_access_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_access_token); ?>">
+                                        <input type="password" id="idlm-meta-access-token"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('meta_access_token'); ?> name="meta_access_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_access_token); ?>">
                                 <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="meta_access_token_clear" value="1"> Clear saved credential</label>
                                     </div>
@@ -106,7 +106,7 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                                     </div>
                                     <div class="idlm-form-group">
                                         <label for="idlm-google-api-secret">GA4 API secret</label>
-                                        <input type="password" id="idlm-google-api-secret" name="google_api_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_google_api_secret); ?>">
+                                        <input type="password" id="idlm-google-api-secret"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('google_api_secret'); ?> name="google_api_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_google_api_secret); ?>">
                                 <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="google_api_secret_clear" value="1"> Clear saved credential</label>
                                     </div>
@@ -162,7 +162,7 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                                 </div>
                                 <div class="idlm-form-group">
                                     <label for="idlm-linkedin-access-token">LinkedIn access token</label>
-                                    <input type="password" id="idlm-linkedin-access-token" name="linkedin_access_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_linkedin_access_token); ?>">
+                                    <input type="password" id="idlm-linkedin-access-token"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('linkedin_access_token'); ?> name="linkedin_access_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_linkedin_access_token); ?>">
                                 <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="linkedin_access_token_clear" value="1"> Clear saved credential</label>
                                 </div>

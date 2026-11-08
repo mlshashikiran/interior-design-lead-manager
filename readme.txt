@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.105.0
+Stable tag: 1.105.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,9 @@ Action Scheduler is optional; WP-Cron is the fallback. Scheduled work requires w
 Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Project Authors. The complete SIL Open Font License 1.1 is bundled in assets/fonts/OFL.txt; assets/fonts/NOTICE.txt and assets/fonts/inter-provenance.json identify the exact upstream revision, matching Google Fonts distribution and file hashes. Font bytes and existing CSS mappings are preserved.
 
 == Changelog ==
+
+= 1.105.1 =
+* Saved access tokens and secrets in the Conversion API and sync settings show "Saved securely" instead of "Not configured". Builder: Shashi.
 
 = 1.105.0 =
 * Meta Conversions API match-quality, timing and retry fixes, website _fbc/_fbp capture, a Send test event button and clearer delivery outcomes; a Meta lead sync setup built on a system user token, with pause on token failure and a status panel; and a Qualified handoffs card that no longer repeats its count. Builder: Shashi.
