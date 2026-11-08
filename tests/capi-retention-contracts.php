@@ -49,7 +49,8 @@ idlm_test('INT008 force and attribution changes cannot replay a prior successful
     $GLOBALS['wpdb']->seed('idlm_capi_logs',array());IDLM_CAPI::handle_attribution_merged(1,array('gclid'=>'new'));IDLM_CAPI::fire_google_capi($lead,'Qualified');assert_same(1,count($GLOBALS['idlm_test_http_calls']));
 });
 idlm_test('CAPI ambiguous provider responses fence normal forced and manual replay',static function():void {
-    foreach(array('meta','google','linkedin') as $platform){
+    // Meta timeouts and 5xx are replay-safe (event_id dedup) and covered by CAPI D8 tests.
+    foreach(array('google','linkedin') as $platform){
         foreach(array(408,503) as $code){
             idlm_test_reset_environment();$event=$platform==='meta'?'Contact':'CRM Qualified Lead';$id=idlm_capi_fast_fixture($platform,'Qualified',$event);$GLOBALS['idlm_test_http_code']=$code;
             $lead=(object)$GLOBALS['wpdb']->rows('idlm_leads')[0];$method='fire_'.$platform.'_capi';$result=IDLM_CAPI::$method($lead,'Qualified');

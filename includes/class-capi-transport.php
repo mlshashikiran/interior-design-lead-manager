@@ -58,6 +58,30 @@ final class IDLM_CAPI_Transport {
         return $payload;
     }
 
+    /** Graph API error codes Meta documents as temporary or throttling. Builder: Shashi. */
+    const META_TRANSIENT_CODES = array(1, 2, 4, 17, 32, 341, 368, 613);
+    const META_RETRY_HOOK = 'idlm_capi_meta_auto_retry';
+
+    /** Meta keeps only the first event with the same event_id and event_name, so these replays are safe. */
+    public static function meta_transient($code, $body) {
+        $code = (int) $code;
+        if (408 === $code || ($code >= 500 && $code <= 599)) { return true; }
+        $decoded = json_decode((string) $body, true);
+        $error = is_array($decoded) ? ($decoded['error'] ?? null) : null;
+        if (!is_array($error)) { return false; }
+        if (!empty($error['is_transient'])) { return true; }
+        $error_code = (int) ($error['code'] ?? 0);
+        return in_array($error_code, self::META_TRANSIENT_CODES, true) || ($error_code >= 80000 && $error_code <= 80099);
+    }
+
+    /** At most the 3 per-root retries allowed by retry_capi_log, 5 then 30 minutes apart: well inside Meta's 48-hour dedup window. */
+    private static function schedule_meta_retry($log_id, $retry_root) {
+        $args = array((int) $log_id, IDLM_Recovery_Guard::generation());
+        $at = time() + ($retry_root ? 1800 : 300);
+        if (function_exists('as_schedule_single_action')) { return (bool) as_schedule_single_action($at, self::META_RETRY_HOOK, $args); }
+        return function_exists('wp_schedule_single_event') ? (bool) wp_schedule_single_event($at, self::META_RETRY_HOOK, $args) : false;
+    }
+
     public static function record_attempt($lead_id,$platform,$delivery,$payload,$response,$status,$attempted,$retryable,$outcome = null) {
         unset($delivery['credential']);
         $payload = self::mask_logged_identifiers($payload);
@@ -74,13 +98,17 @@ final class IDLM_CAPI_Transport {
         };
         $saved = $claimed ? IDLM_Lead_Transaction::run($save) : $save();
         $id = is_wp_error($saved) ? 0 : (int) $saved;
-        $message = $id > 0 ? ('success' === $status ? ($platform === 'google' ? 'Google received the request; event processing is not confirmed.' : 'This attempt was accepted.') : ('uncertain' === $delivery['outcome'] ? 'Delivery is uncertain; reconciliation is required before replay.' : 'This attempt failed; inspect its delivery log.')) : 'Attempt outcome could not be recorded; reconciliation is required.';
+        if ($id > 0 && 'meta' === $platform && 'transient' === $delivery['outcome']) { self::schedule_meta_retry($id, $delivery['retry_root'] ?? 0); }
+        $message = $id > 0 ? ('success' === $status ? ($platform === 'google' ? 'Google received the request; event processing is not confirmed.' : 'This attempt was accepted.') : ('uncertain' === $delivery['outcome'] ? 'Delivery is uncertain; reconciliation is required before replay.' : ('transient' === $delivery['outcome'] ? 'Meta had a temporary error; the event will be retried automatically.' : 'This attempt failed; inspect its delivery log.'))) : 'Attempt outcome could not be recorded; reconciliation is required.';
         return array('success'=>$id > 0 && 'success' === $status,'message'=>$message,'attempted'=>$attempted,'log_id'=>$id,'attempt_id'=>$delivery['attempt_id'],'retryable'=>$retryable,'outcome'=>$id > 0 ? $delivery['outcome'] : 'uncertain');
     }
 
     public static function record_provider_response($lead_id, $platform, $delivery, $payload, $body, $code, $status) {
         if ('success' === $status) {
             return self::record_attempt($lead_id, $platform, $delivery, $payload, $body, $status, true, false);
+        }
+        if ('meta' === $platform && self::meta_transient($code, $body)) {
+            return self::record_attempt($lead_id, $platform, $delivery, $payload, $body, 'failed', true, true, 'transient');
         }
         // Google explicitly advises against replaying non-2xx Measurement Protocol requests.
         // Timeouts, server errors, redirects and unrecognized success bodies are ambiguous.
@@ -183,7 +211,8 @@ final class IDLM_CAPI_Transport {
         if (!IDLM_Recovery_Guard::lease_valid()) { return false; }
         if (is_wp_error($response)) {
             $err_msg = $response->get_error_message();
-            return self::record_attempt($lead->id, 'meta', $delivery, $payload, $err_msg, 'failed', true, false, 'uncertain');
+            // A Meta timeout is safe to replay: the same event_id is deduplicated.
+            return self::record_attempt($lead->id, 'meta', $delivery, $payload, $err_msg, 'failed', true, true, 'transient');
         } else {
             $body = wp_remote_retrieve_body($response);
             $code = wp_remote_retrieve_response_code($response);

@@ -88,3 +88,70 @@ idlm_test('CAPI D5: a Qualified event without a stage change uses qualified_at',
     $event = idlm_capi_meta_event(array('stage'=>'Contacted', 'lead_quality'=>'Qualified', 'qualified_at'=>gmdate('Y-m-d H:i:s', $at)), 'Qualified');
     assert_same($at, $event['event_time']);
 });
+
+idlm_test('CAPI D8: Meta timeouts, 5xx and documented throttling codes are transient; other rejections are not', static function(): void {
+    foreach (array(array(503, ''), array(500, '{}'), array(408, ''), array(400, '{"error":{"code":17}}'), array(400, '{"error":{"code":4}}'), array(403, '{"error":{"code":613}}'), array(400, '{"error":{"code":80004}}'), array(400, '{"error":{"code":100,"is_transient":true}}'), array(400, '{"error":{"code":2}}')) as $case) {
+        assert_true(IDLM_CAPI_Transport::meta_transient($case[0], $case[1]), wp_json_encode($case));
+    }
+    foreach (array(array(400, '{"error":{"code":100}}'), array(400, '{"error":{"code":190}}'), array(400, 'not json'), array(404, ''), array(200, '{}')) as $case) {
+        assert_false(IDLM_CAPI_Transport::meta_transient($case[0], $case[1]), wp_json_encode($case));
+    }
+});
+
+function idlm_capi_d8_retries(): array {
+    return array_values(array_filter($GLOBALS['idlm_test_schedules'] ?? array(), static fn($s) => IDLM_CAPI_Transport::META_RETRY_HOOK === ($s['hook'] ?? '')));
+}
+
+function idlm_capi_d8_fresh_root(int $log_id): void {
+    $GLOBALS['wpdb']->update($GLOBALS['wpdb']->prefix . 'idlm_capi_logs', array('created_at'=>gmdate('Y-m-d H:i:s', time() - 60)), array('id'=>$log_id));
+}
+
+idlm_test('CAPI D8: a Meta 503 is retried automatically with the same event_id and event_time', static function(): void {
+    $first = idlm_capi_meta_send(array(), 'New', '', array(), 503)['result'];
+    assert_same('transient', $first['outcome']); assert_true($first['retryable']);
+    assert_same('failed', IDLM_CAPI_Delivery::read(1, 'meta', 'Lead')['status']);
+    $scheduled = idlm_capi_d8_retries();
+    assert_same(1, count($scheduled));
+    assert_same(array($first['log_id'], IDLM_Recovery_Guard::generation()), $scheduled[0]['args']);
+    assert_true($scheduled[0]['timestamp'] >= time() + 290 && $scheduled[0]['timestamp'] <= time() + 310, 'First retry is 5 minutes out.');
+    idlm_capi_d8_fresh_root($first['log_id']);
+    $GLOBALS['idlm_test_http_code'] = 200; $GLOBALS['idlm_test_http_body'] = '{"events_received":1}';
+    try { $retry = IDLM_CAPI::auto_retry_meta($first['log_id'], IDLM_Recovery_Guard::generation()); } finally { unset($GLOBALS['idlm_test_http_body']); }
+    assert_true($retry['success'], (string) $retry['message']);
+    assert_same(2, count($GLOBALS['idlm_test_http_calls']));
+    $a = json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'], true)['data'][0];
+    $b = json_decode($GLOBALS['idlm_test_http_calls'][1][1]['body'], true)['data'][0];
+    assert_same($a['event_id'], $b['event_id']); assert_same($a['event_time'], $b['event_time']);
+    assert_same('sent', IDLM_CAPI_Delivery::read(1, 'meta', 'Lead')['status']);
+    IDLM_CAPI::auto_retry_meta($retry['log_id'], IDLM_Recovery_Guard::generation());
+    IDLM_CAPI::auto_retry_meta($first['log_id'], IDLM_Recovery_Guard::generation());
+    assert_same(2, count($GLOBALS['idlm_test_http_calls']), 'Accepted events are never replayed.');
+});
+
+idlm_test('CAPI D8: a 400 rate limit is retried at most 3 times, 30 minutes apart after the first', static function(): void {
+    $first = idlm_capi_meta_send(array(), 'New', '{"error":{"code":17}}', array(), 400)['result'];
+    assert_same('transient', $first['outcome'], 'A rate limit is not a confirmed rejection.');
+    idlm_capi_d8_fresh_root($first['log_id']);
+    $GLOBALS['idlm_test_http_body'] = '{"error":{"code":17}}';
+    try {
+        assert_false(IDLM_CAPI::auto_retry_meta($first['log_id'], IDLM_Recovery_Guard::generation() + 1), 'A stale generation is ignored.');
+        assert_same(1, count($GLOBALS['idlm_test_http_calls']));
+        $log = $first['log_id'];
+        for ($i = 0; $i < 5; $i++) { $r = IDLM_CAPI::auto_retry_meta($log, IDLM_Recovery_Guard::generation()); if (!empty($r['log_id'])) { $log = $r['log_id']; } }
+    } finally { unset($GLOBALS['idlm_test_http_body']); }
+    assert_same(4, count($GLOBALS['idlm_test_http_calls']), 'One send plus at most three retries.');
+    $later = idlm_capi_d8_retries();
+    assert_true(count($later) >= 2 && $later[1]['timestamp'] >= time() + 1790, 'Later retries are 30 minutes apart.');
+});
+
+idlm_test('CAPI D8: no auto-retry outside 47 hours or after a real rejection', static function(): void {
+    $old = idlm_capi_meta_send(array(), 'New', '', array(), 503)['result'];
+    $GLOBALS['wpdb']->update($GLOBALS['wpdb']->prefix . 'idlm_capi_logs', array('created_at'=>gmdate('Y-m-d H:i:s', time() - 48 * HOUR_IN_SECONDS)), array('id'=>$old['log_id']));
+    $late = IDLM_CAPI::auto_retry_meta($old['log_id'], IDLM_Recovery_Guard::generation());
+    assert_false($late['attempted']); assert_same(1, count($GLOBALS['idlm_test_http_calls']));
+    $rejected = idlm_capi_meta_send(array(), 'New', '{"error":{"code":100,"message":"Invalid parameter"}}', array(), 400)['result'];
+    assert_same('failed', $rejected['outcome']);
+    assert_same(0, count(idlm_capi_d8_retries()), 'A confirmed rejection is not retried automatically.');
+    idlm_capi_d8_fresh_root($rejected['log_id']);
+    assert_false(IDLM_CAPI::auto_retry_meta($rejected['log_id'], IDLM_Recovery_Guard::generation())['attempted']);
+});

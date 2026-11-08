@@ -296,7 +296,7 @@ final class IDLM_Backup {
     }
 
     private static function cancel_queued_jobs() {
-        $hooks = array('idlm_async_capi_upload_event', 'idlm_async_interakt_track_event', 'idlm_async_interakt_batch_event', IDLM_Audience_Dispatch::HOOK);
+        $hooks = array('idlm_async_capi_upload_event', IDLM_CAPI_Transport::META_RETRY_HOOK, 'idlm_async_interakt_track_event', 'idlm_async_interakt_batch_event', IDLM_Audience_Dispatch::HOOK);
         foreach ($hooks as $hook) {
             if (function_exists('as_unschedule_all_actions')) { as_unschedule_all_actions($hook); }
             wp_unschedule_hook($hook);

@@ -105,7 +105,8 @@ final class IDLM_CAPI_Delivery {
         $receipt = self::read($delivery['lead_id'], $delivery['platform'], $delivery['event']);
         IDLM_Lead_Transaction::required($receipt && $receipt['status'] === 'processing' && $receipt['attempt_id'] === $delivery['attempt_id']);
         $receipt['status'] = $outcome === 'success' ? 'sent' : ($outcome === 'uncertain' ? 'uncertain' : 'failed');
-        $receipt['rejection_confirmed'] = $outcome === 'failed';
+        // A Meta transient error is replay-safe (event_id dedup), so it may be claimed again like a rejection.
+        $receipt['rejection_confirmed'] = in_array($outcome, array('failed', 'transient'), true);
         $receipt['sent'] = $receipt['sent'] || $outcome === 'success'; $receipt['updated_at']=current_time('mysql', true);
         return self::save($receipt);
     }

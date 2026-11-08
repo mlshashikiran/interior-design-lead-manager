@@ -11,6 +11,26 @@ class IDLM_CAPI {
         add_action('idlm_async_capi_upload_event', array(__CLASS__, 'process_capi_event'), 10, 3);
         // Hook for handling duplicate lead attribution merges
         add_action('idlm_lead_attribution_merged', array(__CLASS__, 'handle_attribution_merged'), 10, 2);
+        add_action(IDLM_CAPI_Transport::META_RETRY_HOOK, array(__CLASS__, 'auto_retry_meta'), 10, 2);
+    }
+
+    /** Automatic replay of a Meta transient failure (CAPI review D8). Shares the 3-attempt cap with manual retry. Builder: Shashi. */
+    public static function auto_retry_meta($log_id, $generation = null) {
+        return IDLM_Recovery_Guard::run(static function() use ($log_id) {
+            global $wpdb;
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- CAPI-D8: prefixed log table, value bound; retry state must be read live.
+            $log = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_capi_logs WHERE id = %d", absint($log_id)));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            if ($wpdb->last_error || !$log || 'meta' !== $log->platform || 'failed' !== $log->status) { return self::no_attempt('Only a failed Meta event is retried automatically.'); }
+            $identity = self::log_payload($log->payload)['_idlm_delivery'] ?? array();
+            if ('transient' !== ($identity['outcome'] ?? '')) { return self::no_attempt('Only a temporary Meta error is retried automatically.'); }
+            // Meta deduplicates replays only within 48 hours of the first attempt.
+            $root = absint($identity['retry_root'] ?? 0) ?: (int) $log->id;
+            $first = $root === (int) $log->id ? $log : $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_capi_logs WHERE id = %d", $root)); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- CAPI-D8: prefixed log table, value bound.
+            $first_at = $first && is_string($first->created_at ?? null) ? strtotime(get_gmt_from_date($first->created_at) . ' UTC') : false;
+            if (!$first_at || time() - $first_at > 47 * HOUR_IN_SECONDS) { return self::no_attempt('The Meta deduplication window has passed; review before retrying.'); }
+            return self::retry_capi_log_work((int) $log->id);
+        }, $generation, true, IDLM_CAPI_Transport::META_RETRY_HOOK, array($log_id, $generation));
     }
 
     /** Preserve the hook callback without replaying an already reported conversion. */
