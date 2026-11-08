@@ -4,6 +4,14 @@ if (!defined('ABSPATH')) {
 }
 
 class IDLM_CAPI {
+    /** Meta defaults for a fresh install: CRM stage names for Conversion Leads (CAPI review D2). Builder: Shashi. */
+    const META_CRM_STAGE_EVENTS = array('New' => 'Lead', 'Qualified' => 'Qualified', 'Quote Shared' => 'Quote Shared', 'Won' => 'Won');
+
+    /** First-activation defaults only; an existing install's settings are never changed. */
+    public static function seed_fresh_install_defaults($fresh_install) {
+        if (!$fresh_install) { return false; }
+        return add_option('idlm_meta_event_mappings', self::META_CRM_STAGE_EVENTS);
+    }
     public static function init() {
         // Hook lead conversion stage changes
         add_action('idlm_lead_stage_converted', array(__CLASS__, 'queue_capi_event'), 10, 3);
@@ -358,7 +366,8 @@ class IDLM_CAPI {
             $destination=(string) self::runtime_option($keys[$platform][0],'');$credential=(string) self::runtime_option($keys[$platform][1],'');
             if ($expected && ($expected['event'] !== $event || (!empty($expected['destination']) && $expected['destination'] !== $destination))) { return self::no_attempt('Event mapping or destination changed. Review the original event before retrying.'); }
             $delivery=array('version'=>1,'platform'=>$platform,'lead_id'=>(int)$lead_id,'stage'=>$stage,'event'=>$event,'destination'=>$destination,'credential'=>$credential,'attempt_id'=>$expected['_attempt_id'] ?? bin2hex(random_bytes(16)),'event_id'=>$expected['event_id'] ?? ('idlm_lead_'.$lead_id.'_'.$event),'occurred_at'=>$expected['occurred_at'] ?? self::stage_occurred_at($lead,$stage),'value'=>$expected['value'] ?? (float)($lead->deal_value ?? 0),'currency'=>$expected['currency'] ?? self::runtime_option('idlm_currency_code','INR'),'retry_root'=>$expected['retry_root'] ?? 0);
-            if ($platform==='meta' && $event==='Purchase' && $expected===null) {
+            // The close value applies to the Won stage whatever its Meta event is named.
+            if ($platform==='meta' && ($event==='Purchase' || $stage==='Won') && $expected===null) {
                 $amount=self::purchase_amount($lead);$delivery['value']=$amount['value'];$delivery['currency']=$amount['currency'];
             }
             if ('' === $destination || '' === $credential) { return self::record_attempt($lead_id,$platform,$delivery,array(),'Missing integration destination or credentials.','failed',false,true); }

@@ -155,3 +155,30 @@ idlm_test('CAPI D8: no auto-retry outside 47 hours or after a real rejection', s
     idlm_capi_d8_fresh_root($rejected['log_id']);
     assert_false(IDLM_CAPI::auto_retry_meta($rejected['log_id'], IDLM_Recovery_Guard::generation())['attempted']);
 });
+
+idlm_test('CAPI D2: only a first-ever activation seeds CRM stage names; existing mappings are never changed', static function(): void {
+    idlm_test_reset_environment();
+    assert_false(IDLM_CAPI::seed_fresh_install_defaults(false));
+    assert_false(get_option('idlm_meta_event_mappings', false), 'An existing install keeps the legacy default.');
+    assert_true(IDLM_CAPI::seed_fresh_install_defaults(true));
+    assert_same(array('New'=>'Lead', 'Qualified'=>'Qualified', 'Quote Shared'=>'Quote Shared', 'Won'=>'Won'), get_option('idlm_meta_event_mappings'));
+    update_option('idlm_meta_event_mappings', array('New'=>'Lead', 'Won'=>'Purchase'));
+    IDLM_CAPI::seed_fresh_install_defaults(true);
+    assert_same(array('New'=>'Lead', 'Won'=>'Purchase'), get_option('idlm_meta_event_mappings'), 'A saved mapping is never overwritten.');
+    $source = file_get_contents(dirname(__DIR__) . '/interior-design-lead-manager.php');
+    $fresh = strpos($source, '$fresh_install = false === get_option(\'idlm_plugin_activated_at\', false) && false === get_option(\'idlm_schema_version\', false);');
+    assert_true(false !== $fresh && $fresh < strpos($source, '$result = IDLM_DB::init();'), 'Fresh install is decided before migrations write markers.');
+});
+
+idlm_test('CAPI D2: a Won stage sends the close value whatever its Meta event is called', static function(): void {
+    idlm_test_reset_environment();
+    update_option('idlm_meta_event_mappings', IDLM_CAPI::META_CRM_STAGE_EVENTS);
+    $GLOBALS['idlm_test_http_calls'] = array(); $GLOBALS['idlm_test_http_code'] = 200; $GLOBALS['idlm_test_http_body'] = '{"events_received":1}';
+    $GLOBALS['wpdb']->seed('idlm_leads', array(lead_fixture(array('stage'=>'Won', 'deal_value'=>250000, 'fb_lead_id'=>'123456789012345', 'num_rooms'=>2, 'source'=>'Meta Ads'))));
+    foreach (array('idlm_meta_capi_enabled'=>'1', 'idlm_meta_pixel_id'=>'synthetic-pixel', 'idlm_meta_access_token'=>'synthetic-meta-token') as $key => $value) { update_option($key, $value); }
+    try { $result = IDLM_CAPI::fire_meta_capi((object) $GLOBALS['wpdb']->rows('idlm_leads')[0], 'Won'); } finally { unset($GLOBALS['idlm_test_http_body']); }
+    assert_true($result['success'], (string) $result['message']);
+    $event = json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'], true)['data'][0];
+    assert_same('Won', $event['event_name']);
+    assert_same(250000.0, (float) $event['custom_data']['value']);
+});
