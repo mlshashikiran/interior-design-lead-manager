@@ -156,9 +156,9 @@ class IDLM_Audiences {
 
         foreach ($leads as $lead) {
             $ads_email = IDLM_Contact_Identity::email_for_ads($lead); $email_hash = '' !== $ads_email ? hash('sha256', $ads_email) : '';
-            $phone_hash = !empty($lead->phone) ? hash('sha256', preg_replace('/[^0-9]/', '', $lead->phone)) : '';
-            $first_hash = !empty($lead->first_name) ? hash('sha256', strtolower(trim($lead->first_name))) : '';
-            $last_hash = !empty($lead->last_name) ? hash('sha256', strtolower(trim($lead->last_name))) : '';
+            $phone_hash = IDLM_CAPI_Transport::meta_hash(IDLM_CAPI_Transport::meta_phone($lead->phone ?? ''));
+            $first_hash = IDLM_CAPI_Transport::meta_hash(IDLM_CAPI_Transport::meta_name($lead->first_name ?? ''));
+            $last_hash = IDLM_CAPI_Transport::meta_hash(IDLM_CAPI_Transport::meta_name($lead->last_name ?? ''));
 
             $row_data = array($email_hash, $phone_hash, $first_hash, $last_hash);
             if ($is_value_based) {

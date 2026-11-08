@@ -1766,6 +1766,7 @@ require_once __DIR__ . '/capi-retention-contracts.php';
 require_once __DIR__ . '/capi-graph-version-contracts.php';
 require_once __DIR__ . '/capi-meta-log-contracts.php';
 require_once __DIR__ . '/capi-meta-payload-contracts.php';
+require_once __DIR__ . '/capi-meta-decision-contracts.php';
 require_once __DIR__ . '/whatsapp-inbound-contracts.php';
 require_once __DIR__ . '/lead-connector-contracts.php';
 require_once __DIR__ . '/google-audience-contracts.php';

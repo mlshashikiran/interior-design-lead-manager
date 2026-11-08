@@ -16,6 +16,27 @@ final class IDLM_CAPI_Transport {
         return empty($lead->fb_lead_id) && ($attribution['channel'] ?? '') === 'whatsapp';
     }
 
+    /** Meta phone normalisation: digits only, with the country code. A 10-digit or 0-prefixed 11-digit number is Indian (+91). Builder: Shashi. */
+    public static function meta_phone($phone) {
+        $digits = preg_replace('/\D/', '', (string) $phone);
+        if ('' === $digits) { return ''; }
+        if (0 === strpos($digits, '00')) { $digits = substr($digits, 2); }
+        elseif (11 === strlen($digits) && '0' === $digits[0]) { $digits = substr($digits, 1); }
+        if (10 === strlen($digits)) { $digits = '91' . $digits; }
+        return strlen($digits) >= 8 ? $digits : '';
+    }
+
+    /** Meta name normalisation: UTF-8 lowercase with punctuation and symbols removed. Builder: Shashi. */
+    public static function meta_name($name) {
+        $name = mb_strtolower(trim((string) $name), 'UTF-8');
+        $name = preg_replace('/[\p{P}\p{S}]+/u', '', $name);
+        return trim(preg_replace('/\s+/u', ' ', (string) $name));
+    }
+
+    public static function meta_hash($value) {
+        return '' === $value ? '' : hash('sha256', $value);
+    }
+
     /** Meta user_data keys whose hashed values identify a person; logs keep only the key. */
     const LOGGED_HASH_KEYS = array('em', 'ph', 'fn', 'ln', 'ct', 'st', 'zp', 'country', 'external_id', 'db', 'ge');
 
@@ -68,7 +89,7 @@ final class IDLM_CAPI_Transport {
         $access_token = $delivery['credential'];
 
         $ads_email = IDLM_Contact_Identity::email_for_ads($lead); $hashed_email = '' !== $ads_email ? hash('sha256', $ads_email) : '';
-        $hashed_phone = !empty($lead->phone) ? hash('sha256', preg_replace('/[^0-9]/', '', $lead->phone)) : '';
+        $hashed_phone = self::meta_hash(self::meta_phone($lead->phone ?? ''));
 
         // CRM workers do not possess the visitor's browser IP or user agent.
         $user_data = array();
@@ -82,12 +103,10 @@ final class IDLM_CAPI_Transport {
         }
 
 
-        if (!empty($lead->first_name)) {
-            $user_data['fn'] = hash('sha256', strtolower(trim($lead->first_name)));
-        }
-        if (!empty($lead->last_name)) {
-            $user_data['ln'] = hash('sha256', strtolower(trim($lead->last_name)));
-        }
+        $first_hash = self::meta_hash(self::meta_name($lead->first_name ?? ''));
+        if ('' !== $first_hash) { $user_data['fn'] = $first_hash; }
+        $last_hash = self::meta_hash(self::meta_name($lead->last_name ?? ''));
+        if ('' !== $last_hash) { $user_data['ln'] = $last_hash; }
 
         // A bare fbclid does not establish the original _fbc cookie's timestamp.
         // Do not fabricate it from the CRM lead creation time (or send seconds in
