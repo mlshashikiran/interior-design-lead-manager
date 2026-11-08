@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.105.0 — Meta Conversions API review and Meta lead sync (2026-11-08)
+
+Builder: Shashi. Releases PRs #8–#12: the CAPI review fixes and decisions in [CAPI-REVIEW.md](CAPI-REVIEW.md), the direct lead sync review and decisions L-D1 to L-D6 in [LEAD-SYNC-REVIEW.md](LEAD-SYNC-REVIEW.md), `_fbc`/`_fbp` webhook field mapping and the Qualified handoffs card fix. Core schema 1.3.18 adds the `fbc` and `fbp` lead columns. Release version and schema versions stay independent.
+
 ## 1.103.0 — release of the local unreleased work below (2026-11-06)
 
 Builder: Shashi. Releases every "Local unreleased" entry below as 1.103.0, plus the shared `IDLM_Date_Ranges` period class, the reconciled dashboard Won set (`IDLM_Dashboard::won_set_sql()`), sidebar needs-action counts and toast notices. Core schema is `IDLM_DB_VERSION` as defined in the plugin file; updating runs its additive migrations. Release version and schema versions stay independent.
