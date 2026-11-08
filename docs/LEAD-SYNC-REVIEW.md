@@ -84,3 +84,14 @@ Review of the Meta Lead Ads (Instant Form) direct sync in `interior-design-lead-
 ## Tests
 
 Existing coverage is strong: native tests cover webhook and direct arrival order, replay, erasure, failed retrieval with rotated credentials, and the field fallback. Added for L-S1 and L-S2: fallback is skipped on rate-limit and token errors and kept on error 100 or unknown errors; mapping errors go straight to `failed` and recover through retry.
+
+## Setup without Meta App Review (implemented)
+
+The owner asked for a simpler setup that avoids App Review. A business that connects its own Page to its own Meta app only needs standard access, so the settings wizard now leads with a **system user token**:
+
+1. **App and token:** create a Business app owned by the Page's business and switch it to Live; add a system user, assign it the app and Page; generate a never-expiring token with `leads_retrieval`, `pages_manage_metadata`, `pages_read_engagement`, `pages_show_list` and `pages_manage_ads`; allow it in Leads access. Enter the app ID, app secret, token, Page ID and form IDs.
+2. **Webhook:** add the callback URL and a verification token to the app's Page webhook (`leadgen`).
+3. **Check and start:** the check confirms the token and lists missing permissions, subscribes the Page's `leadgen` field to the app if needed (keeping other fields, with a Page token derived for that call and never stored), and confirms each form is readable. Then enable sync.
+4. **Field mapping:** per-form mappings and import recovery.
+
+Facebook sign-in remains available under "Other way: connect with Facebook sign-in" in step 3. The "Check saved Meta lead connection" button previously had no JavaScript handler and did nothing; it is now wired up and shows each result line.
