@@ -162,8 +162,11 @@ class IDLM_Audiences {
 
             $row_data = array($email_hash, $phone_hash, $first_hash, $last_hash);
             if ($is_value_based) {
-                // Determine transaction/deal value from lead record, fallback to 100.0 if not set or zero
-                $val = (!empty($lead->deal_value) && floatval($lead->deal_value) > 0) ? floatval($lead->deal_value) : 100.0;
+                // A value-based audience gets only real deal values; an invented one
+                // would skew the lookalike (CAPI review D14). The daily resync picks a
+                // lead up once its deal value is entered.
+                $val = isset($lead->deal_value) && is_numeric($lead->deal_value) ? (float) $lead->deal_value : 0.0;
+                if (!is_finite($val) || $val <= 0) { continue; }
                 $row_data[] = $val;
             }
             $data[] = $row_data;
@@ -175,6 +178,7 @@ class IDLM_Audiences {
                 'data' => $data
             )
         );
+        if (!$data) { return array('status'=>'sent','payload'=>$payload,'response'=>'No lead in this page has a deal value; nothing was uploaded.','retry_after'=>0); }
 
         $endpoint = "https://graph.facebook.com/" . IDLM_CAPI_Transport::GRAPH_VERSION . "/" . rawurlencode($audience_id) . "/users";
 

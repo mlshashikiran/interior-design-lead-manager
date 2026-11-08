@@ -182,3 +182,22 @@ idlm_test('CAPI D2: a Won stage sends the close value whatever its Meta event is
     assert_same('Won', $event['event_name']);
     assert_same(250000.0, (float) $event['custom_data']['value']);
 });
+
+idlm_test('CAPI D14: value-based Meta audiences upload only real deal values', static function(): void {
+    idlm_test_reset_environment();
+    $GLOBALS['idlm_test_http_calls'] = array(); $GLOBALS['idlm_test_http_code'] = 200;
+    update_option('idlm_meta_access_token', 'synthetic-meta-token');
+    $rule = array('platform'=>'meta', 'audience_id'=>'synthetic-audience', 'is_value'=>'1');
+    $leads = array((object) lead_fixture(array('id'=>1, 'deal_value'=>450000)), (object) lead_fixture(array('id'=>2, 'deal_value'=>0, 'email'=>'b@example.test')), (object) lead_fixture(array('id'=>3, 'deal_value'=>null, 'email'=>'c@example.test')));
+    $out = IDLM_Recovery_Guard::run(static function() use ($leads, $rule) { return IDLM_Audiences::send_page($leads, $rule); });
+    assert_same('sent', $out['status']);
+    $body = json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'], true)['payload'];
+    assert_same(array('EMAIL', 'PHONE', 'FN', 'LN', 'LOOKALIKE_VALUE'), $body['schema']);
+    assert_same(1, count($body['data']), 'Leads without a deal value are left out, not given 100.');
+    assert_same(450000, $body['data'][0][4]);
+    $GLOBALS['idlm_test_http_calls'] = array();
+    $none = IDLM_Recovery_Guard::run(static function() use ($leads, $rule) { return IDLM_Audiences::send_page(array($leads[1], $leads[2]), $rule); });
+    assert_same('sent', $none['status']); assert_same(0, count($GLOBALS['idlm_test_http_calls']), 'An empty value page makes no request.');
+    $plain = IDLM_Recovery_Guard::run(static function() use ($leads) { return IDLM_Audiences::send_page($leads, array('platform'=>'meta', 'audience_id'=>'synthetic-audience', 'is_value'=>'0')); });
+    assert_same(3, count(json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'], true)['payload']['data']), 'A plain audience still uploads everyone.');
+});
