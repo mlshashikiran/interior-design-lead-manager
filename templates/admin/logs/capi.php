@@ -107,14 +107,15 @@ $idlm_status_tabs = array('' => 'All', 'failed' => 'Failed', 'success' => 'Succe
                     <?php foreach ($idlm_logs as $idlm_log):
                         $idlm_lead_label = $idlm_log->email ? $idlm_log->email : 'Lead #' . $idlm_log->lead_id;
                         $idlm_entry_label = sprintf('%s for %s at %s', $idlm_log->event_name, $idlm_lead_label, IDLM_Admin::format_datetime($idlm_log->created_at));
+                        $idlm_outcome = isset($idlm_log->outcome) && is_array($idlm_log->outcome) ? $idlm_log->outcome : array('label' => ucfirst((string) $idlm_log->status), 'badge' => 'success' === $idlm_log->status ? 'success' : 'failed', 'retryable' => 'success' !== $idlm_log->status, 'message' => '');
                     ?>
                         <tr<?php echo 'success' !== $idlm_log->status ? ' class="is-failed"' : ''; ?>>
-                            <td data-label="Select" class="idlm-selection-column"><label class="screen-reader-text" for="idlm-capi-log-<?php echo esc_attr($idlm_log->id); ?>">Select <?php echo esc_html($idlm_entry_label); ?></label><input class="idlm-checkbox-control idlm-capi-log-selector" type="checkbox" id="idlm-capi-log-<?php echo esc_attr($idlm_log->id); ?>" value="<?php echo esc_attr($idlm_log->id); ?>"></td>
+                            <td data-label="Select" class="idlm-selection-column"><?php if ($idlm_outcome['retryable']): ?><label class="screen-reader-text" for="idlm-capi-log-<?php echo esc_attr($idlm_log->id); ?>">Select <?php echo esc_html($idlm_entry_label); ?></label><input class="idlm-checkbox-control idlm-capi-log-selector" type="checkbox" id="idlm-capi-log-<?php echo esc_attr($idlm_log->id); ?>" value="<?php echo esc_attr($idlm_log->id); ?>"><?php endif; ?></td>
                             <td data-label="Time" class="idlm-table-cell-nowrap"><?php echo esc_html(IDLM_Admin::format_datetime($idlm_log->created_at)); ?></td>
                             <td data-label="Lead"><span class="idlm-log-primary"><?php echo esc_html($idlm_lead_label); ?></span><small>Lead #<?php echo esc_html((string) $idlm_log->lead_id); ?></small></td>
                             <td data-label="Platform"><span class="idlm-badge idlm-badge-<?php echo esc_attr($idlm_log->platform); ?>"><?php echo esc_html(ucfirst($idlm_log->platform)); ?></span></td>
                             <td data-label="Event"><code class="idlm-log-token"><?php echo esc_html($idlm_log->event_name); ?></code></td>
-                            <td data-label="Status"><span class="idlm-badge idlm-badge-<?php echo 'success' === $idlm_log->status ? 'success' : 'failed'; ?>"><?php echo esc_html(ucfirst((string) $idlm_log->status)); ?></span></td>
+                            <td data-label="Status"><span class="idlm-badge idlm-badge-<?php echo esc_attr($idlm_outcome['badge']); ?>"><?php echo esc_html($idlm_outcome['label']); ?></span><?php if ('' !== $idlm_outcome['message']): ?><small class="idlm-log-outcome-message"><?php echo esc_html($idlm_outcome['message']); ?></small><?php endif; ?></td>
                             <td data-label="Details"><button class="idlm-btn idlm-btn-secondary idlm-btn-compact" type="button" data-idlm-log-inspect data-log-type="capi" data-log-id="<?php echo esc_attr($idlm_log->id); ?>" data-log-label="<?php echo esc_attr($idlm_entry_label); ?>" aria-haspopup="dialog">Inspect payload</button></td>
                         </tr>
                     <?php endforeach; ?>

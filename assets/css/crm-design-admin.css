@@ -391,6 +391,14 @@ body.idlm-crm-design .idlm-logs-page .idlm-log-table .idlm-log-primary {
     overflow-wrap: anywhere;
 }
 
+body.idlm-crm-design .idlm-logs-page .idlm-log-table .idlm-log-outcome-message {
+    display: block;
+    margin-block-start: var(--idlm-space-1);
+    max-inline-size: 32ch;
+    color: var(--idlm-text-muted);
+    overflow-wrap: anywhere;
+}
+
 body.idlm-crm-design .idlm-logs-page .idlm-log-table td[data-label="Leads synced"] {
     font-variant-numeric: tabular-nums;
 }

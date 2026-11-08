@@ -201,3 +201,27 @@ idlm_test('CAPI D14: value-based Meta audiences upload only real deal values', s
     $plain = IDLM_Recovery_Guard::run(static function() use ($leads) { return IDLM_Audiences::send_page($leads, array('platform'=>'meta', 'audience_id'=>'synthetic-audience', 'is_value'=>'0')); });
     assert_same(3, count(json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'], true)['payload']['data']), 'A plain audience still uploads everyone.');
 });
+
+idlm_test('CAPI D13: the log screen tells rejected, retrying, uncertain and not-sent attempts apart', static function(): void {
+    $row = static function(string $status, $delivery, string $response = '') { return (object) array('status'=>$status, 'payload'=>serialize(array('data'=>array(), '_idlm_delivery'=>$delivery)), 'response'=>$response); };
+    $ok = IDLM_Admin_Logs_Renderer::capi_outcome($row('success', array('outcome'=>'success', 'attempted'=>true, 'retryable'=>false), '{"events_received":1,"fbtrace_id":"synthetic-trace"}'));
+    assert_same(array('success', 'Succeeded', 'success', false), array($ok['key'], $ok['label'], $ok['badge'], $ok['retryable']));
+    $rejected = IDLM_Admin_Logs_Renderer::capi_outcome($row('failed', array('outcome'=>'failed', 'attempted'=>true, 'retryable'=>false), '{"error":{"message":"Invalid parameter","error_user_msg":"The event_time is too old.","fbtrace_id":"synthetic-trace"}}'));
+    assert_same(array('Rejected', 'failed', false), array($rejected['label'], $rejected['badge'], $rejected['retryable']));
+    assert_same('The event_time is too old. (trace synthetic-trace)', $rejected['message']);
+    $fixable = IDLM_Admin_Logs_Renderer::capi_outcome($row('failed', array('outcome'=>'failed', 'attempted'=>true, 'retryable'=>true), '{"error":{"message":"Invalid OAuth access token."}}'));
+    assert_true($fixable['retryable']); assert_same('Invalid OAuth access token.', $fixable['message']);
+    $transient = IDLM_Admin_Logs_Renderer::capi_outcome($row('failed', array('outcome'=>'transient', 'attempted'=>true, 'retryable'=>true), '{"error":{"code":17,"message":"User request limit reached"}}'));
+    assert_same(array('Retrying', 'warning', true), array($transient['label'], $transient['badge'], $transient['retryable']));
+    $uncertain = IDLM_Admin_Logs_Renderer::capi_outcome($row('failed', array('outcome'=>'uncertain', 'attempted'=>true, 'retryable'=>false), 'cURL error 28'));
+    assert_same(array('Uncertain', false, 'cURL error 28'), array($uncertain['label'], $uncertain['retryable'], $uncertain['message']));
+    $skipped = IDLM_Admin_Logs_Renderer::capi_outcome($row('failed', array('outcome'=>'failed', 'attempted'=>false, 'retryable'=>true), 'Missing integration destination or credentials.'));
+    assert_same(array('Not sent', true), array($skipped['label'], $skipped['retryable']));
+    $legacy = IDLM_Admin_Logs_Renderer::capi_outcome((object) array('status'=>'failed', 'payload'=>'{"data":[]}', 'response'=>''));
+    assert_same(array('Rejected', true), array($legacy['label'], $legacy['retryable']));
+    $template = file_get_contents(dirname(__DIR__) . '/templates/admin/logs/capi.php');
+    assert_true(strpos($template, "<?php if (\$idlm_outcome['retryable']): ?>") !== false, 'Rows that cannot be retried have no checkbox.');
+    assert_true(strpos($template, "esc_html(\$idlm_outcome['message'])") !== false);
+    $renderer = file_get_contents(dirname(__DIR__) . '/includes/class-admin-logs-renderer.php');
+    assert_true(strpos($renderer, 'unset($log->payload, $log->response)') !== false && strpos($renderer, "ORDER BY c.id DESC LIMIT 50") !== false, 'Payloads are read for at most 50 rows and not passed to the view.');
+});

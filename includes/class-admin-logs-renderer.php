@@ -26,7 +26,7 @@ class IDLM_Admin_Logs_Renderer {
         }
         self::append_common_where($where, $values, $filters, 'c');
 
-        $sql = "SELECT c.id, c.lead_id, c.platform, c.event_name, c.status, c.created_at,
+        $sql = "SELECT c.id, c.lead_id, c.platform, c.event_name, c.status, c.created_at, c.payload, c.response,
                        l.first_name, l.last_name, l.email
                 FROM {$wpdb->prefix}idlm_capi_logs c
                 LEFT JOIN {$wpdb->prefix}idlm_leads l ON c.lead_id = l.id
@@ -42,11 +42,46 @@ class IDLM_Admin_Logs_Renderer {
         $logs = $wpdb->get_results($sql);
         // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter
 
+        $logs = is_array($logs) ? $logs : array();
+        // The outcome is read from the 50 shown rows; payloads are dropped before rendering.
+        foreach ($logs as $log) { $log->outcome = self::capi_outcome($log); unset($log->payload, $log->response); }
+
         IDLM_View::display('admin/logs/capi.php', array(
-            'logs'        => is_array($logs) ? $logs : array(),
+            'logs'        => $logs,
             'retry_nonce' => wp_create_nonce('idlm_admin_nonce'),
             'filters'     => $filters,
         ));
+    }
+
+    /** What happened to one delivery attempt, for the log screen (CAPI review D13). Builder: Shashi. */
+    public static function capi_outcome($log) {
+        $payload = is_string($log->payload ?? null) ? IDLM_Schema_Migration::decode($log->payload) : ($log->payload ?? array());
+        if (is_string($payload)) { $decoded = json_decode($payload, true); $payload = is_array($decoded) ? $decoded : array(); }
+        $delivery = is_array($payload) && is_array($payload['_idlm_delivery'] ?? null) ? $payload['_idlm_delivery'] : array();
+        $outcome = (string) ($delivery['outcome'] ?? ('success' === ($log->status ?? '') ? 'success' : 'failed'));
+        if ('success' === ($log->status ?? '')) { $outcome = 'success'; }
+        elseif (array_key_exists('attempted', $delivery) && false === $delivery['attempted']) { $outcome = 'not_sent'; }
+        $states = array(
+            'success'   => array('Succeeded', 'success', true),
+            'failed'    => array('Rejected', 'failed', !array_key_exists('retryable', $delivery) || !empty($delivery['retryable'])),
+            'transient' => array('Retrying', 'warning', true),
+            'uncertain' => array('Uncertain', 'warning', false),
+            'not_sent'  => array('Not sent', 'warning', true),
+        );
+        $state = $states[$outcome] ?? $states['failed'];
+        $message = '';
+        $response = is_string($log->response ?? null) ? json_decode($log->response, true) : null;
+        if (is_array($response)) {
+            $error = is_array($response['error'] ?? null) ? $response['error'] : array();
+            $text = (string) ($error['error_user_msg'] ?? ($error['message'] ?? ''));
+            $trace = (string) ($response['fbtrace_id'] ?? ($error['fbtrace_id'] ?? ''));
+            $message = trim($text . ('' !== $trace ? ' (trace ' . $trace . ')' : ''));
+        } elseif ('success' !== $outcome && is_string($log->response ?? null)) {
+            $message = (string) $log->response;
+        }
+        if ('uncertain' === $outcome && '' === $message) { $message = 'The provider may have received this event; it is not replayed.'; }
+        if (function_exists('mb_strimwidth')) { $message = mb_strimwidth($message, 0, 160, '…', 'UTF-8'); }
+        return array('key' => $outcome, 'label' => $state[0], 'badge' => $state[1], 'retryable' => 'success' !== $outcome && $state[2], 'message' => $message);
     }
 
     public static function render_audience() {
