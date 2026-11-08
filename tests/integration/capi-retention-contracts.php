@@ -22,12 +22,25 @@ idlm_integration_test('T08-N-INT008 attribution and force cannot resend accepted
     }
 });
 idlm_integration_test('T08-N-INT008 ambiguous HTTP outcomes prevent later ordinary and manual replay',static function():void {
-    foreach(array('google','meta','linkedin') as $platform){
+    // Meta is replay-safe (event_id dedup): CAPI review D8 below.
+    foreach(array('google','linkedin') as $platform){
         foreach(array(408,503) as $code){
             [$lead,$row,$log]=idlm_capi_ret_fixture($platform);$method='fire_'.$platform.'_capi';
             [$r,$calls]=idlm_capi_native_capture(static fn()=>IDLM_CAPI::$method($row,'Qualified'),$code);idlm_integration_assert_same('uncertain',$r['outcome']);idlm_integration_assert_same(1,count($calls));
             [$again,$calls]=idlm_capi_native_capture(static function()use($row,$method,$log){IDLM_CAPI::$method($row,'Qualified',true);return IDLM_CAPI::retry_capi_log($log);});idlm_integration_assert_same(0,count($calls));
         }
+    }
+});
+idlm_integration_test('CAPI D8 native: a Meta timeout or 5xx is transient and replays once with the same event_id',static function():void {
+    foreach(array(408,503) as $code){
+        [$lead,$row,$log]=idlm_capi_ret_fixture('meta');
+        [$r,$calls]=idlm_capi_native_capture(static fn()=>IDLM_CAPI::fire_meta_capi($row,'Qualified'),$code);idlm_integration_assert_same('transient',$r['outcome']);idlm_integration_assert_same(1,count($calls));
+        idlm_integration_assert_same('failed',IDLM_CAPI_Delivery::read($lead,'meta','Contact')['status']);
+        $first=json_decode($calls[0]['args']['body'],true)['data'][0];
+        [$again,$calls]=idlm_capi_native_capture(static fn()=>IDLM_CAPI::retry_capi_log($r['log_id']));idlm_integration_assert_same(1,count($calls));idlm_integration_assert_true($again['success'],$again['message']);
+        $second=json_decode($calls[0]['args']['body'],true)['data'][0];idlm_integration_assert_same($first['event_id'],$second['event_id']);idlm_integration_assert_same($first['event_time'],$second['event_time']);
+        [$none,$calls]=idlm_capi_native_capture(static fn()=>IDLM_CAPI::fire_meta_capi($row,'Qualified'));idlm_integration_assert_same(0,count($calls));
+        wp_clear_scheduled_hook(IDLM_CAPI_Transport::META_RETRY_HOOK,array($r['log_id'],IDLM_Recovery_Guard::generation()));
     }
 });
 idlm_integration_test('T08-T16-N-INT008 all platforms retain sent evidence after configured payload expiry and stage reversal',static function():void {

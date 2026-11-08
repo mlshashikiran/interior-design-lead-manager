@@ -60,6 +60,18 @@ idlm_integration_test('CONNECTOR-N webhook works with direct sync disabled and i
     update_option('idlm_meta_capi_enabled','1');update_option('idlm_meta_pixel_id','123456');IDLM_Secret_Store::set('idlm_meta_access_token','synthetic-capi-token');
     [$result,$calls]=idlm_connector_native_http(array(),static function()use($lead){return IDLM_CAPI::fire_meta_capi($lead,'New');});idlm_integration_assert_same(true,$result['success'],$result['message']);$payload=json_decode($calls[0]['args']['body'],true)['data'][0];idlm_integration_assert_same($id,$payload['user_data']['lead_id']);idlm_integration_assert_true(!isset($payload['user_data']['fbc']));idlm_integration_assert_same(array(hash('sha256',$phone)),$payload['user_data']['ph']);
 });
+/** New is queued, not sent in the intake request (CAPI review D12); run the due CAPI jobs as the scheduler would. */
+function idlm_connector_native_run_capi_queue(): int {
+    $ran=0;
+    foreach((array)_get_cron_array() as $time=>$hooks){
+        foreach((array)($hooks['idlm_async_capi_upload_event'] ?? array()) as $event){
+            if($time>time()){continue;}
+            wp_unschedule_event($time,'idlm_async_capi_upload_event',$event['args']);
+            do_action_ref_array('idlm_async_capi_upload_event',array_values($event['args']));$ran++;
+        }
+    }
+    return $ran;
+}
 idlm_integration_test('CONNECTOR-N direct and webhook duplicate delivery sends one New CAPI event',static function():void {
     idlm_connector_native_setup();update_option('idlm_meta_capi_enabled','1');update_option('idlm_meta_pixel_id','123456');IDLM_Secret_Store::set('idlm_meta_access_token','synthetic-capi-token');
     foreach(array('direct-first','webhook-first') as $index=>$order){
@@ -67,7 +79,7 @@ idlm_integration_test('CONNECTOR-N direct and webhook duplicate delivery sends o
         [$result,$calls]=idlm_connector_native_http(array($id=>$record),static function()use($order,$id,$phone){
             $direct=static function()use($id){idlm_integration_assert_same(true,idlm_connector_native_enqueue_meta($id));idlm_integration_assert_same(true,IDLM_Lead_Connector::process(idlm_connector_native_key('meta',$id)));};
             $webhook=static function()use($id,$phone){idlm_integration_assert_same(200,idlm_connector_native_webhook($id,$phone)->get_status());};
-            if($order==='direct-first'){$direct();$webhook();}else{$webhook();$direct();}return true;
+            if($order==='direct-first'){$direct();$webhook();}else{$webhook();$direct();}idlm_connector_native_run_capi_queue();return true;
         });
         $posts=array_values(array_filter($calls,static function($call){return ($call['args']['method'] ?? '')==='POST';}));idlm_integration_assert_same(1,count($posts));$payload=json_decode($posts[0]['args']['body'],true)['data'][0];idlm_integration_assert_same($id,$payload['user_data']['lead_id']);
     }

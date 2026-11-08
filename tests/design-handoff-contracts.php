@@ -63,11 +63,11 @@ idlm_test('HANDOFF design schema is pinned to its schema version, so a new colum
     // A column added without a version bump never reaches a site already on that version,
     // and every write naming it fails ("That change was not saved"). Change both together.
     $fingerprint = md5(implode("\n", array(IDLM_Design_Handoffs::schema(), IDLM_Design_Handoffs::versions_schema(), IDLM_Design_Handoffs::events_schema(), IDLM_Design_Revisions::schema(), IDLM_Design_Stages::schema())));
-    assert_same(array('1.3.17', 'a9a56737b36fe084156f4f2f8695d34f'), array(IDLM_DB_VERSION, $fingerprint), 'Design schema changed: bump IDLM_DB_VERSION, then update this pin.');
+    assert_same(array('1.3.18', 'a9a56737b36fe084156f4f2f8695d34f'), array(IDLM_DB_VERSION, $fingerprint), 'Design schema changed: bump IDLM_DB_VERSION, then update this pin.');
 });
 
 idlm_test('HANDOFF table is additive and joins deletion, reset, recovery and outbox rules', static function(): void {
-    assert_same('1.3.17', IDLM_DB_VERSION);
+    assert_same('1.3.18', IDLM_DB_VERSION);
     assert_same(array('idlm_design_document_versions', 'idlm_design_revisions', 'idlm_design_handoff_events', 'idlm_design_handoff_versions', 'idlm_design_handoffs'), IDLM_Design_Handoffs::tables());
     assert_contains('IDLM_Design_Handoffs::schema()', idlm_handoff_source('includes/class-db.php'));
     assert_contains('UNIQUE KEY lead_id', idlm_handoff_source('includes/class-design-handoffs.php'));

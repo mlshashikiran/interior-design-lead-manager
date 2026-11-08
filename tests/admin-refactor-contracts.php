@@ -48,7 +48,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
         'ajax_log_presales_touch', 'ajax_presales_decision', 'ajax_save_activity_comment',
         'ajax_edit_activity_comment', 'ajax_delete_activity_comment', 'ajax_export_google_conversions',
         'ajax_export_leads', 'ajax_add_lead_manual', 'ajax_trigger_manual_audience_sync',
-        'ajax_test_api_connection', 'ajax_retry_capi_events', 'ajax_log_js_error',
+        'ajax_test_api_connection', 'ajax_send_meta_test_event', 'ajax_retry_capi_events', 'ajax_log_js_error',
         'ajax_clear_telemetry_logs', 'ajax_download_diagnostic_report', 'ajax_save_routing_settings',
         'ajax_run_fallback_now', 'ajax_get_mapped_past_leads', 'ajax_sync_mapped_past_batch',
         'ajax_bulk_action', 'ajax_get_leads_table', 'ajax_get_kanban_leads',
@@ -65,7 +65,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
     })));
 
     assert_same($expected, $actual, 'The IDLM_Admin public compatibility surface changed.');
-    assert_same(85, count($actual));
+    assert_same(86, count($actual));
     assert_true(count(file(dirname(__DIR__) . '/includes/class-admin.php')) <= 3240, 'The Phase 2 admin facade exceeded its 3,240-line size contract.');
 });
 
@@ -303,7 +303,7 @@ idlm_test('admin hooks, AJAX actions, shortcodes, and menu callbacks remain regi
         'wp_ajax_idlm_save_lead_details', 'wp_ajax_idlm_delete_lead',
         'wp_ajax_idlm_import_leads_batch', 'wp_ajax_idlm_upload_lead_file',
         'wp_ajax_idlm_get_total_leads_count', 'wp_ajax_idlm_reset_crm_data',
-        'wp_ajax_idlm_test_api_connection', 'wp_ajax_idlm_retry_capi_events',
+        'wp_ajax_idlm_test_api_connection', 'wp_ajax_idlm_send_meta_test_event', 'wp_ajax_idlm_retry_capi_events',
         'wp_ajax_idlm_log_js_error', 'wp_ajax_idlm_clear_telemetry_logs',
         'wp_ajax_idlm_download_diagnostic_report', 'wp_ajax_idlm_save_routing_settings',
         'wp_ajax_idlm_run_fallback_now', 'wp_ajax_idlm_log_presales_touch',

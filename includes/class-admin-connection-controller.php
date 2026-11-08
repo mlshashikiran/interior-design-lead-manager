@@ -3,6 +3,16 @@
 if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_Admin_Connection_Controller {
+    /** Send one synthetic Meta test event with the admin's Events Manager test code (CAPI review D11). */
+    public static function ajax_send_meta_test_event() {
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('admin');
+        $code = isset($_POST['test_event_code']) ? sanitize_text_field(wp_unslash($_POST['test_event_code'])) : '';
+        $result = IDLM_CAPI_Transport::send_meta_test_event((string) get_option('idlm_meta_pixel_id', ''), (string) IDLM_Secret_Store::get('idlm_meta_access_token', '', true), $code);
+        if ($result['success']) { wp_send_json_success(array('message' => $result['message'])); }
+        wp_send_json_error(array('message' => $result['message']));
+    }
+
     public static function ajax_test_api_connection() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
         IDLM_Admin::require_ajax_access('admin');
@@ -26,7 +36,7 @@ final class IDLM_Admin_Connection_Controller {
             }
 
             // We can check Pixel ID (CAPI) or Custom Audience ID
-            $endpoint = "https://graph.facebook.com/v25.0/" . rawurlencode($target_id) . "?";
+            $endpoint = "https://graph.facebook.com/" . IDLM_CAPI_Transport::GRAPH_VERSION . "/" . rawurlencode($target_id) . "?";
             if ($test_type === 'capi') {
                 $endpoint .= "fields=name";
             } else {

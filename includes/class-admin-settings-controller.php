@@ -324,7 +324,7 @@ class IDLM_Admin_Settings_Controller {
 
         // Save dynamic mappings
         $platforms = array('meta', 'google', 'linkedin', 'website', 'walkin');
-        $fields = array('first_name', 'last_name', 'email', 'phone', 'budget', 'project_timeline', 'property_location', 'property_type', 'num_rooms', 'preferred_studio', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_adgroup', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'fbclid', 'li_fat_id', 'fb_lead_id', 'landing_page', 'conversion_time', 'referrer_details');
+        $fields = array('first_name', 'last_name', 'email', 'phone', 'budget', 'project_timeline', 'property_location', 'property_type', 'num_rooms', 'preferred_studio', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_adgroup', 'utm_term', 'utm_content', 'gclid', 'gbraid', 'wbraid', 'fbclid', 'li_fat_id', 'fbc', 'fbp', 'fb_lead_id', 'landing_page', 'conversion_time', 'referrer_details');
         foreach ($platforms as $plat) {
             $plat_maps = array();
             foreach ($fields as $f) {

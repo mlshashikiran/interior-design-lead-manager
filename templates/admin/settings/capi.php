@@ -82,6 +82,15 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                                 <div class="idlm-table-actions">
                                     <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-test-meta-capi" data-idlm-ui="action-outline">Test Meta CAPI Connection</button>
                                 </div>
+
+                                <div class="idlm-form-group">
+                                    <label for="idlm-meta-test-event-code">Events Manager test code</label>
+                                    <input type="text" id="idlm-meta-test-event-code" class="idlm-input" autocomplete="off" spellcheck="false" placeholder="TEST12345" aria-describedby="idlm-meta-test-event-help">
+                                    <p class="description" id="idlm-meta-test-event-help">Sends one sample event, with no lead data, to Events Manager &gt; Test Events using the saved Pixel ID and token. The code is not saved.</p>
+                                </div>
+                                <div class="idlm-table-actions">
+                                    <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-send-meta-test-event" data-idlm-ui="action-outline">Send test event</button>
+                                </div>
                             </article>
 
                             <!-- Google Ads Offline Conversions Card -->

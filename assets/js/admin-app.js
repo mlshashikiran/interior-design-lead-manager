@@ -1609,6 +1609,33 @@ jQuery(document).ready(function($) {
         });
     });
 
+    // Send one Meta test event to Events Manager > Test Events (CAPI review D11)
+    $(document).on('click', '#idlm-send-meta-test-event', function(e) {
+        e.preventDefault();
+        var $btn = $(this);
+        var code = $.trim($('#idlm-meta-test-event-code').val() || '');
+        var report = function(message, type) {
+            showToast(message, type);
+            if (window.IDLMSettingsActionStatus) { window.IDLMSettingsActionStatus($btn, message, type); }
+        };
+        if (!/^TEST[A-Za-z0-9]{1,32}$/.test(code)) {
+            report('Enter the test code shown in Events Manager > Test Events.', 'error');
+            return;
+        }
+        $btn.text('Sending test event...').prop('disabled', true);
+        $.ajax({
+            url: idlm_vars.ajax_url,
+            type: 'POST',
+            data: { action: 'idlm_send_meta_test_event', nonce: idlm_vars.nonce, test_event_code: code },
+            success: function(response) {
+                var message = response && response.data && response.data.message ? response.data.message : 'The test event could not be sent.';
+                report(message, response && response.success ? 'success' : 'error');
+            },
+            error: function() { report('The test event could not be sent.', 'error'); },
+            complete: function() { $btn.text('Send test event').prop('disabled', false); }
+        });
+    });
+
     // Test Audience Rule Connection Click Handler
     $(document).on('click', '.idlm-test-audience-rule', function(e) {
         e.preventDefault();

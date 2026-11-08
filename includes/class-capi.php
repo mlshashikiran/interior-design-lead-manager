@@ -4,6 +4,14 @@ if (!defined('ABSPATH')) {
 }
 
 class IDLM_CAPI {
+    /** Meta defaults for a fresh install: CRM stage names for Conversion Leads (CAPI review D2). Builder: Shashi. */
+    const META_CRM_STAGE_EVENTS = array('New' => 'Lead', 'Qualified' => 'Qualified', 'Quote Shared' => 'Quote Shared', 'Won' => 'Won');
+
+    /** First-activation defaults only; an existing install's settings are never changed. */
+    public static function seed_fresh_install_defaults($fresh_install) {
+        if (!$fresh_install) { return false; }
+        return add_option('idlm_meta_event_mappings', self::META_CRM_STAGE_EVENTS);
+    }
     public static function init() {
         // Hook lead conversion stage changes
         add_action('idlm_lead_stage_converted', array(__CLASS__, 'queue_capi_event'), 10, 3);
@@ -11,6 +19,26 @@ class IDLM_CAPI {
         add_action('idlm_async_capi_upload_event', array(__CLASS__, 'process_capi_event'), 10, 3);
         // Hook for handling duplicate lead attribution merges
         add_action('idlm_lead_attribution_merged', array(__CLASS__, 'handle_attribution_merged'), 10, 2);
+        add_action(IDLM_CAPI_Transport::META_RETRY_HOOK, array(__CLASS__, 'auto_retry_meta'), 10, 2);
+    }
+
+    /** Automatic replay of a Meta transient failure (CAPI review D8). Shares the 3-attempt cap with manual retry. Builder: Shashi. */
+    public static function auto_retry_meta($log_id, $generation = null) {
+        return IDLM_Recovery_Guard::run(static function() use ($log_id) {
+            global $wpdb;
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- CAPI-D8: prefixed log table, value bound; retry state must be read live.
+            $log = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_capi_logs WHERE id = %d", absint($log_id)));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            if ($wpdb->last_error || !$log || 'meta' !== $log->platform || 'failed' !== $log->status) { return self::no_attempt('Only a failed Meta event is retried automatically.'); }
+            $identity = self::log_payload($log->payload)['_idlm_delivery'] ?? array();
+            if ('transient' !== ($identity['outcome'] ?? '')) { return self::no_attempt('Only a temporary Meta error is retried automatically.'); }
+            // Meta deduplicates replays only within 48 hours of the first attempt.
+            $root = absint($identity['retry_root'] ?? 0) ?: (int) $log->id;
+            $first = $root === (int) $log->id ? $log : $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_capi_logs WHERE id = %d", $root)); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- CAPI-D8: prefixed log table, value bound.
+            $first_at = $first && is_string($first->created_at ?? null) ? strtotime(get_gmt_from_date($first->created_at) . ' UTC') : false;
+            if (!$first_at || time() - $first_at > 47 * HOUR_IN_SECONDS) { return self::no_attempt('The Meta deduplication window has passed; review before retrying.'); }
+            return self::retry_capi_log_work((int) $log->id);
+        }, $generation, true, IDLM_CAPI_Transport::META_RETRY_HOOK, array($log_id, $generation));
     }
 
     /** Preserve the hook callback without replaying an already reported conversion. */
@@ -165,54 +193,27 @@ class IDLM_CAPI {
      * Queue Conversion API event using Action Scheduler
      */
     public static function queue_capi_event($lead_id, $stage, $old_lead) {
+        // New is queued with no delay so lead intake never waits on provider calls (CAPI review D12).
         $delay = ($stage === 'New') ? 0 : 300;
-
-        if ($delay === 0) {
-            // Fire immediately and synchronously for lead capture ('New' stage) to ensure CAPI is sent instantly
-            IDLM_DB::log_activity($lead_id, 'capi_sync', "Executing Conversions API synchronously for stage: {$stage}.", 0);
-            $processed = self::process_capi_event($lead_id, $stage);
-            if (false === $processed && IDLM_Lead_Outbox::dispatching()) { throw new RuntimeException('CAPI dispatch is busy.'); }
-            return;
-        }
-
         $schedule_time = time() + $delay;
-        $delay_msg = " (delayed by 5 mins)";
+        $delay_msg = $delay ? " (delayed by 5 mins)" : '';
+        $args = array('lead_id' => $lead_id, 'stage' => $stage, 'generation' => IDLM_Recovery_Guard::generation());
 
-        // Cancel any pending CAPI uploads for this lead to prevent duplicate or conflicting events from firing on rapid stage changes.
-        $all_stages = get_option('idlm_custom_stages', array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'));
-        $all_stages = array_unique(array_merge(array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'), $all_stages));
-
-        foreach ($all_stages as $stg) {
-            $current_args = array('lead_id'=>$lead_id, 'stage'=>$stg, 'generation'=>IDLM_Recovery_Guard::generation());
-            if (function_exists('as_unschedule_all_actions')) { as_unschedule_all_actions('idlm_async_capi_upload_event', $current_args); }
-            wp_clear_scheduled_hook('idlm_async_capi_upload_event', $current_args);
-            if (function_exists('as_unschedule_all_actions')) {
-                as_unschedule_all_actions('idlm_async_capi_upload_event', array(
-                    'lead_id' => $lead_id,
-                    'stage' => $stg
-                ));
-            }
-            wp_clear_scheduled_hook('idlm_async_capi_upload_event', array(
-                'lead_id' => $lead_id,
-                'stage' => $stg
-            ));
+        // A newer change into the same stage replaces its pending job. Other stages
+        // keep theirs, so every funnel step is reported (CAPI review D4); the worker
+        // still checks that the lead currently meets each stage's condition.
+        foreach (array($args, array('lead_id' => $lead_id, 'stage' => $stage)) as $pending) {
+            if (function_exists('as_unschedule_all_actions')) { as_unschedule_all_actions('idlm_async_capi_upload_event', $pending); }
+            wp_clear_scheduled_hook('idlm_async_capi_upload_event', $pending);
         }
 
         if (function_exists('as_schedule_single_action')) {
-            $queued = as_schedule_single_action($schedule_time, 'idlm_async_capi_upload_event', array(
-                'lead_id' => $lead_id,
-                'stage' => $stage,
-                'generation' => IDLM_Recovery_Guard::generation()
-            ));
+            $queued = as_schedule_single_action($schedule_time, 'idlm_async_capi_upload_event', $args);
             if (!$queued && IDLM_Lead_Outbox::dispatching()) { throw new RuntimeException('CAPI scheduling was not accepted.'); }
             IDLM_DB::log_activity($lead_id, 'capi_queue', "Queued Conversions API background sync via Action Scheduler for stage: {$stage}{$delay_msg}.", 0);
         } else {
             // Fallback to WP Cron if Action Scheduler is disabled or not booted yet
-            $queued = wp_schedule_single_event($schedule_time, 'idlm_async_capi_upload_event', array(
-                'lead_id' => $lead_id,
-                'stage' => $stage,
-                'generation' => IDLM_Recovery_Guard::generation()
-            ));
+            $queued = wp_schedule_single_event($schedule_time, 'idlm_async_capi_upload_event', $args);
             if (!$queued && IDLM_Lead_Outbox::dispatching()) { throw new RuntimeException('CAPI scheduling was not accepted.'); }
             IDLM_DB::log_activity($lead_id, 'capi_queue', "Queued Conversions API background sync via WP Cron for stage: {$stage}{$delay_msg}.", 0);
         }
@@ -271,6 +272,26 @@ class IDLM_CAPI {
         if (!is_array($mappings)) { return array(); }
         if ('meta' === $platform && !array_key_exists('New', $mappings)) { $mappings['New']='Lead'; }
         return array_map(static function($value) { return is_string($value) ? trim($value) : ''; }, $mappings);
+    }
+
+    /** When the stage really changed (UTC). Falls back to now when unknown, in the future, or older than Meta's 7-day window. Builder: Shashi. */
+    private static function stage_occurred_at($lead, $stage) {
+        global $wpdb;
+        $now = time();
+        $local = null;
+        if ('New' === $stage) { $local = $lead->created_at ?? null; }
+        else {
+            $suppressed = $wpdb->suppress_errors(true);
+            // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- CAPI-D5: prefixed state-event table, values bound; the latest stage change must be read live.
+            $local = $wpdb->get_var($wpdb->prepare("SELECT MAX(occurred_at) FROM {$wpdb->prefix}idlm_lead_state_events WHERE lead_id = %d AND event_type = 'stage_change' AND to_value = %s", $lead->id, $stage));
+            // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+            $wpdb->suppress_errors($suppressed);
+            if ($wpdb->last_error) { $local = null; }
+            if (!$local && 'Qualified' === $stage) { $local = $lead->qualified_at ?? null; }
+        }
+        if (!is_string($local) || !preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/D', $local)) { return $now; }
+        $at = strtotime(get_gmt_from_date($local) . ' UTC');
+        return ($at && $at <= $now && $at > $now - 7 * DAY_IN_SECONDS + HOUR_IN_SECONDS) ? $at : $now;
     }
 
     private static function no_attempt($message) {
@@ -344,8 +365,9 @@ class IDLM_CAPI {
             $keys=array('meta'=>array('idlm_meta_pixel_id','idlm_meta_access_token'), 'google'=>array('idlm_google_measurement_id','idlm_google_api_secret'), 'linkedin'=>array('idlm_linkedin_conversion_id','idlm_linkedin_access_token'));
             $destination=(string) self::runtime_option($keys[$platform][0],'');$credential=(string) self::runtime_option($keys[$platform][1],'');
             if ($expected && ($expected['event'] !== $event || (!empty($expected['destination']) && $expected['destination'] !== $destination))) { return self::no_attempt('Event mapping or destination changed. Review the original event before retrying.'); }
-            $delivery=array('version'=>1,'platform'=>$platform,'lead_id'=>(int)$lead_id,'stage'=>$stage,'event'=>$event,'destination'=>$destination,'credential'=>$credential,'attempt_id'=>$expected['_attempt_id'] ?? bin2hex(random_bytes(16)),'event_id'=>$expected['event_id'] ?? ('idlm_lead_'.$lead_id.'_'.$event),'occurred_at'=>$expected['occurred_at'] ?? time(),'value'=>$expected['value'] ?? (float)($lead->deal_value ?? 0),'currency'=>$expected['currency'] ?? self::runtime_option('idlm_currency_code','INR'),'retry_root'=>$expected['retry_root'] ?? 0);
-            if ($platform==='meta' && $event==='Purchase' && $expected===null) {
+            $delivery=array('version'=>1,'platform'=>$platform,'lead_id'=>(int)$lead_id,'stage'=>$stage,'event'=>$event,'destination'=>$destination,'credential'=>$credential,'attempt_id'=>$expected['_attempt_id'] ?? bin2hex(random_bytes(16)),'event_id'=>$expected['event_id'] ?? ('idlm_lead_'.$lead_id.'_'.$event),'occurred_at'=>$expected['occurred_at'] ?? self::stage_occurred_at($lead,$stage),'value'=>$expected['value'] ?? (float)($lead->deal_value ?? 0),'currency'=>$expected['currency'] ?? self::runtime_option('idlm_currency_code','INR'),'retry_root'=>$expected['retry_root'] ?? 0);
+            // The close value applies to the Won stage whatever its Meta event is named.
+            if ($platform==='meta' && ($event==='Purchase' || $stage==='Won') && $expected===null) {
                 $amount=self::purchase_amount($lead);$delivery['value']=$amount['value'];$delivery['currency']=$amount['currency'];
             }
             if ('' === $destination || '' === $credential) { return self::record_attempt($lead_id,$platform,$delivery,array(),'Missing integration destination or credentials.','failed',false,true); }

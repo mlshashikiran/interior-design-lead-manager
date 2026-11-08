@@ -11,7 +11,7 @@ if (!function_exists('wp_schedule_single_event')) {
 if (!function_exists('wp_remote_post')) {
     function wp_remote_post($url, $args) {
         $GLOBALS['idlm_test_http_calls'][] = array($url, $args);
-        return array('response' => array('code' => $GLOBALS['idlm_test_http_code'] ?? 200), 'body' => '{}');
+        return array('response' => array('code' => $GLOBALS['idlm_test_http_code'] ?? 200), 'body' => $GLOBALS['idlm_test_http_body'] ?? '{}');
     }
     function wp_remote_retrieve_response_code($response) { return $response['response']['code']; }
     function wp_remote_retrieve_body($response) { return $response['body']; }

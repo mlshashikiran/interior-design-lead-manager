@@ -50,7 +50,7 @@ final class IDLM_Facebook_Direct {
         if (!preg_match('#^(?:oauth/access_token|me/accounts|[1-9][0-9]{0,31}/(?:leadgen_forms|leads|subscribed_apps))$#D', $path)) { return self::failure(); }
         $args = array('timeout'=>20, 'redirection'=>0, 'limit_response_size'=>1048576);
         if ($token !== '') { $args['headers'] = array('Authorization'=>'Bearer '.$token); }
-        $url = 'https://graph.facebook.com/v25.0/'.$path;
+        $url = 'https://graph.facebook.com/'.IDLM_CAPI_Transport::GRAPH_VERSION.'/'.$path;
         if ($method === 'GET') { $url = add_query_arg($query, $url); } else { $args['body'] = $query; }
         // OAuth/Page responses contain new tokens; preserve those for encrypted storage.
         // Never surface raw provider errors or responses in diagnostics/browser output.
@@ -127,7 +127,7 @@ final class IDLM_Facebook_Direct {
             $pending = array('epoch'=>$state, 'state'=>$state, 'expires'=>time()+900, 'generation'=>$generation, 'session'=>hash('sha256', wp_get_session_token()), 'app'=>self::fingerprint(), 'return_url'=>explode('#', $return, 2)[0]);
             if (!self::save($pending)) { return self::failure(); }
             $config = IDLM_Lead_Connector::config();
-            return array('authorization_url'=>add_query_arg(array('client_id'=>$config['app_id'], 'config_id'=>$config['login_config_id'], 'redirect_uri'=>self::callback_url(), 'response_type'=>'code', 'state'=>$state), 'https://www.facebook.com/v25.0/dialog/oauth'));
+            return array('authorization_url'=>add_query_arg(array('client_id'=>$config['app_id'], 'config_id'=>$config['login_config_id'], 'redirect_uri'=>self::callback_url(), 'response_type'=>'code', 'state'=>$state), 'https://www.facebook.com/'.IDLM_CAPI_Transport::GRAPH_VERSION.'/dialog/oauth'));
         }
         if ($op === 'disconnect') {
             $config = IDLM_Lead_Connector::config(); $config['enabled'] = '0'; unset($config['connection']);

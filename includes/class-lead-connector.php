@@ -396,7 +396,7 @@ final class IDLM_Lead_Connector {
         if (IDLM_Facebook_Connect::hosted()) { return IDLM_Facebook_Connect::graph($path,$query); }
         $token=self::option('idlm_meta_lead_access_token','');
         if (!is_string($token) || $token === '' || !preg_match('#^[1-9][0-9]{0,31}(?:/(?:leads|subscribed_apps))?$#D',$path)) { return new WP_Error('idlm_connector_config','Lead access token or resource is unavailable.'); }
-        $url='https://graph.facebook.com/v25.0/'.$path;
+        $url='https://graph.facebook.com/'.IDLM_CAPI_Transport::GRAPH_VERSION.'/'.$path;
         if ($query) { $url=add_query_arg($query,$url); }
         $response=IDLM_Secret_Store::request($url,array('headers'=>array('Authorization'=>'Bearer '.$token),'timeout'=>10,'limit_response_size'=>524288),array($token),'GET');
         if (is_wp_error($response)) { return new WP_Error('idlm_connector_api','Meta lead retrieval failed; check connectivity and lead permissions.'); }

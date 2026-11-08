@@ -47,6 +47,7 @@ class IDLM_Admin {
         add_action('wp_ajax_idlm_get_total_leads_count', array(__CLASS__, 'ajax_get_total_leads_count'));
         add_action('wp_ajax_idlm_reset_crm_data', array(__CLASS__, 'ajax_reset_crm_data'));
         add_action('wp_ajax_idlm_test_api_connection', array(__CLASS__, 'ajax_test_api_connection'));
+        add_action('wp_ajax_idlm_send_meta_test_event', array(__CLASS__, 'ajax_send_meta_test_event'));
         add_action('wp_ajax_idlm_retry_capi_events', array(__CLASS__, 'ajax_retry_capi_events'));
         add_action('wp_ajax_idlm_log_js_error', array(__CLASS__, 'ajax_log_js_error'));
         add_action('wp_ajax_idlm_clear_telemetry_logs', array(__CLASS__, 'ajax_clear_telemetry_logs'));
@@ -445,6 +446,7 @@ class IDLM_Admin {
     public static function ajax_add_lead_manual() { return IDLM_Admin_Ajax::ajax_add_lead_manual(); }
     public static function ajax_trigger_manual_audience_sync() { return IDLM_Admin_Ajax::ajax_trigger_manual_audience_sync(); }
     public static function ajax_test_api_connection() { return IDLM_Admin_Connection_Controller::ajax_test_api_connection(); }
+    public static function ajax_send_meta_test_event() { return IDLM_Admin_Connection_Controller::ajax_send_meta_test_event(); }
     public static function ajax_retry_capi_events() { return IDLM_Admin_Ajax::ajax_retry_capi_events(); }
     public static function ajax_log_js_error() { return IDLM_Admin_Telemetry_Controller::ajax_log_js_error(); }
     public static function ajax_clear_telemetry_logs() { return IDLM_Admin_Telemetry_Controller::ajax_clear_telemetry_logs(); }

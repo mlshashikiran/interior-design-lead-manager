@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 
 // Define Plugin Constants
 define('IDLM_VERSION', '1.104.0');
-define('IDLM_DB_VERSION', '1.3.17');
+define('IDLM_DB_VERSION', '1.3.18');
 define('IDLM_PATH', plugin_dir_path(__FILE__));
 define('IDLM_URL', plugin_dir_url(__FILE__));
 
@@ -126,6 +126,8 @@ function idlm_activate_plugin($network_wide = false) {
     if ($network_wide) {
         wp_die(esc_html__('Network activation is not supported. Use a single-site WordPress installation.', 'interior-design-lead-manager'), '', array('response' => 400));
     }
+    // A first-ever activation, read before migrations write their markers.
+    $fresh_install = false === get_option('idlm_plugin_activated_at', false) && false === get_option('idlm_schema_version', false);
     // 1. Run custom database migrations & table creations
     $result = IDLM_DB::init();
     if (is_wp_error($result)) { wp_die(esc_html($result->get_error_message()), '', array('response' => 503)); }
@@ -140,6 +142,10 @@ function idlm_activate_plugin($network_wide = false) {
 
     // 3. Register CRM roles and assignment capabilities.
     idlm_register_crm_roles_and_capabilities();
+
+    // Fresh installs report CRM stage names, the funnel Meta's Conversion Leads
+    // optimisation expects (CAPI review D2). Existing installs keep their mapping.
+    IDLM_CAPI::seed_fresh_install_defaults($fresh_install);
 
     // Log activation in global WordPress options
     update_option('idlm_plugin_activated_at', current_time('mysql'));

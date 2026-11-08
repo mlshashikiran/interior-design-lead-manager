@@ -166,6 +166,7 @@ final class IDLM_Lead_Deletion_Service {
     private static function cancel_scheduled_lead_jobs() {
         $action_scheduler_hooks = array(
             array('idlm_async_capi_upload_event', ''),
+            array(IDLM_CAPI_Transport::META_RETRY_HOOK, ''),
             array('idlm_async_interakt_track_event', 'idlm-interakt'),
             array('idlm_async_interakt_batch_event', 'idlm-interakt'),
             array(IDLM_Audience_Dispatch::HOOK, ''),

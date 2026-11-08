@@ -41,7 +41,7 @@ final class IDLM_Facebook_Connect {
     }
     public static function valid_authorization_url($url) {
         if (!is_string($url)) { return false; }$p=wp_parse_url($url);parse_str($p['query'] ?? '',$query);
-        return ($p['scheme'] ?? '')==='https' && ($p['host'] ?? '')==='www.facebook.com' && ($p['path'] ?? '')==='/v25.0/dialog/oauth' && !isset($p['user']) && !isset($p['pass']) && !isset($p['fragment'])
+        return ($p['scheme'] ?? '')==='https' && ($p['host'] ?? '')==='www.facebook.com' && ($p['path'] ?? '')==='/'.IDLM_CAPI_Transport::GRAPH_VERSION.'/dialog/oauth' && !isset($p['user']) && !isset($p['pass']) && !isset($p['fragment'])
             && !array_diff(array_keys($query),array('client_id','redirect_uri','config_id','response_type','state')) && ($query['response_type'] ?? '')==='code' && is_string($query['state'] ?? null) && preg_match('/^[a-f0-9]{64}$/D',$query['state']);
     }
     /** All operations bind to the current WordPress administrator and session. */
