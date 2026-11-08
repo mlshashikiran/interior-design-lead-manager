@@ -359,9 +359,11 @@ final class IDLM_Lead_Connector {
                 $result=$job['provider'] === 'meta' ? self::import_meta($job['payload'],$job['created_at']) : self::import_interakt($job['payload'],$job['created_at']);
                 if (is_wp_error($result) && $result->get_error_code() === 'idlm_connector_erased') { return self::finish($key,$job,'cancelled'); }
                 if ($result && !is_wp_error($result)) { return self::finish($key,$job,is_array($result) && !empty($result['requires_duplicate_review']) ? 'review' : 'imported'); }
-                $job['state']=$job['attempts'] >= self::MAX_ATTEMPTS ? 'failed' : 'queued';
+                // A mapping error waits for an admin fix and "Retry failed imports" instead of the timer.
+                $mapping=is_wp_error($result) && in_array($result->get_error_code(),self::MAPPING_ERRORS,true);
+                $job['state']=$mapping || $job['attempts'] >= self::MAX_ATTEMPTS ? 'failed' : 'queued';
                 $job['next_at']=time()+min(3600,60*(2 ** $job['attempts']));
-                self::write_job($key,$job); self::status($job['provider'],'retry_required');
+                self::write_job($key,$job); self::status($job['provider'],$mapping ? 'mapping_failed' : 'retry_required');
                 return false;
             } finally { self::unlock($lock); }
         });
@@ -401,7 +403,11 @@ final class IDLM_Lead_Connector {
         $response=IDLM_Secret_Store::request($url,array('headers'=>array('Authorization'=>'Bearer '.$token),'timeout'=>10,'limit_response_size'=>524288),array($token),'GET');
         if (is_wp_error($response)) { return new WP_Error('idlm_connector_api','Meta lead retrieval failed; check connectivity and lead permissions.'); }
         $data=json_decode(wp_remote_retrieve_body($response),true,32);
-        if (wp_remote_retrieve_response_code($response)!==200 || !is_array($data) || isset($data['error'])) { return new WP_Error('idlm_connector_api','Meta refused lead access. Check the token, Page, form and lead permissions.'); }
+        if (wp_remote_retrieve_response_code($response)!==200 || !is_array($data) || isset($data['error'])) {
+            // Keep only Meta's numeric error code; the message may echo request data.
+            $code=is_array($data) && is_array($data['error'] ?? null) && is_numeric($data['error']['code'] ?? null) ? (int)$data['error']['code'] : 0;
+            return new WP_Error('idlm_connector_api','Meta refused lead access. Check the token, Page, form and lead permissions.',array('meta_code'=>$code));
+        }
         return $data;
     }
 
@@ -424,12 +430,23 @@ final class IDLM_Lead_Connector {
         return $data;
     }
 
+    /** Retry with fewer fields only for an unsupported field (100) or an unknown error; never on throttling or token errors. Builder: Shashi. */
+    public static function field_fallback($result) {
+        if (!is_wp_error($result)) { return false; }
+        $data=$result->get_error_data();
+        $code=is_array($data) ? (int)($data['meta_code'] ?? 0) : 0;
+        return 0 === $code || 100 === $code;
+    }
+
+    /** Errors that only an admin can fix (form mapping or a malformed record); retrying on a timer cannot help. */
+    const MAPPING_ERRORS = array('idlm_connector_contact', 'idlm_connector_lead', 'idlm_connector_identity');
+
     private static function import_meta($notification,$queued_at) {
         // Optional fields may be unavailable for a particular token, API version or lead.
         // Never let enrichment failure prevent the established lead retrieval path.
         $record=self::graph($notification['id'],array('fields'=>self::META_FULL_FIELDS));
-        if (is_wp_error($record)) { $record=self::graph($notification['id'],array('fields'=>self::META_ATTRIBUTION_FIELDS)); }
-        if (is_wp_error($record)) { $record=self::graph($notification['id'],array('fields'=>self::META_BASE_FIELDS)); }
+        if (self::field_fallback($record)) { $record=self::graph($notification['id'],array('fields'=>self::META_ATTRIBUTION_FIELDS)); }
+        if (self::field_fallback($record)) { $record=self::graph($notification['id'],array('fields'=>self::META_BASE_FIELDS)); }
         if (is_wp_error($record)) { return $record; }
         if (($record['id'] ?? '') !== $notification['id'] || ($record['form_id'] ?? '') !== $notification['form_id']) { return new WP_Error('idlm_connector_identity','Retrieved lead identity differs from the notification.'); }
         $config=self::config(); $data=self::map_meta($record,self::form_mapping($notification['form_id'],$config));
