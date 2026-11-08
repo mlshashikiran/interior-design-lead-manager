@@ -10,7 +10,18 @@ final class IDLM_Lead_Connector {
     const MAX_ATTEMPTS = 5;
     const META_BASE_FIELDS = 'id,created_time,form_id,ad_id,field_data';
     const META_ATTRIBUTION_FIELDS = 'id,created_time,form_id,ad_id,field_data,ad_name,adset_id,adset_name,campaign_id,campaign_name,is_organic,platform,partner_name';
-    const META_FULL_FIELDS = 'id,created_time,form_id,ad_id,field_data,ad_name,adset_id,adset_name,campaign_id,campaign_name,is_organic,platform,partner_name,custom_disclaimer_responses,home_listing,post,post_submission_check_result,retailer_item_id,vehicle';
+    // Only fields this CRM uses, plus consent checkbox answers kept as evidence (lead sync review L-D4).
+    const META_FULL_FIELDS = 'id,created_time,form_id,ad_id,field_data,ad_name,adset_id,adset_name,campaign_id,campaign_name,is_organic,platform,partner_name,custom_disclaimer_responses';
+    /** Queued leads and catch-up both look back this far; Meta keeps leads for 90 days (L-D2). */
+    const WINDOW_DAYS = 30;
+    /** Import receipts outlive the window so a late replay still deduplicates (L-D6). */
+    const RECEIPT_DAYS = 35;
+    const AUTH_PAUSED = 'idlm_connector_auth_failed';
+    const LAST_IMPORT = 'idlm_connector_last_import';
+    /** Graph codes meaning the token or its permissions no longer work. */
+    const AUTH_CODES = array(10, 102, 190);
+    /** The CRM source for an Instant Form lead that did not come from an ad (L-D3). */
+    const ORGANIC_SOURCE = 'Meta (organic)';
     private static $settings_error = '';
     private static $settings_draft = null;
 
@@ -20,6 +31,62 @@ final class IDLM_Lead_Connector {
         add_action('wp_ajax_idlm_test_lead_connector', array(__CLASS__, 'ajax_test'));
         add_action('wp_ajax_idlm_meta_form_mapping', array(__CLASS__, 'ajax_form_mapping'));
         add_filter('rest_pre_serve_request', array(__CLASS__, 'serve_challenge'), 10, 4);
+        add_action('wp_ajax_idlm_meta_lead_retry', array(__CLASS__, 'ajax_retry'));
+        add_action('admin_notices', array(__CLASS__, 'auth_notice'));
+        // A replaced lead token resumes a sync paused by a token failure.
+        add_action('update_option_idlm_meta_lead_access_token', array(__CLASS__, 'resume'));
+        add_action('add_option_idlm_meta_lead_access_token', array(__CLASS__, 'resume'));
+    }
+
+    /** When Meta stopped accepting the lead token, or 0 (L-D2). */
+    public static function paused_at() {
+        $at = self::option(self::AUTH_PAUSED, 0);
+        return is_numeric($at) ? (int) $at : 0;
+    }
+
+    public static function resume() {
+        if (self::paused_at()) { delete_option(self::AUTH_PAUSED); }
+    }
+
+    /** A Graph error that only a new token or restored permission can fix. */
+    public static function auth_failure($result) {
+        if (!is_wp_error($result)) { return false; }
+        $data = $result->get_error_data();
+        $code = is_array($data) ? (int) ($data['meta_code'] ?? 0) : 0;
+        return in_array($code, self::AUTH_CODES, true) || ($code >= 200 && $code <= 299);
+    }
+
+    public static function auth_notice() {
+        $at = self::paused_at();
+        if (!$at || !current_user_can('manage_options')) { return; }
+        $url = admin_url('admin.php?page=idlm_settings');
+        printf('<div class="notice notice-error"><p><strong>%s</strong> %s <a href="%s">%s</a></p></div>',
+            esc_html__('Meta lead sync is paused.', 'interior-design-lead-manager'),
+            esc_html(sprintf('Meta stopped accepting the lead access token on %s. New leads are kept for %d days. Replace the token, then check the connection.', wp_date('j M Y, H:i', $at), self::WINDOW_DAYS)),
+            esc_url($url), esc_html__('Open lead sync settings', 'interior-design-lead-manager'));
+    }
+
+    /** Counts for the settings status panel; reads at most 200 queued records (L-D5). */
+    public static function summary() {
+        global $wpdb;
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- LEADSYNC-L-D5: fixed options table, escaped LIKE stem, bounded; queue state must be read live.
+        $keys = $wpdb->get_col($wpdb->prepare("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s ORDER BY option_name LIMIT 200", $wpdb->esc_like(self::JOB) . '%'));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        $waiting = 0; $failed = 0;
+        foreach (is_array($keys) ? $keys : array() as $key) {
+            $job = self::read_job($key);
+            if (!is_array($job) || ($job['provider'] ?? '') !== 'meta') { continue; }
+            if (($job['state'] ?? '') === 'failed') { $failed++; } else { $waiting++; }
+        }
+        $last = self::option(self::LAST_IMPORT, 0);
+        return array('waiting'=>$waiting, 'failed'=>$failed, 'capped'=>is_array($keys) && count($keys) >= 200, 'last_import'=>is_numeric($last) ? (int) $last : 0, 'paused_at'=>self::paused_at());
+    }
+
+    public static function ajax_retry() {
+        if (!current_user_can('manage_options')) { wp_send_json_error(array('message'=>'Administrator access required.'),403); }
+        check_ajax_referer('idlm_admin_nonce','nonce');
+        $reset = self::retry_failed();
+        wp_send_json_success(array('message'=>$reset ? sprintf('%d failed import(s) will be retried within a minute.', $reset) : 'There are no failed imports to retry.', 'summary'=>self::summary()));
     }
 
     public static function option($name, $default = false) {
@@ -129,7 +196,7 @@ final class IDLM_Lead_Connector {
             $managed_credentials[$key]=IDLM_Secret_Store::is_environment_managed('idlm_meta_lead_'.$key);
         }
         return array('config'=>self::$settings_draft['config'] ?? self::config(),'error'=>self::$settings_error,'status'=>self::option('idlm_connector_last_status',array()),'credentials'=>$credentials,'managed_credentials'=>$managed_credentials,
-            'interakt_capture'=>self::$settings_draft['interakt_capture'] ?? self::option('idlm_interakt_lead_capture','0'),'whatsapp_capi'=>self::$settings_draft['whatsapp_capi'] ?? self::option('idlm_whatsapp_capi_enabled','0'),'mapping_fields'=>self::mapping_fields(),'facebook'=>IDLM_Facebook_Connect::context());
+            'interakt_capture'=>self::$settings_draft['interakt_capture'] ?? self::option('idlm_interakt_lead_capture','0'),'whatsapp_capi'=>self::$settings_draft['whatsapp_capi'] ?? self::option('idlm_whatsapp_capi_enabled','0'),'mapping_fields'=>self::mapping_fields(),'facebook'=>IDLM_Facebook_Connect::context(),'summary'=>self::summary(),'callback_url'=>get_rest_url(null,'idlm/v1/meta-leads'));
     }
 
     public static function mapping_fields() {
@@ -331,6 +398,7 @@ final class IDLM_Lead_Connector {
             foreach ($keys as $key) { self::process($key); }
             update_option('idlm_connector_cursor',count($keys) === 10 ? end($keys) : '',false);
             self::catch_up();
+            self::prune_receipts();
             return true;
         });
     }
@@ -345,7 +413,7 @@ final class IDLM_Lead_Connector {
                 $receipt=self::option(self::RECEIPT.substr($key,strlen(self::JOB)),false);
                 if (is_wp_error($receipt)) { return false; }
                 if ($receipt !== false) { return is_array($receipt) && ($receipt['fingerprint'] ?? '') === $job['fingerprint'] ? delete_option($key) : false; }
-                if ($job['generation'] !== IDLM_Recovery_Guard::generation() || $job['created_at'] < time()-7*DAY_IN_SECONDS) { return self::finish($key,$job,'expired'); }
+                if ($job['generation'] !== IDLM_Recovery_Guard::generation() || $job['created_at'] < time()-self::WINDOW_DAYS*DAY_IN_SECONDS) { return self::finish($key,$job,'expired'); }
                 if (is_wp_error(self::option('idlm_meta_lead_connector',array()))) { return false; }
                 $interakt_enabled=self::option('idlm_interakt_enabled','0');
                 $interakt_capture=self::option('idlm_interakt_lead_capture','0');
@@ -354,11 +422,19 @@ final class IDLM_Lead_Connector {
                 $enabled=$job['provider'] === 'meta' ? (($config['enabled'] ?? '') === '1' && ($job['payload']['page_id'] ?? '') === ($config['page_id'] ?? '') && in_array($job['payload']['form_id'] ?? '',$config['forms'] ?? array(),true)) : ($interakt_enabled === '1' && $interakt_capture === '1');
                 if (!$enabled) { return self::finish($key,$job,'cancelled'); }
                 if ($job['state'] === 'failed' || $job['next_at'] > time()) { return false; }
+                // A broken token holds Meta jobs without spending attempts until the token is replaced.
+                if ($job['provider'] === 'meta' && self::paused_at()) { return false; }
                 $job['attempts']++; $job['next_at']=time()+300;
                 if (!self::write_job($key,$job)) { return false; }
                 $result=$job['provider'] === 'meta' ? self::import_meta($job['payload'],$job['created_at']) : self::import_interakt($job['payload'],$job['created_at']);
                 if (is_wp_error($result) && $result->get_error_code() === 'idlm_connector_erased') { return self::finish($key,$job,'cancelled'); }
                 if ($result && !is_wp_error($result)) { return self::finish($key,$job,is_array($result) && !empty($result['requires_duplicate_review']) ? 'review' : 'imported'); }
+                if ($job['provider'] === 'meta' && self::auth_failure($result)) {
+                    update_option(self::AUTH_PAUSED, time(), false);
+                    $job['attempts']--; $job['state']='queued'; $job['next_at']=time()+300;
+                    self::write_job($key,$job); self::status('meta','auth_failed');
+                    return false;
+                }
                 // A mapping error waits for an admin fix and "Retry failed imports" instead of the timer.
                 $mapping=is_wp_error($result) && in_array($result->get_error_code(),self::MAPPING_ERRORS,true);
                 $job['state']=$mapping || $job['attempts'] >= self::MAX_ATTEMPTS ? 'failed' : 'queued';
@@ -371,17 +447,41 @@ final class IDLM_Lead_Connector {
 
     private static function finish($key,$job,$outcome) {
         $receipt_key=self::RECEIPT.substr($key,strlen(self::JOB));
-        $receipt=array('fingerprint'=>$job['fingerprint'],'outcome'=>$outcome);
+        $receipt=array('fingerprint'=>$job['fingerprint'],'outcome'=>$outcome,'at'=>time());
         update_option($receipt_key,$receipt,false);
         if (self::option($receipt_key) !== $receipt) { return false; }
         delete_option($key);
         self::status($job['provider'],$outcome);
+        if ($job['provider'] === 'meta' && in_array($outcome, array('imported','review'), true)) { update_option(self::LAST_IMPORT, time(), false); }
         return true;
+    }
+
+    /** Daily, 200 receipts at a time: date undated ones, delete those past RECEIPT_DAYS (L-D6). Erasure markers, not receipts, block re-import of deleted leads. */
+    public static function prune_receipts() {
+        global $wpdb;
+        $state = self::option('idlm_connector_receipt_prune', array());
+        if (!is_array($state)) { $state = array(); }
+        if ((int) ($state['next_at'] ?? 0) > time()) { return 0; }
+        $cursor = is_string($state['cursor'] ?? null) ? $state['cursor'] : '';
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- LEADSYNC-L-D6: fixed options table, escaped LIKE stem, bound cursor, bounded batch.
+        $keys = $wpdb->get_col($wpdb->prepare("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s AND option_name > %s ORDER BY option_name LIMIT 200", $wpdb->esc_like(self::RECEIPT) . '%', $cursor));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        if ($wpdb->last_error || !is_array($keys)) { return 0; }
+        $deleted = 0;
+        foreach ($keys as $key) {
+            $receipt = self::option($key, false);
+            if (!is_array($receipt)) { continue; }
+            if (empty($receipt['at'])) { $receipt['at'] = time(); update_option($key, $receipt, false); continue; }
+            if ((int) $receipt['at'] < time() - self::RECEIPT_DAYS * DAY_IN_SECONDS && delete_option($key)) { $deleted++; }
+        }
+        $more = count($keys) === 200;
+        update_option('idlm_connector_receipt_prune', array('cursor'=>$more ? end($keys) : '', 'next_at'=>$more ? time() : time() + DAY_IN_SECONDS), false);
+        return $deleted;
     }
     private static function status($provider,$state) { update_option('idlm_connector_last_status',array('provider'=>$provider,'state'=>$state,'at'=>time()),false); }
 
     public static function retry_failed() {
-        global $wpdb;
+        global $wpdb; $reset=0;
         // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0546: retry_failed(): fixed prefixed options/lead tables and hashed job/erasure keys; LIKE stem escaped, cursor/IDs/marker values prepared; job/engine/erasure/lock checks deliberately read current state.
         $keys=$wpdb->get_col($wpdb->prepare("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s ORDER BY option_name LIMIT 100",$wpdb->esc_like(self::JOB).'%'));
         // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
@@ -389,9 +489,10 @@ final class IDLM_Lead_Connector {
             $lock=self::lock($key); if (!$lock) { continue; }
             try {
                 $job=self::read_job($key);
-                if (is_array($job) && ($job['state'] ?? '') === 'failed') { $job['state']='queued'; $job['attempts']=0; $job['next_at']=time(); self::write_job($key,$job); }
+                if (is_array($job) && ($job['state'] ?? '') === 'failed') { $job['state']='queued'; $job['attempts']=0; $job['next_at']=time(); if (self::write_job($key,$job)) { $reset++; } }
             } finally { self::unlock($lock); }
         }
+        return $reset;
     }
 
     public static function graph($path,$query=array()) {
@@ -419,7 +520,9 @@ final class IDLM_Lead_Connector {
             $values=array(); foreach ($field['values'] as $value) { if (!is_string($value)) { return new WP_Error('idlm_connector_lead','Invalid lead answer value.'); } $values[]=sanitize_text_field($value); }
             $answers[$field['name']]=implode(', ',$values);
         }
-        $data=array('source'=>'Meta Ads','stage'=>'New','fb_lead_id'=>$record['id']);
+        $data=array('source'=>true === ($record['is_organic'] ?? false) ? self::ORGANIC_SOURCE : 'Meta Ads','stage'=>'New','fb_lead_id'=>$record['id']);
+        // Meta's submission time becomes the touchpoint's submitted_at, never the lead's Won close time (L-D1).
+        if (is_string($record['created_time'] ?? null) && strlen($record['created_time']) <= 40) { $data['conversion_time']=$record['created_time']; }
         foreach (self::mapping_fields() as $field=>$default) { $name=$mappings[$field] ?? $default; $data[$field]=is_string($name) ? ($answers[$name] ?? '') : ''; }
         $full_name=$mappings['full_name'] ?? 'full_name';
         if ($data['first_name'] === '' && is_string($full_name) && !empty($answers[$full_name])) {
@@ -569,13 +672,13 @@ final class IDLM_Lead_Connector {
 
     /** One form/page of results per tick; use cursors, never follow provider URLs. */
     private static function catch_up() {
-        $config=self::config(); if (($config['enabled'] ?? '')!=='1' || empty($config['forms'])) { return; }
+        $config=self::config(); if (($config['enabled'] ?? '')!=='1' || empty($config['forms']) || self::paused_at()) { return; }
         $lock=self::lock('catchup'); if (!$lock) { return; }
         try {
             $index=(int)self::option('idlm_connector_form_index',0); $form=$config['forms'][$index % count($config['forms'])];
             $key='idlm_connector_scan_'.$form; $scan=self::option($key,array()); if (!is_array($scan)) { return; }
             if (($scan['next_at'] ?? 0)>time()) { update_option('idlm_connector_form_index',$index+1,false); return; }
-            $since=max((int)($config['started_at'] ?? time()),(int)($scan['since'] ?? 0),time()-7*DAY_IN_SECONDS);
+            $since=max((int)($config['started_at'] ?? time()),(int)($scan['since'] ?? 0),time()-self::WINDOW_DAYS*DAY_IN_SECONDS);
             $started=(int)($scan['started'] ?? time());
             $query=array('fields'=>'id','limit'=>25,'filtering'=>wp_json_encode(array(array('field'=>'time_created','operator'=>'GREATER_THAN','value'=>$since))));
             if (!empty($scan['after'])) { $query['after']=$scan['after']; }
@@ -658,6 +761,7 @@ final class IDLM_Lead_Connector {
             if (is_wp_error($leads)) { $lines[]='Leads of form '.$form.' cannot be read. In Leads Access, allow this app or system user.'; return array('ok'=>false,'lines'=>$lines); }
         }
         $lines[]='All '.count($config['forms']).' form(s) are readable. Submit a test lead to confirm delivery and field mapping.';
+        self::resume();
         return array('ok'=>true,'lines'=>$lines);
     }
 

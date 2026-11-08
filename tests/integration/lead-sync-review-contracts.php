@@ -22,7 +22,9 @@ idlm_integration_test('LEADSYNC L-S1: rate-limit and token errors make one reque
         idlm_integration_assert_same(false, $result);
         idlm_integration_assert_same(array(IDLM_Lead_Connector::META_FULL_FIELDS), $calls, "Code $code must not trigger the field fallback.");
         $job = json_decode(IDLM_Secret_Store::get(idlm_connector_native_key('meta', $id), '', true), true);
-        idlm_integration_assert_same(array('queued', 1), array($job['state'], $job['attempts']), 'A transient error keeps the timed retry.');
+        // A token error (190) pauses the sync without spending an attempt (L-D2); throttling keeps the timed retry.
+        idlm_integration_assert_same(array('queued', 190 === $code ? 0 : 1), array($job['state'], $job['attempts']), "Code $code retry state.");
+        delete_option(IDLM_Lead_Connector::AUTH_PAUSED);
     }
 });
 
