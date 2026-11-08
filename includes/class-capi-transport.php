@@ -33,6 +33,12 @@ final class IDLM_CAPI_Transport {
         return trim(preg_replace('/\s+/u', ' ', (string) $name));
     }
 
+    /** SHA-256 of the site host and lead ID: stable for a lead, unique across sites. Builder: Shashi. */
+    public static function meta_external_id($lead_id) {
+        $host = strtolower((string) wp_parse_url(home_url('/'), PHP_URL_HOST));
+        return hash('sha256', $host . '|idlm_lead|' . absint($lead_id));
+    }
+
     public static function meta_hash($value) {
         return '' === $value ? '' : hash('sha256', $value);
     }
@@ -89,7 +95,8 @@ final class IDLM_CAPI_Transport {
         $access_token = $delivery['credential'];
 
         $ads_email = IDLM_Contact_Identity::email_for_ads($lead); $hashed_email = '' !== $ads_email ? hash('sha256', $ads_email) : '';
-        $hashed_phone = self::meta_hash(self::meta_phone($lead->phone ?? ''));
+        $meta_phone = self::meta_phone($lead->phone ?? '');
+        $hashed_phone = self::meta_hash($meta_phone);
 
         // CRM workers do not possess the visitor's browser IP or user agent.
         $user_data = array();
@@ -107,6 +114,10 @@ final class IDLM_CAPI_Transport {
         if ('' !== $first_hash) { $user_data['fn'] = $first_hash; }
         $last_hash = self::meta_hash(self::meta_name($lead->last_name ?? ''));
         if ('' !== $last_hash) { $user_data['ln'] = $last_hash; }
+        // A stable per-site lead identity; it never changes for the same lead.
+        $user_data['external_id'] = array(self::meta_external_id($lead->id));
+        // Country is sent only when the phone proves it.
+        if (12 === strlen($meta_phone) && 0 === strpos($meta_phone, '91')) { $user_data['country'] = array(hash('sha256', 'in')); }
 
         // A bare fbclid does not establish the original _fbc cookie's timestamp.
         // Do not fabricate it from the CRM lead creation time (or send seconds in
@@ -117,9 +128,13 @@ final class IDLM_CAPI_Transport {
             $user_data['lead_id'] = (string) $lead->fb_lead_id;
         }
 
-        $custom_data = array(
+        // Meta's Conversion Leads fields describe Lead Ads leads only; other
+        // leads are plain offline events without them.
+        $custom_data = empty($lead->fb_lead_id) ? array() : array(
             'event_source' => 'crm',
             'lead_event_source' => 'Interior Design Lead Manager',
+        );
+        $custom_data += array(
             'lead_id' => $lead->id,
             'stage' => $stage,
             'property_type' => $lead->property_type,

@@ -40,3 +40,27 @@ idlm_test('CAPI D1/D7: Meta audience rows use the same phone and name normalisat
     $row = json_decode($GLOBALS['idlm_test_http_calls'][0][1]['body'], true)['payload']['data'][0];
     assert_same(array(hash('sha256', 'asha@example.test'), hash('sha256', '919876543210'), hash('sha256', 'élodie'), hash('sha256', 'dsouza')), $row);
 });
+
+idlm_test('CAPI D6: Meta events carry a stable hashed external_id and a country only when the phone proves it', static function(): void {
+    $event = idlm_capi_meta_event();
+    assert_same(array(IDLM_CAPI_Transport::meta_external_id(1)), $event['user_data']['external_id']);
+    assert_same(1, preg_match('/^[0-9a-f]{64}$/D', $event['user_data']['external_id'][0]));
+    assert_same(IDLM_CAPI_Transport::meta_external_id(1), IDLM_CAPI_Transport::meta_external_id('1'), 'Same lead, same ID.');
+    assert_false(IDLM_CAPI_Transport::meta_external_id(1) === IDLM_CAPI_Transport::meta_external_id(2));
+    assert_same(array(hash('sha256', 'in')), $event['user_data']['country']);
+    $foreign = idlm_capi_meta_event(array('phone'=>'+1 415 555 0100'));
+    assert_false(isset($foreign['user_data']['country']), 'A non-Indian phone sends no country.');
+    foreach (array('fbc', 'fbp', 'client_ip_address', 'client_user_agent') as $key) { assert_false(isset($event['user_data'][$key])); }
+});
+
+idlm_test('CAPI D3: only Lead Ads leads carry the Conversion Leads CRM fields', static function(): void {
+    $lead_ads = idlm_capi_meta_event();
+    assert_same('crm', $lead_ads['custom_data']['event_source']);
+    assert_same('Interior Design Lead Manager', $lead_ads['custom_data']['lead_event_source']);
+    $website = idlm_capi_meta_event(array('fb_lead_id'=>'', 'source'=>'Website'));
+    assert_same('system_generated', $website['action_source']);
+    foreach (array('event_source', 'lead_event_source') as $key) { assert_false(isset($website['custom_data'][$key]), "$key sent for a non-Lead-Ads lead."); }
+    assert_false(isset($website['user_data']['lead_id']));
+    assert_same('New', $website['custom_data']['stage'], 'The event is still sent with its CRM context.');
+    assert_true(isset($website['user_data']['em'], $website['user_data']['external_id']));
+});
