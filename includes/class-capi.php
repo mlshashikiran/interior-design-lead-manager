@@ -165,54 +165,27 @@ class IDLM_CAPI {
      * Queue Conversion API event using Action Scheduler
      */
     public static function queue_capi_event($lead_id, $stage, $old_lead) {
+        // New is queued with no delay so lead intake never waits on provider calls (CAPI review D12).
         $delay = ($stage === 'New') ? 0 : 300;
-
-        if ($delay === 0) {
-            // Fire immediately and synchronously for lead capture ('New' stage) to ensure CAPI is sent instantly
-            IDLM_DB::log_activity($lead_id, 'capi_sync', "Executing Conversions API synchronously for stage: {$stage}.", 0);
-            $processed = self::process_capi_event($lead_id, $stage);
-            if (false === $processed && IDLM_Lead_Outbox::dispatching()) { throw new RuntimeException('CAPI dispatch is busy.'); }
-            return;
-        }
-
         $schedule_time = time() + $delay;
-        $delay_msg = " (delayed by 5 mins)";
+        $delay_msg = $delay ? " (delayed by 5 mins)" : '';
+        $args = array('lead_id' => $lead_id, 'stage' => $stage, 'generation' => IDLM_Recovery_Guard::generation());
 
-        // Cancel any pending CAPI uploads for this lead to prevent duplicate or conflicting events from firing on rapid stage changes.
-        $all_stages = get_option('idlm_custom_stages', array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'));
-        $all_stages = array_unique(array_merge(array('New', 'Contacted', 'Qualified', 'Quote Shared', 'Negotiation', 'Won', 'Lost'), $all_stages));
-
-        foreach ($all_stages as $stg) {
-            $current_args = array('lead_id'=>$lead_id, 'stage'=>$stg, 'generation'=>IDLM_Recovery_Guard::generation());
-            if (function_exists('as_unschedule_all_actions')) { as_unschedule_all_actions('idlm_async_capi_upload_event', $current_args); }
-            wp_clear_scheduled_hook('idlm_async_capi_upload_event', $current_args);
-            if (function_exists('as_unschedule_all_actions')) {
-                as_unschedule_all_actions('idlm_async_capi_upload_event', array(
-                    'lead_id' => $lead_id,
-                    'stage' => $stg
-                ));
-            }
-            wp_clear_scheduled_hook('idlm_async_capi_upload_event', array(
-                'lead_id' => $lead_id,
-                'stage' => $stg
-            ));
+        // A newer change into the same stage replaces its pending job. Other stages
+        // keep theirs, so every funnel step is reported (CAPI review D4); the worker
+        // still checks that the lead currently meets each stage's condition.
+        foreach (array($args, array('lead_id' => $lead_id, 'stage' => $stage)) as $pending) {
+            if (function_exists('as_unschedule_all_actions')) { as_unschedule_all_actions('idlm_async_capi_upload_event', $pending); }
+            wp_clear_scheduled_hook('idlm_async_capi_upload_event', $pending);
         }
 
         if (function_exists('as_schedule_single_action')) {
-            $queued = as_schedule_single_action($schedule_time, 'idlm_async_capi_upload_event', array(
-                'lead_id' => $lead_id,
-                'stage' => $stage,
-                'generation' => IDLM_Recovery_Guard::generation()
-            ));
+            $queued = as_schedule_single_action($schedule_time, 'idlm_async_capi_upload_event', $args);
             if (!$queued && IDLM_Lead_Outbox::dispatching()) { throw new RuntimeException('CAPI scheduling was not accepted.'); }
             IDLM_DB::log_activity($lead_id, 'capi_queue', "Queued Conversions API background sync via Action Scheduler for stage: {$stage}{$delay_msg}.", 0);
         } else {
             // Fallback to WP Cron if Action Scheduler is disabled or not booted yet
-            $queued = wp_schedule_single_event($schedule_time, 'idlm_async_capi_upload_event', array(
-                'lead_id' => $lead_id,
-                'stage' => $stage,
-                'generation' => IDLM_Recovery_Guard::generation()
-            ));
+            $queued = wp_schedule_single_event($schedule_time, 'idlm_async_capi_upload_event', $args);
             if (!$queued && IDLM_Lead_Outbox::dispatching()) { throw new RuntimeException('CAPI scheduling was not accepted.'); }
             IDLM_DB::log_activity($lead_id, 'capi_queue', "Queued Conversions API background sync via WP Cron for stage: {$stage}{$delay_msg}.", 0);
         }

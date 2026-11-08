@@ -874,6 +874,7 @@ try {
 
     require_once __DIR__ . '/notification-control-contracts.php';
     require_once __DIR__ . '/runtime-topology-contracts.php';
+    require_once __DIR__ . '/capi-queue-contracts.php';
 
     $passed = 0;
     $failed = 0;
