@@ -57,7 +57,26 @@ These change no outbound request, setting, schema or public name.
 
 ### Needs a decision
 
-Each of these changes what is sent, when it is sent, a setting, or the schema, so none is implemented.
+Each of these changes what is sent, when it is sent, a setting, or the schema. The owner approved the recommendations on 2026-11-08; the table shows what was implemented on `capi/review`. The original findings follow it.
+
+| Item | Status | Commit | What changed |
+|---|---|---|---|
+| D1 | Done | `571c5c2` | Meta phone hashes include the country code: 10-digit and 0-prefixed 11-digit numbers get 91. CAPI and audience sync. |
+| D7 | Done | `571c5c2` | Names use UTF-8 lowercase with punctuation and symbols removed. CAPI and audience sync. |
+| D6 | Phase 1 done | `5ce3cfe` | Hashed `external_id` (site host and lead ID) on every event, hashed `country` (`in`) when the phone has the 91 prefix. Phase 2 (`fbc`/`fbp` capture) is not done: it needs a schema change and the D9 consent decision. |
+| D3 | Done (option c, narrowed) | `5ce3cfe` | Non-Lead-Ads leads are still sent, but without `event_source=crm` and `lead_event_source`, so only Lead Ads leads claim the Conversion Leads payload. Option (a), stopping those events, was not chosen because it drops all website-lead signal. |
+| D5 | Done | `0b77947` | `event_time` comes from the lead's creation (New), the latest `stage_change` event into the stage, or `qualified_at`; it falls back to now when unknown, in the future or older than Meta's 7-day window. |
+| D4 | Done | `0cc1238` | A stage change replaces only the same stage's pending job, so earlier funnel stages are still sent. |
+| D12 | Done | `0cc1238` | New is queued with no delay instead of sent inside the intake request. |
+| D8 | Done | `62c44d3` | Meta timeouts, 408, 5xx, `is_transient` and codes 1, 2, 4, 17, 32, 341, 368, 613 and 80000–80099 are a `transient` outcome. The receipt allows a replay and an automatic retry runs 5, then 30 minutes later, sharing the 3-attempt cap with manual retry and stopping 47 hours after the first attempt. Google and LinkedIn are unchanged. |
+| D2 | Done (option a) | `9d97198` | A first-ever activation saves New→Lead, Qualified, Quote Shared and Won as the Meta mapping. Existing installs keep their saved or legacy mapping; updates change nothing. The Won close value is sent whatever the Won event is called. Events Manager funnel setup is still needed. |
+| D14 | Done (exclude) | `128f28e` | Value-based audiences leave out leads with no deal value; the daily resync adds them once a value exists. |
+| D13 | Done | `cce08d5` | The log status shows Succeeded, Rejected, Retrying, Uncertain or Not sent with Meta's error message and `fbtrace_id`; rows that cannot be retried have no checkbox. |
+| D11 | Done | `be95035` | A "Send test event" button on the Meta CAPI card sends one synthetic event with the admin's Events Manager test code. No lead data, log, receipt or saved code. |
+| D9 | Not done | | Consent is a business and legal policy; it needs the owner to choose per-source rules or a stored consent flag before code. |
+| D10 | No change (as recommended) | | Stay on v25.0 until Meta announces its expiry. |
+
+Not verified: no event was sent to a real Meta pixel, and Plugin Check was not rerun. Before release, use the new test-event button against a test pixel and set up the CRM stage funnel in Events Manager.
 
 **D1 (P1, match quality): phone numbers are hashed without a country code.**
 - Where: `includes/class-capi-transport.php:53` and `includes/class-audiences.php:159`.
