@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.105.2] - 2026-11-09
+
+### Changed
+
+- Quotation versions no longer all read "Draft". The current version shows Sales finalised when the lead is Won, Closed: lost when it is Lost, Shared at Quote Shared or Negotiation, and Draft before that; earlier versions show Superseded. Only the label changes: stored statuses, editing and revisions are unchanged. Builder: Shashi.
+
+### Added
+
+- The customer in a quotation's summary opens the lead popup, for people who can already see that lead. Builder: Shashi.
+
 ## [1.105.1] - 2026-11-08
 
 ### Fixed

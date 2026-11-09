@@ -913,7 +913,7 @@ final class IDLM_Quotation_Repository {
         list($where, $params) = self::quotation_list_filters($filters);
         $page = max(1, absint($page));
         $per_page = max(1, absint($per_page));
-        $query = "SELECT q.*, r.revision_name, r.grand_total, r.currency_code, r.valid_until, l.first_name, l.last_name, l.email, l.phone, l.project_name, u.display_name AS creator_name
+        $query = "SELECT q.*, r.revision_name, r.grand_total, r.currency_code, r.valid_until, l.first_name, l.last_name, l.email, l.phone, l.project_name, l.stage AS lead_stage, u.display_name AS creator_name
                 FROM " . self::table('quotes') . " q
                 JOIN {$wpdb->prefix}idlm_leads l ON l.id = q.lead_id
                 LEFT JOIN " . self::table('quote_revisions') . " r ON r.id = q.current_revision_id
@@ -922,7 +922,9 @@ final class IDLM_Quotation_Repository {
         $params[] = $per_page;
         $params[] = ($page - 1) * $per_page;
         // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0147: list_quotations(): table() prefixes fixed suffixes; term/column and sort maps are closed allowlists; filters carry live lead scope, values/ID lists are prepared; current revision and transaction state must remain live.
-        return $wpdb->get_results($wpdb->prepare($query, $params));
+        $rows = $wpdb->get_results($wpdb->prepare($query, $params));
+        foreach ((array) $rows as $row) { $row->display_status = IDLM_Quotation_Policy::display_status($row->status ?? '', true, $row->lead_stage ?? ''); }
+        return $rows;
         // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
     }
 

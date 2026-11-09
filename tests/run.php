@@ -1786,6 +1786,7 @@ require_once __DIR__ . '/quotation-migration-contracts.php';
 require_once __DIR__ . '/quotation-classification-contracts.php';
 require_once __DIR__ . '/quotation-history-contracts.php';
 require_once __DIR__ . '/quotation-legacy-contracts.php';
+require_once __DIR__ . '/quotation-display-contracts.php';
 require_once __DIR__ . '/quotation-engine-contracts.php';
 require_once __DIR__ . '/catalogue-import-contracts.php';
 require_once __DIR__ . '/quotation-numeric-contracts.php';

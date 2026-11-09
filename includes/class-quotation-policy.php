@@ -49,6 +49,20 @@ final class IDLM_Quotation_Policy {
     }
 
     /**
+     * Pure: the status a quotation version shows. Stored statuses stay as saved (almost always Draft);
+     * the lead's outcome names the current version, and any earlier version is superseded.
+     */
+    public static function display_status($stored_status, $is_current, $lead_stage) {
+        if (!$is_current) { return 'Superseded'; }
+        $stage = trim((string) $lead_stage);
+        if ('Won' === $stage) { return 'Sales finalised'; }
+        if ('Lost' === $stage) { return 'Closed: lost'; }
+        $stored = trim((string) $stored_status);
+        if ('' !== $stored && 'draft' !== strtolower($stored)) { return $stored; }
+        return in_array($stage, array('Quote Shared', 'Negotiation'), true) ? 'Shared' : 'Draft';
+    }
+
+    /**
      * A lead keeps one working quotation. The one exception: a legacy quote that
      * is still the lead's newest may be followed by a new quotation and number.
      */
