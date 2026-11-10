@@ -153,7 +153,7 @@ class IDLM_Quotations {
         $white_label = class_exists('IDLM_Settings') ? IDLM_Settings::get_white_label() : array();
         $default_accent = !empty($white_label['accent_color']) ? $white_label['accent_color'] : '#C99644';
         $settings = wp_parse_args((array) get_option('idlm_quote_settings', array()), array(
-            'company_name' => get_bloginfo('name'), 'company_logo' => '', 'accent_color' => $default_accent,
+            'company_name' => get_bloginfo('name'), 'company_logo' => '', 'accent_color' => $default_accent, 'company_gstin' => '',
             'pdf_footer' => '', 'paper_size' => 'A4',
             'cover_page_enabled' => 0, 'cover_page_html' => '',
             'after_quote_enabled' => 0, 'after_quote_html' => '',

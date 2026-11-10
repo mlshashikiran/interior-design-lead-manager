@@ -123,3 +123,31 @@ idlm_test('QUO accepted closing: winning locks current setup once, legacy saved 
     assert_contains("\$closing = IDLM_Quotation_Document::closing(\$terms_known ? \$document_terms : null, \$finalised);",$renderer);
     assert_contains('A quotation marked Sales finalised keeps the terms from when the lead was won.',$renderer);
 });
+
+idlm_test('QUO client header and summary: dates, owners, GSTIN, split GST, total in words and savings', static function(): void {
+    $r='IDLM_Quotation_Renderer';
+    assert_same(array('issued'=>'31 Jan 2026','valid_until'=>'28 Feb 2026'),invoke_private($r,'quote_dates',array('2026-01-31 18:20:00')));
+    assert_same(array('issued'=>'10 Nov 2026','valid_until'=>'10 Dec 2026'),invoke_private($r,'quote_dates',array('2026-11-10 09:00:00')));
+    assert_same(array('issued'=>'—','valid_until'=>'—'),invoke_private($r,'quote_dates',array('')));
+    assert_same('Rupees Five Lakh Twelve Thousand Three Hundred Only',invoke_private($r,'amount_in_words',array(512300,'INR')));
+    assert_same('Rupees One Hundred Twenty Crore Forty Five Lakh Only',invoke_private($r,'amount_in_words',array(1204500000,'INR')));
+    assert_same('Rupees Ninety Nine and Fifty Paise Only',invoke_private($r,'amount_in_words',array(99.5,'INR')));
+    assert_same('One Million Two Hundred Thousand Eleven US Dollars Only',invoke_private($r,'amount_in_words',array(1200011,'USD')));
+    assert_same('Rupees Zero Only',invoke_private($r,'amount_in_words',array(0,'INR')));
+    assert_same(array(array('CGST (9%)',900.0),array('SGST (9%)',900.0)),invoke_private($r,'tax_rows',array((object)array('cgst_total'=>900,'sgst_total'=>900,'igst_total'=>0))));
+    assert_same(array(array('IGST (18%)',1800.0)),invoke_private($r,'tax_rows',array((object)array('cgst_total'=>0,'sgst_total'=>0,'igst_total'=>1800))));
+    $GLOBALS['idlm_test_users'][71]=(object)array('ID'=>71,'display_name'=>'Asha Rao');
+    $GLOBALS['idlm_test_user_meta'][71]['idlm_phone']='+91 98450 00000';
+    assert_same('Asha Rao · +91 98450 00000',invoke_private($r,'person_line',array(71)));
+    assert_same('Kept Name · +91 98450 00000',invoke_private($r,'person_line',array(71,'Kept Name')));
+    assert_same('Saved Designer',invoke_private($r,'person_line',array(0,'Saved Designer')));
+    assert_same('',invoke_private($r,'person_line',array(0)));
+    $source=file_get_contents(dirname(__DIR__).'/includes/class-quotation-renderer.php');
+    foreach(array('<dt>Quote date:</dt>','<dt>Valid until:</dt>','<dt>Sales owner:</dt>','<dt>Designer:</dt>','<dt>GSTIN:</dt>','idlm-print-grand-box','You save ','self::amount_in_words($revision->grand_total, $currency)','name="company_gstin"') as $needle){assert_contains($needle,$source);}
+    assert_false(false!==strpos($source,"'GST (18%)'"));
+    $controller=file_get_contents(dirname(__DIR__).'/includes/class-quotation-controller.php');
+    assert_contains("preg_match('/^[0-9]{2}[A-Z0-9]{13}$/', \$gstin)",$controller);
+    $exporter=file_get_contents(dirname(__DIR__).'/includes/class-quotation-exporter.php');
+    assert_contains("array('CGST', (float) \$revision->cgst_total, 'currency')",$exporter);
+    assert_contains('.idlm-print-grand-box{',$exporter);
+});

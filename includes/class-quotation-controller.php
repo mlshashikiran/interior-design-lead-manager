@@ -761,6 +761,9 @@ final class IDLM_Quotation_Controller extends IDLM_Quotations {
         }
         $settings['company_logo'] = esc_url_raw(wp_unslash($_POST['company_logo'] ?? ''));
         $settings['accent_color'] = sanitize_hex_color(wp_unslash($_POST['accent_color'] ?? '')) ?: '#111827';
+        $gstin = strtoupper(preg_replace('/[^0-9A-Za-z]/', '', sanitize_text_field(wp_unslash($_POST['company_gstin'] ?? ''))));
+        if ('' !== $gstin && !preg_match('/^[0-9]{2}[A-Z0-9]{13}$/', $gstin)) { self::redirect(array('workspace' => 'settings', 'idlm_error' => 'Company GSTIN must be 15 characters, starting with the 2-digit state code.')); }
+        $settings['company_gstin'] = $gstin;
         if (isset($_POST['pdf_footer'])) {
             $settings['pdf_footer'] = sanitize_textarea_field(wp_unslash($_POST['pdf_footer']));
         }
