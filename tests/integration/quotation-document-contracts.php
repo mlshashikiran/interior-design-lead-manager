@@ -1,5 +1,5 @@
 <?php
-/** QUO-006 physical snapshot upgrade/recovery and historical output. Builder: Shashi. */
+/** QUO-006 physical snapshot upgrade/recovery and historical output; the cover is live branding since 1.105.3. Builder: Shashi. */
 if (!defined('ABSPATH') || strpos(DB_NAME,'idlm_test_')!==0) { exit(1); }
 function idlm_document_native_settings(): array { return array('currency_code'=>'INR','cover_page_enabled'=>1,'cover_page_html'=>'<h1>Original captured cover</h1>','after_quote_enabled'=>1,'after_quote_html'=>'<p>Original captured closing</p>[idlm_payment_structure]','pdf_footer'=>'Original captured footer','payment_structure'=>'[{"name":"Original deposit","percentage":"50"},{"name":"Original completion","percentage":"50"}]'); }
 function idlm_document_native_revision(): array {
@@ -13,8 +13,8 @@ idlm_integration_test('T10-T12-N-QUO006-saved-output-retains-currency-template-a
     try {
         $changed=idlm_document_native_settings();$changed['currency_code']='USD';$changed['cover_page_html']='<h1>Changed live cover</h1>';$changed['after_quote_html']='<p>Changed live closing</p>';$changed['pdf_footer']='Changed live footer';$changed['company_name']='Changed live branding';$changed['payment_structure']='[{"name":"Changed live deposit","percentage":100}]';update_option('idlm_quote_settings',$changed,false);
         $bundle=IDLM_Quotation_Repository::get_quote_bundle($fixture[1],$fixture[2]);$html=IDLM_Quotation_Renderer::render_print_document($bundle);
-        foreach(array('Original captured cover','Original captured closing','Original captured footer','Original deposit','Original completion','₹118.00','₹59.00','Changed live branding') as $token){idlm_integration_assert_true(strpos($html,$token)!==false,$token.' missing');}
-        foreach(array('Changed live cover','Changed live closing','Changed live footer','Changed live deposit','$118.00','[idlm_payment_structure]') as $token){idlm_integration_assert_true(strpos($html,$token)===false,$token.' leaked');}
+        foreach(array('Changed live cover','Original captured closing','Original captured footer','Original deposit','Original completion','₹118.00','₹59.00','Changed live branding') as $token){idlm_integration_assert_true(strpos($html,$token)!==false,$token.' missing');}
+        foreach(array('Original captured cover','Changed live closing','Changed live footer','Changed live deposit','$118.00','[idlm_payment_structure]') as $token){idlm_integration_assert_true(strpos($html,$token)===false,$token.' leaked');}
         $method=new ReflectionMethod(IDLM_Quotation_Exporter::class,'export_data');$data=$method->invoke(null,$bundle);$summary=array_column($data['summary'],1,0);
         idlm_integration_assert_same('INR',$summary['Currency']);idlm_integration_assert_same('50.00%',$summary['Payment percentage: Original deposit']);idlm_integration_assert_same(59.0,$summary['Payment amount: Original deposit']);idlm_integration_assert_same('Original captured footer',$summary['Footer terms']);idlm_integration_assert_same($before,idlm_quo_snapshot($fixture));
     } finally { update_option('idlm_quote_settings',$old,false); }

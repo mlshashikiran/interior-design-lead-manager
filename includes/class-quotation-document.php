@@ -11,7 +11,10 @@ final class IDLM_Quotation_Document {
         return new WP_Error('idlm_quote_document_terms', 'Quotation document terms are invalid or too large. Review Quotation Setup before saving.');
     }
 
-    /** Snapshot current contractual settings; branding and paper layout remain live. */
+    /**
+     * Snapshot current contractual settings; branding and paper layout remain live. The cover is
+     * branding (1.105.3): its keys stay for format v1 compatibility but are saved empty.
+     */
     public static function capture($settings, $grand_total) {
         if (!is_array($settings)) { return self::error(); }
         foreach (array('cover_page_html','after_quote_html','pdf_footer','payment_structure') as $field) { if (isset($settings[$field]) && !is_string($settings[$field])) { return self::error(); } }
@@ -20,8 +23,8 @@ final class IDLM_Quotation_Document {
         $rows = json_decode((string) ($settings['payment_structure'] ?? '[]'), true);
         if (!is_array($rows) || count($rows) > 50) { return self::error(); }
         $terms = array('version' => self::VERSION,
-            'cover_page_enabled' => empty($settings['cover_page_enabled']) ? 0 : 1,
-            'cover_page_html' => wp_kses_post($settings['cover_page_html'] ?? ''),
+            'cover_page_enabled' => 0,
+            'cover_page_html' => '',
             'after_quote_enabled' => empty($settings['after_quote_enabled']) ? 0 : 1,
             'after_quote_html' => wp_kses_post($settings['after_quote_html'] ?? ''),
             'pdf_footer' => sanitize_textarea_field($settings['pdf_footer'] ?? ''),
