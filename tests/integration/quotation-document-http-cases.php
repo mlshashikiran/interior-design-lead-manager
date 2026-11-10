@@ -9,12 +9,12 @@ function idlm_document_http_summary(string $csv): array {
     while(($row=fgetcsv($stream,0,',','"',''))!==false){if(count($row)===2){$rows[$row[0]]=$row[1];}}
     fclose($stream);return $rows;
 }
-/** $tag is the saved contract; $cover is the live settings tag, since the cover is branding (1.105.3). */
+/** $tag is the saved contract (footer, milestones); $cover is the live settings tag for the cover (1.105.3) and the content after the quote (1.105.5). */
 function idlm_document_http_formats(object $quote,int $revision,string $tag,string $currency,string $actor='owner',bool $pdf=false,?string $cover=null): void {
     global $config,$sessions;$cover=$cover ?? $tag;
     $before=idlm_http_snapshot();$printed=idlm_http_request('/wp-admin/admin-post.php',array('action'=>'idlm_print_quote','quote_id'=>$quote->id,'revision_id'=>$revision,'_wpnonce'=>$sessions[$actor]['print']),$actor,false);
-    idlm_http_check($printed['status']===200,'Print request failed');foreach(array($cover.' contractual cover',$tag.' contractual closing',$tag.' contractual footer',$tag.' deposit') as $text){idlm_http_check(strpos($printed['body'],$text)!==false,'Print missing '.$text);}
-    if($cover!==$tag){idlm_http_check(strpos($printed['body'],$tag.' contractual cover')===false,'Print used a saved cover instead of the live cover');}
+    idlm_http_check($printed['status']===200,'Print request failed');foreach(array($cover.' contractual cover',$cover.' contractual closing',$tag.' contractual footer',$tag.' deposit') as $text){idlm_http_check(strpos($printed['body'],$text)!==false,'Print missing '.$text);}
+    if($cover!==$tag){idlm_http_check(strpos($printed['body'],$tag.' contractual cover')===false,'Print used a saved cover instead of the live cover');idlm_http_check(strpos($printed['body'],$tag.' contractual closing')===false,'Print used a saved closing instead of the live closing');idlm_http_check(strpos($printed['body'],$cover.' deposit')===false,'Print used live milestones instead of the saved ones');}
     $symbol=$currency==='INR'?'₹':'$';idlm_http_check(strpos($printed['body'],$symbol.'118.00')!==false && strpos($printed['body'],$symbol.'59.00')!==false,'Print currency or milestone amount drift');
     $detail=idlm_http_request('/workspace',array('action'=>'view','quote_id'=>$quote->id,'revision_id'=>$revision),$actor,false);
     idlm_http_check($detail['status']===200 && strpos($detail['body'],'<span>Grand total</span><strong>'.$symbol.'118.00</strong>')!==false,'Detail grand total substituted current currency');
@@ -27,7 +27,7 @@ function idlm_document_http_formats(object $quote,int $revision,string $tag,stri
         $download=idlm_http_request('/wp-admin/admin-post.php',array('action'=>'idlm_download_quote_pdf','quote_id'=>$quote->id,'revision_id'=>$revision,'_wpnonce'=>$sessions[$actor]['pdf']),$actor,false);
         idlm_http_check($download['status']===200 && strncmp($download['body'],'%PDF-',5)===0,'PDF failed: '.$download['headers']);
         $file=$config['content_dir'].'/document.pdf';file_put_contents($file,$download['body']);$command=escapeshellarg(getenv('IDLM_TEST_PDFTOTEXT') ?: 'pdftotext').' -layout '.escapeshellarg($file).' -';$process=proc_open($command,array(1=>array('pipe','w'),2=>array('pipe','w')),$pipes);$text=stream_get_contents($pipes[1]);$errors=stream_get_contents($pipes[2]);fclose($pipes[1]);fclose($pipes[2]);$exit=proc_close($process);unlink($file);
-        idlm_http_check($exit===0,'PDF extraction failed: '.$errors);foreach(array($cover.' contractual cover',$tag.' contractual closing',$tag.' contractual footer',$tag.' deposit',$symbol.'118.00',$symbol.'59.00') as $token){idlm_http_check(strpos($text,$token)!==false,'PDF missing '.$token);}
+        idlm_http_check($exit===0,'PDF extraction failed: '.$errors);foreach(array($cover.' contractual cover',$cover.' contractual closing',$tag.' contractual footer',$tag.' deposit',$symbol.'118.00',$symbol.'59.00') as $token){idlm_http_check(strpos($text,$token)!==false,'PDF missing '.$token);}
         $evidence=getenv('IDLM_TEST_DOCUMENT_EVIDENCE_DIR');if($evidence){file_put_contents($evidence.'/historical-document.pdf',$download['body']);file_put_contents($evidence.'/historical-document.html',$printed['body']);file_put_contents($evidence.'/historical-document.csv',$csv['body']);file_put_contents($evidence.'/historical-document.xlsx',$xlsx['body']);file_put_contents($evidence.'/historical-document.txt',$text);}
     }
     idlm_http_check($before===idlm_http_snapshot(),'Document reads rewrote aggregate/history/working-copy state');

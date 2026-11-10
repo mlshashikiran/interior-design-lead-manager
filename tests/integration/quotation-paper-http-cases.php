@@ -31,7 +31,7 @@ try {
     foreach (array('A4'=>array(595.28,841.89),'Letter'=>array(612,792),'A3'=>array(841.89,1190.55),'Legal'=>array(612,1008)) as $paper_name=>$points) {
         idlm_http_case('T12-H-QUO009-settings-print-multipage-PDF-'.$paper_name, static function() use($paper_quote,$paper_name,$points): void {
             global $config,$sessions;
-            $r = idlm_http_request('/wp-admin/admin-post.php', array('action'=>'idlm_save_quote_settings','paper_size'=>$paper_name,'_wpnonce'=>$sessions['admin']['quote_settings']), 'admin');
+            $r = idlm_http_request('/wp-admin/admin-post.php', array('action'=>'idlm_save_quote_settings','paper_size'=>$paper_name,'after_quote_enabled'=>'1','after_quote_html'=>'<p>Paper test contractual closing</p>[idlm_payment_structure]','_wpnonce'=>$sessions['admin']['quote_settings']), 'admin');
             idlm_http_check($r['status'] === 302, 'Settings save failed'); wp_cache_flush();
             idlm_http_check(get_option('idlm_quote_settings')['paper_size'] === $paper_name, 'Stored paper differs');
             foreach (array('/admin-workspace','/workspace') as $path) {
@@ -78,7 +78,10 @@ function idlm_paper_http_download(object $quote, string $paper, array $points, s
         foreach($sizes as $size){idlm_http_check(abs((float)$size[1]-$points[0])<.1 && abs((float)$size[2]-$points[1])<.1,'PDF page has wrong paper: '.$size[0]);}
         $text=idlm_paper_tool(getenv('IDLM_TEST_PDFTOTEXT') ?: 'pdftotext', array('-layout',$file,'-'));
         for($i=1;$i<=60;$i++){idlm_http_check(strpos($text,sprintf('PAPER-ROW-%03d',$i))!==false,'Missing line '.$i);}
-        foreach(array('Paper test contractual closing','Paper test contractual footer','Paper test deposit') as $token){idlm_http_check(strpos($text,$token)!==false,'Missing saved term '.$token);}
+        idlm_http_check(strpos($text,'Paper test contractual footer')!==false,'Missing saved term Paper test contractual footer');
+        // The content after the quote follows live settings (1.105.5); the legacy cases replace settings, so it prints only when set.
+        $live=get_option('idlm_quote_settings');$closing=is_array($live) && !empty($live['after_quote_enabled']) && false!==strpos((string)($live['after_quote_html'] ?? ''),'Paper test contractual closing');
+        foreach(array('Paper test contractual closing','Paper test deposit') as $token){idlm_http_check($closing===(strpos($text,$token)!==false),($closing?'Missing live closing ':'Unexpected closing ').$token);}
         $csv=idlm_http_request('/wp-admin/admin-post.php',$args+array('action'=>'idlm_download_quote_csv','_wpnonce'=>$sessions['owner']['csv']),'owner',false);
         idlm_http_check($csv['status']===200 && substr($csv['body'],0,3)==="\xEF\xBB\xBF" && strpos($csv['body'],'PAPER-ROW-060')!==false,'Invalid CSV download');
         $stream=fopen('php://temp','r+');fwrite($stream,substr($csv['body'],3));rewind($stream);

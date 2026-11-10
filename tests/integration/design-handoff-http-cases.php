@@ -110,7 +110,7 @@ idlm_http_case('DESIGNREV HTTP a rep edits with real forms, cannot change a disc
     $reviewed=idlm_http_request('/wp-admin/admin-post.php',array('action'=>'idlm_design_quote_review','_wpnonce'=>idlm_handoff_http_nonce($manager,'idlm_design_quote_review'),'handoff_id'=>$row->id,'revision_id'=>$row->design_revision_id),'design'); idlm_http_check($reviewed['status']===302,'Review failed '.$reviewed['status']);
     $detail=idlm_http_request('/crm-workspace',array('idlm_view'=>'design-team','handoff'=>$row->id),'rep',false)['body'];
     idlm_http_check((bool)preg_match($print_link,$detail,$link),'Print link missing after review');
-    $print=idlm_http_request(html_entity_decode($link[0]),array(),'rep',false); idlm_http_check($print['status']===200&&strpos($print['body'],'Design Consultant')!==false&&strpos($print['body'],'-DES')!==false,'Design print failed '.$print['status']);
+    $print=idlm_http_request(html_entity_decode($link[0]),array(),'rep',false); idlm_http_check($print['status']===200&&strpos($print['body'],'<dt>Designer:</dt>')!==false&&strpos($print['body'],'-DES')!==false,'Design print failed '.$print['status']);
     $foreign=$form; $foreign['save_request_key']=wp_generate_uuid4(); $foreign['_wpnonce']=$handoff_sessions['other']['design_send']; $other=idlm_http_request('/wp-admin/admin-post.php',$foreign,'other'); idlm_http_check($other['status']===403,'Foreign rep saved '.$other['status']);
 });
 idlm_http_case('APPROVED HTTP preview, confirm, later payment and rep limits use real forms',static function()use($handoff_lead):void{
