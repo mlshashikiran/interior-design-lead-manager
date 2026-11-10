@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.105.2 — Quotation version labels and customer link (2026-11-09)
+
+Builder: Shashi. `IDLM_Quotation_Policy::display_status()` derives the shown status from the stored status, whether the version is current and the lead's stage; `list_quotations()` adds `lead_stage` and `display_status` to each row, and the list (PHP and `quotations.js`) and detail views use it. The detail summary's customer is a `data-idlm-open-lead` button (workspace only, `IDLM_Lead_Access_Policy::can_access()`), and the page renders the common lead overlays when it shows. Tests: `tests/quotation-display-contracts.php`. No schema change.
+
 ## 1.105.1 — Saved secret status in settings (2026-11-08)
 
 Builder: Shashi. `IDLM_Admin_Settings_Renderer::credential_saved()` reads whether a platform secret is stored or environment-managed, and `credential_saved_attribute()` prints `data-idlm-secret-configured` on the seven write-only secret inputs so `settings.js` shows "Saved securely". Values stay out of the page. Test: `INT010 saved write-only secrets report their saved state without their value`. No schema change.

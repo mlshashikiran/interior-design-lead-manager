@@ -1241,6 +1241,12 @@ jQuery(document).ready(function($) {
     // table cell button semantics: the row name is already the keyboard- and
     // screen-reader-accessible button, and role="button" on the cell makes
     // every click look as though it came from a nested button.
+    // A quotation's customer opens the same lead popup as the Leads list.
+    $(document).on('click', '[data-idlm-open-lead]', function(event) {
+        event.preventDefault();
+        openLeadDrawer($(this).data('idlm-open-lead'));
+    });
+
     $(document).on('click', '.idlm-lead-identity-cell[data-lead-drawer-id]', function(event) {
         if ($(event.target).closest('button, a, input, select, textarea, [role="button"]').length) {
             return;

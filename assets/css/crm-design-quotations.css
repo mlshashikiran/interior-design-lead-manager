@@ -337,6 +337,31 @@ body.idlm-crm-design .idlm-quote-highlights strong {
     white-space: normal;
 }
 
+/* The customer opens the lead popup: looks like the name, reads as a link on hover and focus. */
+body.idlm-crm-design .idlm-quote-customer-link {
+    min-height: 24px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--idlm-action);
+    font: inherit;
+    text-align: left;
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+body.idlm-crm-design .idlm-quote-customer-link:hover {
+    text-decoration-color: currentColor;
+}
+
+body.idlm-crm-design .idlm-quote-customer-link:focus-visible {
+    outline: 2px solid var(--idlm-focus-ring);
+    outline-offset: var(--idlm-focus-offset);
+    border-radius: 2px;
+}
+
 body.idlm-crm-design .idlm-quote-highlights strong.idlm-quote-status-cell {
     display: flex;
 }
