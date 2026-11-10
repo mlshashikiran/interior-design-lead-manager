@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.105.4 — Full-bleed quotation cover (2026-11-10)
+
+Builder: Shashi. `IDLM_Quotation_Renderer::full_bleed_cover_css()` returns `@page :first{margin:0}` plus paper-sized rules (`PAPER_MM`, height 0.5 mm short so Dompdf does not overflow on A3) when the enabled cover contains `idlm-cover-full-bleed`; the print view and `IDLM_Quotation_Exporter::dompdf_document_html()` append it after their own page CSS. Checked in Dompdf on all four paper sizes and in Chrome print. Test: `QUO full-bleed cover is opt-in…`. No schema change.
+
 ## 1.105.3 — Live quotation cover (2026-11-10)
 
 Builder: Shashi. `IDLM_Quotation_Renderer::render_print_document()` reads `cover_page_enabled` and `cover_page_html` from current settings; only `after_quote_*` and `pdf_footer` come from the saved document terms. `IDLM_Quotation_Document::capture()` keeps the format-v1 cover keys but saves them empty, and the exporter summary drops the cover rows. Older snapshots keep their stored cover text but it is no longer rendered. Tests: `QUO cover is live branding…` (fast) and the updated native `T10-T12-N-QUO006` case. No schema change.

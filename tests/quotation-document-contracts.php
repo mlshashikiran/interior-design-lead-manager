@@ -60,3 +60,18 @@ idlm_test('QUO cover is live branding: new versions save no cover and print uses
     $exporter=file_get_contents(dirname(__DIR__).'/includes/class-quotation-exporter.php');
     assert_false(strpos($exporter,"'cover_page_html'=>'Cover content'")!==false);
 });
+
+idlm_test('QUO full-bleed cover is opt-in, sized to the paper and applied to print and PDF', static function(): void {
+    $bleed = '<div class="idlm-quotation-cover idlm-cover-full-bleed"><img src="x" alt=""></div>';
+    assert_same('', IDLM_Quotation_Renderer::full_bleed_cover_css(array('cover_page_enabled'=>1,'cover_page_html'=>'<div class="idlm-quotation-cover">x</div>','paper_size'=>'A4')));
+    assert_same('', IDLM_Quotation_Renderer::full_bleed_cover_css(array('cover_page_enabled'=>0,'cover_page_html'=>$bleed,'paper_size'=>'A4')));
+    foreach (array('A4'=>'width:210mm!important;height:296.5mm!important;','Letter'=>'width:215.9mm!important;height:278.9mm!important;','A3'=>'width:297mm!important;height:419.5mm!important;','Legal'=>'width:215.9mm!important;height:355.1mm!important;','bogus'=>'width:210mm!important;height:296.5mm!important;') as $paper=>$size) {
+        $css = IDLM_Quotation_Renderer::full_bleed_cover_css(array('cover_page_enabled'=>1,'cover_page_html'=>$bleed,'paper_size'=>$paper));
+        assert_contains('@page :first{margin:0}', $css); assert_contains($size, $css);
+        // Printed through esc_html: no character that escaping would change.
+        assert_same($css, esc_html($css));
+    }
+    $root = dirname(__DIR__);
+    assert_contains('<style id="idlm-cover-full-bleed"><?php echo esc_html($idlm_full_bleed); ?></style>', file_get_contents($root . '/includes/class-quotation-renderer.php'));
+    assert_contains("IDLM_Quotation_Renderer::full_bleed_cover_css();", file_get_contents($root . '/includes/class-quotation-exporter.php'));
+});

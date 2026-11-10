@@ -271,6 +271,9 @@ final class IDLM_Quotation_Exporter {
         // print table. Dompdf needs explicit table widths after Grid is
         // replaced with its compatible table layout.
         $css .= '<style id="idlm-dompdf-columns">.idlm-print .idlm-readonly-section .idlm-quote-items th:nth-child(1){width:3%!important}.idlm-print .idlm-readonly-section .idlm-quote-items th:nth-child(2){width:14%!important}.idlm-print .idlm-readonly-section .idlm-quote-items th:nth-child(3){width:19%!important}.idlm-print .idlm-readonly-section .idlm-quote-items th:nth-child(4),.idlm-print .idlm-readonly-section .idlm-quote-items th:nth-child(5){width:6%!important}.idlm-print .idlm-readonly-section .idlm-quote-items th:nth-child(6){width:8%!important}.idlm-print .idlm-readonly-section .idlm-quote-items th:nth-child(7){width:6%!important}.idlm-print .idlm-readonly-section .idlm-quote-items th:nth-child(8){width:10%!important}.idlm-print .idlm-readonly-section .idlm-quote-items th:nth-child(9){width:12%!important}</style>';
+        // A full-bleed cover must win over the 10mm Dompdf page margin above.
+        $full_bleed = IDLM_Quotation_Renderer::full_bleed_cover_css();
+        if ('' !== $full_bleed) { $css .= '<style id="idlm-dompdf-cover-full-bleed">' . esc_html($full_bleed) . '</style>'; }
         return str_replace('</head>', $css . '</head>', $html);
     }
 
