@@ -123,7 +123,7 @@ final class IDLM_Quotation_Exporter {
             array('Grand total', (float) $revision->grand_total, 'currency'),
         );
         $terms = IDLM_Quotation_Document::read($revision);
-        $summary[] = array('Document terms', is_array($terms) ? 'Saved snapshot v1' : (is_wp_error($terms) ? 'Invalid saved snapshot' : 'Historical terms not captured'), 'text');
+        $summary[] = array('Document terms', is_array($terms) ? (isset($terms['accepted']) ? 'Accepted terms locked ' . $terms['accepted']['at'] . ' UTC' : 'Saved snapshot v1') : (is_wp_error($terms) ? 'Invalid saved snapshot' : 'Historical terms not captured'), 'text');
         if (is_array($terms)) {
             foreach (array('pdf_footer'=>'Footer terms') as $field=>$label) {
                 $summary[] = array($label, (string) $terms[$field], 'text');

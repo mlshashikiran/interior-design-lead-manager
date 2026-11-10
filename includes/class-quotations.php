@@ -24,6 +24,8 @@ class IDLM_Quotations {
         }
 
         add_action('admin_post_idlm_save_quote', array(__CLASS__, 'handle_save'));
+        // After-commit outbox hook: lock the accepted closing terms when the lead is won.
+        add_action('idlm_lead_stage_converted', array(__CLASS__, 'lock_accepted_closing'), 10, 2);
         add_action('admin_post_idlm_print_quote', array(__CLASS__, 'render_print_view'));
         add_action('admin_post_idlm_download_quote_pdf', static function() { IDLM_Quotation_Exporter::download('pdf'); });
         add_action('admin_post_idlm_download_quote_csv', static function() { IDLM_Quotation_Exporter::download('csv'); });
@@ -130,6 +132,21 @@ class IDLM_Quotations {
         ob_start();
         self::render_page();
         return ob_get_clean();
+    }
+
+    /**
+     * Lock the closing terms on the lead's current quotation revision when the lead is won. The
+     * outbox may replay or deliver late, so the lead must still be Won and an existing lock is kept.
+     */
+    public static function lock_accepted_closing($lead_id, $stage) {
+        if (IDLM_State_Registry::STAGE_WON !== $stage) { return; }
+        $quote = IDLM_Quotation_Repository::get_quote_for_lead(absint($lead_id));
+        if (!$quote || !absint($quote->current_revision_id)) { return; }
+        $bundle = IDLM_Quotation_Repository::get_quote_bundle($quote->id);
+        if (!$bundle || !$bundle->revision || IDLM_State_Registry::STAGE_WON !== trim((string) ($bundle->lead->stage ?? ''))) { return; }
+        $terms = IDLM_Quotation_Document::accept_closing($bundle->revision, self::settings());
+        if (!is_string($terms)) { return; }
+        IDLM_Quotation_Repository::replace_document_terms($bundle->revision->id, (string) $bundle->revision->document_terms, $terms);
     }
 
     protected static function settings() {

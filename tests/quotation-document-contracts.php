@@ -86,3 +86,40 @@ idlm_test('QUO content after the quote is live: new versions save none, print us
     $exporter=file_get_contents(dirname(__DIR__).'/includes/class-quotation-exporter.php');
     assert_false(strpos($exporter,"'after_quote_html'=>'Closing content'")!==false);
 });
+
+idlm_test('QUO accepted closing: winning locks current setup once, legacy saved closing is kept, and only finalised or locked terms print saved content', static function(): void {
+    $live=idlm_document_settings(array('after_quote_html'=>'<p>Terms on the day the lead was won</p>'));
+    // A 1.105.5 revision saves no closing: winning copies current setup.
+    $revision=(object)array('document_terms'=>IDLM_Quotation_Document::capture(idlm_document_settings(),118));
+    assert_same(null,IDLM_Quotation_Document::closing(IDLM_Quotation_Document::read($revision),true));
+    $locked=IDLM_Quotation_Document::accept_closing($revision,$live);
+    assert_true(is_string($locked));
+    $terms=IDLM_Quotation_Document::read((object)array('document_terms'=>$locked));
+    assert_same(2,$terms['version']);assert_same('settings',$terms['accepted']['source']);
+    assert_same(array('enabled'=>1,'html'=>'<p>Terms on the day the lead was won</p>'),IDLM_Quotation_Document::closing($terms,false));
+    assert_same(array('Deposit','Completion'),array_column($terms['milestones'],'name'));assert_same('Original footer terms',$terms['pdf_footer']);
+    // Locking again is a no-op, whatever setup says now.
+    assert_same(false,IDLM_Quotation_Document::accept_closing((object)array('document_terms'=>$locked),idlm_document_settings(array('after_quote_html'=>'<p>Later edit</p>'))));
+    // A pre-1.105.5 revision kept the closing it was shared with: winning keeps that copy.
+    $legacy=json_decode($revision->document_terms,true);$legacy['after_quote_enabled']=1;$legacy['after_quote_html']='<p>Shared closing</p>';
+    $legacy_revision=(object)array('document_terms'=>wp_json_encode($legacy));
+    $legacy_terms=IDLM_Quotation_Document::read($legacy_revision);
+    assert_same(null,IDLM_Quotation_Document::closing($legacy_terms,false));
+    assert_same('<p>Shared closing</p>',IDLM_Quotation_Document::closing($legacy_terms,true)['html']);
+    $kept=IDLM_Quotation_Document::read((object)array('document_terms'=>IDLM_Quotation_Document::accept_closing($legacy_revision,$live)));
+    assert_same('saved',$kept['accepted']['source']);assert_same('<p>Shared closing</p>',$kept['after_quote_html']);
+    // Unknown terms are never locked; malformed acceptance records are refused.
+    assert_same(false,IDLM_Quotation_Document::accept_closing((object)array('document_terms'=>null),$live));
+    foreach(array(array('at'=>'yesterday','source'=>'settings'),array('at'=>'2026-11-10 10:00:00','source'=>'guess'),array('source'=>'saved','at'=>'2026-11-10 10:00:00')) as $bad){
+        $row=$terms;$row['accepted']=$bad;assert_true(is_wp_error(IDLM_Quotation_Document::read((object)array('document_terms'=>wp_json_encode($row)))));
+    }
+    $row=$terms;unset($row['accepted']);assert_true(is_wp_error(IDLM_Quotation_Document::read((object)array('document_terms'=>wp_json_encode($row)))));
+    $row=json_decode($revision->document_terms,true);$row['accepted']=$terms['accepted'];assert_true(is_wp_error(IDLM_Quotation_Document::read((object)array('document_terms'=>wp_json_encode($row)))));
+    // Wiring: the won hook locks after commit, the print view applies the rule, setup says so.
+    $quotations=file_get_contents(dirname(__DIR__).'/includes/class-quotations.php');
+    assert_contains("add_action('idlm_lead_stage_converted', array(__CLASS__, 'lock_accepted_closing'), 10, 2);",$quotations);
+    assert_contains("IDLM_Quotation_Repository::replace_document_terms(\$bundle->revision->id, (string) \$bundle->revision->document_terms, \$terms);",$quotations);
+    $renderer=file_get_contents(dirname(__DIR__).'/includes/class-quotation-renderer.php');
+    assert_contains("\$closing = IDLM_Quotation_Document::closing(\$terms_known ? \$document_terms : null, \$finalised);",$renderer);
+    assert_contains('A quotation marked Sales finalised keeps the terms from when the lead was won.',$renderer);
+});
