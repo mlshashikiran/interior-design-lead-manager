@@ -51,10 +51,9 @@ idlm_test('QUO006 milestone rounding allocates cents without exceeding the agree
 idlm_test('QUO cover is live branding: new versions save no cover and print uses current settings', static function(): void {
     $terms=IDLM_Quotation_Document::read((object)array('document_terms'=>IDLM_Quotation_Document::capture(idlm_document_settings(),118)));
     assert_same(0,$terms['cover_page_enabled']);assert_same('',$terms['cover_page_html']);
-    // Contractual content is still captured.
-    assert_contains('Original closing terms',$terms['after_quote_html']);assert_same('Original footer terms',$terms['pdf_footer']);
+    // The footer is still captured.
+    assert_same('Original footer terms',$terms['pdf_footer']);
     $renderer=file_get_contents(dirname(__DIR__).'/includes/class-quotation-renderer.php');
-    assert_contains("foreach (array('after_quote_enabled','after_quote_html','pdf_footer') as \$field) {",$renderer);
     assert_false(strpos($renderer,"foreach (array('cover_page_enabled','cover_page_html','after_quote_enabled'")!==false);
     assert_contains('Changes apply to every quotation, including earlier revisions',$renderer);
     $exporter=file_get_contents(dirname(__DIR__).'/includes/class-quotation-exporter.php');
@@ -74,4 +73,16 @@ idlm_test('QUO full-bleed cover is opt-in, sized to the paper and applied to pri
     $root = dirname(__DIR__);
     assert_contains('<style id="idlm-cover-full-bleed"><?php echo esc_html($idlm_full_bleed); ?></style>', file_get_contents($root . '/includes/class-quotation-renderer.php'));
     assert_contains("IDLM_Quotation_Renderer::full_bleed_cover_css();", file_get_contents($root . '/includes/class-quotation-exporter.php'));
+});
+
+idlm_test('QUO content after the quote is live: new versions save none, print uses current settings, milestones stay saved', static function(): void {
+    $terms=IDLM_Quotation_Document::read((object)array('document_terms'=>IDLM_Quotation_Document::capture(idlm_document_settings(),118)));
+    assert_same(0,$terms['after_quote_enabled']);assert_same('',$terms['after_quote_html']);
+    assert_same(array('Deposit','Completion'),array_column($terms['milestones'],'name'));assert_same('Original footer terms',$terms['pdf_footer']);
+    $renderer=file_get_contents(dirname(__DIR__).'/includes/class-quotation-renderer.php');
+    assert_contains("\$settings['pdf_footer'] = \$terms_known ? \$document_terms['pdf_footer'] : '';",$renderer);
+    assert_false(strpos($renderer,"foreach (array('after_quote_enabled','after_quote_html','pdf_footer') as \$field) {")!==false);
+    assert_contains('Payment milestone amounts stay as saved with each revision.',$renderer);
+    $exporter=file_get_contents(dirname(__DIR__).'/includes/class-quotation-exporter.php');
+    assert_false(strpos($exporter,"'after_quote_html'=>'Closing content'")!==false);
 });

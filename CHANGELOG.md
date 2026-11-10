@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.105.5] - 2026-11-10
+
+### Changed
+
+- The content after the quote (terms and conditions) now always uses the current Quotation Setup content, like the cover page. A wording or design change applies to every quotation, including earlier revisions and quotations a client has already accepted, the next time it is printed or downloaded. The payment milestone amounts in `[idlm_payment_structure]` and the footer stay locked to each saved version. Revisions saved before document terms were captured show the current content without a payment table. New versions no longer store a copy of this content. No schema change. Builder: Shashi.
+
 ## [1.105.4] - 2026-11-10
 
 ### Added

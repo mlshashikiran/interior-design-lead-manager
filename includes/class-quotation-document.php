@@ -12,8 +12,9 @@ final class IDLM_Quotation_Document {
     }
 
     /**
-     * Snapshot current contractual settings; branding and paper layout remain live. The cover is
-     * branding (1.105.3): its keys stay for format v1 compatibility but are saved empty.
+     * Snapshot the footer and payment milestones; branding and paper layout remain live. The cover
+     * (1.105.3) and the content after the quote (1.105.5) are read from current settings: their
+     * keys stay for format v1 compatibility but are saved empty.
      */
     public static function capture($settings, $grand_total) {
         if (!is_array($settings)) { return self::error(); }
@@ -25,13 +26,15 @@ final class IDLM_Quotation_Document {
         $terms = array('version' => self::VERSION,
             'cover_page_enabled' => 0,
             'cover_page_html' => '',
-            'after_quote_enabled' => empty($settings['after_quote_enabled']) ? 0 : 1,
-            'after_quote_html' => wp_kses_post($settings['after_quote_html'] ?? ''),
+            'after_quote_enabled' => 0,
+            'after_quote_html' => '',
             'pdf_footer' => sanitize_textarea_field($settings['pdf_footer'] ?? ''),
             'milestones' => array());
         foreach (array('cover_page_html','after_quote_html','pdf_footer') as $field) {
             if (strlen($terms[$field]) > self::MAX_TEXT_BYTES) { return self::error(); }
         }
+        // The live content after the quote is not stored, but keep refusing oversized content.
+        if (strlen(wp_kses_post($settings['after_quote_html'] ?? '')) > self::MAX_TEXT_BYTES) { return self::error(); }
         $total_percent = 0; $allocated = 0; $remainders = array();
         foreach ($rows as $row) {
             if (!is_array($row)) { return self::error(); }

@@ -125,7 +125,7 @@ final class IDLM_Quotation_Exporter {
         $terms = IDLM_Quotation_Document::read($revision);
         $summary[] = array('Document terms', is_array($terms) ? 'Saved snapshot v1' : (is_wp_error($terms) ? 'Invalid saved snapshot' : 'Historical terms not captured'), 'text');
         if (is_array($terms)) {
-            foreach (array('after_quote_enabled'=>'Closing enabled','after_quote_html'=>'Closing content','pdf_footer'=>'Footer terms') as $field=>$label) {
+            foreach (array('pdf_footer'=>'Footer terms') as $field=>$label) {
                 $summary[] = array($label, (string) $terms[$field], 'text');
             }
             foreach ($terms['milestones'] as $row) {
