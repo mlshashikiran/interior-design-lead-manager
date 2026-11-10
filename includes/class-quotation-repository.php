@@ -352,6 +352,14 @@ final class IDLM_Quotation_Repository {
         );
     }
 
+    /** Replace saved document terms only if they are still exactly $expected (compare-and-set). */
+    public static function replace_document_terms($revision_id, $expected, $terms) {
+        global $wpdb;
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- REL007-SQL-0557: replace_document_terms(): table() prefixes a fixed suffix; the ID and both term strings are prepared; compare-and-set must read live state.
+        return $wpdb->query($wpdb->prepare("UPDATE " . self::table('quote_revisions') . " SET document_terms = %s WHERE id = %d AND document_terms = %s", $terms, absint($revision_id), $expected));
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
+    }
+
     /**
      * Point a quotation at its current revision and status.
      *

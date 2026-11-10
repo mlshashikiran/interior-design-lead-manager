@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.105.6] - 2026-11-10
+
+### Changed
+
+- A quotation marked Sales finalised keeps the terms and conditions the client accepted. When a lead moves to Won, the current revision of its quotation locks the content after the quote: the copy saved with that revision if it was saved before 1.105.5, otherwise the Quotation Setup content at that moment. Later Quotation Setup edits change draft, shared and superseded quotations only. A finalised quotation saved before 1.105.5 prints its saved copy even before it is locked. Quotations already won on 1.105.5 with no saved copy keep showing current setup until the lead is won again. The quotation export summary shows when the terms were locked. No schema change. Builder: Shashi.
+
 ## [1.105.5] - 2026-11-10
 
 ### Changed

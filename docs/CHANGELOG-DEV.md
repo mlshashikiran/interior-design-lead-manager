@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.105.6 — Accepted closing terms lock on Won (2026-11-10)
+
+Builder: Shashi. Document terms gain format 2 (format 1 plus `accepted` = `{at, source}`); `IDLM_Quotation_Document::read()` accepts both, and capture still writes format 1. `IDLM_Quotations::lock_accepted_closing()` listens on the after-commit outbox hook `idlm_lead_stage_converted`; for `Won` it rechecks the lead stage, then `accept_closing()` keeps the revision's saved `after_quote_*` (pre-1.105.5) or copies current setup, and `IDLM_Quotation_Repository::replace_document_terms()` writes it with compare-and-set (REL007-SQL-0557), so replay and late delivery are no-ops. `render_print_document()` uses `IDLM_Quotation_Document::closing()`: accepted terms always; for the current revision of a Won lead, a non-empty saved closing; otherwise current setup. Milestones and footer are unchanged, and the payment ledger, backup validator and design revisions read format 2 through `read()`. Tests: `QUO accepted closing…` (fast). The outbox-to-database path has no native/HTTP test yet. No schema change.
+
 ## 1.105.5 — Live content after the quote (2026-11-10)
 
 Builder: Shashi. `IDLM_Quotation_Renderer::render_print_document()` reads `after_quote_enabled` and `after_quote_html` from current settings for every revision; only `pdf_footer` and the milestones come from the saved document terms. `[idlm_payment_structure]` renders the saved milestones, or nothing when the terms are unknown or invalid. `IDLM_Quotation_Document::capture()` keeps the format-v1 `after_quote_*` keys but saves them empty, still refusing content over `MAX_TEXT_BYTES`; the exporter summary drops the closing rows. Older snapshots keep their stored closing text, which is no longer rendered. Tests: `QUO content after the quote is live…` (fast), the updated native `T10-T12-N-QUO006` case and the unknown-terms HTTP case. No schema change.
