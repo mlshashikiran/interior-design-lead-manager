@@ -912,7 +912,11 @@ idlm_test('quotation exports are revision-only, formula-safe, typed, and capabil
     assert_count_value(1, $data['line_items']);
     assert_same('=CMD — Cabinet', $data['line_items'][0]['item_code_name']);
     assert_same(1200.0, $data['line_items'][0]['line_total']);
-    assert_same(1298.0, $data['summary'][13][1]);
+    $summary = array_column($data['summary'], 1, 0);
+    assert_same(1298.0, $summary['Grand total']);
+    assert_same(99.0, $summary['CGST']);
+    assert_same(99.0, $summary['SGST']);
+    assert_same(0.0, $summary['IGST']);
     assert_same("'=1+1", IDLM_Quotation_Exporter::csv_text('=1+1'));
     assert_same("' @SUM(A1)", IDLM_Quotation_Exporter::csv_text(' @SUM(A1)'));
     assert_same('Q-2026-000041-R02-Asha-Rao', IDLM_Quotation_Exporter::filename_stem($bundle));
@@ -1497,7 +1501,9 @@ idlm_test('quotation print source is semantic and has no DOM rewrite script', st
     assert_contains('<section class="idlm-print-customer-details"><h2>Customer Details</h2><table>', $source);
     assert_contains('<th>Client Name</th><th>Phone Number</th><th>Email ID</th><th>Property Name</th><th>Location</th>', $source);
     assert_false(false !== strpos($source, 'Company contact information can be added in the quotation cover page or footer settings.'));
-    assert_contains('Section-wise subtotal before discount', $source);
+    assert_contains('<th>Room / Section</th>', $source);
+    assert_false(false !== strpos($source, 'Created / Modified By'));
+    assert_false(false !== strpos($source, 'Category-wise subtotal'));
     assert_false(false !== strpos($source, 'idlm-print-additional-notes'));
     assert_false(false !== strpos($source, 'document.querySelector'));
     assert_false(false !== strpos($source, '<script'));

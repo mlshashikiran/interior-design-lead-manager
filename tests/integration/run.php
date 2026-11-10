@@ -706,7 +706,7 @@ try {
 
         $print_html = IDLM_Quotation_Renderer::render_print_document(IDLM_Quotation_Repository::get_quote_bundle($quote->id));
         idlm_integration_assert_true(false !== strpos($print_html, 'idlm-print-document-head'));
-        idlm_integration_assert_true(false !== strpos($print_html, 'Section-wise subtotal before discount'));
+        idlm_integration_assert_true(false !== strpos($print_html, 'Room / Section'));
         idlm_integration_assert_true(false === strpos($print_html, '<script'));
         idlm_integration_assert_true(false === strpos($print_html, 'document.querySelector'));
         $print_dom = new DOMDocument();

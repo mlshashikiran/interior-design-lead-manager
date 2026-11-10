@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.105.7] - 2026-11-10
+
+### Changed
+
+- The quotation header is written for the client: quote date, valid until (one calendar month after the quote date, matching the terms), sales owner and designer with phone numbers, and the company GSTIN. The internal Created / Modified By and timestamp lines are gone.
+- The quotation summary has one table by room or section, then the subtotal, discounts, soft close, taxable amount, CGST 9% and SGST 9% (or IGST 18%), round off, a Grand Total box with the amount in words, and "You save" when discounts apply. The category table is removed.
+- The detail screen and the spreadsheet export list CGST, SGST and IGST separately instead of one GST line; the export also lists round off.
+
+### Added
+
+- Quotation Setup → PDF appearance has a Company GSTIN field. It must be 15 characters starting with the 2-digit state code; leave it blank to hide the line.
+
 ## [1.105.6] - 2026-11-10
 
 ### Changed

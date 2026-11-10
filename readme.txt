@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.105.6
+Stable tag: 1.105.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,10 @@ Action Scheduler is optional; WP-Cron is the fallback. Scheduled work requires w
 Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Project Authors. The complete SIL Open Font License 1.1 is bundled in assets/fonts/OFL.txt; assets/fonts/NOTICE.txt and assets/fonts/inter-provenance.json identify the exact upstream revision, matching Google Fonts distribution and file hashes. Font bytes and existing CSS mappings are preserved.
 
 == Changelog ==
+
+= 1.105.7 =
+* Quotation header shows the quote date, a valid-until date one month later, the sales owner and designer with their phone numbers, and the company GSTIN (new Quotation Setup field) instead of internal created/modified details.
+* Quotation summary shows one table by room, the discounts, CGST and SGST (or IGST) as separate lines, round off, a Grand Total box with the amount in words, and the total saved.
 
 = 1.105.6 =
 * A quotation marked Sales finalised keeps the terms the client accepted: when the lead is won, its current revision locks the content after the quote, so later Quotation Setup edits no longer change it. Builder: Shashi.

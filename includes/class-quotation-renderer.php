@@ -27,7 +27,7 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
         <section class="idlm-quote-panel"><h2>Quote numbering</h2><div class="idlm-settings-inline idlm-settings-inline-four"><label>Prefix<input name="number_prefix" maxlength="20" value="<?php echo esc_attr($settings['number_prefix']); ?>"></label><label>Separator<select name="number_separator"><option value="-" <?php selected($settings['number_separator'], '-'); ?>>Hyphen (-)</option><option value="/" <?php selected($settings['number_separator'], '/'); ?>>Slash (/)</option><option value="_" <?php selected($settings['number_separator'], '_'); ?>>Underscore (_)</option></select></label><label>Sequence padding<input type="number" min="3" max="10" name="number_padding" value="<?php echo esc_attr($settings['number_padding']); ?>"></label><div class="idlm-settings-preview"><strong>Preview</strong><p><?php echo esc_html($settings['number_prefix'] . $settings['number_separator'] . wp_date('Y') . $settings['number_separator'] . str_pad('125', absint($settings['number_padding']), '0', STR_PAD_LEFT)); ?></p></div></div></section>
         <div class="idlm-settings-inline idlm-settings-inline-two"><section class="idlm-quote-panel"><h2>Currency</h2><p class="description">This currency applies to new quotations and catalogue prices. Saved quotations and their revisions retain their original currency.</p><label>Currency code<select name="currency_code"><option value="INR" <?php selected($settings['currency_code'], 'INR'); ?>>INR (₹) Indian Rupee</option><option value="USD" <?php selected($settings['currency_code'], 'USD'); ?>>USD ($) US Dollar</option><option value="EUR" <?php selected($settings['currency_code'], 'EUR'); ?>>EUR (€) Euro</option><option value="GBP" <?php selected($settings['currency_code'], 'GBP'); ?>>GBP (£) British Pound</option><option value="AED" <?php selected($settings['currency_code'], 'AED'); ?>>AED (د.إ) UAE Dirham</option><option value="AUD" <?php selected($settings['currency_code'], 'AUD'); ?>>AUD (A$) Australian Dollar</option><option value="CAD" <?php selected($settings['currency_code'], 'CAD'); ?>>CAD (C$) Canadian Dollar</option><option value="SGD" <?php selected($settings['currency_code'], 'SGD'); ?>>SGD (S$) Singapore Dollar</option><option value="JPY" <?php selected($settings['currency_code'], 'JPY'); ?>>JPY (¥) Japanese Yen</option></select></label></section><section class="idlm-quote-panel"><h2><?php echo esc_html('Soft close addition'); ?></h2><p class="description">Set the percentage available to apply to individual quotations. It is calculated from the subtotal after wooden discount.</p><label>Global soft close percentage<input type="number" min="0" max="100" step="0.01" name="soft_close_percent" value="<?php echo esc_attr($settings['soft_close_percent']); ?>">%</label></section></div>
         </div>
-        <section class="idlm-quote-panel idlm-settings-pdf"><h2>PDF appearance</h2><p class="description">Set the visual defaults for client-facing quotation documents.</p><div class="idlm-settings-inline idlm-settings-inline-three"><label>Logo URL<input type="url" name="company_logo" value="<?php echo esc_attr($settings['company_logo']); ?>"></label><label>Accent colour<input type="color" name="accent_color" value="<?php echo esc_attr($settings['accent_color']); ?>"></label><label>Paper size<select name="paper_size"><option value="A4" <?php selected($settings['paper_size'], 'A4'); ?>>A4</option><option value="Letter" <?php selected($settings['paper_size'], 'Letter'); ?>>Letter</option><option value="A3" <?php selected($settings['paper_size'], 'A3'); ?>>A3</option><option value="Legal" <?php selected($settings['paper_size'], 'Legal'); ?>>Legal</option></select></label></div></section>
+        <section class="idlm-quote-panel idlm-settings-pdf"><h2>PDF appearance</h2><p class="description">Set the visual defaults for client-facing quotation documents.</p><div class="idlm-settings-inline idlm-settings-inline-three"><label>Logo URL<input type="url" name="company_logo" value="<?php echo esc_attr($settings['company_logo']); ?>"></label><label>Accent colour<input type="color" name="accent_color" value="<?php echo esc_attr($settings['accent_color']); ?>"></label><label>Paper size<select name="paper_size"><option value="A4" <?php selected($settings['paper_size'], 'A4'); ?>>A4</option><option value="Letter" <?php selected($settings['paper_size'], 'Letter'); ?>>Letter</option><option value="A3" <?php selected($settings['paper_size'], 'A3'); ?>>A3</option><option value="Legal" <?php selected($settings['paper_size'], 'Legal'); ?>>Legal</option></select></label></div><label>Company GSTIN<input type="text" name="company_gstin" maxlength="15" pattern="[0-9A-Za-z]{15}" value="<?php echo esc_attr($settings['company_gstin']); ?>"><span class="description">Printed in the quotation header. Leave blank to hide it.</span></label></section>
         <section class="idlm-quote-panel idlm-settings-template"><div class="idlm-settings-panel-heading"><div><h2>Cover page builder</h2><p class="description">Include this HTML as a separate first page. Changes apply to every quotation, including earlier revisions, the next time it is printed or downloaded. Add the class idlm-cover-full-bleed to the outer element to print it edge to edge, without page margins.</p></div><label class="idlm-settings-toggle"><input type="checkbox" name="cover_page_enabled" value="1" <?php checked(!empty($settings['cover_page_enabled'])); ?>><span class="idlm-settings-toggle__track" aria-hidden="true"></span> Enable cover page</label></div><details class="idlm-settings-disclosure"><summary>Edit cover page HTML</summary><label class="idlm-quote-textarea">Cover page HTML<textarea rows="14" name="cover_page_html" spellcheck="false" placeholder="&lt;section style=&quot;min-height: 900px; display: grid; place-items: center;&quot;&gt;...&lt;/section&gt;"><?php echo esc_textarea($settings['cover_page_html']); ?></textarea></label><p class="description">Enter safe HTML and inline CSS, enable the cover page, then save Quotation Setup. Empty content does not create a cover page.</p></details></section>
         <section class="idlm-quote-panel"><h2>Standard payment structure</h2><p class="description">Define reusable percentage-based milestones. Their amounts are calculated from each quotation's total including tax.</p><div class="idlm-payment-structure" data-payment-structure><?php foreach (array_merge($payment_structure, array(array('name' => '', 'percentage' => ''))) as $payment_index => $payment_row): ?><div class="idlm-payment-structure-row"><input name="payment_structure[<?php echo esc_attr($payment_index); ?>][name]" aria-label="Milestone name" placeholder="Milestone name" value="<?php echo esc_attr($payment_row['name'] ?? ''); ?>"><input type="number" min="0" max="100" step="0.01" name="payment_structure[<?php echo esc_attr($payment_index); ?>][percentage]" aria-label="Milestone percentage" placeholder="%" value="<?php echo esc_attr($payment_row['percentage'] ?? ''); ?>"><button type="button" class="button-link-delete" data-remove-payment-row>Remove</button></div><?php endforeach; ?></div><p class="description" data-payment-total aria-live="polite"></p><div class="idlm-payment-structure-actions"><button type="button" class="button" data-add-payment-row>Add milestone</button><p class="description">Milestones must total no more than 100%. Insert <code>[idlm_payment_structure]</code> in Content after the quote to render the table.</p></div></section>
         <section class="idlm-quote-panel idlm-settings-template"><div class="idlm-settings-panel-heading"><div><h2>Content after the quote</h2><p class="description">Include this HTML after the quotation. Changes apply to every quotation, including earlier revisions, the next time it is printed or downloaded. A quotation marked Sales finalised keeps the terms from when the lead was won. Payment milestone amounts stay as saved with each revision.</p></div><label class="idlm-settings-toggle"><input type="checkbox" name="after_quote_enabled" value="1" <?php checked(!empty($settings['after_quote_enabled'])); ?>><span class="idlm-settings-toggle__track" aria-hidden="true"></span> Enable closing content</label></div><details class="idlm-settings-disclosure"><summary>Edit after-quote HTML</summary><label class="idlm-quote-textarea">After-quote HTML<textarea rows="14" name="after_quote_html" spellcheck="false" placeholder="&lt;section&gt;&lt;h2&gt;Next steps&lt;/h2&gt;[idlm_payment_structure]&lt;/section&gt;"><?php echo esc_textarea($settings['after_quote_html']); ?></textarea></label><p class="description">Enter safe HTML and inline CSS, enable closing content, then save Quotation Setup. Empty content does not create a closing page. Available shortcode: <code>[idlm_payment_structure]</code>.</p></details></section>
@@ -229,7 +229,6 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
     /** Saved totals for the revision on screen. Values are read, never recalculated. */
     private static function render_detail_totals($revision) {
         $currency = $revision->currency_code;
-        $tax_total = (float) $revision->cgst_total + (float) $revision->sgst_total + (float) $revision->igst_total;
         $additional_discount = (float) ($revision->additional_discount_amount ?? 0);
         $rows = array(array('Subtotal', $revision->subtotal, true));
         $rows[] = array('Wooden subtotal', $revision->wooden_subtotal ?? 0, (float) ($revision->wooden_subtotal ?? 0) > 0);
@@ -238,7 +237,7 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
         $rows[] = array('Total', $revision->total_before_additional_discount ?? $revision->subtotal, true);
         $rows[] = array('Additional discount', -1 * $additional_discount, $additional_discount > 0);
         $rows[] = array('Total after additional discount', $revision->taxable_total ?? 0, $additional_discount > 0);
-        $rows[] = array('GST (18%)', $tax_total, true);
+        foreach (self::tax_rows($revision) as $tax_row) { $rows[] = array($tax_row[0], $tax_row[1], true); }
         $rows[] = array('Round off', $revision->round_off_amount ?? 0, 0.0 !== (float) ($revision->round_off_amount ?? 0));
         ?><dl class="idlm-readonly-totals idlm-quote-detail-totals"><?php foreach ($rows as $row): if (!$row[2]) { continue; } ?><div><dt><?php echo esc_html($row[0]); ?></dt><dd><?php echo esc_html(self::display_money($row[1], $currency)); ?></dd></div><?php endforeach; ?><div class="idlm-grand-total"><dt>Grand total</dt><dd><?php echo esc_html(self::display_money($revision->grand_total, $currency)); ?></dd></div></dl><?php
     }
@@ -518,31 +517,34 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
     }
 
     private static function render_readonly_items($bundle, $include_summary = true) {
-        $categories = array();
         $sections = array();
         foreach ($bundle->items as $item) {
             if ($item->is_optional) { continue; }
-            $category = $item->category ?: 'Uncategorised';
-            if (!isset($categories[$category])) { $categories[$category] = array('subtotal' => 0.0); }
-            $categories[$category]['subtotal'] += (float) $item->line_subtotal;
             $section_key = absint($item->section_id);
             $sections[$section_key] = ($sections[$section_key] ?? 0) + (float) $item->line_subtotal;
         }
-        $tax_total = (float) $bundle->revision->cgst_total + (float) $bundle->revision->sgst_total + (float) $bundle->revision->igst_total;
-        $additional_discount = (float) ($bundle->revision->additional_discount_amount ?? 0);
-        if ($include_summary): ?>
+        $revision = $bundle->revision;
+        $currency = $revision->currency_code;
+        if ($include_summary):
+            $wooden_discount = (float) ($revision->wooden_discount_amount ?? 0);
+            $soft_close = (float) ($revision->soft_close_amount ?? 0);
+            $additional_discount = (float) ($revision->additional_discount_amount ?? 0);
+            $round_off = (float) ($revision->round_off_amount ?? 0);
+            $savings = $wooden_discount + $additional_discount;
+            $rows = array(array('Subtotal', (float) $revision->subtotal));
+            if ($wooden_discount > 0) { $rows[] = array('Wooden discount (' . number_format_i18n((float) ($revision->wooden_discount_percent ?? 0), 2) . '%)', -1 * $wooden_discount); }
+            if ($soft_close > 0) { $rows[] = array('Soft close addition', $soft_close); }
+            if ($additional_discount > 0) { $rows[] = array('Additional discount', -1 * $additional_discount); }
+            $rows[] = array('Taxable amount', (float) $revision->taxable_total);
+            foreach (self::tax_rows($revision) as $tax_row) { $rows[] = $tax_row; }
+            if (0.0 !== $round_off) { $rows[] = array('Round off', $round_off); }
+            ?>
             <section class="idlm-print-summary">
                 <h2>Quotation Summary</h2>
-                <div class="idlm-print-summary-grid"><div><h3>Section-wise subtotal before discount</h3><table><thead><tr><th>Sl No</th><th>Section</th><th>Subtotal before discount</th></tr></thead><tbody><?php foreach ($bundle->sections as $section_index => $section): ?><tr><td><?php echo esc_html($section_index + 1); ?></td><td><?php echo esc_html($section->section_name); ?></td><td><?php echo esc_html(self::money($sections[absint($section->id)] ?? 0, $bundle->revision->currency_code)); ?></td></tr><?php endforeach; ?></tbody></table></div><div><h3>Category-wise subtotal</h3><table><thead><tr><th>Category</th><th>Subtotal</th></tr></thead><tbody><?php foreach ($categories as $category => $amounts): ?><tr><td><?php echo esc_html($category); ?></td><td><?php echo esc_html(self::money($amounts['subtotal'], $bundle->revision->currency_code)); ?></td></tr><?php endforeach; ?></tbody></table></div></div>
-                <dl class="idlm-readonly-totals idlm-print-summary-totals">
-                    <div><dt>Subtotal</dt><dd><?php echo esc_html(self::money($bundle->revision->subtotal, $bundle->revision->currency_code)); ?></dd></div>
-                    <div><dt>Wooden Subtotal</dt><dd><?php echo esc_html(self::money($bundle->revision->wooden_subtotal ?? 0, $bundle->revision->currency_code)); ?></dd></div>
-                    <div><dt>Wooden Discount (<?php echo esc_html(number_format_i18n((float) ($bundle->revision->wooden_discount_percent ?? 0), 2)); ?>%)</dt><dd><?php echo esc_html(self::money($bundle->revision->wooden_discount_amount ?? 0, $bundle->revision->currency_code)); ?></dd></div>
-                    <div><dt>Total</dt><dd><?php echo esc_html(self::money($bundle->revision->total_before_additional_discount ?? $bundle->revision->subtotal, $bundle->revision->currency_code)); ?></dd></div>
-                    <?php if ($additional_discount > 0): ?><div><dt>Additional Discount on Total</dt><dd><?php echo esc_html(self::money($additional_discount, $bundle->revision->currency_code)); ?></dd></div><div><dt>Total after additional discount</dt><dd><?php echo esc_html(self::money($bundle->revision->taxable_total, $bundle->revision->currency_code)); ?></dd></div><?php endif; ?>
-                    <div><dt>GST (18%)</dt><dd><?php echo esc_html(self::money($tax_total, $bundle->revision->currency_code)); ?></dd></div>
-                    <div class="idlm-grand-total"><dt>Grand Total</dt><dd><?php echo esc_html(self::money($bundle->revision->grand_total, $bundle->revision->currency_code)); ?></dd></div>
-                </dl>
+                <table class="idlm-print-summary-sections"><thead><tr><th>Sl No</th><th>Room / Section</th><th>Amount</th></tr></thead><tbody><?php foreach ($bundle->sections as $section_index => $section): ?><tr><td><?php echo esc_html($section_index + 1); ?></td><td><?php echo esc_html($section->section_name); ?></td><td><?php echo esc_html(self::money($sections[absint($section->id)] ?? 0, $currency)); ?></td></tr><?php endforeach; ?></tbody></table>
+                <p class="idlm-print-summary-note">Room amounts are before discounts and GST.</p>
+                <dl class="idlm-readonly-totals idlm-print-summary-totals"><?php foreach ($rows as $row): ?><div><dt><?php echo esc_html($row[0]); ?></dt><dd><?php echo esc_html(($row[1] < 0 ? '− ' : '') . self::money(abs($row[1]), $currency)); ?></dd></div><?php endforeach; ?></dl>
+                <table class="idlm-print-grand-box"><tr><td class="idlm-print-grand-label">Grand Total<small>Including GST</small></td><td class="idlm-print-grand-amount"><?php echo esc_html(self::money($revision->grand_total, $currency)); ?></td></tr><tr><td colspan="2" class="idlm-print-grand-words"><?php echo esc_html(self::amount_in_words($revision->grand_total, $currency)); ?></td></tr><?php if ($savings > 0): ?><tr><td colspan="2" class="idlm-print-savings">You save <?php echo esc_html(self::money($savings, $currency)); ?> with the discounts on this quotation.</td></tr><?php endif; ?></table>
             </section>
         <?php endif; ?>
         <section class="idlm-print-breakdown"><?php if ($include_summary): ?><h2>Section &amp; Item Breakdown</h2><?php endif; ?><?php
@@ -550,6 +552,65 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
             <article class="idlm-quote-section idlm-readonly-section"><header><strong><?php echo esc_html($section->section_name); ?></strong></header>
             <div class="idlm-quote-items-wrap"<?php echo (!$include_summary) ? ' tabindex="0" role="region" aria-label="' . esc_attr($section->section_name . ' line items') . '"' : ''; ?>><table class="idlm-quote-items"><thead><tr><th>S.No</th><th>Item</th><th>Description</th><th>Width</th><th>Height</th><th>Area / Qty</th><th>Unit</th><th>Rate</th><th>Subtotal</th></tr></thead><tbody><?php $serial = 0; foreach ($bundle->items as $item): if (absint($item->section_id) !== absint($section->id)) { continue; } if ('header' === ($item->row_type ?? 'item')): ?><tr class="idlm-readonly-header-row"><th colspan="9"><?php echo esc_html($item->description); ?></th></tr><?php continue; endif; $serial++; if (!$item->is_optional) { $section_total += (float) $item->line_subtotal; } ?><tr class="<?php echo $item->is_optional ? 'is-optional' : ''; ?>"><td><?php echo esc_html($serial); ?></td><td><?php echo esc_html($item->item_name ?: $item->item_code); ?><small><?php echo esc_html(trim(($item->category ?: 'Uncategorised') . ($item->item_code ? ' · ' . $item->item_code : ''))); ?></small></td><td><?php echo esc_html($item->description); ?><small><?php echo esc_html($item->specification); ?></small></td><td><?php echo esc_html(self::readonly_measure($item->length ?? 0, $include_summary)); ?></td><td><?php echo esc_html(self::readonly_measure($item->height ?? 0, $include_summary)); ?></td><td><?php echo esc_html(number_format_i18n((float) ($item->quantity ?? 0), 2)); ?></td><td><?php echo esc_html($item->unit); ?></td><td><?php echo esc_html(self::readonly_money($item->unit_rate, $bundle->revision->currency_code, $include_summary)); ?></td><td><?php echo esc_html($item->is_optional ? 'Optional' : self::readonly_money($item->line_subtotal, $bundle->revision->currency_code, $include_summary)); ?></td></tr><?php endforeach; ?></tbody><tfoot><tr><th colspan="8"><?php echo esc_html($section->section_name); ?> <?php echo esc_html($include_summary ? 'Subtotal' : 'subtotal'); ?></th><th><?php echo esc_html(self::readonly_money($section_total, $bundle->revision->currency_code, $include_summary)); ?></th></tr></tfoot></table></div>
             </article><?php endforeach; ?></section><?php
+    }
+
+    /** GST lines as stored on the revision: IGST when present, otherwise CGST and SGST at half the 18% rate. */
+    private static function tax_rows($revision) {
+        $igst = (float) ($revision->igst_total ?? 0);
+        if ($igst > 0) { return array(array('IGST (18%)', $igst)); }
+        return array(array('CGST (9%)', (float) ($revision->cgst_total ?? 0)), array('SGST (9%)', (float) ($revision->sgst_total ?? 0)));
+    }
+
+    /** Issue date of a revision and the date the quotation is valid until (one calendar month, clamped to month end). */
+    private static function quote_dates($created_at) {
+        $date = DateTime::createFromFormat('!Y-m-d', substr((string) $created_at, 0, 10));
+        if (!$date || $date->format('Y-m-d') !== substr((string) $created_at, 0, 10)) { return array('issued' => '—', 'valid_until' => '—'); }
+        $until = (clone $date)->modify('first day of next month');
+        $until->setDate((int) $until->format('Y'), (int) $until->format('n'), min((int) $date->format('j'), (int) $until->format('t')));
+        return array('issued' => $date->format('d M Y'), 'valid_until' => $until->format('d M Y'));
+    }
+
+    /** "Name · phone" for a CRM user; $name overrides the account's display name when the revision kept one. */
+    private static function person_line($user_id, $name = '') {
+        $user = $user_id ? get_userdata($user_id) : false;
+        $name = trim((string) $name) ?: ($user ? (string) $user->display_name : '');
+        if ('' === $name) { return ''; }
+        $phone = $user ? trim((string) get_user_meta($user_id, 'idlm_phone', true)) : '';
+        return '' !== $phone ? $name . ' · ' . $phone : $name;
+    }
+
+    /** Grand total in words: Indian numbering (lakh, crore) for INR, international numbering otherwise. */
+    private static function amount_in_words($amount, $currency) {
+        $names = array('INR' => array('Rupees', 'Paise'), 'USD' => array('US Dollars', 'Cents'), 'EUR' => array('Euros', 'Cents'), 'GBP' => array('Pounds', 'Pence'), 'AED' => array('Dirhams', 'Fils'), 'AUD' => array('Australian Dollars', 'Cents'), 'CAD' => array('Canadian Dollars', 'Cents'), 'SGD' => array('Singapore Dollars', 'Cents'), 'JPY' => array('Yen', ''));
+        $currency = strtoupper((string) $currency);
+        $name = $names[$currency] ?? array($currency, '');
+        $minor = (int) round(abs((float) $amount) * 100);
+        $major = intdiv($minor, 100);
+        $cents = '' === $name[1] ? 0 : $minor % 100;
+        $indian = 'INR' === $currency;
+        $words = self::number_words($major, $indian);
+        $text = $indian ? $name[0] . ' ' . $words : $words . ' ' . $name[0];
+        if ($cents > 0) { $text .= ' and ' . self::number_words($cents, $indian) . ' ' . $name[1]; }
+        return $text . ' Only';
+    }
+
+    private static function number_words($number, $indian) {
+        $number = (int) $number;
+        if (0 === $number) { return 'Zero'; }
+        $scales = $indian ? array(10000000 => 'Crore', 100000 => 'Lakh', 1000 => 'Thousand', 100 => 'Hundred') : array(1000000000 => 'Billion', 1000000 => 'Million', 1000 => 'Thousand', 100 => 'Hundred');
+        $parts = array();
+        foreach ($scales as $value => $label) {
+            if ($number >= $value) {
+                $parts[] = self::number_words(intdiv($number, $value), $indian) . ' ' . $label;
+                $number %= $value;
+            }
+        }
+        if ($number > 0) {
+            $ones = array('', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen');
+            $tens = array('', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety');
+            $parts[] = $number < 20 ? $ones[$number] : trim($tens[intdiv($number, 10)] . ' ' . $ones[$number % 10]);
+        }
+        return implode(' ', $parts);
     }
 
     private static function render_payment_structure_shortcode($html, $bundle, $terms) {
@@ -636,10 +697,11 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
         $closing = IDLM_Quotation_Document::closing($terms_known ? $document_terms : null, $finalised);
         if ($closing) { $settings['after_quote_enabled'] = $closing['enabled']; $settings['after_quote_html'] = $closing['html']; }
         $after_quote_html = self::render_payment_structure_shortcode($settings['after_quote_html'], $bundle, $terms_known ? $document_terms : array('milestones' => array()));
-        $created_by = get_userdata(absint($revision->created_by));
-        $updated_by = get_userdata(absint($revision->updated_by));
-        $created_at_display = $revision->created_at ? mysql2date('d-m-Y h:i A', $revision->created_at, false) : '—';
-        $updated_at_display = $revision->updated_at ? mysql2date('d-m-Y h:i A', $revision->updated_at, false) : '—';
+        $dates = self::quote_dates($revision->created_at ?? '');
+        $sales_owner = !empty($bundle->lead->assigned_rep_id) ? self::person_line(absint($bundle->lead->assigned_rep_id)) : '';
+        $design_meta = IDLM_Design_Revisions::meta($revision->id);
+        $designer = $design_meta ? self::person_line(absint($design_meta->designer_id ?? 0), (string) $design_meta->designer_name) : '';
+        $gstin = strtoupper(trim((string) ($settings['company_gstin'] ?? '')));
         ob_start();
         $document_title = preg_replace('~[\\\\/:*?"<>|]+~', '-', $bundle->quote_number . '-' . $revision->revision_name . '-' . ($revision->customer_name ?: 'Quotation'));
         ?><!doctype html>
@@ -705,6 +767,20 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
                     font-size: 10px;
                     text-transform: uppercase;
                 }
+                .idlm-print-summary-sections { width: 100%; border-collapse: collapse; }
+                .idlm-print-summary-sections th, .idlm-print-summary-sections td { padding: 8px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+                .idlm-print-summary-sections th { background: #f8fafc; color: #475569; font-size: 11px; text-transform: uppercase; }
+                .idlm-print-summary-sections th:first-child, .idlm-print-summary-sections td:first-child { width: 72px; }
+                .idlm-print-summary-sections th:last-child, .idlm-print-summary-sections td:last-child { text-align: right; }
+                .idlm-print-summary-note { margin: 8px 16px 0; color: #64748b; font-size: 11px; }
+                .idlm-print-grand-box { width: 60%; margin: 4px 16px 16px auto; border-collapse: collapse; border: 2px solid #334155; }
+                .idlm-print-grand-box td { padding: 10px 14px; }
+                .idlm-print-grand-label, .idlm-print-grand-amount { background: #334155; color: #fff; font-weight: 700; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                .idlm-print-grand-label { font-size: 15px; }
+                .idlm-print-grand-label small { display: block; font-weight: 400; font-size: 11px; color: #e2e8f0; }
+                .idlm-print-grand-amount { font-size: 22px; text-align: right; }
+                .idlm-print-grand-words { font-size: 12px; border-bottom: 1px solid #e2e8f0; }
+                .idlm-print-savings { font-size: 12px; font-weight: 700; color: #166534; background: #f0fdf4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                 </style>
         </head>
         <body>
@@ -717,9 +793,11 @@ final class IDLM_Quotation_Renderer extends IDLM_Quotations {
                     <dl class="idlm-print-document-meta">
                         <div><dt>Quotation #:</dt><dd><?php echo esc_html($bundle->quote_number); ?></dd></div>
                         <div><dt>Revision:</dt><dd><?php echo esc_html($revision->revision_name); ?></dd></div>
-                        <?php $idlm_design_meta = IDLM_Design_Revisions::meta($revision->id); if ($idlm_design_meta): ?><div><dt>Sales Representative:</dt><dd><?php $idlm_sales_rep = !empty($bundle->lead->assigned_rep_id) ? get_userdata(absint($bundle->lead->assigned_rep_id)) : false; echo esc_html($idlm_sales_rep ? $idlm_sales_rep->display_name : '—'); ?></dd></div><div><dt>Design Consultant:</dt><dd><?php echo esc_html($idlm_design_meta->designer_name ?: '—'); ?></dd></div><?php endif; ?>
-                        <div><dt>Created / Modified By:</dt><dd><?php echo esc_html(($created_by ? $created_by->display_name : 'Unknown') . ' / ' . ($updated_by ? $updated_by->display_name : 'Unknown')); ?></dd></div>
-                        <div><dt>Created / Updated Date:</dt><dd><?php echo esc_html($created_at_display . ' / ' . $updated_at_display); ?></dd></div>
+                        <div><dt>Quote date:</dt><dd><?php echo esc_html($dates['issued']); ?></dd></div>
+                        <div><dt>Valid until:</dt><dd><?php echo esc_html($dates['valid_until']); ?></dd></div>
+                        <div><dt>Sales owner:</dt><dd><?php echo esc_html($sales_owner ?: '—'); ?></dd></div>
+                        <?php if ('' !== $designer): ?><div><dt>Designer:</dt><dd><?php echo esc_html($designer); ?></dd></div><?php endif; ?>
+                        <?php if ('' !== $gstin): ?><div><dt>GSTIN:</dt><dd><?php echo esc_html($gstin); ?></dd></div><?php endif; ?>
                     </dl>
                 </header>
                 <section class="idlm-print-customer-details"><h2>Customer Details</h2><table><thead><tr><th>Client Name</th><th>Phone Number</th><th>Email ID</th><th>Property Name</th><th>Location</th></tr></thead><tbody><tr><td><?php echo esc_html($revision->customer_name ?: '—'); ?></td><td><?php echo esc_html($revision->customer_phone ?: '—'); ?></td><td><?php echo esc_html($revision->customer_email ?: '—'); ?></td><td><?php echo esc_html($revision->project_name ?: '—'); ?></td><td><?php echo esc_html($revision->property_location ?: '—'); ?></td></tr></tbody></table></section>
