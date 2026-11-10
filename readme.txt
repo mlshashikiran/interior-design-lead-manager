@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.105.2
+Stable tag: 1.105.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,9 @@ Action Scheduler is optional; WP-Cron is the fallback. Scheduled work requires w
 Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Project Authors. The complete SIL Open Font License 1.1 is bundled in assets/fonts/OFL.txt; assets/fonts/NOTICE.txt and assets/fonts/inter-provenance.json identify the exact upstream revision, matching Google Fonts distribution and file hashes. Font bytes and existing CSS mappings are preserved.
 
 == Changelog ==
+
+= 1.105.3 =
+* The quotation cover page always uses the current cover settings, so logo and wording changes apply to every quotation; payment terms, the closing page and footer stay locked per version. Builder: Shashi.
 
 = 1.105.2 =
 * Quotation versions show Sales finalised, Closed: lost, Shared, Draft or Superseded from the lead's outcome, and the customer on a quotation opens the lead popup. Builder: Shashi.

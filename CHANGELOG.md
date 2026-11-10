@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.105.3] - 2026-11-10
+
+### Changed
+
+- The quotation cover page is branding and now always uses the current cover settings, like the logo and paper layout. A logo or wording change applies to every quotation, including earlier revisions, the next time it is printed or downloaded. Payment terms, the closing page and footer terms stay locked to each saved version. New versions no longer store a copy of the cover (about 8.5 KB each). No schema change. Builder: Shashi.
+
 ## [1.105.2] - 2026-11-09
 
 ### Changed

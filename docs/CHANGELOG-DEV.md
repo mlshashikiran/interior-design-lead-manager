@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.105.3 — Live quotation cover (2026-11-10)
+
+Builder: Shashi. `IDLM_Quotation_Renderer::render_print_document()` reads `cover_page_enabled` and `cover_page_html` from current settings; only `after_quote_*` and `pdf_footer` come from the saved document terms. `IDLM_Quotation_Document::capture()` keeps the format-v1 cover keys but saves them empty, and the exporter summary drops the cover rows. Older snapshots keep their stored cover text but it is no longer rendered. Tests: `QUO cover is live branding…` (fast) and the updated native `T10-T12-N-QUO006` case. No schema change.
+
 ## 1.105.2 — Quotation version labels and customer link (2026-11-09)
 
 Builder: Shashi. `IDLM_Quotation_Policy::display_status()` derives the shown status from the stored status, whether the version is current and the lead's stage; `list_quotations()` adds `lead_stage` and `display_status` to each row, and the list (PHP and `quotations.js`) and detail views use it. The detail summary's customer is a `data-idlm-open-lead` button (workspace only, `IDLM_Lead_Access_Policy::can_access()`), and the page renders the common lead overlays when it shows. Tests: `tests/quotation-display-contracts.php`. No schema change.

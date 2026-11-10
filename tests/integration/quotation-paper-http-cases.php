@@ -18,7 +18,7 @@ try {
     idlm_http_check(idlm_http_save(idlm_http_payload($paper_lead))['status']===302,'Initial paper fixture save failed');
     $paper_quote=IDLM_Quotation_Repository::get_quote_for_lead($paper_lead);
     idlm_http_check((bool)$paper_quote,'Missing paper fixture quotation');
-    // Exercise pagination with saved long labels and the existing contractual cover/closing.
+    // Exercise pagination with saved long labels and the saved contractual closing.
     $payload = idlm_http_payload((int)$paper_quote->lead_id, (int)$paper_quote->id, (int)$paper_quote->current_revision_id);
     $payload['items'] = array();
     for ($i=1; $i<=60; $i++) {
@@ -71,13 +71,14 @@ function idlm_paper_http_download(object $quote, string $paper, array $points, s
     $file=$config['content_dir'].'/paper-'.$tag.'.pdf'; file_put_contents($file,$pdf['body']);
     try {
         $info=idlm_paper_tool(getenv('IDLM_TEST_PDFINFO') ?: 'pdfinfo', array('-f','1','-l','1000',$file));
-        preg_match('/Pages:\s+(\d+)/',$info,$pages); idlm_http_check((int)($pages[1] ?? 0)>=4, 'Expected cover, summary, multipage items and closing');
+        preg_match('/Pages:\s+(\d+)/',$info,$pages); // The cover follows live settings (1.105.3), and these cases change settings to paper-only values.
+        idlm_http_check((int)($pages[1] ?? 0)>=3, 'Expected summary, multipage items and closing');
         preg_match_all('/(?:Page\s+\d+\s+size|Page size):\s+([\d.]+) x ([\d.]+) pts/',$info,$sizes,PREG_SET_ORDER);
         idlm_http_check(count($sizes)===(int)$pages[1], 'Missing page dimensions');
         foreach($sizes as $size){idlm_http_check(abs((float)$size[1]-$points[0])<.1 && abs((float)$size[2]-$points[1])<.1,'PDF page has wrong paper: '.$size[0]);}
         $text=idlm_paper_tool(getenv('IDLM_TEST_PDFTOTEXT') ?: 'pdftotext', array('-layout',$file,'-'));
         for($i=1;$i<=60;$i++){idlm_http_check(strpos($text,sprintf('PAPER-ROW-%03d',$i))!==false,'Missing line '.$i);}
-        foreach(array('Paper test contractual cover','Paper test contractual closing','Paper test contractual footer','Paper test deposit') as $token){idlm_http_check(strpos($text,$token)!==false,'Missing saved term '.$token);}
+        foreach(array('Paper test contractual closing','Paper test contractual footer','Paper test deposit') as $token){idlm_http_check(strpos($text,$token)!==false,'Missing saved term '.$token);}
         $csv=idlm_http_request('/wp-admin/admin-post.php',$args+array('action'=>'idlm_download_quote_csv','_wpnonce'=>$sessions['owner']['csv']),'owner',false);
         idlm_http_check($csv['status']===200 && substr($csv['body'],0,3)==="\xEF\xBB\xBF" && strpos($csv['body'],'PAPER-ROW-060')!==false,'Invalid CSV download');
         $stream=fopen('php://temp','r+');fwrite($stream,substr($csv['body'],3));rewind($stream);
