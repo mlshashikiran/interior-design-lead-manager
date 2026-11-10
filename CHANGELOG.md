@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.105.4] - 2026-11-10
+
+### Added
+
+- Full-bleed quotation cover: when the cover page markup carries the class `idlm-cover-full-bleed`, the first page prints with no margin and the cover fills the paper (A4, Letter, A3 or Legal), in Preview and print and in the PDF download. Quotation pages keep their margins, and covers without the class print as before. No schema change. Builder: Shashi.
+
 ## [1.105.3] - 2026-11-10
 
 ### Changed
