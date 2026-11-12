@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  Q Oak Interiors quotation cover: editable source.
+  To change a photo, replace the file in photos/ (keep the name) or edit the src below,
+  then render with render.sh. Output: cover.jpg at 1810 x 2560 px (A4 ratio).
+  Photo slots: photos/hero.webp (primary), photos/secondary-1.webp (upper inset), photos/secondary-2.webp (lower inset).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Q Oak quotation cover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c99644;
+    --gold-light: #e2ac4f;
+    --ink: #1f2530;
+    --muted: #4a5260;
+    --panel: #282a30;
+    --panel-text: #b9bec8;
+    --rust: #b4472f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1810px; height: 2560px; }
+  body { position: relative; overflow: hidden; background: #fff; font-family: Outfit, Arial, sans-serif; color: var(--ink); }
+  .abs { position: absolute; }
+
+  /* Hero */
+  .hero { left: 0; top: 0; width: 1810px; height: 1249px; overflow: hidden; }
+  .hero img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; display: block; }
+  .hero::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(20,22,28,.22) 0%, rgba(20,22,28,0) 16%, rgba(20,22,28,0) 50%, rgba(20,22,28,.55) 66%, rgba(20,22,28,.88) 100%),
+                linear-gradient(90deg, rgba(20,22,28,.30) 0%, rgba(20,22,28,0) 60%); }
+  .logo { left: 110px; top: 0; width: 368px; height: 207px; background: #fff; z-index: 2; display: flex; align-items: center; justify-content: center; }
+  .logo img { width: 100%; height: 100%; object-fit: contain; }
+  .tag { right: 108px; top: 70px; z-index: 2; color: #fff; font-size: 30px; font-weight: 500; letter-spacing: .3px; }
+  .bar { left: 114px; top: 791px; width: 128px; height: 9px; background: var(--gold); z-index: 2; }
+  .headline { left: 110px; top: 840px; width: 1300px; z-index: 2; color: #fff; font-size: 100px; font-weight: 600; line-height: 1.12; letter-spacing: -1.5px; }
+  .subhead { left: 114px; top: 1105px; z-index: 2; color: var(--gold-light); font-size: 40px; font-weight: 500; }
+  .dot { left: 1542px; top: 1104px; width: 102px; height: 102px; border-radius: 50%; background: var(--gold-light); z-index: 3; }
+  .block { left: 1594px; top: 1161px; width: 216px; height: 88px; background: var(--rust); z-index: 2; }
+
+  /* Letter */
+  .letter { left: 114px; top: 1335px; width: 860px; font-size: 30px; line-height: 1.62; color: var(--muted); }
+  .letter p { margin-bottom: 30px; }
+  .letter .sign { margin-top: 44px; margin-bottom: 0; color: var(--ink); }
+  .letter strong { font-weight: 600; color: var(--ink); }
+
+  /* Inset photos */
+  .frame { left: 1093px; top: 1373px; width: 457px; height: 339px; border: 6px solid var(--gold); }
+  .inset { object-fit: cover; display: block; }
+  .inset-1 { left: 1060px; top: 1340px; width: 460px; height: 340px; }
+  .inset-2 { left: 1321px; top: 1554px; width: 374px; height: 257px; border: 6px solid #fff; box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+
+  /* Promise panel */
+  .panel { left: 0; top: 1963px; width: 1810px; height: 597px; background: var(--panel); }
+  .panel h2 { position: absolute; left: 108px; top: 70px; color: var(--gold-light); font-size: 37px; font-weight: 500; }
+  .grid { position: absolute; left: 108px; top: 140px; width: 1600px; display: grid; grid-template-columns: repeat(3, 1fr); row-gap: 54px; column-gap: 40px; }
+  .item { display: flex; gap: 26px; align-items: flex-start; }
+  .icon { flex: 0 0 74px; height: 74px; border-radius: 50%; border: 2px solid #4a4d55; display: flex; align-items: center; justify-content: center; }
+  .icon svg { width: 36px; height: 36px; stroke: var(--gold-light); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .item h3 { color: #fff; font-size: 31px; font-weight: 600; margin-bottom: 6px; }
+  .item p { color: var(--panel-text); font-size: 25px; line-height: 1.42; max-width: 380px; }
+  .rule { position: absolute; left: 108px; right: 108px; top: 499px; height: 1px; background: #474a52; }
+  .foot { position: absolute; left: 108px; right: 108px; top: 528px; display: flex; justify-content: space-between; font-size: 24px; color: #9aa0ab; }
+  .foot b { color: #fff; font-weight: 600; margin-right: 14px; }
+  .foot .made { color: var(--gold-light); font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="abs hero"><img src="photos/hero.webp" alt=""></div>
+  <div class="abs logo"><img src="photos/logo.png" alt="Q Oak Interiors"></div>
+  <div class="abs tag">Interior proposal</div>
+  <div class="abs bar"></div>
+  <h1 class="abs headline">Your home deserves more<br>than a beautiful design.</h1>
+  <div class="abs subhead">It deserves a process you can trust.</div>
+  <div class="abs dot"></div>
+  <div class="abs block"></div>
+
+  <div class="abs letter">
+    <p>Thank you for considering Q Oak Interiors.</p>
+    <p>Getting your interiors done is a big decision. The worry is rarely just how the home will look. It is whether the work will finish on time, stay at the agreed price and match the quality you were promised.</p>
+    <p>One team takes your project from design through manufacturing, installation and handover. The proposal that follows is based on our discussions with you.</p>
+    <p class="sign">Warm regards,<br><strong>The Q Oak Interiors team</strong></p>
+  </div>
+
+  <div class="abs frame"></div>
+  <img class="abs inset inset-1" src="photos/secondary-1.webp" alt="">
+  <img class="abs inset inset-2" src="photos/secondary-2.webp" alt="">
+
+  <div class="abs panel">
+    <h2>Our promise to your home</h2>
+    <div class="grid">
+      <div class="item"><div class="icon"><svg viewBox="0 0 24 24"><path d="M2 7h11v9H2zM13 10h4l3 3v3h-7z"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></svg></div><div><h3>45–60 day delivery</h3><p>A committed timeline, not an open-ended project.</p></div></div>
+      <div class="item"><div class="icon"><svg viewBox="0 0 24 24"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/></svg></div><div><h3>Premium plywood only</h3><p>Never MDF or particle board.</p></div></div>
+      <div class="item"><div class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.5 8h7M8.5 11h7M11 8c2.6 0 2.6 6 0 6H8.5l5 4"/></svg></div><div><h3>A price that stays put</h3><p>The price you approve is the price you pay.</p></div></div>
+      <div class="item"><div class="icon"><svg viewBox="0 0 24 24"><path d="M3 21V10l5 3V10l5 3V6h3l1 15z"/><path d="M3 21h18"/></svg></div><div><h3>Our own factory</h3><p>Made in Bangalore, so we control finish and dates.</p></div></div>
+      <div class="item"><div class="icon"><svg viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div><div><h3>15-year warranty</h3><p>Covered long after handover.</p></div></div>
+      <div class="item"><div class="icon"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></div><div><h3>5,000+ Bangalore homes</h3><p>Experience from real homes and homeowners.</p></div></div>
+    </div>
+    <div class="rule"></div>
+    <div class="foot"><span><b>Q Oak Interiors and Modular Solutions Pvt. Ltd.</b>Experience centres in JP Nagar and Whitefield, Bangalore</span><span class="made">Made right. Delivered right.</span></div>
+  </div>
+</body>
+</html>
