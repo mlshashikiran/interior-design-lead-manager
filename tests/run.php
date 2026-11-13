@@ -605,6 +605,34 @@ idlm_test('floor plan attachments normalize legacy and multi-file values safely'
     assert_contains('uploadFloorPlanFiles', $script_source);
 });
 
+idlm_test('global admin-app functions bind jQuery before using $ so lead popup delete runs', static function(): void {
+    // WordPress loads jQuery in noConflict mode, so a top-level function that uses $ without
+    // `var $ = jQuery;` throws "$ is not defined" (the drawer's Delete lead button did this).
+    $script_source = file_get_contents(dirname(__DIR__) . '/assets/js/admin-app.js');
+    preg_match_all('/^function\s+(\w+)\s*\([^)]*\)\s*\{(.*?)^\}/ms', $script_source, $functions, PREG_SET_ORDER);
+    assert_true(count($functions) > 20, 'Expected to find the global admin-app functions.');
+    $unbound = array();
+    foreach ($functions as $function) {
+        if (preg_match('/(?<![\w.$])\$(?:\.|\()/', $function[2]) && !preg_match('/var\s+\$\s*=\s*jQuery\s*;/', $function[2])) {
+            $unbound[] = $function[1];
+        }
+    }
+    assert_same(array(), $unbound, 'Global functions use $ without binding jQuery: ' . implode(', ', $unbound));
+
+    preg_match('/^function deleteSingleLead\(leadId\) \{(.*?)^\}/ms', $script_source, $delete);
+    assert_true(!empty($delete[1]), 'deleteSingleLead() must exist.');
+    assert_contains("action: 'idlm_delete_lead'", $delete[1]);
+    assert_contains('nonce: idlm_vars.nonce', $delete[1]);
+    assert_contains('lead_id: leadId', $delete[1]);
+    assert_contains('closeLeadDrawer();', $delete[1]);
+    assert_contains('window.idlmLoadLeadsTable(page);', $delete[1]);
+
+    $drawer_source = file_get_contents(dirname(__DIR__) . '/includes/class-admin-lead-reads.php');
+    assert_contains('onclick="deleteSingleLead(', $drawer_source);
+    $ajax_source = file_get_contents(dirname(__DIR__) . '/includes/class-admin-ajax.php');
+    assert_contains("check_ajax_referer('idlm_admin_nonce', 'nonce');\n        IDLM_Admin::require_ajax_access('admin', 'Permission denied. Only administrators can delete leads.');", $ajax_source);
+});
+
 idlm_test('Google feed permission uses dedicated Basic Auth and preserves its challenge', static function(): void {
     $GLOBALS['idlm_test_options']['idlm_google_gadm_username'] = 'google-source';
     $GLOBALS['idlm_test_options']['idlm_google_gadm_password'] = 'google-feed-password';

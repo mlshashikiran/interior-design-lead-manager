@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.105.8] - 2026-11-13
+
+### Fixed
+
+- Delete lead in the lead popup did nothing after you confirmed. It now deletes the lead, closes the popup and refreshes the leads list.
+
 ## [1.105.7] - 2026-11-10
 
 ### Changed

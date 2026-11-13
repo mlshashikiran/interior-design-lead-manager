@@ -3522,6 +3522,7 @@ function idlmCopyToClipboard(button, text) {
 }
 
 function deleteSingleLead(leadId) {
+    var $ = jQuery;
     window.IDLMDialog.confirm({
         title: 'Delete lead?',
         message: 'Are you absolutely sure you want to delete this lead? This action cannot be undone and will also delete all associated activity and CAPI logs.',
@@ -3539,15 +3540,15 @@ function deleteSingleLead(leadId) {
             lead_id: leadId
         },
         success: function(response) {
-            if (response.success) {
+            if (response && response.success) {
                 closeLeadDrawer();
-                window.IDLMDialog.notify(response.data.message || 'Lead successfully deleted.', 'success');
+                window.IDLMDialog.notify((response.data && response.data.message) || 'Lead successfully deleted.', 'success');
                 if (typeof window.idlmLoadLeadsTable === 'function') {
                     var page = (typeof window.idlmCurrentPage === 'function') ? window.idlmCurrentPage() : 1;
                     window.idlmLoadLeadsTable(page);
                 }
             } else {
-                window.IDLMDialog.notify(response.data.message || 'Failed to delete lead.', 'error');
+                window.IDLMDialog.notify((response && response.data && response.data.message) || 'Failed to delete lead.', 'error');
             }
         },
         error: function() {
