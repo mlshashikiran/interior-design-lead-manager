@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.105.8 — Lead popup delete (2026-11-13)
+
+Builder: Shashi. 1.102.31 swapped `confirm()` for `IDLMDialog.confirm()` in the global `deleteSingleLead()` in `assets/js/admin-app.js` and dropped its `var $ = jQuery;`. WordPress loads jQuery in noConflict mode, so the confirm callback threw `$ is not defined` and never sent `idlm_delete_lead`. The binding is back, and the success and error notices read `response.data` only when it is present. `ajax_delete_lead()` and `IDLM_Lead_Deletion_Service::delete()` are unchanged. Test: `global admin-app functions bind jQuery before using $…` (fast) checks every top-level function in `admin-app.js` that uses `$` and the delete request's action, nonce, field, drawer close and table reload. No schema change.
+
 ## 1.105.7 — Client-facing quotation header and summary (2026-11-10)
 
 Builder: Shashi. `render_print_document()` header uses new private helpers on `IDLM_Quotation_Renderer`: `quote_dates()` (revision `created_at`, revisions are immutable; valid until is +1 calendar month clamped to month end), `person_line()` (display name plus `idlm_phone` user meta; the designer keeps the name saved in the design revision meta), and setting `company_gstin` (default `''`, validated `^[0-9]{2}[A-Z0-9]{13}$` in `handle_save_settings()`). `render_readonly_items()` summary drops the category table, prints one room table, a totals list built from the stored revision amounts (wooden discount, soft close, additional discount, taxable, `tax_rows()`, round off) and an `idlm-print-grand-box` table with `amount_in_words()` (Indian lakh/crore for INR, international otherwise) and savings = wooden + additional discount. `tax_rows()` prints IGST 18% when `igst_total` > 0, else CGST 9% and SGST 9%; also used by `render_detail_totals()`. Exporter summary replaces `GST (18%)` with CGST, SGST, IGST and Round off rows and adds Dompdf CSS for the new summary. No schema change; no stored amounts change.
