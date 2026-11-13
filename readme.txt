@@ -95,7 +95,7 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 == Changelog ==
 
 = 1.105.10 =
-* Changed: The lead popup header has more room. Field labels sit a fixed gap above their values, the four status fields sit side by side with one small, even gap, and the created and assigned times sit on their own line under them.
+* Changed: The lead popup header has more room. Field labels sit a fixed gap above their values, the four status fields sit side by side with one small, even gap, and the created and assigned times sit under the close and previous/next buttons.
 
 = 1.105.8 =
 * Fixed: Delete lead in the lead popup did nothing after you confirmed. It now deletes the lead, closes the popup and refreshes the list.

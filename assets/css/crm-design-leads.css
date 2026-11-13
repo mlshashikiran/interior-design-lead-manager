@@ -1189,6 +1189,30 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-header > .idlm-close {
     right: var(--idlm-space-4);
 }
 
+/* Wide drawers: created, assigned and any exception stack under close and previous/next,
+   right-aligned, and the fields keep clear of that corner. Narrower drawers keep the line. */
+@media (min-width: 1025px) {
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-grid {
+        padding-right: 260px;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context {
+        position: absolute;
+        top: calc(var(--idlm-drawer-head-pad) + 2px + 32px + var(--idlm-space-3));
+        right: var(--idlm-space-5);
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+        max-width: 260px;
+        text-align: right;
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context-item + .idlm-drawer-status-context-item {
+        padding-left: 0;
+        border-left: 0;
+    }
+}
+
 /* Tabs */
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tabs {
     gap: var(--idlm-space-5);
