@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.105.9] - 2026-11-13
+
+### Changed
+
+- Completed and cancelled background tasks (Action Scheduler) are kept for 14 days instead of the 30-day default, with their log rows. Each cleanup run now deletes up to 100 old tasks instead of 20, so the existing backlog clears within a few hours and stays cleared. Failed and pending tasks are not deleted. The setting applies to every plugin's background tasks on the site; a shorter period or larger batch set elsewhere is kept.
+
 ## [1.105.8] - 2026-11-13
 
 ### Fixed

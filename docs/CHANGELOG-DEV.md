@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.105.9 — Background task retention (2026-11-13)
+
+Builder: Shashi. `IDLM_Data_Retention::init()` adds `action_scheduler_retention_period` → `background_task_retention()` (min of incoming and `BACKGROUND_TASK_RETENTION_DAYS` = 14 days; non-positive falls back to 14) and `action_scheduler_cleanup_batch_size` → `background_task_cleanup_batch()` (max of incoming and `BACKGROUND_TASK_CLEANUP_BATCH` = 100). Action Scheduler's `ActionScheduler_QueueCleaner::delete_old_actions()` runs on every queue run and purges only `complete` and `canceled` (statuses are not filtered here), deleting each action's logs with it; no custom purge job or schema change. Production had 13,663 completed actions and 40,702 log rows when this was written.
+
 ## 1.105.8 — Lead popup delete (2026-11-13)
 
 Builder: Shashi. 1.102.31 swapped `confirm()` for `IDLMDialog.confirm()` in the global `deleteSingleLead()` in `assets/js/admin-app.js` and dropped its `var $ = jQuery;`. WordPress loads jQuery in noConflict mode, so the confirm callback threw `$ is not defined` and never sent `idlm_delete_lead`. The binding is back, and the success and error notices read `response.data` only when it is present. `ajax_delete_lead()` and `IDLM_Lead_Deletion_Service::delete()` are unchanged. Test: `global admin-app functions bind jQuery before using $…` (fast) checks every top-level function in `admin-app.js` that uses `$` and the delete request's action, nonce, field, drawer close and table reload. No schema change.
