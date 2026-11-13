@@ -931,6 +931,8 @@ body.idlm-crm-design .idlm-leads-page .idlm-pagination-summary {
 
 /* --- 8. Lead drawer: fixed frame, identity, then at-a-glance status --------- */
 body.idlm-crm-design #idlm-lead-drawer {
+    /* One header inset, shared by the header and the controls that float over it. */
+    --idlm-drawer-head-pad: var(--idlm-space-5);
     align-items: flex-start;
     padding: var(--idlm-space-6);
 }
@@ -945,17 +947,18 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-content-wrapper {
     animation-timing-function: ease-out;
 }
 
+/* Header rhythm: identity, then the status fields, then a quiet meta line, then the tabs. */
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-header {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--idlm-space-3);
-    padding: var(--idlm-space-3) var(--idlm-space-5);
+    gap: var(--idlm-space-5);
+    padding: var(--idlm-drawer-head-pad) var(--idlm-space-6) var(--idlm-space-4);
     background: var(--idlm-surface);
 }
 
 /* Previous and next sit beside close, in the frame. They no longer float over the page. */
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav {
     position: absolute;
-    top: calc(var(--idlm-space-6) + var(--idlm-space-3));
+    top: calc(var(--idlm-space-6) + var(--idlm-drawer-head-pad) + 2px);
     width: 32px;
     height: 32px;
     border: 1px solid var(--idlm-border);
@@ -1001,7 +1004,7 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-nav-prev {
 
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-position {
     position: absolute;
-    top: calc(var(--idlm-space-6) + var(--idlm-space-3));
+    top: calc(var(--idlm-space-6) + var(--idlm-drawer-head-pad) + 2px);
     right: calc((100% - min(1180px, 100% - 48px)) / 2 + 128px);
     bottom: auto;
     left: auto;
@@ -1017,6 +1020,7 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-lead-position {
 }
 
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-identity {
+    gap: var(--idlm-space-3);
     min-width: 0;
     padding-right: 200px;
 }
@@ -1035,7 +1039,7 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-identity-text {
     display: flex;
     flex-flow: row wrap;
     align-items: center;
-    gap: 1px var(--idlm-space-2);
+    gap: var(--idlm-space-1) var(--idlm-space-2);
     min-width: 0;
 }
 
@@ -1074,24 +1078,31 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-contact a:hover {
     text-decoration: underline;
 }
 
-/* At-a-glance strip: four values and one quiet context line. */
+/* At-a-glance strip: four even columns, then one quiet meta line under them. */
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-grid {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: var(--idlm-space-2) var(--idlm-space-5);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--idlm-space-3);
     min-width: 0;
 }
 
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-primary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--idlm-space-2) var(--idlm-space-5);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--idlm-space-3) var(--idlm-space-6);
+    max-width: 960px;
     padding: 0;
     border: 0;
 }
 
+/* Label above a value slot of one fixed height, so text, select and chip share one baseline. */
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-item {
+    display: grid;
+    grid-template-rows: auto minmax(26px, auto);
+    row-gap: var(--idlm-space-1);
+    align-content: start;
+    align-items: center;
+    justify-items: start;
     min-width: 0;
     padding: 0;
     border: 0;
@@ -1099,7 +1110,7 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-item {
 
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-label {
     display: block;
-    margin: 0 0 1px;
+    margin: 0;
     color: var(--idlm-text-muted);
     font-size: 0.6875rem;
     font-weight: 500;
@@ -1109,6 +1120,7 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-label {
 }
 
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-value {
+    max-width: 100%;
     color: var(--idlm-text);
     font-size: 0.8125rem;
     font-weight: 600;
@@ -1118,15 +1130,17 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-value {
 
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-stage-select {
     width: auto;
+    max-width: calc(100% + var(--idlm-space-2));
     min-height: 26px;
     height: 26px;
     /* Inner padding keeps text off the border on hover and focus; the matching negative
-       margin keeps the text in line with the label, and the strip height unchanged. */
-    margin: -2px 0 -2px calc(-1 * var(--idlm-space-2));
-    padding: 0 var(--idlm-space-6) 0 var(--idlm-space-2);
+       margin keeps the text in line with the label. */
+    margin: 0 0 0 calc(-1 * var(--idlm-space-2));
+    padding: 0 var(--idlm-space-8) 0 var(--idlm-space-2);
     /* A thin border and the arrow at rest say this value can be changed. */
     border-color: var(--idlm-border);
     background-color: transparent;
+    background-position: right var(--idlm-space-2) center;
     color: var(--idlm-text);
     font-size: 0.8125rem;
     font-weight: 600;
@@ -1138,12 +1152,12 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-stage-select:is(:hover, :foc
     background-color: var(--idlm-surface);
 }
 
+/* Created, assigned and any exception sit on their own line, aligned with the fields. */
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context {
     display: flex;
-    flex: 1 1 200px;
     flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0 var(--idlm-space-3);
+    justify-content: flex-start;
+    gap: var(--idlm-space-1) var(--idlm-space-3);
     min-width: 0;
     padding: 0;
     border: 0;
@@ -1159,6 +1173,11 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context-item {
     line-height: 1.5;
 }
 
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context-item + .idlm-drawer-status-context-item {
+    padding-left: var(--idlm-space-3);
+    border-left: 1px solid var(--idlm-border);
+}
+
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context-value {
     color: var(--idlm-text-muted);
     font-weight: 500;
@@ -1166,14 +1185,14 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context-value {
 
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-header > .idlm-close {
     position: absolute;
-    top: var(--idlm-space-3);
+    top: calc(var(--idlm-drawer-head-pad) + 2px);
     right: var(--idlm-space-4);
 }
 
 /* Tabs */
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tabs {
     gap: var(--idlm-space-5);
-    padding-inline: var(--idlm-space-5);
+    padding-inline: var(--idlm-space-6);
     overflow-x: auto;
     scrollbar-width: none;
 }
@@ -2356,10 +2375,6 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
-    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context {
-        justify-content: flex-start;
-    }
-
     body.idlm-crm-design #idlm-lead-drawer .idlm-presales-day-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -2666,8 +2681,13 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         border-radius: 0;
     }
 
+    body.idlm-crm-design #idlm-lead-drawer {
+        --idlm-drawer-head-pad: var(--idlm-space-3);
+    }
+
     body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-header {
-        padding: var(--idlm-space-2) var(--idlm-space-3);
+        gap: var(--idlm-space-4);
+        padding: var(--idlm-drawer-head-pad) var(--idlm-space-4) var(--idlm-space-3);
     }
 
     body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-identity {
@@ -2714,11 +2734,22 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         width: 100%;
-        gap: var(--idlm-space-2) var(--idlm-space-3);
+        gap: var(--idlm-space-3) var(--idlm-space-4);
+    }
+
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-item {
+        justify-items: stretch;
     }
 
     body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-value {
+        justify-self: start;
         white-space: normal;
+    }
+
+    /* The meta line wraps at phone width, so its items stack without a divider. */
+    body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-context-item + .idlm-drawer-status-context-item {
+        padding-left: 0;
+        border-left: 0;
     }
 
     body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-stage-select {
@@ -2733,7 +2764,7 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
 
     body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tabs {
         gap: var(--idlm-space-4);
-        padding-inline: var(--idlm-space-3);
+        padding-inline: var(--idlm-space-4);
     }
 
     body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tab {
