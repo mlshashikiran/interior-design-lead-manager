@@ -4,7 +4,7 @@
 
 ### Changed
 
-- The lead popup header has more room. Call status, Stage, Assigned rep and Lead quality line up in four even columns with the same gap between each label and its value, and the Stage arrow no longer touches the text. The created and assigned times sit on their own line under the fields instead of at the far right. The header has more space above, below and before the tabs. No fields or actions changed. Builder: Shashi.
+- The lead popup header has more room. Call status, Stage, Assigned rep and Lead quality sit side by side with one small, even gap between each label and its value, and the Stage arrow no longer touches the text. The created and assigned times sit on their own line under the fields instead of at the far right. The header has more space above, below and before the tabs. No fields or actions changed. Builder: Shashi.
 
 ## [1.105.8] - 2026-11-13
 

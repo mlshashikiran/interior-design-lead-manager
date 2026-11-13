@@ -1078,7 +1078,7 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-contact a:hover {
     text-decoration: underline;
 }
 
-/* At-a-glance strip: four even columns, then one quiet meta line under them. */
+/* At-a-glance strip: four content-width columns with one even gap, then a quiet meta line. */
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1088,9 +1088,9 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-grid {
 
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-primary {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--idlm-space-3) var(--idlm-space-6);
-    max-width: 960px;
+    grid-template-columns: repeat(4, minmax(0, max-content));
+    justify-content: start;
+    gap: var(--idlm-space-3) var(--idlm-space-8);
     padding: 0;
     border: 0;
 }
