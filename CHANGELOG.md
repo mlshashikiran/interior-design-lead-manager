@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.105.13] - 2026-11-14
+
+### Changed
+
+- Uploaded lead files (floor plans, quotations, design files and payment proofs) are stored on disk in a protected folder instead of inside the database. The folder is outside the website on production; when no location is configured it defaults to `wp-content/uploads/idlm-private`, which denies direct web requests. The database keeps only each file's name, size, checksum and owner.
+- Existing files move to disk automatically, 25 per hourly maintenance run (or on demand), each verified by size and SHA-256 before its database copy is deleted. A file that fails verification keeps its database copy. When none are left, the old file table is rebuilt once so the database shrinks.
+- Resized copies that WordPress had generated for files migrated from the media library are no longer kept; only the original was ever served.
+- Downloads, permissions, deletion and CRM reset work as before, and deleting a lead now also removes its files from disk.
+
 ## [1.105.11] - 2026-11-14
 
 ### Changed
