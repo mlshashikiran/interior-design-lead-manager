@@ -15,8 +15,15 @@ function idlm_native_private_fixture(bool $variants = false): array {
     $wpdb->update($wpdb->prefix.'idlm_leads',array('floor_plan_file'=>$uploaded['url'],'floor_plan_files'=>wp_json_encode(array($uploaded['url']))),array('id'=>$lead));
     return array('lead'=>$lead,'attachment'=>(int)$attachment,'url'=>$uploaded['url'],'bytes'=>$bytes,'paths'=>$paths);
 }
+/** Bytes kept for a file variant: its protected disk copy (1.105.13), or '' when none is kept. */
 function idlm_native_private_bytes(int $file, int $variant=0): string {
-    global $wpdb;$rows=$wpdb->get_col($wpdb->prepare("SELECT data FROM {$wpdb->prefix}idlm_private_file_chunks WHERE file_id = %d AND variant = %d ORDER BY part",$file,$variant));return implode('',array_map(static function($data){return base64_decode($data,true);},$rows));
+    global $wpdb;$archive=json_decode((string)$wpdb->get_var($wpdb->prepare("SELECT archive FROM {$wpdb->prefix}idlm_private_files WHERE id = %d",$file)),true);
+    foreach((array)$archive as $descriptor){if((int)($descriptor['variant']??-1)===$variant && !empty($descriptor['disk'])){$path=IDLM_Private_Files::storage_root().'/'.$descriptor['disk'];return is_file($path)?(string)file_get_contents($path):'';}}
+    return '';
+}
+/** Protected files currently on disk. */
+function idlm_native_disk_files(): array {
+    $root=IDLM_Private_Files::storage_root();return is_dir($root)?array_values(array_filter(glob($root.'/*/*/*.bin') ?: array(),'is_file')):array();
 }
 
 idlm_integration_test('private file installer verifies schema/engine and retries a failed new-table installation',static function():void{
@@ -30,25 +37,29 @@ idlm_integration_test('private file installer verifies schema/engine and retries
     idlm_integration_assert_true(IDLM_Private_Files::install());idlm_integration_assert_same(IDLM_Private_Files::VERSION,get_option('idlm_private_file_schema_version'));
     $wpdb->query("ALTER TABLE {$wpdb->prefix}idlm_private_file_chunks ENGINE=MyISAM");idlm_integration_assert_true(!IDLM_Private_Files::ready());$wpdb->query("ALTER TABLE {$wpdb->prefix}idlm_private_file_chunks ENGINE=InnoDB");idlm_integration_assert_true(IDLM_Private_Files::ready());
 });
-idlm_integration_test('legacy private migration verifies all original/variant bytes before resumable public-copy cleanup',static function():void{
+idlm_integration_test('legacy private migration keeps the verified original on disk before resumable public-copy cleanup',static function():void{
     global $wpdb;
-    $f=idlm_native_private_fixture(true);IDLM_Private_Files::init();$expected=array_map('file_get_contents',$f['paths']);
+    $f=idlm_native_private_fixture(true);IDLM_Private_Files::init();$expected=array_map('file_get_contents',$f['paths']);$chunks=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks");
     idlm_integration_assert_true(IDLM_Private_Files::migrate_lead($f['lead']));$file=(int)get_post_meta($f['attachment'],'_idlm_private_file_id',true);
-    foreach($expected as $variant=>$bytes){idlm_integration_assert_same($bytes,idlm_native_private_bytes($file,$variant));}
+    // Only the served original is kept; WordPress-generated sizes are listed so cleanup can remove their public copies.
+    $expected=array($expected[0],'','');foreach($expected as $variant=>$bytes){idlm_integration_assert_same($bytes,idlm_native_private_bytes($file,$variant));}
+    idlm_integration_assert_same($chunks,(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks"),'Migration wrote file bytes into the database');
     idlm_integration_assert_same(IDLM_Private_Files::url($f['attachment']),$wpdb->get_var($wpdb->prepare("SELECT floor_plan_file FROM {$wpdb->prefix}idlm_leads WHERE id = %d",$f['lead'])));
     $fail=static function($path){return '';};add_filter('wp_delete_file',$fail);
     try{idlm_integration_assert_true(IDLM_Private_Files::cleanup()>0);foreach($f['paths'] as $path){idlm_integration_assert_true(is_file($path),'Protected copy failure removed public bytes');}}finally{remove_filter('wp_delete_file',$fail);}
     IDLM_Private_Files::cleanup();foreach($f['paths'] as $path){idlm_integration_assert_true(!file_exists($path),'Public main/variant remains');}
     foreach($expected as $variant=>$bytes){idlm_integration_assert_same($bytes,idlm_native_private_bytes($file,$variant));}
-    $before=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks");idlm_integration_assert_true(IDLM_Private_Files::migrate_lead($f['lead']));idlm_integration_assert_same($before,(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks"));
+    $before=idlm_native_disk_files();idlm_integration_assert_true(IDLM_Private_Files::migrate_lead($f['lead']));idlm_integration_assert_same($before,idlm_native_disk_files());
     $restore=new ReflectionMethod('IDLM_Backup','restore_payload');if (PHP_VERSION_ID < 80100) { $restore->setAccessible(true); }$lead_count=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_leads");idlm_integration_assert_true(is_wp_error($restore->invoke(null,array('tables'=>array(),'options'=>array()))));idlm_integration_assert_same($lead_count,(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_leads"));
-    idlm_integration_assert_true(!is_wp_error(IDLM_Lead_Deletion_Service::delete($f['lead'])));idlm_integration_assert_same('',idlm_native_private_bytes($file));idlm_integration_assert_true(!get_post($f['attachment']));
+    $disk=IDLM_Private_Files::storage_root().'/'.json_decode($wpdb->get_var($wpdb->prepare("SELECT archive FROM {$wpdb->prefix}idlm_private_files WHERE id = %d",$file)),true)[0]['disk'];idlm_integration_assert_true(is_file($disk));
+    idlm_integration_assert_true(!is_wp_error(IDLM_Lead_Deletion_Service::delete($f['lead'])));idlm_integration_assert_same('',idlm_native_private_bytes($file));idlm_integration_assert_true(!get_post($f['attachment']));idlm_integration_assert_true(!file_exists($disk),'Erased lead left its protected file on disk');
 });
-idlm_integration_test('private migration rejects missing/shared/traversal inputs and failed chunk writes without losing source',static function():void{
-    global $wpdb;
-    $f=idlm_native_private_fixture();$before=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_files");
-    $fail=static function($sql){return strpos($sql,'INSERT INTO `'.$GLOBALS['wpdb']->prefix.'idlm_private_file_chunks`')===0?'INSERT INTO idlm_nonexistent_failure_table VALUES (1)':$sql;};$old=$wpdb->suppress_errors(true);add_filter('query',$fail);
-    try{idlm_integration_assert_true(!IDLM_Private_Files::migrate_lead($f['lead']));}finally{remove_filter('query',$fail);$wpdb->suppress_errors($old);}
+idlm_integration_test('private migration rejects missing/shared/traversal inputs and failed storage writes without losing source',static function():void{
+    global $wpdb,$integration_content_dir;
+    $f=idlm_native_private_fixture();$before=(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_files");$disk=idlm_native_disk_files();
+    $blocker=wp_tempnam('idlm-storage-blocker');$fail=static function() use($blocker){return $blocker.'/private';};add_filter('idlm_private_files_root',$fail);
+    try{idlm_integration_assert_true(!IDLM_Private_Files::migrate_lead($f['lead']));}finally{remove_filter('idlm_private_files_root',$fail);unlink($blocker);}
+    idlm_integration_assert_same($disk,idlm_native_disk_files(),'Failed write left a protected file behind');
     idlm_integration_assert_same($before,(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_files"));idlm_integration_assert_same($f['bytes'],file_get_contents($f['paths'][0]));idlm_integration_assert_same($f['url'],$wpdb->get_var($wpdb->prepare("SELECT floor_plan_file FROM {$wpdb->prefix}idlm_leads WHERE id = %d",$f['lead'])));
     $now=current_time('mysql');$wpdb->insert($wpdb->prefix.'idlm_leads',array('first_name'=>'Synthetic shared','floor_plan_file'=>$f['url'],'created_at'=>$now,'updated_at'=>$now));$shared=(int)$wpdb->insert_id;
     idlm_integration_assert_true(!IDLM_Private_Files::migrate_lead($f['lead']));idlm_integration_assert_true(is_wp_error(IDLM_Lead_Deletion_Service::delete($f['lead'])));$wpdb->delete($wpdb->prefix.'idlm_leads',array('id'=>$shared));
@@ -62,7 +73,7 @@ idlm_integration_test('file erasure rolls back with lead deletion failure and CR
     try{idlm_integration_assert_true(is_wp_error(IDLM_Lead_Deletion_Service::delete($private['lead'])));}finally{remove_filter('query',$fail);$wpdb->suppress_errors($old);}
     idlm_integration_assert_same($before,idlm_native_private_bytes($file));idlm_integration_assert_true((bool)get_post($private['attachment']));
     $legacy=idlm_native_private_fixture(true);$count=(string)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_leads");$result=IDLM_Lead_Deletion_Service::reset_all($count);idlm_integration_assert_true(!is_wp_error($result),'File reset failed');
-    idlm_integration_assert_same(0,(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks"));idlm_integration_assert_same(0,(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_files"));foreach($legacy['paths'] as $path){idlm_integration_assert_true(!file_exists($path));}idlm_integration_assert_true(!get_post($legacy['attachment']));
+    idlm_integration_assert_same(0,(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks"));idlm_integration_assert_same(0,(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_files"));idlm_integration_assert_same(array(),idlm_native_disk_files(),'CRM reset left protected files on disk');foreach($legacy['paths'] as $path){idlm_integration_assert_true(!file_exists($path));}idlm_integration_assert_true(!get_post($legacy['attachment']));
 });
 
 idlm_integration_test('tagged unsaved legacy uploads migrate without binding and erase with their lead',static function():void{
@@ -96,4 +107,35 @@ idlm_integration_test('managed upload history is excluded from legacy batch limi
     }
     idlm_integration_assert_true(IDLM_Private_Files::migrate_lead($lead),'Private history incorrectly exceeded legacy batch limit');idlm_integration_assert_true(!is_wp_error(IDLM_Lead_Deletion_Service::delete($lead)),'Private history blocked lead deletion');
     for($i=0;$i<3;$i++){IDLM_Private_Files::cleanup(50);}idlm_integration_assert_same(0,(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_files WHERE lead_id = %d",$lead)));
+});
+
+idlm_integration_test('database-held files move to verified protected disk storage and the chunk table is emptied',static function():void{
+    global $wpdb,$administrator_id;
+    $now=current_time('mysql');$wpdb->insert($wpdb->prefix.'idlm_leads',array('first_name'=>'SYNTHETIC-DISK-MOVE','assigned_rep_id'=>$administrator_id,'created_at'=>$now,'updated_at'=>$now));$lead=(int)$wpdb->insert_id;
+    // Rows written the pre-1.105.13 way: base64 chunks, a 2-part original and a generated size.
+    $make=static function(string $bytes,string $thumb) use($wpdb,$lead,$now){
+        $a=wp_insert_attachment(array('post_title'=>'Protected lead file','post_status'=>'private','post_mime_type'=>'application/pdf'),'',0,true,false);
+        $archive=array(array('variant'=>0,'path'=>'','size'=>strlen($bytes),'sha256'=>hash('sha256',$bytes)),array('variant'=>1,'path'=>'','size'=>strlen($thumb),'sha256'=>hash('sha256',$thumb)));
+        $wpdb->insert($wpdb->prefix.'idlm_private_files',array('lead_id'=>$lead,'attachment_id'=>$a,'purpose'=>'floor_plan','filename'=>'synthetic.pdf','mime'=>'application/pdf','byte_size'=>strlen($bytes),'sha256'=>hash('sha256',$bytes),'state'=>'active','archive'=>wp_json_encode($archive),'created_at'=>$now));$id=(int)$wpdb->insert_id;
+        foreach(str_split($bytes,IDLM_Private_Files::CHUNK_BYTES) as $i=>$part){$wpdb->insert($wpdb->prefix.'idlm_private_file_chunks',array('file_id'=>$id,'variant'=>0,'part'=>$i+1,'data'=>base64_encode($part)));}
+        $wpdb->insert($wpdb->prefix.'idlm_private_file_chunks',array('file_id'=>$id,'variant'=>1,'part'=>1,'data'=>base64_encode($thumb)));
+        return $id;
+    };
+    $good="%PDF-1.4\n".str_repeat('SYNTHETIC-DISK-MOVE ',5000);$ok=$make($good,'thumb');
+    $bad=$make("%PDF-1.4\nSYNTHETIC-CORRUPT\n",'thumb');$wpdb->update($wpdb->prefix.'idlm_private_file_chunks',array('data'=>base64_encode('tampered')),array('file_id'=>$bad,'variant'=>0,'part'=>1));
+    $result=IDLM_Private_Files::migrate_to_disk(50);
+    idlm_integration_assert_same(1,$result['failed'],'Corrupt database copy was not refused');
+    idlm_integration_assert_same($good,idlm_native_private_bytes($ok),'Moved file bytes differ');idlm_integration_assert_same('',idlm_native_private_bytes($ok,1),'Generated size was kept');
+    idlm_integration_assert_same(0,(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks WHERE file_id = %d",$ok)),'Moved file kept database chunks');
+    idlm_integration_assert_true((int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks WHERE file_id = %d",$bad))>0,'Unverified file lost its only copy');
+    idlm_integration_assert_same('',idlm_native_private_bytes($bad));
+    $root=IDLM_Private_Files::storage_root();foreach(array('.htaccess','index.php','web.config') as $guard){idlm_integration_assert_true(is_file($root.'/'.$guard),'Missing storage guard '.$guard);}
+    idlm_integration_assert_true(false!==strpos((string)file_get_contents($root.'/.htaccess'),'Require all denied'));
+    // A second run is a no-op for the moved file; removing the corrupt row lets the table empty.
+    $again=IDLM_Private_Files::migrate_to_disk(50);idlm_integration_assert_same(1,$again['failed']);idlm_integration_assert_same($good,idlm_native_private_bytes($ok));
+    $wpdb->update($wpdb->prefix.'idlm_private_files',array('state'=>'erasing'),array('id'=>$bad));$done=IDLM_Private_Files::migrate_to_disk(50);
+    idlm_integration_assert_same(0,$done['remaining']);idlm_integration_assert_same(0,(int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks"));
+    idlm_integration_assert_true((bool)get_option('idlm_private_file_chunks_reclaimed'),'Emptied chunk table was not rebuilt');
+    IDLM_Lead_Deletion_Service::delete($lead);for($i=0;$i<3;$i++){IDLM_Private_Files::cleanup(50);}
+    idlm_integration_assert_same('',idlm_native_private_bytes($ok));idlm_integration_assert_same(0,(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_files WHERE lead_id = %d",$lead)));
 });

@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.105.10
+Stable tag: 1.105.13
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,9 @@ Action Scheduler is optional; WP-Cron is the fallback. Scheduled work requires w
 Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Project Authors. The complete SIL Open Font License 1.1 is bundled in assets/fonts/OFL.txt; assets/fonts/NOTICE.txt and assets/fonts/inter-provenance.json identify the exact upstream revision, matching Google Fonts distribution and file hashes. Font bytes and existing CSS mappings are preserved.
 
 == Changelog ==
+
+= 1.105.13 =
+* Uploaded lead files (floor plans, quotations, design files, payment proofs) are stored in a protected folder on disk instead of inside the database. Existing files move automatically in verified batches, and the database space is reclaimed once they have all moved. Downloads still go through the CRM's permission checks.
 
 = 1.105.10 =
 * Changed: The lead popup header has more room. Field labels sit a fixed gap above their values, the four status fields sit side by side with one small, even gap, and the created and assigned times sit under the close and previous/next buttons.
