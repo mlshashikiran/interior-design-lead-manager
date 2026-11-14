@@ -1078,6 +1078,12 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-contact a:hover {
     text-decoration: underline;
 }
 
+/* Loading skeleton: name above contact, as in the loaded header. */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-skeleton .idlm-drawer-identity-text {
+    display: grid;
+    gap: var(--idlm-space-2);
+}
+
 /* At-a-glance strip: four content-width columns with one even gap, then a quiet meta line. */
 body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-status-grid {
     display: grid;
