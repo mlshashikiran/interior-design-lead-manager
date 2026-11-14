@@ -34,7 +34,7 @@ final class IDLM_Private_Files {
         if ('' === $root || false !== strpos($root, '..') || false !== strpos($root, "\0") || !path_is_absolute($root)) { return false; }
         if (!is_dir($root) && !wp_mkdir_p($root)) { return false; }
         $real = realpath($root);
-        if (!$real || !is_dir($real) || !is_writable($real)) { return false; }
+        if (!$real || !is_dir($real) || !wp_is_writable($real)) { return false; }
         $guards = array(
             '.htaccess' => "Require all denied\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n",
             'index.php' => "<?php\n// Silence is golden.\n",
@@ -70,6 +70,7 @@ final class IDLM_Private_Files {
             // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- REL007-BOUNDARY-0006: write_disk(): stores already verified private bytes under a generated name in the protected directory.
             $ok = is_string($data) && strlen($data) === (int) $size && false !== file_put_contents($part, $data, LOCK_EX);
         }
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- REL007-BOUNDARY-0009: write_disk(): atomic same-directory move of a verified .part file to its generated private name.
         if (!$ok || filesize($part) !== (int) $size || !hash_equals((string) $sha256, hash_file('sha256', $part)) || !rename($part, $target)) {
             if (is_file($part)) { wp_delete_file($part); }
             return false;
@@ -305,12 +306,12 @@ final class IDLM_Private_Files {
             if (!$size || ($variant === 0 && $size > self::MAX_BYTES) || $total > self::MAX_ARCHIVE_BYTES) { return 0; }
             $archive[] = array('variant' => $variant, 'path' => $path['path'], 'size' => $size, 'sha256' => hash_file('sha256', $path['source']), 'disk' => '');
         }
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0013: store(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0013: store(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
         if (false === $wpdb->insert(self::table(), array('lead_id' => absint($lead), 'attachment_id' => absint($attachment), 'purpose' => $purpose, 'filename' => $name, 'mime' => $mime, 'byte_size' => $archive[0]['size'], 'sha256' => $archive[0]['sha256'], 'state' => $state, 'archive' => wp_json_encode($archive), 'created_at' => current_time('mysql')))) { return 0; }
         $id = (int) $wpdb->insert_id;
         $archive[0]['disk'] = self::write_disk($id, $archive[0]['sha256'], $archive[0]['size'], $paths[0]['source']);
         if (!$archive[0]['disk'] || false === $wpdb->update(self::table(), array('archive' => wp_json_encode($archive)), array('id' => $id))) { return 0; }
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
         return false === self::bytes($id, $archive[0]) ? 0 : $id;
     }
 
