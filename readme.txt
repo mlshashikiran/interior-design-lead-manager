@@ -95,7 +95,8 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 == Changelog ==
 
 = 1.105.12 =
-* Fixed: The loading spinner in the lead popup, its tabs, the tasks sidebar and the design project panel is centred over its text in the middle of the popup instead of at the top.
+* Fixed: The loading spinner in the lead popup tabs, the tasks sidebar and the design project panel is centred over its text instead of at the top.
+* Changed: The lead popup shows an outline of its header, tabs and sections while it loads, and loading outlines across the CRM (leads table, pipeline, dashboard) have a gentle shimmer. The shimmer is off when the device asks for reduced motion.
 
 = 1.105.10 =
 * Changed: The lead popup header has more room. Field labels sit a fixed gap above their values, the four status fields sit side by side with one small, even gap, and the created and assigned times sit under the close and previous/next buttons.

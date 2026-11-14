@@ -4,7 +4,11 @@
 
 ### Fixed
 
-- While the lead popup, its Activity, WhatsApp and Tasks tabs, the Active tasks sidebar or the design project panel load, the spinner now sits centred over its text in the middle of the space instead of at the top and off to one side. Every popup uses the same loading look. Builder: Shashi.
+- While the lead popup's Activity, WhatsApp and Tasks tabs, the Active tasks sidebar or the design project panel load, the spinner now sits centred over its text in the middle of the space instead of at the top and off to one side. Every popup uses the same loading look. Builder: Shashi.
+
+### Changed
+
+- The lead popup opens straight away with a grey outline of its header, status fields, tabs and sections, so it does not jump when the lead arrives. Loading outlines in the lead popup, leads table, pipeline and dashboard have a light shimmer sweeping across them. This changes how the wait looks, not how long it takes. The shimmer is turned off when the device asks for reduced motion.
 
 ## [1.105.10] - 2026-11-13
 

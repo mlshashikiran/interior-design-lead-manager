@@ -1428,6 +1428,8 @@ body.idlm-crm-design :is(.idlm-popup-load-state, .idlm-drawer-load-state, .idlm-
 /* Skeleton: set the size with width and height, or use the row and text helpers. */
 body.idlm-crm-design .idlm-skeleton {
     display: block;
+    position: relative;
+    overflow: hidden;
     min-height: 12px;
     border-radius: var(--idlm-radius-compact);
     background: var(--idlm-readonly);
@@ -2277,6 +2279,11 @@ body.idlm-crm-design .idlm-workspace-topbar {
 
     body.idlm-crm-design :is(.idlm-spinner, .spinner.is-active, .idlm-state__spinner) {
         animation-duration: 2400ms;
+    }
+
+    body.idlm-crm-design .idlm-skeleton::after {
+        display: none;
+        animation: none;
     }
 }
 

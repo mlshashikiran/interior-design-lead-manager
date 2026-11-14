@@ -6931,6 +6931,36 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 .idlm-popup-load-state--compact { flex-direction: row; gap: var(--idlm-space-2); min-height: 0; padding: var(--idlm-space-4); }
 .idlm-drawer .idlm-drawer-load-state--error { flex: 0 0 auto; margin: var(--idlm-space-4); min-height: auto; border: 1px solid var(--idlm-danger); border-radius: var(--idlm-radius); background: var(--idlm-danger-soft); color: var(--idlm-danger); }
 .idlm-spinner-inline { float: none; margin: 0; }
+/* Skeletons: a light band slides across each block while content loads. It moves by
+   transform only, so the browser composites it without repainting the page. */
+.idlm-skeleton { display: block; position: relative; overflow: hidden; isolation: isolate; border-radius: var(--idlm-radius-compact); background: var(--idlm-readonly); }
+.idlm-skeleton::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--idlm-surface) 60%, transparent), transparent); transform: translateX(-100%); animation: idlm-skeleton-shimmer 1.4s ease-in-out infinite; pointer-events: none; }
+@keyframes idlm-skeleton-shimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .idlm-skeleton::after { display: none; animation: none; } }
+.idlm-sr-only { position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Lead popup skeleton: the header, tabs and body shapes, so the popup opens at its final size. */
+.idlm-drawer-content-wrapper > .idlm-drawer-skeleton { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; }
+.idlm-drawer-skeleton .idlm-drawer-avatar.idlm-skeleton { border-radius: 50%; background: var(--idlm-readonly); }
+.idlm-drawer-skeleton .idlm-drawer-identity-text { display: grid; gap: var(--idlm-space-2); }
+.idlm-drawer-skeleton-name { width: 180px; height: 18px; }
+.idlm-drawer-skeleton-contact { width: 260px; max-width: 100%; height: 12px; }
+.idlm-drawer-skeleton-label { width: 64px; height: 10px; }
+.idlm-drawer-skeleton-value { width: 128px; max-width: 100%; height: 18px; }
+.idlm-drawer-skeleton .idlm-drawer-status-item { min-width: 120px; }
+.idlm-drawer-skeleton .idlm-drawer-tabs { display: flex; align-items: center; min-height: 36px; }
+.idlm-drawer-skeleton-tab { width: 72px; height: 12px; }
+.idlm-drawer-skeleton-tab:nth-child(2) { width: 140px; }
+.idlm-drawer-skeleton .idlm-drawer-body { flex: 1 1 auto; overflow: hidden; }
+.idlm-drawer-skeleton .idlm-drawer-workspace { display: grid; align-items: start; }
+.idlm-drawer-skeleton-column { display: grid; gap: var(--idlm-space-4); min-width: 0; }
+.idlm-drawer-skeleton-card { display: grid; gap: var(--idlm-space-3); padding: var(--idlm-space-4); border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface); }
+.idlm-drawer-skeleton-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--idlm-space-3) var(--idlm-space-4); }
+.idlm-drawer-skeleton-field { height: 36px; }
+.idlm-drawer-skeleton-line { height: 12px; }
+.idlm-drawer-skeleton-line.is-title { width: 30%; height: 14px; }
+.idlm-drawer-skeleton-line.is-short { width: 55%; }
+.idlm-drawer-skeleton-note { height: 72px; }
 .idlm-floating-tasks-btn .idlm-floating-tasks-icon { display: block; width: 20px; height: 20px; margin: auto; font-size: 20px; line-height: 20px; }
 .idlm-floating-tasks-btn .idlm-floating-tasks-badge { display: none; }
 .idlm-dialog .idlm-dialog__body .idlm-form-group, .idlm-log-payload-dialog .idlm-log-payload-section, .idlm-log-payload-dialog .idlm-code-block { min-width: 0; }

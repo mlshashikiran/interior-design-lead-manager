@@ -3142,7 +3142,7 @@ function openLeadDrawer(leadId, startTab) {
     updateBodyScrollLock();
     updateLeadDrawerNavigation(leadId);
     
-    $('#idlm-drawer-content-wrapper-inner').html('<div class="idlm-drawer-load-state idlm-popup-load-state" role="status"><span class="spinner is-active idlm-spinner-inline" aria-hidden="true"></span><span>Loading lead details…</span></div>');
+    $('#idlm-drawer-content-wrapper-inner').html(leadDrawerSkeletonHtml());
     
     $.ajax({
         url: idlm_vars.ajax_url,
@@ -3234,6 +3234,12 @@ jQuery(document).on('keydown', function(event) {
         moveLeadDrawer(1);
     }
 });
+
+// Skeleton of the lead popup (header, tabs, body) shown while the lead loads; it matches
+// the markup in templates/admin/common-overlays.php.
+function leadDrawerSkeletonHtml() {
+    return '<div class="idlm-drawer-skeleton" role="status" aria-busy="true"><span class="idlm-sr-only">Loading lead details…</span><div class="idlm-drawer-header" aria-hidden="true"><div class="idlm-drawer-identity"><span class="idlm-skeleton idlm-drawer-avatar"></span><div class="idlm-drawer-identity-text"><span class="idlm-skeleton idlm-drawer-skeleton-name"></span><span class="idlm-skeleton idlm-drawer-skeleton-contact"></span></div></div><div class="idlm-drawer-status-grid"><div class="idlm-drawer-status-primary"><div class="idlm-drawer-status-item"><span class="idlm-skeleton idlm-drawer-skeleton-label"></span><span class="idlm-skeleton idlm-drawer-skeleton-value"></span></div><div class="idlm-drawer-status-item"><span class="idlm-skeleton idlm-drawer-skeleton-label"></span><span class="idlm-skeleton idlm-drawer-skeleton-value"></span></div><div class="idlm-drawer-status-item"><span class="idlm-skeleton idlm-drawer-skeleton-label"></span><span class="idlm-skeleton idlm-drawer-skeleton-value"></span></div><div class="idlm-drawer-status-item"><span class="idlm-skeleton idlm-drawer-skeleton-label"></span><span class="idlm-skeleton idlm-drawer-skeleton-value"></span></div></div></div></div><div class="idlm-drawer-tabs" aria-hidden="true"><span class="idlm-skeleton idlm-drawer-skeleton-tab"></span><span class="idlm-skeleton idlm-drawer-skeleton-tab"></span><span class="idlm-skeleton idlm-drawer-skeleton-tab"></span><span class="idlm-skeleton idlm-drawer-skeleton-tab"></span></div><div class="idlm-drawer-body" aria-hidden="true"><div class="idlm-drawer-workspace"><div class="idlm-drawer-skeleton-column"><div class="idlm-drawer-skeleton-card"><span class="idlm-skeleton idlm-drawer-skeleton-line is-title"></span><div class="idlm-drawer-skeleton-fields"><span class="idlm-skeleton idlm-drawer-skeleton-field"></span><span class="idlm-skeleton idlm-drawer-skeleton-field"></span><span class="idlm-skeleton idlm-drawer-skeleton-field"></span><span class="idlm-skeleton idlm-drawer-skeleton-field"></span></div></div><div class="idlm-drawer-skeleton-card"><span class="idlm-skeleton idlm-drawer-skeleton-line is-title"></span><div class="idlm-drawer-skeleton-fields"><span class="idlm-skeleton idlm-drawer-skeleton-field"></span><span class="idlm-skeleton idlm-drawer-skeleton-field"></span><span class="idlm-skeleton idlm-drawer-skeleton-field"></span><span class="idlm-skeleton idlm-drawer-skeleton-field"></span></div></div></div><div class="idlm-drawer-skeleton-column"><div class="idlm-drawer-skeleton-card"><span class="idlm-skeleton idlm-drawer-skeleton-line is-title"></span><span class="idlm-skeleton idlm-drawer-skeleton-note"></span><span class="idlm-skeleton idlm-drawer-skeleton-line"></span><span class="idlm-skeleton idlm-drawer-skeleton-line is-short"></span></div></div></div></div></div>';
+}
 
 function closeLeadDrawer() {
     var $ = jQuery;
