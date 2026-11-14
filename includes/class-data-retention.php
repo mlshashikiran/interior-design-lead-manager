@@ -13,14 +13,32 @@ final class IDLM_Data_Retention {
     const CONTINUE_HOOK = 'idlm_continue_sensitive_retention';
     const STATUS_OPTION = 'idlm_retention_progress';
     const BATCH_SIZE = 100;
+    /** Completed and cancelled Action Scheduler tasks are kept this long (its default is 30 days). Failed tasks are never purged by Action Scheduler. */
+    const BACKGROUND_TASK_RETENTION_DAYS = 14;
+    /** Old tasks deleted per queue run (Action Scheduler default 20), so cleanup keeps up with this site's volume. */
+    const BACKGROUND_TASK_CLEANUP_BATCH = 100;
 
     public static function init() {
         add_action(self::HOOK, array(__CLASS__, 'prune'));
         add_action(self::CONTINUE_HOOK, array(__CLASS__, 'prune'));
+        add_filter('action_scheduler_retention_period', array(__CLASS__, 'background_task_retention'));
+        add_filter('action_scheduler_cleanup_batch_size', array(__CLASS__, 'background_task_cleanup_batch'));
         // Bootstrap schedules work; it never purges data in an interactive request.
         if (!wp_next_scheduled(self::HOOK)) {
             wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', self::HOOK);
         }
+    }
+
+    /** Shortens, never lengthens, the period another plugin may already have set. */
+    public static function background_task_retention($seconds) {
+        $limit = self::BACKGROUND_TASK_RETENTION_DAYS * DAY_IN_SECONDS;
+        $seconds = absint($seconds);
+        return $seconds > 0 ? min($seconds, $limit) : $limit;
+    }
+
+    /** Raises, never lowers, the cleanup batch size. */
+    public static function background_task_cleanup_batch($size) {
+        return max(absint($size), self::BACKGROUND_TASK_CLEANUP_BATCH);
     }
 
     public static function clear() {

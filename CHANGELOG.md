@@ -9,6 +9,12 @@
 - Resized copies that WordPress had generated for files migrated from the media library are no longer kept; only the original was ever served.
 - Downloads, permissions, deletion and CRM reset work as before, and deleting a lead now also removes its files from disk.
 
+## [1.105.11] - 2026-11-14
+
+### Changed
+
+- Completed and cancelled background tasks (Action Scheduler) are kept for 14 days instead of the 30-day default, with their log rows. Each cleanup run now deletes up to 100 old tasks instead of 20, so the existing backlog clears within a few hours and stays cleared. Failed and pending tasks are not deleted. The setting applies to every plugin's background tasks on the site; a shorter period or larger batch set elsewhere is kept.
+
 ## [1.105.10] - 2026-11-13
 
 ### Changed
