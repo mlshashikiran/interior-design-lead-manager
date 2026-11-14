@@ -3142,7 +3142,7 @@ function openLeadDrawer(leadId, startTab) {
     updateBodyScrollLock();
     updateLeadDrawerNavigation(leadId);
     
-    $('#idlm-drawer-content-wrapper-inner').html('<div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> ' + ('Loading lead details…') + '</div>');
+    $('#idlm-drawer-content-wrapper-inner').html('<div class="idlm-drawer-load-state idlm-popup-load-state" role="status"><span class="spinner is-active idlm-spinner-inline" aria-hidden="true"></span><span>Loading lead details…</span></div>');
     
     $.ajax({
         url: idlm_vars.ajax_url,
@@ -3288,7 +3288,7 @@ function loadLeadWhatsApp(leadId) {
     var $panel = $('#drawer-tab-whatsapp');
     if (!$panel.length || $panel.data('loaded') || $panel.data('loading')) return;
 
-    $panel.data('loading', true).html('<div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> Loading WhatsApp history...</div>');
+    $panel.data('loading', true).html('<div class="idlm-drawer-load-state idlm-popup-load-state" role="status"><span class="spinner is-active idlm-spinner-inline" aria-hidden="true"></span><span>Loading WhatsApp history…</span></div>');
     $.post(idlm_vars.ajax_url, {
         action: 'idlm_get_lead_whatsapp',
         nonce: idlm_vars.nonce,
@@ -3329,10 +3329,10 @@ function loadLeadActivityLog(leadId, forceRefresh) {
     }
 
     if ($container.length) {
-        $container.html('<div style="text-align:center; padding:30px;"><span class="spinner is-active" style="float:none;"></span> Loading timeline...</div>').removeClass('loaded');
+        $container.html('<div class="idlm-popup-load-state" role="status"><span class="spinner is-active idlm-spinner-inline" aria-hidden="true"></span><span>Loading timeline…</span></div>').removeClass('loaded');
     }
     if ($detailsContainer.length) {
-        $detailsContainer.html('<div style="text-align:center; padding:15px;"><span class="spinner is-active" style="float:none;"></span> Loading...</div>').removeClass('loaded');
+        $detailsContainer.html('<div class="idlm-popup-load-state idlm-popup-load-state--compact" role="status"><span class="spinner is-active idlm-spinner-inline" aria-hidden="true"></span><span>Loading…</span></div>').removeClass('loaded');
     }
 
     $.ajax({
@@ -3813,7 +3813,7 @@ function loadLeadTasks(leadId) {
     var $container = $('#idlm-drawer-tasks-list-container');
     if (!$container.length) return;
 
-    $container.html('<div style="text-align:center; padding:30px;"><span class="spinner is-active" style="float:none;"></span> Loading tasks...</div>');
+    $container.html('<div class="idlm-popup-load-state" role="status"><span class="spinner is-active idlm-spinner-inline" aria-hidden="true"></span><span>Loading tasks…</span></div>');
 
     $.ajax({
         url: (typeof idlm_vars !== 'undefined' && idlm_vars.ajax_url) ? idlm_vars.ajax_url : (typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php'),
@@ -4063,7 +4063,7 @@ function loadGlobalTasks(keepPage) {
     var $body = $('#idlm-global-tasks-sidebar-body');
     if (!$body.length) return;
 
-    $body.html('<div style="text-align: center; color: var(--idlm-text-muted); padding: 40px 0;"><span class="spinner is-active" style="float:none;"></span> Loading tasks...</div>');
+    $body.html('<div class="idlm-global-sidebar-load-state idlm-popup-load-state" role="status"><span class="spinner is-active idlm-spinner-inline" aria-hidden="true"></span><span>Loading tasks…</span></div>');
 
     $.ajax({
         url: (typeof idlm_vars !== 'undefined' && idlm_vars.ajax_url) ? idlm_vars.ajax_url : (typeof ajaxurl !== 'undefined' ? ajaxurl : '/wp-admin/admin-ajax.php'),

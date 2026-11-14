@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.105.12] - 2026-11-14
+
+### Fixed
+
+- While the lead popup, its Activity, WhatsApp and Tasks tabs, the Active tasks sidebar or the design project panel load, the spinner now sits centred over its text in the middle of the space instead of at the top and off to one side. Every popup uses the same loading look. Builder: Shashi.
+
 ## [1.105.10] - 2026-11-13
 
 ### Changed

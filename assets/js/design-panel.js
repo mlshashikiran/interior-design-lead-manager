@@ -21,7 +21,7 @@
     }
 
     // Loading and error states keep the panel's title and close button, built as text.
-    function message(text) {
+    function message(text, loading) {
         content.textContent = '';
         var header = document.createElement('header');
         header.className = 'idlm-drawer-header';
@@ -39,10 +39,20 @@
         header.appendChild(close);
         var body = document.createElement('div');
         body.className = 'idlm-drawer-body';
-        var line = document.createElement('p');
-        line.className = 'idlm-design-note';
+        var line = document.createElement(loading ? 'div' : 'p');
+        line.className = loading ? 'idlm-popup-load-state' : 'idlm-design-note';
         line.setAttribute('role', 'status');
-        line.textContent = text;
+        if (loading) {
+            var spinner = document.createElement('span');
+            spinner.className = 'spinner is-active idlm-spinner-inline';
+            spinner.setAttribute('aria-hidden', 'true');
+            var label = document.createElement('span');
+            label.textContent = text;
+            line.appendChild(spinner);
+            line.appendChild(label);
+        } else {
+            line.textContent = text;
+        }
         body.appendChild(line);
         content.appendChild(header);
         content.appendChild(body);
@@ -57,7 +67,7 @@
 
     function open(id, trigger) {
         var current = ++request;
-        message('Loading project…');
+        message('Loading project…', true);
         window.IDLMDialog.open(dialog, {trigger: trigger, initialFocus: '[data-design-panel-content]'});
         setAddress(id);
         post({action: 'idlm_design_project_panel', nonce: dialog.dataset.nonce, handoff_id: id})

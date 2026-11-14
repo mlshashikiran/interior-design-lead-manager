@@ -1417,6 +1417,13 @@ body.idlm-crm-design :is(.idlm-spinner, .spinner.is-active, .idlm-state__spinner
     animation: idlm-state-spin 800ms linear infinite;
 }
 
+/* Inside a popup loading state the spinner is larger and centred over its text. */
+body.idlm-crm-design :is(.idlm-popup-load-state, .idlm-drawer-load-state, .idlm-global-sidebar-load-state):not(.idlm-popup-load-state--compact) .spinner.is-active {
+    width: 24px;
+    height: 24px;
+    border-width: 2px;
+    vertical-align: middle;
+}
 
 /* Skeleton: set the size with width and height, or use the row and text helpers. */
 body.idlm-crm-design .idlm-skeleton {

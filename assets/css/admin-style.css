@@ -6923,9 +6923,14 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 .idlm-global-sidebar #idlm-global-tasks-sidebar-close { margin-left: var(--idlm-space-1); }
 .idlm-global-sidebar #idlm-global-tasks-sidebar-close:hover, .idlm-global-sidebar #idlm-global-tasks-sidebar-close:focus-visible { outline-offset: 1px; }
 .idlm-global-sidebar .idlm-global-sidebar-body { overflow: auto; overscroll-behavior: contain; box-sizing: border-box; }
-.idlm-global-sidebar .idlm-global-sidebar-load-state, .idlm-drawer .idlm-drawer-load-state { display: grid; min-width: 0; min-height: 112px; padding: var(--idlm-space-6) var(--idlm-space-4); place-content: center; gap: var(--idlm-space-2); overflow-wrap: anywhere; color: var(--idlm-text-muted); text-align: center; }
-.idlm-drawer .idlm-drawer-load-state--error { margin: var(--idlm-space-4); min-height: auto; border: 1px solid var(--idlm-danger); border-radius: var(--idlm-radius); background: var(--idlm-danger-soft); color: var(--idlm-danger); }
-.idlm-spinner-inline { float: none; margin: 0 auto; }
+/* One loading state for popups, drawers and the tasks sidebar: spinner over its text, centred in the space it fills. */
+.idlm-popup-load-state, .idlm-global-sidebar .idlm-global-sidebar-load-state, .idlm-drawer .idlm-drawer-load-state { display: flex; flex: 1 1 auto; flex-direction: column; align-items: center; justify-content: center; gap: var(--idlm-space-3); box-sizing: border-box; min-width: 0; min-height: 160px; padding: var(--idlm-space-8) var(--idlm-space-4); overflow-wrap: anywhere; color: var(--idlm-text-muted); font-size: 13px; line-height: 1.4; text-align: center; }
+.idlm-drawer-content-wrapper > .idlm-drawer-load-state, .idlm-global-sidebar .idlm-global-sidebar-body > .idlm-popup-load-state, .idlm-global-sidebar .idlm-global-sidebar-body > .idlm-global-sidebar-load-state { min-height: 100%; }
+.idlm-drawer-content-wrapper > .idlm-drawer-load-state { min-height: 320px; }
+.idlm-drawer-body > .idlm-popup-load-state:only-child { min-height: 100%; }
+.idlm-popup-load-state--compact { flex-direction: row; gap: var(--idlm-space-2); min-height: 0; padding: var(--idlm-space-4); }
+.idlm-drawer .idlm-drawer-load-state--error { flex: 0 0 auto; margin: var(--idlm-space-4); min-height: auto; border: 1px solid var(--idlm-danger); border-radius: var(--idlm-radius); background: var(--idlm-danger-soft); color: var(--idlm-danger); }
+.idlm-spinner-inline { float: none; margin: 0; }
 .idlm-floating-tasks-btn .idlm-floating-tasks-icon { display: block; width: 20px; height: 20px; margin: auto; font-size: 20px; line-height: 20px; }
 .idlm-floating-tasks-btn .idlm-floating-tasks-badge { display: none; }
 .idlm-dialog .idlm-dialog__body .idlm-form-group, .idlm-log-payload-dialog .idlm-log-payload-section, .idlm-log-payload-dialog .idlm-code-block { min-width: 0; }

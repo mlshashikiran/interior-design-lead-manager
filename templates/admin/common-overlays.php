@@ -17,7 +17,7 @@ $idlm_can_manage_options = !empty($context['can_manage_options']);
             </button>
             <div class="idlm-drawer-content-wrapper" id="idlm-drawer-content-wrapper-inner">
                 <!-- Header, Tabs, and Body loaded dynamically via AJAX to match mockup -->
-                <div class="idlm-drawer-load-state" role="status"><span class="spinner is-active idlm-spinner-inline"></span> Loading lead details…</div>
+                <div class="idlm-drawer-load-state idlm-popup-load-state" role="status"><span class="spinner is-active idlm-spinner-inline" aria-hidden="true"></span><span>Loading lead details…</span></div>
             </div>
             <button type="button" class="idlm-drawer-lead-nav idlm-drawer-lead-nav-next" id="idlm-drawer-next-lead" aria-label="Open next lead" title="Next lead (Right arrow)" disabled>
                 <span class="dashicons dashicons-arrow-right-alt2" aria-hidden="true"></span>
@@ -148,8 +148,8 @@ $idlm_can_manage_options = !empty($context['can_manage_options']);
             </div>
             <div class="idlm-global-sidebar-body" id="idlm-global-tasks-sidebar-body">
                 <!-- Loaded dynamically via AJAX -->
-                <div class="idlm-global-sidebar-load-state" role="status">
-                    <span class="spinner is-active idlm-spinner-inline"></span> Loading tasks...
+                <div class="idlm-global-sidebar-load-state idlm-popup-load-state" role="status">
+                    <span class="spinner is-active idlm-spinner-inline" aria-hidden="true"></span><span>Loading tasks…</span>
                 </div>
             </div>
         </div>
