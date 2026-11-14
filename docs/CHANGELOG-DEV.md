@@ -1,8 +1,12 @@
 # Engineering Change Log
 
-## 1.105.9 — Background task retention (2026-11-13)
+## 1.105.11 — Background task retention (2026-11-14)
 
 Builder: Shashi. `IDLM_Data_Retention::init()` adds `action_scheduler_retention_period` → `background_task_retention()` (min of incoming and `BACKGROUND_TASK_RETENTION_DAYS` = 14 days; non-positive falls back to 14) and `action_scheduler_cleanup_batch_size` → `background_task_cleanup_batch()` (max of incoming and `BACKGROUND_TASK_CLEANUP_BATCH` = 100). Action Scheduler's `ActionScheduler_QueueCleaner::delete_old_actions()` runs on every queue run and purges only `complete` and `canceled` (statuses are not filtered here), deleting each action's logs with it; no custom purge job or schema change. Production had 13,663 completed actions and 40,702 log rows when this was written.
+
+## 1.105.10 — Lead popup header spacing (2026-11-13)
+
+Builder: Shashi. CSS only, in section 8 of `assets/css/crm-design-leads.css`; the markup in `IDLM_Admin_Lead_Reads` is unchanged. `#idlm-lead-drawer` gains `--idlm-drawer-head-pad` (space-5, space-3 at phone width), which sets the header top padding and the top of the close button, the previous/next buttons and the position counter, so they stay in line. The header gap is space-5 and its sides are space-6, matching the tabs. `.idlm-drawer-status-grid` is a one-column grid: `.idlm-drawer-status-primary` is `repeat(4, minmax(0, max-content))`, start-aligned, with a space-8 column gap, and each `.idlm-drawer-status-item` is a grid of label plus a value slot of at least 26px with a space-1 row gap, so text, the stage select and the quality chip share one line. The stage select's negative vertical margin is gone, and its arrow sits at space-2 with space-8 padding. `.idlm-drawer-status-context` is left-aligned on its own line with a divider between items (none at phone width); from 1025px it is absolutely positioned under the close and previous/next buttons, stacked and right-aligned, max 260px with ellipsis, and the status grid reserves 260px on the right. The 1024px `justify-content: flex-start` override is removed as redundant. Checked by rendering the header with the plugin CSS in headless Chrome at 1440, 900 and 390px. No schema change.
 
 ## 1.105.8 — Lead popup delete (2026-11-13)
 

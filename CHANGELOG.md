@@ -1,10 +1,16 @@
 # Changelog
 
-## [1.105.9] - 2026-11-13
+## [1.105.11] - 2026-11-14
 
 ### Changed
 
 - Completed and cancelled background tasks (Action Scheduler) are kept for 14 days instead of the 30-day default, with their log rows. Each cleanup run now deletes up to 100 old tasks instead of 20, so the existing backlog clears within a few hours and stays cleared. Failed and pending tasks are not deleted. The setting applies to every plugin's background tasks on the site; a shorter period or larger batch set elsewhere is kept.
+
+## [1.105.10] - 2026-11-13
+
+### Changed
+
+- The lead popup header has more room. Call status, Stage, Assigned rep and Lead quality sit side by side with one small, even gap between each label and its value, and the Stage arrow no longer touches the text. The created and assigned times stack under the close and previous/next buttons on wide screens, and sit on their own line under the fields on narrower ones. The header has more space above, below and before the tabs. No fields or actions changed. Builder: Shashi.
 
 ## [1.105.8] - 2026-11-13
 

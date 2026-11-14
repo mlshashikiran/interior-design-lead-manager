@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.105.9
+Stable tag: 1.105.11
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,8 +94,11 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 
 == Changelog ==
 
-= 1.105.9 =
+= 1.105.11 =
 * Finished background tasks (Action Scheduler) are kept for 14 days instead of 30, and old ones are cleared 100 at a time instead of 20, so the task and log tables stay small. Failed and pending tasks are not affected.
+
+= 1.105.10 =
+* Changed: The lead popup header has more room. Field labels sit a fixed gap above their values, the four status fields sit side by side with one small, even gap, and the created and assigned times sit under the close and previous/next buttons.
 
 = 1.105.8 =
 * Fixed: Delete lead in the lead popup did nothing after you confirmed. It now deletes the lead, closes the popup and refreshes the list.
