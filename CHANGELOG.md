@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.105.12] - 2026-11-14
+## [1.105.14] - 2026-11-14
 
 ### Fixed
 
@@ -9,6 +9,21 @@
 ### Changed
 
 - The lead popup opens straight away with a grey outline of its header, status fields, tabs and sections, so it does not jump when the lead arrives. Loading outlines in the lead popup, leads table, pipeline and dashboard have a light shimmer sweeping across them. This changes how the wait looks, not how long it takes. The shimmer is turned off when the device asks for reduced motion.
+
+## [1.105.13] - 2026-11-14
+
+### Changed
+
+- Uploaded lead files (floor plans, quotations, design files and payment proofs) are stored on disk in a protected folder instead of inside the database. The folder is outside the website on production; when no location is configured it defaults to `wp-content/uploads/idlm-private`, which denies direct web requests. The database keeps only each file's name, size, checksum and owner.
+- Existing files move to disk automatically, 25 per hourly maintenance run (or on demand), each verified by size and SHA-256 before its database copy is deleted. A file that fails verification keeps its database copy. When none are left, the old file table is rebuilt once so the database shrinks.
+- Resized copies that WordPress had generated for files migrated from the media library are no longer kept; only the original was ever served.
+- Downloads, permissions, deletion and CRM reset work as before, and deleting a lead now also removes its files from disk.
+
+## [1.105.11] - 2026-11-14
+
+### Changed
+
+- Completed and cancelled background tasks (Action Scheduler) are kept for 14 days instead of the 30-day default, with their log rows. Each cleanup run now deletes up to 100 old tasks instead of 20, so the existing backlog clears within a few hours and stays cleared. Failed and pending tasks are not deleted. The setting applies to every plugin's background tasks on the site; a shorter period or larger batch set elsewhere is kept.
 
 ## [1.105.10] - 2026-11-13
 

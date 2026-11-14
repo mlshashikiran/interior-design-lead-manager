@@ -68,6 +68,10 @@ idlm_http_case('T13-H-upload-invalid-purpose-extension-MIME-and-size',static fun
 idlm_http_case('T13-H-multi-chunk-upload-byte-preservation',static function() use($private_lead,$private_bytes,$config):void{
     $data=$private_bytes.str_repeat('SYNTHETIC-CHUNK-',10000);$path=$config['content_dir'].'/chunked.pdf';file_put_contents($path,$data);
     $uploaded=idlm_file_upload_data(idlm_file_upload($private_lead,'owner','floor_plan',$path));$r=idlm_file_get($uploaded['url']);idlm_http_check($r['body']===$data,'Multi-chunk bytes differ');unlink($path);
+    global $wpdb;$id=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}idlm_private_files WHERE attachment_id = %d",$uploaded['attachment_id']));
+    idlm_http_check(0===(int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks WHERE file_id = %d",$id)),'Upload stored file bytes in the database');
+    $disk=IDLM_Private_Files::storage_root().'/'.json_decode((string)$wpdb->get_var($wpdb->prepare("SELECT archive FROM {$wpdb->prefix}idlm_private_files WHERE id = %d",$id)),true)[0]['disk'];
+    idlm_http_check(is_file($disk) && file_get_contents($disk)===$data,'Upload is not on protected disk storage');
 });
 idlm_http_case('T13-H-bound-file-save-and-foreign-purpose-substitution',static function() use($private_lead,$private_upload):void{
     $r=idlm_file_bind($private_lead,$private_upload['url']);idlm_http_check(!empty(json_decode($r['body'],true)['success']),'Bound file save failed: '.$r['body']);
@@ -76,10 +80,10 @@ idlm_http_case('T13-H-bound-file-save-and-foreign-purpose-substitution',static f
 });
 idlm_http_case('T13-H-missing-corrupt-and-forged-file-identities',static function() use($private_upload):void{
     global $wpdb; $id=(int)$wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}idlm_private_files WHERE attachment_id = %d",$private_upload['attachment_id']));
-    $row=$wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}idlm_private_file_chunks WHERE file_id = %d AND variant = 0 AND part = 1",$id),ARRAY_A);
-    $wpdb->update($wpdb->prefix.'idlm_private_file_chunks',array('data'=>'corrupt'),array('file_id'=>$id,'variant'=>0,'part'=>1));
-    idlm_file_denied(static function() use($private_upload){return idlm_file_get($private_upload['url']);});
-    $wpdb->delete($wpdb->prefix.'idlm_private_file_chunks',array('file_id'=>$id,'variant'=>0,'part'=>1));idlm_file_denied(static function() use($private_upload){return idlm_file_get($private_upload['url']);});$wpdb->insert($wpdb->prefix.'idlm_private_file_chunks',$row);
+    $disk=IDLM_Private_Files::storage_root().'/'.json_decode((string)$wpdb->get_var($wpdb->prepare("SELECT archive FROM {$wpdb->prefix}idlm_private_files WHERE id = %d",$id)),true)[0]['disk'];$original=file_get_contents($disk);
+    // Same size, different bytes: the hash check must refuse it. Then a missing file.
+    file_put_contents($disk,str_repeat('X',strlen($original)));idlm_file_denied(static function() use($private_upload){return idlm_file_get($private_upload['url']);});
+    unlink($disk);idlm_file_denied(static function() use($private_upload){return idlm_file_get($private_upload['url']);});file_put_contents($disk,$original);
     foreach(array('9999999','../1','1%20OR%201=1','attachment_id[]=1') as $value){$url=IDLM_Private_Files::url(9999999);$url=preg_replace('/attachment_id=\d+/',strpos($value,'attachment_id')===0?$value:'attachment_id='.$value,$url);idlm_file_denied(static function() use($url){return idlm_file_get($url);});}
 });
 idlm_http_case('T13-H-live-ownership-role-grant-and-suspension-revocation',static function() use($private_lead,$private_upload,$private_bytes,$users):void{
@@ -99,7 +103,10 @@ idlm_http_case('T13-C-upload-lock-rechecks-reassignment',static function() use($
 });
 idlm_http_case('T13-H-lead-delete-erases-bytes-attachments-and-copied-URL',static function() use($private_lead,$private_upload):void{
     global $wpdb;
-    idlm_http_check(!is_wp_error(IDLM_Lead_Deletion_Service::delete($private_lead)),'File-bearing deletion failed');idlm_file_denied(static function() use($private_upload){return idlm_file_get($private_upload['url']);});idlm_http_check(!get_post($private_upload['attachment_id']),'Attachment survived deletion');
+    $disk=glob(IDLM_Private_Files::storage_root().'/*/*/*.bin') ?: array();idlm_http_check(count($disk)>0,'No protected files before deletion');
+    $mine=array();foreach((array)$wpdb->get_col($wpdb->prepare("SELECT archive FROM {$wpdb->prefix}idlm_private_files WHERE lead_id = %d",$private_lead)) as $archive){foreach((array)json_decode($archive,true) as $d){if(!empty($d['disk'])){$mine[]=IDLM_Private_Files::storage_root().'/'.$d['disk'];}}}
+    idlm_http_check(!is_wp_error(IDLM_Lead_Deletion_Service::delete($private_lead)),'File-bearing deletion failed');
+    foreach($mine as $path){idlm_http_check(!file_exists($path),'Protected file survived lead deletion');}idlm_file_denied(static function() use($private_upload){return idlm_file_get($private_upload['url']);});idlm_http_check(!get_post($private_upload['attachment_id']),'Attachment survived deletion');
     idlm_http_check((int)$wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_private_file_chunks")===0,'Private bytes survived deletion');
 });
 

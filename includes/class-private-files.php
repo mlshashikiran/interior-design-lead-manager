@@ -7,10 +7,96 @@ final class IDLM_Private_Files {
     const CHUNK_BYTES = 65536;
     const MAX_BYTES = 10485760;
     const MAX_ARCHIVE_BYTES = 52428800;
+    /** Files live on disk (1.105.13); the chunk table is read only for files not yet moved. */
+    const MIGRATION_BATCH = 25;
+    /** @var string[] Files written in the current request and not yet committed. */
+    private static $written = array();
 
     private static function table($chunks = false) {
         global $wpdb;
         return $wpdb->prefix . ($chunks ? 'idlm_private_file_chunks' : 'idlm_private_files');
+    }
+
+    /**
+     * Protected storage directory. Order: IDLM_PRIVATE_FILES_DIR constant, the
+     * idlm_private_files_root option (production keeps it outside the web root),
+     * then wp-content/uploads/idlm-private guarded against direct requests.
+     */
+    public static function storage_root() {
+        $root = defined('IDLM_PRIVATE_FILES_DIR') ? (string) IDLM_PRIVATE_FILES_DIR : (string) get_option('idlm_private_files_root', '');
+        if ('' === trim($root)) { $uploads = wp_upload_dir(null, false); $root = $uploads['basedir'] . '/idlm-private'; }
+        return untrailingslashit(wp_normalize_path((string) apply_filters('idlm_private_files_root', $root)));
+    }
+
+    /** Create the directory and its deny rules; return its real path or false. */
+    private static function prepared_root() {
+        $root = self::storage_root();
+        if ('' === $root || false !== strpos($root, '..') || false !== strpos($root, "\0") || !path_is_absolute($root)) { return false; }
+        if (!is_dir($root) && !wp_mkdir_p($root)) { return false; }
+        $real = realpath($root);
+        if (!$real || !is_dir($real) || !wp_is_writable($real)) { return false; }
+        $guards = array(
+            '.htaccess' => "Require all denied\n<IfModule !mod_authz_core.c>\nDeny from all\n</IfModule>\n",
+            'index.php' => "<?php\n// Silence is golden.\n",
+            'web.config' => "<?xml version=\"1.0\"?>\n<configuration><system.webServer><authorization><deny users=\"*\" /></authorization></system.webServer></configuration>\n",
+        );
+        foreach ($guards as $name => $body) {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- REL007-BOUNDARY-0005: prepared_root(): writes fixed deny rules into the plugin-owned private storage directory.
+            if (!is_file($real . '/' . $name) && false === file_put_contents($real . '/' . $name, $body)) { return false; }
+        }
+        return $real;
+    }
+
+    /** Absolute path of a stored file; only plugin-generated names beneath the root resolve. */
+    private static function disk_path($relative) {
+        if (!is_string($relative) || !preg_match('~^[0-9]{4}/[0-9]{2}/[0-9]+-[a-f0-9]{32}\.bin$~', $relative)) { return false; }
+        $root = realpath(self::storage_root());
+        if (!$root) { return false; }
+        $path = $root . '/' . $relative;
+        if (is_link($path) || is_link(dirname($path))) { return false; }
+        return $path;
+    }
+
+    /** Write verified bytes to a new protected file; returns its relative name or false. */
+    private static function write_disk($id, $sha256, $size, $source = null, $data = null) {
+        $root = self::prepared_root();
+        if (!$root || $size < 1) { return false; }
+        $relative = gmdate('Y/m') . '/' . absint($id) . '-' . bin2hex(random_bytes(16)) . '.bin';
+        $target = $root . '/' . $relative; $part = $target . '.part';
+        if (!wp_mkdir_p(dirname($target))) { return false; }
+        if (null !== $source) {
+            $ok = is_file($source) && copy($source, $part);
+        } else {
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- REL007-BOUNDARY-0006: write_disk(): stores already verified private bytes under a generated name in the protected directory.
+            $ok = is_string($data) && strlen($data) === (int) $size && false !== file_put_contents($part, $data, LOCK_EX);
+        }
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename -- REL007-BOUNDARY-0009: write_disk(): atomic same-directory move of a verified .part file to its generated private name.
+        if (!$ok || filesize($part) !== (int) $size || !hash_equals((string) $sha256, hash_file('sha256', $part)) || !rename($part, $target)) {
+            if (is_file($part)) { wp_delete_file($part); }
+            return false;
+        }
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_chmod -- REL007-BOUNDARY-0007: write_disk(): owner read/write only for private lead files.
+        chmod($target, 0640);
+        self::$written[] = $target;
+        return $relative;
+    }
+
+    /** Remove files written by a request whose transaction rolled back. */
+    private static function discard_written() {
+        foreach (self::$written as $path) { if (is_file($path)) { wp_delete_file($path); } }
+        self::$written = array();
+    }
+
+    /** Descriptors whose bytes were kept: on disk, or still in the legacy chunk table. */
+    private static function kept($descriptor) {
+        return !array_key_exists('disk', (array) $descriptor) || '' !== (string) $descriptor['disk'];
+    }
+
+    /** The served (variant 0) descriptor, with the row's verified size and hash. */
+    private static function primary($file) {
+        $archive = json_decode((string) $file->archive, true);
+        $descriptor = is_array($archive) && isset($archive[0]) && is_array($archive[0]) ? $archive[0] : array();
+        return array_merge($descriptor, array('variant' => 0, 'size' => (int) $file->byte_size, 'sha256' => (string) $file->sha256));
     }
 
     /** Called only by the core schema installer; verify before advancing our marker. */
@@ -197,54 +283,50 @@ final class IDLM_Private_Files {
             // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0011: upload(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
             if (is_wp_error(wp_update_post(array('ID' => $attachment, 'guid' => self::url($attachment)), true, false)) || false === $wpdb->query('COMMIT')) { throw new RuntimeException('commit'); }
             // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
-            clean_post_cache($attachment);
+            clean_post_cache($attachment); self::$written = array();
             return array('url' => self::url($attachment), 'attachment_id' => (int) $attachment);
         } catch (Throwable $error) {
             // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0012: upload(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
-            $wpdb->query('ROLLBACK'); if ($attachment) { clean_post_cache($attachment); }
+            $wpdb->query('ROLLBACK'); if ($attachment) { clean_post_cache($attachment); } self::discard_written();
             // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
             return new WP_Error('authority' === $error->getMessage() ? 'idlm_file_denied' : 'idlm_file_failed', 'Unable to save this private file. No file was published.');
         } finally { $wpdb->suppress_errors($suppressed); }
     }
 
-    /** Caller owns the transaction. Store verified base64 chunks below packet budgets. */
+    /**
+     * Caller owns the transaction. The served file (variant 0) is written to protected disk
+     * storage; WordPress-generated sizes of migrated media are recorded only so cleanup can
+     * remove their public copies, and are not kept.
+     */
     private static function store($lead, $attachment, $purpose, $name, $mime, $paths, $state) {
         global $wpdb;
         $archive = array(); $total = 0;
         foreach ($paths as $variant => $path) {
             $size = filesize($path['source']); $total += $size;
             if (!$size || ($variant === 0 && $size > self::MAX_BYTES) || $total > self::MAX_ARCHIVE_BYTES) { return 0; }
-            $archive[] = array('variant' => $variant, 'path' => $path['path'], 'size' => $size, 'sha256' => hash_file('sha256', $path['source']));
+            $archive[] = array('variant' => $variant, 'path' => $path['path'], 'size' => $size, 'sha256' => hash_file('sha256', $path['source']), 'disk' => '');
         }
-        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0013: store(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- REL007-SQL-0013: store(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
         if (false === $wpdb->insert(self::table(), array('lead_id' => absint($lead), 'attachment_id' => absint($attachment), 'purpose' => $purpose, 'filename' => $name, 'mime' => $mime, 'byte_size' => $archive[0]['size'], 'sha256' => $archive[0]['sha256'], 'state' => $state, 'archive' => wp_json_encode($archive), 'created_at' => current_time('mysql')))) { return 0; }
-        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
         $id = (int) $wpdb->insert_id;
-        foreach ($paths as $variant => $path) {
-            // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- REL007-BOUNDARY-0001: store(): download validates decimal attachment IDs before SQL and rechecks live cookie/capability/lead/reference access; store streams only validated uploaded/verified local archive paths in bounded chunks, preserving binary bytes.
-            $stream = fopen($path['source'], 'rb'); if (!$stream) { return 0; } $part = 0;
-            // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fopen
-            try {
-                while (!feof($stream)) {
-                    // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fread -- REL007-BOUNDARY-0002: store(): download validates decimal attachment IDs before SQL and rechecks live cookie/capability/lead/reference access; store streams only validated uploaded/verified local archive paths in bounded chunks, preserving binary bytes.
-                    $data = fread($stream, self::CHUNK_BYTES); if ($data === false) { return 0; } if ($data === '') { break; }
-                    // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fread
-                    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0014: store(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
-                    if (++$part > ceil(self::MAX_ARCHIVE_BYTES / self::CHUNK_BYTES) || false === $wpdb->insert(self::table(true), array('file_id' => $id, 'variant' => $variant, 'part' => $part, 'data' => base64_encode($data)))) { return 0; }
-                    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
-                }
-            // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- REL007-BOUNDARY-0003: store(): download validates decimal attachment IDs before SQL and rechecks live cookie/capability/lead/reference access; store streams only validated uploaded/verified local archive paths in bounded chunks, preserving binary bytes.
-            } finally { fclose($stream); }
-            // phpcs:enable WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-            if (false === self::bytes($id, $archive[$variant])) { return 0; }
-        }
-        return $id;
+        $archive[0]['disk'] = self::write_disk($id, $archive[0]['sha256'], $archive[0]['size'], $paths[0]['source']);
+        if (!$archive[0]['disk'] || false === $wpdb->update(self::table(), array('archive' => wp_json_encode($archive)), array('id' => $id))) { return 0; }
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+        return false === self::bytes($id, $archive[0]) ? 0 : $id;
     }
 
     private static function bytes($id, $descriptor) {
         global $wpdb;
         $size = (int) ($descriptor['size'] ?? 0); $variant = (int) ($descriptor['variant'] ?? 0);
         if ($size < 1 || $size > self::MAX_ARCHIVE_BYTES || $variant < 0 || $variant > 100) { return false; }
+        if (array_key_exists('disk', $descriptor)) {
+            $path = self::disk_path($descriptor['disk']);
+            do_action('idlm_private_file_before_read', (int) $id);
+            if (!$path || !is_file($path) || filesize($path) !== $size) { return false; }
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- REL007-BOUNDARY-0008: bytes(): reads a plugin-generated protected file name after lead access checks.
+            $data = file_get_contents($path);
+            return is_string($data) && strlen($data) === $size && hash_equals((string) $descriptor['sha256'], hash('sha256', $data)) ? $data : false;
+        }
         $limit = (int) ceil($size / self::CHUNK_BYTES); $table = self::table(true);
         // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0015: bytes(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
         $rows = (array) $wpdb->get_results($wpdb->prepare("SELECT part,data FROM $table WHERE file_id = %d AND variant = %d ORDER BY part LIMIT %d", $id, $variant, $limit + 1));
@@ -270,7 +352,7 @@ final class IDLM_Private_Files {
         $file = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE attachment_id = %d AND state IN ('uploaded','active','pending','pending_upload')", absint($raw)));
         // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         if (!$file || !self::readable($file) || !self::referenced_or_temporary($file) || (int) $file->byte_size > self::MAX_BYTES) { self::deny(404); }
-        $data = self::bytes($file->id, array('variant' => 0, 'size' => $file->byte_size, 'sha256' => $file->sha256));
+        $data = self::bytes($file->id, self::primary($file));
         self::refresh_actor();
         if (false === $data || !self::readable($file) || !self::referenced_or_temporary($file)) { self::deny(404); }
         while (ob_get_level()) { ob_end_clean(); }
@@ -441,8 +523,56 @@ final class IDLM_Private_Files {
         // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
         $failed = 0; foreach ($ids as $id) { if (!self::migrate_lead($id)) { $failed++; } self::reconcile_lead($id); $cursor = (int) $id; }
         update_option('idlm_private_file_migration_cursor', count($ids) === 10 ? $cursor : 0, false);
-        $pending = self::cleanup(10); $result = array('scanned' => count($ids), 'failed' => $failed, 'pending' => $pending);
+        $pending = self::cleanup(10); $moved = self::migrate_to_disk(self::MIGRATION_BATCH);
+        $result = array('scanned' => count($ids), 'failed' => $failed + (int) $moved['failed'], 'pending' => $pending, 'in_database' => (int) $moved['remaining']);
         update_option('idlm_private_file_migration_status', $result, false); return $result;
+    }
+
+    /**
+     * Move files still held in the chunk table to protected disk storage, oldest first.
+     * Each file is verified (size and SHA-256) on disk before its chunks are deleted in the
+     * same transaction; any failure leaves the database copy untouched. Generated sizes of
+     * migrated media are dropped, since only the original is ever served. Once nothing is
+     * left, the chunk table is rebuilt once so the database file shrinks.
+     */
+    public static function migrate_to_disk($limit = self::MIGRATION_BATCH) {
+        global $wpdb;
+        $result = array('moved' => 0, 'failed' => 0, 'remaining' => -1);
+        if (!self::ready() || !self::transactional() || !self::prepared_root()) { $result['failed'] = 1; return $result; }
+        $files = self::table(); $chunks = self::table(true);
+        // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0558: migrate_to_disk(): table(bool) selects only file/chunk tables; IDs and limits are bound; each file moves in its own transaction after disk verification.
+        $ids = array_map('absint', (array) $wpdb->get_col($wpdb->prepare("SELECT DISTINCT file_id FROM $chunks ORDER BY file_id LIMIT %d", max(1, min(200, (int) $limit)))));
+        foreach ($ids as $id) {
+            if (false === $wpdb->query('START TRANSACTION')) { $result['failed']++; break; }
+            $committed = false; self::$written = array();
+            try {
+                $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM $files WHERE id = %d FOR UPDATE", $id));
+                $archive = $row ? json_decode((string) $row->archive, true) : null;
+                if ($row && 'erasing' !== $row->state && is_array($archive) && isset($archive[0]) && empty($archive[0]['disk'])) {
+                    $primary = array_merge($archive[0], array('variant' => 0));
+                    unset($primary['disk']);
+                    $data = self::bytes($id, $primary);
+                    if (false === $data) { throw new RuntimeException('verify'); }
+                    $archive[0]['disk'] = self::write_disk($id, $primary['sha256'], $primary['size'], null, $data);
+                    if (!$archive[0]['disk']) { throw new RuntimeException('write'); }
+                    foreach ($archive as $i => $descriptor) { if ($i > 0 && empty($descriptor['disk'])) { $archive[$i]['disk'] = ''; } }
+                    if (false === $wpdb->update($files, array('archive' => wp_json_encode($archive)), array('id' => $id))) { throw new RuntimeException('archive'); }
+                }
+                // Moved, erasing or orphaned: the chunk rows are no longer needed.
+                if (false === $wpdb->delete($chunks, array('file_id' => $id))) { throw new RuntimeException('chunks'); }
+                $committed = false !== $wpdb->query('COMMIT');
+                if (!$committed) { throw new RuntimeException('commit'); }
+                self::$written = array(); $result['moved']++;
+            } catch (Throwable $error) {
+                $wpdb->query('ROLLBACK'); self::discard_written(); $result['failed']++;
+            }
+        }
+        $result['remaining'] = (int) $wpdb->get_var("SELECT COUNT(DISTINCT file_id) FROM $chunks");
+        if (0 === $result['remaining'] && !get_option('idlm_private_file_chunks_reclaimed')) {
+            if (false !== $wpdb->query("OPTIMIZE TABLE $chunks")) { update_option('idlm_private_file_chunks_reclaimed', current_time('mysql'), false); }
+        }
+        // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        return $result;
     }
 
     /** Caller owns lead deletion/reset transaction. Revoke bytes before filesystem work. */
@@ -513,7 +643,7 @@ final class IDLM_Private_Files {
             if (!$row || !in_array($row->state, array('pending','pending_upload','erasing'), true)) { continue; }
             $archive = json_decode($row->archive, true); if (!is_array($archive)) { continue; } $safe = true;
             foreach ($archive as $descriptor) {
-                if (in_array($row->state, array('pending','pending_upload'), true) && false === self::bytes($row->id, $descriptor)) { $safe = false; break; }
+                if (in_array($row->state, array('pending','pending_upload'), true) && self::kept($descriptor) && false === self::bytes($row->id, $descriptor)) { $safe = false; break; }
                 if (!$descriptor['path']) { continue; } $path = self::local_path($descriptor['path']);
                 if (!$path || (in_array($row->state, array('pending','pending_upload'), true) && is_file($path) && !hash_equals($descriptor['sha256'], hash_file('sha256', $path)))) { $safe = false; break; }
             }
@@ -528,6 +658,12 @@ final class IDLM_Private_Files {
                 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0033: cleanup(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
                 if (false === $wpdb->delete(self::table(true), array('file_id' => $row->id))) { continue; }
                 // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery
+                foreach ($archive as $descriptor) {
+                    $stored = !empty($descriptor['disk']) ? self::disk_path($descriptor['disk']) : false;
+                    if ($stored && is_file($stored)) { wp_delete_file($stored); }
+                    if ($stored && is_file($stored)) { $safe = false; break; }
+                }
+                if (!$safe) { continue; }
                 if (get_post($row->attachment_id) && !wp_delete_attachment($row->attachment_id, true)) { continue; }
                 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- REL007-SQL-0034: cleanup(): table(bool) selects only file/chunk tables; lead/attachment/variant limits are bound; live ownership/reference and engine checks govern confidential file reads.
                 if (false === $wpdb->delete($table, array('id' => $row->id))) { continue; }

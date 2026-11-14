@@ -77,7 +77,8 @@ add_filter('query', static function($sql) use ($config) {
     $barrier=$config['content_dir'].'/read-barrier';
     if (!is_file($barrier) || is_file($barrier.'.ready')) { return $sql; }
     $kind=file_get_contents($barrier);
-    $table=$kind==='files' ? 'idlm_private_file_chunks' : ($kind==='tasks' ? 'idlm_tasks' : ($kind==='quotes' ? 'idlm_quotes' : 'idlm_leads'));
+    if ($kind==='files') { return $sql; } // File reads pause at idlm_private_file_before_read below.
+    $table=$kind==='tasks' ? 'idlm_tasks' : ($kind==='quotes' ? 'idlm_quotes' : 'idlm_leads');
     if (strpos($sql,'FROM '.$wpdb->prefix.$table.' ') !== false) {
         file_put_contents($barrier.'.ready','ready'); $deadline=microtime(true)+10;
         while(!is_file($barrier.'.release') && microtime(true)<$deadline){usleep(10000);}
@@ -85,10 +86,18 @@ add_filter('query', static function($sql) use ($config) {
     }
     return $sql;
 });
-// Controlled SQL failure only in this owned disposable fixture.
-add_filter('query', static function($sql) use ($config) {
-    if (is_file($config['content_dir'] . '/fail-private-chunk') && strpos($sql, 'INSERT INTO `' . $GLOBALS['wpdb']->prefix . 'idlm_private_file_chunks`') === 0) { return 'INSERT INTO idlm_nonexistent_failure_table VALUES (1)'; }
-    return $sql;
+// Pause a protected-file read after the first access check, before bytes are read from disk.
+add_action('idlm_private_file_before_read', static function() use ($config) {
+    $barrier=$config['content_dir'].'/read-barrier';
+    if (!is_file($barrier) || is_file($barrier.'.ready') || 'files' !== file_get_contents($barrier)) { return; }
+    file_put_contents($barrier.'.ready','ready'); $deadline=microtime(true)+10;
+    while(!is_file($barrier.'.release') && microtime(true)<$deadline){usleep(10000);}
+    if(!is_file($barrier.'.release')){throw new RuntimeException('Read fixture barrier timeout.');}
+});
+// Controlled storage write failure only in this owned disposable fixture: the root sits under a regular file.
+add_filter('idlm_private_files_root', static function($root) use ($config) {
+    $blocker=$config['content_dir'] . '/fail-private-chunk';
+    return is_file($blocker) ? $blocker . '/private' : $root;
 });
 add_filter('query', static function($sql) use ($config) {
     if (is_file($config['content_dir'] . '/fail-export-next-page') && strpos($sql, 'SELECT id, first_name,') === 0 && strpos($sql, 'id <') !== false) { return 'SELECT * FROM idlm_missing_export_page'; }

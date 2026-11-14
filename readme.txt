@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.105.12
+Stable tag: 1.105.14
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,9 +94,15 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 
 == Changelog ==
 
-= 1.105.12 =
+= 1.105.14 =
 * Fixed: The loading spinner in the lead popup tabs, the tasks sidebar and the design project panel is centred over its text instead of at the top.
 * Changed: The lead popup shows an outline of its header, tabs and sections while it loads, and loading outlines across the CRM (leads table, pipeline, dashboard) have a gentle shimmer. The shimmer is off when the device asks for reduced motion.
+
+= 1.105.13 =
+* Uploaded lead files (floor plans, quotations, design files, payment proofs) are stored in a protected folder on disk instead of inside the database. Existing files move automatically in verified batches, and the database space is reclaimed once they have all moved. Downloads still go through the CRM's permission checks.
+
+= 1.105.11 =
+* Finished background tasks (Action Scheduler) are kept for 14 days instead of 30, and old ones are cleared 100 at a time instead of 20, so the task and log tables stay small. Failed and pending tasks are not affected.
 
 = 1.105.10 =
 * Changed: The lead popup header has more room. Field labels sit a fixed gap above their values, the four status fields sit side by side with one small, even gap, and the created and assigned times sit under the close and previous/next buttons.
