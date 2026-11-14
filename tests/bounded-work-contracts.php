@@ -19,3 +19,21 @@ idlm_test('retention health reports a missing continuation even when the daily h
     $retention=array_values(array_filter($report['checks'],static function($check){return $check['key']==='retention';}));
     assert_same('critical',$retention[0]['status']);assert_same('Continuation stalled',$retention[0]['value']);
 });
+
+idlm_test('RETENTION background tasks: completed and cancelled Action Scheduler tasks keep 14 days and clean up 100 per run', static function(): void {
+    $saved_hooks=$GLOBALS['idlm_test_hooks'] ?? array();$GLOBALS['idlm_test_hooks']=array();IDLM_Data_Retention::init();
+    $filters=array();foreach($GLOBALS['idlm_test_hooks'] as $hook){if('filter'===$hook['type']){$filters[$hook['hook']]=$hook['callback'];}}
+    assert_same(array('IDLM_Data_Retention','background_task_retention'),$filters['action_scheduler_retention_period']);
+    assert_same(array('IDLM_Data_Retention','background_task_cleanup_batch'),$filters['action_scheduler_cleanup_batch_size']);
+    // Action Scheduler's 30-day default drops to 14; a shorter period set elsewhere is kept; a broken value falls back to 14.
+    assert_same(14*DAY_IN_SECONDS,IDLM_Data_Retention::background_task_retention(30*DAY_IN_SECONDS));
+    assert_same(7*DAY_IN_SECONDS,IDLM_Data_Retention::background_task_retention(7*DAY_IN_SECONDS));
+    assert_same(14*DAY_IN_SECONDS,IDLM_Data_Retention::background_task_retention(0));
+    assert_same(14*DAY_IN_SECONDS,IDLM_Data_Retention::background_task_retention('bad'));
+    // The default batch of 20 rises to 100; a larger batch set elsewhere is kept.
+    assert_same(100,IDLM_Data_Retention::background_task_cleanup_batch(20));
+    assert_same(250,IDLM_Data_Retention::background_task_cleanup_batch(250));
+    // Only the retention window changes: the plugin never filters which statuses are purged, so failed tasks stay.
+    assert_false(false!==strpos(file_get_contents(dirname(__DIR__).'/includes/class-data-retention.php'),'action_scheduler_default_cleaner_statuses'));
+    $GLOBALS['idlm_test_hooks']=$saved_hooks;
+});
