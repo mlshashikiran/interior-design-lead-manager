@@ -445,13 +445,14 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
                         </div>
                         <div class="idlm-form-group">
                             <label for="idlm-lead-source-select">Source channel</label>
-                            <select name="source" id="idlm-lead-source-select" class="idlm-input">
+                            <select name="source" id="idlm-lead-source-select" class="idlm-input" required>
+                                <option value="" selected disabled>Choose where this lead came from</option>
+                                <option value="Offline/Walk-in">Offline/Walk-in</option>
+                                <option value="Referral">Referral</option>
                                 <option value="Website">Website</option>
                                 <option value="Meta Ads">Meta Ads</option>
                                 <option value="Google Ads">Google Ads</option>
                                 <option value="LinkedIn Ads">LinkedIn Ads</option>
-                                <option value="Referral">Referral</option>
-                                <option value="Offline/Walk-in">Offline/Walk-in</option>
                             </select>
                         </div>
                         <!-- Referrer Text Area (Hidden by default, shown when Source is Referral) -->

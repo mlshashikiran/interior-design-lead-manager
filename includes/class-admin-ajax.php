@@ -10,6 +10,8 @@ if (!defined('ABSPATH')) {
 }
 
 final class IDLM_Admin_Ajax extends IDLM_Admin {
+    /** Manual lead sources, most common first. */
+    const MANUAL_LEAD_SOURCES = array('Offline/Walk-in', 'Referral', 'Website', 'Meta Ads', 'Google Ads', 'LinkedIn Ads');
     /**
      * AJAX Endpoint: Inline Quick-Edit row changes
      */
@@ -783,6 +785,8 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         if ('' === IDLM_Contact_Identity::phone_key($phone)) { return $error('Enter a phone number with at least 10 digits.', 'phone'); }
         if ('' !== $email && !is_email($email)) { return $error('Enter a valid email address, or leave it empty.', 'email'); }
         if ('' !== $email && IDLM_Contact_Identity::is_placeholder_email($email, $phone)) { return $error('This looks like a made-up email. Leave the email empty if the customer did not share one.', 'email'); }
+        // A preselected source was being saved untouched, so the rep must pick one.
+        if (!in_array($text('source'), self::MANUAL_LEAD_SOURCES, true)) { return $error('Choose where this lead came from.', 'source'); }
         $data = array(
             'first_name' => $first_name, 'last_name' => $text('last_name'), 'email' => $email, 'phone' => $phone,
             'budget' => '' !== $text('budget') ? IDLM_Integrations::normalize_budget($text('budget')) : '',
