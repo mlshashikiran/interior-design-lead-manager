@@ -80,7 +80,7 @@ idlm_integration_test('MANUAL "ask pre-sales to call" goes to pre-sales and retu
         idlm_integration_assert_same(0, (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->prefix}idlm_tasks WHERE lead_id = %d AND assigned_rep_id = %d AND status = 'pending'", $lead->id, $pre)), 'Pre-sales work is closed.');
         // Without anyone in pre-sales, the choice is refused before anything is saved.
         update_option('idlm_active_pre_sales_reps', array()); IDLM_Settings::sync_routing_from_legacy(); wp_set_current_user($rep);
-        idlm_integration_assert_true(false !== strpos((string) idlm_manual_add(array('first_name' => 'Synthetic', 'phone' => idlm_manual_phone(), 'qualification_choice' => 'pre_sales')), 'No one in pre-sales'));
+        idlm_integration_assert_true(false !== strpos((string) idlm_manual_add(array('first_name' => 'Synthetic', 'phone' => idlm_manual_phone(), 'qualification_choice' => 'pre_sales', 'source' => 'Referral')), 'No one in pre-sales'));
     } finally { wp_set_current_user($admin); update_option('idlm_assignment_mode', 'manual'); IDLM_Settings::sync_routing_from_legacy(); }
 });
 

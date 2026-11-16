@@ -45,6 +45,10 @@ idlm_test('MANUAL a sales-side lead starts Qualified only with every detail, or 
     assert_same('email', IDLM_Admin_Ajax::prepare_manual_lead(array_merge($base, array('email' => 'na@gmail.com')), true, 9)->get_error_data()['field'], 'A made-up email is refused.');
     assert_same('phone', IDLM_Admin_Ajax::prepare_manual_lead(array_merge($base, array('phone' => '12345')), true, 9)->get_error_data()['field']);
     assert_same('first_name', IDLM_Admin_Ajax::prepare_manual_lead(array_merge($base, array('first_name' => ' ')), true, 9)->get_error_data()['field']);
+    assert_same('source', IDLM_Admin_Ajax::prepare_manual_lead(array_merge($base, array('source' => '')), true, 9)->get_error_data()['field'], 'A manual lead needs a chosen source.');
+    assert_same('source', IDLM_Admin_Ajax::prepare_manual_lead(array_merge($base, array('source' => 'Meta (organic)')), true, 9)->get_error_data()['field'], 'Only the listed manual sources are accepted.');
+    $form = file_get_contents(dirname(__DIR__) . '/templates/admin/leads.php');
+    assert_true(1 === preg_match('~<select name="source" id="idlm-lead-source-select"[^>]*required>\s*<option value="" selected disabled>[^<]+</option>\s*<option value="Offline/Walk-in">Offline/Walk-in</option>\s*<option value="Referral">Referral</option>~', $form), 'The manual form has no preselected source and lists walk-in and referral first.');
 });
 
 idlm_test('MANUAL conversions for hand-added leads follow the administrator\'s choice', static function(): void {

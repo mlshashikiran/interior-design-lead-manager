@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.105.15] - 2026-11-15
+
+### Fixed
+
+- The Add lead form no longer comes with a source already chosen. Reps must pick where the lead came from before saving, so leads are no longer saved as Website just because it was first in the list. Offline/Walk-in and Referral, the usual sources for manual leads, are now at the top. Builder: Shashi.
+
 ## [1.105.14] - 2026-11-14
 
 ### Fixed

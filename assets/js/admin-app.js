@@ -1520,6 +1520,7 @@ jQuery(document).ready(function($) {
                     showToast(response.data.message, 'success');
                     closeLeadModal();
                     $('#idlm-add-lead-form')[0].reset();
+                    $('#idlm-referrer-field').hide();
                     syncAddLeadChoice();
                     loadLeadsTable(1);
 
