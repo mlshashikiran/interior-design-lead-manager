@@ -53,13 +53,17 @@ final class IDLM_Admin_Assets {
 
     private static $white_label_style_added = false;
 
-    /** Use each local asset's modification time to avoid stale frontend bundles. */
+    /**
+     * Plugin version plus the asset's modification time. Release ZIPs stamp every file with one
+     * fixed time (deterministic builds), so the version keeps each release's URLs unique while the
+     * time still busts caches between local edits.
+     */
     private static function asset_version($relative_path) {
         $path = dirname(__DIR__) . '/assets/' . ltrim((string) $relative_path, '/');
-        return is_file($path) ? (string) filemtime($path) : IDLM_VERSION;
+        return is_file($path) ? IDLM_VERSION . '.' . filemtime($path) : IDLM_VERSION;
     }
 
-    /** Cache-busting version for any plugin asset, relative to assets/: its modification time. */
+    /** Cache-busting version for any plugin asset, relative to assets/: plugin version and modification time. */
     public static function version($relative_path) {
         return self::asset_version($relative_path);
     }

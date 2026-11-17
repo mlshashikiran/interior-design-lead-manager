@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.107.2] - 2026-11-17
+
+### Fixed
+
+- After an update, browsers load the new CRM stylesheets and scripts straight away. Asset URLs were versioned by file time only, and release ZIPs give every file the same fixed time, so each release reused the old URLs and browsers kept old cached copies. The plugin version is now part of every asset URL. Builder: Shashi.
+
 ## [1.107.1] - 2026-11-17
 
 ### Fixed
