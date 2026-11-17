@@ -14,23 +14,25 @@ $idlm_can_manage_options = !empty($context['can_manage_options']);
         <div class="idlm-modal idlm-dialog" id="idlm-send-back-modal" role="dialog" aria-modal="true" aria-labelledby="idlm-send-back-title" aria-describedby="idlm-send-back-description" aria-hidden="true" data-idlm-dialog data-idlm-initial-focus="#idlm-send-back-reason">
             <div class="idlm-modal-content idlm-dialog__panel idlm-dialog--compact">
                 <header class="idlm-modal-header idlm-dialog__header">
-                    <div><h2 class="idlm-dialog__title" id="idlm-send-back-title">Send back to pre-sales</h2><p class="idlm-dialog__description" id="idlm-send-back-description"><span class="idlm-send-back-lead-name"></span> goes back to the pre-sales person who qualified it. It becomes unqualified, its stage moves to Contacted and your open tasks on it close. It comes back to you when pre-sales qualifies it again.</p></div>
+                    <div><h2 class="idlm-dialog__title" id="idlm-send-back-title">Send back to pre-sales</h2><p class="idlm-dialog__description" id="idlm-send-back-description"><span class="idlm-send-back-lead-name"></span> goes back to the pre-sales person who qualified it. It becomes unqualified, its stage moves to Contacted and the sales rep's open tasks on it close. It returns to the same sales rep when pre-sales qualifies it again.</p></div>
                     <button type="button" class="idlm-dialog__close" data-idlm-dialog-close aria-label="Close send back dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
                 </header>
                 <div class="idlm-dialog__body">
                     <input type="hidden" id="idlm-send-back-lead-id" value="">
                     <div class="idlm-form-group">
-                        <label class="idlm-settings-label" for="idlm-send-back-reason">Reason</label>
-                        <select id="idlm-send-back-reason" class="idlm-input idlm-control-full" required>
+                        <label class="idlm-settings-label" for="idlm-send-back-reason">Reason <span class="idlm-required-indicator" aria-hidden="true">*</span></label>
+                        <select id="idlm-send-back-reason" class="idlm-input idlm-control-full" required aria-errormessage="idlm-send-back-reason-error">
                             <option value="">Choose a reason</option>
                             <?php foreach (IDLM_Lead_Lifecycle_Service::SEND_BACK_REASONS as $idlm_send_back_key => $idlm_send_back_label): ?>
                                 <option value="<?php echo esc_attr($idlm_send_back_key); ?>"><?php echo esc_html($idlm_send_back_label); ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <p class="idlm-field-error" id="idlm-send-back-reason-error" role="alert" hidden></p>
                     </div>
                     <div class="idlm-form-group">
-                        <label class="idlm-settings-label" for="idlm-send-back-note">Note for pre-sales</label>
-                        <textarea id="idlm-send-back-note" class="idlm-input idlm-control-full" rows="3" minlength="10" required placeholder="What should pre-sales check with the customer?"></textarea>
+                        <label class="idlm-settings-label" for="idlm-send-back-note">Note for pre-sales <span class="idlm-required-indicator" aria-hidden="true">*</span></label>
+                        <textarea id="idlm-send-back-note" class="idlm-input idlm-control-full" rows="3" minlength="10" required placeholder="What should pre-sales check with the customer?" aria-errormessage="idlm-send-back-note-error"></textarea>
+                        <p class="idlm-field-error" id="idlm-send-back-note-error" role="alert" hidden></p>
                     </div>
                 </div>
                 <footer class="idlm-dialog__footer">

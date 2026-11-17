@@ -389,10 +389,10 @@ final class IDLM_Test_WPDB {
             $this->tables[$matches[1]] = array_values(array_filter($this->tables[$matches[1]], static fn(array $row): bool => !in_array((int) ($row['id'] ?? 0), $ids, true)));
             return $before - count($this->tables[$matches[1]]);
         }
-        if (preg_match("/^UPDATE (wp_idlm_tasks) SET status = 'completed', completed_at = '([^']+)', updated_at = '[^']+' WHERE lead_id = ([0-9]+) AND status = 'pending'$/i", $normalized, $matches)) {
+        if (preg_match("/^UPDATE (wp_idlm_tasks) SET status = 'completed', completed_at = '([^']+)', updated_at = '[^']+' WHERE lead_id = ([0-9]+)(?: AND assigned_rep_id = ([0-9]+))? AND status = 'pending'$/i", $normalized, $matches)) {
             $updated = 0;
             foreach ($this->tables[$matches[1]] ?? array() as $index => $row) {
-                if ((int) ($row['lead_id'] ?? 0) === (int) $matches[3] && 'pending' === ($row['status'] ?? '')) {
+                if ((int) ($row['lead_id'] ?? 0) === (int) $matches[3] && 'pending' === ($row['status'] ?? '') && ('' === ($matches[4] ?? '') || (int) ($row['assigned_rep_id'] ?? 0) === (int) $matches[4])) {
                     $this->tables[$matches[1]][$index]['status'] = 'completed';
                     $this->tables[$matches[1]][$index]['completed_at'] = $matches[2];
                     $updated++;

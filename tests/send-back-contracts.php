@@ -70,6 +70,10 @@ idlm_test('SENDBACK the lead stays in pre-sales until qualified and then returns
     assert_same(3, (int) $lead['assigned_rep_id'], 'Back to the rep who sent it back.');
     assert_same('returned_after_send_back', $lead['handoff_method']);
     assert_same('manually_assigned', $lead['handoff_status']);
+    $pending = array_values(array_filter($GLOBALS['wpdb']->rows('idlm_tasks'), static fn($t) => 'pending' === $t['status']));
+    assert_same(1, count($pending), 'The pre-sales call task closes and the rep gets one task.');
+    assert_same(3, (int) $pending[0]['assigned_rep_id']);
+    assert_same(IDLM_Lead_Lifecycle_Service::SEND_BACK_RETURN_TASK_TITLE, $pending[0]['title']);
     assert_same('', IDLM_Admin_Collection_Reads::sent_back_badge((object) $lead));
 });
 

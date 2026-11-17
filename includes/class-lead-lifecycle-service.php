@@ -26,6 +26,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
     const REENQUIRY_DEFAULT_QUIET_DAYS = 3;
     const PRESALES_HOLD_ERROR = 'This lead is still with pre-sales and has not been qualified. Pre-sales must qualify it before it can be assigned to anyone outside pre-sales. You can move it to another pre-sales person.';
 
+    const SEND_BACK_RETURN_TASK_TITLE = 'Qualified again by pre-sales: call the customer';
     const SEND_BACK_REASONS = array(
         'unreachable' => 'Customer unreachable',
         'budget_mismatch' => 'Budget does not match',
@@ -1031,6 +1032,7 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             'Qualified' !== $old_lead->stage
         );
 
+        $sent_back_rep = 0;
         if ($became_qualified) {
             $data['qualified_at'] = current_time('mysql');
             $data['qualified_by_user_id'] = get_current_user_id();
@@ -1224,6 +1226,17 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                      WHERE lead_id = %d AND status = 'pending' AND task_type = 'Qualification'",
                     current_time('mysql'), current_time('mysql'), absint($lead_id)
                 )));
+                if ($sent_back_rep) {
+                    // Pre-sales work on a sent-back lead ends here; the rep it returns to gets one call task.
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transactional write to the plugin's own tasks table. Builder: Shashi.
+                    IDLM_Lead_Transaction::required($wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}idlm_tasks SET status = 'completed', completed_at = %s, updated_at = %s WHERE lead_id = %d AND assigned_rep_id = %d AND status = 'pending'", current_time('mysql'), current_time('mysql'), absint($lead_id), absint($old_lead->assigned_rep_id))));
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Transactional insert into the plugin's own tasks table. Builder: Shashi.
+                    IDLM_Lead_Transaction::required(1 === $wpdb->insert($wpdb->prefix . 'idlm_tasks', array(
+                        'lead_id' => absint($lead_id), 'assigned_rep_id' => $sent_back_rep, 'title' => self::SEND_BACK_RETURN_TASK_TITLE,
+                        'task_type' => 'Call', 'priority' => 'High', 'status' => 'pending', 'due_date' => current_time('mysql'),
+                        'created_by' => $user_id, 'created_at' => current_time('mysql'), 'updated_at' => current_time('mysql'),
+                    )) ? true : false);
+                }
                 if (empty($old_lead->floor_plan_received) && '' !== trim($qualification_handoff_remark)) {
                     IDLM_Lead_Transaction::required(self::log_activity(
                         $lead_id,
