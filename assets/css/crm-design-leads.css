@@ -2827,11 +2827,14 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         outline-offset: -4px;
     }
 
-    /* Call has its own button now, so the number reads as text on the card. */
-    body.idlm-crm-design .idlm-workspace #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) .idlm-lead-row-phone {
+    /* Call has its own button, so the number is plain text: a tap on it opens the lead like the
+       rest of the identity block instead of starting a call from a 16px target. */
+    body.idlm-crm-design .idlm-workspace #idlm-leads-table .idlm-responsive-lead-row .idlm-lead-row-phone {
+        display: inline;
         min-height: 0;
         color: var(--idlm-text-muted);
         font-weight: 400;
+        pointer-events: none;
     }
 
     body.idlm-crm-design #idlm-leads-table .idlm-lead-row-place {

@@ -616,6 +616,11 @@ idlm_test('Phone lead cards keep 44px reach, one-tap Call and WhatsApp, and a se
     foreach (array('class="idlm-col-mobile"', 'idlm-lead-row-call', 'idlm-lead-row-whatsapp', "'https://wa.me/'", 'IDLM_Interakt::format_phone_for_interakt(', 'rel="noopener noreferrer"') as $contract) {
         assert_contains($contract, $reads);
     }
+    // The card names the lead source, hides punctuation-only locations and leaves calling to the Call button.
+    assert_same(2, substr_count($reads, 'array($l->source ?: \'Unknown source\', \'is-source\')'), 'Both summary lines name the lead source.');
+    assert_contains('private static function mobile_place_text($location)', $reads);
+    assert_contains('.idlm-responsive-lead-row .idlm-lead-row-phone {', $css);
+    assert_contains('pointer-events: none;', $css);
     // Phones hide the header checkbox, so the result line mirrors it and the script keeps both in sync.
     assert_contains('id="idlm-select-all-mobile"', $template);
     assert_contains("'#idlm-select-all, #idlm-select-all-mobile'", $script);

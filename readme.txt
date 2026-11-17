@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.105.16
+Stable tag: 1.105.17
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,9 @@ Action Scheduler is optional; WP-Cron is the fallback. Scheduled work requires w
 Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Project Authors. The complete SIL Open Font License 1.1 is bundled in assets/fonts/OFL.txt; assets/fonts/NOTICE.txt and assets/fonts/inter-provenance.json identify the exact upstream revision, matching Google Fonts distribution and file hashes. Font bytes and existing CSS mappings are preserved.
 
 == Changelog ==
+
+= 1.105.17 =
+* Fixed: Phone lead cards show the lead source, no longer show a stray comma when a lead's location is blank, and tapping the phone number opens the lead instead of dialling (use the Call button to call).
 
 = 1.105.16 =
 * Changed: On phones the Leads list keeps search and Filters pinned while you scroll. Each lead card shows stage and quality side by side as compact dropdowns, a summary line (owner, budget, plan, tasks, age) and one-tap Call and WhatsApp buttons. An "All" checkbox selects the page, the bulk actions bar sits at the bottom of the screen, and the page buttons are easier to tap. Wider screens are unchanged.

@@ -2150,6 +2150,7 @@ body.idlm-filters-open {
     #idlm-leads-table .idlm-lead-row-meta .is-danger { color: var(--idlm-danger); font-weight: 600; }
     #idlm-leads-table .idlm-lead-row-quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--idlm-space-2); }
     #idlm-leads-table .idlm-lead-row-quick .idlm-btn { justify-content: center; min-height: var(--idlm-target-size); }
+    #idlm-leads-table .idlm-responsive-lead-row .idlm-lead-row-phone { pointer-events: none; }
     #idlm-leads-table .idlm-lead-row-place { display: inline; }
     #idlm-leads-table .idlm-lead-row-place::before { content: "·"; margin-inline: 6px; }
     .idlm-leads-mobile-select-all { display: inline-flex; align-items: center; gap: 6px; min-height: var(--idlm-target-size); }

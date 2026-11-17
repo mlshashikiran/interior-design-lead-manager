@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.105.17] - 2026-11-17
+
+### Fixed
+
+- Phone lead cards now show where the lead came from (for example Meta Ads or Website) on the summary line. Builder: Shashi.
+- A lead whose location was saved as just a comma or similar no longer shows "· ," after the phone number.
+- Tapping the phone number on a card opens the lead, like the rest of the name area, instead of starting a call from a small target. The Call button still calls.
+
 ## [1.105.16] - 2026-11-17
 
 ### Changed
