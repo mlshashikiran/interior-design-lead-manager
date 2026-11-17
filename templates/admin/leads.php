@@ -298,6 +298,7 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
                             <option value="overdue">Overdue follow-up</option>
                             <option value="stale_updates">Needs fresh update (7+ days)</option>
                             <option value="pending_calls">Pending calls</option>
+                            <option value="reenquired">Customer enquired again</option>
                             <option value="whatsapp_received">WhatsApp message received</option>
                             <option value="unread_whatsapp">Unread WhatsApp messages</option>
                         </select>

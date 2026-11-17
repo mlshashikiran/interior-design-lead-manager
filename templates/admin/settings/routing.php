@@ -16,6 +16,7 @@ $idlm_fallback_enabled = isset($context['fallback_enabled']) ? $context['fallbac
 $idlm_fallback_hours = isset($context['fallback_hours']) ? $context['fallback_hours'] : null;
 $idlm_qualified_fallback_enabled = isset($context['qualified_fallback_enabled']) ? $context['qualified_fallback_enabled'] : null;
 $idlm_qualified_fallback_hours = isset($context['qualified_fallback_hours']) ? $context['qualified_fallback_hours'] : null;
+$idlm_reenquiry_quiet_days = isset($context['reenquiry_quiet_days']) ? absint($context['reenquiry_quiet_days']) : 3;
 $idlm_qualified_fallback_end_at = isset($context['qualified_fallback_end_at']) ? $context['qualified_fallback_end_at'] : null;
 $idlm_qualified_fallback_include_existing = isset($context['qualified_fallback_include_existing']) ? $context['qualified_fallback_include_existing'] : null;
 $idlm_studio_mismatch_behavior = isset($context['studio_mismatch_behavior']) ? $context['studio_mismatch_behavior'] : null;
@@ -166,6 +167,11 @@ $idlm_role_labels = wp_roles()->get_names();
                                 <label for="idlm-qualified-fallback-hours" data-idlm-ui="medium">Handoff delay (hours)</label>
                                 <input type="number" id="idlm-qualified-fallback-hours" name="qualified_fallback_hours" class="idlm-input" min="1" max="720" inputmode="numeric" value="<?php echo esc_attr($idlm_qualified_fallback_hours); ?>" data-idlm-ui="max-150">
                                 <p class="description">Wait time from qualification while manager coverage is on.</p>
+                            </div>
+                            <div class="idlm-form-group">
+                                <label for="idlm-reenquiry-quiet-days" data-idlm-ui="medium">Re-enquiry after (days)</label>
+                                <input type="number" id="idlm-reenquiry-quiet-days" name="reenquiry_quiet_days" class="idlm-input" min="1" max="90" inputmode="numeric" value="<?php echo esc_attr($idlm_reenquiry_quiet_days); ?>" data-idlm-ui="max-150">
+                                <p class="description">A repeat form submission counts as a re-enquiry after this many days without one. Closed leads always count.</p>
                             </div>
                             <div class="idlm-form-group">
                                 <label for="idlm-qualified-fallback-end" data-idlm-ui="medium">Manager OOO ends</label>

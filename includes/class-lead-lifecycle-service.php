@@ -20,6 +20,76 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         } finally { self::release_inbound_identity_locks($locks); }
     }
 
+    /** Customer-submitted channels; CSV imports, manual adds and WhatsApp chats never count as a re-enquiry. */
+    const REENQUIRY_PLATFORMS = array('website', 'meta', 'google', 'linkedin', 'walkin');
+    const REENQUIRY_TASK_TITLE = 'Customer enquired again: call back';
+    const REENQUIRY_DEFAULT_QUIET_DAYS = 3;
+
+    /** Days without a submission before a new one counts as a re-enquiry (1–90, default 3). */
+    public static function reenquiry_quiet_days() {
+        return min(90, max(1, intval(get_option('idlm_reenquiry_quiet_days', self::REENQUIRY_DEFAULT_QUIET_DAYS))));
+    }
+
+    /**
+     * Pure: does a matched submission count as a re-enquiry? A Meta form followed by the website
+     * form within the quiet period is one enquiry. A later submission, or any submission on a
+     * Won, Lost or Unqualified lead, is a re-enquiry. Builder: Shashi.
+     */
+    public static function is_reenquiry($lead, $platform, $last_inbound_at, $now, $quiet_days) {
+        if (!in_array($platform, self::REENQUIRY_PLATFORMS, true)) { return false; }
+        if (self::reenquiry_lead_is_closed($lead)) { return true; }
+        $previous = $last_inbound_at ?: ($lead->created_at ?? '');
+        $previous_time = $previous ? strtotime((string) $previous) : false;
+        $now_time = strtotime((string) $now);
+        if (false === $previous_time || false === $now_time) { return false; }
+        return ($now_time - $previous_time) >= max(1, intval($quiet_days)) * DAY_IN_SECONDS;
+    }
+
+    private static function reenquiry_lead_is_closed($lead) {
+        return in_array((string) ($lead->stage ?? ''), array('Won', 'Lost'), true) || 'Unqualified' === (string) ($lead->lead_quality ?? '');
+    }
+
+    /** Latest submission time recorded for a lead, or null when it has none. */
+    private static function last_inbound_at($lead_id) {
+        global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bound read of the plugin's own touchpoints inside the inbound transaction. Builder: Shashi.
+        $value = IDLM_Lead_Transaction::read($wpdb->get_var($wpdb->prepare("SELECT MAX(received_at) FROM {$wpdb->prefix}idlm_lead_touchpoints WHERE lead_id = %d", absint($lead_id))));
+        return is_string($value) && '' !== $value ? $value : null;
+    }
+
+    /** Mark the lead, log it and give the owner one open call-back task. */
+    private static function flag_reenquiry($lead, $platform, $data) {
+        global $wpdb;
+        $lead_id = absint($lead->id);
+        $now = current_time('mysql');
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transactional write to the plugin's own leads table. Builder: Shashi.
+        if (false === $wpdb->update($wpdb->prefix . 'idlm_leads', array('reenquiry_at' => $now, 'reenquiry_count' => absint($lead->reenquiry_count ?? 0) + 1, 'updated_at' => $now), array('id' => $lead_id))) { return false; }
+        $channel = !empty($data['source']) ? sanitize_text_field($data['source']) : ucfirst($platform);
+        $closed = '';
+        if (self::reenquiry_lead_is_closed($lead)) {
+            $closed = sprintf(' The lead was %s.', in_array((string) ($lead->stage ?? ''), array('Won', 'Lost'), true) ? $lead->stage : 'Unqualified');
+        }
+        if (!self::log_activity($lead_id, 'reenquiry', sprintf('Customer enquired again via %s.%s', $channel, $closed))) { return false; }
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bound read of the plugin's own tasks table. Builder: Shashi.
+        $open_task = IDLM_Lead_Transaction::read($wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->prefix}idlm_tasks WHERE lead_id = %d AND status = 'pending' AND title = %s LIMIT 1", $lead_id, self::REENQUIRY_TASK_TITLE)));
+        if ($open_task) { return true; }
+        $owner_id = absint($lead->assigned_rep_id ?? 0);
+        if ($owner_id && !get_userdata($owner_id)) { $owner_id = 0; }
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Transactional insert into the plugin's own tasks table. Builder: Shashi.
+        return 1 === $wpdb->insert($wpdb->prefix . 'idlm_tasks', array(
+            'lead_id' => $lead_id, 'assigned_rep_id' => $owner_id, 'title' => self::REENQUIRY_TASK_TITLE,
+            'task_type' => 'Call', 'priority' => 'High', 'status' => 'pending',
+            'due_date' => $now, 'created_by' => 0, 'created_at' => $now, 'updated_at' => $now,
+        ));
+    }
+
+    /** The rep has acted on a re-enquiry: drop the flag so the lead returns to its normal place. */
+    public static function clear_reenquiry($lead_id) {
+        global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bound write to the plugin's own leads table. Builder: Shashi.
+        return false !== $wpdb->update($wpdb->prefix . 'idlm_leads', array('reenquiry_at' => null), array('id' => absint($lead_id)));
+    }
+
     private static function transaction_result($result) {
         if (is_wp_error($result)) { if (!self::$last_validation_error) { self::$last_validation_error = $result->get_error_message(); } return false; }
         return $result;
@@ -65,8 +135,14 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                 $message_result=IDLM_WhatsApp_Inbox::record($options['connector_message'], true);
                 IDLM_Lead_Transaction::required(!is_wp_error($message_result) && in_array($message_result['status'] ?? '', array('processed','replayed'), true));
             }
+            // Read the previous submission time before this submission's touchpoint is written.
+            $reenquiry = self::is_reenquiry($canonical, $platform, self::last_inbound_at($canonical_id), current_time('mysql'), self::reenquiry_quiet_days());
             IDLM_Lead_Transaction::required(1 === self::record_lead_touchpoint($canonical_id, $platform, $data, $payload));
-            return array('lead_id' => $canonical_id, 'created' => false, 'matched' => true);
+            if ($reenquiry) {
+                IDLM_Lead_Transaction::required(self::flag_reenquiry($canonical, $platform, $data));
+                IDLM_Lead_Transaction::invalidate('inbound_lead_update', $canonical_id);
+            }
+            return array('lead_id' => $canonical_id, 'created' => false, 'matched' => true, 'reenquiry' => $reenquiry);
         }
 
         $data['original_source'] = !empty($data['source']) ? sanitize_text_field($data['source']) : '';
@@ -966,6 +1042,13 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
                 );
                 $data['time_to_won'] = round($elapsed_hours * 3600);
             }
+        }
+
+        // Logging a call or moving the stage answers a re-enquiry, so the lead leaves the top.
+        $call_changed = isset($data['call_status']) && $data['call_status'] !== $old_lead->call_status;
+        $stage_changed = isset($data['stage']) && $data['stage'] !== $old_lead->stage;
+        if (($call_changed || $stage_changed) && !empty($old_lead->reenquiry_at)) {
+            $data['reenquiry_at'] = null;
         }
 
         $capacity = IDLM_Assignment_Capacity::validate_transition($old_lead, array_merge((array) $old_lead, $data));

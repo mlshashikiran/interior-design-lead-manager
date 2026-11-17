@@ -286,7 +286,7 @@ idlm_test('CAPI D6 phase 2: stored _fbc/_fbp are sent unhashed in Meta user_data
 idlm_test('CAPI D6 phase 2: fbc and fbp are lead columns with a schema version bump and backup inventory', static function(): void {
     $db = file_get_contents(dirname(__DIR__) . '/includes/class-db.php');
     assert_true(strpos($db, "li_fat_id varchar(255) DEFAULT '',\n            fbc varchar(255) DEFAULT '',\n            fbp varchar(255) DEFAULT '',\n            fb_lead_id") !== false);
-    assert_same('1.3.18', IDLM_DB_VERSION);
+    assert_same('1.3.19', IDLM_DB_VERSION);
     $leads = IDLM_Backup_Validator::columns()['idlm_leads'];
     assert_true(in_array('fbc', $leads, true) && in_array('fbp', $leads, true));
 });

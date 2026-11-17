@@ -168,6 +168,7 @@ class IDLM_Admin_Settings_Controller {
             update_option('idlm_qualified_fallback_enabled_at', current_time('mysql'));
         }
         update_option('idlm_qualified_fallback_hours', isset($_POST['qualified_fallback_hours']) ? min(720, max(1, intval(wp_unslash($_POST['qualified_fallback_hours'])))) : 4);
+        update_option('idlm_reenquiry_quiet_days', isset($_POST['reenquiry_quiet_days']) ? min(90, max(1, intval(wp_unslash($_POST['reenquiry_quiet_days'])))) : IDLM_Lead_Lifecycle_Service::REENQUIRY_DEFAULT_QUIET_DAYS);
         $qualified_end_raw = isset($_POST['qualified_fallback_end_at']) ? sanitize_text_field(wp_unslash($_POST['qualified_fallback_end_at'])) : '';
         $qualified_end_at = $qualified_end_raw && strtotime($qualified_end_raw) ? str_replace('T', ' ', $qualified_end_raw) : '';
         update_option('idlm_qualified_fallback_end_at', $qualified_end_at);

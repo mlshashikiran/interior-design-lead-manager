@@ -170,6 +170,9 @@ final class IDLM_Admin_Task_Controller extends IDLM_Admin {
             // Log in activity log
             $activity_details = sprintf('Marked task "%s" as %s', $task->title, $status);
             IDLM_DB::log_activity($task->lead_id, 'task', $activity_details);
+            if ('completed' === $status && IDLM_Lead_Lifecycle_Service::REENQUIRY_TASK_TITLE === $task->title) {
+                IDLM_Lead_Lifecycle_Service::clear_reenquiry($task->lead_id);
+            }
 
             wp_send_json_success(array('message' => 'Task status updated.', 'status' => $status));
         } else {

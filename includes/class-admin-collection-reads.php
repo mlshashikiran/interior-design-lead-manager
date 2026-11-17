@@ -4,6 +4,15 @@ if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
     /** Location for the phone card's contact line; punctuation-only values such as "," count as empty. */
+    /** Amber "Re-enquired" badge while a returning customer waits for the rep (STD-CRM-4: text first). */
+    public static function reenquiry_badge($lead) {
+        if (empty($lead->reenquiry_at)) { return ''; }
+        $time = strtotime((string) $lead->reenquiry_at);
+        $ago = $time ? human_time_diff($time, current_time('timestamp')) : '';
+        $title = $ago ? sprintf('Customer enquired again %s ago', $ago) : 'Customer enquired again';
+        return '<span class="idlm-row-handoff-badge idlm-row-reenquiry-badge" title="' . esc_attr($title) . '">Re-enquired' . ($ago ? ' · ' . esc_html($ago) : '') . '</span>';
+    }
+
     private static function mobile_place_text($location) {
         $location = trim((string) $location);
         return '' === trim($location, " \t\n\r\0\x0B,.;:-/|") ? '' : $location;
@@ -81,7 +90,8 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
             $where[] = $wpdb->prepare("assigned_rep_id = %d", $restricted_user_id);
         }
         if ($active_only) {
-            $where[] = "COALESCE(l.stage, '') NOT IN ('Won', 'Lost')";
+            // A closed lead that enquired again stays visible until the rep acts on it.
+            $where[] = "(COALESCE(l.stage, '') NOT IN ('Won', 'Lost') OR l.reenquiry_at IS NOT NULL)";
         }
 
         // Apply filters
@@ -160,6 +170,8 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
             $statuses = array_unique($statuses);
             $in_clause = implode("','", array_map('esc_sql', $statuses));
             $where[] = "call_status IN ('{$in_clause}')";
+        } elseif (!empty($post_followup_filter) && $post_followup_filter === 'reenquired') {
+            $where[] = 'l.reenquiry_at IS NOT NULL';
         } elseif (!empty($post_followup_filter) && $post_followup_filter === 'whatsapp_received') {
             $where[] = IDLM_Admin_Lead_Notifications::whatsapp_exists_sql('l', false);
         } elseif (!empty($post_followup_filter) && $post_followup_filter === 'unread_whatsapp') {
@@ -303,8 +315,8 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
         );
         $uses_default_queue_order = empty($sort_by) || !isset($sortable_columns[$sort_by]);
         $order_by = $is_pre_sales
-            ? "CASE WHEN l.call_status = 'Call Back Requested' AND l.callback_datetime IS NOT NULL AND l.callback_datetime <= %s THEN 0 WHEN l.call_status = 'Not Called' THEN 1 ELSE 2 END ASC, COALESCE(l.callback_datetime, l.assigned_at, l.created_at) ASC, l.id ASC"
-            : 'COALESCE(l.assigned_at, l.created_at) DESC, l.id DESC';
+            ? "CASE WHEN l.reenquiry_at IS NOT NULL THEN 0 WHEN l.call_status = 'Call Back Requested' AND l.callback_datetime IS NOT NULL AND l.callback_datetime <= %s THEN 0 WHEN l.call_status = 'Not Called' THEN 1 ELSE 2 END ASC, COALESCE(l.callback_datetime, l.assigned_at, l.created_at) ASC, l.id ASC"
+            : 'COALESCE(l.reenquiry_at, l.assigned_at, l.created_at) DESC, l.id DESC';
         if (!$uses_default_queue_order) {
             $sort_expression = $sortable_columns[$sort_by];
             if ('age' === $sort_by) {
@@ -334,7 +346,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                 'stage' => $post_stage,
             ),
             'limit' => $limit,
-            'sort' => 'assigned_or_created_desc_id_desc',
+            'sort' => 'reenquiry_or_assigned_or_created_desc_id_desc',
         );
         if ('' !== $cursor_token && !$cursor_enabled) {
             wp_send_json_error(array('message' => 'This pagination cursor does not match the selected lead sort.'), 400);
@@ -353,7 +365,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                 wp_send_json_error(array('message' => 'The pagination cursor position is invalid. Refresh the lead list and try again.'), 400);
             }
             $cursor_predicate = $wpdb->prepare(
-                '(COALESCE(l.assigned_at, l.created_at) < %s OR (COALESCE(l.assigned_at, l.created_at) = %s AND l.id < %d))',
+                '(COALESCE(l.reenquiry_at, l.assigned_at, l.created_at) < %s OR (COALESCE(l.reenquiry_at, l.assigned_at, l.created_at) = %s AND l.id < %d))',
                 $cursor_sort_value,
                 $cursor_sort_value,
                 $cursor_id
@@ -514,7 +526,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                             <div class="idlm-lead-row-headline">
                                 <button type="button" class="idlm-lead-row-open" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)" title="<?php echo esc_attr($name); ?>"><strong><?php echo esc_html($name); ?></strong><span class="screen-reader-text"> — open lead details</span></button>
                                 <?php echo wp_kses_post($dup_badge); ?>
-                                <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span><?php endif; ?>
+                                <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span><?php endif; ?><?php echo wp_kses_post(self::reenquiry_badge($l)); ?>
                             </div>
                             <div class="idlm-lead-row-contact"><a class="idlm-lead-row-phone" href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', (string) $l->phone)); ?>"><?php echo esc_html($l->phone); ?></a><?php if ($l->project_name): ?><span class="idlm-lead-row-email" title="<?php echo esc_attr($l->project_name); ?>"><?php echo esc_html($l->project_name); ?></span><?php endif; ?></div>
                             <button type="button" class="idlm-lead-row-expand" aria-expanded="false" aria-controls="<?php echo esc_attr($responsive_row_id); ?>"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><span class="idlm-lead-row-expand-label">Show details</span></button>
@@ -559,7 +571,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                         <div class="idlm-lead-row-headline">
                             <button type="button" class="idlm-lead-row-open" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)" title="<?php echo esc_attr($name); ?>"><strong><?php echo esc_html($name); ?></strong><span class="screen-reader-text"> — open lead details</span></button>
                             <?php echo wp_kses_post($dup_badge); ?>
-                            <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span><?php endif; ?>
+                            <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span><?php endif; ?><?php echo wp_kses_post(self::reenquiry_badge($l)); ?>
                             <?php if ($awaiting_handoff): ?><span class="idlm-row-handoff-badge <?php echo $handoff_hours >= max(1, intval(get_option('idlm_qualified_fallback_hours', '4'))) ? 'is-overdue' : ''; ?>" title="<?php echo esc_attr($handoff_title); ?>">Awaiting <?php echo esc_html($handoff_hours < 1 ? '<1h' : floor($handoff_hours) . 'h'); ?><span class="screen-reader-text"> — <?php echo esc_html($handoff_title); ?></span></span><?php endif; ?>
                             <?php if ($routing_exception): ?><span class="idlm-row-handoff-badge is-overdue" title="<?php echo esc_attr(isset($l->handoff_exception_reason) ? $l->handoff_exception_reason : 'Routing exception'); ?>">Routing exception</span><?php endif; ?>
                         </div>
@@ -660,7 +672,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
         $next_cursor = '';
         if ($cursor_enabled && $page < $total_pages && !empty($leads)) {
             $last_lead = end($leads);
-            $next_sort_value = null !== $last_lead->assigned_at ? $last_lead->assigned_at : $last_lead->created_at;
+            $next_sort_value = !empty($last_lead->reenquiry_at) ? $last_lead->reenquiry_at : (null !== $last_lead->assigned_at ? $last_lead->assigned_at : $last_lead->created_at);
             if (is_string($next_sort_value) && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $next_sort_value)) {
                 $next_cursor = IDLM_Cursor_Pagination::encode(
                     'leads',
