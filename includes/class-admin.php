@@ -55,6 +55,7 @@ class IDLM_Admin {
         add_action('wp_ajax_idlm_save_routing_settings', array(__CLASS__, 'ajax_save_routing_settings'));
         add_action('wp_ajax_idlm_run_fallback_now', array(__CLASS__, 'ajax_run_fallback_now'));
         add_action('wp_ajax_idlm_log_presales_touch', array(__CLASS__, 'ajax_log_presales_touch'));
+        add_action('wp_ajax_idlm_send_back_to_presales', array(__CLASS__, 'ajax_send_back_to_presales'));
         add_action('wp_ajax_idlm_presales_decision', array(__CLASS__, 'ajax_presales_decision'));
         add_action('wp_ajax_idlm_get_mapped_past_leads', array(__CLASS__, 'ajax_get_mapped_past_leads'));
         add_action('wp_ajax_idlm_sync_mapped_past_batch', array(__CLASS__, 'ajax_sync_mapped_past_batch'));
@@ -437,6 +438,7 @@ class IDLM_Admin {
     public static function ajax_get_audience_log_payload() { return IDLM_Admin_Logs_Renderer::ajax_get_audience_log_payload(); }
     public static function ajax_quick_edit_lead() { return IDLM_Admin_Ajax::ajax_quick_edit_lead(); }
     public static function ajax_log_presales_touch() { return IDLM_Admin_Ajax::ajax_log_presales_touch(); }
+    public static function ajax_send_back_to_presales() { return IDLM_Admin_Ajax::ajax_send_back_to_presales(); }
     public static function ajax_presales_decision() { return IDLM_Admin_Ajax::ajax_presales_decision(); }
     public static function ajax_save_activity_comment() { return IDLM_Admin_Activity_Controller::ajax_save_activity_comment(); }
     public static function ajax_edit_activity_comment() { return IDLM_Admin_Activity_Controller::ajax_edit_activity_comment(); }

@@ -26,6 +26,104 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
     const REENQUIRY_DEFAULT_QUIET_DAYS = 3;
     const PRESALES_HOLD_ERROR = 'This lead is still with pre-sales and has not been qualified. Pre-sales must qualify it before it can be assigned to anyone outside pre-sales. You can move it to another pre-sales person.';
 
+    const SEND_BACK_REASONS = array(
+        'unreachable' => 'Customer unreachable',
+        'budget_mismatch' => 'Budget does not match',
+        'wrong_details' => 'Qualification details are wrong',
+        'floor_plan_missing' => 'Floor plan missing',
+        'not_ready' => 'Customer not ready yet',
+        'other' => 'Other',
+    );
+
+    /**
+     * Sales returns a qualified lead to pre-sales. The lead becomes unqualified again, goes to the
+     * person who qualified it (or the next in the pre-sales rotation) with a call task, and returns
+     * to the same sales rep when pre-sales qualifies it again.
+     */
+    public static function send_back_to_presales($lead_id, $reason, $note) {
+        self::$last_validation_error = '';
+        return self::transaction_result(IDLM_Lead_Transaction::run(static function() use ($lead_id, $reason, $note) {
+            return self::send_back_work(absint($lead_id), sanitize_key((string) $reason), sanitize_textarea_field((string) $note));
+        }));
+    }
+
+    /** Pure check of a send-back request. Returns the error text, or '' when it may proceed. */
+    public static function send_back_error($lead, $actor_id, $actor_can_assign, $reason, $note, array $pre_sales_ids) {
+        if (!$lead) { return 'Lead not found.'; }
+        $owner = absint($lead->assigned_rep_id ?? 0);
+        $pre_sales_ids = array_map('absint', $pre_sales_ids);
+        if (!$actor_can_assign && absint($actor_id) !== $owner) { return 'Only the lead owner or a manager can send a lead back to pre-sales.'; }
+        if (in_array(absint($actor_id), $pre_sales_ids, true) && !$actor_can_assign) { return 'Pre-sales cannot send a lead back to pre-sales.'; }
+        if (!empty($lead->is_duplicate)) { return 'A duplicate lead cannot be sent back. Open the original lead.'; }
+        if (in_array((string) ($lead->stage ?? ''), array('Won', 'Lost'), true)) { return 'A Won or Lost lead cannot be sent back to pre-sales.'; }
+        if ('Qualified' !== (string) ($lead->lead_quality ?? '')) { return 'Only a qualified lead can be sent back to pre-sales.'; }
+        if ($owner && in_array($owner, $pre_sales_ids, true)) { return 'This lead is already with pre-sales.'; }
+        if (!isset(self::SEND_BACK_REASONS[$reason])) { return 'Choose why the lead is going back to pre-sales.'; }
+        if (strlen(trim((string) $note)) < 10) { return 'Add a note for pre-sales of at least 10 characters.'; }
+        return '';
+    }
+
+    /** The sales rep a sent-back lead returns to once it is qualified again, or 0. */
+    public static function send_back_return_rep($lead_id) {
+        global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Bound read of the plugin's own state events. Builder: Shashi.
+        $rep = absint(IDLM_Lead_Transaction::read($wpdb->get_var($wpdb->prepare("SELECT from_value FROM {$wpdb->prefix}idlm_lead_state_events WHERE lead_id = %d AND event_type = 'assignment' AND event_origin = 'sent_back' ORDER BY id DESC LIMIT 1", absint($lead_id)))));
+        if (!$rep) { return 0; }
+        $user = get_userdata($rep);
+        return $user && !in_array('idlm_pre_sales', (array) $user->roles, true) && IDLM_Lead_Access_Policy::is_assignable_rep($rep, 'any', IDLM_Lead_Transaction::active()) ? $rep : 0;
+    }
+
+    private static function send_back_work($lead_id, $reason, $note) {
+        global $wpdb;
+        $table_leads = $wpdb->prefix . 'idlm_leads';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Locked read of the plugin's own leads table. Builder: Shashi.
+        $lead = IDLM_Lead_Transaction::read($wpdb->get_row($wpdb->prepare("SELECT * FROM $table_leads WHERE id = %d FOR UPDATE", $lead_id)));
+        $error = self::send_back_error($lead, get_current_user_id(), IDLM_Lead_Access_Policy::can_assign(), $reason, $note, IDLM_Lead_Access_Policy::pre_sales_user_ids());
+        if ('' !== $error) { self::$last_validation_error = $error; return false; }
+
+        $preferred = absint($lead->qualified_by_user_id) ?: absint($lead->intake_owner_id);
+        $target = IDLM_Integrations::send_back_target($preferred);
+        if (!$target) { self::$last_validation_error = 'No pre-sales person is available to take this lead. Check Settings, Routing.'; return false; }
+
+        $now = current_time('mysql');
+        $data = array(
+            'assigned_rep_id' => $target, 'assigned_at' => $now, 'intake_owner_id' => $target,
+            'lead_quality' => '', 'stage' => 'Contacted', 'qualified_at' => null, 'qualified_by_user_id' => 0,
+            'handoff_status' => 'sent_back', 'handoff_at' => null, 'handoff_method' => '',
+            'handoff_exception_reason' => self::SEND_BACK_REASONS[$reason], 'updated_at' => $now,
+        );
+        $capacity = IDLM_Assignment_Capacity::validate_transition($lead, array_merge((array) $lead, $data));
+        if (is_wp_error($capacity)) { self::$last_validation_error = $capacity->get_error_message(); return false; }
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transactional write to the plugin's own leads table. Builder: Shashi.
+        IDLM_Lead_Transaction::required($wpdb->update($table_leads, $data, array('id' => $lead_id)));
+
+        $actor = get_current_user_id();
+        $label = self::SEND_BACK_REASONS[$reason];
+        if ('Contacted' !== (string) $lead->stage) {
+            IDLM_Lead_Transaction::required(self::record_reporting_event($lead_id, 'stage_change', $lead->stage, 'Contacted', $label, 'sent_back', $actor, $now));
+        }
+        IDLM_Lead_Transaction::required(self::record_reporting_event($lead_id, 'assignment', $lead->assigned_rep_id, $target, $label, 'sent_back', $actor, $now));
+
+        // The sales rep's open work on this lead ends here; pre-sales gets one call task.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Transactional write to the plugin's own tasks table. Builder: Shashi.
+        IDLM_Lead_Transaction::required($wpdb->query($wpdb->prepare("UPDATE {$wpdb->prefix}idlm_tasks SET status = 'completed', completed_at = %s, updated_at = %s WHERE lead_id = %d AND status = 'pending'", $now, $now, $lead_id)));
+        $from = get_userdata(absint($lead->assigned_rep_id));
+        $from_name = $from ? $from->display_name : 'Sales';
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Transactional insert into the plugin's own tasks table. Builder: Shashi.
+        IDLM_Lead_Transaction::required(1 === $wpdb->insert($wpdb->prefix . 'idlm_tasks', array(
+            'lead_id' => $lead_id, 'assigned_rep_id' => $target, 'title' => sprintf('Sent back by %s: %s', $from_name, $label),
+            'task_type' => 'Call', 'priority' => 'High', 'status' => 'pending',
+            'due_date' => $now, 'created_by' => $actor, 'created_at' => $now, 'updated_at' => $now,
+        )) ? true : false);
+        $to = get_userdata($target);
+        $by = get_userdata($actor);
+        IDLM_Lead_Transaction::required(self::log_activity($lead_id, 'sent_back', sprintf(
+            'Sent back to pre-sales (%s) from %s by %s. Reason: %s. Note: %s',
+            $to ? $to->display_name : 'pre-sales', $from_name, $by ? $by->display_name : 'a manager', $label, $note
+        ), $actor));
+        return true;
+    }
+
     /**
      * An unqualified lead owned by pre-sales may move only to another pre-sales person.
      * Pure check: returns the error text, or '' when the owner change is allowed.
@@ -937,14 +1035,16 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
             $data['qualified_at'] = current_time('mysql');
             $data['qualified_by_user_id'] = get_current_user_id();
             $assigned_user = !empty($old_lead->assigned_rep_id) ? get_userdata(absint($old_lead->assigned_rep_id)) : false;
-            $requested_rep = $assigned_user && in_array('idlm_pre_sales', (array) $assigned_user->roles, true) && !isset($data['assigned_rep_id']) ? IDLM_Contact_Identity::requested_rep($lead_id) : 0;
+            $from_pre_sales = $assigned_user && in_array('idlm_pre_sales', (array) $assigned_user->roles, true) && !isset($data['assigned_rep_id']);
+            $sent_back_rep = $from_pre_sales && 'sent_back' === (string) $old_lead->handoff_status ? self::send_back_return_rep($lead_id) : 0;
+            $requested_rep = $sent_back_rep ?: ($from_pre_sales ? IDLM_Contact_Identity::requested_rep($lead_id) : 0);
             if ($requested_rep) {
                 // A rep asked pre-sales to call a lead they added: it goes back to that rep, not into routing.
                 $data['assigned_rep_id'] = $requested_rep;
                 $data['assigned_at'] = current_time('mysql');
                 $data['handoff_status'] = 'manually_assigned';
                 $data['handoff_at'] = current_time('mysql');
-                $data['handoff_method'] = 'returned_to_requesting_rep';
+                $data['handoff_method'] = $sent_back_rep ? 'returned_after_send_back' : 'returned_to_requesting_rep';
                 $data['handoff_exception_reason'] = '';
                 $data['intake_owner_id'] = absint($old_lead->assigned_rep_id);
             } elseif ($assigned_user && in_array('idlm_pre_sales', (array) $assigned_user->roles, true)) {

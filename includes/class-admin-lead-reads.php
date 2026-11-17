@@ -271,6 +271,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                         <span class="idlm-drawer-status-context-value" title="<?php echo esc_attr(ucwords(str_replace('_', ' ', $lead->disqualification_reason))); ?>"><?php echo esc_html(ucwords(str_replace('_', ' ', $lead->disqualification_reason))); ?></span>
                     </span>
                     <?php endif; ?>
+                    <?php echo IDLM_Admin_Collection_Reads::send_back_drawer_html($lead); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped parts. ?>
                     <?php if ('exception' === $lead->handoff_status): ?>
                     <span class="idlm-drawer-status-context-item">
                         <span class="idlm-drawer-status-context-label">Routing exception:</span>

@@ -389,6 +389,17 @@ final class IDLM_Test_WPDB {
             $this->tables[$matches[1]] = array_values(array_filter($this->tables[$matches[1]], static fn(array $row): bool => !in_array((int) ($row['id'] ?? 0), $ids, true)));
             return $before - count($this->tables[$matches[1]]);
         }
+        if (preg_match("/^UPDATE (wp_idlm_tasks) SET status = 'completed', completed_at = '([^']+)', updated_at = '[^']+' WHERE lead_id = ([0-9]+) AND status = 'pending'$/i", $normalized, $matches)) {
+            $updated = 0;
+            foreach ($this->tables[$matches[1]] ?? array() as $index => $row) {
+                if ((int) ($row['lead_id'] ?? 0) === (int) $matches[3] && 'pending' === ($row['status'] ?? '')) {
+                    $this->tables[$matches[1]][$index]['status'] = 'completed';
+                    $this->tables[$matches[1]][$index]['completed_at'] = $matches[2];
+                    $updated++;
+                }
+            }
+            return $updated;
+        }
         if (preg_match("/UPDATE (wp_idlm_tasks).*WHERE lead_id = ([0-9]+).*task_type = 'Qualification'/i", $normalized, $matches)) {
             $lead_id = (int) $matches[2];
             foreach ($this->tables[$matches[1]] as $index => $row) {
@@ -463,6 +474,13 @@ final class IDLM_Test_WPDB {
         if (preg_match('/SELECT MAX\(received_at\) FROM wp_idlm_lead_touchpoints WHERE lead_id = ([0-9]+)/', $query, $match)) {
             $times = array_filter(array_map(static fn($row) => (int) ($row['lead_id'] ?? 0) === (int) $match[1] ? (string) ($row['received_at'] ?? '') : '', $this->tables['wp_idlm_lead_touchpoints'] ?? array()));
             return $times ? max($times) : null;
+        }
+        if (preg_match("/SELECT from_value FROM wp_idlm_lead_state_events WHERE lead_id = ([0-9]+) AND event_type = 'assignment' AND event_origin = 'sent_back' ORDER BY id DESC LIMIT 1/", $query, $match)) {
+            $value = null;
+            foreach ($this->tables['wp_idlm_lead_state_events'] ?? array() as $row) {
+                if ((int) ($row['lead_id'] ?? 0) === (int) $match[1] && 'assignment' === ($row['event_type'] ?? '') && 'sent_back' === ($row['event_origin'] ?? '')) { $value = (string) $row['from_value']; }
+            }
+            return $value;
         }
         if (preg_match("/SELECT id FROM wp_idlm_tasks WHERE lead_id = ([0-9]+) AND status = 'pending' AND title = '([^']*)' LIMIT 1/", $query, $match)) {
             foreach ($this->tables['wp_idlm_tasks'] ?? array() as $row) {

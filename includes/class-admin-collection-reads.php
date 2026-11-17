@@ -13,6 +13,25 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
         return '<span class="idlm-row-handoff-badge idlm-row-reenquiry-badge" title="' . esc_attr($title) . '">Re-enquired' . ($ago ? ' · ' . esc_html($ago) : '') . '</span>';
     }
 
+    /** Amber marker on a lead sales sent back, until pre-sales qualifies or closes it. */
+    public static function sent_back_badge($lead) {
+        if ('sent_back' !== (string) ($lead->handoff_status ?? '') || '' !== (string) ($lead->lead_quality ?? '') || in_array((string) ($lead->stage ?? ''), array('Won', 'Lost'), true)) { return ''; }
+        $reason = trim((string) ($lead->handoff_exception_reason ?? ''));
+        return '<span class="idlm-row-handoff-badge idlm-row-sent-back-badge" title="' . esc_attr('Sent back by sales' . ('' !== $reason ? ': ' . $reason : '')) . '">Sent back</span>';
+    }
+
+    /** Drawer context: why sales sent the lead back, and the send-back button when this user may use it. */
+    public static function send_back_drawer_html($lead) {
+        $html = '';
+        if ('sent_back' === (string) $lead->handoff_status && '' === (string) $lead->lead_quality) {
+            $html .= '<span class="idlm-drawer-status-context-item"><span class="idlm-drawer-status-context-label">Sent back by sales:</span> <span class="idlm-drawer-status-context-value" title="' . esc_attr($lead->handoff_exception_reason) . '">' . esc_html($lead->handoff_exception_reason) . '</span></span>';
+        }
+        if ('' === IDLM_Lead_Lifecycle_Service::send_back_error($lead, get_current_user_id(), IDLM_Lead_Access_Policy::can_assign(), 'other', str_repeat('x', 10), IDLM_Lead_Access_Policy::pre_sales_user_ids())) {
+            $html .= '<span class="idlm-drawer-status-context-item"><button type="button" class="idlm-btn idlm-btn-secondary idlm-send-back-open" data-lead-id="' . esc_attr($lead->id) . '" data-lead-name="' . esc_attr(trim($lead->first_name . ' ' . $lead->last_name)) . '">Send back to pre-sales</button></span>';
+        }
+        return $html;
+    }
+
     private static function mobile_place_text($location) {
         $location = trim((string) $location);
         return '' === trim($location, " \t\n\r\0\x0B,.;:-/|") ? '' : $location;
@@ -433,6 +452,8 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
             'fields'   => array('ID', 'display_name')
         ));
         $active_rep_ids = get_option('idlm_active_assignment_reps', array());
+        // Unqualified leads may also go to pre-sales, so the owner list offers pre-sales people for them.
+        $pre_sales_ids = IDLM_Lead_Access_Policy::pre_sales_user_ids();
         $whatsapp_read_ids = self::get_whatsapp_read_activity_ids();
         $outreach_targets = $is_pre_sales ? IDLM_DB::get_presales_outreach_targets() : array();
         ob_start();
@@ -526,7 +547,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                             <div class="idlm-lead-row-headline">
                                 <button type="button" class="idlm-lead-row-open" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)" title="<?php echo esc_attr($name); ?>"><strong><?php echo esc_html($name); ?></strong><span class="screen-reader-text"> — open lead details</span></button>
                                 <?php echo wp_kses_post($dup_badge); ?>
-                                <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span><?php endif; ?><?php echo wp_kses_post(self::reenquiry_badge($l)); ?>
+                                <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span><?php endif; ?><?php echo wp_kses_post(self::reenquiry_badge($l)); ?><?php echo wp_kses_post(self::sent_back_badge($l)); ?>
                             </div>
                             <div class="idlm-lead-row-contact"><a class="idlm-lead-row-phone" href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', (string) $l->phone)); ?>"><?php echo esc_html($l->phone); ?></a><?php if ($l->project_name): ?><span class="idlm-lead-row-email" title="<?php echo esc_attr($l->project_name); ?>"><?php echo esc_html($l->project_name); ?></span><?php endif; ?></div>
                             <button type="button" class="idlm-lead-row-expand" aria-expanded="false" aria-controls="<?php echo esc_attr($responsive_row_id); ?>"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><span class="idlm-lead-row-expand-label">Show details</span></button>
@@ -571,7 +592,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                         <div class="idlm-lead-row-headline">
                             <button type="button" class="idlm-lead-row-open" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)" title="<?php echo esc_attr($name); ?>"><strong><?php echo esc_html($name); ?></strong><span class="screen-reader-text"> — open lead details</span></button>
                             <?php echo wp_kses_post($dup_badge); ?>
-                            <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span><?php endif; ?><?php echo wp_kses_post(self::reenquiry_badge($l)); ?>
+                            <?php if ($has_unread_whatsapp): ?><span class="idlm-whatsapp-row-badge" data-lead-id="<?php echo esc_attr($l->id); ?>" title="This lead sent a new WhatsApp message">New WhatsApp</span><?php endif; ?><?php echo wp_kses_post(self::reenquiry_badge($l)); ?><?php echo wp_kses_post(self::sent_back_badge($l)); ?>
                             <?php if ($awaiting_handoff): ?><span class="idlm-row-handoff-badge <?php echo $handoff_hours >= max(1, intval(get_option('idlm_qualified_fallback_hours', '4'))) ? 'is-overdue' : ''; ?>" title="<?php echo esc_attr($handoff_title); ?>">Awaiting <?php echo esc_html($handoff_hours < 1 ? '<1h' : floor($handoff_hours) . 'h'); ?><span class="screen-reader-text"> — <?php echo esc_html($handoff_title); ?></span></span><?php endif; ?>
                             <?php if ($routing_exception): ?><span class="idlm-row-handoff-badge is-overdue" title="<?php echo esc_attr(isset($l->handoff_exception_reason) ? $l->handoff_exception_reason : 'Routing exception'); ?>">Routing exception</span><?php endif; ?>
                         </div>
@@ -598,7 +619,8 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                             <select class="idlm-table-select idlm-quick-edit" data-field="assigned_rep_id" data-id="<?php echo esc_attr($l->id); ?>">
                                 <option value="0">Unassigned</option>
                                 <?php foreach ($reps as $rep): 
-                                    if (!in_array($rep->ID, $active_rep_ids) && $l->assigned_rep_id != $rep->ID) {
+                                    $offer_pre_sales = 'Qualified' !== $l->lead_quality && in_array((int) $rep->ID, $pre_sales_ids, true);
+                                    if (!in_array($rep->ID, $active_rep_ids) && $l->assigned_rep_id != $rep->ID && !$offer_pre_sales) {
                                         continue;
                                     }
                                 ?>

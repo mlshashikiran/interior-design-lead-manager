@@ -37,7 +37,7 @@ final class IDLM_State_Registry {
         return array(
             'not_ready' => 'not_ready', 'awaiting_manager' => 'awaiting_manager',
             'manually_assigned' => 'manually_assigned', 'auto_assigned' => 'auto_assigned',
-            'exception' => 'exception',
+            'exception' => 'exception', 'sent_back' => 'sent_back',
         );
     }
 

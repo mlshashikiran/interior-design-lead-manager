@@ -776,6 +776,15 @@ class IDLM_Integrations {
         return self::assign_lead_atomically($lead_id, 0, $pre_sales, sprintf('Lead added by %s and sent to %s (pre-sales) to collect qualification details. It returns to %s once qualified.', $requested_by, $person ? $person->display_name : 'pre-sales', $requested_by), false, 'intake');
     }
 
+    /** Who takes a lead sales sent back: the preferred pre-sales person if still eligible, else the rotation. */
+    public static function send_back_target($preferred_id) {
+        $preferred_id = absint($preferred_id);
+        if ($preferred_id && IDLM_Lead_Access_Policy::is_assignable_rep($preferred_id, 'intake', IDLM_Lead_Transaction::active())) {
+            return $preferred_id;
+        }
+        return self::select_round_robin_rep(self::get_pre_sales_pool(), 'idlm_last_pre_sales_rep_index');
+    }
+
     /** Is anyone in pre-sales available for intake right now? */
     public static function pre_sales_available() {
         return (bool) self::get_pre_sales_pool();

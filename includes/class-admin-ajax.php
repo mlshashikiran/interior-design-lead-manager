@@ -140,6 +140,22 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         return sprintf('%s failed for %d lead(s). %s', $label, count($failed), implode(' ', $details));
     }
 
+    /** Sales or a manager returns a qualified lead to pre-sales with a reason. */
+    public static function ajax_send_back_to_presales() {
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        IDLM_Admin::require_ajax_access('rep');
+        $lead_id = isset($_POST['lead_id']) ? absint($_POST['lead_id']) : 0;
+        $reason = isset($_POST['reason']) ? sanitize_key(wp_unslash($_POST['reason'])) : '';
+        $note = isset($_POST['note']) ? sanitize_textarea_field(wp_unslash($_POST['note'])) : '';
+        if (!$lead_id || !self::current_user_can_access_lead($lead_id)) {
+            wp_send_json_error(array('message' => 'You can send back only leads you can open.'));
+        }
+        if (!IDLM_Lead_Lifecycle_Service::send_back_to_presales($lead_id, $reason, $note)) {
+            wp_send_json_error(array('message' => IDLM_DB::get_last_validation_error() ?: 'The lead could not be sent back. Nothing was changed.'));
+        }
+        wp_send_json_success(array('message' => 'Sent back to pre-sales.'));
+    }
+
     /** Log auditable pre-sales outreach or a policy-controlled early close. */
     public static function ajax_log_presales_touch() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
