@@ -640,9 +640,11 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                         $mobile_meta[] = empty($l->floor_plan_received) ? array('Plan pending', 'is-warning') : array('Plan received', '');
                     }
                     if (intval($l->overdue_tasks_count) > 0) {
-                        $mobile_meta[] = array(sprintf(_n('%d task overdue', '%d tasks overdue', intval($l->overdue_tasks_count)), intval($l->overdue_tasks_count)), 'is-danger');
+                        /* translators: %d: number of overdue tasks on the lead. */
+                        $mobile_meta[] = array(sprintf(_n('%d task overdue', '%d tasks overdue', intval($l->overdue_tasks_count), 'interior-design-lead-manager'), intval($l->overdue_tasks_count)), 'is-danger');
                     } elseif (intval($l->pending_tasks_count) > 0) {
-                        $mobile_meta[] = array(sprintf(_n('%d task', '%d tasks', intval($l->pending_tasks_count)), intval($l->pending_tasks_count)), '');
+                        /* translators: %d: number of open tasks on the lead. */
+                        $mobile_meta[] = array(sprintf(_n('%d task', '%d tasks', intval($l->pending_tasks_count), 'interior-design-lead-manager'), intval($l->pending_tasks_count)), '');
                     }
                     if (!empty($l->created_at)) {
                         $mobile_meta[] = array(max(0, (int) floor((current_time('timestamp') - strtotime($l->created_at)) / DAY_IN_SECONDS)) . 'd old', '');

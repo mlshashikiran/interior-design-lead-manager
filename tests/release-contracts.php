@@ -345,3 +345,23 @@ idlm_test('T22-A-REL006 repeated ZIP builds ignore source times permissions and 
         rmdir($directory);
     }
 });
+
+idlm_test('Plugin Check i18n: translation calls name the text domain and explain placeholders', static function(): void {
+    // The release gate fails on any Plugin Check finding; 1.105.16-1.105.19 failed on two bare _n() calls.
+    $root = dirname(__DIR__);
+    $files = array_merge(glob($root . '/interior-design-lead-manager.php') ?: array(), glob($root . '/includes/*.php') ?: array(), glob($root . '/templates/*/*.php') ?: array(), glob($root . '/templates/*/*/*.php') ?: array());
+    $calls = 0;
+    foreach ($files as $file) {
+        $lines = file($file);
+        foreach ($lines as $index => $line) {
+            if (!preg_match('/(?<![\w>:$])(?:__|_e|_x|_n|_nx|esc_html__|esc_html_e|esc_attr__|esc_attr_e)\(/', $line)) { continue; }
+            $calls++;
+            $where = basename($file) . ':' . ($index + 1);
+            assert_contains("'interior-design-lead-manager'", $line, $where . ' must pass the plugin text domain.');
+            if (preg_match('/%(?:\d+\$)?[sd]/', $line)) {
+                assert_contains('translators:', (string) ($lines[$index - 1] ?? ''), $where . ' needs a translators: comment on the line above.');
+            }
+        }
+    }
+    assert_true($calls >= 2, 'Expected to find the lead-card task count translations.');
+});
