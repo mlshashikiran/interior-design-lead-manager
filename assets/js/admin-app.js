@@ -3088,6 +3088,51 @@ jQuery(document).ready(function($) {
         }
     });
 
+    // Send a qualified lead back to pre-sales with a reason and a note.
+    $(document).on('click', '.idlm-send-back-open', function() {
+        var $btn = $(this);
+        $('#idlm-send-back-lead-id').val($btn.data('lead-id'));
+        $('.idlm-send-back-lead-name').text($btn.data('lead-name') || 'This lead');
+        $('#idlm-send-back-reason').val('');
+        $('#idlm-send-back-note').val('');
+        window.IDLMDialog.open('#idlm-send-back-modal', {trigger: this});
+    });
+
+    $(document).on('click', '#idlm-send-back-confirm', function() {
+        var $confirm = $(this);
+        var leadId = $('#idlm-send-back-lead-id').val();
+        var reason = $('#idlm-send-back-reason').val();
+        var note = $.trim($('#idlm-send-back-note').val());
+        window.IDLMDialog.clearFieldError($('#idlm-send-back-reason').get(0));
+        window.IDLMDialog.clearFieldError($('#idlm-send-back-note').get(0));
+        if (!reason) {
+            window.IDLMDialog.setFieldError($('#idlm-send-back-reason').get(0), 'Choose a reason.');
+            return;
+        }
+        if (note.length < 10) {
+            window.IDLMDialog.setFieldError($('#idlm-send-back-note').get(0), 'Add a note of at least 10 characters.');
+            return;
+        }
+        $confirm.prop('disabled', true);
+        $.post(idlm_vars.ajax_url, {
+            action: 'idlm_send_back_to_presales', nonce: idlm_vars.nonce,
+            lead_id: leadId, reason: reason, note: note
+        }).done(function(response) {
+            if (response && response.success) {
+                window.IDLMDialog.close('#idlm-send-back-modal', {reason: 'submitted'});
+                showToast(response.data.message || 'Sent back to pre-sales.', 'success');
+                if ($('#idlm-leads-table').length) { loadLeadsTable(currentPage); }
+                openLeadDrawer(leadId);
+            } else {
+                showToast((response && response.data && response.data.message) || 'The lead could not be sent back.', 'error');
+            }
+        }).fail(function() {
+            showToast('Server error. The lead was not sent back; try again.', 'error');
+        }).always(function() {
+            $confirm.prop('disabled', false);
+        });
+    });
+
     // Expose table reloading and current page for global scope access
     window.idlmLoadLeadsTable = loadLeadsTable;
     window.idlmCurrentPage = function() { return currentPage; };

@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.107.0] - 2026-11-17
+
+### Added
+
+- "Send back to pre-sales" button in the lead drawer, for a qualified lead that is not Won or Lost. The sales rep who owns the lead or a manager can use it; pre-sales cannot. Builder: Shashi.
+- A reason (customer unreachable, budget does not match, qualification details are wrong, floor plan missing, customer not ready yet, other) and a note of at least 10 characters are required.
+- The lead goes to the pre-sales person who qualified it, or the next person in the pre-sales rotation if they are no longer available. It becomes unqualified, its stage moves to Contacted, and the details pre-sales collected are kept.
+- The rep's open tasks on the lead close. Pre-sales gets one high-priority call task due now, titled "Sent back by {rep}: {reason}".
+- The lead shows an amber "Sent back" badge in the lead list, and the drawer shows the reason, until pre-sales qualifies or closes it. The pre-sales hold from 1.106.1 keeps it in pre-sales until then.
+- When pre-sales qualifies it again, it goes straight back to the same sales rep instead of through routing. Pre-sales' open tasks on the lead close, and the rep gets a high-priority "Qualified again by pre-sales: call the customer" task.
+- The owner list in the lead table now offers pre-sales people for leads that are not qualified.
+
+### Changed
+
+- A sent-back lead no longer counts as qualified. It drops out of qualified totals and the qualifier's count until it is qualified again, when it counts once at the new date. The Meta "Qualified" event already sent is not withdrawn and is not sent a second time.
+
 ## [1.106.1] - 2026-11-17
 
 ### Changed

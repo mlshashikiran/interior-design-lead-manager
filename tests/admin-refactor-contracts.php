@@ -45,7 +45,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
         'render_dashboard_page', 'render_users_access_page', 'render_leads_list_page', 'render_common_overlays', 'render_kanban_page',
         'render_capi_logs_page', 'render_audience_sync_logs_page', 'render_settings_page',
         'ajax_get_lead_details', 'ajax_get_lead_whatsapp', 'ajax_mark_whatsapp_messages_read', 'ajax_get_lead_activity', 'ajax_get_capi_log_payload', 'ajax_get_audience_log_payload', 'ajax_quick_edit_lead',
-        'ajax_log_presales_touch', 'ajax_presales_decision', 'ajax_save_activity_comment',
+        'ajax_log_presales_touch', 'ajax_send_back_to_presales', 'ajax_presales_decision', 'ajax_save_activity_comment',
         'ajax_edit_activity_comment', 'ajax_delete_activity_comment', 'ajax_export_google_conversions',
         'ajax_export_leads', 'ajax_add_lead_manual', 'ajax_trigger_manual_audience_sync',
         'ajax_test_api_connection', 'ajax_send_meta_test_event', 'ajax_retry_capi_events', 'ajax_log_js_error',
@@ -65,7 +65,7 @@ idlm_test('admin facade preserves every public compatibility method and its size
     })));
 
     assert_same($expected, $actual, 'The IDLM_Admin public compatibility surface changed.');
-    assert_same(86, count($actual));
+    assert_same(87, count($actual));
     assert_true(count(file(dirname(__DIR__) . '/includes/class-admin.php')) <= 3240, 'The Phase 2 admin facade exceeded its 3,240-line size contract.');
 });
 
@@ -306,7 +306,7 @@ idlm_test('admin hooks, AJAX actions, shortcodes, and menu callbacks remain regi
         'wp_ajax_idlm_test_api_connection', 'wp_ajax_idlm_send_meta_test_event', 'wp_ajax_idlm_retry_capi_events',
         'wp_ajax_idlm_log_js_error', 'wp_ajax_idlm_clear_telemetry_logs',
         'wp_ajax_idlm_download_diagnostic_report', 'wp_ajax_idlm_save_routing_settings',
-        'wp_ajax_idlm_run_fallback_now', 'wp_ajax_idlm_log_presales_touch',
+        'wp_ajax_idlm_run_fallback_now', 'wp_ajax_idlm_log_presales_touch', 'wp_ajax_idlm_send_back_to_presales',
         'wp_ajax_idlm_presales_decision', 'wp_ajax_idlm_get_mapped_past_leads',
         'wp_ajax_idlm_sync_mapped_past_batch', 'wp_ajax_idlm_get_lead_tasks',
         'wp_ajax_idlm_add_lead_task', 'wp_ajax_idlm_toggle_task_status',
