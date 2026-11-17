@@ -621,6 +621,9 @@ idlm_test('Phone lead cards keep 44px reach, one-tap Call and WhatsApp, and a se
     assert_contains('private static function mobile_place_text($location)', $reads);
     assert_contains('.idlm-responsive-lead-row .idlm-lead-row-phone {', $css);
     assert_contains('pointer-events: none;', $css);
+    // Pre-sales cards drop the side labels and share one row of queue buttons.
+    assert_contains('.idlm-responsive-lead-row.idlm-presales-queue-row > td:is(.idlm-col-quality, .idlm-col-actions) {', $css);
+    assert_contains('grid-template-columns: none;', $css);
     // Phones hide the header checkbox, so the result line mirrors it and the script keeps both in sync.
     assert_contains('id="idlm-select-all-mobile"', $template);
     assert_contains("'#idlm-select-all, #idlm-select-all-mobile'", $script);

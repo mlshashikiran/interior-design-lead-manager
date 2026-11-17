@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.105.18 — Pre-sales phone cards and long locations (2026-11-17)
+
+Builder: Shashi. Checked as a sales executive and the pre-sales user by rendering `IDLM_Admin::render_leads_list_page()` and `ajax_get_leads_table()` server-side with `wp_set_current_user()` (no session created), then loading the markup at 375px with the live stylesheets. Sales cards were correct. Pre-sales cards kept the 88px label column on `td.idlm-col-quality` and `td.idlm-col-actions`, wrapping the next step under its label (320px cards). At 782px those two cells are now flex rows with no `::before` label; `.idlm-queue-actions` drops the two-column template (`grid-template-columns: none`, auto columns) and `.idlm-btn-primary` loses its full-row span, so the buttons share one row (cards ~249px). `.idlm-lead-row-contact` is a no-wrap flex line and `.idlm-lead-row-place` ellipsises. CSS only, phone breakpoint only. No schema change.
+
 ## 1.105.17 — Phone card fixes from the live check (2026-11-17)
 
 Builder: Shashi. Checked on production at 375px after 1.105.16. Both `render_mobile_quick_cell()` callers add `array($l->source ?: 'Unknown source', 'is-source')` to the summary line (second item on standard rows, first on pre-sales rows). `mobile_place_text()` returns '' when the location is only whitespace or `,.;:-/|`, so `.idlm-lead-row-place` is skipped. At 782px `.idlm-lead-row-phone` on every card is inline muted text with `pointer-events: none`, so a tap falls through to the identity cell's drawer handler; keyboard access to the `tel:` link is unchanged (both stylesheets). Tests: the phone-card contract gains source, place and phone assertions. No schema change.

@@ -2837,8 +2837,18 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         pointer-events: none;
     }
 
+    /* Long locations end in an ellipsis inside the card instead of running past its edge. */
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row .idlm-lead-row-contact {
+        display: flex;
+        min-width: 0;
+        white-space: nowrap;
+    }
+
     body.idlm-crm-design #idlm-leads-table .idlm-lead-row-place {
-        display: inline;
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     body.idlm-crm-design #idlm-leads-table .idlm-lead-row-place::before {
@@ -2962,8 +2972,35 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         gap: var(--idlm-space-2);
     }
 
-    body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row > td:is(.idlm-col-quality, .idlm-col-actions) {
+    /* Pre-sales cards: follow-up status and next step on one line, then the queue buttons at full
+       width. Both drop their side labels; the chip and button text already say what they are. */
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row.idlm-presales-queue-row > td:is(.idlm-col-quality, .idlm-col-actions) {
+        display: flex;
+        flex-wrap: wrap;
         grid-column: 1 / -1;
+        align-items: center;
+        gap: var(--idlm-space-1) var(--idlm-space-2);
+        padding: var(--idlm-space-2) var(--idlm-space-3) 0;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row.idlm-presales-queue-row > td:is(.idlm-col-quality, .idlm-col-actions)::before {
+        content: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-lead-next-action {
+        color: var(--idlm-text);
+        font-size: 0.8125rem;
+        font-weight: 500;
+    }
+
+    /* One row of equal buttons: View alone fills it; Log call, Log WA and Decide share it. */
+    body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row > td.idlm-col-actions .idlm-queue-actions {
+        flex: 1 1 100%;
+        grid-template-columns: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row .idlm-queue-actions .idlm-btn-primary {
+        grid-column: auto;
     }
 
     body.idlm-crm-design #idlm-leads-table .idlm-queue-actions .idlm-btn {

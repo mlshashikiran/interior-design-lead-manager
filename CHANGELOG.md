@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.105.18] - 2026-11-17
+
+### Fixed
+
+- Pre-sales lead cards on phones are shorter and easier to read: the follow-up status and the next step sit on one line, and Log call, Log WA and Decide (or View) fill one row of equal buttons. Builder: Shashi.
+- On phones, a long location after the phone number ends in "…" inside the card instead of running past its edge.
+
 ## [1.105.17] - 2026-11-17
 
 ### Fixed
