@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## Unreleased — Release gate: text domain on phone-card task counts (2026-11-17)
+
+Builder: Shashi. The CI release-artifact gate ("Check final ZIP with pinned official Plugin Check") failed on every commit from 1.105.16 to 1.105.19 while all 10 test jobs passed. Reproduced locally with the same WordPress 6.6, WP-CLI 2.12.0 and Plugin Check 2.1.0 (fd34f85: 0 findings; ba4db0a: 4 errors). The two `_n()` calls added for the phone-card task counts in `class-admin-collection-reads.php` had no text domain (`WordPress.WP.I18n.MissingArgDomain`) and no `translators:` comment (`MissingTranslatorsComment`). Both now pass `'interior-design-lead-manager'` with a translators comment. A release contract test checks every translation call in the bootstrap, `includes/` and `templates/`. Output is unchanged, so production 1.105.19 needs no redeploy.
+
 ## 1.105.19 — Meta property type normalisation (2026-11-17)
 
 Builder: Shashi. Production Meta leads arrive through `/webhook?platform=meta` with `property_type` set to the instant-form answer ("Villa/Duplex/Penthouse", "Apartment/Flat", "independent_house"). `IDLM_Webhook_Intake::normalize_property_type()` matched only exact single words, so 602 leads stored raw values. The drawer `<select>` offers only Apartment/Villa/Independent House/Commercial, so saving the drawer posted '' and cleared 67 of them (activity log "changed from 'Villa/duplex/penthouse' to ''"). The normaliser now treats `_`/`-` as spaces, splits combined labels on `/ , | & or`, then tries single words, and maps duplex/penthouse/triplex to Villa; unmatched values keep the `ucfirst()` fallback. `IDLM_Lead_Connector::map_meta()` applies the same normaliser on the direct connector path. The drawer renders a non-standard current value as a selected extra option. Existing rows are unchanged (no backfill). Test: `CONNECTOR Meta property type answers save as CRM project types on both Meta intake paths`. No schema change.
