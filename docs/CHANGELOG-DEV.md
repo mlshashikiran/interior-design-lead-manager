@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.107.2 — Asset URLs change with every release (2026-11-17)
+
+Builder: Shashi. Found while verifying 1.107.1 on production: every asset loaded as `?ver=946684800`. `IDLM_Admin_Assets::asset_version()` returned `filemtime()` only, and the deterministic release ZIP (REL-006) stamps all entries with epoch 946684800, which `ZipArchive::extractTo()` keeps. Asset URLs therefore never changed between releases, and browsers and LiteSpeed kept old CSS and JS; the 1.107.0 send-back JavaScript was affected too. The version is now `IDLM_VERSION . '.' . filemtime()`, so releases change it and local edits still bust it. `STREAMLINE every plugin asset version…` asserts the new form. Production 1.107.1 was mitigated by touching its 32 CSS/JS files and purging LiteSpeed. No schema change.
+
 ## 1.107.1 — Lead table dropdown border at rest (2026-11-17)
 
 Builder: Shashi. Reported on production: inline selects in `#idlm-leads-table` (desktop, `min-width: 783px` block in `crm-design-leads.css`) rested on `--idlm-border` (#e4e0d8, about 1.3:1 on white) and only reached `--idlm-border-strong` on row hover or focus, against STD-CRM-6. Rest is now `--idlm-border-strong`; hover, focus and focus-within use `--idlm-control-line`, the token text controls already use. Tokens only, no new colours. Previewed on the live lead table by injecting the rule into one browser tab.
