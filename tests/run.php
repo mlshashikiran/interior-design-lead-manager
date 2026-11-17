@@ -172,7 +172,7 @@ idlm_test('lead table keeps offset compatibility and adds bounded default keyset
 
     assert_contains("isset(\$_POST['page'])", $ajax_source);
     assert_contains("'pagination_mode' => \$use_cursor_query ? 'cursor' : 'offset'", $ajax_source);
-    assert_contains('COALESCE(l.assigned_at, l.created_at) < %s', $ajax_source);
+    assert_contains('COALESCE(l.reenquiry_at, l.assigned_at, l.created_at) < %s', $ajax_source);
     assert_contains("\$pagination_limit_sql = \$use_cursor_query ? 'LIMIT %d' : 'LIMIT %d OFFSET %d'", $ajax_source);
     assert_contains('IDLM_Cursor_Pagination::decode', $ajax_source);
     assert_contains('leadsPageCursors[currentPage + 1] = response.data.next_cursor', $client_source);
@@ -1828,6 +1828,7 @@ require_once __DIR__ . '/quotation-document-contracts.php';
 require_once __DIR__ . '/lead-payment-contracts.php';
 require_once __DIR__ . '/design-handoff-contracts.php';
 require_once __DIR__ . '/manual-lead-contracts.php';
+require_once __DIR__ . '/reenquiry-contracts.php';
 require_once __DIR__ . '/streamline-contracts.php';
 require_once __DIR__ . '/presales-leads-contracts.php';
 require_once __DIR__ . '/quotation-paper-contracts.php';

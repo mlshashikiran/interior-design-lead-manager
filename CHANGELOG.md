@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.106.0] - 2026-11-17
+
+### Added
+
+- Returning customers are now visible to reps. When a lead already in the CRM submits a website, Meta, Google, LinkedIn or walk-in form again after 3 days without one, the lead shows an amber "Re-enquired" badge, moves to the top of the lead list, and its owner gets a high-priority "Customer enquired again: call back" task due now. Builder: Shashi.
+- A Meta form followed by the website or estimation form within those 3 days is treated as one enquiry: nothing is flagged.
+- A Won, Lost or Unqualified lead that submits again is always flagged and stays in the active list until handled. Its stage is not changed; the rep decides whether to reopen it.
+- The badge clears, and the lead returns to its usual place, when the rep logs a call outcome, changes the stage or completes the call-back task.
+- New "Customer enquired again" option in the lead list's follow-up filter, and a "Re-enquiry after (days)" setting (1–90, default 3) in Settings, Routing.
+- CSV imports, manual adds and WhatsApp chats never count as a re-enquiry.
+
 ## [1.105.19] - 2026-11-17
 
 ### Fixed

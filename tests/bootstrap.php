@@ -11,7 +11,7 @@ define('ABSPATH', __DIR__ . '/support/wp/');
 define('IDLM_TESTING', true);
 define('DB_NAME', 'idlm_test_unit');
 define('IDLM_VERSION', '1.101.75');
-define('IDLM_DB_VERSION', '1.3.18');
+define('IDLM_DB_VERSION', '1.3.19');
 define('IDLM_PATH', dirname(__DIR__) . '/');
 define('IDLM_URL', 'https://example.test/wp-content/plugins/interior-design-lead-manager/');
 define('ARRAY_A', 'ARRAY_A');
@@ -460,6 +460,16 @@ final class IDLM_Test_WPDB {
 
     public function get_var(string $query) {
         $this->last_error = '';
+        if (preg_match('/SELECT MAX\(received_at\) FROM wp_idlm_lead_touchpoints WHERE lead_id = ([0-9]+)/', $query, $match)) {
+            $times = array_filter(array_map(static fn($row) => (int) ($row['lead_id'] ?? 0) === (int) $match[1] ? (string) ($row['received_at'] ?? '') : '', $this->tables['wp_idlm_lead_touchpoints'] ?? array()));
+            return $times ? max($times) : null;
+        }
+        if (preg_match("/SELECT id FROM wp_idlm_tasks WHERE lead_id = ([0-9]+) AND status = 'pending' AND title = '([^']*)' LIMIT 1/", $query, $match)) {
+            foreach ($this->tables['wp_idlm_tasks'] ?? array() as $row) {
+                if ((int) ($row['lead_id'] ?? 0) === (int) $match[1] && 'pending' === ($row['status'] ?? '') && $match[2] === ($row['title'] ?? '')) { return (string) $row['id']; }
+            }
+            return null;
+        }
         if (preg_match('/SELECT COUNT\(\*\) FROM wp_idlm_quote_revisions WHERE quote_id = ([0-9]+) AND LOWER/', $query, $match)) {
             return count(array_filter($this->tables['wp_idlm_quote_revisions'] ?? array(), static function($row) use ($match) {
                 return (int) ($row['quote_id'] ?? 0) === (int) $match[1] && !in_array(strtolower(trim($row['status'] ?? 'Draft')), array('draft', 'superseded'), true) &&
