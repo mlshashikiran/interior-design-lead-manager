@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.107.1] - 2026-11-17
+
+### Fixed
+
+- Lead table dropdowns (stage, owner, quality) now show a visible border at rest on desktop. Their border used the faintest divider colour, about 1.3:1 against white, so it looked missing until the row was hovered. Hovering a row now darkens the border to the standard control line. Builder: Shashi.
+
 ## [1.107.0] - 2026-11-17
 
 ### Added

@@ -590,9 +590,9 @@ body.idlm-crm-design #idlm-leads-table .idlm-state {
         display: none;
     }
 
-    /* Inline lead edits stay light, with a thin border and arrow so they read as dropdowns (STD-CRM-6). */
+    /* Inline lead edits stay light, with a thin visible border and arrow so they read as dropdowns at rest (STD-CRM-6). */
     body.idlm-crm-design #idlm-leads-table tbody select {
-        border-color: var(--idlm-border);
+        border-color: var(--idlm-border-strong);
         background-color: transparent;
         background-size: 14px 14px;
         box-shadow: none;
@@ -601,7 +601,7 @@ body.idlm-crm-design #idlm-leads-table .idlm-state {
     body.idlm-crm-design #idlm-leads-table tbody tr:hover select,
     body.idlm-crm-design #idlm-leads-table tbody select:focus,
     body.idlm-crm-design #idlm-leads-table tbody tr:focus-within select {
-        border-color: var(--idlm-border-strong);
+        border-color: var(--idlm-control-line);
         background-color: var(--idlm-surface);
         background-size: 14px 14px;
     }

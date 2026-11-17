@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.107.0
+Stable tag: 1.107.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,9 @@ Action Scheduler is optional; WP-Cron is the fallback. Scheduled work requires w
 Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Project Authors. The complete SIL Open Font License 1.1 is bundled in assets/fonts/OFL.txt; assets/fonts/NOTICE.txt and assets/fonts/inter-provenance.json identify the exact upstream revision, matching Google Fonts distribution and file hashes. Font bytes and existing CSS mappings are preserved.
 
 == Changelog ==
+
+= 1.107.1 =
+* Fixed: Stage, owner and quality dropdowns in the lead table show their border before you hover, so they read as dropdowns. Hovering a row darkens it.
 
 = 1.107.0 =
 * Added: "Send back to pre-sales" in the lead drawer. The sales rep who owns a qualified lead, or a manager, picks a reason and adds a note. The lead becomes unqualified, returns to the pre-sales person who qualified it with a call task, shows a "Sent back" badge, and goes back to the same rep once it is qualified again. The owner list also offers pre-sales people for unqualified leads.
