@@ -43,3 +43,15 @@ Detail and open questions: `docs/PRESALES-LEADS-REVIEW.md`.
 - **Rows.** Undecided rows offer Log call and Log WA, plus Decide when a decision is ready. Decided rows offer View only. Each button's accessible name includes the lead's name.
 - **Drawer.** The order is outreach actions, then Lead decision, then cycle history, then Early close. A locked control states what unlocks it. Missing saved qualification details are marked under their fields. Decided leads show "Decision recorded" and no outreach or early close for pre-sales. Deal and quote fields are not rendered for pre-sales.
 - **Bulk.** Pre-sales sees only the stages the server accepts from them: New, Contacted and Qualified.
+
+## Phone cards (Shashi, 2026-11-17)
+
+Approved mockup: `docs/mockups/lead-list-mobile.html`. Applies at `782px` and below; wider layouts are unchanged.
+
+- **Pinned search.** The header is sticky with a negative top (`--idlm-leads-sticky-hide`), so the title and attention rows scroll away and search plus Filters stay under the top bar.
+- **Summary pills.** Metric cards become 44px filter-count pills: count, label, then the scope hint.
+- **Card order.** Name and flags, then phone and location as text, then stage and quality side by side, then one summary line (owner, budget, plan, tasks, age) and Call and WhatsApp buttons. Show details stays in the corner. Phone-only markup lives in `td.idlm-col-mobile` and `.idlm-lead-row-place`, hidden above `782px` in both stylesheets.
+- **Stage and quality.** An 11px label over a 32px toned pill. The select keeps a 44px touch box; transparent 6px top and bottom borders hide the extra height, and the inset line mixes the tone's text colour. Quality shows "Qualified" or "Pending" on phones (`syncLeadQualityLabels()`), because the summary line carries the plan state. Text is 14px, so iOS may zoom when a pill opens.
+- **Call and WhatsApp.** Plain links: `tel:` and `wa.me` with the Interakt-normalised number. Nothing is logged.
+- **Selection.** "All" in the result line mirrors `#idlm-select-all`, which phones hide. The bulk bar is fixed to the bottom (count and Clear, then action and Apply), and the page gains matching bottom padding.
+- **Pagination.** Previous, page and Next as 44px buttons; page size on its own line.

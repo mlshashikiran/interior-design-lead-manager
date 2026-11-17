@@ -3,6 +3,35 @@
 if (!defined('ABSPATH')) { exit; }
 
 final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
+    /**
+     * Phone card footer, hidden above 782px: a quiet summary line, then one-tap Call and WhatsApp.
+     * Plain links only; nothing is logged. WhatsApp uses the number as Interakt would send it.
+     *
+     * @param object $lead Lead row.
+     * @param string $name Escaped display name, as the row already prints it.
+     * @param array  $meta List of array(text, class) pairs.
+     */
+    private static function render_mobile_quick_cell($lead, $name, array $meta) {
+        $tel = preg_replace('/[^0-9+]/', '', (string) $lead->phone);
+        $whatsapp = '';
+        if ('' !== preg_replace('/\D+/', '', (string) $lead->phone)) {
+            $parts = IDLM_Interakt::format_phone_for_interakt((string) $lead->phone);
+            $digits = preg_replace('/\D+/', '', $parts['countryCode'] . $parts['phoneNumber']);
+            $whatsapp = $digits ? 'https://wa.me/' . $digits : '';
+        }
+        ?>
+        <td class="idlm-col-mobile" data-label="Summary">
+            <?php if ($meta): ?><p class="idlm-lead-row-meta"><?php foreach ($meta as $item): ?><span<?php echo $item[1] ? ' class="' . esc_attr($item[1]) . '"' : ''; ?>><?php echo esc_html($item[0]); ?></span><?php endforeach; ?></p><?php endif; ?>
+            <?php if ('' !== $tel): ?>
+            <div class="idlm-lead-row-quick">
+                <a class="idlm-btn idlm-btn-secondary idlm-lead-row-call" href="tel:<?php echo esc_attr($tel); ?>" aria-label="Call <?php echo esc_attr($name); ?>"><span class="dashicons dashicons-phone" aria-hidden="true"></span>Call</a>
+                <?php if ($whatsapp): ?><a class="idlm-btn idlm-btn-secondary idlm-lead-row-whatsapp" href="<?php echo esc_url($whatsapp); ?>" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp <?php echo esc_attr($name); ?> (opens WhatsApp)"><span class="dashicons dashicons-whatsapp" aria-hidden="true"></span>WhatsApp</a><?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </td>
+        <?php
+    }
+
 
     public static function ajax_get_leads_table() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
@@ -494,6 +523,12 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                         <td class="idlm-col-details idlm-col-priority-low" data-label="Project details"><strong><?php echo esc_html($details_complete); ?>/6</strong><small><?php echo empty($l->floor_plan_received) ? 'Plan pending' : 'Plan received'; ?></small></td>
                         <td class="idlm-col-quality idlm-col-priority-primary" data-label="Follow-up status"><span class="idlm-sla-chip <?php echo esc_attr($sla_class); ?>"><?php echo esc_html($sla_label); ?></span><small class="idlm-lead-next-action" title="<?php echo esc_attr($next_action); ?>"><?php echo esc_html($next_action); ?></small></td>
                         <td class="idlm-col-actions idlm-col-priority-primary idlm-lead-row-actions" data-label="Actions"><div class="idlm-queue-actions"><?php if ($decision_complete): ?><button type="button" class="idlm-btn idlm-btn-secondary" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)" aria-label="View <?php echo esc_attr($name); ?>">View</button><?php else: ?><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="call" data-lead-id="<?php echo esc_attr($l->id); ?>" aria-label="Log call for <?php echo esc_attr($name); ?>">Log call</button><button type="button" class="idlm-btn idlm-btn-secondary idlm-presales-row-touch" data-kind="whatsapp" data-lead-id="<?php echo esc_attr($l->id); ?>" aria-label="Log WhatsApp for <?php echo esc_attr($name); ?>">Log WA</button><?php if ($decision_ready): ?><button type="button" class="idlm-btn idlm-btn-primary" onclick="openLeadDrawer(<?php echo esc_attr($l->id); ?>)" aria-label="Decide on <?php echo esc_attr($name); ?>">Decide</button><?php endif; ?><?php endif; ?></div></td>
+                        <?php
+                        self::render_mobile_quick_cell($l, $name, array(
+                            $l->budget ? array($l->budget, '') : array('Budget missing', 'is-warning'),
+                            array($cycle_outreach['calls'] . '/' . $outreach_targets['calls'] . ' calls · ' . $cycle_outreach['whatsapp'] . '/' . $outreach_targets['whatsapp'] . ' WA', ''),
+                        ));
+                        ?>
                     </tr>
                     <?php
                     continue;
@@ -521,7 +556,7 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
                             <?php if ($awaiting_handoff): ?><span class="idlm-row-handoff-badge <?php echo $handoff_hours >= max(1, intval(get_option('idlm_qualified_fallback_hours', '4'))) ? 'is-overdue' : ''; ?>" title="<?php echo esc_attr($handoff_title); ?>">Awaiting <?php echo esc_html($handoff_hours < 1 ? '<1h' : floor($handoff_hours) . 'h'); ?><span class="screen-reader-text"> — <?php echo esc_html($handoff_title); ?></span></span><?php endif; ?>
                             <?php if ($routing_exception): ?><span class="idlm-row-handoff-badge is-overdue" title="<?php echo esc_attr(isset($l->handoff_exception_reason) ? $l->handoff_exception_reason : 'Routing exception'); ?>">Routing exception</span><?php endif; ?>
                         </div>
-                        <div class="idlm-lead-row-contact"><a class="idlm-lead-row-phone" href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', (string) $l->phone)); ?>"><?php echo esc_html($l->phone); ?></a></div>
+                        <div class="idlm-lead-row-contact"><a class="idlm-lead-row-phone" href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', (string) $l->phone)); ?>"><?php echo esc_html($l->phone); ?></a><?php if (!empty($l->property_location)): ?><span class="idlm-lead-row-place"><?php echo esc_html($l->property_location); ?></span><?php endif; ?></div>
                         <?php if ($awaiting_handoff && !empty($l->property_location)): ?><small class="idlm-row-handoff-location"><?php echo esc_html($l->property_location); ?></small><?php endif; ?>
                         <button type="button" class="idlm-lead-row-expand" aria-expanded="false" aria-controls="<?php echo esc_attr($responsive_row_id); ?>"><span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span><span class="idlm-lead-row-expand-label">Show details</span></button>
                     </td>
@@ -586,6 +621,24 @@ final class IDLM_Admin_Collection_Reads extends IDLM_Admin {
 
                     <td class="idlm-col-assigned idlm-col-created-at idlm-col-priority-low" data-label="Assigned at"><?php echo wp_kses_post(IDLM_Admin_Presenter::render_lead_table_datetime($l->assigned_at)); ?></td>
                     <td class="idlm-col-created idlm-col-created-at idlm-col-priority-low" data-label="Created at"><?php echo wp_kses_post(IDLM_Admin_Presenter::render_lead_table_datetime($l->created_at)); ?></td>
+                    <?php
+                    $mobile_meta = array(!empty($l->rep_name) ? array($l->rep_name, 'is-owner') : array('Unassigned', 'is-warning'));
+                    if (!empty($l->budget)) {
+                        $mobile_meta[] = array($l->budget, '');
+                    }
+                    if ('Qualified' === $l->lead_quality) {
+                        $mobile_meta[] = empty($l->floor_plan_received) ? array('Plan pending', 'is-warning') : array('Plan received', '');
+                    }
+                    if (intval($l->overdue_tasks_count) > 0) {
+                        $mobile_meta[] = array(sprintf(_n('%d task overdue', '%d tasks overdue', intval($l->overdue_tasks_count)), intval($l->overdue_tasks_count)), 'is-danger');
+                    } elseif (intval($l->pending_tasks_count) > 0) {
+                        $mobile_meta[] = array(sprintf(_n('%d task', '%d tasks', intval($l->pending_tasks_count)), intval($l->pending_tasks_count)), '');
+                    }
+                    if (!empty($l->created_at)) {
+                        $mobile_meta[] = array(max(0, (int) floor((current_time('timestamp') - strtotime($l->created_at)) / DAY_IN_SECONDS)) . 'd old', '');
+                    }
+                    self::render_mobile_quick_cell($l, $name, $mobile_meta);
+                    ?>
                 </tr>
                 <?php
             }

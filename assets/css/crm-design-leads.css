@@ -911,6 +911,13 @@ body.idlm-crm-design #idlm-leads-table .idlm-queue-actions .idlm-btn {
     white-space: nowrap;
 }
 
+/* Phone-only pieces: the card summary and quick actions, the location beside the phone and the select-all mirror. */
+body.idlm-crm-design #idlm-leads-table .idlm-col-mobile,
+body.idlm-crm-design #idlm-leads-table .idlm-lead-row-place,
+body.idlm-crm-design .idlm-leads-mobile-select-all {
+    display: none;
+}
+
 /* --- 7. Pagination ---------------------------------------------------------- */
 body.idlm-crm-design .idlm-leads-page .idlm-pagination {
     display: flex;
@@ -2412,14 +2419,52 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
 
 /* --- 11. Phone: one card per lead ------------------------------------------- */
 @media (max-width: 782px) {
-    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-header-actions {
+    /* The header is sticky with a negative top: the title and attention rows scroll away and the
+       search row stays pinned under the top bar. The offset is the height of those two rows. */
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page {
+        --idlm-leads-sticky-hide: calc(var(--idlm-space-3) + (var(--idlm-target-size) + var(--idlm-space-2)) * 2);
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page:not(:has(.idlm-leads-attention > :not([style*="none"]))) {
+        --idlm-leads-sticky-hide: calc(var(--idlm-space-3) + var(--idlm-target-size) + var(--idlm-space-2));
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page.idlm-leads-page .idlm-header {
+        position: sticky;
+        z-index: 14;
+        top: calc(var(--idlm-sticky-top) - var(--idlm-leads-sticky-hide));
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto auto;
         gap: var(--idlm-space-2);
+        margin: 0 -12px var(--idlm-space-2);
+        padding: var(--idlm-space-3) 12px var(--idlm-space-2);
+        border-bottom: 1px solid var(--idlm-border);
+        background: var(--idlm-canvas);
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page.idlm-leads-page .idlm-header > .idlm-header-meta {
+        grid-column: 1;
+        grid-row: 1;
+        align-self: center;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-header-actions {
+        display: contents;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-header-actions > .idlm-leads-menu {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-header-actions > .idlm-btn-primary {
+        grid-column: 3;
+        grid-row: 1;
     }
 
     body.idlm-crm-design .idlm-wrap.idlm-leads-page.idlm-leads-page .idlm-header-search {
-        grid-column: 1 / -1;
+        grid-column: 1 / 3;
+        grid-row: 3;
         width: 100%;
         max-width: none;
         min-width: 0;
@@ -2436,14 +2481,14 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
     }
 
     body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-header-filter-button {
-        grid-column: 1;
+        grid-column: 3;
+        grid-row: 3;
         justify-content: center;
-        width: 100%;
     }
 
     body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-leads-attention {
         grid-column: 1 / -1;
-        grid-row: 3;
+        grid-row: 2;
         justify-content: flex-start;
         margin: 0;
         overflow-x: auto;
@@ -2474,10 +2519,36 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
     }
 
     body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric.idlm-metric {
-        flex: 0 0 128px;
-        width: 128px;
+        display: inline-flex;
+        flex: 0 0 auto;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        width: auto;
         min-height: var(--idlm-target-size);
+        padding: 0 var(--idlm-space-3);
+        border-radius: var(--idlm-radius-pill);
         scroll-snap-align: start;
+        white-space: nowrap;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric .idlm-metric-value {
+        display: contents;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric .idlm-metric-value > :not(.idlm-metric-hint) {
+        order: -1;
+        font-size: 0.875rem;
+        font-weight: 700;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric .idlm-metric-label {
+        color: var(--idlm-text);
+        font-size: 0.8125rem;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-metric .idlm-metric-hint {
+        font-size: 0.6875rem;
     }
 
     body.idlm-crm-design .idlm-active-filter {
@@ -2490,29 +2561,119 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         height: 32px;
     }
 
-    /* The phone header scrolls away, so only the top bar offsets the bar. */
-    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-bar {
-        top: calc(var(--idlm-sticky-top) + var(--idlm-space-1));
-        align-items: stretch;
-        flex-direction: column;
+    /* Bulk bar sits at the bottom, in thumb reach: count and Clear, then action and Apply.
+       The page gains the same space below, so the bar never covers the last card (STD-LAY-5). */
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-bar:not([hidden]) {
+        position: fixed;
+        z-index: 19;
+        inset: auto 0 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: var(--idlm-space-2);
+        margin: 0;
+        padding: var(--idlm-space-2) var(--idlm-space-3) calc(var(--idlm-space-3) + env(safe-area-inset-bottom, 0px));
+        border: 0;
+        border-top: 1px solid var(--idlm-border-strong);
+        border-radius: 0;
+        background: var(--idlm-surface);
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page:has(.idlm-bulk-bar:not([hidden])) {
+        padding-bottom: 148px;
     }
 
     body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions {
-        margin: 0;
+        display: contents;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions > label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-selected-count {
+        grid-column: 1;
+        grid-row: 1;
+        font-size: 0.875rem;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions #idlm-clear-selection {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions #idlm-bulk-action-select {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions #idlm-apply-bulk {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions :is(#idlm-bulk-rep, #idlm-bulk-stage) {
+        grid-column: 1 / -1;
+        grid-row: 3;
     }
 
     body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions .idlm-input {
-        flex: 1 1 100%;
         width: 100%;
+        min-width: 0;
+        height: var(--idlm-target-size);
+        font-size: 1rem;
     }
 
     body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-actions .idlm-btn {
-        flex: 1 1 0;
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+    }
+
+    body.idlm-crm-design .idlm-wrap.idlm-leads-page .idlm-bulk-error {
+        grid-column: 1 / -1;
+        margin: 0;
     }
 
     /* Result count and sort share one line above the cards. */
     body.idlm-crm-design .idlm-active-filters {
         margin-bottom: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design .idlm-active-filters .idlm-leads-mobile-select-all {
+        display: inline-flex;
+        order: 0;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    body.idlm-crm-design .idlm-active-filters .idlm-leads-mobile-select-all input {
+        width: 20px;
+        height: 20px;
+        margin: 0;
+    }
+
+    body.idlm-crm-design .idlm-active-filters .idlm-leads-mobile-select-all .screen-reader-text {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    body.idlm-crm-design .idlm-active-filters .idlm-active-filters-count {
+        order: 1;
     }
 
     body.idlm-crm-design .idlm-active-filters .idlm-leads-mobile-sort {
@@ -2548,9 +2709,138 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         gap: var(--idlm-space-2);
     }
 
+    /* Card order: identity, then stage and quality side by side, then the summary and quick
+       actions; anything Show details opens follows below. */
     body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row {
+        grid-template-columns: var(--idlm-target-size) minmax(0, 1.4fr) minmax(0, 1fr);
         border-radius: var(--idlm-radius);
         box-shadow: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > td {
+        order: 3;
+        border-bottom: 0;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > :is(.idlm-selection-column, .idlm-lead-identity-cell) {
+        order: 0;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > td:is(.idlm-col-stage, .idlm-col-quality, .idlm-col-actions) {
+        order: 1;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > td.idlm-col-mobile {
+        order: 2;
+        display: block;
+        grid-column: 1 / -1;
+        padding: var(--idlm-space-2) var(--idlm-space-3) var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > td.idlm-col-mobile::before {
+        content: none;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row.is-expanded > td.idlm-col-mobile {
+        border-bottom: 1px solid var(--idlm-border);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px var(--idlm-space-3);
+        margin: 0 0 var(--idlm-space-2);
+        color: var(--idlm-text-muted);
+        font-size: 0.75rem;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-meta .is-owner {
+        color: var(--idlm-text);
+        font-weight: 500;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-meta .is-warning {
+        color: var(--idlm-warning);
+        font-weight: 600;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-meta .is-danger {
+        color: var(--idlm-danger);
+        font-weight: 600;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-quick {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design .idlm-workspace #idlm-leads-table .idlm-lead-row-quick .idlm-btn {
+        justify-content: center;
+        gap: var(--idlm-space-1);
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+        color: var(--idlm-action);
+        font-size: 0.8125rem;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-quick .dashicons {
+        width: 16px;
+        height: 16px;
+        font-size: 16px;
+    }
+
+    /* Stage and quality: an 11px label above a 32px toned pill. The select itself stays 44px tall
+       for touch; its transparent top and bottom borders hide the extra height, and the inset line
+       takes its tone from the text colour that section 15 already sets. */
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) > td:is(.idlm-col-stage, .idlm-col-quality) {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--idlm-space-1);
+        padding: var(--idlm-space-2) var(--idlm-space-1) 0 var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) > td.idlm-col-stage {
+        grid-column: 1 / 3;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) > td.idlm-col-quality {
+        grid-column: 3;
+        padding-inline: var(--idlm-space-1) var(--idlm-space-3);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) > td:is(.idlm-col-stage, .idlm-col-quality)::before {
+        font-size: 0.6875rem;
+    }
+
+    body.idlm-crm-design #idlm-leads-table tbody tr.idlm-responsive-lead-row > td:is(.idlm-col-stage, .idlm-col-quality) > select.idlm-table-select.idlm-quick-edit {
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+        margin-block: -6px;
+        padding-block: 0;
+        border-style: solid;
+        border-width: 6px 0;
+        border-color: transparent;
+        border-radius: var(--idlm-radius-compact) / 12px;
+        background-clip: padding-box;
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 35%, var(--idlm-surface));
+        font-size: 0.875rem;
+        outline-offset: -4px;
+    }
+
+    /* Call has its own button now, so the number reads as text on the card. */
+    body.idlm-crm-design .idlm-workspace #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) .idlm-lead-row-phone {
+        min-height: 0;
+        color: var(--idlm-text-muted);
+        font-weight: 400;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-place {
+        display: inline;
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-lead-row-place::before {
+        content: "·";
+        margin-inline: 6px;
     }
 
     body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > td {
@@ -2568,7 +2858,7 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
 
     body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > .idlm-selection-column {
         padding: var(--idlm-space-3) 0 0;
-        border-bottom: 1px solid var(--idlm-border);
+        border-bottom: 0;
     }
 
     body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > .idlm-lead-identity-cell {
@@ -2607,10 +2897,7 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
     }
 
     body.idlm-crm-design #idlm-leads-table .idlm-row-handoff-location {
-        display: block;
-        margin: 0;
-        color: var(--idlm-text-muted);
-        font-size: 0.75rem;
+        display: none;
     }
 
     /* Details is a corner control, so the card stays name, contact, stage, quality. */
@@ -2667,6 +2954,13 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
 
     body.idlm-crm-design #idlm-leads-table .idlm-queue-actions {
         display: grid;
+        grid-auto-columns: minmax(0, 1fr);
+        grid-auto-flow: column;
+        gap: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design #idlm-leads-table .idlm-presales-queue-row > td:is(.idlm-col-quality, .idlm-col-actions) {
+        grid-column: 1 / -1;
     }
 
     body.idlm-crm-design #idlm-leads-table .idlm-queue-actions .idlm-btn {
@@ -2693,9 +2987,56 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
         border-radius: var(--idlm-radius);
     }
 
+    body.idlm-crm-design .idlm-leads-page .idlm-pagination {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: var(--idlm-space-2);
+        margin-top: var(--idlm-space-3);
+    }
+
     body.idlm-crm-design .idlm-leads-page .idlm-pagination-summary {
-        flex-basis: 100%;
+        grid-column: 1 / -1;
         margin: 0;
+        text-align: center;
+    }
+
+    body.idlm-crm-design .idlm-leads-page .idlm-pagination .idlm-pagination-btn {
+        height: var(--idlm-target-size);
+        min-height: var(--idlm-target-size);
+        font-size: 0.8125rem;
+    }
+
+    body.idlm-crm-design .idlm-leads-page .idlm-pagination #prev-page {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    body.idlm-crm-design .idlm-leads-page .idlm-pagination #page-num {
+        grid-column: 2;
+        grid-row: 2;
+        color: var(--idlm-text-muted);
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    body.idlm-crm-design .idlm-leads-page .idlm-pagination #next-page {
+        grid-column: 3;
+        grid-row: 2;
+    }
+
+    body.idlm-crm-design .idlm-leads-page .idlm-pagination .idlm-per-page-label {
+        display: inline-flex;
+        grid-column: 1 / -1;
+        grid-row: 3;
+        align-items: center;
+        justify-self: center;
+        gap: var(--idlm-space-2);
+    }
+
+    body.idlm-crm-design .idlm-leads-page .idlm-pagination .idlm-per-page-select {
+        height: var(--idlm-target-size);
+        font-size: 1rem;
     }
 
     /* Drawer fills the phone. Close and previous/next share the top row. */
@@ -2892,21 +3233,6 @@ body.idlm-crm-design #idlm-presales-activity-modal .idlm-presales-activity-foote
     /* The desktop column widths would shrink a stacked card's stage and quality controls to a few letters. */
     body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row > td:is(.idlm-col-stage, .idlm-col-quality, .idlm-col-rep) {
         width: auto;
-    }
-}
-
-/* Tablet cards have room to put stage and quality side by side. */
-@media (min-width: 481px) {
-    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) {
-        grid-template-columns: var(--idlm-target-size) minmax(0, 1fr) minmax(0, 1fr);
-    }
-
-    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) > td.idlm-col-stage {
-        grid-column: 1 / 3;
-    }
-
-    body.idlm-crm-design #idlm-leads-table .idlm-responsive-lead-row:not(.idlm-presales-queue-row) > td.idlm-col-quality {
-        grid-column: 3;
     }
 }
 

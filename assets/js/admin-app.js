@@ -1204,6 +1204,23 @@ jQuery(document).ready(function($) {
         return yyyy + '-' + mm + '-' + dd + 'T' + hh + ':' + min;
     }
 
+    // Phone cards show the plan state on their summary line, so the quality dropdown keeps a short label
+    // there ("Qualified", "Pending") and the full wording returns at wider widths. Values never change.
+    var leadQualityPhoneQuery = window.matchMedia ? window.matchMedia('(max-width: 782px)') : null;
+    function syncLeadQualityLabels() {
+        var phone = !!(leadQualityPhoneQuery && leadQualityPhoneQuery.matches);
+        $('#idlm-leads-table select[data-field="lead_quality"] option').each(function() {
+            var $option = $(this);
+            if ($option.data('idlmFullLabel') === undefined) $option.data('idlmFullLabel', $option.text());
+            var short = this.value === 'Qualified' ? 'Qualified' : (this.value === '' ? 'Pending' : $option.data('idlmFullLabel'));
+            $option.text(phone ? short : $option.data('idlmFullLabel'));
+        });
+    }
+    if (leadQualityPhoneQuery) {
+        if (leadQualityPhoneQuery.addEventListener) leadQualityPhoneQuery.addEventListener('change', syncLeadQualityLabels);
+        else if (leadQualityPhoneQuery.addListener) leadQualityPhoneQuery.addListener(syncLeadQualityLabels);
+    }
+
     function selectedLeadIds() {
         return $('.idlm-row-selector:checked').map(function() { return $(this).val(); }).get();
     }
@@ -1212,10 +1229,11 @@ jQuery(document).ready(function($) {
         var totalCount = $('.idlm-row-selector').length;
         var selectedCount = $('.idlm-row-selector:checked').length;
         var selectAll = document.getElementById('idlm-select-all');
-        if (selectAll) {
-            selectAll.checked = totalCount > 0 && selectedCount === totalCount;
-            selectAll.indeterminate = selectedCount > 0 && selectedCount < totalCount;
-        }
+        [selectAll, document.getElementById('idlm-select-all-mobile')].forEach(function(box) {
+            if (!box) return;
+            box.checked = totalCount > 0 && selectedCount === totalCount;
+            box.indeterminate = selectedCount > 0 && selectedCount < totalCount;
+        });
         $('.idlm-selected-count').text(selectedCount + ' lead' + (selectedCount === 1 ? '' : 's') + ' selected');
         $('.idlm-bulk-bar').prop('hidden', selectedCount === 0);
         if (selectedCount === 0) {
@@ -1226,7 +1244,8 @@ jQuery(document).ready(function($) {
     }
 
     // Checkbox selections for bulk actions.
-    $(document).on('change', '#idlm-select-all', function() {
+    // Phones hide the table header, so the result line carries a mirror of the select-all box.
+    $(document).on('change', '#idlm-select-all, #idlm-select-all-mobile', function() {
         var checked = $(this).prop('checked');
         $('.idlm-row-selector').prop('checked', checked);
         updateBulkSelectionState();
@@ -1762,6 +1781,7 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success) {
                     $('#idlm-leads-table tbody').html(response.data.html);
+                    syncLeadQualityLabels();
                     fitLeadsStateRows();
                     renderLeadsSummary(response.data);
                     if (response.data.hasOwnProperty('stale_lead_count')) updateStaleLeadsPill(response.data.stale_lead_count);

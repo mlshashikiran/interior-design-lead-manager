@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lead list mobile</title>
+<meta name="author" content="Shashi">
+<!--
+  Lead list, phone view: current vs proposed. Design mockup only, nothing here is wired to the plugin.
+  Owner: Shashi. Contract: design-system/interior-design-lead-manager/STANDARD.md.
+  Tokens copied from assets/css/admin-style.css (white-label defaults) and assets/css/crm-design.css (warm stone neutrals).
+  Fonts: bundled Inter from assets/fonts (relative path), system fallback if opened elsewhere.
+-->
+<style>
+@font-face { font-family: 'Inter'; font-weight: 400; font-display: swap; src: url('../../assets/fonts/inter-latin-400.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 500; font-display: swap; src: url('../../assets/fonts/inter-latin-500.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 600; font-display: swap; src: url('../../assets/fonts/inter-latin-600.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 700; font-display: swap; src: url('../../assets/fonts/inter-latin-700.woff2') format('woff2'); }
+
+/* --- Tokens: the plugin's own values, nothing new ------------------------- */
+:root {
+    --idlm-brand-gold: #c99644;
+    --idlm-action: #7a5017;
+    --idlm-action-hover: #603d10;
+    --idlm-action-soft: #fff4df;
+    --idlm-action-contrast: #ffffff;
+    --idlm-info: #176a9e;
+    --idlm-success: #177c51;
+    --idlm-warning: #855a00;
+    --idlm-info-soft: #e7f4ff;
+    --idlm-success-soft: #e8f6ef;
+    --idlm-warning-soft: #fff6d7;
+    --idlm-danger-soft: #fff0ec;
+    --idlm-surface: #ffffff;
+    --idlm-sidebar: #111a24;
+    --idlm-text-inverse: #ffffff;
+    /* crm-design.css warm stone neutrals */
+    --idlm-canvas: #f5f3ef;
+    --idlm-surface-soft: #faf8f5;
+    --idlm-surface-tint: #f8f5ef;
+    --idlm-text: #1e1b16;
+    --idlm-text-muted: #5e584d;
+    --idlm-border: #e4e0d8;
+    --idlm-border-strong: #c9c3b6;
+    --idlm-danger: #b83c2c;
+
+    --idlm-space-1: 4px; --idlm-space-2: 8px; --idlm-space-3: 12px; --idlm-space-4: 16px;
+    --idlm-space-5: 20px; --idlm-space-6: 24px; --idlm-space-8: 32px;
+    --idlm-control-height: 34px;
+    --idlm-target-size: 44px;
+    --idlm-radius-compact: 6px;
+    --idlm-radius: 8px;
+    --idlm-radius-panel: 12px;
+    --idlm-radius-pill: 999px;
+    --idlm-workspace-topbar: 52px;
+    --idlm-focus-ring: var(--idlm-action);
+    --idlm-motion-base: 200ms;
+    --idlm-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+    --idlm-success-line: color-mix(in srgb, var(--idlm-success) 35%, var(--idlm-surface));
+    --idlm-warning-line: color-mix(in srgb, var(--idlm-warning) 35%, var(--idlm-surface));
+    --idlm-danger-line: color-mix(in srgb, var(--idlm-danger) 35%, var(--idlm-surface));
+    --idlm-info-line: color-mix(in srgb, var(--idlm-info) 35%, var(--idlm-surface));
+    --idlm-sidebar-text: color-mix(in srgb, var(--idlm-text-inverse) 80%, transparent);
+    --idlm-shadow-lg: 0 16px 48px color-mix(in srgb, var(--idlm-text) 18%, transparent);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+    margin: 0;
+    background: var(--idlm-canvas);
+    color: var(--idlm-text);
+    font: 400 0.8125rem/1.45 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+button, input, select { font: inherit; color: inherit; }
+:is(a, button, input, select):focus-visible { outline: 2px solid var(--idlm-focus-ring); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* --- Page chrome (mockup only) -------------------------------------------- */
+.page { max-width: 1280px; margin: 0 auto; padding: var(--idlm-space-6) var(--idlm-space-4) var(--idlm-space-8); }
+.page-head h1 { margin: 0 0 var(--idlm-space-1); font-size: 1.25rem; font-weight: 650; letter-spacing: -0.01em; }
+.page-head p { margin: 0; max-width: 72ch; color: var(--idlm-text-muted); }
+.frames { display: flex; flex-wrap: wrap; gap: var(--idlm-space-6); margin-top: var(--idlm-space-6); justify-content: center; }
+.frame { flex: 0 1 375px; width: 100%; max-width: 375px; min-width: 0; }
+.frame-label { display: flex; align-items: baseline; gap: var(--idlm-space-2); margin: 0 0 var(--idlm-space-2); font-size: 0.875rem; font-weight: 600; }
+.frame-label .tag { padding: 1px var(--idlm-space-2); border: 1px solid var(--idlm-border-strong); border-radius: var(--idlm-radius-compact); color: var(--idlm-text-muted); font-size: 0.6875rem; font-weight: 500; }
+.frame-label .tag.is-new { border-color: var(--idlm-success-line); background: var(--idlm-success-soft); color: var(--idlm-success); }
+.frame-note { margin: var(--idlm-space-2) 0 0; color: var(--idlm-text-muted); font-size: 0.75rem; }
+.phone {
+    position: relative;
+    height: 780px;
+    overflow: hidden auto;
+    border: 1px solid var(--idlm-border-strong);
+    border-radius: var(--idlm-radius-panel);
+    background: var(--idlm-canvas);
+    overscroll-behavior: contain;
+}
+
+/* Workspace phone top bar (exists today, 52px, sidebar colour). */
+.topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: var(--idlm-space-2);
+    height: var(--idlm-workspace-topbar);
+    padding: 0 var(--idlm-space-1);
+    background: var(--idlm-sidebar);
+    color: var(--idlm-text-inverse);
+}
+.topbar button { display: inline-grid; place-items: center; width: var(--idlm-target-size); height: var(--idlm-target-size); border: 0; background: transparent; color: var(--idlm-sidebar-text); }
+.topbar strong { font-size: 0.875rem; font-weight: 600; }
+.topbar .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--idlm-brand-gold); }
+
+.wrap { padding: var(--idlm-space-3); }
+
+/* --- Shared components (as the plugin draws them) ------------------------- */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--idlm-space-1);
+    min-height: var(--idlm-target-size); padding: 0 var(--idlm-space-3);
+    border: 1px solid var(--idlm-border-strong); border-radius: var(--idlm-radius);
+    background: var(--idlm-surface); color: var(--idlm-text);
+    font-weight: 600; text-decoration: none; white-space: nowrap; cursor: pointer;
+    transition: background-color var(--idlm-motion-base) var(--idlm-ease), border-color var(--idlm-motion-base) var(--idlm-ease);
+}
+.btn-primary { border-color: var(--idlm-action); background: var(--idlm-action); color: var(--idlm-action-contrast); }
+.btn-quiet { border-color: transparent; background: transparent; color: var(--idlm-action); }
+.input, .select {
+    width: 100%; min-width: 0; height: var(--idlm-target-size);
+    padding: 0 var(--idlm-space-3);
+    border: 1px solid var(--idlm-border-strong); border-radius: var(--idlm-radius);
+    background: var(--idlm-surface); font-size: 1rem;
+}
+.select { appearance: none; padding-right: var(--idlm-space-6);
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%;
+    background-size: 5px 5px; background-repeat: no-repeat; }
+.badge { display: inline-flex; align-items: center; min-height: 20px; padding: 0 6px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius-compact); background: var(--idlm-surface-soft); font-size: 0.6875rem; font-weight: 600; white-space: nowrap; }
+.badge.is-info { border-color: var(--idlm-info-line); background: var(--idlm-info-soft); color: var(--idlm-info); }
+.badge.is-warning { border-color: var(--idlm-warning-line); background: var(--idlm-warning-soft); color: var(--idlm-warning); }
+.badge.is-danger { border-color: var(--idlm-danger-line); background: var(--idlm-danger-soft); color: var(--idlm-danger); }
+.badge.is-success { border-color: var(--idlm-success-line); background: var(--idlm-success-soft); color: var(--idlm-success); }
+
+/* Stage and quality tones, STD-CRM-11. Same pairs crm-design.css section 15 uses. */
+.tone-neutral { }
+.tone-info { border-color: var(--idlm-info-line); background-color: var(--idlm-info-soft); color: var(--idlm-info); font-weight: 600; }
+.tone-success { border-color: var(--idlm-success-line); background-color: var(--idlm-success-soft); color: var(--idlm-success); font-weight: 600; }
+.tone-won { border-color: var(--idlm-success); background-color: var(--idlm-success-soft); color: var(--idlm-success); font-weight: 700; }
+.tone-warning { border-color: var(--idlm-warning-line); background-color: var(--idlm-warning-soft); color: var(--idlm-warning); font-weight: 600; }
+.tone-danger { border-color: var(--idlm-danger-line); background-color: var(--idlm-danger-soft); color: var(--idlm-danger); font-weight: 600; }
+
+/* ==========================================================================
+   CURRENT: a faithful sketch of crm-design-leads.css at <=480px (1.105.15)
+   ========================================================================== */
+.cur-header h2 { margin: 0 0 var(--idlm-space-2); font-size: 1.25rem; font-weight: 650; }
+.cur-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--idlm-space-2); }
+.cur-actions .search { grid-column: 1 / -1; }
+.cur-attention { display: flex; gap: var(--idlm-space-3); overflow-x: auto; margin-top: var(--idlm-space-2); scrollbar-width: none; }
+.cur-attention span { display: inline-flex; align-items: center; min-height: var(--idlm-target-size); white-space: nowrap; font-size: 0.75rem; }
+.cur-attention strong { margin-right: 3px; color: var(--idlm-danger); }
+.cur-metrics { display: flex; gap: var(--idlm-space-2); margin: var(--idlm-space-3) -12px 0; padding: 0 12px; overflow-x: auto; scrollbar-width: none; }
+.cur-metric { flex: 0 0 128px; padding: var(--idlm-space-2) var(--idlm-space-3); border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface); }
+.cur-metric span { display: block; color: var(--idlm-text-muted); font-size: 0.6875rem; }
+.cur-metric b { font-size: 1.125rem; }
+.cur-metric small { margin-left: 4px; color: var(--idlm-text-muted); font-size: 0.6875rem; }
+.cur-metric.is-alert b { color: var(--idlm-danger); }
+.cur-result { display: flex; align-items: center; gap: var(--idlm-space-2); margin: var(--idlm-space-3) 0 var(--idlm-space-2); }
+.cur-result .count { color: var(--idlm-text-muted); font-size: 0.75rem; }
+.cur-result .select { flex: 0 1 190px; margin-left: auto; font-size: 0.875rem; }
+
+.cur-card { display: grid; grid-template-columns: var(--idlm-target-size) minmax(0, 1fr); margin-bottom: var(--idlm-space-2); border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface); overflow: hidden; }
+.cur-card > div { grid-column: 1 / -1; display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; gap: var(--idlm-space-3); padding: var(--idlm-space-2) var(--idlm-space-3); border-bottom: 1px solid var(--idlm-border); }
+.cur-card > div:last-child { border-bottom: 0; }
+.cur-card > .sel { grid-column: 1; grid-row: 1; display: flex; justify-content: center; align-items: flex-start; padding: var(--idlm-space-3) 0 0; }
+.cur-card > .id { grid-column: 2; grid-row: 1; display: block; position: relative; padding: var(--idlm-space-2) var(--idlm-target-size) var(--idlm-space-2) 0; }
+.cur-card .id strong { font-size: 0.9375rem; }
+.cur-card .id a { display: inline-flex; align-items: center; min-height: var(--idlm-target-size); color: var(--idlm-action); font-weight: 500; text-decoration: none; font-size: 0.75rem; }
+.cur-card .chev { position: absolute; top: 0; right: 0; width: var(--idlm-target-size); height: var(--idlm-target-size); border: 0; background: transparent; color: var(--idlm-text-muted); }
+.cur-card .lbl { color: var(--idlm-text-muted); font-size: 0.75rem; font-weight: 500; }
+.cur-card .select { font-size: 1rem; }
+.cur-card .headline { display: flex; flex-wrap: wrap; gap: 2px var(--idlm-space-2); align-items: center; min-height: 24px; }
+.cur-bulk { display: flex; flex-direction: column; gap: var(--idlm-space-2); padding: var(--idlm-space-3); border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface); margin-bottom: var(--idlm-space-2); }
+.cur-pagination { display: flex; flex-wrap: wrap; align-items: center; gap: var(--idlm-space-2); margin-top: var(--idlm-space-3); font-size: 0.75rem; }
+.cur-pagination .sum { flex-basis: 100%; color: var(--idlm-text-muted); }
+.cur-pagination .btn { min-height: var(--idlm-control-height); padding: 0 var(--idlm-space-2); font-weight: 500; }
+.cur-pagination .select { width: auto; height: var(--idlm-control-height); font-size: 0.75rem; }
+
+/* Problem pins */
+.pin { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 4px; border-radius: 50%; background: var(--idlm-danger); color: var(--idlm-text-inverse); font-size: 0.6875rem; font-weight: 700; vertical-align: middle; }
+.problems { margin: var(--idlm-space-3) 0 0; padding: 0; list-style: none; font-size: 0.75rem; color: var(--idlm-text-muted); }
+.problems li { display: grid; grid-template-columns: 22px 1fr; gap: 2px; margin-bottom: var(--idlm-space-1); }
+.problems .pin { margin: 0; }
+
+/* ==========================================================================
+   PROPOSED
+   ========================================================================== */
+.p-head { display: flex; align-items: center; gap: var(--idlm-space-2); padding: var(--idlm-space-3) var(--idlm-space-3) 0; }
+.p-head h2 { margin: 0; margin-right: auto; font-size: 1.25rem; font-weight: 650; letter-spacing: -0.01em; }
+.icon-btn { display: inline-grid; place-items: center; width: var(--idlm-target-size); height: var(--idlm-target-size); padding: 0; border: 1px solid var(--idlm-border-strong); border-radius: var(--idlm-radius); background: var(--idlm-surface); color: var(--idlm-text); cursor: pointer; }
+
+/* 1. Sticky search row: under the 52px top bar, keeps the canvas colour so cards slide beneath. */
+.p-toolbar {
+    position: sticky; top: var(--idlm-workspace-topbar); z-index: 20;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--idlm-space-2);
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+    background: var(--idlm-canvas);
+    border-bottom: 1px solid var(--idlm-border);
+}
+.p-search { position: relative; }
+.p-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--idlm-text-muted); pointer-events: none; }
+.p-search .input { padding-left: 36px; }
+.filter-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--idlm-radius-pill); background: var(--idlm-action); color: var(--idlm-action-contrast); font-size: 0.6875rem; font-weight: 700; }
+
+/* 2. One scrolling row of attention + summary counts. Pills are allowed: they are filter counts (STD-VIS-4). */
+.p-chips { display: flex; gap: var(--idlm-space-2); padding: var(--idlm-space-2) var(--idlm-space-3); overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+.chip {
+    flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+    min-height: var(--idlm-target-size); padding: 0 var(--idlm-space-3);
+    border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius-pill);
+    background: var(--idlm-surface); font-size: 0.8125rem; white-space: nowrap; cursor: pointer; scroll-snap-align: start;
+}
+.chip b { font-variant-numeric: tabular-nums; }
+.chip.is-alert b { color: var(--idlm-danger); }
+.chip.is-warn b { color: var(--idlm-warning); }
+.chip[aria-pressed="true"] { border-color: var(--idlm-action); background: var(--idlm-action-soft); }
+
+/* 3. Result line: count, select-page, sort. */
+.p-result { display: flex; align-items: center; gap: var(--idlm-space-1); padding: 0 var(--idlm-space-3) var(--idlm-space-2); }
+.p-result .count { margin-right: auto; white-space: nowrap; color: var(--idlm-text-muted); font-size: 0.75rem; }
+.p-result .select { width: auto; max-width: 160px; height: var(--idlm-target-size); font-size: 0.875rem; }
+.p-selectall { flex: 0 0 auto; justify-content: center; min-width: var(--idlm-target-size); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; min-height: var(--idlm-target-size); padding: 0 var(--idlm-space-1); font-size: 0.8125rem; font-weight: 500; cursor: pointer; }
+.check { width: 20px; height: 20px; margin: 0; accent-color: var(--idlm-action); cursor: pointer; }
+
+/* 4. Card */
+.p-list { display: grid; gap: var(--idlm-space-2); padding: 0 var(--idlm-space-3); margin: 0; list-style: none; }
+.p-card {
+    border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    transition: border-color var(--idlm-motion-base) var(--idlm-ease), background-color var(--idlm-motion-base) var(--idlm-ease);
+}
+.p-card.is-selected { border-color: var(--idlm-action); background: var(--idlm-surface-tint); }
+.p-top { display: grid; grid-template-columns: var(--idlm-target-size) minmax(0, 1fr) auto; align-items: start; }
+.p-sel { display: grid; place-items: center; width: var(--idlm-target-size); height: var(--idlm-target-size); cursor: pointer; }
+.p-id { position: relative; min-width: 0; padding: var(--idlm-space-2) 0 0; }
+/* The name opens the drawer; its hit area covers the whole identity block (well over 44px). */
+.p-name::after { content: ""; position: absolute; inset: 0; }
+.p-name { display: block; width: 100%; padding: 0; border: 0; background: transparent; text-align: left; font-size: 0.9375rem; font-weight: 650; line-height: 1.3; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-flags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.p-sub { margin-top: 2px; color: var(--idlm-text-muted); font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-age { padding: var(--idlm-space-2) var(--idlm-space-3) 0 var(--idlm-space-2); color: var(--idlm-text-muted); font-size: 0.75rem; white-space: nowrap; }
+.p-status { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--idlm-space-2); padding: var(--idlm-space-2) var(--idlm-space-3) 0; }
+.p-status label { display: grid; gap: 2px; min-width: 0; }
+.p-status .lbl { color: var(--idlm-text-muted); font-size: 0.6875rem; font-weight: 500; }
+/* 16px keeps iOS from zooming on focus, as the current phone rules do. */
+/* Compact look, full reach: the pill is drawn 32px tall by the label, while the transparent
+   select over it stays 44px for touch (negative margins keep the row at 32px). */
+.p-status label { position: relative; gap: 4px; }
+.p-status .select {
+    position: relative; z-index: 1;
+    height: var(--idlm-target-size); margin-block: -6px;
+    padding-left: var(--idlm-space-2);
+    border-color: transparent; background-color: transparent;
+    font-size: 0.875rem; text-overflow: ellipsis;
+    background-position: calc(100% - 13px) 52%, calc(100% - 9px) 52%;
+    background-size: 4px 4px;
+}
+.p-status label::after {
+    content: ""; position: absolute; inset: auto 0 0 0; height: 32px;
+    border: 1px solid var(--idlm-border-strong); border-radius: var(--idlm-radius-compact);
+    background: var(--idlm-surface);
+}
+/* Focus: the ring follows the visible pill, not the larger tap box. As in dialog.js, a touch or
+   mouse tap leaves no ring (body.idlm-pointer-input); Tab brings the full ring back. */
+.p-status .select:focus, .p-status .select:focus-visible { outline: none; }
+body:not(.idlm-pointer-input) .p-status label:has(.select:focus-visible)::after { outline: 2px solid var(--idlm-focus-ring); outline-offset: 2px; }
+body.idlm-pointer-input :is(a, button, input, select):focus-visible { outline: none; }
+.p-status label:has(.tone-info)::after { border-color: var(--idlm-info-line); background: var(--idlm-info-soft); }
+.p-status label:has(:is(.tone-success, .tone-won))::after { border-color: var(--idlm-success-line); background: var(--idlm-success-soft); }
+.p-status label:has(.tone-won)::after { border-color: var(--idlm-success); }
+.p-status label:has(.tone-warning)::after { border-color: var(--idlm-warning-line); background: var(--idlm-warning-soft); }
+.p-status label:has(.tone-danger)::after { border-color: var(--idlm-danger-line); background: var(--idlm-danger-soft); }
+.p-meta { display: flex; flex-wrap: wrap; gap: 2px var(--idlm-space-3); padding: var(--idlm-space-2) var(--idlm-space-3) 0; color: var(--idlm-text-muted); font-size: 0.75rem; }
+.p-meta b { color: var(--idlm-text); font-weight: 500; }
+.p-meta .is-danger { color: var(--idlm-danger); font-weight: 600; }
+.p-meta .is-warn { color: var(--idlm-warning); font-weight: 600; }
+.p-actions { display: grid; grid-template-columns: 1fr 1fr var(--idlm-target-size); gap: var(--idlm-space-2); padding: var(--idlm-space-2) var(--idlm-space-3) var(--idlm-space-3); }
+.p-actions .btn { min-width: 0; font-size: 0.8125rem; }
+.p-actions .btn svg { flex: 0 0 auto; }
+.p-actions .call { color: var(--idlm-action); }
+.p-actions.is-presales { grid-template-columns: 1fr 1fr 1fr; }
+.p-more { padding: 0; }
+.p-details { display: grid; grid-template-columns: auto 1fr; gap: 4px var(--idlm-space-3); margin: 0 var(--idlm-space-3) var(--idlm-space-3); padding-top: var(--idlm-space-2); border-top: 1px solid var(--idlm-border); font-size: 0.75rem; }
+.p-details dt { color: var(--idlm-text-muted); }
+.p-details dd { margin: 0; }
+
+/* 5. Pagination */
+.p-pager { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--idlm-space-2); padding: var(--idlm-space-4) var(--idlm-space-3) var(--idlm-space-2); }
+.p-pager .info { color: var(--idlm-text-muted); font-size: 0.75rem; text-align: center; white-space: nowrap; }
+.p-pager-foot { display: flex; align-items: center; justify-content: center; gap: var(--idlm-space-2); padding: 0 var(--idlm-space-3) var(--idlm-space-4); color: var(--idlm-text-muted); font-size: 0.75rem; }
+.p-pager-foot .select { width: auto; height: var(--idlm-target-size); font-size: 0.875rem; }
+
+/* 6. Bulk bar: bottom of the screen, thumb reach. The list gets matching bottom padding so the last card is never covered (STD-LAY-5). */
+.p-bulk {
+    position: sticky; bottom: 0; z-index: 25;
+    display: grid; gap: var(--idlm-space-2);
+    padding: var(--idlm-space-2) var(--idlm-space-3) var(--idlm-space-3);
+    border-top: 1px solid var(--idlm-border-strong);
+    background: var(--idlm-surface);
+    box-shadow: var(--idlm-shadow-lg);
+}
+.p-bulk[hidden] { display: none; }
+.p-bulk-row { display: flex; align-items: center; gap: var(--idlm-space-2); }
+.p-bulk-row strong { margin-right: auto; font-size: 0.875rem; }
+.p-bulk-row .select { flex: 1 1 auto; font-size: 0.875rem; }
+.p-bulk-hint { margin: 0; color: var(--idlm-text-muted); font-size: 0.6875rem; }
+
+/* --- Notes ----------------------------------------------------------------- */
+.notes { display: grid; gap: var(--idlm-space-6); margin-top: var(--idlm-space-8); }
+@media (min-width: 1025px) { .notes { grid-template-columns: 1.3fr 1fr; } }
+.notes section { min-width: 0; padding: var(--idlm-space-5); border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface); }
+.notes h2 { margin: 0 0 var(--idlm-space-3); font-size: 1rem; font-weight: 650; }
+.notes ol, .notes ul { margin: 0; padding-left: 1.2em; }
+.notes li { margin-bottom: var(--idlm-space-2); }
+.notes code { padding: 1px 4px; border-radius: 4px; background: var(--idlm-surface-soft); font-size: 0.75rem; overflow-wrap: anywhere; }
+.notes .q { margin-top: var(--idlm-space-4); padding-top: var(--idlm-space-3); border-top: 1px solid var(--idlm-border); }
+
+@media (prefers-reduced-motion: reduce) { .btn, .p-card { transition: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+    <header class="page-head">
+        <h1>Lead list on phones</h1>
+        <p>Current card view (1.105.15) beside the proposed one, at 375px. Proposed changes reuse the plugin's tokens, Inter and existing classes. Sample leads are fake. Nothing is implemented yet. Prepared for Shashi.</p>
+    </header>
+
+    <div class="frames">
+
+        <!-- ================= CURRENT ================= -->
+        <div class="frame">
+            <p class="frame-label">Current <span class="tag">1.105.15</span></p>
+            <div class="phone" aria-label="Current lead list at 375px">
+                <div class="topbar"><button type="button" aria-label="Open menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><span class="brand-dot"></span><strong>Q Oak CRM</strong></div>
+                <div class="wrap">
+                    <div class="cur-header">
+                        <h2>Leads</h2>
+                        <div class="cur-actions">
+                            <input class="input search" type="search" placeholder="Search name, phone or email" aria-label="Search leads">
+                            <button class="btn" type="button">Filters</button>
+                            <button class="btn" type="button">More</button>
+                            <button class="btn btn-primary" type="button">Add lead</button>
+                        </div>
+                        <div class="cur-attention"><span><strong>4</strong> handoffs · 1 overdue</span><span><strong>7</strong> need update</span><span><strong>3</strong> unread</span></div>
+                    </div>
+                    <div class="cur-metrics">
+                        <div class="cur-metric is-alert"><span>Qualified handoffs</span><b>4</b><small>1 overdue</small></div>
+                        <div class="cur-metric"><span>Not called</span><b>12</b><small>active only</small></div>
+                        <div class="cur-metric"><span>Follow-up</span><b>23</b><small>active only</small></div>
+                        <div class="cur-metric"><span>Pending quality</span><b>9</b></div>
+                    </div>
+                    <div class="cur-result"><span class="count">312 leads</span><select class="select" aria-label="Sort leads"><option>Default order</option></select></div>
+
+                    <div class="cur-card">
+                        <div class="sel"><input class="check" type="checkbox" aria-label="Select Ananya Rao"></div>
+                        <div class="id"><div class="headline"><strong>Ananya Rao</strong><span class="badge is-success">New WhatsApp</span></div><a href="#">+91 98450 11234</a><button class="chev" type="button" aria-label="Show details">▾</button></div>
+                        <div><span class="lbl">Stage</span><select class="select tone-success" aria-label="Stage"><option>Quote Shared</option></select></div>
+                        <div><span class="lbl">Lead quality <span class="pin">3</span></span><select class="select tone-success" aria-label="Lead quality"><option>Qualified with plan received</option></select></div>
+                    </div>
+                    <div class="cur-card">
+                        <div class="sel"><input class="check" type="checkbox" aria-label="Select Rohit Menon"></div>
+                        <div class="id"><div class="headline"><strong>Rohit Menon</strong><span class="badge is-danger">Awaiting 5h</span></div><a href="#">+91 99001 22345</a><div class="p-sub">Sarjapur Road</div><button class="chev" type="button" aria-label="Show details">▾</button></div>
+                        <div><span class="lbl">Stage</span><select class="select tone-info" aria-label="Stage"><option>Sales Connected</option></select></div>
+                        <div><span class="lbl">Lead quality</span><select class="select tone-warning" aria-label="Lead quality"><option>Qualified with plan pending</option></select></div>
+                    </div>
+                    <div class="cur-card">
+                        <div class="sel"><input class="check" type="checkbox" aria-label="Select Fatima Sheikh"></div>
+                        <div class="id"><div class="headline"><strong>Fatima Sheikh</strong></div><a href="#">+91 90080 33456</a><button class="chev" type="button" aria-label="Show details">▾</button></div>
+                        <div><span class="lbl">Stage</span><select class="select" aria-label="Stage"><option>New</option></select></div>
+                        <div><span class="lbl">Lead quality</span><select class="select" aria-label="Lead quality"><option>Pending qualification</option></select></div>
+                    </div>
+                    <div class="cur-card">
+                        <div class="sel"><input class="check" type="checkbox" aria-label="Select Vikram Desai"></div>
+                        <div class="id"><div class="headline"><strong>Vikram Desai</strong></div><a href="#">+91 97400 44567</a><button class="chev" type="button" aria-label="Show details">▾</button></div>
+                        <div><span class="lbl">Stage</span><select class="select tone-warning" aria-label="Stage"><option>RNR</option></select></div>
+                        <div><span class="lbl">Lead quality</span><select class="select" aria-label="Lead quality"><option>Pending qualification</option></select></div>
+                    </div>
+                    <div class="cur-pagination">
+                        <span class="sum">Showing 1–25 of 312</span>
+                        <label>Leads per page <select class="select"><option>25</option></select></label>
+                        <button class="btn" type="button">Previous</button><span>Page 1 of 13</span><button class="btn" type="button">Next <span class="pin">6</span></button>
+                    </div>
+                </div>
+            </div>
+            <ul class="problems">
+                <li><span class="pin">1</span><span>Search and Filters scroll away with the header, so changing the filter after scrolling means going back to the top.</span></li>
+                <li><span class="pin">2</span><span>Header plus counts plus summary take about 330px before the first lead: roughly 2.5 cards per screen.</span></li>
+                <li><span class="pin">3</span><span>Stage and quality each take a full row with a 76px label column. Owner, tasks and budget only appear after Show details.</span></li>
+                <li><span class="pin">4</span><span>The phone number is the only quick action. No WhatsApp, and the call link is small text in the name block.</span></li>
+                <li><span class="pin">5</span><span>No "select all" on phones: the table header with that checkbox is hidden. The bulk bar sticks to the top and stacks into a tall column.</span></li>
+                <li><span class="pin">6</span><span>Pagination buttons are 34px high, below the 44px touch target.</span></li>
+            </ul>
+        </div>
+
+        <!-- ================= PROPOSED ================= -->
+        <div class="frame">
+            <p class="frame-label">Proposed <span class="tag is-new">Sales and admin</span></p>
+            <div class="phone" id="proposed" aria-label="Proposed lead list at 375px">
+                <div class="topbar"><button type="button" aria-label="Open menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><span class="brand-dot"></span><strong>Q Oak CRM</strong></div>
+
+                <div class="p-head">
+                    <h2>Leads</h2>
+                    <button class="icon-btn" type="button" aria-label="More: import, export, routing settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+                    <button class="btn btn-primary" type="button">Add lead</button>
+                </div>
+
+                <div class="p-toolbar">
+                    <label class="p-search"><span class="sr">Search leads</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                        <input class="input" type="search" placeholder="Search leads">
+                    </label>
+                    <button class="btn" type="button" aria-label="Filters, 2 active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg>Filters <span class="filter-count">2</span></button>
+                </div>
+
+                <div class="p-chips" role="group" aria-label="Needs attention and lead summary">
+                    <button class="chip is-alert" type="button" aria-pressed="false"><b>4</b> handoffs · 1 overdue</button>
+                    <button class="chip is-warn" type="button" aria-pressed="true"><b>7</b> need update</button>
+                    <button class="chip" type="button" aria-pressed="false"><b>3</b> unread WhatsApp</button>
+                    <button class="chip" type="button" aria-pressed="false"><b>12</b> not called</button>
+                    <button class="chip" type="button" aria-pressed="false"><b>23</b> follow-up</button>
+                    <button class="chip" type="button" aria-pressed="false"><b>9</b> pending quality</button>
+                </div>
+
+                <div class="p-result">
+                    <label class="p-selectall"><input class="check" type="checkbox" id="p-all"> All</label>
+                    <span class="count" role="status">7 of 312</span>
+                    <label><span class="sr">Sort leads</span><select class="select"><option>Recently assigned</option><option>Name: A to Z</option><option>Budget: high to low</option></select></label>
+                </div>
+
+                <ul class="p-list" id="p-list">
+                    <li class="p-card">
+                        <div class="p-top">
+                            <label class="p-sel"><input class="check p-row" type="checkbox" aria-label="Select Ananya Rao"></label>
+                            <div class="p-id">
+                                <button class="p-name" type="button">Ananya Rao</button>
+                                <div class="p-sub">+91 98450 11234 · 3BHK, Whitefield</div>
+                                <div class="p-flags"><span class="badge is-success">New WhatsApp</span></div>
+                            </div>
+                            <span class="p-age">2d</span>
+                        </div>
+                        <div class="p-status">
+                            <label><span class="lbl">Stage</span><select class="select tone-success"><option>Quote Shared</option></select></label>
+                            <label><span class="lbl">Quality</span><select class="select tone-success"><option>Qualified</option></select></label>
+                        </div>
+                        <div class="p-meta"><span><b>Karthik M</b></span><span>₹12L</span><span>Plan received</span><span class="is-danger">1 task overdue</span></div>
+                        <div class="p-actions">
+                            <a class="btn call" href="tel:+919845011234" aria-label="Call Ananya Rao"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Call</a>
+                            <a class="btn call" href="#" aria-label="WhatsApp Ananya Rao"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20l1.2-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>WhatsApp</a>
+                            <button class="btn p-more" type="button" aria-expanded="true" aria-label="Hide details for Ananya Rao"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
+                        </div>
+                        <dl class="p-details">
+                            <dt>Channel</dt><dd>Meta lead ads · Whitefield studio</dd>
+                            <dt>Assigned</dt><dd>14 Nov 2026, 10:42</dd>
+                            <dt>Created</dt><dd>14 Nov 2026, 09:15</dd>
+                            <dt>Tasks</dt><dd>2 pending, 1 overdue</dd>
+                        </dl>
+                    </li>
+                    <li class="p-card">
+                        <div class="p-top">
+                            <label class="p-sel"><input class="check p-row" type="checkbox" aria-label="Select Rohit Menon"></label>
+                            <div class="p-id">
+                                <button class="p-name" type="button">Rohit Menon</button>
+                                <div class="p-sub">+91 99001 22345 · Villa, Sarjapur Road</div>
+                                <div class="p-flags"><span class="badge is-danger">Awaiting 5h</span></div>
+                            </div>
+                            <span class="p-age">1d</span>
+                        </div>
+                        <div class="p-status">
+                            <label><span class="lbl">Stage</span><select class="select tone-info"><option>Sales Connected</option></select></label>
+                            <label><span class="lbl">Quality</span><select class="select tone-warning"><option>Qualified</option></select></label>
+                        </div>
+                        <div class="p-meta"><span class="is-warn">Unassigned</span><span class="is-warn">Plan pending</span><span>₹28L</span><span>No tasks</span></div>
+                        <div class="p-actions">
+                            <a class="btn call" href="tel:+919900122345" aria-label="Call Rohit Menon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Call</a>
+                            <a class="btn call" href="#" aria-label="WhatsApp Rohit Menon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20l1.2-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>WhatsApp</a>
+                            <button class="btn p-more" type="button" aria-expanded="false" aria-label="Show details for Rohit Menon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+                        </div>
+                    </li>
+                    <li class="p-card">
+                        <div class="p-top">
+                            <label class="p-sel"><input class="check p-row" type="checkbox" aria-label="Select Fatima Sheikh"></label>
+                            <div class="p-id">
+                                <button class="p-name" type="button">Fatima Sheikh</button>
+                                <div class="p-sub">+91 90080 33456 · 2BHK, HSR Layout</div>
+                            </div>
+                            <span class="p-age">4h</span>
+                        </div>
+                        <div class="p-status">
+                            <label><span class="lbl">Stage</span><select class="select"><option>New</option></select></label>
+                            <label><span class="lbl">Quality</span><select class="select"><option>Pending</option></select></label>
+                        </div>
+                        <div class="p-meta"><span><b>Divya S</b></span><span>₹6.5L</span><span>No tasks</span></div>
+                        <div class="p-actions">
+                            <a class="btn call" href="tel:+919008033456" aria-label="Call Fatima Sheikh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Call</a>
+                            <a class="btn call" href="#" aria-label="WhatsApp Fatima Sheikh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20l1.2-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>WhatsApp</a>
+                            <button class="btn p-more" type="button" aria-expanded="false" aria-label="Show details for Fatima Sheikh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+                        </div>
+                    </li>
+                    <li class="p-card">
+                        <div class="p-top">
+                            <label class="p-sel"><input class="check p-row" type="checkbox" aria-label="Select Vikram Desai"></label>
+                            <div class="p-id">
+                                <button class="p-name" type="button">Vikram Desai</button>
+                                <div class="p-sub">+91 97400 44567 · 3BHK, Hebbal</div>
+                            </div>
+                            <span class="p-age">6d</span>
+                        </div>
+                        <div class="p-status">
+                            <label><span class="lbl">Stage</span><select class="select tone-warning"><option>RNR</option></select></label>
+                            <label><span class="lbl">Quality</span><select class="select"><option>Pending</option></select></label>
+                        </div>
+                        <div class="p-meta"><span><b>Karthik M</b></span><span>₹9L</span><span>2 tasks</span></div>
+                        <div class="p-actions">
+                            <a class="btn call" href="tel:+919740044567" aria-label="Call Vikram Desai"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Call</a>
+                            <a class="btn call" href="#" aria-label="WhatsApp Vikram Desai"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20l1.2-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>WhatsApp</a>
+                            <button class="btn p-more" type="button" aria-expanded="false" aria-label="Show details for Vikram Desai"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+                        </div>
+                    </li>
+                    <li class="p-card">
+                        <div class="p-top">
+                            <label class="p-sel"><input class="check p-row" type="checkbox" aria-label="Select Meera Iyer"></label>
+                            <div class="p-id">
+                                <button class="p-name" type="button">Meera Iyer</button>
+                                <div class="p-sub">+91 98860 55678 · 4BHK, Koramangala</div>
+                            </div>
+                            <span class="p-age">21d</span>
+                        </div>
+                        <div class="p-status">
+                            <label><span class="lbl">Stage</span><select class="select tone-won"><option>Won</option></select></label>
+                            <label><span class="lbl">Quality</span><select class="select tone-success"><option>Qualified</option></select></label>
+                        </div>
+                        <div class="p-meta"><span><b>Divya S</b></span><span>₹18L</span><span>Plan received</span><span>No tasks</span></div>
+                        <div class="p-actions">
+                            <a class="btn call" href="tel:+919886055678" aria-label="Call Meera Iyer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Call</a>
+                            <a class="btn call" href="#" aria-label="WhatsApp Meera Iyer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20l1.2-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>WhatsApp</a>
+                            <button class="btn p-more" type="button" aria-expanded="false" aria-label="Show details for Meera Iyer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+                        </div>
+                    </li>
+                    <li class="p-card">
+                        <div class="p-top">
+                            <label class="p-sel"><input class="check p-row" type="checkbox" aria-label="Select Arjun Kapoor"></label>
+                            <div class="p-id">
+                                <button class="p-name" type="button">Arjun Kapoor</button>
+                                <div class="p-sub">+91 99450 66789 · 1BHK, Electronic City</div>
+                            </div>
+                            <span class="p-age">34d</span>
+                        </div>
+                        <div class="p-status">
+                            <label><span class="lbl">Stage</span><select class="select tone-danger"><option>Lost</option></select></label>
+                            <label><span class="lbl">Quality</span><select class="select tone-danger"><option>Unqualified</option></select></label>
+                        </div>
+                        <div class="p-meta"><span><b>Karthik M</b></span><span>₹3L</span><span>No tasks</span></div>
+                        <div class="p-actions">
+                            <a class="btn call" href="tel:+919945066789" aria-label="Call Arjun Kapoor"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Call</a>
+                            <a class="btn call" href="#" aria-label="WhatsApp Arjun Kapoor"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20l1.2-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>WhatsApp</a>
+                            <button class="btn p-more" type="button" aria-expanded="false" aria-label="Show details for Arjun Kapoor"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+                        </div>
+                    </li>
+                </ul>
+
+                <nav class="p-pager" aria-label="Lead pages">
+                    <button class="btn" type="button" disabled>Previous</button>
+                    <span class="info">1–7 of 7<br>Page 1 of 1</span>
+                    <button class="btn" type="button" disabled>Next</button>
+                </nav>
+                <div class="p-pager-foot"><label for="p-per">Leads per page</label><select id="p-per" class="select"><option>25</option><option>50</option><option>100</option></select></div>
+
+                <div class="p-bulk" id="p-bulk" hidden role="region" aria-label="Bulk lead actions">
+                    <div class="p-bulk-row"><strong id="p-bulk-count" role="status">0 leads selected</strong><button class="btn btn-quiet" type="button" id="p-bulk-clear">Clear</button></div>
+                    <div class="p-bulk-row">
+                        <label class="sr" for="p-bulk-action">Bulk action</label>
+                        <select class="select" id="p-bulk-action"><option>Choose an action</option><option>Assign to rep</option><option>Change stage</option><option>Mark unqualified</option><option>Delete leads</option></select>
+                        <button class="btn btn-primary" type="button">Apply</button>
+                    </div>
+                </div>
+            </div>
+            <p class="frame-note">Tick a card or "All" to see the bulk bar. Scroll inside the phone: search and Filters stay put.</p>
+        </div>
+
+        <!-- ================= PROPOSED: SELECTING + PRE-SALES ================= -->
+        <div class="frame">
+            <p class="frame-label">Proposed <span class="tag is-new">Selecting, pre-sales</span></p>
+            <div class="phone" aria-label="Proposed pre-sales list with three leads selected">
+                <div class="topbar"><button type="button" aria-label="Open menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><span class="brand-dot"></span><strong>Q Oak CRM</strong></div>
+                <div class="p-head"><h2>Leads</h2><button class="btn btn-primary" type="button">Add lead</button></div>
+                <div class="p-toolbar">
+                    <label class="p-search"><span class="sr">Search leads</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input" type="search" placeholder="Search leads"></label>
+                    <button class="btn" type="button" aria-label="Filters, 1 active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg>Filters <span class="filter-count">1</span></button>
+                </div>
+                <div class="p-chips" role="group" aria-label="Needs attention and lead summary">
+                    <button class="chip is-alert" type="button" aria-pressed="true"><b>6</b> pending calls</button>
+                    <button class="chip" type="button" aria-pressed="false"><b>2</b> unread WhatsApp</button>
+                    <button class="chip" type="button" aria-pressed="false"><b>11</b> not called</button>
+                </div>
+                <div class="p-result">
+                    <label class="p-selectall"><input class="check" type="checkbox" checked aria-checked="mixed"> All</label>
+                    <span class="count">18 · action required</span>
+                </div>
+                <ul class="p-list">
+                    <li class="p-card is-selected">
+                        <div class="p-top">
+                            <label class="p-sel"><input class="check" type="checkbox" checked aria-label="Select Sneha Kulkarni"></label>
+                            <div class="p-id"><button class="p-name" type="button">Sneha Kulkarni</button><div class="p-sub">+91 98441 77890 · 2BHK, Yelahanka</div><div class="p-flags"><span class="badge is-danger">Due today</span></div></div>
+                            <span class="p-age">0d</span>
+                        </div>
+                        <div class="p-meta"><span><b>Log call 1 of 3</b></span><span>0/3 calls · 0/2 WA</span><span>₹7L</span></div>
+                        <div class="p-actions is-presales">
+                            <button class="btn" type="button" aria-label="Log call for Sneha Kulkarni">Log call</button>
+                            <button class="btn" type="button" aria-label="Log WhatsApp for Sneha Kulkarni">Log WA</button>
+                            <a class="btn call" href="tel:+919844177890" aria-label="Call Sneha Kulkarni">Call</a>
+                        </div>
+                    </li>
+                    <li class="p-card is-selected">
+                        <div class="p-top">
+                            <label class="p-sel"><input class="check" type="checkbox" checked aria-label="Select Imran Qureshi"></label>
+                            <div class="p-id"><button class="p-name" type="button">Imran Qureshi</button><div class="p-sub">+91 90360 88901 · 3BHK, JP Nagar</div><div class="p-flags"><span class="badge is-info">Cycle in progress</span><span class="badge is-success">New WhatsApp</span></div></div>
+                            <span class="p-age">2d</span>
+                        </div>
+                        <div class="p-meta"><span><b>Log WhatsApp</b></span><span>3/3 calls · 1/2 WA</span><span>₹15L</span></div>
+                        <div class="p-actions is-presales">
+                            <button class="btn" type="button" aria-label="Log call for Imran Qureshi">Log call</button>
+                            <button class="btn" type="button" aria-label="Log WhatsApp for Imran Qureshi">Log WA</button>
+                            <a class="btn call" href="#" aria-label="WhatsApp Imran Qureshi">WhatsApp</a>
+                        </div>
+                    </li>
+                    <li class="p-card">
+                        <div class="p-top">
+                            <label class="p-sel"><input class="check" type="checkbox" aria-label="Select Kavya Nair"></label>
+                            <div class="p-id"><button class="p-name" type="button">Kavya Nair</button><div class="p-sub">+91 97310 99012 · Villa, Devanahalli</div><div class="p-flags"><span class="badge is-success">On track</span></div></div>
+                            <span class="p-age">3d</span>
+                        </div>
+                        <div class="p-meta"><span><b>Ready to qualify</b></span><span>Details 6/6</span><span>₹22L</span></div>
+                        <div class="p-actions is-presales">
+                            <button class="btn" type="button" aria-label="Log call for Kavya Nair">Log call</button>
+                            <button class="btn" type="button" aria-label="Log WhatsApp for Kavya Nair">Log WA</button>
+                            <button class="btn btn-primary" type="button" aria-label="Decide on Kavya Nair">Decide</button>
+                        </div>
+                    </li>
+                    <li class="p-card is-selected">
+                        <div class="p-top">
+                            <label class="p-sel"><input class="check" type="checkbox" checked aria-label="Select Rahul Bhat"></label>
+                            <div class="p-id"><button class="p-name" type="button">Rahul Bhat</button><div class="p-sub">+91 99860 10123 · 2BHK, Marathahalli</div><div class="p-flags"><span class="badge is-danger">Due today</span></div></div>
+                            <span class="p-age">1d</span>
+                        </div>
+                        <div class="p-meta"><span><b>Log call 2 of 3</b></span><span>1/3 calls · 0/2 WA</span><span class="is-warn">Budget missing</span></div>
+                        <div class="p-actions is-presales">
+                            <button class="btn" type="button" aria-label="Log call for Rahul Bhat">Log call</button>
+                            <button class="btn" type="button" aria-label="Log WhatsApp for Rahul Bhat">Log WA</button>
+                            <a class="btn call" href="tel:+919986010123" aria-label="Call Rahul Bhat">Call</a>
+                        </div>
+                    </li>
+                </ul>
+                <nav class="p-pager" aria-label="Lead pages">
+                    <button class="btn" type="button" disabled>Previous</button>
+                    <span class="info">1–18 of 18<br>Page 1 of 1</span>
+                    <button class="btn" type="button" disabled>Next</button>
+                </nav>
+                <div class="p-bulk" role="region" aria-label="Bulk lead actions">
+                    <div class="p-bulk-row"><strong role="status">3 leads selected</strong><button class="btn btn-quiet" type="button">Clear</button></div>
+                    <div class="p-bulk-row">
+                        <label class="sr" for="p3-bulk">Bulk action</label>
+                        <select class="select" id="p3-bulk"><option>Change stage: Contacted</option></select>
+                        <button class="btn btn-primary" type="button">Apply</button>
+                    </div>
+                    <p class="p-bulk-hint">Pre-sales sees only New and Contacted, as today.</p>
+                </div>
+            </div>
+            <p class="frame-note">Pre-sales cards swap stage and quality for the follow-up status and next step they already show, with Log call, Log WA and Decide kept as 44px buttons.</p>
+        </div>
+    </div>
+
+    <div class="notes">
+        <section>
+            <h2>Proposed changes</h2>
+            <ol>
+                <li><strong>Sticky search row.</strong> Search and Filters (with active count) stick under the 52px top bar. Title, More and Add lead scroll away, so only one row stays pinned.</li>
+                <li><strong>One count row.</strong> The attention pills and the summary strip merge into one scrolling row of 44px filter-count pills, attention first (STD-CRM-1). Same buttons, same <code>aria-pressed</code> filters. About 150px less before the first lead.</li>
+                <li><strong>Card order: name, contact, status, owner, act.</strong> Name and age on top, phone and project or location on one muted line, flags (New WhatsApp, Awaiting 5h, Routing exception) as text badges.</li>
+                <li><strong>Stage and quality side by side</strong> with an 11px label above, each still a toned, editable dropdown drawn as a 32px, 14px-text pill with a 44px invisible tap area (STD-CRM-6, STD-CRM-11). The quality dropdown shows Qualified, Unqualified or Pending; plan received or pending moves to the meta line, so long values never truncate on a 375px screen.</li>
+                <li><strong>Owner, budget and tasks always visible</strong> in one meta line. Overdue tasks in red text, Unassigned in amber text. No coloured card edges (STD-VIS-3).</li>
+                <li><strong>One-tap Call and WhatsApp</strong> as 44px buttons. Call uses the existing <code>tel:</code> link; WhatsApp is new. The chevron moves into the action row and keeps <code>.idlm-lead-row-expand</code>; Show details reveals channel, studio and dates as a short list.</li>
+                <li><strong>Selection.</strong> 44px checkbox target in each card's corner; selected cards get the action border. An "All" checkbox (select this page) leads the result line on phones, lined up with the card checkboxes, because the header checkbox is hidden there today.</li>
+                <li><strong>Bulk bar at the bottom.</strong> Count and Clear on row one, action and Apply on row two. Sticky to the bottom for thumb reach, with matching list padding so the last card stays reachable (STD-LAY-5). Delete still confirms via <code>IDLMDialog</code> with the count (STD-CRM-8).</li>
+                <li><strong>Pagination</strong> becomes Previous, range and page, Next as 44px buttons, with Leads per page on its own line.</li>
+                <li><strong>Pre-sales</strong> keeps its queue card: follow-up status and next step replace stage and quality, and the action row is Log call, Log WA, then Decide when ready or Call otherwise.</li>
+            </ol>
+            <div class="q">
+                <h2>Decisions for Shashi</h2>
+                <ul>
+                    <li>WhatsApp button: open the chat directly (<code>wa.me</code>, number normalised with <code>IDLM_Interakt::format_phone_for_interakt()</code>), or open the Interakt inbox when Interakt is on, as the drawer does?</li>
+                    <li>Should tapping WhatsApp or Call also log a touch for pre-sales, or stay a plain link? This mockup keeps them as plain links: no behaviour change.</li>
+                    <li>Keep Previous/Next, or switch phones to "Show 25 more" using the existing cursor pagination?</li>
+                </ul>
+            </div>
+        </section>
+        <section>
+            <h2>Files to change</h2>
+            <ul>
+                <li><code>includes/class-admin-collection-reads.php</code>: row markup for both lead rows and pre-sales rows (meta line, action row with Call and WhatsApp, chevron move). The admin page and the workspace shortcode load rows from this one AJAX response, so parity comes for free.</li>
+                <li><code>templates/admin/leads.php</code>: wrap search and Filters in their own row so they can stick; add the phone-only select-page checkbox; reorder the bulk bar children. Every existing ID, class, <code>name</code> and <code>data-*</code> stays (STD-CSS-9).</li>
+                <li><code>assets/css/crm-design-leads.css</code>: rewrite the 782px and 480px card rules, sticky row, merged count row, bottom bulk bar, 44px pagination. Gated selectors, tokens only, no <code>!important</code>.</li>
+                <li><code>assets/js/admin-app.js</code>: The phone select-page checkbox mirrors <code>#idlm-select-all</code>; bulk bar toggles list padding; expand toggle keeps its handler at the new position.</li>
+                <li><code>assets/css/workspace.css</code> (check only): sticky offset under the shortcode workspace top bar via <code>--idlm-sticky-top</code>.</li>
+                <li><code>tests/ui-regression-contracts.php</code>: contracts for 44px phone targets, the WhatsApp link and the select-page control.</li>
+                <li><code>design-system/interior-design-lead-manager/pages/leads.md</code>: record the phone card decisions. <code>CHANGELOG.md</code> and the version bump at release time only.</li>
+            </ul>
+            <div class="q">
+                <h2>Not changing</h2>
+                <ul>
+                    <li>Desktop and tablet table layouts above 782px.</li>
+                    <li>Filter panel, lead drawer, quick-edit save behaviour, server checks.</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+(function () {
+    var root = document.getElementById('proposed');
+    if (!root) { return; }
+    var rows = root.querySelectorAll('.p-row');
+    var all = document.getElementById('p-all');
+    var bar = document.getElementById('p-bulk');
+    var count = document.getElementById('p-bulk-count');
+    var list = document.getElementById('p-list');
+    function sync() {
+        var n = 0;
+        rows.forEach(function (box) {
+            box.closest('.p-card').classList.toggle('is-selected', box.checked);
+            if (box.checked) { n++; }
+        });
+        all.checked = n === rows.length;
+        all.indeterminate = n > 0 && n < rows.length;
+        bar.hidden = n === 0;
+        count.textContent = n + (n === 1 ? ' lead selected' : ' leads selected');
+        list.style.paddingBottom = n ? '120px' : '';
+    }
+    rows.forEach(function (box) { box.addEventListener('change', sync); });
+    all.addEventListener('change', function () { rows.forEach(function (box) { box.checked = all.checked; }); sync(); });
+    document.getElementById('p-bulk-clear').addEventListener('click', function () { rows.forEach(function (box) { box.checked = false; }); sync(); });
+    root.querySelectorAll('.p-more').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var card = btn.closest('.p-card');
+            var details = card.querySelector('.p-details');
+            if (!details) { return; }
+            var open = details.hidden;
+            details.hidden = !open;
+            btn.setAttribute('aria-expanded', String(open));
+            btn.querySelector('path').setAttribute('d', open ? 'm6 15 6-6 6 6' : 'm6 9 6 6 6-6');
+        });
+    });
+})();
+</script>
+<script>
+/* Mirrors dialog.js: pointer use hides focus rings, Tab restores them. */
+document.addEventListener('pointerdown', function () { document.body.classList.add('idlm-pointer-input'); }, true);
+document.addEventListener('keydown', function (e) { if (e.key === 'Tab') { document.body.classList.remove('idlm-pointer-input'); } }, true);
+</script>
+</body>
+</html>

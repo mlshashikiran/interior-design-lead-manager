@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.105.16] - 2026-11-17
+
+### Changed
+
+- The Leads list works better on phones. Search and Filters stay pinned under the top bar while you scroll. Each lead card shows the name, phone and location, then stage and quality side by side as compact dropdowns, then one line with the owner, budget, plan status, tasks and age, and Call and WhatsApp buttons that open the phone dialler or WhatsApp straight away. The summary counts are smaller pills. Tablets and computers look the same as before. Builder: Shashi.
+- On phones, an "All" checkbox above the cards selects every lead on the page, the bulk actions bar sits at the bottom of the screen within thumb reach, and Previous and Next are full-size buttons.
+
 ## [1.105.15] - 2026-11-15
 
 ### Fixed

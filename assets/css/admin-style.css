@@ -2141,6 +2141,27 @@ body.idlm-filters-open {
     #idlm-leads-table .idlm-queue-actions .idlm-btn-primary {
         grid-column: 1 / -1;
     }
+
+    /* Phone card summary and quick actions (the front-end design layer restyles these). */
+    #idlm-leads-table .idlm-responsive-lead-row > td.idlm-col-mobile { display: block; padding: var(--idlm-space-2) var(--idlm-space-3) var(--idlm-space-3); }
+    #idlm-leads-table .idlm-responsive-lead-row > td.idlm-col-mobile::before { content: none; }
+    #idlm-leads-table .idlm-lead-row-meta { display: flex; flex-wrap: wrap; gap: 2px var(--idlm-space-3); margin: 0 0 var(--idlm-space-2); color: var(--idlm-text-muted); font-size: 12px; }
+    #idlm-leads-table .idlm-lead-row-meta .is-warning { color: var(--idlm-warning); font-weight: 600; }
+    #idlm-leads-table .idlm-lead-row-meta .is-danger { color: var(--idlm-danger); font-weight: 600; }
+    #idlm-leads-table .idlm-lead-row-quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--idlm-space-2); }
+    #idlm-leads-table .idlm-lead-row-quick .idlm-btn { justify-content: center; min-height: var(--idlm-target-size); }
+    #idlm-leads-table .idlm-lead-row-place { display: inline; }
+    #idlm-leads-table .idlm-lead-row-place::before { content: "·"; margin-inline: 6px; }
+    .idlm-leads-mobile-select-all { display: inline-flex; align-items: center; gap: 6px; min-height: var(--idlm-target-size); }
+}
+
+/* Phone-only lead list pieces stay hidden on wider screens. */
+@media (min-width: 783px) {
+    #idlm-leads-table .idlm-col-mobile,
+    #idlm-leads-table .idlm-lead-row-place,
+    .idlm-leads-mobile-select-all {
+        display: none;
+    }
 }
 
 @media (max-width: 480px) {

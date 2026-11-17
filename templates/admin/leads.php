@@ -159,6 +159,8 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
             </section>
 
             <div class="idlm-active-filters" id="idlm-active-filters">
+                <?php // Phones hide the table header, so this mirrors #idlm-select-all there. ?>
+                <label class="idlm-leads-mobile-select-all" for="idlm-select-all-mobile"><input type="checkbox" id="idlm-select-all-mobile" aria-controls="idlm-leads-table"><span>All</span><span class="screen-reader-text"> leads on this page</span></label>
                 <span class="idlm-active-filters-count" id="idlm-leads-result-count" role="status" aria-live="polite"></span>
                 <ul class="idlm-active-filters-list" id="idlm-active-filters-list" aria-label="Active filters" hidden></ul>
                 <button type="button" class="idlm-btn idlm-btn-quiet idlm-active-filters-clear" id="idlm-active-filters-clear" hidden>Clear all</button>

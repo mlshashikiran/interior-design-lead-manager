@@ -602,3 +602,31 @@ idlm_test('webhook mapping shows every mappable field in a group, including the 
     assert_same(array(), array_values(array_diff($fields[1], $grouped[1])), 'Every labelled field belongs to a mapping group.');
     foreach (array('fbc', 'fbp') as $cookie) { assert_true(in_array($cookie, $grouped[1], true), $cookie . ' is shown under Attribution.'); }
 });
+
+idlm_test('Phone lead cards keep 44px reach, one-tap Call and WhatsApp, and a select-all mirror', static function(): void {
+    $root = dirname(__DIR__);
+    $reads = (string) file_get_contents($root . '/includes/class-admin-collection-reads.php');
+    $template = (string) file_get_contents($root . '/templates/admin/leads.php');
+    $script = (string) file_get_contents($root . '/assets/js/admin-app.js');
+    $css = (string) file_get_contents($root . '/assets/css/crm-design-leads.css');
+    $legacy = (string) file_get_contents($root . '/assets/css/admin-style.css');
+
+    // Both row kinds end with the phone summary cell; WhatsApp uses the Interakt-normalised number.
+    assert_same(2, substr_count($reads, 'self::render_mobile_quick_cell($l, $name'), 'Standard and pre-sales rows both render the phone cell.');
+    foreach (array('class="idlm-col-mobile"', 'idlm-lead-row-call', 'idlm-lead-row-whatsapp', "'https://wa.me/'", 'IDLM_Interakt::format_phone_for_interakt(', 'rel="noopener noreferrer"') as $contract) {
+        assert_contains($contract, $reads);
+    }
+    // Phones hide the header checkbox, so the result line mirrors it and the script keeps both in sync.
+    assert_contains('id="idlm-select-all-mobile"', $template);
+    assert_contains("'#idlm-select-all, #idlm-select-all-mobile'", $script);
+    assert_contains("document.getElementById('idlm-select-all-mobile')", $script);
+    // Quality labels shorten on phones only; stored values never change.
+    assert_contains('function syncLeadQualityLabels()', $script);
+    // Phone-only pieces are hidden on wider screens in both stylesheets.
+    assert_contains('#idlm-leads-table .idlm-col-mobile', $css);
+    assert_contains('#idlm-leads-table .idlm-col-mobile', $legacy);
+    // Compact stage and quality pills keep a 44px touch box; the bulk bar leaves room for the last card.
+    assert_contains('> select.idlm-table-select.idlm-quick-edit {' . "\n" . '        height: var(--idlm-target-size);', $css);
+    assert_contains(':has(.idlm-bulk-bar:not([hidden])) {' . "\n" . '        padding-bottom:', $css);
+    assert_contains('.idlm-pagination .idlm-pagination-btn {' . "\n" . '        height: var(--idlm-target-size);', $css);
+});
