@@ -198,3 +198,21 @@ idlm_test('CONNECTOR check results mark each line passed, warning or failed', st
         IDLM_Lead_Connector::check_items(array('ok'=>true, 'lines'=>array('Token accepted with all lead permissions.', 'All 1 form(s) are readable.'))));
     assert_same(array('warn', 'fail'), array_column(IDLM_Lead_Connector::check_items(array('ok'=>false, 'lines'=>array('Token accepted, but it is missing: pages_manage_ads.', 'Leads of form 222 cannot be read.'))), 'state'));
 });
+idlm_test('CONNECTOR Meta property type answers save as CRM project types on both Meta intake paths',static function():void {
+    // Real production payloads (platform=meta webhook) send Meta option keys and combined labels.
+    foreach (array('Apartment/Flat'=>'Apartment','apartment_flat'=>'Apartment','Villa/Duplex/Penthouse'=>'Villa','Villa / duplex'=>'Villa','independent_house'=>'Independent House','Independent-House'=>'Independent House','Commercial space'=>'Commercial','Apartment'=>'Apartment','Farmhouse'=>'Farmhouse','  '=>'') as $raw=>$expected) {
+        assert_same($expected,IDLM_Webhook_Intake::normalize_property_type($raw),'Normalising '.var_export($raw,true).'.');
+    }
+    $payload=array(array('first_name'=>'Asha','phone'=>'9876543210','fb_lead_id'=>1161085246438287,'property_type'=>'Villa/Duplex/Penthouse'));
+    $saved=$GLOBALS['idlm_test_options']['idlm_field_mappings_meta'] ?? null;
+    // Production mapping for platform=meta (keys from the live option, values are payload keys).
+    $GLOBALS['idlm_test_options']['idlm_field_mappings_meta']=array('first_name'=>'first_name','phone'=>'phone','property_type'=>'property_type','fb_lead_id'=>'fb_lead_id');
+    try { $lead=IDLM_Webhook_Intake::apply_field_mappings($payload,'meta'); }
+    finally { if (null===$saved) { unset($GLOBALS['idlm_test_options']['idlm_field_mappings_meta']); } else { $GLOBALS['idlm_test_options']['idlm_field_mappings_meta']=$saved; } }
+    assert_same('Villa',$lead['property_type']);
+    $record=array('id'=>'99999999999999999999','field_data'=>array(array('name'=>'Phone Number','values'=>array('+919876543210')),array('name'=>'What type of property do you need interiors for?','values'=>array('independent_house'))));
+    $data=IDLM_Lead_Connector::map_meta($record,array('phone'=>'Phone Number','property_type'=>'What type of property do you need interiors for?'));
+    assert_same('Independent House',$data['property_type']);
+    $drawer=file_get_contents(dirname(__DIR__).'/includes/class-admin-lead-reads.php');
+    assert_contains('Keep an older intake value so saving the drawer does not clear it.',$drawer);
+});

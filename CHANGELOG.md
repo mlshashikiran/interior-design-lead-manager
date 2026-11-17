@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.105.19] - 2026-11-17
+
+### Fixed
+
+- Meta lead property types are saved as one of the CRM project types. Answers such as "Apartment/Flat", "Villa/Duplex/Penthouse" and "independent_house" now become Apartment, Villa and Independent House. Builder: Shashi.
+- Saving a lead in the drawer no longer clears a property type that isn't one of the four choices; the existing value stays selected.
+
 ## [1.105.18] - 2026-11-17
 
 ### Fixed

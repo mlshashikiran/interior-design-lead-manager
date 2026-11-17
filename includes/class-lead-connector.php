@@ -529,6 +529,7 @@ final class IDLM_Lead_Connector {
             $parts=preg_split('/\s+/',trim($answers[$full_name]),2); $data['first_name']=$parts[0]; if ($data['last_name']==='') { $data['last_name']=$parts[1] ?? ''; }
         }
         $data['email']=sanitize_email($data['email']);
+        $data['property_type']=IDLM_Webhook_Intake::normalize_property_type($data['property_type']);
         if ($data['phone'] === '' && $data['email'] === '') { return new WP_Error('idlm_connector_contact','Lead has no mapped email or phone.'); }
         return $data;
     }

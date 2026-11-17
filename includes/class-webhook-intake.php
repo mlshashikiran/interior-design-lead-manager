@@ -252,22 +252,31 @@ final class IDLM_Webhook_Intake {
     }
 
     public static function normalize_property_type($val) {
-        $val = strtolower(trim($val));
-        if (empty($val)) {
+        $val = strtolower(trim((string) $val));
+        if ('' === $val) {
             return '';
         }
 
-        if (in_array($val, array('apt', 'apartment', 'apartments', 'flat', 'flats', 'unit', 'condo', 'condominium'))) {
-            return 'Apartment';
-        }
-        if (in_array($val, array('villa', 'villas', 'row house', 'rowhouse', 'bungalow', 'bungalows'))) {
-            return 'Villa';
-        }
-        if (in_array($val, array('independent house', 'house', 'plot', 'residential', 'builder floor', 'individual house'))) {
-            return 'Independent House';
-        }
-        if (in_array($val, array('commercial', 'office', 'shop', 'retail', 'showroom', 'commercial space'))) {
-            return 'Commercial';
+        $types = array(
+            'Apartment'         => array('apt', 'apartment', 'apartments', 'flat', 'flats', 'unit', 'condo', 'condominium'),
+            'Villa'             => array('villa', 'villas', 'row house', 'rowhouse', 'bungalow', 'bungalows', 'duplex', 'penthouse', 'triplex'),
+            'Independent House' => array('independent house', 'house', 'plot', 'residential', 'builder floor', 'individual house'),
+            'Commercial'        => array('commercial', 'office', 'shop', 'retail', 'showroom', 'commercial space'),
+        );
+        // Meta instant-form answers arrive as option keys ("independent_house") or
+        // combined labels ("Villa/Duplex/Penthouse", "Apartment / flat"). Map them to the
+        // CRM's fixed choices so the lead drawer select can show and keep the value.
+        $plain = trim(preg_replace('/\s+/', ' ', str_replace(array('_', '-'), ' ', $val)));
+        $candidates = array_merge(array($plain), array_map('trim', preg_split('/[\/,|&]+|\bor\b/', $plain)));
+        // Whole answers and their parts first, then single words ("apartment flat").
+        foreach (array($candidates, explode(' ', $plain)) as $group) {
+            foreach ($group as $candidate) {
+                foreach ($types as $type => $aliases) {
+                    if (in_array($candidate, $aliases, true)) {
+                        return $type;
+                    }
+                }
+            }
         }
 
         return ucfirst($val); // Fallback to capitalized original if no match

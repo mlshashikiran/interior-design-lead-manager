@@ -480,6 +480,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                                             <option value="Villa" <?php selected($lead->property_type, 'Villa'); ?>>Villa</option>
                                             <option value="Independent House" <?php selected($lead->property_type, 'Independent House'); ?>>Independent House</option>
                                             <option value="Commercial" <?php selected($lead->property_type, 'Commercial'); ?>>Commercial</option>
+                                            <?php if ('' !== (string) $lead->property_type && !in_array((string) $lead->property_type, array('Apartment', 'Villa', 'Independent House', 'Commercial'), true)) { /* Keep an older intake value so saving the drawer does not clear it. */ printf('<option value="%1$s" selected>%2$s</option>', esc_attr($lead->property_type), esc_html($lead->property_type)); } ?>
                                         </select>
                                         <?php echo $need_note('property_type'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in the closure. ?>
                                     </div>
