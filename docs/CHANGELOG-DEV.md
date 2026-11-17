@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## Unreleased — Trim CI runs (2026-11-17)
+
+Builder: Shashi. `.github/workflows/tests.yml` ran 10 matrix jobs (each with MySQL, a WordPress download and three suites) plus the release-artifact gate on every push to every branch and tag, and again for the pull request. It now runs on pull requests, pushes to `main` and manual dispatch only; a `concurrency` group cancels superseded runs except on `main`; pull requests exclude PHP 8.1/8.3/8.4 (4 jobs: 7.4 and 8.5 × WordPress 6.6/latest). The full 10-job matrix and the release-artifact gate still run on `main`. The REL005 matrix literal is unchanged. No plugin code change.
+
 ## 1.105.19 — Meta property type normalisation (2026-11-17)
 
 Builder: Shashi. Production Meta leads arrive through `/webhook?platform=meta` with `property_type` set to the instant-form answer ("Villa/Duplex/Penthouse", "Apartment/Flat", "independent_house"). `IDLM_Webhook_Intake::normalize_property_type()` matched only exact single words, so 602 leads stored raw values. The drawer `<select>` offers only Apartment/Villa/Independent House/Commercial, so saving the drawer posted '' and cleared 67 of them (activity log "changed from 'Villa/duplex/penthouse' to ''"). The normaliser now treats `_`/`-` as spaces, splits combined labels on `/ , | & or`, then tries single words, and maps duplex/penthouse/triplex to Villa; unmatched values keep the `ucfirst()` fallback. `IDLM_Lead_Connector::map_meta()` applies the same normaliser on the direct connector path. The drawer renders a non-standard current value as a selected extra option. Existing rows are unchanged (no backfill). Test: `CONNECTOR Meta property type answers save as CRM project types on both Meta intake paths`. No schema change.

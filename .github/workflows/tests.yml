@@ -1,8 +1,17 @@
 name: Plugin tests
 
 on:
+  # Branch work is checked through its pull request; main is checked after merge.
+  # Tag pushes do not start a second run of an already-tested commit.
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+# A newer push to the same pull request cancels the older run. Runs on main always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   test:
@@ -14,6 +23,8 @@ jobs:
       matrix:
         php: ['7.4', '8.1', '8.3', '8.4', '8.5']
         wordpress: ['6.6', 'latest']
+        # Pull requests test the supported floor and the newest PHP (4 jobs); main runs all 10.
+        exclude: ${{ github.event_name == 'pull_request' && fromJSON('[{"php":"8.1"},{"php":"8.3"},{"php":"8.4"}]') || fromJSON('[]') }}
     services:
       mysql:
         image: mysql:8.0
