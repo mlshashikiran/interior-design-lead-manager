@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.106.1] - 2026-11-17
+
+### Changed
+
+- A lead that is with pre-sales and not yet qualified stays in pre-sales. Assigning it to a sales rep or an administrator, or unassigning it, is refused with the message "This lead is still with pre-sales and has not been qualified…", from the lead list, the lead drawer and bulk assign, and for every role including administrators. Builder: Shashi.
+- It can still move to another pre-sales person, for example to cover leave.
+- Once pre-sales marks it Qualified, the handoff to sales works as before, by automatic routing or by a manager.
+
 ## [1.106.0] - 2026-11-17
 
 ### Added

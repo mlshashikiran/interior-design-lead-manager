@@ -24,6 +24,21 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
     const REENQUIRY_PLATFORMS = array('website', 'meta', 'google', 'linkedin', 'walkin');
     const REENQUIRY_TASK_TITLE = 'Customer enquired again: call back';
     const REENQUIRY_DEFAULT_QUIET_DAYS = 3;
+    const PRESALES_HOLD_ERROR = 'This lead is still with pre-sales and has not been qualified. Pre-sales must qualify it before it can be assigned to anyone outside pre-sales. You can move it to another pre-sales person.';
+
+    /**
+     * An unqualified lead owned by pre-sales may move only to another pre-sales person.
+     * Pure check: returns the error text, or '' when the owner change is allowed.
+     */
+    public static function presales_hold_error($old_owner_id, $new_owner_id, $qualified_after, array $pre_sales_ids) {
+        $old_owner_id = absint($old_owner_id);
+        $new_owner_id = absint($new_owner_id);
+        $pre_sales_ids = array_map('absint', $pre_sales_ids);
+        if ($old_owner_id === $new_owner_id || $qualified_after) { return ''; }
+        if (!$old_owner_id || !in_array($old_owner_id, $pre_sales_ids, true)) { return ''; }
+        if ($new_owner_id && in_array($new_owner_id, $pre_sales_ids, true)) { return ''; }
+        return self::PRESALES_HOLD_ERROR;
+    }
 
     /** Days without a submission before a new one counts as a re-enquiry (1–90, default 3). */
     public static function reenquiry_quiet_days() {
@@ -881,6 +896,15 @@ final class IDLM_Lead_Lifecycle_Service extends IDLM_DB {
         }
         if (!self::validate_quality_transition($lead_id, $old_lead, $data, $explicit_quality_update)) {
             return false;
+        }
+        if (isset($data['assigned_rep_id'])) {
+            $quality_after = array_key_exists('lead_quality', $data) ? (string) $data['lead_quality'] : (string) $old_lead->lead_quality;
+            $qualified_after = 'Qualified' === $quality_after || (isset($data['stage']) && 'Qualified' === $data['stage']);
+            $hold_error = self::presales_hold_error($old_lead->assigned_rep_id, $data['assigned_rep_id'], $qualified_after, IDLM_Lead_Access_Policy::pre_sales_user_ids());
+            if ('' !== $hold_error) {
+                self::$last_validation_error = $hold_error;
+                return false;
+            }
         }
 
         $qualification_handoff_remark = isset($data['qualification_handoff_remark'])
