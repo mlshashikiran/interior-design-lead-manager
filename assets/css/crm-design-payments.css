@@ -2,7 +2,6 @@
    Contract: design-system/interior-design-lead-manager/STANDARD.md. Every selector starts
    with body.idlm-crm-design. Tokens only: no hex colours, no important overrides. */
 
-
 /* --- Lead list: one scannable row, the whole row opens the project ------- */
 body.idlm-crm-design .idlm-payments .idlm-payment-leads { table-layout: auto; width: 100%; }
 body.idlm-crm-design .idlm-payments .idlm-payment-leads th:first-child,
@@ -42,7 +41,6 @@ body.idlm-crm-design .idlm-payments .idlm-alert { margin-bottom: var(--idlm-spac
 body.idlm-crm-design .idlm-payments .idlm-pagination { margin-top: var(--idlm-space-3); }
 body.idlm-crm-design .idlm-payments .idlm-pagination:empty { display: none; }
 
-
 @media (max-width: 782px) {
     body.idlm-crm-design .idlm-payments .idlm-payment-leads th:first-child, body.idlm-crm-design .idlm-payments .idlm-payment-leads td:first-child { width: 64px; }
     body.idlm-crm-design .idlm-payments .idlm-quote-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -69,7 +67,6 @@ body.idlm-crm-design .idlm-payments .idlm-alert > .dashicons { display: none; }
     body.idlm-crm-design .idlm-payments .idlm-quote-summary strong { overflow: visible; font-size: 1rem; text-overflow: clip; overflow-wrap: anywhere; }
     body.idlm-crm-design .idlm-payments .idlm-quote-summary > div { padding: var(--idlm-space-3); }
 }
-
 
 /* --- Design handoff: lead drawer card and send dialog --------------------- */
 body.idlm-crm-design #idlm-lead-drawer .idlm-design-card { margin-bottom: var(--idlm-space-3); }
@@ -117,11 +114,9 @@ body.idlm-crm-design .idlm-design-team .idlm-design-revisions li { padding: var(
 body.idlm-crm-design .idlm-design-team .idlm-design-revisions small { display: block; color: var(--idlm-text-muted); font-size: 0.75rem; }
 body.idlm-crm-design .idlm-design-team .idlm-design-milestones td small { color: var(--idlm-text-muted); font-size: 0.75rem; }
 body.idlm-crm-design .idlm-design-team .idlm-design-panel .idlm-table-wrapper { margin: var(--idlm-space-2) 0; }
-body.idlm-crm-design .idlm-design-team .idlm-design-approve,
-body.idlm-crm-design .idlm-design-team .idlm-design-payment { display: flex; flex-direction: column; gap: var(--idlm-space-2); }
+body.idlm-crm-design .idlm-design-team .idlm-design-approve { display: flex; flex-direction: column; gap: var(--idlm-space-2); }
 body.idlm-crm-design .idlm-design-team .idlm-design-approve { margin-top: var(--idlm-space-3); }
-body.idlm-crm-design .idlm-design-team .idlm-design-approve label,
-body.idlm-crm-design .idlm-design-team .idlm-design-payment label { color: var(--idlm-text); font-size: 0.8125rem; font-weight: 500; }
+body.idlm-crm-design .idlm-design-team .idlm-design-approve label { color: var(--idlm-text); font-size: 0.8125rem; font-weight: 500; }
 body.idlm-crm-design .idlm-design-team .idlm-design-steps { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--idlm-space-2); margin: 0 0 var(--idlm-space-3); padding: 0; list-style: none; }
 body.idlm-crm-design .idlm-design-team .idlm-design-steps li { padding: var(--idlm-space-2); border: 1px solid var(--idlm-border); border-radius: 6px; font-size: 0.75rem; overflow-wrap: anywhere; }
 body.idlm-crm-design .idlm-design-team .idlm-design-steps li span { display: block; color: var(--idlm-text-muted); }

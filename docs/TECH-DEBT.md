@@ -39,6 +39,10 @@ No open high-priority code defect is currently proven. Version 1.99.8 adds the g
 
 ## Low
 
+### Legacy stylesheet under the design layer (1.109.0)
+
+`admin-style.css` (~6,580 lines) still loads under every CRM page. Version 1.109.0 removed rules for class names no code renders and 113 top-level rules that the design layer overrides everywhere it was measured (method in `docs/SHADCN-UI-FOUNDATIONS-PLAN.md`). Still to do: rules inside media queries, rules with state pseudo-classes or pseudo-elements, 220 rules that matched nothing in any measured state (they may serve dialogs and states not opened during measurement), and rules kept on purpose (`[hidden]` guards, `data-idlm-ui` utilities, size and position, `!important`, contract-test literals, twin selectors). The file also owns the base tokens (`:root` spacing, radius, layers, status colours), which must move into `crm-design.css` before the file can go.
+
 ### Remaining request and client hotspots
 
 - **Problem:** `class-admin-ajax.php`, `class-integrations.php`, `class-db.php`, `class-capi.php`, `class-dashboard.php`, `admin-app.js`, and the Leads template remain large compatibility hotspots.

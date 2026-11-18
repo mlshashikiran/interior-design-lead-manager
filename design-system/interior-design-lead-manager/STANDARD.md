@@ -72,6 +72,14 @@ The redesign lives in switchable stylesheets: `assets/css/crm-design.css` (token
 - **STD-CSS-9** Markup changes must keep every existing class, ID, `name`, `data-*` and handler that `assets/js/` or the contract tests use. The CRM design is the only design, so change markup directly; never add a second rendering path or a design switch.
 - **STD-CSS-8** The quotation editor stays free of the document-content review panel, and printed or PDF quotations are not restyled by this layer.
 
+## Components (shadcn/ui model)
+
+- **STD-CMP-1** New rules use the `--idlm-ui-*` role tokens (section 1a of `crm-design.css`): background, card, muted, muted-foreground, primary, destructive, success, warning, info, border, input, ring. They are aliases, never new colours.
+- **STD-CMP-2** Buttons: `idlm-btn` plus one variant (`-primary` default, `-secondary` outline, `-quiet` ghost, `-danger-outline` destructive, `-danger-quiet`, `-link`) and at most one size (`-sm` small, `-icon`; the older `-compact` keeps 34px). Icons inside a button carry `data-icon="inline-start"`, `"inline-end"` or bare `data-icon` for icon-only, and no size of their own.
+- **STD-CMP-3** Badges: `idlm-badge` plus `is-success|is-warning|is-danger|is-info|is-neutral|is-outline`. A stage or quality badge sets `data-idlm-stage` or `data-idlm-quality` to the stored value and gets the STD-CRM-11 tone automatically.
+- **STD-CMP-4** Fields: `idlm-field` (or `idlm-form-group`) holds label, control, `idlm-field-help`, then `idlm-field-error`; stacks use `idlm-field-group`. Invalid is `data-invalid` on the field and `aria-invalid="true"` on the control; disabled is `data-disabled` and `disabled`. Checkbox and radio groups use `fieldset.idlm-fieldset` with `legend.idlm-fieldset-legend`.
+- **STD-CMP-5** Review every variant on the Design system page (`?idlm_view=ui-kit`), shown to administrators on local and development sites only.
+
 ## One design
 
 The CRM design is the only front-end design. The previous design, its `?idlm_design=legacy` preview, the Utilities switch and the `IDLM_DESIGN_LAYER` constant were retired in the streamline work (see `docs/STREAMLINE-AUDIT.md`, D2). The stored `idlm_design_layer` option is no longer read. wp-admin keeps plain WordPress markup and loads no design stylesheet.

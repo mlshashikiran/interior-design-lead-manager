@@ -19,14 +19,14 @@ $idlm_dialog_id = isset($context['dialog_id']) ? sanitize_html_class($context['d
             <section class="idlm-log-payload-section" aria-labelledby="<?php echo esc_attr($idlm_dialog_id); ?>-request-title">
                 <div class="idlm-log-payload-heading">
                     <h3 id="<?php echo esc_attr($idlm_dialog_id); ?>-request-title">Request payload</h3>
-                    <button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-compact" data-idlm-log-copy="payload" disabled>Copy request</button>
+                    <button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-sm" data-idlm-log-copy="payload" disabled>Copy request</button>
                 </div>
                 <pre class="idlm-code-block" data-idlm-log-payload tabindex="0">No payload loaded.</pre>
             </section>
             <section class="idlm-log-payload-section" aria-labelledby="<?php echo esc_attr($idlm_dialog_id); ?>-response-title">
                 <div class="idlm-log-payload-heading">
                     <h3 id="<?php echo esc_attr($idlm_dialog_id); ?>-response-title">Platform response</h3>
-                    <button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-compact" data-idlm-log-copy="response" disabled>Copy response</button>
+                    <button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-sm" data-idlm-log-copy="response" disabled>Copy response</button>
                 </div>
                 <pre class="idlm-code-block" data-idlm-log-response tabindex="0">No response loaded.</pre>
             </section>

@@ -408,7 +408,7 @@ jQuery(function($) {
                 var data = response.data, rows = data.records || [];
                 $('#idlm-records-body').html(rows.length ? rows.map(function(row) {
                     var name = [row.first_name, row.last_name].filter(Boolean).join(' ') || 'Lead #' + row.id;
-                    return '<tr><th scope="row"><button type="button" class="idlm-dashboard-link" data-dashboard-lead="' + num(row.id) + '">' + text(name) + '</button></th><td>' + text(row.stage || 'New') + '</td><td>' + text(row.lead_quality || 'Pending') + '</td><td>' + text(row.created_at) + '</td><td>' + text(row.next_due || 'No dated pending task') + '</td></tr>';
+                    return '<tr><th scope="row"><button type="button" class="idlm-dashboard-link" data-dashboard-lead="' + num(row.id) + '">' + text(name) + '</button></th><td><span class="idlm-badge" data-idlm-stage="' + text(row.stage || 'New') + '">' + text(row.stage || 'New') + '</span></td><td><span class="idlm-badge" data-idlm-quality="' + text(row.lead_quality || 'Pending') + '">' + text(row.lead_quality || 'Pending') + '</span></td><td>' + text(row.created_at) + '</td><td>' + text(row.next_due || 'No dated pending task') + '</td></tr>';
                 }).join('') : empty(5, 'No leads match this investigation. The queue may have changed since the report loaded.'));
                 $('#idlm-records-status').text('Oldest first · ' + rows.length + (rows.length === 1 ? ' lead' : ' leads') + ' on this page. Open a lead to review its details and permitted actions.');
                 $('#idlm-records-page').text('Page ' + data.page);

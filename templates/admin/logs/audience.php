@@ -105,7 +105,7 @@ $idlm_status_tabs = array('' => 'All', 'failed' => 'Failed', 'success' => 'Succe
                             <td data-label="Audience"><code class="idlm-log-token"><?php echo esc_html($idlm_log->audience_id); ?></code></td>
                             <td data-label="Leads synced"><span class="idlm-log-primary"><?php echo esc_html(number_format_i18n((int) $idlm_log->lead_count)); ?></span></td>
                             <td data-label="Status"><span class="idlm-badge idlm-badge-<?php echo 'success' === $idlm_log->status ? 'success' : 'failed'; ?>"><?php echo esc_html(ucfirst((string) $idlm_log->status)); ?></span></td>
-                            <td data-label="Details"><button class="idlm-btn idlm-btn-secondary idlm-btn-compact" type="button" data-idlm-log-inspect data-log-type="audience" data-log-id="<?php echo esc_attr($idlm_log->id); ?>" data-log-label="<?php echo esc_attr($idlm_entry_label); ?>" aria-haspopup="dialog">Inspect payload</button></td>
+                            <td data-label="Details"><button class="idlm-btn idlm-btn-secondary idlm-btn-sm" type="button" data-idlm-log-inspect data-log-type="audience" data-log-id="<?php echo esc_attr($idlm_log->id); ?>" data-log-label="<?php echo esc_attr($idlm_entry_label); ?>" aria-haspopup="dialog">Inspect payload</button></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>

@@ -896,3 +896,134 @@ body.idlm-crm-design .idlm-users-page .idlm-activity-table td[data-label="When"]
         white-space: normal;
     }
 }
+
+/* --- Design system review page (local and development only) ---------------- */
+body.idlm-crm-design .idlm-ui-kit {
+    display: flex;
+    flex-direction: column;
+    gap: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--idlm-space-3);
+    padding: var(--idlm-space-5);
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-section :is(h2, h3, p) {
+    margin: 0;
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-section h2 {
+    font-size: 1rem;
+    font-weight: 650;
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-section h3 {
+    margin-top: var(--idlm-space-2);
+    color: var(--idlm-ui-muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-ui-kit code {
+    padding: 0;
+    background: transparent;
+    color: var(--idlm-ui-muted-foreground);
+    font-size: 0.6875rem;
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--idlm-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatches li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch {
+    display: block;
+    height: 40px;
+    margin-bottom: var(--idlm-space-1);
+    border: 1px solid var(--idlm-ui-border);
+    border-radius: var(--idlm-ui-radius-sm);
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="background"] { background: var(--idlm-ui-background); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="card"] { background: var(--idlm-ui-card); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="muted"] { background: var(--idlm-ui-muted); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="muted-foreground"] { background: var(--idlm-ui-muted-foreground); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="foreground"] { background: var(--idlm-ui-foreground); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="border"] { background: var(--idlm-ui-border); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="input"] { background: var(--idlm-ui-input); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="primary"] { background: var(--idlm-ui-primary); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="success"] { background: var(--idlm-ui-success); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="warning"] { background: var(--idlm-ui-warning); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="destructive"] { background: var(--idlm-ui-destructive); }
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-swatch[data-role="info"] { background: var(--idlm-ui-info); }
+
+/* A grid, not a table: buttons inside table rows shrink to row-action size (section 4). */
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-buttons {
+    display: flex;
+    flex-direction: column;
+    overflow-x: auto;
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-button-row {
+    display: grid;
+    grid-template-columns: minmax(150px, 1.2fr) repeat(6, minmax(110px, 1fr));
+    gap: var(--idlm-space-3);
+    align-items: center;
+    min-width: 860px;
+    padding-block: var(--idlm-space-2);
+    border-bottom: 1px solid var(--idlm-ui-border);
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-button-row.is-head {
+    color: var(--idlm-ui-muted-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-button-row [role="rowheader"] {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-form {
+    max-width: 480px;
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-states {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--idlm-space-3);
+}
+
+body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-loading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--idlm-space-1);
+    padding: var(--idlm-space-4);
+    border: 1px solid var(--idlm-ui-border);
+    border-radius: var(--idlm-ui-radius);
+    background: var(--idlm-ui-card);
+}

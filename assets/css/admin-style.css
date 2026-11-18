@@ -165,18 +165,6 @@
     z-index: var(--idlm-layer-base);
 }
 
-.idlm-users-page .idlm-users-filter {
-    display: grid;
-    grid-template-columns: minmax(220px, 1.5fr) minmax(150px, 1fr) minmax(150px, 1fr) auto;
-    width: 100%;
-    overflow: visible;
-    align-items: end;
-}
-
-.idlm-users-page .idlm-users-filter .idlm-input:first-of-type {
-    min-width: 0;
-}
-
 .idlm-users-filter-actions,
 .idlm-log-filter-actions {
     display: flex;
@@ -197,7 +185,6 @@
     margin-inline: auto;
 }
 
-
 .idlm-log-filters {
     display: grid;
     grid-template-columns: minmax(220px, 1.5fr) minmax(140px, .75fr) minmax(150px, .75fr) minmax(150px, .75fr) auto;
@@ -210,22 +197,19 @@
     background: var(--idlm-surface-soft);
 }
 
-.idlm-log-filters .idlm-form-group,
-.idlm-users-filter .idlm-form-group {
+.idlm-log-filters .idlm-form-group {
     display: grid;
     gap: var(--idlm-space-1);
     margin: 0;
 }
 
-.idlm-log-filters label,
-.idlm-users-filter label {
+.idlm-log-filters label {
     color: var(--idlm-text);
     font-size: 12px;
     font-weight: 700;
 }
 
-.idlm-log-filters .idlm-input,
-.idlm-users-filter .idlm-input {
+.idlm-log-filters .idlm-input {
     width: 100%;
 }
 
@@ -291,11 +275,6 @@
     display: block;
 }
 
-.idlm-log-primary {
-    color: var(--idlm-text);
-    font-weight: 700;
-}
-
 .idlm-log-table td small {
     margin-top: var(--idlm-space-1);
     color: var(--idlm-text-muted);
@@ -347,7 +326,6 @@
 }
 
 @media (max-width: 1024px) {
-    .idlm-users-page .idlm-users-filter,
     .idlm-log-filters {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -359,7 +337,6 @@
 }
 
 @media (max-width: 782px) {
-    .idlm-users-page .idlm-users-filter,
     .idlm-log-filters {
         grid-template-columns: minmax(0, 1fr);
     }
@@ -470,10 +447,6 @@
 }
 
 /* White-label settings. */
-.idlm-wrap .idlm-white-label-heading {
-    margin-bottom: var(--idlm-space-5);
-}
-
 .idlm-wrap .idlm-white-label-heading h2 {
     margin: 0 0 var(--idlm-space-1);
     color: var(--idlm-text);
@@ -812,30 +785,25 @@
 
 .idlm-state { display: grid; justify-items: center; text-align: center; }
 
-
 .idlm-state p {
     max-width: 65ch;
     margin: 0;
 }
 
-
 .idlm-state.is-empty {
     color: var(--idlm-text-muted);
 }
 
-
 .idlm-state.is-loading {
     cursor: progress;
 }
-
 
 @keyframes idlm-state-spin {
     to { transform: rotate(360deg); }
 }
 
 /* Reusable settings, table, status, and spacing patterns replacing inline visual styles. */
-.idlm-settings-tab-content[hidden],
-.idlm-is-hidden {
+.idlm-settings-tab-content[hidden] {
     display: none !important;
 }
 
@@ -843,10 +811,6 @@
 .idlm-table .idlm-select,
 .idlm-table .idlm-input {
     width: 100%;
-}
-
-.idlm-readonly-control {
-    background: var(--idlm-readonly);
 }
 
 .idlm-checkbox-control {
@@ -857,8 +821,6 @@
     cursor: pointer;
 }
 
-.idlm-settings-enable-row,
-.idlm-settings-inline-actions,
 .idlm-settings-card-head {
     display: flex;
     align-items: center;
@@ -868,11 +830,6 @@
 .idlm-settings-card-head {
     gap: var(--idlm-space-3);
     margin-bottom: var(--idlm-space-5);
-}
-
-.idlm-settings-card-head :where(h2, h3, h4),
-.idlm-heading-flush {
-    margin: 0;
 }
 
 .idlm-settings-section-title {
@@ -896,13 +853,6 @@
     font-weight: 700;
 }
 
-.idlm-settings-help {
-    display: block;
-    margin-top: var(--idlm-space-1);
-    color: var(--idlm-text-muted);
-    font-size: 11px;
-}
-
 .idlm-settings-actions {
     display: flex;
     justify-content: flex-end;
@@ -910,19 +860,16 @@
     margin-top: var(--idlm-space-5);
 }
 
-.idlm-settings-table-action,
 .idlm-table-action-cell {
     text-align: center;
     white-space: nowrap;
 }
-
 
 .idlm-btn-compact {
     min-height: var(--idlm-control-height);
     padding: var(--idlm-space-1) var(--idlm-space-3);
     font-size: 11px;
 }
-
 
 .idlm-text-link,
 .idlm-action-link {
@@ -959,7 +906,6 @@
     font-weight: 600;
 }
 
-.idlm-status-text.is-success { color: var(--idlm-success); }
 .idlm-status-text.is-warning { color: var(--idlm-warning); }
 .idlm-status-text.is-danger { color: var(--idlm-danger); }
 .idlm-status-text.is-muted { color: var(--idlm-text-muted); }
@@ -994,14 +940,6 @@
     background: var(--idlm-surface-soft);
 }
 
-.idlm-stack-trace pre {
-    margin: 0;
-    color: var(--idlm-text);
-    font: 11px/1.5 monospace;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-}
-
 .idlm-trace-dialog {
     width: min(700px, calc(100vw - var(--idlm-space-12)));
 }
@@ -1017,7 +955,6 @@
     color: var(--idlm-danger);
 }
 
-.idlm-mt-3 { margin-top: var(--idlm-space-3); }
 .idlm-mb-4 { margin-bottom: var(--idlm-space-4); }
 
 [data-idlm-ui~="w-full"] { width: 100%; }
@@ -1107,16 +1044,10 @@
 }
 
 .idlm-flex-grow { flex: 1 1 auto; min-width: 0; }
-.idlm-link-plain { text-decoration: none; }
-.idlm-settings-description { margin: 0 0 var(--idlm-space-3); font-size: 12px; }
 .idlm-settings-divider { margin-top: var(--idlm-space-6); padding-top: var(--idlm-space-5); border-top: 1px solid var(--idlm-border); }
 .idlm-settings-wrap { display: flex; flex-wrap: wrap; gap: var(--idlm-space-3); margin-top: var(--idlm-space-2); }
 .idlm-settings-working-hours { display: flex; align-items: center; gap: var(--idlm-space-3); }
 .idlm-table-soft { margin-bottom: var(--idlm-space-4); border: 1px solid var(--idlm-border); background: var(--idlm-surface-soft); }
-.idlm-help-step-title { margin: 0 0 var(--idlm-space-1); color: var(--idlm-action); font-weight: 600; }
-.idlm-mcp-status { margin: var(--idlm-space-3) 0; }
-.idlm-mcp-tabs { margin: var(--idlm-space-4) 0 var(--idlm-space-5); }
-.idlm-mcp-form-block { margin: var(--idlm-space-4) 0 var(--idlm-space-5); }
 .idlm-mcp-copy-row { display: flex; align-items: center; justify-content: space-between; gap: var(--idlm-space-2); width: 100%; }
 .idlm-code-command { width: 85%; padding: var(--idlm-space-2); overflow-x: auto; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius-compact); background: var(--idlm-surface-tint); color: var(--idlm-text); font: 11px/1.5 monospace; }
 .idlm-security-list { margin: 0 0 0 var(--idlm-space-5); color: var(--idlm-text); font-size: 13px; line-height: 1.5; list-style: disc; }
@@ -1268,12 +1199,6 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--idlm-focus-ring) 18%, transparent);
 }
 
-.idlm-form-label {
-    color: var(--idlm-text);
-    font-size: 12px;
-    font-weight: 700;
-}
-
 /* Custom Dropdown Arrow styles for select elements */
 .idlm-wrap select,
 .idlm-drawer select,
@@ -1289,15 +1214,6 @@ select.idlm-table-select {
 }
 
 /* Cards layout */
-.idlm-card {
-    background-color: var(--idlm-surface);
-    border-radius: 8px;
-    padding: 20px;
-    border: 1px solid var(--idlm-border);
-    box-shadow: var(--idlm-shadow);
-    margin-bottom: 25px;
-}
-
 .idlm-card h3 {
     margin-top: 0;
     margin-bottom: 20px;
@@ -1307,11 +1223,7 @@ select.idlm-table-select {
     color: var(--idlm-text);
 }
 
-.idlm-users-form, .idlm-users-filter { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-
 /* Keep directory controls on a dedicated full-width row. */
-.idlm-users-filter { display: inline-flex; width: auto; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; }
-
 /* Keep CRM overlay states authoritative after legacy module declarations. */
 
 /* Final density contract: shared controls use the 34px desktop rhythm.
@@ -1358,11 +1270,10 @@ select.idlm-table-select {
     }
 }
 
-
 /* Role-level lead visibility controls on Users & Access. */
 .idlm-permission-role { min-width: 0; border: 1px solid var(--idlm-border); border-radius: 10px; background: var(--idlm-surface); overflow: hidden; }
-.idlm-permission-summary:focus-visible, .idlm-permission-option:focus-within { outline: 2px solid var(--idlm-action); outline-offset: -2px; }
-.idlm-permission-heading > span, .idlm-permission-actions > span { color: var(--idlm-text-muted); font-size: 12px; }
+.idlm-permission-option:focus-within { outline: 2px solid var(--idlm-action); outline-offset: -2px; }
+.idlm-permission-actions > span { color: var(--idlm-text-muted); font-size: 12px; }
 .idlm-permission-edit { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; color: var(--idlm-action-hover); font-size: 12px; font-weight: 700; }
 .idlm-permission-edit .dashicons { transition: transform .18s ease; }
 .idlm-permission-role[open] .idlm-permission-edit .dashicons { transform: rotate(180deg); }
@@ -1386,50 +1297,16 @@ select.idlm-table-select {
 
 /* Theme-isolated overlay hardening: all presentation remains inside CRM-owned components. */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-.idlm-dialog .idlm-dialog__body :where(input, select, textarea, button),
-.idlm-dialog .idlm-dialog__footer .idlm-btn,
-.idlm-global-sidebar :where(button, input) {
-    font-family: inherit;
-}
-
-
 .idlm-dialog .idlm-dialog__body .idlm-form-group {
     min-width: 0;
 }
-
-
-
-
-
 
 .idlm-log-payload-dialog .idlm-log-payload-section,
 .idlm-log-payload-dialog .idlm-code-block {
     min-width: 0;
 }
 
-
-
-
-
-
 @media (max-width: 600px) {
-
-
-
-
 
     .idlm-dialog .idlm-dialog__footer,
     .idlm-dialog .idlm-dialog__actions {
@@ -1441,7 +1318,6 @@ select.idlm-table-select {
     .idlm-dialog .idlm-dialog__actions .idlm-btn {
         width: 100%;
     }
-
 
     #idlm-routing-modal .idlm-routing-modal-footer {
         align-items: stretch;
@@ -1469,39 +1345,23 @@ select.idlm-table-select {
     background: var(--idlm-surface);
 }
 
-.idlm-drawer-identity { gap: 12px; }
 .idlm-drawer-avatar { width: 42px; height: 42px; font-size: 16px; background: var(--idlm-action-soft); }
-.idlm-drawer-identity h2 { margin-bottom: 5px; font-size: 18px; line-height: 1.25; }
 .idlm-drawer-chip { min-height: 22px; padding: 0 8px; font-size: 10px; letter-spacing: .04em; }
 
 .idlm-drawer-status-primary { gap: 0; }
-.idlm-drawer-status-item { padding-inline: 14px; }
-.idlm-drawer-status-label { font-size: 10px; letter-spacing: .03em; text-transform: uppercase; }
-.idlm-drawer-status-value { font-size: 12px; }
 .idlm-drawer-status-context { padding-top: 8px; }
 .idlm-drawer-status-context-item { font-size: 10px; }
 .idlm-drawer-stage-select { min-height: 26px; font-size: 12px; }
 
-.idlm-drawer-tabs { gap: 24px; padding-inline: 24px; }
 .idlm-drawer-tab { min-height: 42px; font-size: 12px; }
-.idlm-drawer-body { padding: 16px 24px 20px; }
 .idlm-drawer-workspace { grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; }
-.idlm-drawer-panel { margin-bottom: 12px; border-radius: 10px; }
 .idlm-drawer-panel-head { min-height: 40px; padding-inline: 14px; }
-.idlm-drawer-panel-title { font-size: 11px; letter-spacing: .06em; }
-.idlm-drawer-form-grid, .idlm-drawer-data-grid { gap: 12px 16px; padding: 14px; }
-.idlm-drawer-field label, .idlm-drawer-data-label { margin-bottom: 5px; font-size: 10px; letter-spacing: .02em; }
 .idlm-drawer-control { height: 36px; padding-inline: 10px; font-size: 12px; border-radius: 7px; }
 .idlm-drawer-textarea { min-height: 112px; padding: 10px; font-size: 12px; border-radius: 7px; }
 .idlm-drawer-btn-file { min-height: 30px; padding-inline: 10px; border-radius: 7px; font-size: 11px; }
-.idlm-drawer-file-note, .idlm-drawer-data-value { font-size: 11px; }
-.idlm-drawer-activity-body { padding: 14px; gap: 12px; }
 .idlm-drawer-comment-actions .idlm-btn { min-height: 32px; padding-inline: 12px; border-radius: var(--idlm-button-radius, 8px); font-size: 12px; }
 
-.idlm-drawer-form-footer { justify-content: space-between; padding: 12px 24px; gap: 8px; }
 .idlm-drawer-form-footer .idlm-btn { min-height: 36px; padding-inline: 14px; font-size: 12px; border-radius: var(--idlm-button-radius, 8px); }
-.idlm-drawer-form-footer .idlm-btn-danger-outline { margin-right: auto; }
-
 @media (max-width: 1120px) {
     .idlm-drawer-header { grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1fr) auto; gap: 16px; }
 }
@@ -1517,15 +1377,6 @@ select.idlm-table-select {
 
 /* Compact CRM audit pass: prioritize scanability and preserve room for data. */
 .idlm-wrap .idlm-card { padding: 16px; margin-bottom: 18px; }
-.idlm-wrap .idlm-card h3 { margin-bottom: 12px; font-size: var(--idlm-type-section, 1rem); }
-.idlm-table-wrapper { margin-bottom: 18px; }
-.idlm-table { margin-top: 10px; }
-.idlm-table th, .idlm-table td { padding: 8px 10px; }
-.idlm-table th { font-size: var(--idlm-type-label, .625rem); letter-spacing: .03em; }
-.idlm-table td strong { margin-bottom: 2px; font-size: var(--idlm-type-compact, .75rem); }
-.idlm-table td div { font-size: var(--idlm-type-meta, .5625rem); }
-.idlm-bulk-bar { gap: 10px; padding: 8px 12px; margin-bottom: 12px; }
-.idlm-filters-primary-row, .idlm-filters-secondary-row { gap: 8px; }
 .idlm-filters-secondary-row { margin-top: 10px; padding-top: 10px; }
 .idlm-filters-primary-row .idlm-input, .idlm-filters-secondary-row .idlm-input,
 .idlm-filters-primary-row .idlm-select, .idlm-filters-secondary-row .idlm-select { min-height: 32px; }
@@ -1548,7 +1399,6 @@ select.idlm-table-select {
 .idlm-workspace .idlm-btn,
 .idlm-pagination-btn,
 .idlm-filters-close,
-.idlm-chart-data-toggle,
 .idlm-wrap .idlm-tab-link,
 .idlm-global-sidebar-filter-btn,
 .idlm-workspace-toggle {
@@ -1559,8 +1409,7 @@ select.idlm-table-select {
 .idlm-dialog .idlm-btn:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline),
 .idlm-workspace .idlm-btn:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline),
 .idlm-pagination-btn,
-.idlm-filters-close,
-.idlm-chart-data-toggle {
+.idlm-filters-close {
     background: var(--idlm-surface);
     color: var(--idlm-text);
 }
@@ -1585,7 +1434,7 @@ select.idlm-table-select {
 }
 
 /* Shared actionable dialog and non-blocking status feedback. */
-.idlm-dialog__field{display:grid;gap:6px;margin:0 0 14px;font-size:13px;font-weight:700}.idlm-dialog__field[hidden],.idlm-dialog__error[hidden]{display:none}.idlm-dialog__error{margin:0 0 14px;color:var(--idlm-danger);font-size:13px;font-weight:600}.idlm-dialog__actions{display:flex;justify-content:flex-end;gap:10px}.idlm-dialog .idlm-btn-danger{border-color:var(--idlm-danger);background:var(--idlm-danger);color:var(--idlm-text-inverse)}.idlm-toast{ right:24px; bottom:24px; z-index:var(--idlm-layer-toast); opacity:0; transform:translateY(8px); transition:opacity var(--idlm-transition),transform var(--idlm-transition); }.idlm-toast.is-visible{opacity:1;transform:translateY(0)}.idlm-routing-settings-button{display:flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;border:1px solid var(--idlm-border);border-radius:6px;background:var(--idlm-bg-secondary);color:var(--idlm-text);cursor:pointer;transition:background-color var(--idlm-transition),border-color var(--idlm-transition),color var(--idlm-transition)}
+.idlm-dialog__field{display:grid;gap:6px;margin:0 0 14px;font-size:13px;font-weight:700}.idlm-dialog__field[hidden],.idlm-dialog__error[hidden]{display:none}.idlm-dialog__error{margin:0 0 14px;color:var(--idlm-danger);font-size:13px;font-weight:600}.idlm-dialog__actions{display:flex;justify-content:flex-end;gap:10px}.idlm-toast{ right:24px; bottom:24px; z-index:var(--idlm-layer-toast); opacity:0; transform:translateY(8px); transition:opacity var(--idlm-transition),transform var(--idlm-transition); }.idlm-toast.is-visible{opacity:1;transform:translateY(0)}.idlm-routing-settings-button{display:flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;border:1px solid var(--idlm-border);border-radius:6px;background:var(--idlm-bg-secondary);color:var(--idlm-text);cursor:pointer;transition:background-color var(--idlm-transition),border-color var(--idlm-transition),color var(--idlm-transition)}
 
 /* Keep Phase 7 component dimensions authoritative over legacy component declarations. */
 .idlm-users-page .idlm-input,
@@ -1604,7 +1453,7 @@ select.idlm-table-select {
 }
 
 /* Users & Access: disclosure-based editing keeps operational scanning calm. */
-.idlm-users-page{max-width:1440px;margin-inline:auto}.idlm-users-header{align-items:flex-end;margin-bottom:24px}.idlm-users-create,.idlm-users-directory{border:1px solid var(--idlm-border);border-radius:14px;background:var(--idlm-surface);box-shadow:0 10px 28px rgba(23,33,43,.05)}.idlm-users-create{display:grid;grid-template-columns:220px minmax(0,1fr);gap:26px;padding:24px;margin-bottom:20px;border-left:4px solid var(--idlm-action)}.idlm-users-create h2,.idlm-users-directory h2{margin:0 0 6px;font-size:17px;color:var(--idlm-text)}.idlm-users-create p,.idlm-users-directory p{margin:0;color:var(--idlm-text-muted);font-size:13px;line-height:1.55}.idlm-users-create-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:end}.idlm-users-create-form .idlm-btn{min-height:38px}.idlm-users-page .idlm-form-group{display:grid;gap:6px;margin:0}.idlm-users-page .idlm-form-group label{font-size:12px;font-weight:700;color:var(--idlm-text)}.idlm-users-page .idlm-form-group label span{font-weight:500;color:var(--idlm-text-muted)}.idlm-users-page .idlm-input{width:100%;min-height:38px;box-sizing:border-box}.idlm-users-directory{overflow:hidden}.idlm-users-directory-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;padding:22px 24px;border-bottom:1px solid var(--idlm-border)}.idlm-users-filter{justify-content:flex-end}.idlm-user-list{background:var(--idlm-surface)}.idlm-user-row{border-bottom:1px solid var(--idlm-border)}.idlm-user-row:last-child{border-bottom:0}.idlm-user-row summary{display:grid;grid-template-columns:40px minmax(180px,1.4fr) minmax(140px,1fr) 100px 72px;gap:14px;align-items:center;padding:14px 24px;cursor:pointer;list-style:none}.idlm-user-row summary::-webkit-details-marker{display:none}.idlm-user-row summary:hover{background:#fbfcfe}.idlm-user-row[open] summary{background:var(--idlm-surface-soft)}.idlm-user-avatar{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--idlm-action-soft);color:var(--idlm-action-hover);font-size:14px;font-weight:800}.idlm-user-identity{display:grid;gap:2px;min-width:0}.idlm-user-identity strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.idlm-user-identity small{overflow:hidden;color:var(--idlm-text-muted);text-overflow:ellipsis;white-space:nowrap;font-size:12px}.idlm-user-role{color:var(--idlm-text-muted);font-size:12px}.idlm-user-status{justify-self:start;padding:4px 8px;border-radius:999px;background:var(--idlm-success-soft);color:var(--idlm-success);font-size:11px;font-weight:700}.idlm-user-status.is-suspended{background:var(--idlm-danger-soft);color:var(--idlm-danger)}.idlm-user-edit{display:flex;align-items:center;justify-content:flex-end;gap:2px;color:var(--idlm-action-hover);font-size:12px;font-weight:700}.idlm-user-row[open] .idlm-user-edit .dashicons{transform:rotate(180deg)}.idlm-user-edit .dashicons{transition:transform .18s ease}.idlm-user-edit-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:20px 24px 22px;border-top:1px solid var(--idlm-border);background:var(--idlm-surface-soft)}.idlm-user-edit-actions{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:16px;padding-top:4px}.idlm-user-edit-actions .idlm-checkbox-row{margin:0}.idlm-users-empty{display:grid;justify-items:center;gap:8px;padding:56px 24px;color:var(--idlm-text-muted);text-align:center}.idlm-users-empty .dashicons{width:32px;height:32px;color:var(--idlm-action);font-size:32px}@media(max-width:1100px){.idlm-users-create{grid-template-columns:1fr}.idlm-users-create-form{grid-template-columns:repeat(2,minmax(0,1fr))}.idlm-users-directory-top{align-items:stretch;flex-direction:column}.idlm-users-filter{justify-content:flex-start}}@media(max-width:782px){.idlm-users-header{align-items:flex-start;flex-direction:column}.idlm-users-create,.idlm-users-directory-top{padding:18px}.idlm-users-create-form,.idlm-user-edit-form{grid-template-columns:1fr}.idlm-user-row summary{grid-template-columns:38px minmax(0,1fr) auto;padding:14px 18px}.idlm-user-role{display:none}.idlm-user-status{grid-column:2}.idlm-user-edit{grid-column:3;grid-row:1}.idlm-user-edit-form{padding:18px}.idlm-user-edit-actions{align-items:stretch;flex-direction:column}.idlm-user-edit-actions .idlm-btn{width:100%}}
+.idlm-users-page{max-width:1440px;margin-inline:auto}.idlm-users-create,.idlm-users-directory{border:1px solid var(--idlm-border);border-radius:14px;background:var(--idlm-surface);box-shadow:0 10px 28px rgba(23,33,43,.05)}.idlm-users-create{display:grid;grid-template-columns:220px minmax(0,1fr);gap:26px;padding:24px;margin-bottom:20px;border-left:4px solid var(--idlm-action)}.idlm-users-create p,.idlm-users-directory p{margin:0;color:var(--idlm-text-muted);font-size:13px;line-height:1.55}.idlm-users-create-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:end}.idlm-users-create-form .idlm-btn{min-height:38px}.idlm-users-page .idlm-form-group label span{font-weight:500;color:var(--idlm-text-muted)}.idlm-users-page .idlm-input{width:100%;min-height:38px;box-sizing:border-box}.idlm-users-directory{overflow:hidden}.idlm-users-directory-top{display:flex;justify-content:space-between;gap:18px;align-items:flex-end;padding:22px 24px;border-bottom:1px solid var(--idlm-border)}.idlm-user-list{background:var(--idlm-surface)}.idlm-user-row{border-bottom:1px solid var(--idlm-border)}.idlm-user-row:last-child{border-bottom:0}.idlm-user-row summary{display:grid;grid-template-columns:40px minmax(180px,1.4fr) minmax(140px,1fr) 100px 72px;gap:14px;align-items:center;padding:14px 24px;cursor:pointer;list-style:none}.idlm-user-row summary::-webkit-details-marker{display:none}.idlm-user-row summary:hover{background:#fbfcfe}.idlm-user-row[open] summary{background:var(--idlm-surface-soft)}.idlm-user-avatar{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--idlm-action-soft);color:var(--idlm-action-hover);font-size:14px;font-weight:800}.idlm-user-identity{display:grid;gap:2px;min-width:0}.idlm-user-identity strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}.idlm-user-identity small{overflow:hidden;color:var(--idlm-text-muted);text-overflow:ellipsis;white-space:nowrap;font-size:12px}.idlm-user-role{color:var(--idlm-text-muted);font-size:12px}.idlm-user-status{justify-self:start;padding:4px 8px;border-radius:999px;background:var(--idlm-success-soft);color:var(--idlm-success);font-size:11px;font-weight:700}.idlm-user-status.is-suspended{background:var(--idlm-danger-soft);color:var(--idlm-danger)}.idlm-user-edit{display:flex;align-items:center;justify-content:flex-end;gap:2px;color:var(--idlm-action-hover);font-size:12px;font-weight:700}.idlm-user-row[open] .idlm-user-edit .dashicons{transform:rotate(180deg)}.idlm-user-edit .dashicons{transition:transform .18s ease}.idlm-user-edit-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:20px 24px 22px;border-top:1px solid var(--idlm-border);background:var(--idlm-surface-soft)}.idlm-user-edit-actions{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:16px;padding-top:4px}.idlm-users-empty{display:grid;justify-items:center;gap:8px;padding:56px 24px;color:var(--idlm-text-muted);text-align:center}.idlm-users-empty .dashicons{width:32px;height:32px;color:var(--idlm-action);font-size:32px}@media(max-width:1100px){.idlm-users-create{grid-template-columns:1fr}.idlm-users-create-form{grid-template-columns:repeat(2,minmax(0,1fr))}.idlm-users-directory-top{align-items:stretch;flex-direction:column}}@media(max-width:782px){.idlm-users-header{align-items:flex-start;flex-direction:column}.idlm-users-create,.idlm-users-directory-top{padding:18px}.idlm-users-create-form,.idlm-user-edit-form{grid-template-columns:1fr}.idlm-user-row summary{grid-template-columns:38px minmax(0,1fr) auto;padding:14px 18px}.idlm-user-role{display:none}.idlm-user-status{grid-column:2}.idlm-user-edit{grid-column:3;grid-row:1}.idlm-user-edit-form{padding:18px}.idlm-user-edit-actions{align-items:stretch;flex-direction:column}.idlm-user-edit-actions .idlm-btn{width:100%}}
 
 /* Pagination Styling */
 .idlm-pagination { display: flex; align-items: center; margin-top: 25px; margin-bottom: 10px; width: 100%; }
@@ -1749,7 +1598,6 @@ select.idlm-table-select {
 }
 
 /* Users and operational logs compose the shared drawer rather than inline toolbars. */
-.idlm-filters-panel.idlm-users-filter,
 .idlm-filters-panel.idlm-log-filters {
     display: block;
     width: min(440px, 100vw);
@@ -1758,27 +1606,23 @@ select.idlm-table-select {
     overflow: hidden;
 }
 
-.idlm-filters-panel.idlm-users-filter .idlm-filters-panel-body,
 .idlm-filters-panel.idlm-log-filters .idlm-filters-panel-body {
     display: grid;
     gap: 16px;
     align-content: start;
 }
 
-.idlm-filters-panel.idlm-users-filter .idlm-form-group,
 .idlm-filters-panel.idlm-log-filters .idlm-form-group {
     display: grid;
     gap: 6px;
     margin: 0;
 }
 
-.idlm-filters-panel.idlm-users-filter .idlm-input,
 .idlm-filters-panel.idlm-log-filters .idlm-input {
     width: 100%;
     min-width: 0;
 }
 
-.idlm-filters-panel.idlm-users-filter .idlm-users-filter-actions,
 .idlm-filters-panel.idlm-log-filters .idlm-log-filter-actions {
     display: flex;
     justify-content: flex-end;
@@ -1791,18 +1635,6 @@ body.idlm-filters-open {
 }
 
 /* Compact Filter Layout */
-
-
-
-
-
-.idlm-filter-group label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--idlm-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
 
 .idlm-filter-group select,
 .idlm-filter-group input {
@@ -1981,10 +1813,6 @@ body.idlm-filters-open {
     cursor: pointer;
 }
 
-.idlm-table tr:last-child td {
-    border-bottom: 0;
-}
-
 /* Phase 3 responsive lead-table disclosure. The workspace alias outranks theme button rules. */
 .idlm-workspace .idlm-lead-row-open,
 .idlm-lead-row-open {
@@ -2029,25 +1857,14 @@ body.idlm-filters-open {
     font-size: 18px;
 }
 
-.idlm-lead-row-contact {
-    margin-top: var(--idlm-space-1);
-    color: var(--idlm-text-muted);
-    font-size: 11px;
-}
-
 .idlm-leads-mobile-sort {
     display: none;
-}
-
-#idlm-leads-table th {
-    text-transform: none;
 }
 
 @media (max-width: 1024px) {
     #idlm-leads-table .idlm-col-priority-low {
         display: none;
     }
-
 
     #idlm-leads-table .idlm-lead-row-expand {
         display: inline-flex;
@@ -2187,25 +2004,6 @@ body.idlm-filters-open {
     letter-spacing: 0.3px;
 }
 
-.idlm-badge-meta,
-.idlm-badge-metaads {
-    background-color: #e7f3fb;
-    color: #1976b9;
-}
-.idlm-badge-google,
-.idlm-badge-googleads {
-    background-color: var(--idlm-danger-soft);
-    color: #b5472e;
-}
-.idlm-badge-linkedin,
-.idlm-badge-linkedinads {
-    background-color: #e0e7ff;
-    color: #4338ca;
-}
-.idlm-badge-website {
-    background-color: var(--idlm-success-soft);
-    color: var(--idlm-success);
-}
 .idlm-badge-referral {
     background-color: #faf5ff;
     color: #7e22ce;
@@ -2221,8 +2019,6 @@ body.idlm-filters-open {
     color: #475569;
 }
 
-.idlm-badge-success { background-color: var(--idlm-success-soft); color: var(--idlm-success); }
-.idlm-badge-failed { background-color: var(--idlm-danger-soft); color: #b5472e; }
 .idlm-badge-warning { background-color: var(--idlm-warning-soft); color: #9a6700; }
 
 /* Inline select inputs */
@@ -2254,10 +2050,6 @@ body.idlm-filters-open {
 
 /* Sliding side Drawer (Refactored CRM Popup Modal) */
 .idlm-drawer { display: none; position: fixed; inset: 0; z-index: var(--idlm-layer-modal); padding: 34px; align-items: center; justify-content: center; box-sizing: border-box; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-
-.idlm-drawer * {
-    box-sizing: border-box;
-}
 
 .idlm-drawer.active {
     display: flex;
@@ -2395,11 +2187,6 @@ body.idlm-filters-open {
     min-width: 0;
     padding: 0 var(--idlm-space-3);
     border-left: 1px solid var(--idlm-border);
-}
-
-.idlm-drawer-status-item:first-child {
-    padding-left: 0;
-    border-left: 0;
 }
 
 .idlm-drawer-status-label {
@@ -2925,11 +2712,7 @@ body.idlm-filters-open {
 
 .idlm-dialog .idlm-dialog__header { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: var(--idlm-space-4); margin: 0; border-bottom: 1px solid var(--idlm-border); }
 
-.idlm-dialog .idlm-dialog__title { margin: 0; }
-
 .idlm-dialog .idlm-dialog__description { margin: var(--idlm-space-1) 0 0; color: var(--idlm-text-muted); line-height: 1.5; }
-
-
 
 .idlm-dialog .idlm-dialog__close .dashicons {
     width: 18px;
@@ -2975,13 +2758,10 @@ body.idlm-filters-open {
     line-height: 1.4;
 }
 
-
 .idlm-input[aria-invalid="true"] {
     border-color: var(--idlm-danger);
     box-shadow: 0 0 0 2px var(--idlm-danger-soft);
 }
-
-
 
 .idlm-presales-activity-modal .idlm-modal-content {
     width: min(480px, calc(100% - 32px));
@@ -3080,36 +2860,6 @@ body.idlm-filters-open {
     font-weight: 600;
 }
 
-.idlm-handoff-alert-pill em {
-    padding-left: 7px;
-    border-left: 1px solid currentColor;
-    font-size: 10px;
-    font-style: normal;
-}
-
-.idlm-handoff-alert-pill.is-overdue,
-.idlm-metric.is-alert {
-    border-color: rgba(239, 68, 68, 0.45);
-    background: rgba(239, 68, 68, 0.08);
-    color: #b91c1c;
-}
-
-.idlm-row-handoff-badge {
-    display: inline-flex;
-    margin-top: 6px;
-    padding: 3px 7px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--idlm-brand-gold) 12%, transparent);
-    color: #7c5b20;
-    font-size: 10px;
-    font-weight: 700;
-}
-
-.idlm-row-handoff-badge.is-overdue {
-    background: rgba(239, 68, 68, 0.1);
-    color: #b91c1c;
-}
-
 .idlm-row-handoff-location {
     display: block;
     margin-top: 3px;
@@ -3117,11 +2867,6 @@ body.idlm-filters-open {
 }
 
 /* Keep mandatory Lost Remark fields inside their modal boundaries. */
-#idlm-lost-remark-modal .idlm-modal-content,
-#idlm-kanban-lost-modal .idlm-modal-content {
-    overflow-x: hidden;
-}
-
 #idlm-lost-remark-input,
 #idlm-kanban-lost-input {
     display: block;
@@ -3242,7 +2987,6 @@ body.idlm-filters-open {
     grid-column: 1 / -1;
 }
 
-
 #idlm-routing-modal .idlm-routing-section-heading h3 { margin: 1px 0 2px; color: var(--idlm-text); line-height: 1.35; }
 
 #idlm-routing-modal .idlm-routing-section-heading p,
@@ -3301,7 +3045,6 @@ body.idlm-filters-open {
     border-bottom: 0;
 }
 
-
 #idlm-routing-modal .idlm-routing-rep-name {
     display: flex;
     align-items: center;
@@ -3310,10 +3053,6 @@ body.idlm-filters-open {
     color: var(--idlm-text);
     font-size: 12px;
     font-weight: 600;
-}
-
-#idlm-routing-modal input[type="checkbox"] {
-    accent-color: var(--idlm-action);
 }
 
 #idlm-routing-modal .idlm-routing-rep-row .idlm-input {
@@ -3329,21 +3068,6 @@ body.idlm-filters-open {
 #idlm-routing-modal .idlm-routing-conditional-controls[hidden] {
     display: none;
 }
-
-#idlm-routing-modal .idlm-routing-fallback-section {
-    display: block;
-}
-
-
-
-
-
-
-
-
-
-
-
 
 #idlm-routing-modal .idlm-routing-control-heading {
     display: flex;
@@ -3367,8 +3091,6 @@ body.idlm-filters-open {
     font-size: 10px;
     line-height: 1.45;
 }
-
-
 
 #idlm-routing-modal .idlm-routing-switch-row {
     display: flex;
@@ -3645,8 +3367,6 @@ body.idlm-filters-open {
         grid-template-columns: 1fr;
     }
 
-
-
     #idlm-routing-modal .idlm-routing-rep-head {
         display: none;
     }
@@ -3669,18 +3389,6 @@ body.idlm-filters-open {
     }
 }
 
-.idlm-settings-routing-safeguards {
-    margin-top: 22px;
-    padding-top: 18px;
-    border-top: 1px solid var(--idlm-border);
-}
-
-.idlm-routing-settings-title h4 {
-    margin: 0 0 3px;
-    color: var(--idlm-text);
-    font-size: 15px;
-}
-
 .idlm-routing-settings-title p {
     margin: 0;
     color: var(--idlm-text-muted);
@@ -3691,16 +3399,6 @@ body.idlm-filters-open {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
-}
-
-.idlm-settings-routing-overview > div {
-    display: grid;
-    gap: 4px;
-    padding: 12px 14px;
-    border: 1px solid var(--idlm-border);
-    border-left: 3px solid var(--idlm-action);
-    border-radius: 9px;
-    background: var(--idlm-surface);
 }
 
 .idlm-settings-routing-overview > div.is-warning {
@@ -3798,12 +3496,6 @@ body.idlm-filters-open {
     gap: 6px;
 }
 
-.idlm-form-group label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--idlm-text-muted);
-}
-
 /* General Alerts */
 .idlm-alert {
     padding: 10px 14px;
@@ -3849,10 +3541,6 @@ body.idlm-filters-open {
 /* Webhook Mapping Tab Visibility */
 .idlm-mapping-tab-content {
     display: none;
-}
-
-.idlm-mapping-tab-content.active {
-    display: block;
 }
 
 /* Follow-up Reminders Overdue highlights */
@@ -4004,10 +3692,6 @@ body.idlm-filters-open {
     width: min(760px, calc(100vw - 32px));
 }
 
-.idlm-import-error {
-    margin: -8px 0 16px;
-}
-
 .idlm-import-step-item {
     display: flex;
     align-items: center;
@@ -4015,11 +3699,6 @@ body.idlm-filters-open {
     font-size: 12px;
     font-weight: 500;
     color: var(--idlm-text-muted);
-}
-
-.idlm-import-step-item.active {
-    color: var(--idlm-brand-gold);
-    font-weight: 600;
 }
 
 .idlm-import-step-item.completed {
@@ -4091,17 +3770,6 @@ body.idlm-filters-open {
 .idlm-import-drag-zone:hover svg, .idlm-import-drag-zone.dragover svg {
     color: var(--idlm-brand-gold);
     transform: translateY(-2px);
-}
-
-.idlm-import-drag-text {
-    font-size: 14px;
-    color: var(--idlm-text);
-    font-weight: 500;
-}
-
-.idlm-import-drag-subtext {
-    font-size: 12px;
-    color: var(--idlm-text-muted);
 }
 
 .idlm-import-mapping-wrapper {
@@ -4230,21 +3898,11 @@ body.idlm-filters-open {
     cursor: not-allowed;
 }
 
-.idlm-export-count-preview {
-    margin: 0;
-    padding: 10px 12px;
-    border-radius: var(--idlm-radius-sm, 8px);
-    background: var(--idlm-surface-soft);
-    color: var(--idlm-text);
-    font-weight: 600;
-}
-
 /* Prevent background scrolling and chaining on popups/modals */
 body.idlm-modal-open {
     overflow: hidden;
 }
 
-.idlm-drawer-form-body,
 .idlm-timeline-container,
 .idlm-modal-content,
 .idlm-drawer-body,
@@ -4363,23 +4021,10 @@ body.idlm-modal-open {
 
 /* Non-interactive summaries share the metric-card surface without implying a
    click target. Interactive metrics keep the hover affordance above. */
-.idlm-metric-static {
-    cursor: default;
-}
-
 .idlm-metric-static:hover {
     border-color: var(--idlm-border);
     box-shadow: var(--idlm-shadow);
     transform: none;
-}
-
-.idlm-metric-label {
-    color: var(--idlm-text-muted);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 2px;
 }
 
 .idlm-metric-value {
@@ -4390,12 +4035,6 @@ body.idlm-modal-open {
     font-weight: 700;
     color: var(--idlm-text);
     line-height: 1;
-}
-
-.idlm-metric-hint {
-    font-size: 10px;
-    color: var(--idlm-text-muted);
-    font-weight: 500;
 }
 
 /* ==========================================================================
@@ -4413,8 +4052,6 @@ body.idlm-modal-open {
 .idlm-filters-primary-row .idlm-filter-group {
     min-width: 0;
 }
-
-
 
 .idlm-filters-secondary-row {
     display: grid;
@@ -4755,16 +4392,7 @@ body.idlm-modal-open {
   min-height: auto;
 }
 
-.idlm-wrap * {
-  box-sizing: border-box;
-}
-
 /* Let the lead manager sit flush with its frontend container. */
-div.wrap.idlm-wrap {
-  padding-left: 0;
-  padding-right: 0;
-}
-
 .idlm-wrap .idlm-shell {
   max-width: 1560px;
   margin: 0 auto;
@@ -4857,8 +4485,6 @@ div.wrap.idlm-wrap {
   color: var(--idlm-action-contrast);
 }
 
-.idlm-wrap .idlm-btn-danger { border-color: #df978d; }
-
 .idlm-wrap .idlm-btn-danger:hover {
   background: #fecdd3;
   color: var(--idlm-danger);
@@ -4884,11 +4510,6 @@ div.wrap.idlm-wrap {
   box-shadow: none;
 }
 
-.idlm-wrap .idlm-tab-link.active {
-  background: var(--idlm-action-soft);
-  color: var(--idlm-action);
-}
-
 .idlm-wrap .idlm-tab-link.active::after {
   content: "";
   position: absolute;
@@ -4902,10 +4523,6 @@ div.wrap.idlm-wrap {
 
 .idlm-wrap .idlm-tab-link-danger {
   color: var(--idlm-danger);
-}
-
-.idlm-wrap .idlm-settings-form {
-  margin-top: 22px;
 }
 
 .idlm-wrap .idlm-settings-tab-content {
@@ -4939,11 +4556,6 @@ div.wrap.idlm-wrap {
   display: flex;
   flex-direction: column;
   gap: 18px;
-}
-
-.idlm-wrap .idlm-lead-fields-card > h3,
-.idlm-wrap .idlm-lead-fields-card > .idlm-card-desc {
-  margin: 0;
 }
 
 .idlm-wrap .idlm-lead-fields-card .idlm-ui-label-editor {
@@ -4989,11 +4601,6 @@ div.wrap.idlm-wrap {
   gap: var(--idlm-space-3);
 }
 
-.idlm-wrap .idlm-backup-export-card h3,
-.idlm-wrap .idlm-backup-export-card p {
-  margin: 0;
-}
-
 .idlm-wrap .idlm-backup-export-card :is(.idlm-card-desc, .description) {
   max-width: 760px;
   color: var(--idlm-text-muted);
@@ -5020,12 +4627,6 @@ div.wrap.idlm-wrap {
   gap: var(--idlm-space-1);
   min-width: 0;
   margin: 0;
-}
-
-.idlm-wrap .idlm-backup-restore-fields label {
-  color: var(--idlm-text);
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .idlm-wrap .idlm-backup-restore-fields :where(input[type="file"], input[type="text"]) {
@@ -5253,10 +4854,6 @@ div.wrap.idlm-wrap {
   line-height: 1.35;
 }
 
-.idlm-wrap .idlm-automation-integration-card > .idlm-card-desc {
-  margin: 0 0 var(--idlm-space-5);
-}
-
 /* The Routing tab uses the same sectioned body hierarchy as the workspace routing popup. */
 .idlm-wrap #settings-routing .idlm-routing-primary-grid {
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
@@ -5326,11 +4923,6 @@ div.wrap.idlm-wrap {
 }
 
 .idlm-wrap #settings-routing .idlm-routing-rep-table :is(th, td) { width: 33.333%; }
-
-.idlm-wrap #settings-routing .idlm-routing-rep-row {
-  border: 0;
-  background: transparent;
-}
 
 .idlm-wrap #settings-routing .idlm-routing-rep-row td {
   padding: var(--idlm-space-2) 0;
@@ -5483,8 +5075,7 @@ div.wrap.idlm-wrap {
   gap: 7px;
 }
 
-.idlm-wrap .idlm-form-group label,
-.idlm-wrap .idlm-label {
+.idlm-wrap .idlm-form-group label {
   color: var(--idlm-text-muted);
   font-size: 12px;
   font-weight: 600;
@@ -5524,11 +5115,6 @@ div.wrap.idlm-wrap {
   resize: vertical;
 }
 
-.idlm-wrap .idlm-input[readonly],
-.idlm-wrap .idlm-textarea[readonly] {
-  background: #fbfcfe;
-}
-
 .idlm-wrap .idlm-form-group.full,
 .idlm-wrap .idlm-card.full {
   grid-column: 1 / -1;
@@ -5541,18 +5127,6 @@ div.wrap.idlm-wrap {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
-}
-
-.idlm-wrap .idlm-check {
-  width: 17px;
-  height: 17px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border-radius: 4px;
-  background: var(--idlm-info);
-  color: var(--idlm-surface);
-  font-size: 12px;
 }
 
 .idlm-wrap .idlm-pill,
@@ -5575,7 +5149,6 @@ div.wrap.idlm-wrap {
   border-color: #efb3aa;
   color: var(--idlm-danger);
 }
-
 
 .idlm-wrap .idlm-token-editor {
   display: grid;
@@ -5657,12 +5230,6 @@ div.wrap.idlm-wrap {
   opacity: 0.45;
 }
 
-.idlm-wrap .idlm-pipeline-stage-editor__list {
-  display: grid;
-  gap: var(--idlm-space-2);
-  padding: var(--idlm-space-2);
-}
-
 .idlm-wrap .idlm-pipeline-stage-editor__item {
   grid-template-columns: 30px 20px minmax(0, .8fr) minmax(0, 1fr) minmax(112px, 220px) var(--idlm-target-size);
   min-height: calc(var(--idlm-target-size) + 8px);
@@ -5680,7 +5247,6 @@ div.wrap.idlm-wrap {
   font-size: 12px;
   font-weight: 700;
 }
-
 
 .idlm-wrap .idlm-token-editor__item--movable .idlm-token-editor__alias {
   width: 100%;
@@ -5853,8 +5419,6 @@ div.wrap.idlm-wrap {
   display: none;
 }
 
-.idlm-wrap .idlm-capture-tabs { margin-bottom: 16px; }
-
 .idlm-wrap .idlm-mapping-tab-content {
   margin-top: 14px;
   border: 1px solid var(--idlm-border);
@@ -5868,11 +5432,11 @@ div.wrap.idlm-wrap {
 
 .idlm-wrap .idlm-meta-connector__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .idlm-wrap .idlm-meta-connector__header h3 { margin: 0 0 6px; }
-.idlm-wrap .idlm-meta-connector__status, .idlm-wrap .idlm-meta-step-state { flex-shrink: 0; padding: 4px 9px; border: 1px solid var(--idlm-border); border-radius: 999px; background: var(--idlm-surface-soft); font-size: 12px; font-weight: 600; }
+.idlm-wrap .idlm-meta-connector__status { flex-shrink: 0; padding: 4px 9px; border: 1px solid var(--idlm-border); border-radius: 999px; background: var(--idlm-surface-soft); font-size: 12px; font-weight: 600; }
 .idlm-wrap .idlm-meta-connector__connection { margin: 16px 0; padding: 16px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface-soft); }
 .idlm-wrap .idlm-meta-connector__connection-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .idlm-wrap .idlm-meta-connector__connection-heading { display: flex; flex-direction: column; gap: 4px; }
-.idlm-wrap .idlm-meta-connector__connection-heading span, .idlm-wrap .idlm-meta-manual summary small { font-size: 13px; font-weight: 400; }
+.idlm-wrap .idlm-meta-connector__connection-heading span { font-size: 13px; font-weight: 400; }
 .idlm-wrap .idlm-meta-connector__connection .idlm-alert { margin-top: 14px; }
 .idlm-wrap .idlm-meta-connector__connection [data-idlm-facebook-status]:empty { display: none; }
 .idlm-wrap .idlm-interakt-capture__panel { margin-top: 16px; padding: 16px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface-soft); }
@@ -5993,8 +5557,7 @@ div.wrap.idlm-wrap {
 
 .idlm-wrap .idlm-shortcode-card,
 .idlm-wrap .idlm-health-item,
-.idlm-wrap .idlm-faq-item,
-.idlm-wrap .idlm-danger-action {
+.idlm-wrap .idlm-faq-item {
   border: 1px solid var(--idlm-border);
   border-radius: var(--idlm-radius);
   background: var(--idlm-surface);
@@ -6007,14 +5570,6 @@ div.wrap.idlm-wrap {
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
-}
-
-.idlm-wrap .idlm-shortcode-card h4,
-.idlm-wrap .idlm-faq-item h4 {
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--idlm-text);
 }
 
 .idlm-wrap .idlm-shortcode-card p,
@@ -6358,11 +5913,6 @@ div.wrap.idlm-wrap {
 .idlm-table-task-badge:hover {
     transform: scale(1.05);
 }
-.idlm-task-badge-active {
-    background-color: var(--idlm-action-soft);
-    color: var(--idlm-action);
-    border: 1px solid rgba(211, 154, 59, 0.25);
-}
 .idlm-task-badge-overdue {
     background-color: var(--idlm-danger-soft);
     color: var(--idlm-danger);
@@ -6548,7 +6098,6 @@ div.wrap.idlm-wrap {
     font-size: 18px;
 }
 
-
 @media (max-width: 600px) {
     .idlm-floating-tasks-btn { right: 16px; bottom: 0; left: auto; padding-right: 11px; }
     .idlm-floating-tasks-label { font-size: 11px; }
@@ -6581,8 +6130,6 @@ div.wrap.idlm-wrap {
 .idlm-drawer-whatsapp-message-meta time { color: var(--idlm-text-muted); font-size: 11px; white-space: nowrap; }
 .idlm-drawer-whatsapp-message-body { color: var(--idlm-text); font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; white-space: normal; }
 .idlm-drawer-whatsapp-empty { margin: 0; padding: 20px; color: var(--idlm-text-muted); text-align: center; }
-.idlm-presales-compliance { margin-bottom: 16px; }
-.idlm-presales-compliance .idlm-drawer-panel-head { align-items: center; gap: 12px; }
 .idlm-presales-compliance .idlm-drawer-panel-head > span { color: var(--idlm-text-muted); font-size: 12px; }
 .idlm-presales-summary { cursor: pointer; list-style: none; }
 .idlm-presales-summary::-webkit-details-marker { display: none; }
@@ -6591,9 +6138,7 @@ div.wrap.idlm-wrap {
 .idlm-presales-accordion[open] .idlm-presales-summary .dashicons { transform: rotate(180deg); }
 .idlm-presales-day-grid { display: grid; grid-template-columns: repeat(6, minmax(105px, 1fr)); gap: 6px; padding: 10px; }
 .idlm-presales-day { min-height: 0; border: 1px solid var(--idlm-border); border-radius: 8px; padding: 7px 8px; display: grid; gap: 2px; background: var(--idlm-surface-soft); }
-.idlm-presales-day.is-complete { border-color: #55a779; background: rgba(85, 167, 121, .1); }
 .idlm-presales-day strong { font-size: 11px; line-height: 1.25; }
-.idlm-presales-day span, .idlm-presales-day small { color: var(--idlm-text-muted); font-size: 10px; line-height: 1.3; }
 .idlm-presales-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 10px; }
 .idlm-presales-decision-box { margin: 0 10px 10px; padding: 9px 10px; border: 1px solid rgba(40,94,168,.25); background: rgba(40,94,168,.05); border-radius: 8px; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center; }
 .idlm-presales-decision-box > div { display: grid; gap: 3px; }
@@ -6650,17 +6195,14 @@ div.wrap.idlm-wrap {
 .idlm-login-form label { display: block; }
 .idlm-login-form .input { box-sizing: border-box; width: 100%; padding: 10px 12px; border: 1px solid var(--idlm-border-strong); border-radius: var(--idlm-radius); background: var(--idlm-surface); color: var(--idlm-text); font: inherit; }
 .idlm-password-field { position: relative; min-width: 0; }
-.idlm-password-field :is(.input, .idlm-input) { padding-right: 48px; }
 .idlm-password-toggle { position: absolute; top: 50%; right: 4px; display: inline-flex; align-items: center; justify-content: center; width: 38px; min-width: 38px; height: 38px; min-height: 38px; padding: 0; transform: translateY(-50%); border: 0; border-radius: 6px; background: transparent; color: var(--idlm-action); font: inherit; line-height: 1; cursor: pointer; transition: color var(--idlm-motion-fast) var(--idlm-ease), background-color var(--idlm-motion-fast) var(--idlm-ease); }
 .idlm-password-toggle:hover { background: var(--idlm-action-soft); color: var(--idlm-action-hover); }
 .idlm-password-toggle:focus-visible { outline: 2px solid var(--idlm-focus-ring); outline-offset: -2px; }
 .idlm-password-toggle .dashicons { width: 18px; height: 18px; font-size: 18px; line-height: 18px; }
 .idlm-field-help, .idlm-field-error { margin: 7px 0 0; font-size: 12px; line-height: 1.5; }
-.idlm-field-help { color: var(--idlm-text-muted); }
 .idlm-field-error { color: var(--idlm-danger); font-weight: 600; }
 .idlm-field-error[hidden] { display: none; }
 .idlm-account-security .idlm-form-group { align-content: start; }
-.idlm-required { color: var(--idlm-text-muted); font-weight: 500; }
 .idlm-auth-message:focus, .idlm-alert[data-idlm-notice]:focus { outline: 2px solid var(--idlm-focus-ring); outline-offset: 2px; }
 .idlm-login-form[aria-busy="true"] .button-primary, .idlm-account-form[aria-busy="true"] .idlm-btn-primary { cursor: wait; }
 .idlm-login-form .login-remember label { display: inline-flex; align-items: center; gap: 8px; }
@@ -6743,8 +6285,7 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 .idlm-wrap .idlm-panel-heading h2,
 .idlm-drawer-identity h2,
 .idlm-modal-header h2,
-#idlm-routing-modal .idlm-modal-header h2,
-.idlm-dialog-title {
+#idlm-routing-modal .idlm-modal-header h2 {
     font-size: var(--idlm-type-section);
     line-height: 1.375;
 }
@@ -6757,7 +6298,6 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 }
 
 .idlm-wrap .idlm-form-group label,
-.idlm-wrap .idlm-label,
 .idlm-wrap .idlm-table th {
     font-size: var(--idlm-type-label);
     line-height: 1.45;
@@ -6791,11 +6331,6 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
     line-height: 1.4;
 }
 
-.idlm-metric-value {
-    font-size: var(--idlm-type-metric);
-    line-height: 1.1;
-}
-
 .idlm-metric-hint {
     font-size: var(--idlm-type-meta);
     line-height: 1.4;
@@ -6812,11 +6347,6 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 }
 
 /* Users directory controls intentionally occupy their own full-width row. */
-.idlm-users-directory-top { display: grid; align-items: start; }
-.idlm-users-filter { width: 100%; justify-content: flex-start; }
-.idlm-users-filter .idlm-input:first-of-type { min-width: 260px; }
-@media (max-width: 782px) { .idlm-users-filter .idlm-input:first-of-type { min-width: 0; } }
-
 /* Lead routing uses a single scrolling canvas with anchored context and actions. */
 #idlm-routing-modal .idlm-modal-content {
     width: min(960px, calc(100% - 32px));
@@ -6834,7 +6364,6 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 #idlm-routing-modal .idlm-routing-modal-heading {
     min-width: 0;
 }
-
 
 #idlm-routing-modal .idlm-routing-modal-intro {
     max-width: 60ch;
@@ -6867,16 +6396,6 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 #idlm-routing-modal .idlm-routing-section-heading h3 { margin-top: 0; }
 
 #idlm-routing-modal .idlm-routing-current-summary { display: grid; gap: 2px; margin: 2px 0 0; padding: 12px 14px; color: var(--idlm-text); }
-
-
-#idlm-routing-modal .idlm-routing-source-section {
-    display: grid;
-    gap: 14px;
-}
-
-#idlm-routing-modal .idlm-routing-source-section.is-inactive {
-    background: color-mix(in srgb, var(--idlm-surface) 72%, var(--idlm-surface-soft));
-}
 
 #idlm-routing-modal .idlm-routing-source-section.is-inactive .idlm-input {
     color: var(--idlm-text-muted);
@@ -6941,8 +6460,6 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 .idlm-global-sidebar .idlm-global-sidebar-actions { display: flex; align-items: center; }
 .idlm-global-sidebar .idlm-global-sidebar-filter-btn { font: inherit; line-height: 1.2; cursor: pointer; }
 .idlm-global-sidebar .idlm-global-sidebar-filter-btn:hover, .idlm-global-sidebar .idlm-global-sidebar-filter-btn:focus-visible { border-color: var(--idlm-action); outline: 0; box-shadow: 0 0 0 3px color-mix(in srgb, var(--idlm-action) 16%, transparent); }
-.idlm-global-sidebar .idlm-global-sidebar-filter-btn.active { border-color: var(--idlm-action); }
-.idlm-global-sidebar #idlm-global-tasks-sidebar-close { margin-left: var(--idlm-space-1); }
 .idlm-global-sidebar #idlm-global-tasks-sidebar-close:hover, .idlm-global-sidebar #idlm-global-tasks-sidebar-close:focus-visible { outline-offset: 1px; }
 .idlm-global-sidebar .idlm-global-sidebar-body { overflow: auto; overscroll-behavior: contain; box-sizing: border-box; }
 /* One loading state for popups, drawers and the tasks sidebar: spinner over its text, centred in the space it fills. */
@@ -6952,7 +6469,6 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 .idlm-drawer-body > .idlm-popup-load-state:only-child { min-height: 100%; }
 .idlm-popup-load-state--compact { flex-direction: row; gap: var(--idlm-space-2); min-height: 0; padding: var(--idlm-space-4); }
 .idlm-drawer .idlm-drawer-load-state--error { flex: 0 0 auto; margin: var(--idlm-space-4); min-height: auto; border: 1px solid var(--idlm-danger); border-radius: var(--idlm-radius); background: var(--idlm-danger-soft); color: var(--idlm-danger); }
-.idlm-spinner-inline { float: none; margin: 0; }
 /* Skeletons: a light band slides across each block while content loads. It moves by
    transform only, so the browser composites it without repainting the page. */
 .idlm-skeleton { display: block; position: relative; overflow: hidden; isolation: isolate; border-radius: var(--idlm-radius-compact); background: var(--idlm-readonly); }
@@ -6964,7 +6480,6 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 /* Lead popup skeleton: the header, tabs and body shapes, so the popup opens at its final size. */
 .idlm-drawer-content-wrapper > .idlm-drawer-skeleton { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; }
 .idlm-drawer-skeleton .idlm-drawer-avatar.idlm-skeleton { border-radius: 50%; background: var(--idlm-readonly); }
-.idlm-drawer-skeleton .idlm-drawer-identity-text { display: grid; gap: var(--idlm-space-2); }
 .idlm-drawer-skeleton-name { width: 180px; height: 18px; }
 .idlm-drawer-skeleton-contact { width: 260px; max-width: 100%; height: 12px; }
 .idlm-drawer-skeleton-label { width: 64px; height: 10px; }
@@ -6974,7 +6489,6 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 .idlm-drawer-skeleton-tab { width: 72px; height: 12px; }
 .idlm-drawer-skeleton-tab:nth-child(2) { width: 140px; }
 .idlm-drawer-skeleton .idlm-drawer-body { flex: 1 1 auto; overflow: hidden; }
-.idlm-drawer-skeleton .idlm-drawer-workspace { display: grid; align-items: start; }
 .idlm-drawer-skeleton-column { display: grid; gap: var(--idlm-space-4); min-width: 0; }
 .idlm-drawer-skeleton-card { display: grid; gap: var(--idlm-space-3); padding: var(--idlm-space-4); border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface); }
 .idlm-drawer-skeleton-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--idlm-space-3) var(--idlm-space-4); }
@@ -7062,6 +6576,4 @@ body:not(.wp-admin):not(.admin-bar) .idlm-wrap .idlm-header {
 
 /* Add lead: sections the chosen save option does not need. The ID outranks grid display rules. */
 #idlm-add-lead-form [hidden] { display: none; }
-#idlm-add-lead-form .idlm-add-lead-qualification { margin: 16px 0 0; }
 #idlm-add-lead-form .idlm-add-lead-choice { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 8px; }
-#idlm-add-lead-form .idlm-add-lead-choice span { display: flex; flex-direction: column; }

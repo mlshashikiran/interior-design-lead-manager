@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.108.0
+Stable tag: 1.109.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,8 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 
 == Changelog ==
 
+= 1.109.0 =
+* Added: Shared buttons, badges and form fields gain shadcn-style variants and a local-only Design system review page; unused legacy styles were removed. Screens look the same.
 = 1.108.0 =
 * Added: A CRM tab left open during an update shows "The CRM has been updated. Reload to get the latest version." with a Reload button. It asks before discarding unsaved edits.
 

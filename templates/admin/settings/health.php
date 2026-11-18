@@ -214,7 +214,7 @@ $idlm_email_cleared = isset($context['email_cleared']) ? $context['email_cleared
                                                 </td>
                                                 <td class="idlm-table-action-cell">
                                                     <?php if (!empty($idlm_log->stack_trace)): ?>
-                                                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-view-trace-btn idlm-btn-compact" data-trace="<?php echo esc_attr($idlm_log->stack_trace); ?>" data-message="<?php echo esc_attr($idlm_log->message); ?>">
+                                                        <button type="button" class="idlm-btn idlm-btn-secondary idlm-view-trace-btn idlm-btn-sm" data-trace="<?php echo esc_attr($idlm_log->stack_trace); ?>" data-message="<?php echo esc_attr($idlm_log->message); ?>">
                                                             View Trace
                                                         </button>
                                                     <?php else: ?>

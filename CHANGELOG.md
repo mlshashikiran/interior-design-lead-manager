@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.109.0] - 2026-11-18
+
+### Added
+
+- Shared components follow the shadcn/ui model: role tokens (`--idlm-ui-*`) that follow the white-label colours, a Link button, a small button size, an icon slot for buttons, outline badges, stage and quality badges in the standard tones, and a field layout with clear invalid and disabled states. Existing screens look the same. Builder: Shashi.
+- The new components are in use. Lead sources in the Leads table and the lead drawer are outlined badges. Dashboard drill-down lists show stage and quality as coloured badges. Any form field with an error now turns its label red as well as its border, including in the lead drawer. Toolbar buttons such as Select failed, Copy request and Retry use the new small size, and buttons with icons size them consistently.
+- A Design system page in the workspace shows every button, badge, field and state for review. It appears only to administrators on local and development sites.
+
+### Fixed
+
+- A quality value of "Qualified" no longer shows a custom stage label (for example "Pre-Qualified") in dashboard lists.
+
+### Removed
+
+- About 370 lines of the legacy stylesheet: rules for class names that no screen renders any more (such as the old users filter and `idlm-check`), and 113 rules that the current design already overrides everywhere. Every screen was compared with the previous version at four widths and renders the same.
 ## [1.108.0] - 2026-11-18
 
 ### Added

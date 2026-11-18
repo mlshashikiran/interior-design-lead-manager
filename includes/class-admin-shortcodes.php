@@ -112,6 +112,9 @@ final class IDLM_Admin_Shortcodes {
             $sections['users'] = array('Users & access', 'dashicons-admin-users', array('IDLM_Admin', 'render_users_access_page'));
         }
         $sections['my-account'] = array('My account', 'dashicons-admin-users', array('IDLM_Admin', 'render_my_account_page'));
+        if (self::ui_kit_available()) {
+            $sections['ui-kit'] = array('Design system', 'dashicons-art', array(__CLASS__, 'render_ui_kit'));
+        }
 
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0082: render_workspace_shortcode(): current CRM access gates workspace routing; idlm_view/quotation query presence select only an allowlisted view, whose handler retains its own capability/object rules; these GETs do not mutate state.
         $requested = isset($_GET['idlm_view']) ? sanitize_key(wp_unslash($_GET['idlm_view'])) : '';
@@ -123,6 +126,23 @@ final class IDLM_Admin_Shortcodes {
         }
         $active = isset($sections[$requested]) ? $requested : ($has_lead_access ? 'dashboard' : IDLM_Design_Handoff_Controller::VIEW);
         return array('sections' => $sections, 'active' => $active, 'has_lead_access' => $has_lead_access);
+    }
+
+    /**
+     * The component review page is for administrators on local and development sites only,
+     * so staging and production never list it.
+     */
+    public static function ui_kit_available() {
+        $environment = function_exists('wp_get_environment_type') ? wp_get_environment_type() : 'production';
+        return current_user_can('manage_options') && in_array($environment, array('local', 'development'), true);
+    }
+
+    /** Every button, badge and field variant on live classes, for design review. */
+    public static function render_ui_kit() {
+        if (!self::ui_kit_available()) {
+            return '';
+        }
+        return IDLM_View::render('admin/ui-kit.php');
     }
 
     /** Render the complete capability-aware CRM workspace. */
