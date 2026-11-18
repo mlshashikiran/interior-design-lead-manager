@@ -115,23 +115,23 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                             <p class="idlm-card-desc">Instead of complex API integrations, Google Ads Data Manager pulls conversion data and customer match segments from secure HTTPS feeds on your site. Configure the Basic Auth credentials below, then map these URLs in your Google Ads Data Manager. <button type="button" class="idlm-action-link" onclick="switchSettingsTab(document.querySelector('.idlm-tab-link[onclick*=\'settings-help\']'), 'settings-help'); setTimeout(function(){ document.getElementById('idlm-help-google-ads-creds').scrollIntoView({behavior: 'smooth'}); }, 100);">Read step-by-step instructions to link sources</button>.</p>
                             
                             <div class="idlm-form-grid two" data-idlm-ui="mt-4">
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <label for="idlm-google-gadm-username">HTTPS source username</label>
                                     <input type="text" id="idlm-google-gadm-username" name="google_gadm_username" class="idlm-input" autocomplete="username" value="<?php echo esc_attr($idlm_google_gadm_username); ?>" required>
                                 </div>
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <label for="idlm-google-gadm-password">HTTPS source password or token</label>
                                     <input type="password" id="idlm-google-gadm-password" name="google_gadm_password" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_google_gadm_password); ?>" required>
                                 </div>
                             </div>
 
-                            <div class="idlm-form-group" data-idlm-ui="mt-4">
+                            <div class="idlm-form-group idlm-field" data-idlm-ui="mt-4">
                                 <label for="idlm-conversions-feed-url">Google Ads offline conversions feed URL</label>
                                 <div data-idlm-ui="flex">
-                                    <input type="text" class="idlm-input idlm-flex-grow idlm-readonly-control" readonly value="<?php echo esc_url(site_url('/wp-json/interior-design-lead-manager/v1/google-ads-conversions.csv')); ?>" id="idlm-conversions-feed-url">
+                                    <input type="text" class="idlm-input idlm-flex-grow idlm-readonly-control" readonly value="<?php echo esc_url(site_url('/wp-json/interior-design-lead-manager/v1/google-ads-conversions.csv')); ?>" id="idlm-conversions-feed-url" aria-describedby="idlm-conversions-feed-url-help">
                                     <button type="button" class="idlm-btn idlm-btn-secondary" onclick="idlmCopyToClipboard(this, document.getElementById('idlm-conversions-feed-url').value)">Copy URL</button>
                                 </div>
-                                <p class="idlm-settings-help">Use this URL for importing Offline Conversions in Google Ads Data Manager.</p>
+                                <p id="idlm-conversions-feed-url-help" class="idlm-settings-help idlm-field-help">Use this URL for importing Offline Conversions in Google Ads Data Manager.</p>
                             </div>
                         </article>
 
@@ -186,29 +186,29 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                             </div>
                             <p class="idlm-card-desc">Configure Interakt credentials, incoming replies and campaign event mappings. Outgoing WhatsApp automations also require General → Notifications → Enable outgoing WhatsApp automations.</p>
                             
-                            <div class="idlm-form-group" data-idlm-ui="mb-5">
+                            <div class="idlm-form-group idlm-field" data-idlm-ui="mb-5">
                                 <label for="idlm-interakt-api-key" class="idlm-settings-label">Interakt write API key</label>
-                                <input type="password" id="idlm-interakt-api-key"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('interakt_api_key'); ?> name="idlm_interakt_api_key" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_interakt_api_key); ?>" data-idlm-ui="w-full" placeholder="e.g. key_xxxxxxxxxxxxxxxxxxxxxxxx">
-                                <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
+                                <input type="password" id="idlm-interakt-api-key" aria-describedby="idlm-interakt-api-key-help idlm-interakt-api-key-help-2"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('interakt_api_key'); ?> name="idlm_interakt_api_key" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_interakt_api_key); ?>" data-idlm-ui="w-full" placeholder="e.g. key_xxxxxxxxxxxxxxxxxxxxxxxx">
+                                <p id="idlm-interakt-api-key-help" class="description idlm-field-help">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="idlm_interakt_api_key_clear" value="1"> Clear saved credential</label>
-                                <span class="description idlm-settings-help">Provide the Write API key from your Interakt Developer dashboard.</span>
+                                <span id="idlm-interakt-api-key-help-2" class="description idlm-settings-help idlm-field-help">Provide the Write API key from your Interakt Developer dashboard.</span>
                             </div>
                             
-                            <div class="idlm-form-group" data-idlm-ui="mb-5">
+                            <div class="idlm-form-group idlm-field" data-idlm-ui="mb-5">
                                 <label for="idlm-interakt-webhook-secret" class="idlm-settings-label">Interakt webhook secret key</label>
-                                <input type="password" id="idlm-interakt-webhook-secret"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('interakt_webhook_secret'); ?> name="idlm_interakt_webhook_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_interakt_webhook_secret); ?>" data-idlm-ui="w-full" placeholder="e.g. sec_xxxxxxxxxxxxxxxxxxxxxxxx">
-                                <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
+                                <input type="password" id="idlm-interakt-webhook-secret" aria-describedby="idlm-interakt-webhook-secret-help idlm-interakt-webhook-secret-help-2"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('interakt_webhook_secret'); ?> name="idlm_interakt_webhook_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_interakt_webhook_secret); ?>" data-idlm-ui="w-full" placeholder="e.g. sec_xxxxxxxxxxxxxxxxxxxxxxxx">
+                                <p id="idlm-interakt-webhook-secret-help" class="description idlm-field-help">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="idlm_interakt_webhook_secret_clear" value="1"> Clear saved credential</label>
-                                <span class="description idlm-settings-help">Enter the secret key used by Interakt to sign webhook events.</span>
+                                <span id="idlm-interakt-webhook-secret-help-2" class="description idlm-settings-help idlm-field-help">Enter the secret key used by Interakt to sign webhook events.</span>
                             </div>
 
-                            <div class="idlm-form-group" data-idlm-ui="mb-5">
+                            <div class="idlm-form-group idlm-field" data-idlm-ui="mb-5">
                                 <label for="idlm-interakt-webhook-url" class="idlm-settings-label">Webhook callback URL (copy to Interakt)</label>
-                                <input type="text" id="idlm-interakt-webhook-url" readonly class="idlm-input" value="<?php echo esc_url(get_rest_url(null, 'idlm/v1/interakt-webhook')); ?>" data-idlm-ui="w-full readonly" onclick="this.select();">
-                                <span class="description idlm-settings-help">Copy this URL and paste it as the Webhook URL in your Interakt Developer settings.</span>
+                                <input type="text" id="idlm-interakt-webhook-url" aria-describedby="idlm-interakt-webhook-url-help" readonly class="idlm-input" value="<?php echo esc_url(get_rest_url(null, 'idlm/v1/interakt-webhook')); ?>" data-idlm-ui="w-full readonly" onclick="this.select();">
+                                <span id="idlm-interakt-webhook-url-help" class="description idlm-settings-help idlm-field-help">Copy this URL and paste it as the Webhook URL in your Interakt Developer settings.</span>
                             </div>
 
-                            <div class="idlm-form-group" data-idlm-ui="mb-5">
+                            <div class="idlm-form-group idlm-field" data-idlm-ui="mb-5">
                                 <span class="idlm-form-label idlm-settings-label">Event Mappings</span>
                                 <p class="idlm-card-desc idlm-settings-description">Map status, stage, or quality values to custom event campaign names inside Interakt.</p>
                                 
@@ -274,26 +274,26 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                             </div>
                             <p class="idlm-card-desc">Bypass third-party integration charges by subscribing directly to Meta's free incoming message webhooks.</p>
                             
-                            <div class="idlm-form-group" data-idlm-ui="mb-5">
+                            <div class="idlm-form-group idlm-field" data-idlm-ui="mb-5">
                                 <label for="idlm-meta-webhook-verify-token" class="idlm-settings-label">Verify token</label>
-                                <input type="password" id="idlm-meta-webhook-verify-token"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('meta_webhook_verify_token'); ?> name="idlm_meta_webhook_verify_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_webhook_verify_token); ?>" data-idlm-ui="w-full" placeholder="Enter a random verify token of your choice">
-                                <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
+                                <input type="password" id="idlm-meta-webhook-verify-token" aria-describedby="idlm-meta-webhook-verify-token-help idlm-meta-webhook-verify-token-help-2"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('meta_webhook_verify_token'); ?> name="idlm_meta_webhook_verify_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_webhook_verify_token); ?>" data-idlm-ui="w-full" placeholder="Enter a random verify token of your choice">
+                                <p id="idlm-meta-webhook-verify-token-help" class="description idlm-field-help">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="idlm_meta_webhook_verify_token_clear" value="1"> Clear saved credential</label>
-                                <span class="description idlm-settings-help">Define a unique secret token string here, then enter the exact same string as the 'Verify Token' in your Meta App Webhook Developer settings.</span>
+                                <span id="idlm-meta-webhook-verify-token-help-2" class="description idlm-settings-help idlm-field-help">Define a unique secret token string here, then enter the exact same string as the 'Verify Token' in your Meta App Webhook Developer settings.</span>
                             </div>
 
-                            <div class="idlm-form-group" data-idlm-ui="mb-5">
+                            <div class="idlm-form-group idlm-field" data-idlm-ui="mb-5">
                                 <label for="idlm-meta-webhook-app-secret" class="idlm-settings-label">Meta app secret</label>
-                                <input type="password" id="idlm-meta-webhook-app-secret"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('meta_webhook_app_secret'); ?> name="idlm_meta_webhook_app_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_webhook_app_secret); ?>" data-idlm-ui="w-full" placeholder="e.g. 5f83xxxxxxxxxxxxxxxxxxxxxxxx">
-                                <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
+                                <input type="password" id="idlm-meta-webhook-app-secret" aria-describedby="idlm-meta-webhook-app-secret-help idlm-meta-webhook-app-secret-help-2"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('meta_webhook_app_secret'); ?> name="idlm_meta_webhook_app_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_webhook_app_secret); ?>" data-idlm-ui="w-full" placeholder="e.g. 5f83xxxxxxxxxxxxxxxxxxxxxxxx">
+                                <p id="idlm-meta-webhook-app-secret-help" class="description idlm-field-help">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="idlm_meta_webhook_app_secret_clear" value="1"> Clear saved credential</label>
-                                <span class="description idlm-settings-help">Provide the Meta App Secret (found in your Meta App Dashboard > Settings > Basic) to verify X-Hub-Signature-256 signatures.</span>
+                                <span id="idlm-meta-webhook-app-secret-help-2" class="description idlm-settings-help idlm-field-help">Provide the Meta App Secret (found in your Meta App Dashboard > Settings > Basic) to verify X-Hub-Signature-256 signatures.</span>
                             </div>
 
-                            <div class="idlm-form-group" data-idlm-ui="mb-5">
+                            <div class="idlm-form-group idlm-field" data-idlm-ui="mb-5">
                                 <label for="idlm-meta-webhook-url" class="idlm-settings-label">Webhook callback URL (copy to Meta App Dashboard)</label>
-                                <input type="text" id="idlm-meta-webhook-url" readonly class="idlm-input" value="<?php echo esc_url(get_rest_url(null, 'idlm/v1/meta-webhook')); ?>" data-idlm-ui="w-full readonly" onclick="this.select();">
-                                <span class="description idlm-settings-help">Configure this Callback URL inside WhatsApp > Configuration Webhook settings on the Meta Developer Portal and subscribe to the <code>messages</code> field.</span>
+                                <input type="text" id="idlm-meta-webhook-url" aria-describedby="idlm-meta-webhook-url-help" readonly class="idlm-input" value="<?php echo esc_url(get_rest_url(null, 'idlm/v1/meta-webhook')); ?>" data-idlm-ui="w-full readonly" onclick="this.select();">
+                                <span id="idlm-meta-webhook-url-help" class="description idlm-settings-help idlm-field-help">Configure this Callback URL inside WhatsApp > Configuration Webhook settings on the Meta Developer Portal and subscribe to the <code>messages</code> field.</span>
                             </div>
                         </article>
                     </div>

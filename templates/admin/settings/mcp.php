@@ -42,18 +42,18 @@ $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                             <button type="button" id="idlm-mcp-tab-codex" class="idlm-tab-link" role="tab" aria-selected="false" aria-controls="mcp-codex" tabindex="-1" onclick="switchMcpClientTab(this, 'mcp-codex')">Codex CLI</button>
                         </div>
 
-                        <div class="idlm-form-group full idlm-mcp-form-block">
+                        <div class="idlm-form-group idlm-field full idlm-mcp-form-block">
                             <label for="idlm-mcp-api-key">Scoped MCP API key</label>
                             <div class="idlm-mcp-key-control" data-idlm-ui="flex">
-                                <input type="password" id="idlm-mcp-api-key" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_saved_api_key); ?>" readonly>
+                                <input type="password" id="idlm-mcp-api-key" aria-describedby="idlm-mcp-api-key-help" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_saved_api_key); ?>" readonly>
                                 <button type="submit" form="idlm-rotate-mcp-form" class="idlm-action-link idlm-action-link-danger" data-idlm-confirm-submit data-idlm-confirm-title="Rotate MCP key?" data-idlm-confirm-message="Rotate the MCP key now? Existing remote MCP clients must be updated immediately." data-idlm-confirm-label="Rotate key" data-idlm-confirm-destructive="true">Rotate Key</button>
                             </div>
-                            <p class="description">Remote clients must send this value in the <code>X-IDLM-API-Key</code> header.</p>
+                            <p id="idlm-mcp-api-key-help" class="description idlm-field-help">Remote clients must send this value in the <code>X-IDLM-API-Key</code> header.</p>
                         </div>
 
                         <!-- Subtab 1: Claude Desktop -->
                         <div id="mcp-claude" class="idlm-mcp-client-tab-content active" role="tabpanel" aria-labelledby="idlm-mcp-tab-claude">
-                            <div class="idlm-form-group full">
+                            <div class="idlm-form-group idlm-field full">
                                 <h4 data-idlm-ui="heading">Claude Desktop settings</h4>
                                 <p class="idlm-card-desc">Add the snippet below into the <code>mcpServers</code> section of your Claude configuration file (<code>~/Library/Application Support/Claude/claude_desktop_config.json</code> on macOS).</p>
                                 
@@ -75,7 +75,7 @@ $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
 
                         <!-- Subtab 2: Antigravity IDE -->
                         <div id="mcp-antigravity" class="idlm-mcp-client-tab-content" role="tabpanel" aria-labelledby="idlm-mcp-tab-antigravity" hidden>
-                            <div class="idlm-form-group full">
+                            <div class="idlm-form-group idlm-field full">
                                 <h4 data-idlm-ui="heading">Antigravity / Gemini Code Assist setup</h4>
                                 <p class="idlm-card-desc">Configure the Google Antigravity developer agent environment (<code>~/.gemini/antigravity/mcp_config.json</code>) to use this database MCP server.</p>
                                 
@@ -97,7 +97,7 @@ $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
 
                         <!-- Subtab 3: Cursor -->
                         <div id="mcp-cursor" class="idlm-mcp-client-tab-content" role="tabpanel" aria-labelledby="idlm-mcp-tab-cursor" hidden>
-                            <div class="idlm-form-group full">
+                            <div class="idlm-form-group idlm-field full">
                                 <h4 data-idlm-ui="heading">Cursor editor setup</h4>
                                 <p class="idlm-card-desc">Navigate to **Cursor Settings > Features > MCP**, click **+ Add New MCP Server**, and configure using one of the options below:</p>
                                 
@@ -155,7 +155,7 @@ $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
 
                         <!-- Subtab 4: Codex CLI -->
                         <div id="mcp-codex" class="idlm-mcp-client-tab-content" role="tabpanel" aria-labelledby="idlm-mcp-tab-codex" hidden>
-                            <div class="idlm-form-group full">
+                            <div class="idlm-form-group idlm-field full">
                                 <h4 data-idlm-ui="heading">Codex CLI Setup</h4>
                                 <p class="idlm-card-desc">Configure the Codex CLI client to connect to your database over HTTPS (Remote) or Stdio command (Local):</p>
                                 
@@ -192,7 +192,7 @@ args = ["<?php echo esc_html($idlm_mcp_script_path); ?>"]</pre>
                             </div>
                         </div>
 
-                        <div class="idlm-form-group full idlm-settings-divider">
+                        <div class="idlm-form-group idlm-field full idlm-settings-divider">
                             <h4 data-idlm-ui="heading">Security and access sandbox</h4>
                             <ul class="idlm-security-list">
                                 <li><strong>Read-Only Restraints</strong>: The MCP server strictly executes only <code>SELECT</code> queries. Any writing, modifying, or structure altering statements are automatically rejected.</li>

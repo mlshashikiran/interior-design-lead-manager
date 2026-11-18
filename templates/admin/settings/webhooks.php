@@ -26,11 +26,11 @@ if (!empty($context['lead_connector']['error'])) { $idlm_capture_tab = 'meta'; }
                         <h3>Webhook credentials</h3>
                         <p class="idlm-card-desc">Add the endpoint and API key to the service sending your leads. Rotating the key requires updating every connected service.</p>
                         <div class="idlm-form-grid two">
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-webhook-endpoint">Target webhook endpoint URL</label>
                                 <input type="text" id="idlm-webhook-endpoint" class="idlm-input" value="<?php echo esc_attr(get_rest_url(null, 'interior-design-lead-manager/v1/webhook')); ?>" readonly>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-webhook-api-key">Webhook API key (send in the <code>X-IDLM-API-Key</code> header)</label>
                                 <input type="password" id="idlm-webhook-api-key" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_webhook_key); ?>" readonly>
                                 <button type="submit" form="idlm-rotate-webhook-form" class="idlm-action-link idlm-action-link-danger" data-idlm-confirm-submit data-idlm-confirm-title="Rotate webhook key?" data-idlm-confirm-message="Rotate the webhook key now? Existing webhook clients must be updated immediately." data-idlm-confirm-label="Rotate key" data-idlm-confirm-destructive="true">Rotate webhook key</button>
@@ -142,7 +142,7 @@ if (!empty($context['lead_connector']['error'])) { $idlm_capture_tab = 'meta'; }
                                             <?php foreach ($idlm_group_fields as $idlm_key => $idlm_lbl):
                                                 $idlm_val = isset($idlm_mappings[$idlm_key]) ? $idlm_mappings[$idlm_key] : '';
                                             ?>
-                                                <div class="idlm-form-group">
+                                                <div class="idlm-form-group idlm-field">
                                                     <label for="idlm-map-<?php echo esc_attr($idlm_plat); ?>-<?php echo esc_attr($idlm_key); ?>"><?php echo esc_html($idlm_lbl); ?></label>
                                                     <input type="text" id="idlm-map-<?php echo esc_attr($idlm_plat); ?>-<?php echo esc_attr($idlm_key); ?>" name="map_<?php echo esc_attr($idlm_plat); ?>_<?php echo esc_attr($idlm_key); ?>" class="idlm-input" placeholder="e.g. <?php echo esc_attr($idlm_key); ?>" value="<?php echo esc_attr($idlm_val); ?>">
                                                 </div>

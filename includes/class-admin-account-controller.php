@@ -34,6 +34,20 @@ final class IDLM_Admin_Account_Controller {
         ));
     }
 
+    /** Email the signed-in person a password-reset link. Nothing on the account is saved. */
+    public static function handle_send_reset() {
+        if (!is_user_logged_in()) {
+            wp_die('Authentication required.', 403);
+        }
+        check_admin_referer('idlm_send_my_reset');
+        $return_url = isset($_POST['idlm_return_url']) ? esc_url_raw(wp_unslash($_POST['idlm_return_url'])) : home_url('/');
+        $return_url = wp_validate_redirect($return_url, home_url('/'));
+        $sent = retrieve_password(wp_get_current_user()->user_login);
+        $failed = !$sent || is_wp_error($sent);
+        wp_safe_redirect(add_query_arg($failed ? 'idlm_account_error' : 'idlm_account_notice', $failed ? 'reset-failed' : 'reset-sent', $return_url));
+        exit;
+    }
+
     /** Save the current user's frontend account details. */
     public static function handle_update() {
         if (!is_user_logged_in()) {

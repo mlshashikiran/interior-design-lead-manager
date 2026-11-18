@@ -380,6 +380,17 @@ final class IDLM_Admin_Users_Controller {
         self::redirect('notice', 'updated');
     }
 
+    /** Send one person a password-reset link. Nothing on their account is saved. */
+    public static function handle_send_reset() {
+        self::authorize('idlm_send_user_reset');
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- authorize() checked manage_options, POST and the idlm_send_user_reset nonce.
+        $user_id = absint($_POST['user_id'] ?? 0);
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
+        if (!$user_id || !get_userdata($user_id)) { self::redirect('error', 'invalid-user'); }
+        $sent = self::send_reset($user_id);
+        self::redirect($sent && !is_wp_error($sent) ? 'notice' : 'error', $sent && !is_wp_error($sent) ? 'reset-sent' : 'reset-failed');
+    }
+
     private static function enroll_editorial_user($user_id, $role) {
         if (!in_array($role, self::EDITORIAL_ROLES, true)) { return; }
         $user = new WP_User($user_id);
@@ -489,7 +500,7 @@ final class IDLM_Admin_Users_Controller {
         if (!empty($_POST['crm_access_disabled'])) { update_user_meta($user_id, self::DISABLED_META_KEY, '1'); } else { delete_user_meta($user_id, self::DISABLED_META_KEY); }
         // phpcs:enable WordPress.Security.NonceVerification.Missing
     }
-    private static function send_reset($user_id) { $user = get_userdata($user_id); if ($user) { retrieve_password($user->user_login); } }
+    private static function send_reset($user_id) { $user = get_userdata($user_id); return $user ? retrieve_password($user->user_login) : false; }
     private static function guard_administrator_change($user_id, $new_role, $disabled) {
         // An empty role keeps a person's unmanaged roles, and so whatever manage_options they hold through them.
         if ($user_id === get_current_user_id() && (('' !== $new_role && 'administrator' !== $new_role) || $disabled)) { self::redirect('error', 'self-lockout'); }

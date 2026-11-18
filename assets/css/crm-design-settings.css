@@ -84,6 +84,7 @@ body.idlm-crm-design .idlm-settings-page .idlm-card-desc {
 /* Labels outrank help text: label 13px/600 in text colour, help 12px/400 muted. */
 body.idlm-crm-design .idlm-settings-page .idlm-form-group > label,
 body.idlm-crm-design .idlm-settings-page .idlm-form-group > .idlm-form-label,
+body.idlm-crm-design .idlm-settings-page .idlm-fieldset-legend,
 body.idlm-crm-design .idlm-settings-page .idlm-settings-label {
     color: var(--idlm-text);
     font-size: 0.8125rem;

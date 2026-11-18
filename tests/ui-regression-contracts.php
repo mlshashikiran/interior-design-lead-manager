@@ -668,3 +668,70 @@ idlm_test('shadcn foundations: role tokens follow white-label roots, component v
     assert_contains("select[data-field=\"lead_quality\"], [data-idlm-quality]').length) continue;", (string) file_get_contents($root . '/assets/js/admin-app.js'));
     assert_contains('class="idlm-btn idlm-btn-secondary idlm-btn-sm" data-idlm-select-failed', (string) file_get_contents($root . '/templates/admin/logs/capi.php'));
 });
+
+idlm_test('Field layout: CRM forms use the shared field anatomy, fieldsets and linked help', static function(): void {
+    $root = dirname(__DIR__);
+    $files = array_merge(
+        glob($root . '/templates/admin/settings/*.php'),
+        glob($root . '/templates/admin/users*.php'),
+        array($root . '/templates/admin/leads.php', $root . '/templates/admin/common-overlays.php', $root . '/templates/my-account.php'),
+        glob($root . '/templates/admin/logs/*.php')
+    );
+    $fields = 0;
+    foreach ($files as $file) {
+        $source = (string) file_get_contents($file);
+        $name = substr($file, strlen($root) + 1);
+        // Every single-field wrapper is a Field; the routing section cards are layout, not fields.
+        assert_same(0, preg_match_all('/<(div|label|p|span)\b[^>]*class="idlm-form-group(?![\w-])(?![^"]*\bidlm-field\b)/', $source), $name . ' has a form group without idlm-field.');
+        assert_same(0, preg_match_all('/<div class="idlm-filter-group(?![\w-])(?![^"]*\bidlm-field\b)/', $source), $name . ' has a filter group without idlm-field.');
+        $fields += preg_match_all('/class="idlm-(?:form|filter)-group idlm-field\b/', $source);
+        // Help with a fixed id is announced by the control it describes.
+        preg_match_all('/<(?:p|small|span)\b[^>]*\bid="([a-z0-9-]+)"[^>]*\bidlm-field-help\b|<(?:p|small|span)\b[^>]*\bidlm-field-help\b[^>]*\bid="([a-z0-9-]+)"/', $source, $help);
+        foreach (array_filter(array_merge($help[1], $help[2])) as $help_id) {
+            assert_true((bool) preg_match('/aria-describedby="[^"]*\b' . preg_quote($help_id, '/') . '\b/', $source), $name . ' does not link help ' . $help_id . '.');
+        }
+        assert_false(false !== strpos($source, '<span class="idlm-form-label">Business working days</span>'), $name . ' still heads a checkbox group with a span.');
+    }
+    assert_true($fields > 150, 'Expected the five areas to carry more than 150 fields, found ' . $fields . '.');
+    // Checkbox and radio groups are fieldsets with a legend.
+    foreach (array('templates/admin/settings/routing.php' => array('Available reps', 'Working hours', 'Business working days'), 'templates/admin/leads.php' => array('Available now', 'Daily working hours', 'Business working days', 'What to export'), 'templates/admin/users-roles.php' => array('Which leads they see')) as $file => $legends) {
+        $source = (string) file_get_contents($root . '/' . $file);
+        foreach ($legends as $legend) {
+            assert_true((bool) preg_match('/<legend class="[^"]*idlm-fieldset-legend[^"]*">' . preg_quote($legend, '/') . '</', $source), $file . ' lacks the fieldset legend ' . $legend . '.');
+        }
+    }
+    assert_contains('<fieldset class="idlm-fieldset idlm-permission-group">', (string) file_get_contents($root . '/templates/admin/users-roles.php'));
+    // Invalid and disabled live on the field as well as the control.
+    $white_label = (string) file_get_contents($root . '/templates/admin/settings/white-label.php');
+    assert_same(5, substr_count($white_label, " ? ' data-invalid' : ''; ?>"));
+    // A control with help adds its error id to the same aria-describedby instead of a second attribute.
+    assert_contains("aria-describedby=\"idlm-white-label-brand-name-help<?php echo isset(\$idlm_errors['brand_name']) ? ' idlm-white-label-brand-name-error' : ''; ?>\"", $white_label);
+    assert_contains("data-idlm-connector-secret<?php echo \$idlm_managed ? ' data-disabled' : ''; ?>", (string) file_get_contents($root . '/templates/admin/settings/connector-secret.php'));
+    // A field toggled with `hidden` still hides under the flex layout.
+    assert_contains('.idlm-field[hidden] {', (string) file_get_contents($root . '/assets/css/crm-design.css'));
+});
+
+idlm_test('password-reset is a button on its own form, so Enter still saves and nothing else is saved', static function(): void {
+    $root = dirname(__DIR__);
+    $users = (string) file_get_contents($root . '/templates/admin/users.php');
+    $account = (string) file_get_contents($root . '/templates/my-account.php');
+    foreach (array($users, $account) as $source) {
+        assert_false(false !== strpos($source, 'name="send_reset_link"'), 'The reset checkbox is retired.');
+    }
+    assert_contains('<button class="idlm-btn idlm-btn-secondary" type="submit" form="idlm-user-reset-<?php echo esc_attr($idlm_user->ID); ?>"', $users);
+    assert_contains('id="idlm-user-reset-<?php echo esc_attr($idlm_user->ID); ?>" class="idlm-user-reset-form" data-idlm-pending-form hidden><input type="hidden" name="action" value="idlm_send_user_reset">', $users);
+    assert_contains('<button class="idlm-btn idlm-btn-secondary" type="submit" form="idlm-account-reset-form">', $account);
+    assert_contains('id="idlm-account-reset-form" data-idlm-pending-label="Sending link…" hidden><input type="hidden" name="action" value="idlm_send_my_reset">', $account);
+    // Each reset form follows its edit form, never inside it (forms cannot nest).
+    assert_true(strpos($users, 'class="idlm-user-reset-form"') > strpos($users, '<button class="idlm-btn idlm-btn-primary" type="submit" data-idlm-submit-label="Saving changes…">Save changes</button>'));
+    // Pending labels go to the form's own button, not the first submit button inside it.
+    foreach (array('users-logs.js', 'access-account.js') as $script) {
+        $js = (string) file_get_contents($root . '/assets/js/' . $script);
+        assert_contains("Array.prototype.find.call(form.elements, function (element) { return 'submit' === element.type; })", $js);
+        assert_false(false !== strpos($js, "form.querySelector('button[type=\"submit\"]')"), $script . ' still picks the first submit button inside the form.');
+    }
+    // Pages opened before the update still post the old checkbox to the save handlers.
+    assert_contains("if (!empty(\$_POST['send_reset_link'])) { self::send_reset(\$user_id); }", (string) file_get_contents($root . '/includes/class-admin-users-controller.php'));
+    assert_contains("if (!empty(\$_POST['send_reset_link'])) {", (string) file_get_contents($root . '/includes/class-admin-account-controller.php'));
+});
+

@@ -91,7 +91,7 @@ $idlm_role_labels = wp_roles()->get_names();
                                 $idlm_field_name = 'source_map_' . str_replace(array(' ', '/', '-'), '_', strtolower($idlm_src));
                                 $idlm_val = isset($idlm_source_maps[$idlm_src]) ? $idlm_source_maps[$idlm_src] : 0;
                             ?>
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <label for="idlm-source-map-<?php echo esc_attr(sanitize_key($idlm_src)); ?>"><?php echo esc_html($idlm_src); ?> rep</label>
                                     <select id="idlm-source-map-<?php echo esc_attr(sanitize_key($idlm_src)); ?>" name="<?php echo esc_attr($idlm_field_name); ?>" class="idlm-select">
                                         <option value="0">Unassigned</option>
@@ -123,9 +123,10 @@ $idlm_role_labels = wp_roles()->get_names();
                                 <div class="<?php echo $idlm_unassigned_intake_count > 0 ? 'is-warning' : ''; ?>"><span>Unassigned backlog</span><strong><?php echo esc_html($idlm_unassigned_intake_count); ?> leads</strong></div>
                                 <div><span>Backlog recovery</span><strong><?php echo '1' === $idlm_fallback_enabled ? 'Enabled' : 'Disabled'; ?></strong></div>
                             </div>
-                            <div class="idlm-form-group full idlm-routing-settings-group">
+                            <div class="idlm-form-group idlm-field full idlm-routing-settings-group">
                                 <div class="idlm-routing-settings-group-heading"><span>1</span><div><strong>Pre-sales availability</strong><small>Checked users receive new leads.</small></div></div>
-                                <span class="idlm-form-label">Available reps</span>
+                                <fieldset class="idlm-fieldset" aria-describedby="idlm-active-pre-sales-reps-help">
+                                <legend class="idlm-fieldset-legend">Available reps</legend>
                                 <div class="idlm-settings-wrap">
                                     <?php if (empty($idlm_pre_sales_reps)): ?>
                                         <span class="description">No users currently have the Pre-Sales Representative role.</span>
@@ -135,57 +136,58 @@ $idlm_role_labels = wp_roles()->get_names();
                                         <?php endforeach; ?>
                                     <?php endif; ?>
                                 </div>
-                                <p class="description">Uncheck unavailable reps. Existing unassigned leads stay unchanged.</p>
+                                <p id="idlm-active-pre-sales-reps-help" class="description idlm-field-help">Uncheck unavailable reps. Existing unassigned leads stay unchanged.</p>
+                                </fieldset>
                             </div>
-                            <div class="idlm-form-group idlm-routing-settings-group">
+                            <div class="idlm-form-group idlm-field idlm-routing-settings-group">
                                 <div class="idlm-routing-settings-group-heading"><span>2</span><div><strong>Unassigned lead recovery</strong><small>Optional backlog routing.</small></div></div>
                                 <label data-idlm-ui="check-label">
-                                    <input type="checkbox" name="fallback_assignment_enabled" value="1" <?php checked($idlm_fallback_enabled, '1'); ?>>
+                                    <input type="checkbox" id="idlm-fallback-assignment-enabled" aria-describedby="idlm-fallback-assignment-enabled-help" name="fallback_assignment_enabled" value="1" <?php checked($idlm_fallback_enabled, '1'); ?>>
                                     Automatically assign the unassigned backlog
                                 </label>
-                                <p class="description">Return eligible unassigned leads after the threshold.</p>
+                                <p id="idlm-fallback-assignment-enabled-help" class="description idlm-field-help">Return eligible unassigned leads after the threshold.</p>
                             </div>
-                            <div class="idlm-form-group idlm-routing-settings-group">
+                            <div class="idlm-form-group idlm-field idlm-routing-settings-group">
                                 <div class="idlm-routing-settings-group-heading"><span>3</span><div><strong>Qualified lead handoff</strong><small>Optional manager coverage.</small></div></div>
                                 <label data-idlm-ui="check-label">
-                                    <input type="checkbox" name="qualified_fallback_enabled" value="1" <?php checked($idlm_qualified_fallback_enabled, '1'); ?>>
+                                    <input type="checkbox" id="idlm-qualified-fallback-enabled" aria-describedby="idlm-qualified-fallback-enabled-help" name="qualified_fallback_enabled" value="1" <?php checked($idlm_qualified_fallback_enabled, '1'); ?>>
                                     Manager OOO: Auto-Assign Qualified Leads
                                 </label>
-                                <p class="description">Assign qualified leads to a studio-matched sales rep, then the general pool.</p>
+                                <p id="idlm-qualified-fallback-enabled-help" class="description idlm-field-help">Assign qualified leads to a studio-matched sales rep, then the general pool.</p>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-max-active-leads" data-idlm-ui="medium">Active lead limit per rep</label>
-                                <input type="number" id="idlm-max-active-leads" name="max_active_leads_per_rep" class="idlm-input" min="0" max="10000" inputmode="numeric" value="<?php echo esc_attr($idlm_max_active_leads_per_rep); ?>" data-idlm-ui="max-150">
-                                <p class="description">Applies to automatic pools. Use 0 for no limit.</p>
+                                <input type="number" id="idlm-max-active-leads" aria-describedby="idlm-max-active-leads-help" name="max_active_leads_per_rep" class="idlm-input" min="0" max="10000" inputmode="numeric" value="<?php echo esc_attr($idlm_max_active_leads_per_rep); ?>" data-idlm-ui="max-150">
+                                <p id="idlm-max-active-leads-help" class="description idlm-field-help">Applies to automatic pools. Use 0 for no limit.</p>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-fallback-hours" data-idlm-ui="medium">Recovery delay (hours)</label>
-                                <input type="number" id="idlm-fallback-hours" name="fallback_assignment_hours" class="idlm-input" min="1" max="720" inputmode="numeric" value="<?php echo esc_attr($idlm_fallback_hours); ?>" data-idlm-ui="max-150">
-                                <p class="description">Wait time before automatic recovery.</p>
+                                <input type="number" id="idlm-fallback-hours" aria-describedby="idlm-fallback-hours-help" name="fallback_assignment_hours" class="idlm-input" min="1" max="720" inputmode="numeric" value="<?php echo esc_attr($idlm_fallback_hours); ?>" data-idlm-ui="max-150">
+                                <p id="idlm-fallback-hours-help" class="description idlm-field-help">Wait time before automatic recovery.</p>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-qualified-fallback-hours" data-idlm-ui="medium">Handoff delay (hours)</label>
-                                <input type="number" id="idlm-qualified-fallback-hours" name="qualified_fallback_hours" class="idlm-input" min="1" max="720" inputmode="numeric" value="<?php echo esc_attr($idlm_qualified_fallback_hours); ?>" data-idlm-ui="max-150">
-                                <p class="description">Wait time from qualification while manager coverage is on.</p>
+                                <input type="number" id="idlm-qualified-fallback-hours" aria-describedby="idlm-qualified-fallback-hours-help" name="qualified_fallback_hours" class="idlm-input" min="1" max="720" inputmode="numeric" value="<?php echo esc_attr($idlm_qualified_fallback_hours); ?>" data-idlm-ui="max-150">
+                                <p id="idlm-qualified-fallback-hours-help" class="description idlm-field-help">Wait time from qualification while manager coverage is on.</p>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-reenquiry-quiet-days" data-idlm-ui="medium">Re-enquiry after (days)</label>
-                                <input type="number" id="idlm-reenquiry-quiet-days" name="reenquiry_quiet_days" class="idlm-input" min="1" max="90" inputmode="numeric" value="<?php echo esc_attr($idlm_reenquiry_quiet_days); ?>" data-idlm-ui="max-150">
-                                <p class="description">A repeat form submission counts as a re-enquiry after this many days without one. Closed leads always count.</p>
+                                <input type="number" id="idlm-reenquiry-quiet-days" aria-describedby="idlm-reenquiry-quiet-days-help" name="reenquiry_quiet_days" class="idlm-input" min="1" max="90" inputmode="numeric" value="<?php echo esc_attr($idlm_reenquiry_quiet_days); ?>" data-idlm-ui="max-150">
+                                <p id="idlm-reenquiry-quiet-days-help" class="description idlm-field-help">A repeat form submission counts as a re-enquiry after this many days without one. Closed leads always count.</p>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-qualified-fallback-end" data-idlm-ui="medium">Manager OOO ends</label>
-                                <input type="datetime-local" id="idlm-qualified-fallback-end" name="qualified_fallback_end_at" class="idlm-input" value="<?php echo esc_attr($idlm_qualified_fallback_end_at ? str_replace(' ', 'T', substr($idlm_qualified_fallback_end_at, 0, 16)) : ''); ?>">
-                                <p class="description">Optional end time for manager coverage.</p>
+                                <input type="datetime-local" id="idlm-qualified-fallback-end" aria-describedby="idlm-qualified-fallback-end-help" name="qualified_fallback_end_at" class="idlm-input" value="<?php echo esc_attr($idlm_qualified_fallback_end_at ? str_replace(' ', 'T', substr($idlm_qualified_fallback_end_at, 0, 16)) : ''); ?>">
+                                <p id="idlm-qualified-fallback-end-help" class="description idlm-field-help">Optional end time for manager coverage.</p>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-studio-mismatch-behavior" data-idlm-ui="medium">No studio match</label>
                                 <select id="idlm-studio-mismatch-behavior" name="studio_mismatch_behavior" class="idlm-select">
                                     <option value="general_pool" <?php selected($idlm_studio_mismatch_behavior, 'general_pool'); ?>>Use general active sales pool</option>
                                     <option value="hold_for_manager" <?php selected($idlm_studio_mismatch_behavior, 'hold_for_manager'); ?>>Hold for manager review</option>
                                 </select>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-handoff-task-policy" data-idlm-ui="medium">Pending tasks</label>
                                 <select id="idlm-handoff-task-policy" name="handoff_task_policy" class="idlm-select">
                                     <option value="transfer" <?php selected($idlm_handoff_task_policy, 'transfer'); ?>>Transfer pending tasks to sales owner</option>
@@ -193,34 +195,37 @@ $idlm_role_labels = wp_roles()->get_names();
                                     <option value="complete_qualification" <?php selected($idlm_handoff_task_policy, 'complete_qualification'); ?>>Complete qualification tasks only</option>
                                 </select>
                             </div>
-                            <div class="idlm-form-group">
-                                <label><input type="checkbox" name="qualified_fallback_include_existing" value="1" <?php checked($idlm_qualified_fallback_include_existing, '1'); ?>> Include historical qualified leads</label>
-                                <p class="description">Off by default to avoid an immediate bulk handoff.</p>
+                            <div class="idlm-form-group idlm-field">
+                                <label><input type="checkbox" id="idlm-qualified-fallback-include-existing" aria-describedby="idlm-qualified-fallback-include-existing-help" name="qualified_fallback_include_existing" value="1" <?php checked($idlm_qualified_fallback_include_existing, '1'); ?>> Include historical qualified leads</label>
+                                <p id="idlm-qualified-fallback-include-existing-help" class="description idlm-field-help">Off by default to avoid an immediate bulk handoff.</p>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <p class="description">Manage handoff and routing email notifications in General → Notifications.</p>
                             </div>
-                            <div class="idlm-form-group">
-                                <span class="idlm-form-label">Working hours</span>
+                            <div class="idlm-form-group idlm-field">
+                                <fieldset class="idlm-fieldset" aria-describedby="idlm-working-hours-help">
+                                <legend class="idlm-fieldset-legend">Working hours</legend>
                                 <div class="idlm-settings-working-hours">
                                     <input type="time" name="working_hours_start" class="idlm-input" aria-label="Working hours start" value="<?php echo esc_attr($idlm_working_hours_start); ?>" data-idlm-ui="max-120">
                                     <span>to</span>
                                     <input type="time" name="working_hours_end" class="idlm-input" aria-label="Working hours end" value="<?php echo esc_attr($idlm_working_hours_end); ?>" data-idlm-ui="max-120">
                                 </div>
-                                <p class="description">Hours when reps can receive leads.</p>
+                                <p id="idlm-working-hours-help" class="description idlm-field-help">Hours when reps can receive leads.</p>
+                                </fieldset>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-presales-calls-per-day" data-idlm-ui="medium">Calls per follow-up cycle</label>
-                                <input type="number" id="idlm-presales-calls-per-day" name="presales_calls_per_day" class="idlm-input" min="1" max="20" inputmode="numeric" value="<?php echo esc_attr($idlm_presales_targets['calls']); ?>" data-idlm-ui="max-150">
-                                <p class="description">Incomplete calls carry forward.</p>
+                                <input type="number" id="idlm-presales-calls-per-day" aria-describedby="idlm-presales-calls-per-day-help" name="presales_calls_per_day" class="idlm-input" min="1" max="20" inputmode="numeric" value="<?php echo esc_attr($idlm_presales_targets['calls']); ?>" data-idlm-ui="max-150">
+                                <p id="idlm-presales-calls-per-day-help" class="description idlm-field-help">Incomplete calls carry forward.</p>
                             </div>
-                            <div class="idlm-form-group">
+                            <div class="idlm-form-group idlm-field">
                                 <label for="idlm-presales-whatsapp-per-day" data-idlm-ui="medium">WhatsApp messages per follow-up cycle</label>
-                                <input type="number" id="idlm-presales-whatsapp-per-day" name="presales_whatsapp_per_day" class="idlm-input" min="0" max="20" inputmode="numeric" value="<?php echo esc_attr($idlm_presales_targets['whatsapp']); ?>" data-idlm-ui="max-150">
-                                <p class="description">Enter 0 to make WhatsApp optional.</p>
+                                <input type="number" id="idlm-presales-whatsapp-per-day" aria-describedby="idlm-presales-whatsapp-per-day-help" name="presales_whatsapp_per_day" class="idlm-input" min="0" max="20" inputmode="numeric" value="<?php echo esc_attr($idlm_presales_targets['whatsapp']); ?>" data-idlm-ui="max-150">
+                                <p id="idlm-presales-whatsapp-per-day-help" class="description idlm-field-help">Enter 0 to make WhatsApp optional.</p>
                             </div>
-                            <div class="idlm-form-group">
-                                <span class="idlm-form-label">Business working days</span>
+                            <div class="idlm-form-group idlm-field">
+                                <fieldset class="idlm-fieldset" aria-describedby="idlm-working-days-help">
+                                <legend class="idlm-fieldset-legend">Business working days</legend>
                                 <div data-idlm-ui="grid-four mt-1">
                                     <?php 
                                     $idlm_days_map = array(
@@ -240,9 +245,10 @@ $idlm_role_labels = wp_roles()->get_names();
                                         </label>
                                     <?php endforeach; ?>
                                 </div>
-                                <p class="description">Days when leads can be assigned.</p>
+                                <p id="idlm-working-days-help" class="description idlm-field-help">Days when leads can be assigned.</p>
+                                </fieldset>
                             </div>
-                            <div class="idlm-form-group full">
+                            <div class="idlm-form-group idlm-field full">
                                 <span class="idlm-form-label">Fallback health</span>
                                 <p class="description">Last completed: <?php echo esc_html($idlm_fallback_last_completed); ?> · Status: <?php echo esc_html($idlm_fallback_last_status); ?> · Open routing exceptions: <?php echo esc_html($idlm_routing_exception_count); ?></p>
                                 <button type="button" class="idlm-btn idlm-btn-secondary idlm-run-fallback-now">Run fallback now</button>

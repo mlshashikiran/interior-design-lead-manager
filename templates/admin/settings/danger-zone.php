@@ -30,7 +30,7 @@ $idlm_can_manage_options = !empty($context['can_manage_options']);
                                 <button type="button" class="idlm-dialog__close" id="idlm-reset-close-btn" data-idlm-dialog-close aria-label="Close permanent reset dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button>
                             </header>
                             <div class="idlm-dialog__body">
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <label id="idlm-reset-instruction-text" class="idlm-settings-label" for="idlm-reset-confirm-input">To confirm, enter the total number of leads currently in the database:</label>
                                     <input type="text" inputmode="numeric" id="idlm-reset-confirm-input" class="idlm-input idlm-control-full" placeholder="Enter total lead count" aria-describedby="idlm-reset-dialog-description">
                                 </div>

@@ -26,8 +26,8 @@ $idlm_messages = array(
         <h3>Restore plugin data</h3>
         <p class="idlm-danger-copy">Restoring replaces CRM records and non-secret plugin settings. Use a full WordPress database restore when private lead files are present; this JSON restore is blocked to preserve those files. Current API credentials are preserved; queued outbound jobs are cleared. Restore requires a complete backup from this same site with matching schema and assigned WordPress users. Active CRM work must finish first. Quotation number counters never move backwards, and old working copies are discarded. Backup files must be smaller than 100 MB.</p>
         <div class="idlm-backup-restore-fields">
-            <div class="idlm-form-group"><label for="idlm-backup-file">Backup file</label><input form="idlm-restore-backup-form" type="file" id="idlm-backup-file" name="idlm_backup_file" accept="application/json,.json" required></div>
-            <div class="idlm-form-group"><label for="idlm-restore-confirmation">Type <strong>RESTORE</strong> to confirm</label><input form="idlm-restore-backup-form" type="text" id="idlm-restore-confirmation" name="idlm_restore_confirmation" autocomplete="off" required></div>
+            <div class="idlm-form-group idlm-field"><label for="idlm-backup-file">Backup file</label><input form="idlm-restore-backup-form" type="file" id="idlm-backup-file" name="idlm_backup_file" accept="application/json,.json" required></div>
+            <div class="idlm-form-group idlm-field"><label for="idlm-restore-confirmation">Type <strong>RESTORE</strong> to confirm</label><input form="idlm-restore-backup-form" type="text" id="idlm-restore-confirmation" name="idlm_restore_confirmation" autocomplete="off" required></div>
         </div>
         <div class="idlm-backup-restore-action"><button type="submit" form="idlm-restore-backup-form" class="idlm-btn idlm-btn-danger">Restore backup</button></div>
     </article>
