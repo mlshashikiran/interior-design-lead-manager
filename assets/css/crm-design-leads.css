@@ -3358,3 +3358,74 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-reopen-error {
     margin: 0;
     color: var(--idlm-danger);
 }
+
+/* Folded from crm-legacy-leads.css (step C). The 760/768px rules, the import and export dialog widths and the routing advanced-content padding (they would outrank the design layer's dialog width) and the progress bar (hex colour) stay there. */
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-bulk-actions { flex-wrap: wrap; }
+
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-rep-head { padding: 0 12px; }
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-days-group {
+    grid-column: 1 / -1;
+    padding-top: 14px;
+    border-top: 1px solid var(--idlm-border);
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-form-error {
+    margin: 0 auto 0 0;
+    color: var(--idlm-danger);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* The routing dialog keeps routine setup in view and tucks operational safeguards
+ * behind one native disclosure instead of a stack of competing cards. */
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-outcome {
+    margin: 0;
+    color: var(--idlm-text);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+body.idlm-crm-design .idlm-pending-pulse-dot {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    background-color: var(--idlm-brand-gold);
+    border-radius: 50%;
+}
+
+body.idlm-crm-design .idlm-import-mapping-wrapper {
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--idlm-border);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+body.idlm-crm-design .idlm-import-preview-wrapper {
+    max-height: 200px;
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 1px solid var(--idlm-border);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-modal-heading {
+    min-width: 0;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-modal-intro {
+    max-width: 60ch;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-modal-footer { min-width: 0; flex-wrap: wrap; }
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-modal-footer .idlm-routing-form-error { min-width: min(100%, 18rem); overflow-wrap: anywhere; }
+
+body.idlm-crm-design #idlm-add-lead-form .idlm-add-lead-choice { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 8px; }

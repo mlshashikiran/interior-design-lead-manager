@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.113.5] - 2026-11-18
+
+### Changed
+
+- Internal only: most Leads legacy rules moved into the design layer. Nothing changes on screen. Builder: Shashi.
+
 ## [1.113.4] - 2026-11-18
 
 ### Changed
