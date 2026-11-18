@@ -95,6 +95,7 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 == Changelog ==
 
 = 1.111.0 =
+* Fixed: A payment that cannot be saved returns to its dialog with the reason instead of an error page.
 * Added: The Payments list is shown again to administrators and managers.
 * Added: The Payments list can be searched by name, phone, email, quote number or lead number, shows what each lead still owes (the same figure as its payment page), and can show leads with money outstanding first or only.
 

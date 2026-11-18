@@ -232,3 +232,36 @@ idlm_test('PAYMENT sidebar navigation drops payment keys so Payments opens the l
     foreach (array('payment_lead_id', 'payment_revision_id', 'payment_saved', 'payment_done', 'payment_q', 'payment_balance', 'payment_sort', 'payment_page') as $key) { assert_true(in_array($key, IDLM_Lead_Payment_Controller::QUERY_KEYS, true), $key); }
     assert_contains('IDLM_Design_Handoff_Controller::QUERY_KEYS, IDLM_Lead_Payment_Controller::QUERY_KEYS)', (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-shortcodes.php'));
 });
+idlm_test('PAYMENT proof check accepts current private payment images only', static function(): void {
+    $file = static function(array $over = array()) { return (object) array_merge(array('mime' => 'image/png', 'byte_size' => 1000, 'state' => 'active', 'created_at' => '2020-01-01 00:00:00'), $over); };
+    assert_true(IDLM_Lead_Payments::proof_ok($file()));
+    assert_true(IDLM_Lead_Payments::proof_ok($file(array('state' => 'uploaded', 'created_at' => current_time('mysql')))));
+    assert_false(IDLM_Lead_Payments::proof_ok(null), 'A screenshot whose file record is gone is refused.');
+    assert_false(IDLM_Lead_Payments::proof_ok($file(array('mime' => 'application/pdf'))));
+    assert_false(IDLM_Lead_Payments::proof_ok($file(array('byte_size' => IDLM_Private_Files::MAX_BYTES + 1))));
+    assert_false(IDLM_Lead_Payments::proof_ok($file(array('state' => 'uploaded'))), 'An unused upload older than 7 days is refused.');
+    $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-lead-payments.php');
+    assert_contains('if (!self::proof_ok($file)) {', $source);
+    // Forms prefill a handoff screenshot only when the receipt check would accept it.
+    assert_contains("IDLM_Lead_Payments::usable_proof(\$lead_id, (int) \$row->advance_attachment_id) ? (int) \$row->advance_attachment_id : 0", (string) file_get_contents(dirname(__DIR__) . '/includes/class-lead-payment-controller.php'));
+    assert_contains("IDLM_Lead_Payments::usable_proof(\$lead_id, (int) \$row->advance_attachment_id)", (string) file_get_contents(dirname(__DIR__) . '/includes/class-design-handoffs.php'));
+});
+idlm_test('PAYMENT refused save returns to the page with the reason and typed values, once, for the same person', static function(): void {
+    idlm_test_reset_environment(); idlm_test_login(1, array('administrator'), array('manage_options'));
+    $token = IDLM_Lead_Payment_Controller::save_retry('Receipt refused.', 'idlm-payment-record', array('amount' => '10,000', 'note' => "<b>Paid</b>\nby UPI", 'reference' => array('x'), 'payment_lead_id' => '9', 'attachment_id' => '7'));
+    assert_true(1 === preg_match('/^[a-z0-9]{20}$/', $token));
+    idlm_test_login(2, array('idlm_sales_rep'), array('idlm_access_leads'));
+    assert_same(null, IDLM_Lead_Payment_Controller::take_retry($token), 'Another person cannot read it.');
+    idlm_test_login(1, array('administrator'), array('manage_options'));
+    $retry = IDLM_Lead_Payment_Controller::take_retry($token);
+    assert_same('Receipt refused.', $retry['message']); assert_same('idlm-payment-record', $retry['dialog']);
+    assert_same(array('amount' => '10,000', 'note' => "Paid\nby UPI"), $retry['values'], 'Only typed text fields are kept, sanitized; IDs and arrays are not.');
+    assert_same(null, IDLM_Lead_Payment_Controller::take_retry($token), 'It is read once.');
+    assert_same('', IDLM_Lead_Payment_Controller::take_retry(IDLM_Lead_Payment_Controller::save_retry('x', 'other-dialog"><script>', array()))['dialog']);
+    assert_same(null, IDLM_Lead_Payment_Controller::take_retry('../../etc'));
+    $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-lead-payment-controller.php');
+    assert_false(strpos($source, "'Payment not saved'"), 'No WordPress error page for a refused save.');
+    assert_contains("wp_safe_redirect(add_query_arg(array('payment_lead_id' => \$lead_id, 'payment_error' => \$token), \$url)); exit;", $source);
+    assert_contains("self::hidden('payment_dialog', \$id);", $source);
+    assert_contains("document.querySelector('[data-payment-reopen]')", (string) file_get_contents(dirname(__DIR__) . '/assets/js/design-detail.js'));
+});
