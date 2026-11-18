@@ -273,7 +273,7 @@ idlm_test('settings support UI-only labels and draggable pipeline ordering', sta
 idlm_test('General settings prioritizes metrics above the two configuration cards', static function(): void {
     $root = dirname(__DIR__);
     $template = (string) file_get_contents($root . '/templates/admin/settings/general.php');
-    $styles = (string) idlm_legacy_css($root);
+    $styles = (string) idlm_legacy_css($root) . (string) file_get_contents($root . '/assets/css/crm-design-settings.css');
 
     assert_contains('idlm-settings-general-metrics', $template);
     assert_contains('.idlm-wrap .idlm-settings-general-metrics', $styles);
