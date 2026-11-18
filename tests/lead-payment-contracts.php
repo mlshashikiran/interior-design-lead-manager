@@ -117,3 +117,102 @@ idlm_test('PAYMENT Won-amount plan writes no quotation, keeps first-plan and cha
     assert_contains("if (\$won && \$can_record) {",$c);
     assert_contains('IDLM_Quotation_Repository::get_revision((int) $schedule[\'revision_id\']) : null;',$c);
 });
+/** Records every list read and answers it: lead rows for the page query, latest snapshots for the balance query. Builder: Shashi. */
+final class IDLM_Payment_List_Test_DB {
+    public string $prefix = 'wp_';
+    public array $reads = array();
+    public function __construct(public IDLM_Test_WPDB $inner, public array $leads, public array $snapshots) {}
+    public function esc_like($value) { return $this->inner->esc_like($value); }
+    public function prepare($query, ...$args) { return $this->inner->prepare($query, ...$args); }
+    public function __call($name, $args) { return $this->inner->$name(...$args); }
+    public function get_results($query, $output = OBJECT) {
+        $this->reads[] = $query;
+        if (false !== strpos($query, 'idlm_lead_payment_allocation_sets a')) {
+            preg_match('/lead_id IN \(([^)]*)\)/', $query, $m); $rows = array();
+            foreach (array_map('intval', explode(',', $m[1])) as $id) { if (isset($this->snapshots[$id])) { $rows[] = (object) array('lead_id' => (string) $id, 'snapshot' => wp_json_encode($this->snapshots[$id])); } }
+            return $rows;
+        }
+        preg_match('/LIMIT (\d+)/', $query, $m);
+        return array_slice(array_map(static function($id) { return (object) array('id' => (string) $id, 'first_name' => 'Lead', 'last_name' => (string) $id, 'project_name' => 'Flat ' . $id); }, $this->leads), 0, (int) $m[1]);
+    }
+}
+function idlm_payment_list_db(array $leads, array $snapshots): IDLM_Payment_List_Test_DB {
+    $db = new IDLM_Payment_List_Test_DB($GLOBALS['wpdb'], $leads, $snapshots); $GLOBALS['wpdb'] = $db; return $db;
+}
+idlm_test('PAYMENT list balance is the same ledger snapshot the payment page and drawer show', static function(): void {
+    idlm_test_reset_environment(); idlm_test_login(1, array('administrator'), array('manage_options'));
+    $schedule = idlm_payment_test_schedule('1000.00', array(10, 90));
+    $part = IDLM_Lead_Payment_Ledger::balance($schedule, array(idlm_payment_test_receipt(1, '250.00')));
+    $paid = IDLM_Lead_Payment_Ledger::balance($schedule, array(idlm_payment_test_receipt(2, '1000.00')));
+    $inner = $GLOBALS['wpdb'];
+    try {
+        idlm_payment_list_db(array(7, 8, 9), array(7 => $part, 8 => $paid));
+        $page = IDLM_Lead_Payment_Controller::list_page(IDLM_Lead_Payment_Controller::list_filters(array()));
+        // The panel reads the latest allocation set (IDLM_Lead_Payments::read()['balance']); the drawer reads IDLM_Design_Handoffs::balance(). Both are this snapshot.
+        assert_same($part, $page['balances'][7]); assert_same($paid, $page['balances'][8]); assert_false(isset($page['balances'][9]));
+        $cell = IDLM_Lead_Payment_Controller::balance_cell($page['balances'][7]);
+        assert_contains('idlm-badge is-warning">Outstanding', $cell); assert_contains('₹750.00', $cell); assert_contains('of ₹1,000.00', $cell);
+        assert_contains('is-success">Paid in full', IDLM_Lead_Payment_Controller::balance_cell($page['balances'][8]));
+        assert_contains('is-neutral">No schedule', IDLM_Lead_Payment_Controller::balance_cell(null));
+    } finally { $GLOBALS['wpdb'] = $inner; }
+});
+idlm_test('PAYMENT list reads a page in two queries whatever its size', static function(): void {
+    idlm_test_reset_environment(); idlm_test_login(1, array('administrator'), array('manage_options'));
+    $inner = $GLOBALS['wpdb'];
+    try {
+        foreach (array(1, 10, 60) as $count) {
+            $leads = range(1, $count); $snapshots = array_fill_keys($leads, IDLM_Lead_Payment_Ledger::balance(idlm_payment_test_schedule('100.00', array(100)), array()));
+            $db = idlm_payment_list_db($leads, $snapshots);
+            $page = IDLM_Lead_Payment_Controller::list_page(IDLM_Lead_Payment_Controller::list_filters(array('payment_sort' => 'outstanding', 'payment_balance' => 'outstanding')));
+            assert_same(2, count($db->reads), "Page of $count leads.");
+            assert_same(min($count, 50), count($page['rows'])); assert_same($count > 50, $page['more']); assert_same(min($count, 50), count($page['balances']));
+            $GLOBALS['wpdb'] = $inner;
+        }
+        $db = idlm_payment_list_db(array(), array());
+        IDLM_Lead_Payment_Controller::list_page(IDLM_Lead_Payment_Controller::list_filters(array()));
+        assert_same(1, count($db->reads), 'An empty page skips the balance read.');
+    } finally { $GLOBALS['wpdb'] = $inner; }
+});
+idlm_test('PAYMENT list search is prepared, sanitized and kept inside the payment access scope', static function(): void {
+    idlm_test_reset_environment(); $inner = $GLOBALS['wpdb'];
+    try {
+        $filters = IDLM_Lead_Payment_Controller::list_filters(array('payment_q' => " <b>Asha</b> 50%_ ", 'payment_balance' => 'bogus', 'payment_sort' => 'DROP', 'payment_page' => '-3'));
+        assert_same('Asha 50%_', $filters['q']); assert_same('', $filters['balance']); assert_same('newest', $filters['sort']); assert_same(1, $filters['page']);
+        // Sales representative: own assigned leads only.
+        idlm_test_login(5, array('idlm_sales_rep'), array('idlm_access_leads', 'idlm_record_lead_payments'));
+        $db = idlm_payment_list_db(array(), array());
+        IDLM_Lead_Payment_Controller::list_page($filters);
+        $sql = $db->reads[0];
+        assert_contains('l.assigned_rep_id=5', $sql); assert_contains("LIKE '%Asha 50", $sql); assert_contains('50\\\\%\\\\_%', $sql, 'LIKE wildcards in the search text are escaped.'); assert_contains('q.quote_number LIKE', $sql); assert_contains('l.email LIKE', $sql); assert_contains("l.stage='Won'", $sql);
+        $GLOBALS['wpdb'] = $inner;
+        // Assigner whose role is limited to assigned leads: the list no longer shows leads the payment page refuses.
+        $GLOBALS['idlm_test_options']['idlm_role_lead_scopes'] = array('idlm_sales_manager' => 'assigned');
+        idlm_test_login(6, array('idlm_sales_manager'), array('idlm_access_leads', 'idlm_assign_leads', 'idlm_record_lead_payments'));
+        $db = idlm_payment_list_db(array(), array());
+        IDLM_Lead_Payment_Controller::list_page(IDLM_Lead_Payment_Controller::list_filters(array('payment_q' => '#42')));
+        assert_contains('l.assigned_rep_id = 6', $db->reads[0]); assert_contains('l.id = 42', $db->reads[0]);
+        $GLOBALS['wpdb'] = $inner;
+        // Pre-sales and people without a payment grant read nothing.
+        foreach (array(array(array('idlm_pre_sales'), array('idlm_access_leads', 'idlm_record_lead_payments')), array(array('idlm_sales_rep'), array('idlm_access_leads'))) as $who) {
+            idlm_test_login(7, $who[0], $who[1]); $GLOBALS['idlm_test_users'][7]->roles = $who[0];
+            $db = idlm_payment_list_db(array(1), array());
+            assert_same(array(), IDLM_Lead_Payment_Controller::list_page($filters)['rows']); assert_same(0, count($db->reads));
+            $GLOBALS['wpdb'] = $inner; unset($GLOBALS['idlm_test_users'][7]);
+        }
+    } finally { $GLOBALS['wpdb'] = $inner; }
+});
+idlm_test('PAYMENT list sorts and filters on the ledger inputs without dropping existing order', static function(): void {
+    idlm_test_reset_environment(); idlm_test_login(1, array('administrator'), array('manage_options')); $inner = $GLOBALS['wpdb'];
+    try {
+        $db = idlm_payment_list_db(array(), array());
+        IDLM_Lead_Payment_Controller::list_page(IDLM_Lead_Payment_Controller::list_filters(array()));
+        assert_contains('ORDER BY l.id DESC LIMIT 51 OFFSET 0', $db->reads[0]); assert_false(strpos($db->reads[0], 'idlm_lead_payment_schedules'));
+        $GLOBALS['wpdb'] = $inner;
+        $db = idlm_payment_list_db(array(), array());
+        IDLM_Lead_Payment_Controller::list_page(IDLM_Lead_Payment_Controller::list_filters(array('payment_sort' => 'outstanding', 'payment_balance' => 'paid', 'payment_page' => '2')));
+        $sql = $db->reads[0];
+        assert_contains("v.status <> 'revoked'", $sql); assert_contains('v.id = c.current_version_id AND v.confirmation_id = c.id', $sql);
+        assert_contains('GREATEST(0, sch.basis_total - COALESCE(rec.received, 0)) = 0', $sql);
+        assert_contains('ORDER BY (sch.lead_id IS NULL), GREATEST(0, sch.basis_total - COALESCE(rec.received, 0)) DESC, l.id DESC LIMIT 51 OFFSET 50', $sql);
+    } finally { $GLOBALS['wpdb'] = $inner; }
+});

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.111.0] - 2026-11-18
+
+### Added
+
+- Payments list: search by customer name, phone, email, project, quote number or lead number; a Balance column showing Outstanding (with the amount and the plan total), Paid in full or No schedule; a Balance filter; and an Outstanding first sort. The amount is the same ledger figure the lead's payment page and drawer show. Paging keeps the search and filters. Builder: Shashi.
+
+### Security
+
+- The Payments list now also applies the lead access policy's role scope, so an assigner whose role sees only assigned leads no longer sees (or sees balances for) leads their payment page would refuse. Builder: Shashi.
+
 ## [1.109.1] - 2026-11-18
 
 ### Removed

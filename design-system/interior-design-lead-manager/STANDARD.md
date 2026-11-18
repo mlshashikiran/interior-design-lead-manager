@@ -101,5 +101,4 @@ Do not make these worse.
 
 1. Some legacy rules on screens outside the design layer's reach still hard-code `9–10px` text, against STD-TYPE-1.
 2. The wp-login form and the wp-admin Identity reviews page do not load the layer.
-3. The Payments list has no search or outstanding balance, against STD-CRM-1: it needs a balance read for the page of leads.
-4. Log rows cannot show a failure reason: the query has no such column.
+3. Log rows cannot show a failure reason: the query has no such column.
