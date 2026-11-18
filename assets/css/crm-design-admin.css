@@ -511,7 +511,7 @@ body.idlm-crm-design .idlm-users-page .idlm-permission-group-tools {
     display: flex;
     justify-content: flex-end;
     gap: var(--idlm-space-3);
-    margin-bottom: var(--idlm-space-2);
+    margin-bottom: 0;
     font-size: 0.75rem;
 }
 
@@ -635,7 +635,8 @@ body.idlm-crm-design .idlm-users-page .idlm-role-scope-group {
     border: 0;
 }
 
-body.idlm-crm-design .idlm-users-page .idlm-role-scope-group legend {
+body.idlm-crm-design .idlm-users-page .idlm-role-scope-group legend,
+body.idlm-crm-design .idlm-users-page .idlm-permission-group legend {
     margin-bottom: var(--idlm-space-2);
     padding: 0;
     color: var(--idlm-text);
