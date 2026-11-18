@@ -1037,3 +1037,35 @@ body.idlm-crm-design .idlm-ui-kit .idlm-ui-kit-loading {
     border-radius: var(--idlm-ui-radius);
     background: var(--idlm-ui-card);
 }
+
+/* Folded from crm-legacy-admin.css (step C). The 1100px users rules stay there: 1100 is not a STD-CSS-5 breakpoint. */
+body.idlm-crm-design .idlm-permission-option:focus-within { outline: 2px solid var(--idlm-action); outline-offset: -2px; }
+
+body.idlm-crm-design .idlm-permission-group { min-width: 0; margin: 0; padding: 0; border: 0; }
+
+body.idlm-crm-design .idlm-users-directory { overflow: hidden; }
+
+body.idlm-crm-design .idlm-user-row:not(:last-child) { border-bottom: 1px solid var(--idlm-border); }
+
+@media (max-width: 1024px) {
+    body.idlm-crm-design .idlm-users-search-field,
+    body.idlm-crm-design .idlm-log-search-field {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-users-search-field,
+    body.idlm-crm-design .idlm-log-search-field {
+        grid-column: auto;
+    }
+
+    body.idlm-crm-design .idlm-permission-options { grid-template-columns: 1fr; }
+
+    body.idlm-crm-design .idlm-permission-actions { align-items: stretch; flex-direction: column; }
+
+    body.idlm-crm-design .idlm-users-create-form,
+    body.idlm-crm-design .idlm-user-edit-form { grid-template-columns: 1fr; }
+
+    body.idlm-crm-design .idlm-user-edit-actions { align-items: stretch; flex-direction: column; }
+}

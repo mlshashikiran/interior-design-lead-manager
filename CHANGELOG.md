@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.113.3] - 2026-11-18
+
+### Changed
+
+- Internal only: the Users and operational logs legacy rules moved into the design layer. Nothing changes on screen. Builder: Shashi.
+
 ## [1.113.2] - 2026-11-18
 
 ### Changed

@@ -47,7 +47,7 @@ The legacy rules (formerly `admin-style.css`, now `crm-legacy-*.css`, ~6,800 lin
 - About 160 rules that had no measurable effect but were kept on purpose: state classes (`.is-open`, `.active`, `[open]`, `[aria-*]`), `[hidden]` and `display: none` guards, `data-idlm-ui` utilities, size and position declarations, `!important`, contract-test literals and twin selectors.
 - About 240 rules that matched nothing even with every dialog forced open. Their classes exist in code, so they style states the local data never produced.
 - 108 hover, focus and pseudo-element rules, which this method cannot measure.
-- Done in 1.113.1 (step A): the `:root` block (80 tokens, about 30 hex colours) moved into `assets/css/crm-tokens.css`, allowed by STD-CSS-10. Done in 1.113.2 (step B): `admin-style.css` is gone; its rules sit in `crm-legacy-shared.css` (nearly all of them) and the `leads`, `settings` and `admin` files under `:where(body.idlm-crm-design)`, with computed styles identical to 1.113.1 (STD-CSS-11). Still to do: C, fold those into the design layer area by area; D, final standard and test cleanup.
+- Done in 1.113.1 (step A): the `:root` block (80 tokens, about 30 hex colours) moved into `assets/css/crm-tokens.css`, allowed by STD-CSS-10. Done in 1.113.2 (step B): `admin-style.css` is gone; its rules sit in `crm-legacy-shared.css` (nearly all of them) and the `leads`, `settings` and `admin` files under `:where(body.idlm-crm-design)`, with computed styles identical to 1.113.1 (STD-CSS-11). Step C in progress: `admin` folded in 1.113.3 except three 1100px rules. Still to do: C (other areas), fold those into the design layer area by area; D, final standard and test cleanup.
 
 ### Remaining request and client hotspots
 

@@ -2,46 +2,11 @@
    which adds no specificity, so cascade order and specificity are exactly what admin-style.css had. Do not add rules here: new
    styling goes in crm-design*.css, and rules move there area by area until these files are empty. Area: admin. */
 
-@media (max-width: 1024px) {
-    :where(body.idlm-crm-design) .idlm-users-search-field,
-    :where(body.idlm-crm-design) .idlm-log-search-field {
-            grid-column: 1 / -1;
-        }
-
-}
-@media (max-width: 782px) {
-    :where(body.idlm-crm-design) .idlm-users-search-field,
-    :where(body.idlm-crm-design) .idlm-log-search-field {
-            grid-column: auto;
-        }
-
-}
-:where(body.idlm-crm-design) .idlm-permission-option:focus-within { outline: 2px solid var(--idlm-action); outline-offset: -2px; }
-
-:where(body.idlm-crm-design) .idlm-permission-group { min-width: 0; margin: 0; padding: 0; border: 0; }
-
-@media (max-width: 782px) {
-    :where(body.idlm-crm-design) .idlm-permission-options { grid-template-columns: 1fr; }
-
-    :where(body.idlm-crm-design) .idlm-permission-actions { align-items: stretch; flex-direction: column; }
-
-}
-:where(body.idlm-crm-design) .idlm-users-directory {overflow:hidden}
-
-:where(body.idlm-crm-design) .idlm-user-row {border-bottom:1px solid var(--idlm-border)}
-
 @media (max-width:1100px) {
     :where(body.idlm-crm-design) .idlm-users-create {grid-template-columns:1fr}
 
     :where(body.idlm-crm-design) .idlm-users-create-form {grid-template-columns:repeat(2,minmax(0,1fr))}
 
     :where(body.idlm-crm-design) .idlm-users-directory-top {align-items:stretch;flex-direction:column}
-
-}
-@media (max-width:782px) {
-    :where(body.idlm-crm-design) .idlm-users-create-form,
-    :where(body.idlm-crm-design) .idlm-user-edit-form {grid-template-columns:1fr}
-
-    :where(body.idlm-crm-design) .idlm-user-edit-actions {align-items:stretch;flex-direction:column}
 
 }
