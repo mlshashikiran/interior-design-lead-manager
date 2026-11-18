@@ -198,6 +198,11 @@
         return ' ' + open + ' open lead' + (1 === open ? '' : 's') + ' stay' + (1 === open ? 's' : '') + ' assigned to them until you reassign ' + (1 === open ? 'it' : 'them') + ' on Leads.';
     }
 
+    /* The form's own submit button: a button inside it may belong to another form through its form attribute. */
+    function ownSubmit(form) {
+        return Array.prototype.find.call(form.elements, function (element) { return 'submit' === element.type; }) || null;
+    }
+
     function enhancePendingForm(form) {
         if (form.matches('.idlm-role-editor-form')) {
             form.addEventListener('submit', function (event) {
@@ -214,7 +219,7 @@
                     message: who + ' with this role will lose access to CRM leads when you save, unless another role or a grant on their own account gives it to them.',
                     confirmLabel: 'Remove access for ' + who,
                     destructive: true,
-                    trigger: form.querySelector('button[type="submit"]')
+                    trigger: ownSubmit(form)
                 }).then(function (confirmed) {
                     if (confirmed) {
                         form.dataset.idlmAccessConfirmed = '1';
@@ -236,7 +241,7 @@
                     message: (form.dataset.idlmUserName || 'This person') + ' will lose access to CRM leads and quotations from their next page load. Their account and lead history stay as they are, and you can restore access later.' + (form.dataset.idlmUserManagesSite ? ' This account can manage the site, so it keeps settings, users and backups.' : '') + openLeadsSentence(form),
                     confirmLabel: 'Suspend access',
                     destructive: true,
-                    trigger: form.querySelector('button[type="submit"]')
+                    trigger: ownSubmit(form)
                 }).then(function (confirmed) {
                     if (confirmed) {
                         form.dataset.idlmSuspendConfirmed = '1';
@@ -249,7 +254,7 @@
             if (!form.checkValidity()) {
                 return;
             }
-            var button = form.querySelector('button[type="submit"]');
+            var button = ownSubmit(form);
             if (!button) {
                 return;
             }

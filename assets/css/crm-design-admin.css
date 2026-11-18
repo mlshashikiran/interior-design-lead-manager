@@ -158,7 +158,8 @@ body.idlm-crm-design .idlm-users-page .idlm-user-edit-actions {
     gap: var(--idlm-space-2) var(--idlm-space-4);
 }
 
-body.idlm-crm-design .idlm-users-page .idlm-user-edit-actions .idlm-btn {
+/* Push the buttons to the end together: Send password-reset link, then Save changes. */
+body.idlm-crm-design .idlm-users-page .idlm-user-edit-actions .idlm-btn:first-of-type {
     margin-inline-start: auto;
 }
 
@@ -283,7 +284,7 @@ body.idlm-crm-design .idlm-users-page .idlm-permission-role {
         grid-row: 2;
     }
 
-    body.idlm-crm-design .idlm-users-page .idlm-user-edit-actions .idlm-btn {
+    body.idlm-crm-design .idlm-users-page .idlm-user-edit-actions .idlm-btn:first-of-type {
         margin-inline-start: 0;
     }
 

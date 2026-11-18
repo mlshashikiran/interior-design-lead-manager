@@ -12,6 +12,7 @@ $idlm_error = isset($context['error']) ? (string) $context['error'] : '';
 $idlm_notice_messages = array(
     'created' => 'The user was created and a password-reset link was sent.',
     'updated' => 'The user account and CRM access were updated.',
+    'reset-sent' => 'A password-reset link was sent to their email address. Nothing else on the account changed.',
 );
 $idlm_error_messages = array(
     'invalid-user'  => 'Check the account details, email address, and selected CRM role.',
@@ -19,6 +20,7 @@ $idlm_error_messages = array(
     'update-failed' => 'WordPress could not update this account. Review the details and try again.',
     'self-lockout'  => 'You cannot remove your own administrator role or suspend your own CRM access.',
     'last-admin'    => 'Keep at least one active administrator before changing this account.',
+    'reset-failed' => 'The password-reset email could not be sent. Check the site email settings and try again.',
     'role-not-confirmed' => 'Nothing was saved. This page was out of date, so reload it and choose a role or keep their current role.',
 );
 $idlm_notice_messages['role-access-updated'] = 'Role access was updated. It applies from their next page load.';
@@ -184,10 +186,12 @@ $idlm_website_roles_control = static function($idlm_select_id, $idlm_website_rol
 <?php if ($idlm_open_leads > 0): ?>
                             <p class="idlm-user-suspend-note" data-idlm-suspend-note<?php echo $idlm_disabled ? '' : ' hidden'; ?>><?php echo esc_html(sprintf('%1$s has %2$s. They stay assigned until you reassign them.', $idlm_user->display_name, $idlm_open_label)); ?> <a href="<?php echo esc_url(add_query_arg(array('idlm_view' => 'leads', 'rep' => (int) $idlm_user->ID), $idlm_view_base_url)); ?>">View on Leads</a></p>
 <?php endif; ?>
-                            <label class="idlm-checkbox-row"><input class="idlm-checkbox-control" type="checkbox" name="send_reset_link" value="1"><span>Send password-reset link</span></label>
+                            <button class="idlm-btn idlm-btn-secondary" type="submit" form="idlm-user-reset-<?php echo esc_attr($idlm_user->ID); ?>" data-idlm-submit-label="Sending link…">Send password-reset link</button>
                             <button class="idlm-btn idlm-btn-primary" type="submit" data-idlm-submit-label="Saving changes…">Save changes</button>
                         </div>
                     </form>
+                    <?php // Sends only the link: its button sits in the edit form above but belongs to this form, so Enter in a field still saves. ?>
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="idlm-user-reset-<?php echo esc_attr($idlm_user->ID); ?>" class="idlm-user-reset-form" data-idlm-pending-form hidden><input type="hidden" name="action" value="idlm_send_user_reset"><input type="hidden" name="user_id" value="<?php echo esc_attr($idlm_user->ID); ?>"><input type="hidden" name="idlm_return_url" value="<?php echo esc_url($idlm_return_url); ?>"><?php wp_nonce_field('idlm_send_user_reset', '_wpnonce', false); ?></form>
                 </details>
             <?php endforeach; ?>
             <?php if (!$idlm_users): ?><div class="idlm-users-empty idlm-state is-empty"><span class="dashicons dashicons-admin-users" aria-hidden="true"></span><strong>No users match these filters.</strong><p>Try clearing a filter or invite a team member.</p><?php if ($idlm_has_filters): ?><div class="idlm-state__actions"><a class="idlm-btn idlm-btn-secondary" href="<?php echo esc_url($idlm_clear_url); ?>">Clear filters</a></div><?php endif; ?></div><?php endif; ?>

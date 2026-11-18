@@ -710,3 +710,28 @@ idlm_test('Field layout: CRM forms use the shared field anatomy, fieldsets and l
     // A field toggled with `hidden` still hides under the flex layout.
     assert_contains('.idlm-field[hidden] {', (string) file_get_contents($root . '/assets/css/crm-design.css'));
 });
+
+idlm_test('password-reset is a button on its own form, so Enter still saves and nothing else is saved', static function(): void {
+    $root = dirname(__DIR__);
+    $users = (string) file_get_contents($root . '/templates/admin/users.php');
+    $account = (string) file_get_contents($root . '/templates/my-account.php');
+    foreach (array($users, $account) as $source) {
+        assert_false(false !== strpos($source, 'name="send_reset_link"'), 'The reset checkbox is retired.');
+    }
+    assert_contains('<button class="idlm-btn idlm-btn-secondary" type="submit" form="idlm-user-reset-<?php echo esc_attr($idlm_user->ID); ?>"', $users);
+    assert_contains('id="idlm-user-reset-<?php echo esc_attr($idlm_user->ID); ?>" class="idlm-user-reset-form" data-idlm-pending-form hidden><input type="hidden" name="action" value="idlm_send_user_reset">', $users);
+    assert_contains('<button class="idlm-btn idlm-btn-secondary" type="submit" form="idlm-account-reset-form">', $account);
+    assert_contains('id="idlm-account-reset-form" data-idlm-pending-label="Sending link…" hidden><input type="hidden" name="action" value="idlm_send_my_reset">', $account);
+    // Each reset form follows its edit form, never inside it (forms cannot nest).
+    assert_true(strpos($users, 'class="idlm-user-reset-form"') > strpos($users, '<button class="idlm-btn idlm-btn-primary" type="submit" data-idlm-submit-label="Saving changes…">Save changes</button>'));
+    // Pending labels go to the form's own button, not the first submit button inside it.
+    foreach (array('users-logs.js', 'access-account.js') as $script) {
+        $js = (string) file_get_contents($root . '/assets/js/' . $script);
+        assert_contains("Array.prototype.find.call(form.elements, function (element) { return 'submit' === element.type; })", $js);
+        assert_false(false !== strpos($js, "form.querySelector('button[type=\"submit\"]')"), $script . ' still picks the first submit button inside the form.');
+    }
+    // Pages opened before the update still post the old checkbox to the save handlers.
+    assert_contains("if (!empty(\$_POST['send_reset_link'])) { self::send_reset(\$user_id); }", (string) file_get_contents($root . '/includes/class-admin-users-controller.php'));
+    assert_contains("if (!empty(\$_POST['send_reset_link'])) {", (string) file_get_contents($root . '/includes/class-admin-account-controller.php'));
+});
+

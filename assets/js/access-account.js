@@ -28,11 +28,16 @@
         }
     }
 
+    /* The form's own submit button: a button inside it may belong to another form through its form attribute. */
+    function ownSubmit(form) {
+        return Array.prototype.find.call(form.elements, function (element) { return 'submit' === element.type; }) || null;
+    }
+
     function initializePasswordForm(form) {
         var password = form.querySelector('[data-idlm-password-primary]');
         var confirmation = form.querySelector('[data-idlm-password-confirm]');
         var error = form.querySelector('[data-idlm-password-error]');
-        var submit = form.querySelector('button[type="submit"]');
+        var submit = ownSubmit(form);
 
         function validateMatch() {
             var mismatch;
@@ -89,7 +94,7 @@
 
     window.addEventListener('pageshow', function () {
         document.querySelectorAll('form[aria-busy="true"]').forEach(function (form) {
-            var submit = form.querySelector('button[type="submit"]');
+            var submit = ownSubmit(form);
             form.removeAttribute('aria-busy');
             if (submit) {
                 submit.disabled = false;

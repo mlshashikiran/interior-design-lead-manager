@@ -95,6 +95,7 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 == Changelog ==
 
 = 1.110.0 =
+* Changed: "Send password-reset link" on a team member and "Email me a password-reset link" on My account are buttons that send the link straight away, without saving anything else on the form.
 * Changed: Form fields in Settings, Users and access, Leads dialogs and filters, My account and the logs share one layout: help text sits under its field and is read out with it, and groups of checkboxes have a heading screen readers announce.
 
 = 1.109.1 =

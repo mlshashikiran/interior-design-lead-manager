@@ -2068,6 +2068,11 @@ body.idlm-crm-design .idlm-account-form .idlm-password-toggle {
     right: 2px;
 }
 
+/* Password reset: its own button below the password fields, with a line saying what it does. */
+body.idlm-crm-design .idlm-account-reset {
+    margin-top: var(--idlm-space-4);
+}
+
 body.idlm-crm-design .idlm-account-actions {
     margin-top: var(--idlm-space-4);
 }
