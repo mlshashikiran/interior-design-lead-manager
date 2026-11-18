@@ -95,7 +95,7 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 == Changelog ==
 
 = 1.113.0 =
-* Improved: The password reset screens and the Identity reviews page now match the rest of the CRM: the same colours, buttons, fields, status badges and keyboard focus. Sign-in, reset and review decisions work as before.
+* Improved: The wp-login sign-in and password reset screens and the Identity reviews page now match the rest of the CRM: the same colours, buttons, fields, status badges and keyboard focus. Sign-in, reset and review decisions work as before.
 
 = 1.111.0 =
 * Fixed: A payment that cannot be saved returns to its dialog with the reason instead of an error page.

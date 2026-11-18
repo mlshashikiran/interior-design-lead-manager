@@ -134,7 +134,7 @@ final class IDLM_Auth {
         return check_password_reset_key($key, $login);
     }
 
-    /** Load plugin branding only for WordPress core password-recovery screens. */
+    /** Load plugin branding only for the WordPress core sign-in and password-recovery screens. */
     public static function enqueue_reset_assets() {
         if (!self::is_password_screen()) {
             return;
@@ -177,6 +177,6 @@ final class IDLM_Auth {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- REL007-BOUNDARY-0054: is_password_screen(): public login/reset handlers verify dedicated form nonces and delegate authentication/reset-key authority to WordPress; passwords require string shape and once-only unslashing with exact bytes, not text/HTML sanitization; return_url is internal and wp_validate_redirect constrained; screen metadata only selects presentation; validate_password_reset is the existing WordPress core hook.
         $action = isset($_REQUEST['action']) ? sanitize_key(wp_unslash($_REQUEST['action'])) : 'login';
         // phpcs:enable WordPress.Security.NonceVerification.Recommended
-        return in_array($action, array('lostpassword', 'retrievepassword', 'resetpass', 'rp'), true);
+        return in_array($action, array('login', 'lostpassword', 'retrievepassword', 'resetpass', 'rp'), true);
     }
 }

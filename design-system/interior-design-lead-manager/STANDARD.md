@@ -60,7 +60,7 @@ WCAG 2.2 AA. Text contrast `4.5:1`, controls and focus `3:1`. Every control has 
 
 ## Writing CSS
 
-The redesign lives in switchable stylesheets: `assets/css/crm-design.css` (tokens, shell, shared components) and `assets/css/crm-design-<area>.css` for `leads`, `pipeline`, `dashboard`, `quotations`, `settings`, `admin` and `payments`. `crm-design-standalone.css` serves the two pages outside the workspace (the core password screens and wp-admin Identity reviews): they load `crm-design.css` plus that file and add `idlm-crm-design idlm-crm-standalone` to `body`; its selectors start `body.idlm-crm-design.idlm-crm-standalone`. wp-admin as a whole still loads no layer. Legacy stylesheets stay untouched so that switching off restores the old design.
+The redesign lives in switchable stylesheets: `assets/css/crm-design.css` (tokens, shell, shared components) and `assets/css/crm-design-<area>.css` for `leads`, `pipeline`, `dashboard`, `quotations`, `settings`, `admin` and `payments`. `crm-design-standalone.css` serves the two pages outside the workspace (the core wp-login screens and wp-admin Identity reviews): they load `crm-design.css` plus that file and add `idlm-crm-design idlm-crm-standalone` to `body`; its selectors start `body.idlm-crm-design.idlm-crm-standalone`. wp-admin as a whole still loads no layer. Legacy stylesheets stay untouched so that switching off restores the old design.
 
 - **STD-CSS-1** Every selector starts with `body.idlm-crm-design`. **[test]**
 - **STD-CSS-2** Hex colours appear only in the token block at the top; everything else uses `var(--idlm-*)`. **[test]** The repository's colour budget has one slot left, so derive new shades with `color-mix()`.

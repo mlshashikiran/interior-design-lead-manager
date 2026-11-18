@@ -89,6 +89,14 @@ body.idlm-crm-design.idlm-crm-standalone.login .button-primary:is(:hover, :focus
     color: var(--idlm-ui-primary-foreground);
 }
 
+body.idlm-crm-design.idlm-crm-standalone.login input[type="checkbox"] {
+    accent-color: var(--idlm-action);
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login .wp-pwd .button.wp-hide-pw {
+    color: var(--idlm-ui-muted-foreground);
+}
+
 body.idlm-crm-design.idlm-crm-standalone.login :is(#nav, #backtoblog) a {
     color: var(--idlm-ui-muted-foreground);
 }
