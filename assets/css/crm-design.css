@@ -1180,6 +1180,12 @@ body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filter
     margin-top: 0;
 }
 
+/* Filter fields: the field gap replaces the older label margin. */
+body.idlm-crm-design .idlm-filters-panel .idlm-filter-group.idlm-field > label,
+body.idlm-crm-design .idlm-dialog .idlm-filter-group.idlm-field > label {
+    margin-bottom: 0;
+}
+
 /* The flex layout above outranks the browser's [hidden] rule; fields toggled with `hidden` must still hide. */
 body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-field[hidden] {
     display: none;

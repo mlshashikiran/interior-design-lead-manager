@@ -2157,6 +2157,10 @@ body.idlm-crm-design #idlm-import-modal .idlm-import-progress-line {
 }
 
 /* Export */
+body.idlm-crm-design #idlm-export-modal .idlm-export-scope {
+    margin: 0 0 var(--idlm-space-4);
+}
+
 body.idlm-crm-design #idlm-export-modal .idlm-export-scope-options {
     display: grid;
     gap: var(--idlm-space-2);
