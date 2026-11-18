@@ -3133,6 +3133,52 @@ jQuery(document).ready(function($) {
         });
     });
 
+    // Tell a long-open tab when the CRM has been updated, so people reload instead of working on old scripts.
+    (function watchForUpdates() {
+        if (!window.idlm_vars || !idlm_vars.plugin_version) { return; }
+        var interval = 5 * 60 * 1000;
+        var lastCheck = Date.now();
+        var outdated = false;
+
+        function reloadPage() {
+            if (window.idlmHasUnsavedChanges && window.IDLMDialog) {
+                window.IDLMDialog.confirm({
+                    title: 'Reload with unsaved edits?',
+                    message: 'Reloading gets the latest CRM version but discards the edits you have not saved.',
+                    confirmLabel: 'Discard and reload',
+                    destructive: true
+                }).then(function(confirmed) { if (confirmed) { window.location.reload(); } });
+                return;
+            }
+            window.location.reload();
+        }
+        function announce() {
+            window.IDLMDialog.notify('The CRM has been updated. Reload to get the latest version.', 'info', {action: {label: 'Reload', onClick: reloadPage}});
+        }
+        function check() {
+            lastCheck = Date.now();
+            if (outdated) { announce(); return; }
+            $.ajax({url: idlm_vars.ajax_url, type: 'POST', data: {action: 'idlm_app_version', nonce: idlm_vars.nonce}, cache: false})
+                .done(function(response) {
+                    if (response && response.success && response.data && response.data.version && response.data.version !== idlm_vars.plugin_version) {
+                        outdated = true;
+                        announce();
+                    }
+                })
+                .fail(function(xhr) {
+                    // An expired page token means this page is too old to save anything: same advice.
+                    if (xhr && 403 === xhr.status && '-1' === String(xhr.responseText).trim()) {
+                        outdated = true;
+                        announce();
+                    }
+                });
+        }
+        window.setInterval(function() { if (!document.hidden) { check(); } }, interval);
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && Date.now() - lastCheck > 60 * 1000) { check(); }
+        });
+    }());
+
     // Expose table reloading and current page for global scope access
     window.idlmLoadLeadsTable = loadLeadsTable;
     window.idlmCurrentPage = function() { return currentPage; };

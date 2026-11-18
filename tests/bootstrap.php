@@ -1312,6 +1312,8 @@ function __return_true(): bool {
     return true;
 }
 
+function nocache_headers(): void {}
+
 function check_ajax_referer(string $action, $query_arg = false, bool $die = true): int {
     if (!$GLOBALS['idlm_test_nonce_valid']) {
         throw new IDLM_Test_Response(false, array('message' => 'Invalid nonce.'), 403);

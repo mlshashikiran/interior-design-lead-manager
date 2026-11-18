@@ -102,6 +102,7 @@ final class IDLM_Admin_Assets {
 
         wp_localize_script('idlm-admin-app', 'idlm_vars', array(
             'ajax_url'      => admin_url('admin-ajax.php'),
+            'plugin_version' => IDLM_VERSION,
             'nonce'         => wp_create_nonce('idlm_admin_nonce'),
             'call_statuses' => array_values(array_diff(
                 (array) get_option('idlm_custom_call_statuses', array_values(IDLM_State_Registry::call_statuses())),

@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.108.0] - 2026-11-18
+
+### Added
+
+- A CRM tab that was open during an update now says so. Every 5 minutes while the tab is visible, and when someone returns to it, the page checks the CRM version. If it changed, a toast shows "The CRM has been updated. Reload to get the latest version." with a Reload button. The toast closes on its own like other toasts and comes back at the next check until the page is reloaded. Builder: Shashi.
+- Reload asks first when the drawer has unsaved edits.
+- A page open long enough for its security token to expire gets the same notice, since its saves would fail anyway.
+
 ## [1.107.2] - 2026-11-17
 
 ### Fixed

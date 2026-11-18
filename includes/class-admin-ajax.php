@@ -140,6 +140,17 @@ final class IDLM_Admin_Ajax extends IDLM_Admin {
         return sprintf('%s failed for %d lead(s). %s', $label, count($failed), implode(' ', $details));
     }
 
+    /**
+     * The running plugin version, so an open CRM tab can tell it is out of date and offer a reload.
+     * The nonce limits it to signed-in CRM pages; the version itself is not sensitive, so every CRM
+     * role (design included) may read it.
+     */
+    public static function ajax_app_version() {
+        check_ajax_referer('idlm_admin_nonce', 'nonce');
+        nocache_headers();
+        wp_send_json_success(array('version' => IDLM_VERSION));
+    }
+
     /** Sales or a manager returns a qualified lead to pre-sales with a reason. */
     public static function ajax_send_back_to_presales() {
         check_ajax_referer('idlm_admin_nonce', 'nonce');
