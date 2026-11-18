@@ -32,7 +32,7 @@ $idlm_brand_logo = IDLM_Settings::brand_asset($idlm_white_label['logo_id']);
     <?php if (!$idlm_is_logged_in) : ?>
         <main class="idlm-login-shell idlm-access-restricted" aria-labelledby="idlm-login-title">
             <section class="idlm-login-context" aria-label="<?php echo esc_attr(sprintf('%s overview', $idlm_white_label['workspace_title'])); ?>">
-                <div class="idlm-login-brand"><?php if ($idlm_brand_logo['url']): ?><img src="<?php echo esc_url($idlm_brand_logo['url']); ?>" alt=""><?php else: ?><span class="dashicons dashicons-admin-home" aria-hidden="true"></span><?php endif; ?><span><?php echo esc_html($idlm_white_label['brand_name']); ?></span></div>
+                <div class="idlm-login-brand"><?php if ($idlm_brand_logo['url']): ?><img src="<?php echo esc_url($idlm_brand_logo['url']); ?>" alt="<?php echo esc_attr($idlm_white_label['brand_name']); ?>"><?php else: ?><span class="dashicons dashicons-admin-home" aria-hidden="true"></span><span><?php echo esc_html($idlm_white_label['brand_name']); ?></span><?php endif; ?></div>
                 <div class="idlm-login-context-copy">
                     <p class="idlm-login-product"><?php echo esc_html($idlm_white_label['workspace_title']); ?></p>
                     <h1><?php echo esc_html($idlm_white_label['login_heading']); ?></h1>

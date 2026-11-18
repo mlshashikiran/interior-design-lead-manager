@@ -60,7 +60,7 @@ WCAG 2.2 AA. Text contrast `4.5:1`, controls and focus `3:1`. Every control has 
 
 ## Writing CSS
 
-The redesign lives in switchable stylesheets: `assets/css/crm-design.css` (tokens, shell, shared components) and `assets/css/crm-design-<area>.css` for `leads`, `pipeline`, `dashboard`, `quotations`, `settings`, `admin` and `payments`. Legacy stylesheets stay untouched so that switching off restores the old design.
+The redesign lives in switchable stylesheets: `assets/css/crm-design.css` (tokens, shell, shared components) and `assets/css/crm-design-<area>.css` for `leads`, `pipeline`, `dashboard`, `quotations`, `settings`, `admin` and `payments`. `crm-design-standalone.css` serves the two pages outside the workspace (the core wp-login screens and wp-admin Identity reviews): they load `crm-design.css` plus that file and add `idlm-crm-design idlm-crm-standalone` to `body`; its selectors start `body.idlm-crm-design.idlm-crm-standalone`. wp-admin as a whole still loads no layer. Legacy stylesheets stay untouched so that switching off restores the old design.
 
 - **STD-CSS-1** Every selector starts with `body.idlm-crm-design`. **[test]**
 - **STD-CSS-2** Hex colours appear only in the token block at the top; everything else uses `var(--idlm-*)`. **[test]** The repository's colour budget has one slot left, so derive new shades with `color-mix()`.
@@ -82,7 +82,7 @@ The redesign lives in switchable stylesheets: `assets/css/crm-design.css` (token
 
 ## One design
 
-The CRM design is the only front-end design. The previous design, its `?idlm_design=legacy` preview, the Utilities switch and the `IDLM_DESIGN_LAYER` constant were retired in the streamline work (see `docs/STREAMLINE-AUDIT.md`, D2). The stored `idlm_design_layer` option is no longer read. wp-admin keeps plain WordPress markup and loads no design stylesheet.
+The CRM design is the only front-end design. The previous design, its `?idlm_design=legacy` preview, the Utilities switch and the `IDLM_DESIGN_LAYER` constant were retired in the streamline work (see `docs/STREAMLINE-AUDIT.md`, D2). The stored `idlm_design_layer` option is no longer read. wp-admin keeps plain WordPress markup and loads no design stylesheet, except the Identity reviews page (see Writing CSS).
 
 To inspect the old source, use the git tags `design-baseline-head` (last commit) and `design-baseline-worktree` (tracked files as they stood before this work), or any release before the retirement.
 
@@ -100,4 +100,3 @@ To inspect the old source, use the git tags `design-baseline-head` (last commit)
 Do not make these worse.
 
 1. Some legacy rules on screens outside the design layer's reach still hard-code `9–10px` text, against STD-TYPE-1.
-2. The wp-login form and the wp-admin Identity reviews page do not load the layer.

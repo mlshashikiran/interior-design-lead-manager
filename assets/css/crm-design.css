@@ -2761,3 +2761,9 @@ body.idlm-crm-design.idlm-pointer-input .idlm-permission-option:focus-within {
 body.idlm-crm-design [tabindex="-1"]:focus {
     outline: none;
 }
+
+/* Sign-in brand: a logo stands alone, with the brand name as its text alternative. Without a logo the mark and name show. */
+body.idlm-crm-design .idlm-login-brand img {
+    height: 40px;
+    max-width: 200px;
+}
