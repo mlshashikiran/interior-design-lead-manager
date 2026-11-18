@@ -2,6 +2,8 @@
 /** Authenticated sales payment workspace and operation-specific forms. Builder: Shashi. */
 if (!defined('ABSPATH')) { exit; }
 final class IDLM_Lead_Payment_Controller {
+    /** Every query key the Payments view reads. Sidebar navigation drops them all, so Payments opens the list. */
+    const QUERY_KEYS = array('payment_lead_id', 'payment_revision_id', 'payment_saved', 'payment_done', 'payment_q', 'payment_balance', 'payment_sort', 'payment_page');
     public static function init() {
         foreach (array('schedule', 'resolve_legacy', 'won_plan', 'record', 'correct', 'revoke') as $operation) {
             add_action('admin_post_idlm_payment_' . $operation, array(__CLASS__, 'handle'));

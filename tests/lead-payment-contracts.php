@@ -228,3 +228,7 @@ idlm_test('PAYMENT list is on the menu for administrators and managers, not repr
     $GLOBALS['idlm_test_user_meta'][4][IDLM_Admin_Users_Controller::DISABLED_META_KEY] = '1';
     idlm_test_login(4, array('idlm_sales_manager'), array('idlm_access_leads', 'idlm_assign_leads', 'idlm_record_lead_payments')); assert_false(IDLM_Lead_Payment_Controller::tab_shown());
 });
+idlm_test('PAYMENT sidebar navigation drops payment keys so Payments opens the list', static function(): void {
+    foreach (array('payment_lead_id', 'payment_revision_id', 'payment_saved', 'payment_done', 'payment_q', 'payment_balance', 'payment_sort', 'payment_page') as $key) { assert_true(in_array($key, IDLM_Lead_Payment_Controller::QUERY_KEYS, true), $key); }
+    assert_contains('IDLM_Design_Handoff_Controller::QUERY_KEYS, IDLM_Lead_Payment_Controller::QUERY_KEYS)', (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-shortcodes.php'));
+});
