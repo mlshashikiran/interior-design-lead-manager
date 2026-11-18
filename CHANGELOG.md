@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.113.2] - 2026-11-18
+
+### Changed
+
+- Internal only: the remaining rules of the old `admin-style.css` moved into temporary `crm-legacy-*.css` files, ready to be folded into the design layer area by area. Nothing changes on screen. Builder: Shashi.
+
 ## [1.113.1] - 2026-11-18
 
 ### Changed

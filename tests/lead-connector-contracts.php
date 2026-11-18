@@ -187,7 +187,7 @@ idlm_test('CONNECTOR status panel shows sync state, counts, a paused warning and
     assert_contains('Paused: token stopped working', $paused);
     assert_contains('Lead imports are paused.', $paused);
     assert_contains('Waiting leads are kept for 30 days.', $paused);
-    $css = file_get_contents(dirname(__DIR__) . '/assets/css/admin-style.css');
+    $css = idlm_legacy_css(dirname(__DIR__));
     assert_contains('.idlm-wrap .idlm-meta-connector [hidden] { display: none !important; }', $css);
     $js = file_get_contents(dirname(__DIR__) . '/assets/js/settings.js');
     foreach (array("action: 'idlm_meta_lead_retry'", '[data-idlm-copy-field]', 'getRandomValues', 'data.items') as $needle) { assert_contains($needle, $js); }

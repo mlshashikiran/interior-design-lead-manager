@@ -65,7 +65,7 @@ class IDLM_Quotations {
         if (class_exists('IDLM_Admin')) {
             IDLM_Admin::register_core_assets();
             wp_enqueue_style('idlm-google-fonts');
-            wp_enqueue_style('idlm-admin-styles');
+            IDLM_Admin_Assets::enqueue_admin_styles(array());
             wp_enqueue_script('idlm-dialog');
         }
         wp_enqueue_style('idlm-quotations', IDLM_URL . 'assets/css/quotations.css', array(), self::asset_version('css/quotations.css'));

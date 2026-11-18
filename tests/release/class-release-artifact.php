@@ -32,7 +32,7 @@ final class IDLM_Release_Artifact {
             'assets/fonts/inter-latin-500.woff2',
             'assets/fonts/inter-latin-600.woff2',
             'assets/fonts/inter-latin-700.woff2',
-            'assets/css/admin-style.css',
+            'assets/css/crm-legacy-shared.css',
             'assets/js/admin-app.js',
             'vendor/dompdf/vendor/autoload.php',
             'vendor/dompdf/vendor/composer/installed.json',

@@ -212,7 +212,7 @@ idlm_test('lead drawer Tasks tab shows a live overdue-task notification count', 
     $root = dirname(__DIR__);
     $drawer_source = (string) file_get_contents($root . '/includes/class-admin-lead-reads.php');
     $script_source = (string) file_get_contents($root . '/assets/js/admin-app.js');
-    $styles = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $styles = (string) idlm_legacy_css($root);
 
     assert_contains('idlm-drawer-overdue-task-count', $drawer_source);
     assert_contains('idlm-drawer-tab-notification', $drawer_source);
@@ -273,7 +273,7 @@ idlm_test('settings support UI-only labels and draggable pipeline ordering', sta
 idlm_test('General settings prioritizes metrics above the two configuration cards', static function(): void {
     $root = dirname(__DIR__);
     $template = (string) file_get_contents($root . '/templates/admin/settings/general.php');
-    $styles = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $styles = (string) idlm_legacy_css($root);
 
     assert_contains('idlm-settings-general-metrics', $template);
     assert_contains('.idlm-wrap .idlm-settings-general-metrics', $styles);
@@ -337,7 +337,7 @@ idlm_test('admin hooks, AJAX actions, shortcodes, and menu callbacks remain regi
 idlm_test('admin core asset handles and localized JavaScript contract remain stable', static function(): void {
     IDLM_Admin::register_core_assets();
     assert_same(array(
-        'idlm-google-fonts', 'idlm-crm-tokens', 'idlm-admin-styles', 'idlm-dashboard-styles',
+        'idlm-google-fonts', 'idlm-crm-tokens', 'idlm-crm-legacy-shared', 'idlm-crm-legacy-leads', 'idlm-crm-legacy-settings', 'idlm-crm-legacy-admin', 'idlm-admin-styles', 'idlm-dashboard-styles',
         'idlm-kanban-styles', 'idlm-workspace-styles',
     ), idlm_admin_asset_handles('register_style'));
     assert_same(array(
@@ -362,19 +362,19 @@ idlm_test('admin utility stays asset-free while shortcode contexts enqueue their
 
     $contexts = array(
         '[idlm_leads_list]' => array(
-            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
+            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-crm-legacy-leads', 'idlm-crm-legacy-settings', 'idlm-crm-legacy-admin', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
             array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account'),
         ),
         '[idlm_dashboard]' => array(
-            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-dashboard-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
+            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-crm-legacy-leads', 'idlm-crm-legacy-settings', 'idlm-crm-legacy-admin', 'idlm-dashboard-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
             array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-chartjs', 'idlm-dashboard-app'),
         ),
         '[idlm_kanban]' => array(
-            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-kanban-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
+            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-crm-legacy-leads', 'idlm-crm-legacy-settings', 'idlm-crm-legacy-admin', 'idlm-kanban-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
             array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-kanban-app'),
         ),
         '[idlm_workspace]' => array(
-            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-workspace-styles', 'idlm-dashboard-styles', 'idlm-kanban-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
+            array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-crm-legacy-leads', 'idlm-crm-legacy-settings', 'idlm-crm-legacy-admin', 'idlm-workspace-styles', 'idlm-dashboard-styles', 'idlm-kanban-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-pipeline', 'idlm-crm-design-dashboard', 'idlm-crm-design-quotations', 'idlm-crm-design-settings', 'idlm-crm-design-admin', 'idlm-crm-design-payments'),
             array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app', 'idlm-users-logs', 'idlm-settings', 'idlm-chartjs', 'idlm-dashboard-app', 'idlm-kanban-app'),
         ),
     );
@@ -390,7 +390,7 @@ idlm_test('admin utility stays asset-free while shortcode contexts enqueue their
 idlm_test('Phase 1 accessible dialog and design-token contracts remain present', static function(): void {
     $root = dirname(__DIR__);
     $dialog = (string) file_get_contents($root . '/assets/js/dialog.js');
-    $styles = (string) file_get_contents($root . '/assets/css/admin-style.css') . (string) file_get_contents($root . '/assets/css/crm-tokens.css');
+    $styles = (string) idlm_legacy_css($root) . (string) file_get_contents($root . '/assets/css/crm-tokens.css');
     $overlays = (string) file_get_contents($root . '/templates/admin/common-overlays.php');
     $kanban = (string) file_get_contents($root . '/templates/admin/kanban.php');
     $quotations = (string) file_get_contents($root . '/includes/class-quotation-renderer.php');
@@ -689,7 +689,7 @@ idlm_test('frontend UI UX Phase 3 preserves responsive workflow and interaction 
     $root = dirname(__DIR__);
     $leads_template = (string) file_get_contents($root . '/templates/admin/leads.php');
     $leads_script = (string) file_get_contents($root . '/assets/js/admin-app.js');
-    $leads_styles = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $leads_styles = (string) idlm_legacy_css($root);
     $ajax = (string) file_get_contents($root . '/includes/class-admin-collection-reads.php');
     $kanban_template = (string) file_get_contents($root . '/templates/admin/kanban.php');
     $kanban_script = (string) file_get_contents($root . '/assets/js/kanban.js');

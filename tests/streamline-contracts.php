@@ -306,7 +306,7 @@ idlm_test('STREAMLINE each workspace view loads the shared shell plus only its o
     try {
         $GLOBALS['idlm_test_logged_in'] = true;
         $GLOBALS['idlm_test_caps'] = array('manage_options' => true, 'idlm_access_leads' => true, 'idlm_view_quotes' => true);
-        $shared = array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-workspace-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-payments');
+        $shared = array('idlm-google-fonts', 'idlm-admin-styles', 'idlm-crm-legacy-leads', 'idlm-workspace-styles', 'idlm-crm-design', 'idlm-crm-design-leads', 'idlm-crm-design-payments');
         // Every workspace view, pinned: the shared shell plus only that view's own bundles.
         $shell = array('idlm-dialog', 'idlm-admin-app', 'idlm-access-account', 'idlm-workspace-app');
         $own = array(
@@ -316,11 +316,11 @@ idlm_test('STREAMLINE each workspace view loads the shared shell plus only its o
             'quotations'    => array(array('idlm-crm-design-quotations'), array()),
             'payments'      => array(array(), array()),
             'design-team'   => array(array(), array()),
-            'capi-logs'     => array(array('idlm-crm-design-admin'), array('idlm-users-logs')),
-            'audience-logs' => array(array('idlm-crm-design-admin'), array('idlm-users-logs')),
-            'users'         => array(array('idlm-crm-design-admin'), array('idlm-users-logs')),
-            'settings'      => array(array('idlm-crm-design-settings', 'idlm-crm-design-admin'), array('idlm-settings')),
-            'my-account'    => array(array('idlm-crm-design-admin'), array()),
+            'capi-logs'     => array(array('idlm-crm-legacy-admin', 'idlm-crm-design-admin'), array('idlm-users-logs')),
+            'audience-logs' => array(array('idlm-crm-legacy-admin', 'idlm-crm-design-admin'), array('idlm-users-logs')),
+            'users'         => array(array('idlm-crm-legacy-admin', 'idlm-crm-design-admin'), array('idlm-users-logs')),
+            'settings'      => array(array('idlm-crm-legacy-settings', 'idlm-crm-legacy-admin', 'idlm-crm-design-settings', 'idlm-crm-design-admin'), array('idlm-settings')),
+            'my-account'    => array(array('idlm-crm-legacy-admin', 'idlm-crm-design-admin'), array()),
             // An unknown view renders the default dashboard, so it gets the dashboard's bundles.
             'no-such-view'  => array(array('idlm-dashboard-styles', 'idlm-crm-design-dashboard'), array('idlm-chartjs', 'idlm-dashboard-app')),
         );

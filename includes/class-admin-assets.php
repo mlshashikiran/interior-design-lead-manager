@@ -11,6 +11,11 @@ if (!defined('ABSPATH')) {
 
 final class IDLM_Admin_Assets {
     const DESIGN_AREAS = array('leads', 'pipeline', 'dashboard', 'quotations', 'settings', 'admin', 'payments');
+    /**
+     * Areas that have a temporary assets/css/crm-legacy-<area>.css beside the always-loaded crm-legacy-shared.css
+     * (STD-CSS-11). Same order as DESIGN_AREAS: each file loads in the position the old admin-style.css rules had.
+     */
+    const LEGACY_AREAS = array('leads', 'settings', 'admin');
 
     /**
      * What each workspace view needs beyond the shared shell: dialog, admin-app, workspace and the
@@ -41,6 +46,30 @@ final class IDLM_Admin_Assets {
     }
 
     /** Enqueue the workspace shell plus the active view's assets (all of them when the view is unknown). */
+    /** The design areas the active workspace view needs, or null for every area. Mirrors enqueue_workspace_assets(). */
+    private static function workspace_areas() {
+        $view = self::workspace_view_assets();
+        return null === $view ? null : array_values(array_unique(array_merge(self::SHARED_AREAS, $view['areas'])));
+    }
+
+    /** Legacy stylesheet handles enqueued this request, in load order. */
+    private static $legacy_handles = array();
+
+    /**
+     * Enqueue the base styles every CRM page needs: tokens, dashicons and the shared legacy rules (through the
+     * idlm-admin-styles handle) plus the legacy file of each area in use. Call it before the styles that depend on
+     * idlm-admin-styles so the legacy rules print ahead of them, as admin-style.css did.
+     */
+    public static function enqueue_admin_styles($areas = null) {
+        wp_enqueue_style('idlm-admin-styles');
+        foreach (null === $areas ? self::LEGACY_AREAS : array_intersect(self::LEGACY_AREAS, $areas) as $area) {
+            wp_enqueue_style('idlm-crm-legacy-' . $area);
+            if (!in_array('idlm-crm-legacy-' . $area, self::$legacy_handles, true)) {
+                self::$legacy_handles[] = 'idlm-crm-legacy-' . $area;
+            }
+        }
+    }
+
     private static function enqueue_workspace_assets() {
         wp_enqueue_style('idlm-workspace-styles');
         wp_enqueue_script('idlm-workspace-app');
@@ -75,7 +104,9 @@ final class IDLM_Admin_Assets {
             return;
         }
         $declarations = IDLM_Settings::white_label_style();
-        wp_add_inline_style('idlm-admin-styles', '.idlm-wrap.idlm-wrap,.idlm-workspace.idlm-workspace,.idlm-access-restricted.idlm-access-restricted,.idlm-dialog.idlm-dialog{' . $declarations . '}');
+        // After the last legacy file, where it sat when admin-style.css was one file.
+        $legacy_handles = self::$legacy_handles;
+        wp_add_inline_style($legacy_handles ? end($legacy_handles) : 'idlm-crm-legacy-shared', '.idlm-wrap.idlm-wrap,.idlm-workspace.idlm-workspace,.idlm-access-restricted.idlm-access-restricted,.idlm-dialog.idlm-dialog{' . $declarations . '}');
         self::$white_label_style_added = true;
     }
 
@@ -86,9 +117,15 @@ final class IDLM_Admin_Assets {
         wp_register_style('idlm-google-fonts', $asset_url . 'css/fonts.css', array(), self::asset_version('css/fonts.css'));
         wp_register_script('idlm-chartjs', $asset_url . 'js/chart.js', array(), '4.4.1', true);
 
-        // Base design tokens load first: before admin-style.css and every crm-design*.css (STD-CSS-10).
+        // Base design tokens load first: before the legacy files and every crm-design*.css (STD-CSS-10).
         wp_register_style('idlm-crm-tokens', $asset_url . 'css/crm-tokens.css', array(), self::asset_version('css/crm-tokens.css'));
-        wp_register_style('idlm-admin-styles', $asset_url . 'css/admin-style.css', array('idlm-crm-tokens', 'dashicons'), self::asset_version('css/admin-style.css'));
+        // Temporary: the rules of the retired admin-style.css, under :where(body.idlm-crm-design) (STD-CSS-11).
+        wp_register_style('idlm-crm-legacy-shared', $asset_url . 'css/crm-legacy-shared.css', array('idlm-crm-tokens', 'dashicons'), self::asset_version('css/crm-legacy-shared.css'));
+        foreach (self::LEGACY_AREAS as $area) {
+            wp_register_style('idlm-crm-legacy-' . $area, $asset_url . 'css/crm-legacy-' . $area . '.css', array('idlm-crm-legacy-shared'), self::asset_version('css/crm-legacy-' . $area . '.css'));
+        }
+        // The handle every other stylesheet depends on: no file of its own, it stands for the legacy rules.
+        wp_register_style('idlm-admin-styles', false, array('idlm-crm-legacy-shared'), IDLM_VERSION);
         wp_register_style('idlm-dashboard-styles', $asset_url . 'css/dashboard.css', array('idlm-admin-styles'), self::asset_version('css/dashboard.css'));
         wp_register_style('idlm-kanban-styles', $asset_url . 'css/kanban.css', array('idlm-admin-styles'), self::asset_version('css/kanban.css'));
         wp_register_style('idlm-workspace-styles', $asset_url . 'css/workspace.css', array('idlm-admin-styles'), self::asset_version('css/workspace.css'));
@@ -172,7 +209,7 @@ final class IDLM_Admin_Assets {
         $asset_url = plugin_dir_url(dirname(__FILE__)) . 'assets/';
         self::register_core_assets();
         wp_enqueue_style('idlm-google-fonts');
-        wp_enqueue_style('idlm-admin-styles');
+        self::enqueue_admin_styles(array());
         wp_enqueue_style('idlm-crm-design', $asset_url . 'css/crm-design.css', array('idlm-admin-styles'), self::asset_version('css/crm-design.css'));
         wp_enqueue_style('idlm-crm-design-standalone', $asset_url . 'css/crm-design-standalone.css', array('idlm-crm-design'), self::asset_version('css/crm-design-standalone.css'));
         self::add_white_label_style();
@@ -218,7 +255,7 @@ final class IDLM_Admin_Assets {
 
         self::register_core_assets();
         wp_enqueue_style('idlm-google-fonts');
-        wp_enqueue_style('idlm-admin-styles');
+        self::enqueue_admin_styles($has_workspace && !$has_leads_list && !$has_dashboard && !$has_kanban ? self::workspace_areas() : null);
         self::add_white_label_style();
         wp_enqueue_script('idlm-dialog');
         wp_enqueue_script('idlm-admin-app');
@@ -242,7 +279,7 @@ final class IDLM_Admin_Assets {
     public static function enqueue_shortcode_assets($context) {
         self::register_core_assets();
         wp_enqueue_style('idlm-google-fonts');
-        wp_enqueue_style('idlm-admin-styles');
+        self::enqueue_admin_styles('workspace' === $context ? self::workspace_areas() : null);
         self::add_white_label_style();
         wp_enqueue_script('idlm-dialog');
         wp_enqueue_script('idlm-admin-app');

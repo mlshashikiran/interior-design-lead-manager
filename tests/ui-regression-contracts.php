@@ -59,7 +59,7 @@ idlm_test('settings keep horizontal tab contracts without a secondary sidebar', 
 
 idlm_test('Phase 4 visual matrix keeps canonical responsive, role, motion, and state hooks', static function(): void {
     $root = dirname(__DIR__);
-    $admin_css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $admin_css = (string) idlm_legacy_css($root);
     $workspace = (string) file_get_contents($root . '/templates/workspace.php');
     $shortcodes = (string) file_get_contents($root . '/includes/class-admin-shortcodes.php');
 
@@ -100,7 +100,7 @@ idlm_test('Phase 5 access and account forms expose recoverable password and stat
     $account = (string) file_get_contents($root . '/templates/my-account.php');
     $workspace = (string) file_get_contents($root . '/templates/workspace.php');
     $script = (string) file_get_contents($root . '/assets/js/access-account.js');
-    $css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $css = (string) idlm_legacy_css($root);
     $auth = (string) file_get_contents($root . '/includes/class-auth.php');
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
 
@@ -163,7 +163,7 @@ idlm_test('settings notices use accessible non-duplicating floating toasts with 
     $shell = (string) file_get_contents($root . '/templates/admin/settings/shell.php');
     $backup = (string) file_get_contents($root . '/templates/admin/settings/backup.php');
     $script = (string) file_get_contents($root . '/assets/js/settings.js');
-    $css = (string) file_get_contents($root . '/assets/css/admin-style.css') . idlm_ui_css_sources($root . '/assets/css');
+    $css = (string) idlm_legacy_css($root) . idlm_ui_css_sources($root . '/assets/css');
 
     foreach (array('data-idlm-settings-toast', 'data-idlm-toast-autoclose="4000"', 'notice-success', 'is-dismissible') as $contract) {
         assert_contains($contract, $shell);
@@ -187,7 +187,7 @@ idlm_test('CRM settings pipeline and lead-capture mappings retain accessible pro
     $editor = (string) file_get_contents($root . '/templates/admin/settings/token-editor.php');
     $webhooks = (string) file_get_contents($root . '/templates/admin/settings/webhooks.php');
     $shell = (string) file_get_contents($root . '/templates/admin/settings/shell.php');
-    $css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $css = (string) idlm_legacy_css($root);
     $script = (string) file_get_contents($root . '/assets/js/settings.js');
 
     foreach (array('Pipeline stages', "'pipeline' => true", "'stage_totals' => \$idlm_kanban_stage_totals", 'Lead fields and options', '<details class="idlm-settings-disclosure"', 'Sales activity', 'Outcome tracking', 'Assignment and routing', 'Project requirements') as $contract) {
@@ -215,7 +215,7 @@ idlm_test('white-label settings remain accessible, responsive, and isolated from
     $settings = (string) file_get_contents($root . '/includes/class-settings.php');
     $controller = (string) file_get_contents($root . '/includes/class-admin-settings-controller.php');
     $script = (string) file_get_contents($root . '/assets/js/settings.js');
-    $css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $css = (string) idlm_legacy_css($root);
     $workspace = (string) file_get_contents($root . '/templates/workspace.php');
     $access = (string) file_get_contents($root . '/templates/access-restricted.php');
 
@@ -244,7 +244,7 @@ idlm_test('wp-admin stays a compact utility page while the frontend owns CRM nav
     $root = dirname(__DIR__);
     $admin = (string) file_get_contents($root . '/includes/class-admin.php');
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
-    $css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $css = (string) idlm_legacy_css($root);
 
     foreach (array('redirect_legacy_admin_page', 'IDLM_Admin_Shortcodes::workspace_url()', 'render_admin_utility_page', '[idlm_workspace]', '[idlm_quotations]') as $contract) {
         assert_contains($contract, $admin);
@@ -279,7 +279,7 @@ idlm_test('workspace controls retain native semantics and one shared control con
     $root = dirname(__DIR__);
     $leads = (string) file_get_contents($root . '/templates/admin/leads.php');
     $script = (string) file_get_contents($root . '/assets/js/admin-app.js');
-    $css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $css = (string) idlm_legacy_css($root);
     $workspace_css = (string) file_get_contents($root . '/assets/css/workspace.css');
 
     assert_contains('<button type="button" class="idlm-table-sort-button"', $leads);
@@ -305,7 +305,7 @@ idlm_test('Phase 7 users and logs expose responsive filters, semantic tables, an
     $renderer = (string) file_get_contents($root . '/includes/class-admin-logs-renderer.php');
     $admin = (string) file_get_contents($root . '/includes/class-admin.php');
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
-    $css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $css = (string) idlm_legacy_css($root);
 
     foreach (array('idlm-users-role-filter', 'idlm-users-access-filter', 'data-idlm-filter-field', 'autocomplete="given-name"', 'autocomplete="email"', 'autocomplete="tel"', 'data-idlm-pending-form', 'idlm-user-safeguard') as $contract) {
         assert_contains($contract, $users);
@@ -341,7 +341,7 @@ idlm_test('Phase 7 users and logs expose responsive filters, semantic tables, an
 });
 
 idlm_test('frontend workspace button components outrank Elementor kit defaults without important overrides', static function(): void {
-    $admin_css = (string) file_get_contents(dirname(__DIR__) . '/assets/css/admin-style.css');
+    $admin_css = (string) idlm_legacy_css(dirname(__DIR__));
 
     assert_contains('.idlm-workspace .idlm-metric,', $admin_css);
     assert_contains('.idlm-workspace .idlm-lead-row-open,', $admin_css);
@@ -350,7 +350,7 @@ idlm_test('frontend workspace button components outrank Elementor kit defaults w
 
 idlm_test('compact CRM typography uses a consistent scalable hierarchy', static function(): void {
     $root = dirname(__DIR__);
-    $admin_css = (string) file_get_contents($root . '/assets/css/admin-style.css') . (string) file_get_contents($root . '/assets/css/crm-tokens.css');
+    $admin_css = (string) idlm_legacy_css($root) . (string) file_get_contents($root . '/assets/css/crm-tokens.css');
     $dashboard_css = (string) file_get_contents($root . '/assets/css/dashboard.css');
     $master = (string) file_get_contents($root . '/design-system/interior-design-lead-manager/MASTER.md');
 
@@ -365,7 +365,7 @@ idlm_test('compact CRM typography uses a consistent scalable hierarchy', static 
 
 idlm_test('CRM buttons use a shared radius and readable semantic contrast', static function(): void {
     $root = dirname(__DIR__);
-    $admin_css = (string) file_get_contents($root . '/assets/css/admin-style.css') . (string) file_get_contents($root . '/assets/css/crm-tokens.css');
+    $admin_css = (string) idlm_legacy_css($root) . (string) file_get_contents($root . '/assets/css/crm-tokens.css');
     $workspace_css = (string) file_get_contents($root . '/assets/css/workspace.css');
     $quotes_css = (string) file_get_contents($root . '/assets/css/quotations.css');
     $overlays = (string) file_get_contents($root . '/templates/admin/common-overlays.php');
@@ -399,7 +399,7 @@ idlm_test('final UI acceptance uses shared dialogs and non-blocking feedback ins
 
 idlm_test('pre-sales outreach stays recoverable while the activity request is pending', static function(): void {
     $script = (string) file_get_contents(dirname(__DIR__) . '/assets/js/admin-app.js');
-    $css = (string) file_get_contents(dirname(__DIR__) . '/assets/css/admin-style.css') . (string) file_get_contents(dirname(__DIR__) . '/assets/css/crm-tokens.css');
+    $css = (string) idlm_legacy_css(dirname(__DIR__)) . (string) file_get_contents(dirname(__DIR__) . '/assets/css/crm-tokens.css');
     $dialog = (string) file_get_contents(dirname(__DIR__) . '/assets/js/dialog.js');
     $assets = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-assets.php');
 
@@ -424,7 +424,7 @@ idlm_test('pre-sales outreach stays recoverable while the activity request is pe
 
 idlm_test('lead drawer status summary separates operational state from quieter context without card clutter', static function(): void {
     $root = dirname(__DIR__);
-    $admin_css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $admin_css = (string) idlm_legacy_css($root);
     $lead_reads = (string) file_get_contents($root . '/includes/class-admin-lead-reads.php');
 
     foreach (array('.idlm-drawer-status-primary', 'grid-template-columns: repeat(4, minmax(0, 1fr))', '.idlm-drawer-status-context', 'white-space: nowrap', 'text-overflow: ellipsis') as $contract) {
@@ -444,7 +444,7 @@ idlm_test('lead routing popup distills safeguards with conditional controls whil
     $routing_settings = (string) file_get_contents($root . '/templates/admin/settings/routing.php');
     $script = (string) file_get_contents($root . '/assets/js/admin-app.js');
     $dialog = (string) file_get_contents($root . '/assets/js/dialog.js');
-    $css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $css = (string) idlm_legacy_css($root);
     $ajax = (string) file_get_contents($root . '/includes/class-admin-ajax.php');
 
     foreach (array('role="dialog"', 'aria-modal="true"', 'data-idlm-dialog', 'idlm-routing-modal-title', 'idlm-routing-modal-description', 'aria-label="Open lead routing settings"', 'for="idlm-routing-mode-select"', 'idlm-routing-settings-error', 'idlm-routing-fallback-confirm', 'role="status" aria-live="polite"', 'idlm-routing-current-summary', 'idlm-routing-advanced-safeguards', 'fallback_assignment_controls_active', 'qualified_fallback_controls_active') as $contract) {
@@ -486,11 +486,59 @@ idlm_test('crm-tokens.css is the one ungated stylesheet: custom properties only,
         }
     }
     assert_false(false !== strpos($bare, '!important'), 'No !important in the tokens file.');
-    assert_false((bool) preg_match('/--idlm-[a-z0-9-]+\s*:/', (string) preg_replace('~/\*.*?\*/~s', '', (string) file_get_contents($root . '/assets/css/admin-style.css'))), 'admin-style.css declares no tokens.');
+    assert_false((bool) preg_match('/--idlm-[a-z0-9-]+\s*:/', (string) preg_replace('~/\*.*?\*/~s', '', (string) idlm_legacy_css($root))), 'The legacy files declare no tokens.');
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
     assert_contains("wp_register_style('idlm-crm-tokens'", $assets);
     assert_contains("array('idlm-crm-tokens', 'dashicons')", $assets);
-    assert_true(strpos($assets, "wp_register_style('idlm-crm-tokens'") < strpos($assets, "wp_register_style('idlm-admin-styles'"), 'Tokens are registered before admin-style.css.');
+    assert_true(strpos($assets, "wp_register_style('idlm-crm-tokens'") < strpos($assets, "wp_register_style('idlm-admin-styles'"), 'Tokens are registered before the legacy files.');
+});
+
+idlm_test('legacy rules live in crm-legacy-*.css under a zero-specificity gate and never grow (STD-CSS-11)', static function(): void {
+    $root = dirname(__DIR__);
+    assert_false(is_file($root . '/assets/css/admin-style.css'), 'admin-style.css is retired.');
+    $files = glob($root . '/assets/css/crm-legacy-*.css') ?: array();
+    assert_true(in_array($root . '/assets/css/crm-legacy-shared.css', $files, true), 'The shared legacy file exists.');
+    $rules = 0;
+    $important = 0;
+    foreach ($files as $file) {
+        $name = basename($file);
+        $bare = (string) preg_replace('~/\*.*?\*/~s', '', (string) file_get_contents($file));
+        assert_false((bool) preg_match('/--idlm-[a-z0-9-]+\s*:/', $bare), 'STD-CSS-11: no tokens in ' . $name);
+        $important += preg_match_all('/!important\b/i', $bare);
+        preg_match_all('/([^{}]+)\{/', $bare, $preludes);
+        foreach ($preludes[1] as $prelude) {
+            $prelude = trim($prelude);
+            if ('@' === substr($prelude, 0, 1)) {
+                continue;
+            }
+            if (1 === preg_match('/^(?:from|to|\d+(?:\.\d+)?%)(?:\s*,\s*(?:from|to|\d+(?:\.\d+)?%))*$/', $prelude)) {
+                continue; // @keyframes steps
+            }
+            ++$rules;
+            foreach (preg_split('/,(?![^(]*\))/', $prelude) as $selector) {
+                $selector = trim($selector);
+                $gated = 0 === strpos($selector, ':where(body.idlm-crm-design)')
+                    || 0 === strpos($selector, ':where(html:has(> body.idlm-crm-design))::')
+                    || (bool) preg_match('/^body(?:\.[\w-]+|:not\([^()]*\))*:where\(\.idlm-crm-design\)/', $selector);
+                assert_true($gated, 'STD-CSS-11: selector without the :where() gate in ' . $name . ': ' . $selector);
+            }
+        }
+    }
+    assert_true($rules <= 1266, 'STD-CSS-11: the legacy files must not gain rules (' . $rules . ').');
+    assert_true($important <= 4, 'STD-CSS-11: the legacy files must not gain !important (' . $important . ').');
+
+    $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
+    assert_contains("wp_register_style('idlm-admin-styles', false, array('idlm-crm-legacy-shared'), IDLM_VERSION)", $assets);
+    assert_contains("array('idlm-crm-tokens', 'dashicons')", $assets);
+    assert_true(strpos($assets, "wp_register_style('idlm-crm-legacy-shared'") < strpos($assets, "wp_register_style('idlm-dashboard-styles'"), 'Legacy rules register before the files that depend on them.');
+    assert_same(array('leads', 'settings', 'admin'), IDLM_Admin_Assets::LEGACY_AREAS);
+    foreach (IDLM_Admin_Assets::LEGACY_AREAS as $area) {
+        assert_true(in_array($area, IDLM_Admin_Assets::DESIGN_AREAS, true), 'Legacy area ' . $area . ' mirrors a design area.');
+        assert_true(is_file($root . '/assets/css/crm-legacy-' . $area . '.css'), 'Legacy file for ' . $area);
+    }
+    assert_true(array_keys(IDLM_Admin_Assets::LEGACY_AREAS) === array_keys(array_values(array_intersect(IDLM_Admin_Assets::DESIGN_AREAS, IDLM_Admin_Assets::LEGACY_AREAS))) , 'Legacy areas keep DESIGN_AREAS order.');
+    $standard = (string) file_get_contents($root . '/design-system/interior-design-lead-manager/STANDARD.md');
+    assert_contains('STD-CSS-11', $standard);
 });
 
 idlm_test('CRM design layer stays fully gated, token-led and reversible', static function(): void {
@@ -663,7 +711,7 @@ idlm_test('Phone lead cards keep 44px reach, one-tap Call and WhatsApp, and a se
     $template = (string) file_get_contents($root . '/templates/admin/leads.php');
     $script = (string) file_get_contents($root . '/assets/js/admin-app.js');
     $css = (string) file_get_contents($root . '/assets/css/crm-design-leads.css');
-    $legacy = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $legacy = (string) idlm_legacy_css($root);
 
     // Both row kinds end with the phone summary cell; WhatsApp uses the Interakt-normalised number.
     assert_same(2, substr_count($reads, 'self::render_mobile_quick_cell($l, $name'), 'Standard and pre-sales rows both render the phone cell.');

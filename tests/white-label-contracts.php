@@ -24,7 +24,7 @@ idlm_test('white-label derived tokens keep sidebar accents at 3:1 and accent fil
     assert_same('#C99644', idlm_white_label_test_token($defaults, '--idlm-sidebar-accent'));
     assert_same('#111A24', idlm_white_label_test_token($defaults, '--idlm-on-accent'));
     assert_same('#C99644', idlm_white_label_test_token($defaults, '--idlm-sidebar-accent-text'));
-    assert_contains('.idlm-login-product { margin: 0 0 14px; color: var(--idlm-sidebar-accent-text, #e5c28a);', (string) file_get_contents(dirname(__DIR__) . '/assets/css/admin-style.css'));
+    assert_contains('.idlm-login-product { margin: 0 0 14px; color: var(--idlm-sidebar-accent-text, #e5c28a);', (string) idlm_legacy_css(dirname(__DIR__)));
 
     $dark = IDLM_Settings::white_label_style(array('primary_color' => '#1E1B4B', 'accent_color' => '#3B2F80', 'sidebar_color' => '#0B0A1F'));
     assert_same('#FFFFFF', idlm_white_label_test_token($dark, '--idlm-sidebar-accent'));
@@ -130,7 +130,7 @@ idlm_test('notification subjects and the wp-admin menu use the white-label works
 });
 
 idlm_test('root token aliases that would freeze white-label colours are gone', static function(): void {
-    $css = (string) file_get_contents(dirname(__DIR__) . '/assets/css/admin-style.css');
+    $css = (string) idlm_legacy_css(dirname(__DIR__));
     foreach (array('--idlm-primary:', '--idlm-primary-hover:', '--idlm-dark:', '--idlm-gold:', '--idlm-gold-dark:', '--idlm-gold-soft:') as $alias) {
         assert_false(false !== strpos($css, $alias), 'Removed alias reintroduced: ' . $alias);
     }
