@@ -1,0 +1,223 @@
+/* Temporary legacy rules, moved verbatim from admin-style.css (STD-CSS-11). Every selector sits under :where(body.idlm-crm-design),
+   which adds no specificity, so cascade order and specificity are exactly what admin-style.css had. Do not add rules here: new
+   styling goes in crm-design*.css, and rules move there area by area until these files are empty. Area: settings. */
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-white-label-preview-panel {
+    position: sticky;
+    top: var(--idlm-space-6);
+}
+
+@media (max-width: 1024px) {
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-white-label-layout {
+            grid-template-columns: 1fr;
+        }
+
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-white-label-preview-panel {
+            position: static;
+            grid-row: 1;
+        }
+
+}
+@media (max-width: 782px) {
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-brand-asset-control,
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-brand-colours {
+            grid-template-columns: 1fr;
+        }
+
+}
+:where(body.idlm-crm-design) .idlm-flex-grow { flex: 1 1 auto; min-width: 0; }
+
+:where(body.idlm-crm-design) .idlm-settings-divider { margin-top: var(--idlm-space-6); padding-top: var(--idlm-space-5); border-top: 1px solid var(--idlm-border); }
+
+@media (max-width: 782px) {
+    :where(body.idlm-crm-design) .idlm-settings-working-hours,
+    :where(body.idlm-crm-design) .idlm-mcp-copy-row {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+    :where(body.idlm-crm-design) .idlm-code-command {
+            width: 100%;
+        }
+
+}
+:where(body.idlm-crm-design) .idlm-routing-settings-group {
+    padding: 14px;
+    border: 1px solid var(--idlm-border);
+    border-radius: 9px;
+    background: var(--idlm-surface-soft);
+}
+
+@media (max-width: 900px) {
+    :where(body.idlm-crm-design) .idlm-settings-routing-overview {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+}
+@media (max-width: 520px) {
+    :where(body.idlm-crm-design) .idlm-settings-routing-overview {
+            grid-template-columns: 1fr;
+        }
+
+}
+/* Settings uses the same canvas rhythm as the frontend workspace views. */
+:where(body.idlm-crm-design) .idlm-settings-page {
+  max-width: none;
+  margin: 0;
+  padding: 18px 22px 40px;
+  background: var(--idlm-canvas);
+}
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-settings-general-metrics {
+  grid-column: 1 / -1;
+}
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-lead-fields-card .idlm-settings-disclosures {
+  gap: 12px;
+}
+
+:where(body.idlm-crm-design) .idlm-wrap #settings-capi .idlm-capi-toggle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:where(body.idlm-crm-design) .idlm-wrap #settings-routing .idlm-routing-rep-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+:where(body.idlm-crm-design) .idlm-wrap #settings-routing .idlm-routing-rep-role {
+  color: var(--idlm-text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+:where(body.idlm-crm-design) .idlm-wrap #settings-mcp .idlm-mcp-form-block {
+  align-content: start;
+  margin: 0 0 var(--idlm-space-5);
+}
+
+:where(body.idlm-crm-design) .idlm-wrap #settings-mcp .idlm-mcp-key-control {
+  width: 100%;
+  min-width: 0;
+}
+
+:where(body.idlm-crm-design) .idlm-wrap #settings-mcp .idlm-mcp-key-control > .idlm-secret-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 782px) {
+    :where(body.idlm-crm-design) .idlm-wrap #settings-mcp .idlm-mcp-key-control {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+}
+:where(body.idlm-crm-design) .idlm-wrap .idlm-secret-control__status-row .idlm-action-link-danger {
+  min-height: 26px;
+}
+
+@media (max-width: 600px) {
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-meta-connector__header,
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-meta-connector__connection-row { flex-direction: column; align-items: flex-start; }
+
+}
+:where(body.idlm-crm-design) .idlm-wrap .idlm-settings-savebar.is-dirty .idlm-settings-savebar__status::before {
+  background: var(--idlm-warning);
+}
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-settings-savebar.is-saving .idlm-settings-savebar__status::before {
+  background: var(--idlm-info);
+}
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-settings-savebar.is-saved .idlm-settings-savebar__status::before {
+  background: var(--idlm-success);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :where(body.idlm-crm-design) .idlm-settings-toast-stack .notice.idlm-settings-toast {
+        transition: none;
+      }
+
+}
+@media (max-width: 782px) {
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-token-editor__entry,
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-secret-control {
+        grid-template-columns: 1fr;
+      }
+
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-token-editor__item--movable {
+        grid-template-columns: 28px 20px minmax(0, 1fr) repeat(3, var(--idlm-target-size));
+      }
+
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-token-editor__item--movable .idlm-token-editor__alias,
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-pipeline-stage-editor__total {
+        grid-column: 2 / -1;
+      }
+
+}
+@media (max-width: 480px) {
+    :where(body.idlm-crm-design) .idlm-settings-toast-stack { width: calc(100vw - var(--idlm-space-4)); max-height: calc(100dvh - 150px); }
+
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-settings-savebar {
+        bottom: var(--idlm-space-2);
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+}
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__advanced { margin: 16px 0; }
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__steps .is-done .idlm-meta-wizard__step-number { color: var(--idlm-success); font-weight: 700; }
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__check { list-style: none; padding-inline-start: 0; }
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__mark { flex: 0 0 1.25em; font-weight: 700; text-align: center; }
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__check .is-ok .idlm-meta-wizard__mark { color: var(--idlm-success); }
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__check .is-warn .idlm-meta-wizard__mark { color: var(--idlm-warning); }
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__check .is-fail .idlm-meta-wizard__mark { color: var(--idlm-danger); }
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-connector__status.is-on { border-color: var(--idlm-success); color: var(--idlm-success); }
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-connector__status.is-paused { border-color: var(--idlm-danger); color: var(--idlm-danger); }
+
+@media (max-width: 600px) {
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-meta-connector__summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-meta-connector__copy { flex-direction: column; }
+
+}
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__howto,
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__check { margin: 0 0 16px; padding-inline-start: 20px; }
+
+@media (max-width: 600px) {
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-meta-wizard__review { grid-template-columns: 1fr; }
+
+}
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-form-mapping { min-width: 0; margin: 16px 0; padding: 16px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); }
+
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-field-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--idlm-border); }
+
+@media (max-width: 600px) {
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-meta-field-row { grid-template-columns: 1fr; gap: 8px; }
+
+}
+:where(body.idlm-crm-design) .idlm-wrap .idlm-meta-field-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 12px; font-size: 12px; font-weight: 600; }
+
+@media (max-width: 600px) {
+    :where(body.idlm-crm-design) .idlm-wrap .idlm-meta-field-head { display: none; }
+
+}

@@ -1,0 +1,119 @@
+/* Temporary legacy rules, moved verbatim from admin-style.css (STD-CSS-11). Every selector sits under :where(body.idlm-crm-design),
+   which adds no specificity, so cascade order and specificity are exactly what admin-style.css had. Do not add rules here: new
+   styling goes in crm-design*.css, and rules move there area by area until these files are empty. Area: leads. */
+
+@media (max-width: 782px) {
+    :where(body.idlm-crm-design) .idlm-bulk-actions { flex-wrap: wrap; }
+
+}
+:where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-rep-head { padding: 0 12px; }
+
+:where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-days-group {
+    grid-column: 1 / -1;
+    padding-top: 14px;
+    border-top: 1px solid var(--idlm-border);
+}
+
+:where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-form-error {
+    margin: 0 auto 0 0;
+    color: var(--idlm-danger);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* The routing dialog keeps routine setup in view and tucks operational safeguards
+ * behind one native disclosure instead of a stack of competing cards. */
+:where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-outcome {
+    margin: 0;
+    color: var(--idlm-text);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+:where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-advanced-content {
+    padding: 0 2px 4px;
+}
+
+:where(body.idlm-crm-design) .idlm-pending-pulse-dot {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    background-color: var(--idlm-brand-gold);
+    border-radius: 50%;
+}
+
+:where(body.idlm-crm-design) .idlm-import-dialog-panel {
+    width: min(700px, calc(100vw - 32px));
+}
+
+:where(body.idlm-crm-design) .idlm-export-dialog-panel {
+    width: min(760px, calc(100vw - 32px));
+}
+
+:where(body.idlm-crm-design) .idlm-import-mapping-wrapper {
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--idlm-border);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+:where(body.idlm-crm-design) .idlm-import-preview-wrapper {
+    max-height: 200px;
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 1px solid var(--idlm-border);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+:where(body.idlm-crm-design) .idlm-import-progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background-color: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    :where(body.idlm-crm-design) .idlm-bulk-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+    :where(body.idlm-crm-design) .idlm-filters-primary-row {
+            grid-template-columns: 1fr;
+            align-items: stretch;
+        }
+
+    :where(body.idlm-crm-design) .idlm-filters-secondary-row {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+}
+:where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-modal-heading {
+    min-width: 0;
+}
+
+:where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-modal-intro {
+    max-width: 60ch;
+}
+
+:where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-advanced-content {
+    padding: 0 20px 4px;
+}
+
+@media (max-width: 760px) {
+    :where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-advanced-content {
+            padding: 0 16px 4px;
+        }
+
+}
+:where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-modal-footer { min-width: 0; flex-wrap: wrap; }
+
+:where(body.idlm-crm-design) #idlm-routing-modal .idlm-routing-modal-footer .idlm-routing-form-error { min-width: min(100%, 18rem); overflow-wrap: anywhere; }
+
+:where(body.idlm-crm-design) #idlm-add-lead-form .idlm-add-lead-choice { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 8px; }
+

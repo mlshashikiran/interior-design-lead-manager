@@ -897,6 +897,22 @@ $GLOBALS['idlm_test_asset_calls'] = array();
 $GLOBALS['idlm_test_menu_calls'] = array();
 $GLOBALS['idlm_test_remote_response'] = null;
 
+/**
+ * The retired assets/css/admin-style.css as one string: every crm-legacy-*.css file in load order with the
+ * :where() gate prefix removed, so contract tests keep reading the rules the way they were written (STD-CSS-11).
+ */
+function idlm_legacy_css(?string $root = null): string {
+    $root = $root ?? dirname(__DIR__);
+    $source = '';
+    foreach (array('shared', 'leads', 'pipeline', 'dashboard', 'quotations', 'settings', 'admin', 'payments') as $area) {
+        $file = $root . '/assets/css/crm-legacy-' . $area . '.css';
+        if (is_file($file)) {
+            $source .= (string) file_get_contents($file) . "\n";
+        }
+    }
+    return str_replace(array(':where(body.idlm-crm-design) ', ':where(.idlm-crm-design)'), '', $source);
+}
+
 function idlm_test_reset_environment(): void {
     $GLOBALS['idlm_test_option_write_failures'] = array();
     $GLOBALS['wpdb']->reset();
