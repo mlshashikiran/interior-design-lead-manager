@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.108.0 — Update-available notice for open tabs (2026-11-18)
+
+Builder: Shashi. Follows 1.107.2: versioned asset URLs fix every new page load, but a tab opened before a deploy keeps old CSS and JS until reloaded. `idlm_vars.plugin_version` carries `IDLM_VERSION`. New `wp_ajax_idlm_app_version` (facade delegate plus `IDLM_Admin_Ajax::ajax_app_version()`): nonce only (no rep-access check, so design roles get it too), `nocache_headers()`, returns `{version}`. `admin-app.js` `watchForUpdates()` polls every 5 minutes while `!document.hidden`, rechecks on `visibilitychange` after 60 s, and on a different version (or a 403 `-1` expired nonce) calls `IDLMDialog.notify(..., 'info', {action: {label: 'Reload'}})`. It re-announces on every later check, so it stays within STD-CRM-13 (toasts close themselves). Reload goes through `IDLMDialog.confirm` when `window.idlmHasUnsavedChanges`. Cost: one tiny admin-ajax POST per visible tab every 5 minutes. Tests: `tests/update-notice-contracts.php` (2 cases); facade, hook and localized-key baselines updated. No schema change.
+
 ## 1.107.2 — Asset URLs change with every release (2026-11-17)
 
 Builder: Shashi. Found while verifying 1.107.1 on production: every asset loaded as `?ver=946684800`. `IDLM_Admin_Assets::asset_version()` returned `filemtime()` only, and the deterministic release ZIP (REL-006) stamps all entries with epoch 946684800, which `ZipArchive::extractTo()` keeps. Asset URLs therefore never changed between releases, and browsers and LiteSpeed kept old CSS and JS; the 1.107.0 send-back JavaScript was affected too. The version is now `IDLM_VERSION . '.' . filemtime()`, so releases change it and local edits still bust it. `STREAMLINE every plugin asset version…` asserts the new form. Production 1.107.1 was mitigated by touching its 32 CSS/JS files and purging LiteSpeed. No schema change.

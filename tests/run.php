@@ -1831,6 +1831,7 @@ require_once __DIR__ . '/manual-lead-contracts.php';
 require_once __DIR__ . '/reenquiry-contracts.php';
 require_once __DIR__ . '/presales-hold-contracts.php';
 require_once __DIR__ . '/send-back-contracts.php';
+require_once __DIR__ . '/update-notice-contracts.php';
 require_once __DIR__ . '/streamline-contracts.php';
 require_once __DIR__ . '/presales-leads-contracts.php';
 require_once __DIR__ . '/quotation-paper-contracts.php';
