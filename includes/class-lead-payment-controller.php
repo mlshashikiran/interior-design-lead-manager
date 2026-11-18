@@ -204,7 +204,7 @@ final class IDLM_Lead_Payment_Controller {
     private static function list_args($filters, $page) {
         return array_filter(array('payment_q' => $filters['q'], 'payment_balance' => $filters['balance'], 'payment_sort' => 'newest' === $filters['sort'] ? '' : $filters['sort'], 'payment_page' => $page > 1 ? (string) $page : ''), 'strlen');
     }
-    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     /**
      * One page of Won leads in the caller's payment scope, with each lead's balance.
      * Two queries whatever the page size: the scoped lead page, then the latest ledger snapshot
@@ -260,7 +260,7 @@ final class IDLM_Lead_Payment_Controller {
         }
         return $balances;
     }
-    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter
     /** List label for a balance: written status first (STD-CRM-4), amount in the payment money format. */
     public static function balance_cell($balance) {
         if (!is_array($balance) || !isset($balance['total_outstanding'], $balance['currency'])) { return '<span class="idlm-badge is-neutral">No schedule</span>'; }
@@ -318,8 +318,7 @@ final class IDLM_Lead_Payment_Controller {
     private static function dialog_open($id, $title, $description, $operation, $lead_id, $version, $return_url, $multipart = false, $attributes = '') {
         wp_enqueue_script('idlm-design-detail', IDLM_URL . 'assets/js/design-detail.js', array('idlm-dialog'), IDLM_Admin_Assets::version('js/design-detail.js'), true);
         self::$open_dialog = $id;
-        $reopen = self::$retry && self::$retry['dialog'] === $id ? ' data-payment-reopen' : '';
-        echo '<div class="idlm-modal idlm-dialog idlm-design-dialog" id="' . esc_attr($id) . '"' . $reopen . ' role="dialog" aria-modal="true" aria-labelledby="' . esc_attr($id . '-title') . '"' . ($description ? ' aria-describedby="' . esc_attr($id . '-description') . '"' : '') . ' aria-hidden="true" hidden data-idlm-dialog data-idlm-initial-focus=".idlm-dialog__body :is(textarea, select, input:not([type=hidden]))"><div class="idlm-modal-content idlm-dialog__panel"><header class="idlm-modal-header idlm-dialog__header"><div><h2 class="idlm-dialog__title" id="' . esc_attr($id . '-title') . '">' . esc_html($title) . '</h2>' . ($description ? '<p class="idlm-dialog__description" id="' . esc_attr($id . '-description') . '">' . esc_html($description) . '</p>' : '') . '</div><button type="button" class="idlm-dialog__close" data-idlm-dialog-close aria-label="Close dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button></header>';
+        echo '<div class="idlm-modal idlm-dialog idlm-design-dialog" id="' . esc_attr($id) . '"' . (self::$retry && self::$retry['dialog'] === $id ? ' data-payment-reopen' : '') . ' role="dialog" aria-modal="true" aria-labelledby="' . esc_attr($id . '-title') . '"' . ($description ? ' aria-describedby="' . esc_attr($id . '-description') . '"' : '') . ' aria-hidden="true" hidden data-idlm-dialog data-idlm-initial-focus=".idlm-dialog__body :is(textarea, select, input:not([type=hidden]))"><div class="idlm-modal-content idlm-dialog__panel"><header class="idlm-modal-header idlm-dialog__header"><div><h2 class="idlm-dialog__title" id="' . esc_attr($id . '-title') . '">' . esc_html($title) . '</h2>' . ($description ? '<p class="idlm-dialog__description" id="' . esc_attr($id . '-description') . '">' . esc_html($description) . '</p>' : '') . '</div><button type="button" class="idlm-dialog__close" data-idlm-dialog-close aria-label="Close dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button></header>';
         if (null === $operation) { echo '<div class="idlm-dialog__body">'; return; }
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         echo '<form class="idlm-design-dialog-form idlm-payment-form" method="post"' . ($multipart ? ' enctype="multipart/form-data"' : '') . ' action="' . esc_url(admin_url('admin-post.php')) . '"' . $attributes . '>';
