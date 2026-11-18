@@ -2,6 +2,66 @@
    Contract: design-system/interior-design-lead-manager/STANDARD.md. Every selector starts
    with body.idlm-crm-design. Tokens only: no hex colours, no important overrides. */
 
+/* Folded from crm-legacy-shared.css (step C): kept first, where the legacy rules loaded before the design rules. */
+body.idlm-crm-design .idlm-user-safeguard {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--idlm-text-muted);
+    font-size: 12px;
+}
+
+body.idlm-crm-design .idlm-checkbox-control {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    accent-color: var(--idlm-action);
+    cursor: pointer;
+}
+
+/* Role-level lead visibility controls on Users & Access. */
+body.idlm-crm-design .idlm-permission-role { min-width: 0; border: 1px solid var(--idlm-border); border-radius: 10px; background: var(--idlm-surface); overflow: hidden; }
+
+body.idlm-crm-design .idlm-permission-edit { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; color: var(--idlm-action-hover); font-size: 12px; font-weight: 700; }
+
+body.idlm-crm-design .idlm-permission-form { display: grid; gap: 20px; padding: 20px 18px; border-top: 1px solid var(--idlm-border); }
+
+body.idlm-crm-design .idlm-permission-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+body.idlm-crm-design .idlm-permission-option { display: flex; align-items: center; gap: 10px; min-height: 42px; box-sizing: border-box; padding: 9px 12px; border: 1px solid var(--idlm-border); border-radius: 8px; color: var(--idlm-text); font-size: 13px; cursor: pointer; }
+
+body.idlm-crm-design .idlm-permission-option:hover { background: var(--idlm-surface-soft); }
+
+body.idlm-crm-design .idlm-permission-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; border-top: 1px solid var(--idlm-border); }
+
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-permission-edit { font-size: 0; }
+}
+
+/* Users & Access: disclosure-based editing keeps operational scanning calm. */
+body.idlm-crm-design .idlm-users-page {max-width:1440px;margin-inline:auto}
+
+body.idlm-crm-design .idlm-user-list {background:var(--idlm-surface)}
+
+body.idlm-crm-design .idlm-user-row:last-child {border-bottom:0}
+
+body.idlm-crm-design .idlm-user-avatar {display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--idlm-action-soft);color:var(--idlm-action-hover);font-size:14px;font-weight:800}
+
+body.idlm-crm-design .idlm-user-identity {display:grid;gap:2px;min-width:0}
+
+body.idlm-crm-design .idlm-user-role {color:var(--idlm-text-muted);font-size:12px}
+
+body.idlm-crm-design .idlm-user-status {justify-self:start;padding:4px 8px;border-radius:999px;background:var(--idlm-success-soft);color:var(--idlm-success);font-size:11px;font-weight:700}
+
+body.idlm-crm-design .idlm-user-status.is-suspended {background:var(--idlm-danger-soft);color:var(--idlm-danger)}
+
+body.idlm-crm-design .idlm-user-edit {display:flex;align-items:center;justify-content:flex-end;gap:2px;color:var(--idlm-action-hover);font-size:12px;font-weight:700}
+
+body.idlm-crm-design .idlm-users-empty {display:grid;justify-items:center;gap:8px;padding:56px 24px;color:var(--idlm-text-muted);text-align:center}
+
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-users-header {align-items:flex-start;flex-direction:column}
+}
+
 body.idlm-crm-design .idlm-users-page :is(.idlm-users-create, .idlm-users-directory) {
     border: 1px solid var(--idlm-border);
     border-radius: var(--idlm-radius);
