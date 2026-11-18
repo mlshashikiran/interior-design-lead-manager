@@ -52,7 +52,7 @@ $idlm_email_cleared = isset($context['email_cleared']) ? $context['email_cleared
                             <p class="idlm-card-desc">Configure the error tracking log level. Higher levels record more details but may write more rows if errors occur.</p>
                             
                             <div class="idlm-form-grid two">
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <label for="idlm-telemetry-level">Error telemetry log level</label>
                                     <select id="idlm-telemetry-level" name="telemetry_level" class="idlm-select">
                                         <option value="off" <?php selected($idlm_telemetry_level, 'off'); ?>>Disabled (No Logs)</option>
@@ -61,7 +61,7 @@ $idlm_email_cleared = isset($context['email_cleared']) ? $context['email_cleared
                                         <option value="verbose" <?php selected($idlm_telemetry_level, 'verbose'); ?>>Verbose Debug (All Logs & Warnings)</option>
                                     </select>
                                 </div>
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <span class="idlm-form-label">Diagnostic export</span>
                                     <div>
                                         <a href="<?php echo esc_url($idlm_diagnostic_url); ?>" class="idlm-btn idlm-btn-secondary idlm-control-full idlm-link-plain">

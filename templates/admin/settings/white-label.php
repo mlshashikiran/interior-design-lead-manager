@@ -38,10 +38,10 @@ $idlm_asset_fields = array(
                 <div class="idlm-settings-card-head">
                     <div><h3>Brand identity</h3><p class="idlm-card-desc">Set the name and approved image assets shown on plugin-owned screens.</p></div>
                 </div>
-                <div class="idlm-form-group">
+                <div class="idlm-form-group idlm-field"<?php echo isset($idlm_errors['brand_name']) ? ' data-invalid' : ''; ?>>
                     <label for="idlm-white-label-brand-name">Brand name <span class="idlm-required">(required)</span></label>
-                    <input class="idlm-input" type="text" id="idlm-white-label-brand-name" name="white_label[brand_name]" maxlength="80" required value="<?php echo esc_attr($idlm_white_label['brand_name']); ?>" data-idlm-brand-field="brand_name" <?php echo isset($idlm_errors['brand_name']) ? 'aria-invalid="true" aria-describedby="idlm-white-label-brand-name-error"' : ''; ?>>
-                    <p class="idlm-settings-help">Shown on sign-in and account surfaces.</p>
+                    <input class="idlm-input" type="text" id="idlm-white-label-brand-name" aria-describedby="idlm-white-label-brand-name-help<?php echo isset($idlm_errors['brand_name']) ? ' idlm-white-label-brand-name-error' : ''; ?>" name="white_label[brand_name]" maxlength="80" required value="<?php echo esc_attr($idlm_white_label['brand_name']); ?>" data-idlm-brand-field="brand_name" <?php echo isset($idlm_errors['brand_name']) ? 'aria-invalid="true"' : ''; ?>>
+                    <p id="idlm-white-label-brand-name-help" class="idlm-settings-help idlm-field-help">Shown on sign-in and account surfaces.</p>
                     <?php if (isset($idlm_errors['brand_name'])): ?><p class="idlm-field-error" id="idlm-white-label-brand-name-error"><?php echo esc_html($idlm_errors['brand_name']); ?></p><?php endif; ?>
                 </div>
 
@@ -88,13 +88,13 @@ $idlm_asset_fields = array(
                 <div class="idlm-brand-colours">
                     <?php foreach ($idlm_colour_fields as $idlm_field => $idlm_copy): ?>
                         <?php $idlm_field_slug = str_replace('_', '-', $idlm_field); ?>
-                        <div class="idlm-form-group idlm-brand-colour-control <?php echo isset($idlm_errors[$idlm_field]) ? 'has-error' : ''; ?>" data-idlm-brand-colour data-contrast-required="<?php echo $idlm_copy[2] ? 'true' : 'false'; ?>">
+                        <div class="idlm-form-group idlm-field idlm-brand-colour-control <?php echo isset($idlm_errors[$idlm_field]) ? 'has-error' : ''; ?>"<?php echo isset($idlm_errors[$idlm_field]) ? ' data-invalid' : ''; ?> data-idlm-brand-colour data-contrast-required="<?php echo $idlm_copy[2] ? 'true' : 'false'; ?>">
                             <label for="idlm-white-label-<?php echo esc_attr($idlm_field_slug); ?>"><?php echo esc_html($idlm_copy[0]); ?> <span class="idlm-required">(required)</span></label>
                             <div class="idlm-brand-colour-inputs">
                                 <input type="color" value="<?php echo esc_attr($idlm_white_label[$idlm_field]); ?>" aria-label="Choose <?php echo esc_attr(strtolower($idlm_copy[0])); ?>" data-idlm-brand-colour-picker>
-                                <input class="idlm-input" type="text" id="idlm-white-label-<?php echo esc_attr($idlm_field_slug); ?>" name="white_label[<?php echo esc_attr($idlm_field); ?>]" value="<?php echo esc_attr($idlm_white_label[$idlm_field]); ?>" maxlength="7" pattern="#[0-9A-Fa-f]{6}" required spellcheck="false" data-idlm-brand-colour-value data-idlm-brand-field="<?php echo esc_attr($idlm_field); ?>" <?php echo isset($idlm_errors[$idlm_field]) ? 'aria-invalid="true" aria-describedby="idlm-white-label-' . esc_attr($idlm_field_slug) . '-error"' : ''; ?>>
+                                <input class="idlm-input" type="text" id="idlm-white-label-<?php echo esc_attr($idlm_field_slug); ?>" name="white_label[<?php echo esc_attr($idlm_field); ?>]" value="<?php echo esc_attr($idlm_white_label[$idlm_field]); ?>" maxlength="7" pattern="#[0-9A-Fa-f]{6}" required spellcheck="false" data-idlm-brand-colour-value data-idlm-brand-field="<?php echo esc_attr($idlm_field); ?>" aria-describedby="idlm-white-label-<?php echo esc_attr($idlm_field_slug); ?>-help<?php echo isset($idlm_errors[$idlm_field]) ? ' idlm-white-label-' . esc_attr($idlm_field_slug) . '-error' : ''; ?>" <?php echo isset($idlm_errors[$idlm_field]) ? 'aria-invalid="true"' : ''; ?>>
                             </div>
-                            <p class="idlm-settings-help"><?php echo esc_html($idlm_copy[1]); ?></p>
+                            <p class="idlm-settings-help idlm-field-help" id="idlm-white-label-<?php echo esc_attr($idlm_field_slug); ?>-help"><?php echo esc_html($idlm_copy[1]); ?></p>
                             <?php if ($idlm_copy[2]): ?><p class="idlm-brand-contrast" role="status" data-idlm-brand-contrast>Checking contrast with white text.</p><?php endif; ?>
                             <?php if (isset($idlm_errors[$idlm_field])): ?><p class="idlm-field-error" id="idlm-white-label-<?php echo esc_attr($idlm_field_slug); ?>-error"><?php echo esc_html($idlm_errors[$idlm_field]); ?></p><?php endif; ?>
                         </div>
@@ -107,25 +107,25 @@ $idlm_asset_fields = array(
                     <div><h3>Workspace identity</h3><p class="idlm-card-desc">Set the concise labels your team sees while entering and using the CRM.</p></div>
                 </div>
                 <div class="idlm-form-grid two">
-                    <div class="idlm-form-group">
+                    <div class="idlm-form-group idlm-field"<?php echo isset($idlm_errors['workspace_title']) ? ' data-invalid' : ''; ?>>
                         <label for="idlm-white-label-workspace-title">Workspace title <span class="idlm-required">(required)</span></label>
                         <input class="idlm-input" type="text" id="idlm-white-label-workspace-title" name="white_label[workspace_title]" maxlength="60" required value="<?php echo esc_attr($idlm_white_label['workspace_title']); ?>" data-idlm-brand-field="workspace_title" <?php echo isset($idlm_errors['workspace_title']) ? 'aria-invalid="true" aria-describedby="idlm-white-label-workspace-title-error"' : ''; ?>>
                         <?php if (isset($idlm_errors['workspace_title'])): ?><p class="idlm-field-error" id="idlm-white-label-workspace-title-error"><?php echo esc_html($idlm_errors['workspace_title']); ?></p><?php endif; ?>
                     </div>
-                    <div class="idlm-form-group">
+                    <div class="idlm-form-group idlm-field"<?php echo isset($idlm_errors['support_email']) ? ' data-invalid' : ''; ?>>
                         <label for="idlm-white-label-support-email">Support email</label>
                         <input class="idlm-input" type="email" id="idlm-white-label-support-email" name="white_label[support_email]" maxlength="100" autocomplete="email" value="<?php echo esc_attr($idlm_white_label['support_email']); ?>" data-idlm-brand-field="support_email" <?php echo isset($idlm_errors['support_email']) ? 'aria-invalid="true" aria-describedby="idlm-white-label-support-email-error"' : ''; ?>>
                         <?php if (isset($idlm_errors['support_email'])): ?><p class="idlm-field-error" id="idlm-white-label-support-email-error"><?php echo esc_html($idlm_errors['support_email']); ?></p><?php endif; ?>
                     </div>
-                    <div class="idlm-form-group full">
+                    <div class="idlm-form-group idlm-field full"<?php echo isset($idlm_errors['login_heading']) ? ' data-invalid' : ''; ?>>
                         <label for="idlm-white-label-login-heading">Sign-in heading <span class="idlm-required">(required)</span></label>
                         <input class="idlm-input" type="text" id="idlm-white-label-login-heading" name="white_label[login_heading]" maxlength="120" required value="<?php echo esc_attr($idlm_white_label['login_heading']); ?>" data-idlm-brand-field="login_heading" <?php echo isset($idlm_errors['login_heading']) ? 'aria-invalid="true" aria-describedby="idlm-white-label-login-heading-error"' : ''; ?>>
                         <?php if (isset($idlm_errors['login_heading'])): ?><p class="idlm-field-error" id="idlm-white-label-login-heading-error"><?php echo esc_html($idlm_errors['login_heading']); ?></p><?php endif; ?>
                     </div>
-                    <div class="idlm-form-group full">
+                    <div class="idlm-form-group idlm-field full">
                         <label for="idlm-white-label-footer-text">Footer text</label>
-                        <textarea class="idlm-textarea" id="idlm-white-label-footer-text" name="white_label[footer_text]" rows="3" maxlength="180" data-idlm-brand-field="footer_text"><?php echo esc_textarea($idlm_white_label['footer_text']); ?></textarea>
-                        <p class="idlm-settings-help">Plain text only. Leave blank to omit.</p>
+                        <textarea class="idlm-textarea" id="idlm-white-label-footer-text" aria-describedby="idlm-white-label-footer-text-help" name="white_label[footer_text]" rows="3" maxlength="180" data-idlm-brand-field="footer_text"><?php echo esc_textarea($idlm_white_label['footer_text']); ?></textarea>
+                        <p id="idlm-white-label-footer-text-help" class="idlm-settings-help idlm-field-help">Plain text only. Leave blank to omit.</p>
                     </div>
                 </div>
             </article>

@@ -24,34 +24,34 @@ $idlm_value_labels = isset($context['value_labels']) ? $context['value_labels'] 
                             <article class="idlm-card" id="idlm-notification-settings">
                                 <h3>Notifications</h3>
                                 <p class="idlm-card-desc">Choose which notifications this plugin can send. All are off by default. Save settings to apply changes.</p>
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <label class="idlm-checkbox-row"><input type="checkbox" name="handoff_notifications_enabled" value="1" <?php checked($context['handoff_notifications_enabled'] ?? '0', '1'); ?>> Email previous and new owners after handoff</label>
                                 </div>
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <label class="idlm-checkbox-row"><input type="checkbox" name="routing_exception_notifications_enabled" value="1" <?php checked($context['routing_exception_notifications_enabled'] ?? '0', '1'); ?>> Email the administrator about routing exceptions</label>
                                 </div>
-                                <div class="idlm-form-group">
-                                    <label class="idlm-checkbox-row"><input type="checkbox" name="whatsapp_notifications_enabled" value="1" <?php checked($context['whatsapp_notifications_enabled'] ?? '0', '1'); ?>> Enable outgoing WhatsApp automations</label>
-                                    <p class="description">Requires the Interakt integration and event mappings in Automation. Turning this off stops new sends and queued work; incoming replies can still be captured. Enabling it does not send missed events automatically.</p>
+                                <div class="idlm-form-group idlm-field">
+                                    <label class="idlm-checkbox-row"><input type="checkbox" id="idlm-whatsapp-notifications-enabled" aria-describedby="idlm-whatsapp-notifications-enabled-help" name="whatsapp_notifications_enabled" value="1" <?php checked($context['whatsapp_notifications_enabled'] ?? '0', '1'); ?>> Enable outgoing WhatsApp automations</label>
+                                    <p id="idlm-whatsapp-notifications-enabled-help" class="description idlm-field-help">Requires the Interakt integration and event mappings in Automation. Turning this off stops new sends and queued work; incoming replies can still be captured. Enabling it does not send missed events automatically.</p>
                                 </div>
                                 <p class="description">Notifications already being delivered cannot be recalled. CRM records, assignments and on-screen reminders work with these switches off.</p>
                             </article>
                             <article class="idlm-card idlm-settings-general-metrics">
                                 <h3>Firm metrics and targets</h3>
                                 <div class="idlm-form-grid three" data-idlm-ui="grid-three">
-                                    <div class="idlm-form-group">
+                                    <div class="idlm-form-group idlm-field">
                                         <label for="idlm-lead-target">Monthly lead volume target</label>
                                         <input type="number" id="idlm-lead-target" name="lead_target" class="idlm-input" min="0" inputmode="numeric" value="<?php echo esc_attr($idlm_lead_target); ?>">
                                     </div>
-                                    <div class="idlm-form-group">
+                                    <div class="idlm-form-group idlm-field">
                                         <label for="idlm-conversion-target">Monthly Won deals target</label>
                                         <input type="number" id="idlm-conversion-target" name="conversion_target" class="idlm-input" min="0" inputmode="numeric" value="<?php echo esc_attr($idlm_conv_target); ?>">
                                     </div>
-                                    <div class="idlm-form-group">
+                                    <div class="idlm-form-group idlm-field">
                                         <label for="idlm-currency-code">Preferred currency code</label>
                                         <input type="text" id="idlm-currency-code" name="currency_code" class="idlm-input" value="<?php echo esc_attr($idlm_currency_code); ?>" placeholder="e.g. INR" maxlength="3" autocapitalize="characters" data-idlm-ui="uppercase">
                                     </div>
-                                    <div class="idlm-form-group full">
+                                    <div class="idlm-form-group idlm-field full">
                                         <label class="idlm-checkbox-row">
                                             <input type="checkbox" name="reps_see_all" value="1" <?php checked($idlm_reps_see_all, '1'); ?> data-idlm-ui="checkbox">
                                             <span>Reps see all leads (Shared Inbox Model)</span>
@@ -81,7 +81,7 @@ $idlm_value_labels = isset($context['value_labels']) ? $context['value_labels'] 
                                 <p class="idlm-card-desc">Keep reusable choices organized by the part of the CRM that uses them. Open a group to add, remove, or reorder its options.</p>
                                 <div class="idlm-form-grid two idlm-ui-label-editor">
                                     <?php foreach (array('call_status' => 'Call Status', 'lost_reason' => 'Lost Reason', 'preferred_studio' => 'Preferred Studio', 'num_rooms' => 'Rooms') as $idlm_key => $idlm_default): ?>
-                                        <div class="idlm-form-group"><label for="idlm-ui-label-<?php echo esc_attr($idlm_key); ?>"><?php echo esc_html($idlm_default); ?> display label</label><input class="idlm-input" id="idlm-ui-label-<?php echo esc_attr($idlm_key); ?>" name="ui_labels[<?php echo esc_attr($idlm_key); ?>]" value="<?php echo esc_attr(isset($idlm_ui_labels[$idlm_key]) ? $idlm_ui_labels[$idlm_key] : $idlm_default); ?>"></div>
+                                        <div class="idlm-form-group idlm-field"><label for="idlm-ui-label-<?php echo esc_attr($idlm_key); ?>"><?php echo esc_html($idlm_default); ?> display label</label><input class="idlm-input" id="idlm-ui-label-<?php echo esc_attr($idlm_key); ?>" name="ui_labels[<?php echo esc_attr($idlm_key); ?>]" value="<?php echo esc_attr(isset($idlm_ui_labels[$idlm_key]) ? $idlm_ui_labels[$idlm_key] : $idlm_default); ?>"></div>
                                     <?php endforeach; ?>
                                 </div>
                                 <div class="idlm-settings-disclosures">

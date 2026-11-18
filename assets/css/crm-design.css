@@ -1180,6 +1180,11 @@ body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filter
     margin-top: 0;
 }
 
+/* The flex layout above outranks the browser's [hidden] rule; fields toggled with `hidden` must still hide. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-field[hidden] {
+    display: none;
+}
+
 body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-field-group {
     display: flex;
     flex-direction: column;

@@ -45,14 +45,14 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                                     <h3 class="idlm-heading-flush"><label for="idlm-meta-capi-enabled">Meta Conversion API (CAPI)</label></h3>
                                 </div>
                                 <div class="idlm-form-grid two">
-                                    <div class="idlm-form-group">
+                                    <div class="idlm-form-group idlm-field">
                                         <label for="idlm-meta-pixel-id">Meta Pixel ID</label>
                                         <input type="text" id="idlm-meta-pixel-id" name="meta_pixel_id" class="idlm-input" value="<?php echo esc_attr($idlm_meta_pixel_id); ?>">
                                     </div>
-                                    <div class="idlm-form-group">
+                                    <div class="idlm-form-group idlm-field">
                                         <label for="idlm-meta-access-token">Meta access token</label>
-                                        <input type="password" id="idlm-meta-access-token"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('meta_access_token'); ?> name="meta_access_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_access_token); ?>">
-                                <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
+                                        <input type="password" id="idlm-meta-access-token" aria-describedby="idlm-meta-access-token-help"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('meta_access_token'); ?> name="meta_access_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_meta_access_token); ?>">
+                                <p id="idlm-meta-access-token-help" class="description idlm-field-help">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="meta_access_token_clear" value="1"> Clear saved credential</label>
                                     </div>
                                 </div>
@@ -83,10 +83,10 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                                     <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-test-meta-capi" data-idlm-ui="action-outline">Test Meta CAPI Connection</button>
                                 </div>
 
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <label for="idlm-meta-test-event-code">Events Manager test code</label>
                                     <input type="text" id="idlm-meta-test-event-code" class="idlm-input" autocomplete="off" spellcheck="false" placeholder="TEST12345" aria-describedby="idlm-meta-test-event-help">
-                                    <p class="description" id="idlm-meta-test-event-help">Sends one sample event, with no lead data, to Events Manager &gt; Test Events using the saved Pixel ID and token. The code is not saved.</p>
+                                    <p class="description idlm-field-help" id="idlm-meta-test-event-help">Sends one sample event, with no lead data, to Events Manager &gt; Test Events using the saved Pixel ID and token. The code is not saved.</p>
                                 </div>
                                 <div class="idlm-table-actions">
                                     <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-send-meta-test-event" data-idlm-ui="action-outline">Send test event</button>
@@ -100,14 +100,14 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                                     <h3 class="idlm-heading-flush"><label for="idlm-google-capi-enabled">Google Ads offline conversions</label></h3>
                                 </div>
                                 <div class="idlm-form-grid two">
-                                    <div class="idlm-form-group">
+                                    <div class="idlm-form-group idlm-field">
                                         <label for="idlm-google-measurement-id">GA4 Measurement ID</label>
                                         <input type="text" id="idlm-google-measurement-id" name="google_measurement_id" class="idlm-input" value="<?php echo esc_attr($idlm_google_measurement_id); ?>">
                                     </div>
-                                    <div class="idlm-form-group">
+                                    <div class="idlm-form-group idlm-field">
                                         <label for="idlm-google-api-secret">GA4 API secret</label>
-                                        <input type="password" id="idlm-google-api-secret"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('google_api_secret'); ?> name="google_api_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_google_api_secret); ?>">
-                                <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
+                                        <input type="password" id="idlm-google-api-secret" aria-describedby="idlm-google-api-secret-help"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('google_api_secret'); ?> name="google_api_secret" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_google_api_secret); ?>">
+                                <p id="idlm-google-api-secret-help" class="description idlm-field-help">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="google_api_secret_clear" value="1"> Clear saved credential</label>
                                     </div>
                                 </div>
@@ -139,7 +139,7 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                                 ?>
                                 <h4 class="idlm-settings-subtitle">Google Ads offline conversion import (OCI) CSV feed</h4>
                                 <p class="idlm-card-desc">Use this URL to schedule automatic conversion uploads in Google Ads (fetch schedule: e.g. daily), or download the CSV manually.</p>
-                                <div class="idlm-form-group" data-idlm-ui="mt-2">
+                                <div class="idlm-form-group idlm-field" data-idlm-ui="mt-2">
                                     <input type="text" class="idlm-input" readonly value="<?php echo esc_url($idlm_feed_url); ?>" id="idlm-google-oci-feed-url">
                                 </div>
                                 <div class="idlm-table-actions">
@@ -156,14 +156,14 @@ $idlm_linkedin_event_mappings = isset($context['linkedin_event_mappings']) ? $co
                                 <h3 class="idlm-heading-flush"><label for="idlm-linkedin-capi-enabled">LinkedIn Conversion API</label></h3>
                             </div>
                             <div class="idlm-form-grid two">
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <label for="idlm-linkedin-conversion-id">LinkedIn conversion action partner ID</label>
                                     <input type="text" id="idlm-linkedin-conversion-id" name="linkedin_conversion_id" class="idlm-input" value="<?php echo esc_attr($idlm_linkedin_conversion_id); ?>">
                                 </div>
-                                <div class="idlm-form-group">
+                                <div class="idlm-form-group idlm-field">
                                     <label for="idlm-linkedin-access-token">LinkedIn access token</label>
-                                    <input type="password" id="idlm-linkedin-access-token"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('linkedin_access_token'); ?> name="linkedin_access_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_linkedin_access_token); ?>">
-                                <p class="description">Leave blank to retain the saved credential. Enter a value to replace it.</p>
+                                    <input type="password" id="idlm-linkedin-access-token" aria-describedby="idlm-linkedin-access-token-help"<?php IDLM_Admin_Settings_Renderer::credential_saved_attribute('linkedin_access_token'); ?> name="linkedin_access_token" class="idlm-input" autocomplete="new-password" value="<?php echo esc_attr($idlm_linkedin_access_token); ?>">
+                                <p id="idlm-linkedin-access-token-help" class="description idlm-field-help">Leave blank to retain the saved credential. Enter a value to replace it.</p>
                                 <label><input type="checkbox" name="linkedin_access_token_clear" value="1"> Clear saved credential</label>
                                 </div>
                             </div>
