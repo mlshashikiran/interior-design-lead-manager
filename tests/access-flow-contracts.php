@@ -46,7 +46,7 @@ if (!function_exists('username_exists')) {
         return $id;
     }
     function wp_update_user($data) { return (int) $data['ID']; }
-    function retrieve_password($login) { return true; }
+    function retrieve_password($login) { $GLOBALS['idlm_test_reset_logins'][] = $login; return $GLOBALS['idlm_test_reset_result'] ?? true; }
 }
 
 if (!function_exists('idlm_crm_default_capabilities')) {
@@ -706,4 +706,39 @@ idlm_test('new required files are in the release inventory', static function(): 
         assert_true(is_file(dirname(__DIR__) . '/' . $file), $file);
         assert_false(IDLM_Release_Artifact::is_excluded($file, IDLM_Release_Artifact::distignore_patterns(dirname(__DIR__))), $file);
     }
+});
+
+idlm_test('password-reset buttons send only the link and report whether it went', static function(): void {
+    idlm_access_fixture();
+    $account = idlm_access_account(5, array('sales_manager'));
+    $GLOBALS['idlm_test_reset_logins'] = array();
+    $GLOBALS['idlm_test_reset_result'] = true;
+    $send = static fn(array $post): string => idlm_access_run(array('IDLM_Admin_Users_Controller', 'handle_send_reset'), $post);
+
+    // The Team button sends to that person and changes nothing else, even when edit fields ride along.
+    assert_contains('reset-sent?0=idlm_users_notice', $send(array('user_id' => 5, 'role' => 'administrator', 'crm_access_disabled' => '1', 'email' => 'other@example.test')));
+    assert_same(array('person5'), $GLOBALS['idlm_test_reset_logins']);
+    assert_same(array('sales_manager'), $account->roles);
+    assert_same('', get_user_meta(5, IDLM_Admin_Users_Controller::DISABLED_META_KEY, true));
+    assert_same(array(), idlm_access_events());
+    assert_contains('invalid-user?0=idlm_users_error', $send(array('user_id' => 404)));
+    $GLOBALS['idlm_test_reset_result'] = new WP_Error('mail', 'Mail failed');
+    assert_contains('reset-failed?0=idlm_users_error', $send(array('user_id' => 5)));
+
+    // The bootstrap's add_query_arg() stub puts the value first: 'reset-sent?0=idlm_users_notice'.
+    // Only administrators may send one.
+    idlm_test_login(9, array('sales_manager'));
+    $denied = $send(array('user_id' => 5));
+    assert_false(false !== strpos($denied, 'reset-sent'), 'A non-administrator must not send a reset link.');
+
+    // My account sends to the signed-in person only, and saves nothing.
+    $GLOBALS['idlm_test_reset_logins'] = array();
+    $GLOBALS['idlm_test_reset_result'] = true;
+    idlm_access_account(9, array('sales_manager'));
+    idlm_test_login(9, array('sales_manager'));
+    $mine = idlm_access_run(array('IDLM_Admin_Account_Controller', 'handle_send_reset'), array('user_id' => 5, 'first_name' => 'Changed', 'idlm_return_url' => 'https://example.test/workspace/'));
+    assert_contains('reset-sent?0=idlm_account_notice', $mine);
+    assert_same(array('person9'), $GLOBALS['idlm_test_reset_logins']);
+    assert_same('', $GLOBALS['idlm_test_users'][9]->first_name);
+    unset($GLOBALS['idlm_test_reset_result'], $GLOBALS['idlm_test_reset_logins']);
 });

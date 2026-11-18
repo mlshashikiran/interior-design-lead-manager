@@ -99,6 +99,10 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 * Added: The Payments list is shown again to administrators and managers.
 * Added: The Payments list can be searched by name, phone, email, quote number or lead number, shows what each lead still owes (the same figure as its payment page), and can show leads with money outstanding first or only.
 
+= 1.110.0 =
+* Changed: "Send password-reset link" on a team member and "Email me a password-reset link" on My account are buttons that send the link straight away, without saving anything else on the form.
+* Changed: Form fields in Settings, Users and access, Leads dialogs and filters, My account and the logs share one layout: help text sits under its field and is read out with it, and groups of checkboxes have a heading screen readers announce.
+
 = 1.109.1 =
 * Removed: More legacy styles that the current design overrides. Screens look the same.
 

@@ -14,6 +14,8 @@ class IDLM_Admin {
         add_action('admin_post_idlm_rotate_api_credential', array(__CLASS__, 'handle_rotate_api_credential'));
         add_action('admin_post_idlm_create_user', array(__CLASS__, 'handle_create_user'));
         add_action('admin_post_idlm_update_user', array(__CLASS__, 'handle_update_user'));
+        add_action('admin_post_idlm_send_user_reset', array(__CLASS__, 'handle_send_user_reset'));
+        add_action('admin_post_idlm_send_my_reset', array(__CLASS__, 'handle_send_my_reset'));
 
         // Shortcodes for frontend lead manager & dashboard
         add_shortcode('idlm_leads_list', array(__CLASS__, 'render_leads_list_shortcode'));
@@ -293,6 +295,10 @@ class IDLM_Admin {
     }
     public static function handle_create_user() { return IDLM_Admin_Users_Controller::handle_create(); }
     public static function handle_update_user() { return IDLM_Admin_Users_Controller::handle_update(); }
+    /** Email a password-reset link to one person, without saving their edit form. */
+    public static function handle_send_user_reset() { return IDLM_Admin_Users_Controller::handle_send_reset(); }
+    /** Email the signed-in person a password-reset link, without saving My account. */
+    public static function handle_send_my_reset() { return IDLM_Admin_Account_Controller::handle_send_reset(); }
 
     /** Register the deliberately small wp-admin utility page. */
     public static function register_admin_menus() {

@@ -75,8 +75,8 @@ if (!isset($idlm_roles[$idlm_edit_slug])) { $idlm_edit_slug = ''; }
         <input type="hidden" name="access_role" value="<?php echo esc_attr($idlm_edit_slug); ?>">
         <input type="hidden" name="idlm_return_url" value="<?php echo esc_url($idlm_return_url); ?>">
         <?php wp_nonce_field('idlm_update_role_access'); ?>
-        <fieldset class="idlm-role-scope-group">
-            <legend>Which leads they see</legend>
+        <fieldset class="idlm-fieldset idlm-role-scope-group">
+            <legend class="idlm-fieldset-legend">Which leads they see</legend>
             <label class="idlm-role-scope-option"><input type="radio" name="role_scope" value="default" data-idlm-role-scope <?php checked($idlm_scope, 'default'); ?>><span><strong>Default for this role</strong> <span data-idlm-default-outcome data-idlm-text-base="<?php echo esc_attr($idlm_base['text']); ?>" data-idlm-text-assign="<?php echo esc_attr($idlm_assign['text']); ?>" data-idlm-text-none="<?php echo esc_attr($idlm_none['text']); ?>" data-idlm-base-depends="<?php echo $idlm_base['depends_on_setting'] ? '1' : '0'; ?>"><?php echo esc_html($idlm_now['text']); ?></span> <a data-idlm-default-link href="<?php echo esc_url(add_query_arg('idlm_view', 'settings', $idlm_view_base_url) . '#tab-general'); ?>"<?php echo $idlm_now['depends_on_setting'] ? '' : ' hidden'; ?>>Open the setting</a></span></label>
             <label class="idlm-role-scope-option"><input type="radio" name="role_scope" value="assigned" data-idlm-role-scope <?php checked($idlm_scope, 'assigned'); ?>><span><strong>Only assigned leads</strong> People see only leads assigned to them.</span></label>
             <label class="idlm-role-scope-option"><input type="radio" name="role_scope" value="all" data-idlm-role-scope <?php checked($idlm_scope, 'all'); ?>><span><strong>All leads</strong> People see every lead, whoever it is assigned to.</span></label>
@@ -88,8 +88,8 @@ if (!isset($idlm_roles[$idlm_edit_slug])) { $idlm_edit_slug = ''; }
         $idlm_group_permissions = array_intersect_key($idlm_permissions, array_flip($idlm_group_caps));
         if (!$idlm_group_permissions) { continue; }
 ?>
-        <fieldset class="idlm-permission-group">
-            <legend><?php echo esc_html($idlm_group); ?></legend>
+        <fieldset class="idlm-fieldset idlm-permission-group">
+            <legend class="idlm-fieldset-legend"><?php echo esc_html($idlm_group); ?></legend>
             <div class="idlm-permission-group-tools"><button type="button" class="idlm-action-link" data-idlm-permission-all="1">Select all</button><button type="button" class="idlm-action-link" data-idlm-permission-all="0">Clear</button></div>
             <div class="idlm-permission-options">
             <?php foreach ($idlm_group_permissions as $idlm_capability => $idlm_permission_label):

@@ -36,11 +36,11 @@ $idlm_status_tabs = array('' => 'All', 'failed' => 'Failed', 'success' => 'Succe
         <?php else: ?>
             <input type="hidden" name="idlm_view" value="capi-logs">
         <?php endif; ?>
-        <div class="idlm-form-group idlm-log-search-field">
+        <div class="idlm-form-group idlm-field idlm-log-search-field">
             <label for="idlm-capi-log-search">Search logs</label>
             <input class="idlm-input" id="idlm-capi-log-search" name="log_search" type="search" data-idlm-filter-field value="<?php echo esc_attr($idlm_filters['search'] ?? ''); ?>" placeholder="Email, lead ID, event, or platform">
         </div>
-        <div class="idlm-form-group">
+        <div class="idlm-form-group idlm-field">
             <label for="idlm-capi-log-status">Delivery status</label>
             <select class="idlm-input" id="idlm-capi-log-status" name="log_status" data-idlm-filter-field>
                 <option value="">All statuses</option>
@@ -48,15 +48,15 @@ $idlm_status_tabs = array('' => 'All', 'failed' => 'Failed', 'success' => 'Succe
                 <option value="failed" <?php selected($idlm_filters['status'] ?? '', 'failed'); ?>>Failed</option>
             </select>
         </div>
-        <div class="idlm-form-group">
+        <div class="idlm-form-group idlm-field">
             <label for="idlm-capi-log-date-range">Date range</label>
             <select class="idlm-input" id="idlm-capi-log-date-range" name="log_date_range" data-idlm-date-range data-idlm-filter-field><?php IDLM_Date_Ranges::print_options($idlm_filters['range'] ?? '', 'All time'); ?></select>
         </div>
-        <div class="idlm-form-group" data-idlm-date-custom-for="idlm-capi-log-date-range"<?php echo 'custom' === ($idlm_filters['range'] ?? '') ? '' : ' hidden'; ?>>
+        <div class="idlm-form-group idlm-field" data-idlm-date-custom-for="idlm-capi-log-date-range"<?php echo 'custom' === ($idlm_filters['range'] ?? '') ? '' : ' hidden'; ?>>
             <label for="idlm-capi-log-date-from">From date</label>
             <input class="idlm-input" id="idlm-capi-log-date-from" name="log_date_from" type="date" data-idlm-filter-field value="<?php echo esc_attr($idlm_filters['date_from'] ?? ''); ?>">
         </div>
-        <div class="idlm-form-group" data-idlm-date-custom-for="idlm-capi-log-date-range"<?php echo 'custom' === ($idlm_filters['range'] ?? '') ? '' : ' hidden'; ?>>
+        <div class="idlm-form-group idlm-field" data-idlm-date-custom-for="idlm-capi-log-date-range"<?php echo 'custom' === ($idlm_filters['range'] ?? '') ? '' : ' hidden'; ?>>
             <label for="idlm-capi-log-date-to">To date</label>
             <input class="idlm-input" id="idlm-capi-log-date-to" name="log_date_to" type="date" data-idlm-filter-field value="<?php echo esc_attr($idlm_filters['date_to'] ?? ''); ?>">
         </div>

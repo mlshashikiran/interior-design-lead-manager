@@ -71,7 +71,7 @@ $idlm_last=(int)($idlm_summary['last_import'] ?? 0);
                 <li>In Business Settings &gt; Integrations &gt; Leads access, allow the app or system user to read leads.</li>
             </ol>
             <div class="idlm-form-grid two">
-                <div class="idlm-form-group">
+                <div class="idlm-form-group idlm-field">
                     <label for="idlm-connector-app_id">Meta app ID</label>
                     <input type="text" inputmode="numeric" class="idlm-input" id="idlm-connector-app_id" name="idlm_connector_app_id" value="<?php echo esc_attr($idlm_config['app_id'] ?? ''); ?>">
                 </div>
@@ -79,8 +79,8 @@ $idlm_last=(int)($idlm_summary['last_import'] ?? 0);
         echo IDLM_View::render('admin/settings/connector-secret.php', array('key'=>'app_secret','label'=>'Meta app secret','saved'=>$idlm_credentials['app_secret'] ?? false,'managed'=>$idlm_connector['managed_credentials']['app_secret'] ?? false)); ?>
             <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The fixed credential subtemplate escapes labels/IDs and outputs only credential-presence booleans; saved secret values are never passed.
         echo IDLM_View::render('admin/settings/connector-secret.php', array('key'=>'access_token','label'=>'System user access token','saved'=>$idlm_credentials['access_token'] ?? false,'managed'=>$idlm_connector['managed_credentials']['access_token'] ?? false)); ?>
-                <div class="idlm-form-group"><label for="idlm-connector-page_id">Facebook Page ID</label><input class="idlm-input" inputmode="numeric" id="idlm-connector-page_id" name="idlm_connector_page_id" value="<?php echo esc_attr($idlm_config['page_id'] ?? ''); ?>"><p class="description">Page settings &gt; About &gt; Page transparency, or Business Settings &gt; Pages.</p></div>
-                <div class="idlm-form-group"><label for="idlm-connector-forms">Instant Form IDs (comma-separated)</label><input class="idlm-input" id="idlm-connector-forms" name="idlm_connector_form_ids" value="<?php echo esc_attr(implode(', ', $idlm_config['forms'] ?? array())); ?>"><p class="description">One to twenty form IDs from Meta Business Suite &gt; Instant forms.</p></div>
+                <div class="idlm-form-group idlm-field"><label for="idlm-connector-page_id">Facebook Page ID</label><input class="idlm-input" inputmode="numeric" id="idlm-connector-page_id" aria-describedby="idlm-connector-page_id-help" name="idlm_connector_page_id" value="<?php echo esc_attr($idlm_config['page_id'] ?? ''); ?>"><p id="idlm-connector-page_id-help" class="description idlm-field-help">Page settings &gt; About &gt; Page transparency, or Business Settings &gt; Pages.</p></div>
+                <div class="idlm-form-group idlm-field"><label for="idlm-connector-forms">Instant Form IDs (comma-separated)</label><input class="idlm-input" id="idlm-connector-forms" aria-describedby="idlm-connector-forms-help" name="idlm_connector_form_ids" value="<?php echo esc_attr(implode(', ', $idlm_config['forms'] ?? array())); ?>"><p id="idlm-connector-forms-help" class="description idlm-field-help">One to twenty form IDs from Meta Business Suite &gt; Instant forms.</p></div>
             </div>
             <div class="idlm-table-actions"><button type="button" class="idlm-btn idlm-btn-primary" data-idlm-manual-next="2">Next: webhook</button></div>
         </details>
@@ -88,7 +88,7 @@ $idlm_last=(int)($idlm_summary['last_import'] ?? 0);
             <summary><strong>2. Configure the lead webhook</strong></summary>
             <p>In your Meta app, add the Webhooks product, choose <strong>Page</strong>, enter the callback URL and a verification token of your choice, then subscribe to the <code>leadgen</code> field. Use the same token here.</p>
             <div class="idlm-form-grid two">
-                <div class="idlm-form-group"><label for="idlm-connector-url">Meta Lead Ads callback URL</label><div class="idlm-meta-connector__copy"><input class="idlm-input" id="idlm-connector-url" value="<?php echo esc_attr(get_rest_url(null,'idlm/v1/meta-leads')); ?>" readonly><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-copy-field="idlm-connector-url">Copy</button></div></div>
+                <div class="idlm-form-group idlm-field"><label for="idlm-connector-url">Meta Lead Ads callback URL</label><div class="idlm-meta-connector__copy"><input class="idlm-input" id="idlm-connector-url" value="<?php echo esc_attr(get_rest_url(null,'idlm/v1/meta-leads')); ?>" readonly><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-copy-field="idlm-connector-url">Copy</button></div></div>
                 <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The fixed credential subtemplate escapes labels/IDs and outputs only credential-presence booleans; saved secret values are never passed.
         echo IDLM_View::render('admin/settings/connector-secret.php', array('key'=>'verify_token','label'=>'Webhook verification token','saved'=>$idlm_credentials['verify_token'] ?? false,'managed'=>$idlm_connector['managed_credentials']['verify_token'] ?? false)); ?>
             </div>
@@ -112,14 +112,14 @@ $idlm_last=(int)($idlm_summary['last_import'] ?? 0);
                 <summary>Other way: connect with Facebook sign-in</summary>
                 <p>Instead of a system user token, an administrator can sign in with Facebook to choose the Page and forms. This needs a Facebook Login for Business configuration, and the Page token comes from that administrator’s account.</p>
                 <div class="idlm-form-grid two">
-                    <div class="idlm-form-group">
+                    <div class="idlm-form-group idlm-field">
                         <label for="idlm-connector-login_config_id">Facebook Login configuration ID</label>
                         <input type="text" inputmode="numeric" class="idlm-input" id="idlm-connector-login_config_id" name="idlm_connector_login_config_id" value="<?php echo esc_attr($idlm_config['login_config_id'] ?? ''); ?>">
                     </div>
-                    <div class="idlm-form-group">
+                    <div class="idlm-form-group idlm-field">
                         <label for="idlm-facebook-redirect-url">Facebook Login redirect URL</label>
-                        <div class="idlm-meta-connector__copy"><input class="idlm-input" id="idlm-facebook-redirect-url" value="<?php echo esc_attr(IDLM_Facebook_Direct::callback_url()); ?>" readonly><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-copy-field="idlm-facebook-redirect-url">Copy</button></div>
-                        <p class="description">Add this exact URL to your app’s valid OAuth redirect URIs. Live sign-in requires a public HTTPS address.</p>
+                        <div class="idlm-meta-connector__copy"><input class="idlm-input" id="idlm-facebook-redirect-url" aria-describedby="idlm-facebook-redirect-url-help" value="<?php echo esc_attr(IDLM_Facebook_Direct::callback_url()); ?>" readonly><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-copy-field="idlm-facebook-redirect-url">Copy</button></div>
+                        <p id="idlm-facebook-redirect-url-help" class="description idlm-field-help">Add this exact URL to your app’s valid OAuth redirect URIs. Live sign-in requires a public HTTPS address.</p>
                     </div>
                 </div>
     <div class="idlm-meta-connector__connection" data-idlm-facebook-connect data-idlm-facebook-ready="<?php echo !empty($idlm_facebook['ready']) ? '1' : '0'; ?>">
@@ -143,7 +143,7 @@ $idlm_last=(int)($idlm_summary['last_import'] ?? 0);
         <?php endif; ?>
         <p role="status" aria-live="polite" data-idlm-facebook-status></p>
         <div data-idlm-facebook-picker hidden>
-            <div class="idlm-form-group">
+            <div class="idlm-form-group idlm-field">
                 <label for="idlm-facebook-pages">Choose your Facebook Page</label>
                 <select id="idlm-facebook-pages" class="idlm-input" data-idlm-facebook-pages><option value="">Select a Page</option></select>
             </div>
@@ -186,7 +186,7 @@ $idlm_last=(int)($idlm_summary['last_import'] ?? 0);
             <p class="description">These fallback mappings apply only to forms without their own saved mapping. Full name defaults to splitting <code>full_name</code> into first and last name. Keep these for existing or manual connections when form questions cannot be loaded.</p>
         <div class="idlm-form-grid two">
         <?php foreach (($idlm_connector['mapping_fields'] ?? array()) as $idlm_key=>$idlm_default): ?>
-            <div class="idlm-form-group">
+            <div class="idlm-form-group idlm-field">
                 <label for="idlm-connector-map-<?php echo esc_attr($idlm_key); ?>"><?php echo esc_html(ucwords(str_replace('_',' ',$idlm_key))); ?></label>
                 <input class="idlm-input" id="idlm-connector-map-<?php echo esc_attr($idlm_key); ?>" name="idlm_connector_map_<?php echo esc_attr($idlm_key); ?>" value="<?php echo esc_attr($idlm_config['mappings'][$idlm_key] ?? $idlm_default); ?>">
             </div>
@@ -211,7 +211,7 @@ $idlm_last=(int)($idlm_summary['last_import'] ?? 0);
     </div>
     <div class="idlm-interakt-capture__panel">
         <label class="idlm-interakt-capture__option"><input type="checkbox" name="idlm_whatsapp_capi_enabled" value="1" <?php checked($idlm_connector['whatsapp_capi'] ?? '0','1'); ?>><span><strong>Report WhatsApp campaign conversions</strong><small>Send eligible outcomes to Meta using your existing conversion API connection.</small></span></label>
-    <div class="idlm-form-group">
+    <div class="idlm-form-group idlm-field">
         <label for="idlm-whatsapp-page-id">Facebook Page ID used by WhatsApp ads</label>
         <input class="idlm-input" type="text" inputmode="numeric" id="idlm-whatsapp-page-id" name="idlm_connector_whatsapp_page_id" value="<?php echo esc_attr($idlm_config['whatsapp_page_id'] ?? ''); ?>">
     </div>
@@ -222,7 +222,7 @@ $idlm_last=(int)($idlm_summary['last_import'] ?? 0);
         <p class="description">Separate from Instant Form events. Won → Purchase is the default; leave other stages blank until their supported event names are configured for your Meta business-messaging dataset. Uses the existing Meta CAPI destination and access token.</p>
         <div class="idlm-form-grid two">
         <?php foreach (array('New','Qualified','Quote Shared','Won') as $idlm_stage): ?>
-            <div class="idlm-form-group">
+            <div class="idlm-form-group idlm-field">
                 <label for="idlm-wa-event-<?php echo esc_attr(sanitize_key($idlm_stage)); ?>"><?php echo esc_html($idlm_stage); ?></label>
                 <input class="idlm-input" id="idlm-wa-event-<?php echo esc_attr(sanitize_key($idlm_stage)); ?>" name="idlm_whatsapp_event_<?php echo esc_attr(sanitize_key($idlm_stage)); ?>" value="<?php echo esc_attr($idlm_config['whatsapp_events'][$idlm_stage] ?? ($idlm_stage==='Won' ? 'Purchase' : '')); ?>">
             </div>
