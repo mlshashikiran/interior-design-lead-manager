@@ -161,6 +161,33 @@ final class IDLM_Admin_Assets {
         add_filter('body_class', array(__CLASS__, 'add_design_body_class'));
     }
 
+    /**
+     * Load the shared tokens and components for a page that has no CRM workspace: the core
+     * password screens and Identity reviews. They use the same gate class and the one extra
+     * stylesheet, never the area stylesheets, and wp-admin as a whole stays unstyled.
+     */
+    public static function enqueue_standalone_design() {
+        $asset_url = plugin_dir_url(dirname(__FILE__)) . 'assets/';
+        self::register_core_assets();
+        wp_enqueue_style('idlm-google-fonts');
+        wp_enqueue_style('idlm-admin-styles');
+        wp_enqueue_style('idlm-crm-design', $asset_url . 'css/crm-design.css', array('idlm-admin-styles'), self::asset_version('css/crm-design.css'));
+        wp_enqueue_style('idlm-crm-design-standalone', $asset_url . 'css/crm-design-standalone.css', array('idlm-crm-design'), self::asset_version('css/crm-design-standalone.css'));
+        self::add_white_label_style();
+    }
+
+    /** Body classes for a standalone page: the design gate plus the marker the page rules start from. */
+    public static function add_standalone_body_class($classes) {
+        $classes[] = 'idlm-crm-design';
+        $classes[] = 'idlm-crm-standalone';
+        return $classes;
+    }
+
+    /** admin_body_class passes one string, not an array. */
+    public static function add_standalone_admin_body_class($classes) {
+        return trim((string) $classes . ' idlm-crm-design idlm-crm-standalone');
+    }
+
     /** Gate class for assets/css/crm-design.css. */
     public static function add_design_body_class($classes) {
         $classes[] = 'idlm-crm-design';

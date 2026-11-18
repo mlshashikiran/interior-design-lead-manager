@@ -477,7 +477,7 @@ idlm_test('CRM design layer stays fully gated, token-led and reversible', static
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
     $admin = (string) file_get_contents($root . '/includes/class-admin.php');
     $files = glob($root . '/assets/css/crm-design*.css') ?: array();
-    assert_true(8 === count($files), 'The design layer must stay in its base and seven area stylesheets.');
+    assert_true(9 === count($files), 'The design layer must stay in its base, seven area and one standalone stylesheet.');
     $rule_count = 0;
 
     foreach ($files as $file) {
@@ -518,6 +518,35 @@ idlm_test('CRM design layer stays fully gated, token-led and reversible', static
     foreach (array('IDLM_DESIGN_LAYER', 'idlm_design_layer', 'idlm_set_design_layer', "\$_GET['idlm_design']", 'render_design_layer_control') as $retired) {
         assert_true(false === strpos($assets . $admin, $retired), 'Retired design switch is back: ' . $retired);
     }
+});
+
+idlm_test('login and Identity reviews load the shared design through one scoped gate', static function(): void {
+    $root = dirname(__DIR__);
+    $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
+    $auth = (string) file_get_contents($root . '/includes/class-auth.php');
+    $review = (string) file_get_contents($root . '/includes/class-identity-review.php');
+    $template = (string) file_get_contents($root . '/templates/admin/identity-reviews.php');
+    $css = (string) file_get_contents($root . '/assets/css/crm-design-standalone.css');
+    assert_true(!is_file($root . '/assets/css/login.css'), 'login.css is replaced by the standalone design stylesheet.');
+    // The layer stays off for wp-admin as a whole; only these two pages opt in.
+    assert_contains('return !(function_exists(\'is_admin\') && is_admin()', $assets);
+    assert_contains("'idlm-crm-design-standalone'", $assets);
+    assert_contains("add_filter('login_body_class'", $auth);
+    assert_contains('IDLM_Admin_Assets::enqueue_standalone_design();', $auth);
+    assert_contains("'toplevel_page_idlm_identity_reviews' === \$hook_suffix", $review);
+    assert_contains("add_filter('admin_body_class'", $review);
+    assert_contains('IDLM_Admin_Assets::add_standalone_admin_body_class', $review);
+    assert_false(false !== strpos($auth . $review, "add_filter('authenticate'"), 'Presentation must not touch authentication.');
+    // Identity reviews keeps its form contract and gains shared components, with no inline presentation.
+    foreach (array('class="wrap idlm-wrap idlm-identity-reviews"', 'name="decision"', 'name="lead_id"', 'name="note"', 'name="review_id"', 'action" value="idlm_resolve_identity_review"', 'idlm-btn idlm-btn-primary', 'idlm-select', 'idlm-field', 'idlm-badge') as $contract) {
+        assert_contains($contract, $template);
+    }
+    assert_false(false !== strpos($template, 'style='), 'Identity reviews uses classes, not inline styles.');
+    assert_false((bool) preg_match('/\son[a-z]+=/', $template), 'Identity reviews has no inline handlers.');
+    // Every page rule starts from both gate classes and white-label tokens are never redefined here.
+    assert_contains('body.idlm-crm-design.idlm-crm-standalone.login form', $css);
+    assert_contains('body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews', $css);
+    assert_false((bool) preg_match('/(?:^|\n)\s*(?!body\.idlm-crm-design\.idlm-crm-standalone)[^\s@}\/*][^{}\n]*\{/', (string) preg_replace('~/\*.*?\*/~s', '', $css)), 'Every standalone selector starts with both gate classes.');
 });
 
 idlm_test('design standard stays the entry point for agents and status options stay free of emoji', static function(): void {

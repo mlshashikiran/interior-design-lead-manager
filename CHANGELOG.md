@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.113.0] - 2026-11-18
+
+### Changed
+
+- The password reset screens (wp-login.php) and the wp-admin Identity reviews page now use the CRM design: the shared colours, buttons, fields, status badges, bordered notices and the keyboard focus ring. White-label colours from Settings still apply. Signing in, resetting a password and resolving a review are unchanged. Builder: Shashi.
+
 ## [1.111.0] - 2026-11-18
 
 ### Added

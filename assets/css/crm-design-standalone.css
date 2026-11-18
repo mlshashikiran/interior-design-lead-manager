@@ -1,0 +1,268 @@
+/* ==========================================================================
+   IDLM CRM design layer: standalone surfaces. Builder: Shashi.
+
+   Two staff-facing pages sit outside the CRM workspace: the core password screens
+   (wp-login.php) and the wp-admin Identity reviews page. They load crm-design.css for
+   the shared tokens, buttons, fields, badges and notices, plus this file for the page
+   layout. Both add the body classes idlm-crm-design and idlm-crm-standalone, so no other
+   wp-admin screen and no other login screen is affected.
+   Contract: design-system/interior-design-lead-manager/STANDARD.md (STD-CSS-1, STD-CMP-*).
+   No hex colours, no important overrides; white-label colours arrive as tokens only.
+   ========================================================================== */
+
+/* --- 1. Core password screens (wp-login.php) -------------------------------- */
+body.idlm-crm-design.idlm-crm-standalone.login {
+    background: var(--idlm-canvas);
+    color: var(--idlm-text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login #login {
+    width: min(420px, calc(100% - 32px));
+    padding-top: clamp(36px, 9vh, 90px);
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login h1 a {
+    width: auto;
+    height: auto;
+    margin-bottom: var(--idlm-space-6);
+    background: none;
+    color: var(--idlm-ui-foreground);
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.3;
+    text-indent: 0;
+}
+
+/* Border first: a static card carries no shadow (STD-VIS-2). */
+body.idlm-crm-design.idlm-crm-standalone.login form {
+    padding: var(--idlm-space-6);
+    border: 1px solid var(--idlm-ui-border);
+    border-radius: var(--idlm-radius-panel);
+    background: var(--idlm-ui-card);
+    box-shadow: none;
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login label {
+    color: var(--idlm-ui-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login :is(input[type="text"], input[type="email"], input[type="password"]) {
+    min-height: var(--idlm-target-size);
+    border: 1px solid var(--idlm-ui-input);
+    border-radius: var(--idlm-ui-radius);
+    background-color: var(--idlm-ui-card);
+    box-shadow: none;
+    color: var(--idlm-ui-foreground);
+    font-size: 1rem;
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login :is(input[type="text"], input[type="email"], input[type="password"]):hover {
+    border-color: var(--idlm-ui-muted-foreground);
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login :is(input[type="text"], input[type="email"], input[type="password"]):focus-visible {
+    outline: 2px solid var(--idlm-ui-ring);
+    outline-offset: 0;
+    border-color: var(--idlm-ui-ring);
+    box-shadow: none;
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login .button-primary {
+    min-height: var(--idlm-target-size);
+    padding: 0 var(--idlm-space-4);
+    border: 1px solid var(--idlm-ui-primary);
+    border-radius: var(--idlm-ui-radius);
+    background: var(--idlm-ui-primary);
+    box-shadow: none;
+    color: var(--idlm-ui-primary-foreground);
+    font-weight: 600;
+    text-shadow: none;
+    transition: background-color var(--idlm-motion-fast) var(--idlm-ease), border-color var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login .button-primary:is(:hover, :focus) {
+    border-color: var(--idlm-ui-primary-hover);
+    background: var(--idlm-ui-primary-hover);
+    color: var(--idlm-ui-primary-foreground);
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login :is(#nav, #backtoblog) a {
+    color: var(--idlm-ui-muted-foreground);
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login :is(#nav, #backtoblog) a:is(:hover, :focus) {
+    color: var(--idlm-ui-primary);
+}
+
+/* Core prints a 4px accent stripe on notices; the CRM uses a bordered notice (STD-VIS-3). */
+body.idlm-crm-design.idlm-crm-standalone.login :is(.message, .success, #login_error) {
+    border: 1px solid var(--idlm-info-line);
+    border-radius: var(--idlm-ui-radius);
+    background: var(--idlm-ui-info-soft);
+    box-shadow: none;
+    color: var(--idlm-ui-foreground);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login .success {
+    border-color: var(--idlm-success-line);
+    background: var(--idlm-ui-success-soft);
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login #login_error {
+    border-color: var(--idlm-danger-line);
+    background: var(--idlm-ui-destructive-soft);
+}
+
+/* Focus rule: a click leaves no ring (focus-visible only), the keyboard ring is never removed. */
+body.idlm-crm-design.idlm-crm-standalone.login :is(a, button, input):focus {
+    box-shadow: none;
+}
+
+body.idlm-crm-design.idlm-crm-standalone.login :is(a, button, input[type="checkbox"], .button-primary):focus-visible {
+    outline: 2px solid var(--idlm-ui-ring);
+    outline-offset: var(--idlm-focus-offset);
+}
+
+/* --- 2. Identity reviews (wp-admin) -------------------------------------------- */
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews {
+    max-width: 880px;
+    margin-right: var(--idlm-space-4);
+    color: var(--idlm-ui-foreground);
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews h1 {
+    margin: var(--idlm-space-4) 0 var(--idlm-space-2);
+    padding: 0;
+    color: var(--idlm-ui-foreground);
+    font-size: var(--idlm-type-page);
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews > p {
+    max-width: 68ch;
+    color: var(--idlm-ui-muted-foreground);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--idlm-space-2);
+    margin: var(--idlm-space-4) 0;
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-filters a[aria-current="page"] {
+    border-color: var(--idlm-ui-input);
+    background: var(--idlm-ui-muted);
+    font-weight: 700;
+}
+
+/* A review is one bordered surface with no shadow, and long values wrap inside it. */
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-card {
+    margin: 0 0 var(--idlm-space-4);
+    padding: var(--idlm-space-5);
+    border: 1px solid var(--idlm-ui-border);
+    border-radius: var(--idlm-radius-panel);
+    background: var(--idlm-ui-card);
+    box-shadow: none;
+    overflow-wrap: anywhere;
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-card h2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--idlm-space-2);
+    margin: 0 0 var(--idlm-space-2);
+    padding: 0;
+    font-size: var(--idlm-type-section);
+    font-weight: 700;
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-card p {
+    margin: 0 0 var(--idlm-space-3);
+    color: var(--idlm-ui-muted-foreground);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-card dl {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--idlm-space-1) var(--idlm-space-4);
+    margin: 0 0 var(--idlm-space-4);
+    font-size: 0.8125rem;
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-card dt {
+    color: var(--idlm-ui-muted-foreground);
+    font-weight: 600;
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-card dd {
+    margin: 0;
+    color: var(--idlm-ui-foreground);
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-card .idlm-field-group {
+    margin-bottom: var(--idlm-space-4);
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-card .idlm-field {
+    margin: 0;
+    color: var(--idlm-ui-foreground);
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews :is(.idlm-select, .idlm-input) {
+    width: 100%;
+    max-width: 100%;
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews textarea.idlm-input {
+    min-height: 88px;
+    padding: var(--idlm-space-2) var(--idlm-space-3);
+    resize: vertical;
+}
+
+/* Focus rule: wp-admin shows its own ring on a click; the CRM shows one for the keyboard only. */
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews :is(a, button, input, select, textarea):focus {
+    box-shadow: none;
+    outline: none;
+}
+
+body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews :is(a, button):focus-visible {
+    outline: 2px solid var(--idlm-ui-ring);
+    outline-offset: var(--idlm-focus-offset);
+}
+
+@media (max-width: 782px) {
+    body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews {
+        margin-right: 0;
+    }
+
+    body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews :is(.idlm-btn, .idlm-select) {
+        min-height: var(--idlm-target-size);
+    }
+}
+
+@media (max-width: 480px) {
+    body.idlm-crm-design.idlm-crm-standalone .idlm-identity-reviews .idlm-identity-card dl {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.idlm-crm-design.idlm-crm-standalone *,
+    body.idlm-crm-design.idlm-crm-standalone *::before,
+    body.idlm-crm-design.idlm-crm-standalone *::after {
+        scroll-behavior: auto;
+        animation-duration: 0.01ms;
+        animation-iteration-count: 1;
+        transition-duration: 0.01ms;
+        transition-delay: 0ms;
+    }
+}

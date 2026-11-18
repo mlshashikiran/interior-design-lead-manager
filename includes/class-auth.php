@@ -18,6 +18,7 @@ final class IDLM_Auth {
         add_action('admin_post_nopriv_idlm_request_password_reset', array(__CLASS__, 'handle_password_reset_request'));
         add_action('admin_post_nopriv_idlm_reset_password', array(__CLASS__, 'handle_password_reset'));
         add_action('login_enqueue_scripts', array(__CLASS__, 'enqueue_reset_assets'));
+        add_filter('login_body_class', array(__CLASS__, 'login_body_class'));
         add_filter('login_headerurl', array(__CLASS__, 'login_header_url'));
         add_filter('login_headertext', array(__CLASS__, 'login_header_text'));
     }
@@ -138,13 +139,17 @@ final class IDLM_Auth {
         if (!self::is_password_screen()) {
             return;
         }
-        wp_enqueue_style('idlm-login-fonts', IDLM_URL . 'assets/css/fonts.css', array(), IDLM_VERSION);
-        wp_enqueue_style('idlm-core-password', IDLM_URL . 'assets/css/login.css', array('idlm-login-fonts'), IDLM_VERSION);
+        IDLM_Admin_Assets::enqueue_standalone_design();
         if (function_exists('wp_add_inline_style')) {
             $white_label = IDLM_Settings::get_white_label();
             $tokens = IDLM_Settings::white_label_style($white_label);
-            wp_add_inline_style('idlm-core-password', 'body.login{' . $tokens . '--idlm-login-action:var(--idlm-action);--idlm-login-action-hover:var(--idlm-action-hover);--idlm-login-brand:var(--idlm-brand-gold);--idlm-login-sidebar:var(--idlm-sidebar);}');
+            wp_add_inline_style('idlm-crm-design-standalone', 'body.login{' . $tokens . '}');
         }
+    }
+
+    /** Gate the shared CRM design on the core password screens only. */
+    public static function login_body_class($classes) {
+        return self::is_password_screen() ? IDLM_Admin_Assets::add_standalone_body_class($classes) : $classes;
     }
 
     public static function login_header_url($url) {

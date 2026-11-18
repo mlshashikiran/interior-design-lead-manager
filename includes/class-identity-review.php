@@ -7,6 +7,8 @@ final class IDLM_Identity_Review {
 
     public static function init() {
         add_action('admin_menu', array(__CLASS__, 'menu'));
+        add_action('admin_enqueue_scripts', array(__CLASS__, 'enqueue_assets'));
+        add_filter('admin_body_class', array(__CLASS__, 'body_class'));
         add_action('admin_post_idlm_resolve_identity_review', array(__CLASS__, 'handle'));
         add_action(self::PRUNE_HOOK, array(__CLASS__, 'prune'));
     }
@@ -80,6 +82,18 @@ final class IDLM_Identity_Review {
         if (!IDLM_Lead_Access_Policy::can_assign()) { return; }
         // Separate entry lets CRM managers reach this utility without administrator settings access.
         add_menu_page('Identity reviews', 'Identity reviews', current_user_can('manage_options') ? 'manage_options' : 'idlm_assign_leads', 'idlm_identity_reviews', array(__CLASS__, 'render'), 'dashicons-search', 27);
+    }
+
+    /** Load the shared CRM tokens and components on this page only; the rest of wp-admin is untouched. */
+    public static function enqueue_assets($hook_suffix) {
+        if ('toplevel_page_idlm_identity_reviews' === $hook_suffix) {
+            IDLM_Admin_Assets::enqueue_standalone_design();
+        }
+    }
+
+    public static function body_class($classes) {
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        return $screen && 'toplevel_page_idlm_identity_reviews' === $screen->id ? IDLM_Admin_Assets::add_standalone_admin_body_class($classes) : $classes;
     }
 
     public static function render() {
