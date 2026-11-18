@@ -15,6 +15,9 @@
         event.preventDefault();
         window.IDLMDialog.open(dialog, {trigger: button});
     });
+    // A payment save the server refused comes back with its dialog open and the typed values in place.
+    var reopen = document.querySelector('[data-payment-reopen]');
+    if (reopen) { window.IDLMDialog.open(reopen); }
     // One submit per dialog: a second click while the page is posting does nothing.
     document.addEventListener('submit', function (event) {
         var form = event.target.closest('.idlm-design-dialog-form');

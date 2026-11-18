@@ -1,6 +1,13 @@
 <?php
 /** Actual cookie, form nonce, multipart proof and immutable history. Builder: Shashi. */
 if ('cli' !== PHP_SAPI || strpos($config['db_name'] ?? '', 'idlm_test_') !== 0) { exit(1); }
+/** A save refused for its input returns to the payment page (302 with payment_error), discloses nothing and changes nothing. Builder: Shashi. */
+function idlm_payment_http_refused(callable $request): void {
+    $before = idlm_http_snapshot(); $r = $request();
+    idlm_http_check(302 === $r['status'] && 1 === preg_match('/^Location: [^\r\n]*payment_error=[a-z0-9]{20}/mi', $r['headers']), 'Expected a return to the payment dialog, got ' . $r['status']);
+    foreach (array('PII-SYNTHETIC', 'PRIVATE-SYNTHETIC-NOTES', 'SYNTHETIC-ITEM-ORIGINAL') as $pii) { idlm_http_check(strpos($r['body'], $pii) === false, 'PII disclosed: ' . $pii); }
+    idlm_http_check($before === idlm_http_snapshot(), 'Refused request changed rows, numbering, working copies or jobs');
+}
 function idlm_payment_http_form($html, $operation): array {
     $dom=new DOMDocument(); libxml_use_internal_errors(true); $dom->loadHTML($html); libxml_clear_errors(); libxml_use_internal_errors(false);
     $xpath=new DOMXPath($dom); $forms=$xpath->query('//form[input[@name="action" and @value="idlm_payment_'.$operation.'"]]');
@@ -49,7 +56,7 @@ idlm_http_case('PAYMENT HTTP saved timeline publication and URN partial receipt'
 });
 idlm_http_case('PAYMENT HTTP missing proof date amount and forged cross lead file rejected',static function()use($payment_lead):void{
     $form=idlm_payment_http_form(idlm_payment_http_page($payment_lead)['body'],'record');$form+=array('amount'=>'1','currency'=>'INR','received_date'=>'2026-11-05','method'=>'Cash');
-    foreach(array(array(),array('reference'=>'x','received_date'=>'2026-02-30'),array('reference'=>'x','amount'=>'0'),array('reference'=>'x','attachment_id'=>'999999'))as$invalid){$p=array_merge($form,$invalid);idlm_http_denied(static function()use($p){return idlm_http_request('/wp-admin/admin-post.php',$p);},array(422));}
+    foreach(array(array(),array('reference'=>'x','received_date'=>'2026-02-30'),array('reference'=>'x','amount'=>'0'),array('reference'=>'x','attachment_id'=>'999999'))as$invalid){$p=array_merge($form,$invalid);idlm_payment_http_refused(static function()use($p){return idlm_http_request('/wp-admin/admin-post.php',$p);});}
 });
 $payment_png=base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aKfoAAAAASUVORK5CYII=');file_put_contents($config['content_dir'].'/payment.png',$payment_png);
 $payment_attachment=0;
@@ -94,7 +101,7 @@ idlm_http_case('PAYMENT HTTP legacy resolution rejects bad nonce ordinary sales 
     $owner_page=idlm_payment_http_page($payment_legacy_lead,array('payment_revision_id'=>$payment_legacy_revision));idlm_http_check(strpos($owner_page['body'],'A manager with payment-correction permission can enter its percentages')!==false,'Owner lacks recovery guidance');idlm_http_check(strpos($owner_page['body'],'value="idlm_payment_resolve_legacy"')===false,'Recovery action exposed to ordinary sales');
     $bad=$legacy_payload;$bad['_wpnonce']='invalid';idlm_http_denied(static function()use($bad){return idlm_http_request('/wp-admin/admin-post.php',$bad,'manager');},array(403));
     $owner=$legacy_payload;$owner['_wpnonce']=$sessions['owner']['payment_resolve_legacy'];idlm_http_denied(static function()use($owner){return idlm_http_request('/wp-admin/admin-post.php',$owner);},array(422));
-    foreach(array(array('legacy_confirmed'=>''),array('source_reference'=>' '),array('legacy_milestones'=>array(array('name'=>'Too much','percentage'=>'101','advance'=>'1'))),array('legacy_milestones'=>array(array('name'=>'No advance selected','percentage'=>'10'))))as$invalid){$p=array_merge($legacy_payload,$invalid);idlm_http_denied(static function()use($p){return idlm_http_request('/wp-admin/admin-post.php',$p,'manager');},array(422));}
+    foreach(array(array('legacy_confirmed'=>''),array('source_reference'=>' '),array('legacy_milestones'=>array(array('name'=>'Too much','percentage'=>'101','advance'=>'1'))),array('legacy_milestones'=>array(array('name'=>'No advance selected','percentage'=>'10'))))as$invalid){$p=array_merge($legacy_payload,$invalid);idlm_payment_http_refused(static function()use($p){return idlm_http_request('/wp-admin/admin-post.php',$p,'manager');});}
 });
 idlm_http_case('PAYMENT HTTP explicit historic timeline is versioned retry safe and leaves old quote untouched',static function()use($legacy_payload,$payment_legacy_lead,$payment_legacy_revision):void{
     global $wpdb;

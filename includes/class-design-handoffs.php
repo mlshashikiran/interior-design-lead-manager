@@ -388,7 +388,7 @@ final class IDLM_Design_Handoffs {
         $data = array();
         foreach (array('amount', 'received_date', 'method', 'reference') as $field) { $data[$field] = is_string($input[$field] ?? null) ? trim($input[$field]) : ''; }
         $data['attachment_id'] = (int) ($input['attachment_id'] ?? 0);
-        if (!$data['attachment_id'] && $row && (int) $row->advance_attachment_id) { $data['attachment_id'] = (int) $row->advance_attachment_id; }
+        if (!$data['attachment_id'] && $row && IDLM_Lead_Payments::usable_proof($lead_id, (int) $row->advance_attachment_id)) { $data['attachment_id'] = (int) $row->advance_attachment_id; }
         $schedule = $ledger['schedule']; $version = (int) $ledger['version']; $basis = $schedule ? null : self::basis($lead_id);
         $data['currency'] = $schedule ? $schedule['currency'] : ($basis ? $basis['snapshot']['currency'] : self::quotation_currency($lead_id));
         // Check everything the sender typed before writing a schedule.

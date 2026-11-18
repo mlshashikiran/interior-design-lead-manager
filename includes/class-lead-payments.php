@@ -261,7 +261,7 @@ final class IDLM_Lead_Payments {
             if (!$revoke && $value['attachment_id']) {
                 $files = $wpdb->prefix . 'idlm_private_files';
                 $file = IDLM_Lead_Transaction::read($wpdb->get_row($wpdb->prepare("SELECT * FROM $files WHERE attachment_id = %d AND lead_id = %d AND purpose = 'payment' AND state IN ('uploaded','active') FOR UPDATE", $value['attachment_id'], $lead_id)));
-                if (!$file || !in_array($file->mime, array('image/jpeg', 'image/png', 'image/webp'), true) || $file->byte_size > IDLM_Private_Files::MAX_BYTES || ($file->state === 'uploaded' && strtotime($file->created_at) < strtotime(current_time('mysql')) - 7 * DAY_IN_SECONDS)) { return self::error('proof', 'Upload a current private payment screenshot for this lead.'); }
+                if (!self::proof_ok($file)) { return self::error('proof', 'The payment screenshot is missing or no longer available. Attach the screenshot again, or enter the transaction reference.'); }
             }
             if (!$revoke && $value['normalized_reference']) {
                 foreach (self::receipts($lead_id) as $existing) {
@@ -284,6 +284,18 @@ final class IDLM_Lead_Payments {
     }
     // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter
     // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
+    /** A receipt may use this file: the lead's private payment image, in use or uploaded in the last 7 days. */
+    public static function proof_ok($file) {
+        return $file && in_array($file->mime, array('image/jpeg', 'image/png', 'image/webp'), true) && (int) $file->byte_size <= IDLM_Private_Files::MAX_BYTES
+            && !('uploaded' === $file->state && strtotime($file->created_at) < strtotime(current_time('mysql')) - 7 * DAY_IN_SECONDS);
+    }
+    /** Read-only form check: would a receipt for this lead accept this screenshot? Forms prefill only proof that passes. */
+    public static function usable_proof($lead_id, $attachment_id) {
+        global $wpdb;
+        if ((int) $attachment_id <= 0) { return false; }
+        $files = $wpdb->prefix . 'idlm_private_files';
+        return self::proof_ok($wpdb->get_row($wpdb->prepare("SELECT mime, byte_size, state, created_at FROM $files WHERE attachment_id = %d AND lead_id = %d AND purpose = 'payment' AND state IN ('uploaded','active') LIMIT 1", (int) $attachment_id, (int) $lead_id)));
+    }
     /** Historical proof remains protected and referenced after correction/revocation. */
     public static function references_file($lead_id, $attachment_id) {
         global $wpdb; $table = self::table('versions');

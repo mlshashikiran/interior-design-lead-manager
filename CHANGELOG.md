@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.111.0] - 2026-11-18
+
+### Added
+
+- The Payments list is back on the menu for administrators and managers (people who can assign leads) who hold a payment permission. Representatives still open payments from each lead. Builder: Shashi.
+- Clicking Payments in the sidebar from a lead's payment page now returns to the list instead of reopening that lead. Builder: Shashi.
+- Payments list: search by customer name, phone, email, project, quote number or lead number; a Balance column showing Outstanding (with the amount and the plan total), Paid in full or No schedule; a Balance filter; and an Outstanding first sort. The amount is the same ledger figure the lead's payment page and drawer show. Paging keeps the search and filters. Builder: Shashi.
+
+### Fixed
+
+- A payment that cannot be saved no longer opens a WordPress error page: the payment page reopens the same dialog with the reason and what was typed (the screenshot must be chosen again). Builder: Shashi.
+- Record this advance no longer offers a design handoff screenshot that has since been deleted, which made every save fail with "Upload a current private payment screenshot". Resending to design has the same guard. Builder: Shashi.
+
+### Security
+
+- The Payments list now also applies the lead access policy's role scope, so an assigner whose role sees only assigned leads no longer sees (or sees balances for) leads their payment page would refuse. Builder: Shashi.
+
 ## [1.110.0] - 2026-11-18
 
 ### Changed

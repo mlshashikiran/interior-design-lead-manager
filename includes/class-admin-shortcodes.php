@@ -156,7 +156,7 @@ final class IDLM_Admin_Shortcodes {
         $active = $workspace['active'];
         $has_lead_access = $workspace['has_lead_access'];
         // Navigation always opens a section's start, so no view's tab, filter or open record follows it.
-        $base_url = remove_query_arg(array_merge(array('idlm_view', 'workspace', 'action', 'quote_id', 'lead_id', 'revision_id', 'quote_search', 'catalogue_search', 'status', 'created_by', 'date_from', 'date_to', 'idlm_notice', 'idlm_error'), IDLM_Design_Handoff_Controller::QUERY_KEYS));
+        $base_url = remove_query_arg(array_merge(array('idlm_view', 'workspace', 'action', 'quote_id', 'lead_id', 'revision_id', 'quote_search', 'catalogue_search', 'status', 'created_by', 'date_from', 'date_to', 'idlm_notice', 'idlm_error'), IDLM_Design_Handoff_Controller::QUERY_KEYS, IDLM_Lead_Payment_Controller::QUERY_KEYS));
         $current_user = wp_get_current_user();
         $role_variant = current_user_can('manage_options')
             ? 'administrator'

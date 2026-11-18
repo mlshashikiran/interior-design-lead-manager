@@ -2,6 +2,13 @@
 /** Authenticated sales payment workspace and operation-specific forms. Builder: Shashi. */
 if (!defined('ABSPATH')) { exit; }
 final class IDLM_Lead_Payment_Controller {
+    /** Every query key the Payments view reads. Sidebar navigation drops them all, so Payments opens the list. */
+    const QUERY_KEYS = array('payment_lead_id', 'payment_revision_id', 'payment_saved', 'payment_done', 'payment_q', 'payment_balance', 'payment_sort', 'payment_page', 'payment_error');
+    /** Typed values a refused save hands back to its dialog (STD-CRM-10). Files cannot be refilled. */
+    const RETRY_FIELDS = array('amount', 'received_date', 'method', 'reference', 'note', 'duplicate_review_reason', 'reason', 'source_reference');
+    private static $retry = null;
+    private static $open_dialog = '';
+    private static $retry_shown = false;
     public static function init() {
         foreach (array('schedule', 'resolve_legacy', 'won_plan', 'record', 'correct', 'revoke') as $operation) {
             add_action('admin_post_idlm_payment_' . $operation, array(__CLASS__, 'handle'));
@@ -32,11 +39,12 @@ final class IDLM_Lead_Payment_Controller {
             (current_user_can('manage_options') || current_user_can('idlm_record_lead_payments') || current_user_can('idlm_correct_lead_payments'));
     }
     /**
-     * The workspace Payments tab and its lead list are retired: each lead's payment page
-     * opens from the lead drawer and the Design project. Filter `idlm_show_payments_tab` true restores it.
+     * The workspace Payments tab and its lead list show to administrators and managers (people who can
+     * assign leads); representatives open each lead's payment page from the lead drawer or the Design project.
+     * Filter `idlm_show_payments_tab` overrides it either way. The list itself still needs visible().
      */
     public static function tab_shown() {
-        return (bool) apply_filters('idlm_show_payments_tab', false);
+        return (bool) apply_filters('idlm_show_payments_tab', current_user_can('manage_options') || IDLM_Lead_Access_Policy::can_assign());
     }
     /** May open this lead's payment page: same checks the page itself applies. */
     public static function can_open($lead_id) {
@@ -102,12 +110,39 @@ final class IDLM_Lead_Payment_Controller {
             return 'correct' === $operation ? IDLM_Lead_Payments::correct($lead_id, $confirmation_id, $data, $reason, $version, $key) : IDLM_Lead_Payments::record($lead_id, $data, $version, $key);
         });
         if (false === $result) { $result = new WP_Error('idlm_payment_busy', 'CRM recovery is busy. Retry shortly.'); }
-        if (is_wp_error($result)) { wp_die(esc_html($result->get_error_message()), 'Payment not saved', array('response' => 422, 'back_link' => true)); }
         $url = wp_validate_redirect(self::text($_POST, 'return_url'), admin_url('admin.php?page=idlm-payments'));
+        // Access refusals stay a hard stop: there is nothing to retype.
+        if (is_wp_error($result) && in_array($result->get_error_code(), array('idlm_payment_denied', 'idlm_file_denied', 'idlm_payment_busy'), true)) { wp_die(esc_html($result->get_error_message()), 'Payment not saved', array('response' => 422, 'back_link' => true)); }
+        if (is_wp_error($result)) {
+            // Back to the payment page with the reason and what was typed, not a WordPress error page.
+            $file_chosen = isset($_FILES['payment_screenshot']) && UPLOAD_ERR_NO_FILE !== (int) ($_FILES['payment_screenshot']['error'] ?? UPLOAD_ERR_NO_FILE);
+            $token = self::save_retry($result->get_error_message() . ($file_chosen ? ' Choose the screenshot again before saving.' : ''), self::text($_POST, 'payment_dialog'), $_POST);
+            wp_safe_redirect(add_query_arg(array('payment_lead_id' => $lead_id, 'payment_error' => $token), $url)); exit;
+        }
         $url = add_query_arg(array('payment_lead_id' => $lead_id, 'payment_saved' => '1', 'payment_done' => $operation), $url);
         wp_safe_redirect($url); exit;
     }
     // phpcs:enable WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.MissingUnslash,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+    /** Keep a refused save for ten minutes, for this person only; the page reads it once. Returns the token for the address. */
+    public static function save_retry($message, $dialog, $input) {
+        $values = array();
+        foreach (self::RETRY_FIELDS as $field) { if (isset($input[$field]) && is_string($input[$field])) { $values[$field] = sanitize_textarea_field(wp_unslash($input[$field])); } }
+        $token = strtolower(wp_generate_password(20, false, false));
+        set_transient('idlm_payment_retry_' . get_current_user_id() . '_' . $token, array('message' => sanitize_text_field((string) $message), 'dialog' => preg_match('/^idlm-payment-[a-z0-9-]{1,60}$/D', (string) $dialog) ? (string) $dialog : '', 'values' => $values), 10 * MINUTE_IN_SECONDS);
+        return $token;
+    }
+    /** The refused save for this address and person, or null. Read once. */
+    public static function take_retry($token) {
+        $token = is_string($token) ? strtolower($token) : '';
+        if (!preg_match('/^[a-z0-9]{20}$/D', $token)) { return null; }
+        $key = 'idlm_payment_retry_' . get_current_user_id() . '_' . $token;
+        $retry = get_transient($key); delete_transient($key);
+        return is_array($retry) && isset($retry['message'], $retry['dialog'], $retry['values']) ? $retry : null;
+    }
+    /** A value typed before a refused save in the dialog being printed, else the default. */
+    private static function retried($field, $default = '') {
+        return self::$retry && self::$open_dialog && self::$retry['dialog'] === self::$open_dialog && isset(self::$retry['values'][$field]) ? self::$retry['values'][$field] : $default;
+    }
     private static function form($operation, $lead_id, $version, $return_url) {
         echo '<form class="idlm-payment-form" method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         self::hidden('action', 'idlm_payment_' . $operation); self::hidden('payment_lead_id', $lead_id);
@@ -144,35 +179,135 @@ final class IDLM_Lead_Payment_Controller {
         $return_url = add_query_arg('payment_lead_id', $lead_id, $base);
         $can_record = IDLM_Lead_Payments::permitted($lead_id); $can_correct = IDLM_Lead_Payments::permitted($lead_id, true);
         $customer = $lead ? trim($lead->first_name . ' ' . $lead->last_name) : '';
+        self::$retry = self::take_retry(self::text($_GET, 'payment_error'));
         // One summary, one milestone table, one payments list; every form in a dialog.
         self::render_simple($lead_id, ($lead->project_name ?? '') ?: $customer, $customer, $context, $return_url, $retired ? $leads_url : $base, $retired, $can_record, $can_correct, (string) ($lead->deal_value ?? '0'));
+        // A refused save whose dialog is not on the page still says why.
+        if (self::$retry && !self::$retry_shown) { echo '<div class="idlm-alert idlm-alert-error" role="alert">' . esc_html(self::$retry['message']) . '</div>'; }
         echo '</div>';
     }
     // phpcs:enable WordPress.Security.NonceVerification.Recommended
     // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
+    const LIST_SORTS = array('newest' => 'Newest first', 'outstanding' => 'Outstanding first');
+    const LIST_BALANCES = array('' => 'All balances', 'outstanding' => 'Outstanding', 'paid' => 'Paid in full', 'none' => 'No schedule');
+    const LIST_PAGE_SIZE = 50;
+    /** Payments list filters from GET: search text, balance filter, sort and page. Unknown values fall back to the defaults. */
+    public static function list_filters($input) {
+        $q = trim(sanitize_text_field(self::text($input, 'payment_q')));
+        $q = function_exists('mb_substr') ? mb_substr($q, 0, 100) : substr($q, 0, 100);
+        $balance = sanitize_key(self::text($input, 'payment_balance'));
+        $sort = sanitize_key(self::text($input, 'payment_sort'));
+        return array('q' => $q, 'balance' => isset(self::LIST_BALANCES[$balance]) ? $balance : '',
+            'sort' => isset(self::LIST_SORTS[$sort]) ? $sort : 'newest', 'page' => max(1, min(1000, self::id($input, 'payment_page'))));
+    }
+    /** Query arguments that keep the current filters on paging links; defaults are left out. */
+    private static function list_args($filters, $page) {
+        return array_filter(array('payment_q' => $filters['q'], 'payment_balance' => $filters['balance'], 'payment_sort' => 'newest' === $filters['sort'] ? '' : $filters['sort'], 'payment_page' => $page > 1 ? (string) $page : ''), 'strlen');
+    }
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
+    /**
+     * One page of Won leads in the caller's payment scope, with each lead's balance.
+     * Two queries whatever the page size: the scoped lead page, then the latest ledger snapshot
+     * for those leads (the same snapshot the lead's payment page and drawer show).
+     */
+    public static function list_page($filters) {
+        global $wpdb;
+        $empty = array('rows' => array(), 'more' => false, 'balances' => array());
+        if (!self::visible()) { return $empty; }
+        $p = $wpdb->prefix;
+        $where = array("l.stage='Won'", 'l.is_duplicate=0');
+        if (!IDLM_Lead_Access_Policy::can_assign()) { $where[] = $wpdb->prepare('l.assigned_rep_id=%d', get_current_user_id()); }
+        // Never list (or price) a lead its payment page would refuse: same scope as can_open()'s can_access($id, true).
+        $params = array(); $scope = IDLM_Lead_Access_Policy::scope_sql('l', $params, true);
+        if ('' !== $scope) { $where[] = $params ? $wpdb->prepare(substr($scope, 5), $params) : substr($scope, 5); }
+        if ('' !== $filters['q']) {
+            $like = '%' . $wpdb->esc_like($filters['q']) . '%';
+            $match = $wpdb->prepare("CONCAT_WS(' ', l.first_name, l.last_name) LIKE %s OR l.email LIKE %s OR l.phone LIKE %s OR l.project_name LIKE %s OR EXISTS (SELECT 1 FROM {$p}idlm_quotes q WHERE q.lead_id = l.id AND q.quote_number LIKE %s)", $like, $like, $like, $like, $like);
+            $digits = preg_replace('/\D+/', '', $filters['q']);
+            if (strlen($digits) >= 4 && $digits !== $filters['q']) { $match .= $wpdb->prepare(' OR l.phone LIKE %s', '%' . $wpdb->esc_like($digits) . '%'); }
+            $id = ltrim($filters['q'], '#');
+            if ('' !== $id && ctype_digit($id) && strlen($id) < 19) { $match .= $wpdb->prepare(' OR l.id = %d', (int) $id); }
+            $where[] = '(' . $match . ')';
+        }
+        // Balance from the ledger's own inputs: latest schedule total less current, unrevoked receipts.
+        $join = ''; $order = 'l.id DESC';
+        if ('outstanding' === $filters['sort'] || '' !== $filters['balance']) {
+            $join = " LEFT JOIN (SELECT s.lead_id, s.basis_total FROM {$p}idlm_lead_payment_schedules s INNER JOIN (SELECT lead_id, MAX(id) AS id FROM {$p}idlm_lead_payment_schedules GROUP BY lead_id) ls ON ls.id = s.id) sch ON sch.lead_id = l.id"
+                . " LEFT JOIN (SELECT c.lead_id, SUM(v.amount) AS received FROM {$p}idlm_lead_payment_confirmations c INNER JOIN {$p}idlm_lead_payment_versions v ON v.id = c.current_version_id AND v.confirmation_id = c.id AND v.lead_id = c.lead_id WHERE v.status <> 'revoked' GROUP BY c.lead_id) rec ON rec.lead_id = l.id";
+            $owed = 'GREATEST(0, sch.basis_total - COALESCE(rec.received, 0))';
+            $clauses = array('outstanding' => "sch.lead_id IS NOT NULL AND $owed > 0", 'paid' => "sch.lead_id IS NOT NULL AND $owed = 0", 'none' => 'sch.lead_id IS NULL');
+            if ('' !== $filters['balance']) { $where[] = $clauses[$filters['balance']]; }
+            if ('outstanding' === $filters['sort']) { $order = "(sch.lead_id IS NULL), $owed DESC, l.id DESC"; }
+        }
+        $size = self::LIST_PAGE_SIZE;
+        $rows = (array) $wpdb->get_results($wpdb->prepare("SELECT l.id,l.first_name,l.last_name,l.project_name FROM {$p}idlm_leads l$join WHERE " . implode(' AND ', $where) . " ORDER BY $order LIMIT %d OFFSET %d", $size + 1, ($filters['page'] - 1) * $size));
+        $more = count($rows) > $size; $rows = array_slice($rows, 0, $size);
+        return array('rows' => $rows, 'more' => $more, 'balances' => self::page_balances(array_map(static function($row) { return (int) $row->id; }, $rows)));
+    }
+    /** Latest allocation snapshot per lead, one query for the whole page. Callers pass only IDs from the scoped list. */
+    private static function page_balances($lead_ids) {
+        global $wpdb;
+        $lead_ids = array_values(array_unique(array_filter(array_map('intval', $lead_ids))));
+        if (!$lead_ids) { return array(); }
+        $table = $wpdb->prefix . 'idlm_lead_payment_allocation_sets';
+        $in = implode(',', array_fill(0, count($lead_ids), '%d'));
+        $sets = (array) $wpdb->get_results($wpdb->prepare("SELECT a.lead_id, a.snapshot FROM $table a INNER JOIN (SELECT lead_id, MAX(id) AS id FROM $table WHERE lead_id IN ($in) GROUP BY lead_id) latest ON latest.id = a.id", $lead_ids));
+        $balances = array();
+        foreach ($sets as $set) {
+            $set = (object) $set;
+            $balance = json_decode((string) $set->snapshot, true);
+            if (is_array($balance)) { $balances[(int) $set->lead_id] = $balance; }
+        }
+        return $balances;
+    }
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter
+    /** List label for a balance: written status first (STD-CRM-4), amount in the payment money format. */
+    public static function balance_cell($balance) {
+        if (!is_array($balance) || !isset($balance['total_outstanding'], $balance['currency'])) { return '<span class="idlm-badge is-neutral">No schedule</span>'; }
+        $owed = IDLM_Lead_Payment_Ledger::money($balance['total_outstanding']);
+        if (is_wp_error($owed) || !$owed) { return '<span class="idlm-badge is-success">Paid in full</span>'; }
+        return '<span class="idlm-badge is-warning">Outstanding</span> <span class="idlm-payment-balance-amount">' . esc_html(self::money($balance['total_outstanding'], $balance['currency'])) . '</span><small class="idlm-payment-balance-basis">' . esc_html('of ' . self::money($balance['basis_total'], $balance['currency'])) . '</small>';
+    }
+    /** GET form for the list; keeps the workspace's own query arguments (page ID, view) as hidden fields. */
+    private static function list_toolbar($base, $filters) {
+        $parts = wp_parse_url($base); $query = array();
+        if (!empty($parts['query'])) { wp_parse_str($parts['query'], $query); }
+        $action = strtok($base, '?');
+        echo '<form class="idlm-payment-toolbar" method="get" action="' . esc_url($action) . '" role="search" aria-label="Find payment leads">';
+        foreach ($query as $key => $value) { if (is_string($value)) { self::hidden($key, $value); } }
+        echo '<div class="idlm-field idlm-payment-search-field"><label for="idlm-payment-q">Search</label><input class="idlm-input" id="idlm-payment-q" type="search" name="payment_q" value="' . esc_attr($filters['q']) . '" placeholder="Name, phone, email or quote number" maxlength="100"></div>';
+        echo '<div class="idlm-field"><label for="idlm-payment-balance">Balance</label><select class="idlm-select" id="idlm-payment-balance" name="payment_balance">';
+        foreach (self::LIST_BALANCES as $value => $label) { echo '<option value="' . esc_attr($value) . '"' . selected($filters['balance'], $value, false) . '>' . esc_html($label) . '</option>'; }
+        echo '</select></div><div class="idlm-field"><label for="idlm-payment-sort">Sort</label><select class="idlm-select" id="idlm-payment-sort" name="payment_sort">';
+        foreach (self::LIST_SORTS as $value => $label) { echo '<option value="' . esc_attr($value) . '"' . selected($filters['sort'], $value, false) . '>' . esc_html($label) . '</option>'; }
+        echo '</select></div><div class="idlm-payment-toolbar-actions"><button type="submit" class="idlm-btn idlm-btn-secondary idlm-btn-sm">Apply</button>';
+        if ('' !== $filters['q'] || '' !== $filters['balance'] || 'newest' !== $filters['sort']) { echo '<a class="idlm-btn idlm-btn-quiet idlm-btn-sm" href="' . esc_url($base) . '">Clear</a>'; }
+        echo '</div></form>';
+    }
     // phpcs:disable WordPress.Security.NonceVerification.Recommended -- POST handlers verify the nonce (check_admin_referer or check_ajax_referer) and capability before acting, reading the action name first only to choose that nonce; GET values are display-only routing, cast or sanitized before use; uploads are validated by IDLM_Private_Files::upload(). Builder: Shashi.
     private static function render_leads($base) {
-        global $wpdb;
+        $filters = self::list_filters($_GET);
+        $page = self::list_page($filters);
+        $filtered = '' !== $filters['q'] || '' !== $filters['balance'];
         echo '<header class="idlm-header"><div><h1>Payments</h1></div></header>';
-        $sql = "SELECT id,first_name,last_name,project_name FROM {$wpdb->prefix}idlm_leads WHERE stage='Won' AND is_duplicate=0";
-        if (!IDLM_Lead_Access_Policy::can_assign()) { $sql .= $wpdb->prepare(' AND assigned_rep_id=%d', get_current_user_id()); }
-        $page = max(1, min(1000, self::id($_GET, 'payment_page')));
-        $leads = $wpdb->get_results($wpdb->prepare($sql . ' ORDER BY id DESC LIMIT 51 OFFSET %d', ($page - 1) * 50));
-        echo '<div class="idlm-card idlm-payment-list"><div class="idlm-table-wrapper"><table class="idlm-table idlm-payment-leads"><caption class="screen-reader-text">Won leads eligible for payment recording, including existing leads.</caption><thead><tr><th scope="col">Lead</th><th scope="col">Customer</th><th scope="col">Project</th><th scope="col"><span class="screen-reader-text">Action</span></th></tr></thead><tbody>';
-        if (!$leads) { echo '<tr><td colspan="4"><div class="idlm-state is-empty"><strong>No Won leads in your payment scope</strong><span>Leads appear here once they reach the Won stage and are assigned to you.</span></div></td></tr>'; }
-        foreach (array_slice($leads, 0, 50) as $lead) {
+        self::list_toolbar($base, $filters);
+        echo '<div class="idlm-card idlm-payment-list"><div class="idlm-table-wrapper"><table class="idlm-table idlm-payment-leads"><caption class="screen-reader-text">Won leads eligible for payment recording, including existing leads, with the balance each still owes.</caption><thead><tr><th scope="col">Lead</th><th scope="col">Customer</th><th scope="col">Project</th><th scope="col">Balance</th><th scope="col"><span class="screen-reader-text">Action</span></th></tr></thead><tbody>';
+        if (!$page['rows']) {
+            echo $filtered
+                ? '<tr><td colspan="5"><div class="idlm-state is-empty"><strong>No Won leads match</strong><span>Try another name, phone, email or quote number, or clear the filters.</span><a class="idlm-btn idlm-btn-secondary idlm-btn-sm" href="' . esc_url($base) . '">Clear filters</a></div></td></tr>'
+                : '<tr><td colspan="5"><div class="idlm-state is-empty"><strong>No Won leads in your payment scope</strong><span>Leads appear here once they reach the Won stage and are assigned to you.</span></div></td></tr>';
+        }
+        foreach ($page['rows'] as $lead) {
             $name = trim($lead->first_name . ' ' . $lead->last_name); $open = esc_url(add_query_arg('payment_lead_id', $lead->id, $base));
             // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
-            echo '<tr class="idlm-payment-lead-row"><td class="idlm-payment-lead-id">#' . esc_html($lead->id) . '</td><td class="idlm-payment-lead-name"><a class="idlm-payment-row-link" href="' . $open . '"><strong>' . esc_html($name) . '</strong></a></td><td class="idlm-payment-lead-project">' . esc_html($lead->project_name) . '</td><td class="idlm-payment-lead-action"><a class="idlm-btn idlm-btn-secondary" href="' . $open . '" aria-label="' . esc_attr('Open payments for ' . $name . ', lead #' . $lead->id) . '">Open</a></td></tr>';
+            echo '<tr class="idlm-payment-lead-row"><td class="idlm-payment-lead-id">#' . esc_html($lead->id) . '</td><td class="idlm-payment-lead-name"><a class="idlm-payment-row-link" href="' . $open . '"><strong>' . esc_html($name) . '</strong></a></td><td class="idlm-payment-lead-project">' . esc_html($lead->project_name) . '</td><td class="idlm-payment-lead-balance">' . self::balance_cell($page['balances'][(int) $lead->id] ?? null) . '</td><td class="idlm-payment-lead-action"><a class="idlm-btn idlm-btn-secondary" href="' . $open . '" aria-label="' . esc_attr('Open payments for ' . $name . ', lead #' . $lead->id) . '">Open</a></td></tr>';
         }
         echo '</tbody></table></div></div><nav class="idlm-pagination" aria-label="Payment leads pages">';
-        if ($page > 1) { echo '<a class="idlm-btn idlm-btn-secondary" href="' . esc_url(add_query_arg('payment_page', $page - 1, $base)) . '">Previous</a>'; }
-        if (count($leads) > 50) { echo '<a class="idlm-btn idlm-btn-secondary" href="' . esc_url(add_query_arg('payment_page', $page + 1, $base)) . '">Next</a>'; }
+        if ($filters['page'] > 1) { echo '<a class="idlm-btn idlm-btn-secondary" href="' . esc_url(add_query_arg(self::list_args($filters, $filters['page'] - 1), $base)) . '">Previous</a>'; }
+        if ($page['more']) { echo '<a class="idlm-btn idlm-btn-secondary" href="' . esc_url(add_query_arg(self::list_args($filters, $filters['page'] + 1), $base)) . '">Next</a>'; }
         echo '</nav>';
     }
     // phpcs:enable WordPress.Security.NonceVerification.Recommended
-    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
     const METHODS = array('UPI', 'Bank transfer', 'Cheque', 'Card', 'Cash');
     const DONE = array('record' => 'Payment recorded.', 'schedule' => 'Payment plan set.', 'resolve_legacy' => 'Payment plan saved from the old quotation.', 'won_plan' => 'Payment plan set from the Won amount.', 'correct' => 'Payment corrected.', 'revoke' => 'Payment revoked.');
     private static function advance_badge($status) {
@@ -182,14 +317,17 @@ final class IDLM_Lead_Payment_Controller {
     }
     private static function dialog_open($id, $title, $description, $operation, $lead_id, $version, $return_url, $multipart = false, $attributes = '') {
         wp_enqueue_script('idlm-design-detail', IDLM_URL . 'assets/js/design-detail.js', array('idlm-dialog'), IDLM_Admin_Assets::version('js/design-detail.js'), true);
-        echo '<div class="idlm-modal idlm-dialog idlm-design-dialog" id="' . esc_attr($id) . '" role="dialog" aria-modal="true" aria-labelledby="' . esc_attr($id . '-title') . '"' . ($description ? ' aria-describedby="' . esc_attr($id . '-description') . '"' : '') . ' aria-hidden="true" hidden data-idlm-dialog data-idlm-initial-focus=".idlm-dialog__body :is(textarea, select, input:not([type=hidden]))"><div class="idlm-modal-content idlm-dialog__panel"><header class="idlm-modal-header idlm-dialog__header"><div><h2 class="idlm-dialog__title" id="' . esc_attr($id . '-title') . '">' . esc_html($title) . '</h2>' . ($description ? '<p class="idlm-dialog__description" id="' . esc_attr($id . '-description') . '">' . esc_html($description) . '</p>' : '') . '</div><button type="button" class="idlm-dialog__close" data-idlm-dialog-close aria-label="Close dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button></header>';
+        self::$open_dialog = $id;
+        echo '<div class="idlm-modal idlm-dialog idlm-design-dialog" id="' . esc_attr($id) . '"' . (self::$retry && self::$retry['dialog'] === $id ? ' data-payment-reopen' : '') . ' role="dialog" aria-modal="true" aria-labelledby="' . esc_attr($id . '-title') . '"' . ($description ? ' aria-describedby="' . esc_attr($id . '-description') . '"' : '') . ' aria-hidden="true" hidden data-idlm-dialog data-idlm-initial-focus=".idlm-dialog__body :is(textarea, select, input:not([type=hidden]))"><div class="idlm-modal-content idlm-dialog__panel"><header class="idlm-modal-header idlm-dialog__header"><div><h2 class="idlm-dialog__title" id="' . esc_attr($id . '-title') . '">' . esc_html($title) . '</h2>' . ($description ? '<p class="idlm-dialog__description" id="' . esc_attr($id . '-description') . '">' . esc_html($description) . '</p>' : '') . '</div><button type="button" class="idlm-dialog__close" data-idlm-dialog-close aria-label="Close dialog"><span class="dashicons dashicons-no-alt" aria-hidden="true"></span></button></header>';
         if (null === $operation) { echo '<div class="idlm-dialog__body">'; return; }
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         echo '<form class="idlm-design-dialog-form idlm-payment-form" method="post"' . ($multipart ? ' enctype="multipart/form-data"' : '') . ' action="' . esc_url(admin_url('admin-post.php')) . '"' . $attributes . '>';
         self::hidden('action', 'idlm_payment_' . $operation); self::hidden('payment_lead_id', $lead_id);
-        self::hidden('payment_version', $version); self::hidden('request_key', wp_generate_uuid4()); self::hidden('return_url', $return_url);
+        self::hidden('payment_version', $version); self::hidden('request_key', wp_generate_uuid4()); self::hidden('return_url', $return_url); self::hidden('payment_dialog', $id);
         wp_nonce_field('idlm_payment_' . $operation);
         echo '<div class="idlm-dialog__body">';
+        // The dialog that was refused shows why, inside itself, above what was typed.
+        if (self::$retry && self::$retry['dialog'] === $id) { self::$retry_shown = true; echo '<div class="idlm-alert idlm-alert-error" role="alert" data-idlm-notice-inline>' . esc_html(self::$retry['message']) . '</div>'; }
     }
     private static function dialog_close($submit, $danger = false) {
         if (null === $submit) { echo '</div><footer class="idlm-dialog__footer"><button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-dialog-close>Close</button></footer></div></div>'; return; }
@@ -201,18 +339,18 @@ final class IDLM_Lead_Payment_Controller {
     /** Amount, date, method, reference or screenshot, note; the repeated-reference field shows only when payments.js finds a match. */
     private static function simple_receipt_fields($prefix, $currency, $receipt = null) {
         self::hidden('currency', $currency);
-        $method = $receipt->method ?? '';
+        $method = self::retried('method', $receipt->method ?? '');
         $options = '';
         foreach (array_unique(array_merge(self::METHODS, '' !== $method ? array($method) : array())) as $option) { $options .= '<option value="' . esc_attr($option) . '"' . selected($option, $method, false) . '>' . esc_html($option) . '</option>'; }
         echo '<div class="idlm-design-dialog-grid">';
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
-        echo self::group($prefix . '-amount', esc_html('Amount received (' . $currency . ')'), '<input class="idlm-input" id="' . esc_attr($prefix . '-amount') . '" name="amount" inputmode="decimal" autocomplete="off" required value="' . esc_attr($receipt->amount ?? '') . '">');
+        echo self::group($prefix . '-amount', esc_html('Amount received (' . $currency . ')'), '<input class="idlm-input" id="' . esc_attr($prefix . '-amount') . '" name="amount" inputmode="decimal" autocomplete="off" required value="' . esc_attr(self::retried('amount', $receipt->amount ?? '')) . '">');
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
-        echo self::group($prefix . '-date', 'Date received', '<input class="idlm-input" type="date" id="' . esc_attr($prefix . '-date') . '" name="received_date" required value="' . esc_attr($receipt->received_date ?? current_time('Y-m-d')) . '">');
+        echo self::group($prefix . '-date', 'Date received', '<input class="idlm-input" type="date" id="' . esc_attr($prefix . '-date') . '" name="received_date" required value="' . esc_attr(self::retried('received_date', $receipt->received_date ?? current_time('Y-m-d'))) . '">');
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         echo self::group($prefix . '-method', 'Method', '<select class="idlm-input" id="' . esc_attr($prefix . '-method') . '" name="method" required>' . $options . '</select>');
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
-        echo self::group($prefix . '-reference', 'Transaction reference', '<input class="idlm-input" id="' . esc_attr($prefix . '-reference') . '" name="reference" maxlength="255" autocomplete="off" value="' . esc_attr($receipt->reference ?? '') . '">');
+        echo self::group($prefix . '-reference', 'Transaction reference', '<input class="idlm-input" id="' . esc_attr($prefix . '-reference') . '" name="reference" maxlength="255" autocomplete="off" value="' . esc_attr(self::retried('reference', $receipt->reference ?? '')) . '">');
         echo '</div>';
         $current = $receipt ? (int) $receipt->attachment_id : 0;
         self::hidden('attachment_id', $current);
@@ -220,12 +358,12 @@ final class IDLM_Lead_Payment_Controller {
         echo self::group($prefix . '-file', $current ? 'Replace screenshot' : 'Or payment screenshot', '<input class="idlm-input" type="file" id="' . esc_attr($prefix . '-file') . '" name="payment_screenshot" accept="image/jpeg,image/png,image/webp" aria-describedby="' . esc_attr($prefix . '-file-help') . '">', 'A reference or a screenshot is required. JPEG, PNG or WebP, up to 10 MB.');
         if ($current) { echo '<p><a href="' . esc_url(IDLM_Private_Files::url($current)) . '" target="_blank" rel="noopener">View current screenshot</a></p><label class="idlm-payment-checkbox"><input type="checkbox" name="remove_screenshot" value="1"> Remove the current screenshot</label>'; }
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
-        echo self::group($prefix . '-note', 'Note (optional)', '<textarea class="idlm-input" id="' . esc_attr($prefix . '-note') . '" name="note" rows="2" maxlength="8000">' . esc_textarea($receipt->note ?? '') . '</textarea>');
-        $reviewed = '' !== (string) ($receipt->duplicate_review_reason ?? '');
-        echo '<div class="idlm-form-group" data-payment-duplicate' . ($reviewed ? '' : ' hidden') . '><label for="' . esc_attr($prefix . '-duplicate') . '">This reference was used for an earlier payment. Why is this a separate payment?</label><textarea class="idlm-input" id="' . esc_attr($prefix . '-duplicate') . '" name="duplicate_review_reason" rows="2" maxlength="8000"' . ($reviewed ? '' : ' disabled') . '>' . esc_textarea($receipt->duplicate_review_reason ?? '') . '</textarea></div>';
+        echo self::group($prefix . '-note', 'Note (optional)', '<textarea class="idlm-input" id="' . esc_attr($prefix . '-note') . '" name="note" rows="2" maxlength="8000">' . esc_textarea(self::retried('note', $receipt->note ?? '')) . '</textarea>');
+        $duplicate = self::retried('duplicate_review_reason', (string) ($receipt->duplicate_review_reason ?? '')); $reviewed = '' !== $duplicate;
+        echo '<div class="idlm-form-group" data-payment-duplicate' . ($reviewed ? '' : ' hidden') . '><label for="' . esc_attr($prefix . '-duplicate') . '">This reference was used for an earlier payment. Why is this a separate payment?</label><textarea class="idlm-input" id="' . esc_attr($prefix . '-duplicate') . '" name="duplicate_review_reason" rows="2" maxlength="8000"' . ($reviewed ? '' : ' disabled') . '>' . esc_textarea($duplicate) . '</textarea></div>';
     }
     private static function reason_group($id, $label) {
-        return self::group($id, esc_html($label), '<textarea class="idlm-input" id="' . esc_attr($id) . '" name="reason" rows="2" maxlength="8000" required></textarea>');
+        return self::group($id, esc_html($label), '<textarea class="idlm-input" id="' . esc_attr($id) . '" name="reason" rows="2" maxlength="8000" required>' . esc_textarea(self::retried('reason')) . '</textarea>');
     }
     // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom IDLM tables named from $wpdb->prefix; values are bound with prepare(), cast to int, or come from fixed clause builders and generated placeholder lists; request-scoped reads and transactional writes are deliberately uncached. Builder: Shashi.
     private static function simple_revisions($lead_id) {
@@ -430,7 +568,7 @@ final class IDLM_Lead_Payment_Controller {
         }
         echo '<button type="button" class="idlm-btn idlm-btn-quiet" data-payment-add-row>Add milestone</button></fieldset>';
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
-        echo self::group('idlm-payment-legacy-source', 'Where are these terms from?', '<input class="idlm-input" id="idlm-payment-legacy-source" name="source_reference" maxlength="1000" required placeholder="For example, signed quotation emailed on 3 March">');
+        echo self::group('idlm-payment-legacy-source', 'Where are these terms from?', '<input class="idlm-input" id="idlm-payment-legacy-source" name="source_reference" maxlength="1000" required placeholder="For example, signed quotation emailed on 3 March" value="' . esc_attr(self::retried('source_reference')) . '">');
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped when built: helpers and variables here concatenate only esc_html/esc_attr/esc_url values, nonce fields and fixed markup. Builder: Shashi.
         echo self::reason_group('idlm-payment-legacy-reason', 'Reason');
         echo '<label class="idlm-payment-checkbox"><input type="checkbox" name="legacy_confirmed" value="1" required> These are the agreed percentages and advance.</label>';
@@ -465,7 +603,7 @@ final class IDLM_Lead_Payment_Controller {
         $currency = $context['schedule']['currency'];
         echo '<section class="idlm-card idlm-payment-panel idlm-payment-start"><h2>Advance from the design handoff</h2><p>' . esc_html(self::money($row->advance_amount, $row->advance_currency ?: $currency) . ' received on ' . self::date((string) $row->advance_date) . ' was entered with Send to design, before this plan existed. It is not counted yet.') . '</p><button type="button" class="idlm-btn idlm-btn-primary" data-design-dialog="idlm-payment-handoff-advance" aria-haspopup="dialog">Record this advance</button></section>';
         self::dialog_open('idlm-payment-handoff-advance', 'Record the advance', 'Filled in from the design handoff. Check it and save.', 'record', $lead_id, $context['version'], add_query_arg('payment_lead_id', $lead_id, add_query_arg('idlm_view', 'payments', IDLM_Admin_Shortcodes::workspace_url())), true, ' data-payment-references="[]"');
-        self::simple_receipt_fields('idlm-payment-handoff', $currency, (object) array('amount' => $row->advance_amount, 'received_date' => (string) $row->advance_date, 'method' => $row->advance_method, 'reference' => $row->advance_reference, 'attachment_id' => (int) $row->advance_attachment_id, 'note' => 'Advance entered with Send to design', 'duplicate_review_reason' => ''));
+        self::simple_receipt_fields('idlm-payment-handoff', $currency, (object) array('amount' => $row->advance_amount, 'received_date' => (string) $row->advance_date, 'method' => $row->advance_method, 'reference' => $row->advance_reference, 'attachment_id' => IDLM_Lead_Payments::usable_proof($lead_id, (int) $row->advance_attachment_id) ? (int) $row->advance_attachment_id : 0, 'note' => 'Advance entered with Send to design', 'duplicate_review_reason' => ''));
         self::dialog_close('Record advance');
     }
 }
