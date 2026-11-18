@@ -6,8 +6,8 @@ idlm_test('Log failure reasons map known Meta, Google and LinkedIn errors to wha
     $expired = '{"error":{"message":"Error validating access token: Session has expired on Wednesday, 10-Jun-26 07:00:00 PDT.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"synthetic-trace"}}';
     assert_contains('Reconnect Meta in Settings', $reason('meta', $expired));
     assert_contains('Reconnect Meta in Settings', $reason('meta', '{"error":{"message":"The session is invalid because the user logged out.","type":"OAuthException","code":190,"error_subcode":467}}'));
-    assert_contains('Check the ID in Settings', $reason('meta', '{"error":{"message":"Unsupported post request. Object with ID \'120248073253620469\' does not exist. Please read the Graph API documentation at https:\/\/developers.facebook.com\/docs\/graph-api","type":"GraphMethodException","code":100,"error_subcode":33}}'));
-    assert_same('This value-based audience needs a deal value for every uploaded lead.', $reason('meta', '{"error":{"message":"(#100) Value-Based Custom Audience requires LOOKALIKE_VALUE attribute.","type":"OAuthException","code":100}}'));
+    assert_contains('Check it in Settings', $reason('meta', '{"error":{"message":"Unsupported post request. Object with ID \'120248073253620469\' does not exist. Please read the Graph API documentation at https:\/\/developers.facebook.com\/docs\/graph-api","type":"GraphMethodException","code":100,"error_subcode":33}}'));
+    assert_same('Value-based audience needs a deal value on every lead.', $reason('meta', '{"error":{"message":"(#100) Value-Based Custom Audience requires LOOKALIKE_VALUE attribute.","type":"OAuthException","code":100}}'));
     assert_contains('permission', $reason('meta', '{"error":{"message":"(#200) Missing permissions","type":"OAuthException","code":200}}'));
     assert_contains('rate limit', $reason('meta', '{"error":{"code":17,"message":"User request limit reached"}}'));
     assert_same('Meta rejected 3 of 80 uploaded entries.', $reason('meta', '{"audience_id":"1","num_received":80,"num_invalid_entries":3}'));
@@ -32,6 +32,9 @@ idlm_test('Log failure reasons never show secrets, contact details, hashes or li
     assert_false(false !== strpos($json, 'jane.doe') || false !== strpos($json, 'EAAB'), 'JSON messages are scrubbed too: ' . $json);
     $long = IDLM_Admin_Logs_Renderer::failure_reason('meta', str_repeat('Something went wrong. ', 40));
     assert_true(mb_strlen($long, 'UTF-8') <= IDLM_Admin_Logs_Renderer::REASON_LENGTH, 'Reasons are trimmed for the row.');
+    foreach (array('{"error":{"code":190,"type":"OAuthException","message":"x"}}', '{"error":{"code":100,"error_subcode":33,"type":"GraphMethodException","message":"x"}}', '{"error":{"code":100,"type":"OAuthException","message":"requires LOOKALIKE_VALUE"}}') as $known) {
+        assert_true(mb_strlen(IDLM_Admin_Logs_Renderer::failure_reason('meta', $known), 'UTF-8') <= 70, 'A mapped reason fits one line of the Status column.');
+    }
     assert_contains('Pixel 1234567890123456 rejected', IDLM_Admin_Logs_Renderer::failure_reason('meta', 'Pixel 1234567890123456 rejected'), 'Long provider IDs are not mistaken for phone numbers.');
     // The template escapes the reason at output.
     foreach (array('capi.php', 'audience.php') as $file) {

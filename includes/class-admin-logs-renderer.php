@@ -122,16 +122,16 @@ class IDLM_Admin_Logs_Renderer {
         // Meta Graph API (Conversions API and Custom Audiences).
         if (isset($error['fbtrace_id']) || isset($body['fbtrace_id']) || isset($error['type']) || 'meta' === $platform) {
             if (190 === $code || 102 === $code || in_array($subcode, array(458, 459, 460, 463, 464, 467), true)) {
-                return 'Meta no longer accepts the saved access token (expired, revoked or the user logged out). Reconnect Meta in Settings.';
+                return 'Meta access token expired or revoked. Reconnect Meta in Settings.';
             }
             if (10 === $code || ($code >= 200 && $code <= 299)) {
-                return 'The Meta token does not have permission for this pixel or audience. Reconnect Meta with the ads permissions.';
+                return 'The Meta token lacks permission for this pixel or audience. Reconnect Meta.';
             }
             if (100 === $code && 33 === $subcode) {
-                return 'Meta cannot find this pixel or audience, or the token cannot use it. Check the ID in Settings.';
+                return 'Meta cannot find this pixel or audience ID. Check it in Settings.';
             }
             if (false !== stripos($message, 'LOOKALIKE_VALUE')) {
-                return 'This value-based audience needs a deal value for every uploaded lead.';
+                return 'Value-based audience needs a deal value on every lead.';
             }
             if (in_array($code, array(4, 17, 32, 613), true) || ($code >= 80000 && $code <= 80099)) {
                 return 'Meta rate limit reached. The event is retried later.';

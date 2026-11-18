@@ -4,7 +4,7 @@
 
 ### Added
 
-- Ad conversions and Ad audiences logs: a failed row now says in plain words why it failed and what to fix, for example "Meta no longer accepts the saved access token… Reconnect Meta in Settings", a pixel or audience ID Meta cannot find, a value-based audience missing deal values, a rate limit or a timeout. Other provider errors show the provider's own short message with tokens, contact details and links removed. Inspect payload still shows the full request and response. Builder: Shashi.
+- Ad conversions and Ad audiences logs: a failed row now says in plain words why it failed and what to fix, for example "Meta access token expired or revoked. Reconnect Meta in Settings.", a pixel or audience ID Meta cannot find, a value-based audience missing deal values, a rate limit or a timeout. Other provider errors show the provider's own short message with tokens, contact details and links removed. Inspect payload still shows the full request and response. Builder: Shashi.
 
 ### Changed
 
