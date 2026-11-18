@@ -332,9 +332,12 @@ idlm_test('Phase 7 users and logs expose responsive filters, semantic tables, an
     }
     assert_contains("wp_ajax_idlm_get_capi_log_payload", $admin);
     assert_contains("wp_register_script('idlm-users-logs'", $assets);
-    foreach (array('.idlm-log-filters', '.idlm-log-table tbody td::before', '.idlm-log-dialog-panel', '.idlm-users-page .idlm-users-filter') as $contract) {
+    foreach (array('.idlm-log-filters', '.idlm-log-table tbody td::before', '.idlm-log-dialog-panel') as $contract) {
         assert_contains($contract, $css);
     }
+    // The people filters are the users toolbar (#idlm-users-filters), styled by the design layer.
+    assert_contains('class="idlm-users-toolbar" id="idlm-users-filters"', (string) file_get_contents($root . '/templates/admin/users.php'));
+    assert_contains('.idlm-users-page .idlm-users-toolbar .idlm-users-filter-actions', (string) file_get_contents($root . '/assets/css/crm-design-admin.css'));
 });
 
 idlm_test('frontend workspace button components outrank Elementor kit defaults without important overrides', static function(): void {
@@ -637,4 +640,31 @@ idlm_test('Phone lead cards keep 44px reach, one-tap Call and WhatsApp, and a se
     assert_contains('> select.idlm-table-select.idlm-quick-edit {' . "\n" . '        height: var(--idlm-target-size);', $css);
     assert_contains(':has(.idlm-bulk-bar:not([hidden])) {' . "\n" . '        padding-bottom:', $css);
     assert_contains('.idlm-pagination .idlm-pagination-btn {' . "\n" . '        height: var(--idlm-target-size);', $css);
+});
+
+idlm_test('shadcn foundations: role tokens follow white-label roots, component variants and a local-only review page', static function(): void {
+    $root = dirname(__DIR__);
+    $css = (string) file_get_contents($root . '/assets/css/crm-design.css');
+    $shortcodes = (string) file_get_contents($root . '/includes/class-admin-shortcodes.php');
+    $kit = (string) file_get_contents($root . '/templates/admin/ui-kit.php');
+    // Role aliases are declared where white-label tokens are set, so Primary follows the customer's colour.
+    assert_contains("body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-access-restricted, .idlm-dialog) {\n    --idlm-ui-background:", $css);
+    assert_contains('--idlm-ui-primary: var(--idlm-action);', $css);
+    foreach (array('.idlm-btn.idlm-btn-sm {', '.idlm-btn.idlm-btn-link', '.idlm-btn > [data-icon]', ':is(.idlm-badge, .idlm-drawer-chip, .idlm-kanban-card-badge).is-outline', ':is(.idlm-field, .idlm-form-group, .idlm-drawer-field):has([aria-invalid="true"])', '.idlm-badge[data-idlm-stage="Won"]', '.idlm-field {', ':is(.idlm-field, .idlm-form-group, .idlm-drawer-field)[data-invalid]', '.idlm-fieldset-legend') as $contract) {
+        assert_contains($contract, $css);
+    }
+    // The review page exists only for administrators on local and development sites.
+    assert_contains("current_user_can('manage_options') && in_array(\$environment, array('local', 'development'), true)", $shortcodes);
+    assert_contains("if (!self::ui_kit_available()) {\n            return '';", $shortcodes);
+    assert_false(false !== strpos($kit, 'style='), 'The review page uses classes, not inline styles.');
+    assert_false((bool) preg_match('/\son[a-z]+=/', $kit), 'The review page has no inline handlers.');
+    // Applied on screens: source is an outline identity badge, drill-down stage and quality are toned badges,
+    // quality badges keep their own label, and toolbar buttons use the small size.
+    assert_same(2, substr_count((string) file_get_contents($root . '/includes/class-admin-collection-reads.php'), 'data-label="Channel"><span class="idlm-badge is-outline idlm-badge-'));
+    assert_contains('<span class="idlm-drawer-chip is-outline idlm-badge-', (string) file_get_contents($root . '/includes/class-admin-lead-reads.php'));
+    $dashboard = (string) file_get_contents($root . '/assets/js/dashboard.js');
+    assert_contains('<span class="idlm-badge" data-idlm-stage="', $dashboard);
+    assert_contains('<span class="idlm-badge" data-idlm-quality="', $dashboard);
+    assert_contains("select[data-field=\"lead_quality\"], [data-idlm-quality]').length) continue;", (string) file_get_contents($root . '/assets/js/admin-app.js'));
+    assert_contains('class="idlm-btn idlm-btn-secondary idlm-btn-sm" data-idlm-select-failed', (string) file_get_contents($root . '/templates/admin/logs/capi.php'));
 });

@@ -96,7 +96,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                                             </td>
                                             <td data-idlm-ui="center">
                                                 <button type="button" class="idlm-btn idlm-btn-secondary idlm-test-audience-rule" data-idlm-ui="action-outline compact-button">Test</button>
-                                                <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-audience-rule idlm-btn-compact idlm-btn-danger-outline">Delete</button>
+                                                <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-audience-rule idlm-btn-sm idlm-btn-danger-outline">Delete</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -162,7 +162,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                                                 <input type="number" name="reminder_rules_hours[]" class="idlm-input" aria-label="Reminder interval in hours" inputmode="numeric" value="<?php echo esc_attr($idlm_rule['hours']); ?>" min="1" required>
                                             </td>
                                             <td data-idlm-ui="center">
-                                                <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-reminder-rule idlm-btn-compact idlm-btn-danger-outline">Delete</button>
+                                                <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-reminder-rule idlm-btn-sm idlm-btn-danger-outline">Delete</button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -241,7 +241,7 @@ $idlm_interakt_mappings = isset($context['interakt_mappings']) ? $context['inter
                                                 </td>
                                                 <td data-idlm-ui="center nowrap">
                                                     <button type="button" class="idlm-btn idlm-btn-secondary idlm-sync-past-interakt-mapping" data-idlm-ui="action-outline compact-button" data-type="<?php echo esc_attr($idlm_mapping['type']); ?>" data-value="<?php echo esc_attr($idlm_mapping['value']); ?>" data-event="<?php echo esc_attr($idlm_mapping['event']); ?>">Sync Past</button>
-                                                    <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-interakt-mapping idlm-btn-compact idlm-btn-danger-outline">Delete</button>
+                                                    <button type="button" class="idlm-btn idlm-btn-secondary idlm-remove-interakt-mapping idlm-btn-sm idlm-btn-danger-outline">Delete</button>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>

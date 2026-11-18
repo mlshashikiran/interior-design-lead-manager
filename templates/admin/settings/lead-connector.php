@@ -32,7 +32,7 @@ $idlm_last=(int)($idlm_summary['last_import'] ?? 0);
         <div><dt>Waiting</dt><dd data-idlm-lead-sync-waiting><?php echo esc_html(number_format_i18n((int)($idlm_summary['waiting'] ?? 0)).(!empty($idlm_summary['capped']) ? '+' : '')); ?></dd></div>
         <div class="<?php echo !empty($idlm_summary['failed']) ? 'is-failed' : ''; ?>"><dt>Failed</dt><dd data-idlm-lead-sync-failed><?php echo esc_html(number_format_i18n((int)($idlm_summary['failed'] ?? 0))); ?></dd></div>
         <div class="idlm-meta-connector__summary-action">
-            <button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-compact" data-idlm-meta-lead-retry <?php echo empty($idlm_summary['failed']) ? 'hidden' : ''; ?>>Retry failed imports</button>
+            <button type="button" class="idlm-btn idlm-btn-secondary idlm-btn-sm" data-idlm-meta-lead-retry <?php echo empty($idlm_summary['failed']) ? 'hidden' : ''; ?>>Retry failed imports</button>
         </div>
     </dl>
     <p class="description" role="status" aria-live="polite" data-idlm-meta-lead-retry-status></p>

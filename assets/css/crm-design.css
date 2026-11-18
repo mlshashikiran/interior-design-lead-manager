@@ -57,6 +57,38 @@ body.idlm-crm-design {
     --idlm-muted: var(--idlm-text-muted);
 }
 
+/* --- 1a. Role tokens (shadcn/ui vocabulary) -------------------------------- */
+/* Semantic roles for new rules: background, card, muted, primary, destructive, border,
+   input and ring, as in shadcn/ui. Each is an alias, so there is no new colour.
+   White-label tokens are set on these roots, not on body, so the aliases must be
+   declared here as well; declared on body they would freeze the default brand. */
+body.idlm-crm-design,
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-access-restricted, .idlm-dialog) {
+    --idlm-ui-background: var(--idlm-canvas);
+    --idlm-ui-foreground: var(--idlm-text);
+    --idlm-ui-card: var(--idlm-surface);
+    --idlm-ui-card-foreground: var(--idlm-text);
+    --idlm-ui-muted: var(--idlm-readonly);
+    --idlm-ui-muted-foreground: var(--idlm-text-muted);
+    --idlm-ui-accent: var(--idlm-hover-tint);
+    --idlm-ui-primary: var(--idlm-action);
+    --idlm-ui-primary-hover: var(--idlm-action-hover);
+    --idlm-ui-primary-foreground: var(--idlm-action-contrast);
+    --idlm-ui-destructive: var(--idlm-danger);
+    --idlm-ui-destructive-soft: var(--idlm-danger-soft);
+    --idlm-ui-success: var(--idlm-success);
+    --idlm-ui-success-soft: var(--idlm-success-soft);
+    --idlm-ui-warning: var(--idlm-warning);
+    --idlm-ui-warning-soft: var(--idlm-warning-soft);
+    --idlm-ui-info: var(--idlm-info);
+    --idlm-ui-info-soft: var(--idlm-info-soft);
+    --idlm-ui-border: var(--idlm-border);
+    --idlm-ui-input: var(--idlm-control-line);
+    --idlm-ui-ring: var(--idlm-focus-ring);
+    --idlm-ui-radius: var(--idlm-radius);
+    --idlm-ui-radius-sm: var(--idlm-radius-compact);
+}
+
 /* --- 2. Foundations ------------------------------------------------------ */
 body.idlm-crm-design .idlm-workspace-content {
     padding-bottom: var(--idlm-space-12);
@@ -988,6 +1020,73 @@ body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn-pr
     border-top-color: var(--idlm-action-contrast);
 }
 
+/* Size sm (idlm-btn-sm): toolbars and dense rows. Desktop only; phones keep the 44px target (section 17).
+   idlm-btn-compact keeps its legacy 34px height so existing screens do not change. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-sm {
+    min-height: 28px;
+    padding-block: 0;
+    padding-inline: var(--idlm-space-2);
+    font-size: 0.75rem;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-sm.idlm-btn-icon {
+    width: 28px;
+    min-width: 28px;
+    padding: 0;
+}
+
+/* Link: an action that reads as text, for inline "View all" or "Change" next to a value. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-link:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline) {
+    min-height: 0;
+    padding: 0;
+    border-color: transparent;
+    background: transparent;
+    color: var(--idlm-ui-primary);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 3px;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-link:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline):hover {
+    border-color: transparent;
+    background: transparent;
+    color: var(--idlm-ui-primary-hover);
+    text-decoration-color: currentColor;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-link:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline):is(:disabled, [aria-disabled="true"]) {
+    background: transparent;
+    color: var(--idlm-ui-muted-foreground);
+    text-decoration-color: transparent;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-link:not(.idlm-btn-primary):not(.idlm-btn-danger):not(.idlm-btn-danger-outline):is(.is-loading, [aria-busy="true"]) {
+    color: transparent;
+}
+
+/* Icon slot: mark the icon, not the button. The button sizes it, so icons never carry their own size. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn > [data-icon] {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    line-height: 1;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn > [data-icon="inline-start"] {
+    margin-inline-start: -2px;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn > [data-icon="inline-end"] {
+    margin-inline-end: -2px;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-btn.idlm-btn-sm > [data-icon] {
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+}
+
 /* --- 15. Fields -------------------------------------------------------------- */
 body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-input, .idlm-select) {
     border-color: var(--idlm-control-line);
@@ -1069,6 +1168,65 @@ body.idlm-crm-design .idlm-wrap .idlm-checkbox-row {
     font-weight: 400;
 }
 
+/* Field anatomy (shadcn Field): wrapper, label, control, help, error, stacked with gap only. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-field > :is(.idlm-field-help, .idlm-field-error) {
+    margin-top: 0;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--idlm-space-4);
+}
+
+/* Validation lives on the field: data-invalid here, aria-invalid on the control. A field whose
+   control already carries aria-invalid (IDLMDialog.setFieldError and older handlers) gets the same state. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-field, .idlm-form-group, .idlm-drawer-field)[data-invalid] :is(label, .idlm-form-label, .idlm-field-error) {
+    color: var(--idlm-ui-destructive);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-field, .idlm-form-group, .idlm-drawer-field):has([aria-invalid="true"]) :is(label, .idlm-form-label, .idlm-field-error) {
+    color: var(--idlm-ui-destructive);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-field, .idlm-form-group, .idlm-drawer-field)[data-invalid] :is(.idlm-input, .idlm-select, .idlm-drawer-control, .idlm-drawer-textarea) {
+    border-color: var(--idlm-ui-destructive);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-field, .idlm-form-group, .idlm-drawer-field):has([aria-invalid="true"]) :is(.idlm-input, .idlm-select, .idlm-drawer-control, .idlm-drawer-textarea) {
+    border-color: var(--idlm-ui-destructive);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) :is(.idlm-field, .idlm-form-group, .idlm-drawer-field)[data-disabled] :is(label, .idlm-form-label) {
+    color: var(--idlm-ui-muted-foreground);
+}
+
+/* Field set: a group of checkboxes or radios with a written legend, never a div and a heading. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: var(--idlm-space-2);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog, .idlm-filters-panel) .idlm-fieldset-legend {
+    margin-bottom: var(--idlm-space-1);
+    padding: 0;
+    color: var(--idlm-ui-foreground);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
 /* --- 16. Badges, chips and pills ---------------------------------------------- */
 /* Status is a 6px badge with a written label. idlm-pill is for filter counts only. */
 body.idlm-crm-design .idlm-wrap .idlm-chip {
@@ -1106,6 +1264,47 @@ body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge.
 body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge.is-neutral {
     background-color: var(--idlm-readonly);
     color: var(--idlm-text-muted);
+}
+
+/* Outline: identity, such as a lead source or a role, rather than a status. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) :is(.idlm-badge, .idlm-drawer-chip, .idlm-kanban-card-badge).is-outline {
+    border: 1px solid var(--idlm-ui-border);
+    background-color: transparent;
+    color: var(--idlm-ui-foreground);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge.is-strong {
+    font-weight: 700;
+}
+
+/* Stage and quality badges use the STD-CRM-11 tones from section 15, matched on the stored value. */
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge:is([data-idlm-stage="Won"], [data-idlm-stage="Quote Shared"], [data-idlm-stage="Negotiation"], [data-idlm-quality="Qualified"]) {
+    background-color: var(--idlm-ui-success-soft);
+    color: var(--idlm-ui-success);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge[data-idlm-stage="Won"] {
+    font-weight: 700;
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge:is([data-idlm-stage="Qualified"], [data-idlm-stage="Pre-Qualified"], [data-idlm-stage="Sales Connected"], [data-idlm-stage="Studio Visit Scheduled"], [data-idlm-stage="QS - Visit Pending"], [data-idlm-stage="Visit Completed"]) {
+    background-color: var(--idlm-ui-info-soft);
+    color: var(--idlm-ui-info);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge:is([data-idlm-stage="RNR"], [data-idlm-stage="On Hold"], [data-idlm-quality="plan-pending"]) {
+    background-color: var(--idlm-ui-warning-soft);
+    color: var(--idlm-ui-warning);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge:is([data-idlm-stage="Lost"], [data-idlm-quality="Unqualified"]) {
+    background-color: var(--idlm-ui-destructive-soft);
+    color: var(--idlm-danger-ink);
+}
+
+body.idlm-crm-design :is(.idlm-wrap, .idlm-workspace, .idlm-dialog) .idlm-badge:is([data-idlm-stage="New"], [data-idlm-stage="Contacted"], [data-idlm-quality=""], [data-idlm-quality="Pending"]) {
+    background-color: var(--idlm-ui-muted);
+    color: var(--idlm-ui-muted-foreground);
 }
 
 /* --- 17. Pagination and generic tables ---------------------------------------- */

@@ -98,7 +98,7 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
                     </div>
                     <?php if ($idlm_can_manage_options): ?>
                         <div class="idlm-leads-menu">
-                            <button type="button" class="idlm-btn idlm-btn-secondary idlm-leads-menu-toggle" id="idlm-leads-more-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="idlm-leads-more-menu">More <span class="dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span></button>
+                            <button type="button" class="idlm-btn idlm-btn-secondary idlm-leads-menu-toggle" id="idlm-leads-more-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="idlm-leads-more-menu">More <span class="dashicons dashicons-arrow-down-alt2" data-icon="inline-end" aria-hidden="true"></span></button>
                             <div class="idlm-leads-menu-list" id="idlm-leads-more-menu" role="menu" aria-labelledby="idlm-leads-more-btn" hidden>
                         <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-import-btn" role="menuitem" tabindex="-1">Import CSV</button>
                         <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-export-btn" role="menuitem" tabindex="-1">Export CSV</button>
@@ -850,7 +850,7 @@ $idlm_common_overlays_html = isset($context['common_overlays_html']) ? (string) 
 
                     <div class="idlm-import-step-actions is-split">
                         <button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-import-download-template">
-                            <span class="dashicons dashicons-download" aria-hidden="true"></span> Download sample template
+                            <span class="dashicons dashicons-download" data-icon="inline-start" aria-hidden="true"></span> Download sample template
                         </button>
                         <button type="button" class="idlm-btn idlm-btn-secondary" data-idlm-dialog-close>Cancel</button>
                     </div>

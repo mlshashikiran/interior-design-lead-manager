@@ -1335,6 +1335,15 @@ body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-tasks-wrapper label {
     text-transform: none;
 }
 
+/* Field invalid state (STD-CMP-4) inside the drawer, which outranks the shared rule by ID. */
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field[data-invalid] label {
+    color: var(--idlm-ui-destructive);
+}
+
+body.idlm-crm-design #idlm-lead-drawer .idlm-drawer-field:has([aria-invalid="true"]) label {
+    color: var(--idlm-ui-destructive);
+}
+
 body.idlm-crm-design #idlm-lead-drawer :is(.idlm-drawer-control, .idlm-drawer-tasks-wrapper .idlm-input) {
     width: 100%;
     height: var(--idlm-control-height);

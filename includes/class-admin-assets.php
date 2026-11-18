@@ -30,6 +30,7 @@ final class IDLM_Admin_Assets {
         'users'         => array('styles' => array(), 'scripts' => array('idlm-users-logs'), 'areas' => array('admin')),
         'settings'      => array('styles' => array(), 'scripts' => array('idlm-settings'), 'areas' => array('settings', 'admin')),
         'my-account'    => array('styles' => array(), 'scripts' => array(), 'areas' => array('admin')),
+        'ui-kit'        => array('styles' => array(), 'scripts' => array(), 'areas' => array('admin')),
     );
 
     /** The active workspace view's extra assets, or null to load every view's assets. */

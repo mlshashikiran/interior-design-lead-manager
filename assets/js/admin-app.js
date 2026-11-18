@@ -17,7 +17,7 @@ jQuery(document).ready(function($) {
             var original = node.nodeValue;
             var label = original.trim();
             if (!label || !Object.prototype.hasOwnProperty.call(aliases, label) || !aliases[label]) continue;
-            if (stageAliases[label] && $(node.parentNode).closest('select[id*="quality"], select[name*="quality"], select[data-field="lead_quality"]').length) continue;
+            if (stageAliases[label] && $(node.parentNode).closest('select[id*="quality"], select[name*="quality"], select[data-field="lead_quality"], [data-idlm-quality]').length) continue;
             node.nodeValue = original.replace(label, aliases[label]);
         }
     }

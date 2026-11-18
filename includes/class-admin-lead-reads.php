@@ -77,7 +77,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
         <section class="idlm-drawer-panel idlm-drawer-whatsapp-panel">
             <div class="idlm-drawer-panel-head">
                 <h3 class="idlm-drawer-panel-title">WhatsApp messages</h3>
-                <?php if ($can_open_interakt): ?><a class="idlm-btn idlm-btn-secondary idlm-drawer-open-interakt" href="<?php echo esc_url($inbox_url); ?>" target="_blank" rel="noopener noreferrer" title="Open Interakt's WhatsApp Inbox">Open in Interakt <span class="dashicons dashicons-external" aria-hidden="true"></span></a><?php endif; ?>
+                <?php if ($can_open_interakt): ?><a class="idlm-btn idlm-btn-secondary idlm-drawer-open-interakt" href="<?php echo esc_url($inbox_url); ?>" target="_blank" rel="noopener noreferrer" title="Open Interakt's WhatsApp Inbox">Open in Interakt <span class="dashicons dashicons-external" data-icon="inline-end" aria-hidden="true"></span></a><?php endif; ?>
             </div>
             <div class="idlm-drawer-whatsapp-list">
                 <?php if (empty($messages)): ?>
@@ -230,7 +230,7 @@ final class IDLM_Admin_Lead_Reads extends IDLM_Admin {
                 <div class="idlm-drawer-identity-text">
                     <h2 id="lead-title"><?php echo esc_html($lead->first_name . ' ' . $lead->last_name); ?></h2>
                     <?php if ($lead->source): ?>
-                        <span class="idlm-drawer-chip idlm-badge-<?php echo esc_attr(strtolower(str_replace(array(' ', '/', '-'), '', $lead->source))); ?>"><?php echo esc_html($lead->source); ?></span>
+                        <span class="idlm-drawer-chip is-outline idlm-badge-<?php echo esc_attr(strtolower(str_replace(array(' ', '/', '-'), '', $lead->source))); ?>"><?php echo esc_html($lead->source); ?></span>
                     <?php endif; ?>
                     <div class="idlm-drawer-contact"><?php if ($lead->phone): ?><a href="tel:<?php echo esc_attr(preg_replace('/[^0-9+]/', '', (string) $lead->phone)); ?>"><?php echo esc_html($lead->phone); ?></a><?php endif; ?><?php if ($lead->email): ?><a href="mailto:<?php echo esc_attr($lead->email); ?>" title="<?php echo esc_attr($lead->email); ?>"><?php echo esc_html($lead->email); ?></a><?php endif; ?></div>
                 </div>

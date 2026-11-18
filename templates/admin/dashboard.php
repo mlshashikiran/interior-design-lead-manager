@@ -17,7 +17,7 @@ $idlm_grid_class = ' idlm-dashboard-grid--act';
 <div class="wrap idlm-wrap idlm-dashboard">
     <header class="idlm-header">
         <div class="idlm-header-meta"><h1><?php echo esc_html($idlm_dashboard_title); ?></h1><p><?php echo esc_html($idlm_dashboard_description); ?></p></div>
-        <div class="idlm-header-actions"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-dashboard-refresh"><span class="dashicons dashicons-update" aria-hidden="true"></span> Refresh</button></div>
+        <div class="idlm-header-actions"><button type="button" class="idlm-btn idlm-btn-secondary" id="idlm-dashboard-refresh"><span class="dashicons dashicons-update" data-icon="inline-start" aria-hidden="true"></span> Refresh</button></div>
     </header>
     <main class="idlm-dashboard-body">
         <div class="idlm-dashboard-top-row">

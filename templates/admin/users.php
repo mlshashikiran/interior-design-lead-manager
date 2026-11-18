@@ -62,7 +62,7 @@ $idlm_website_roles_control = static function($idlm_select_id, $idlm_website_rol
         </div>
         <div class="idlm-header-actions">
 <?php if ('team' === $idlm_users_tab): ?>
-            <a class="idlm-btn idlm-btn-primary" href="#idlm-users-invite" data-idlm-open-fold="idlm-users-invite"><span class="dashicons dashicons-plus-alt2" aria-hidden="true"></span><span>Invite team member</span></a>
+            <a class="idlm-btn idlm-btn-primary" href="#idlm-users-invite" data-idlm-open-fold="idlm-users-invite"><span class="dashicons dashicons-plus-alt2" data-icon="inline-start" aria-hidden="true"></span><span>Invite team member</span></a>
 <?php endif; ?>
         </div>
     </header>
