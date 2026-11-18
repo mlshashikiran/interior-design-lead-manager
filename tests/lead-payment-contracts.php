@@ -119,9 +119,12 @@ idlm_test('PAYMENT Won-amount plan writes no quotation, keeps first-plan and cha
 });
 /** Records every list read and answers it: lead rows for the page query, latest snapshots for the balance query. Builder: Shashi. */
 final class IDLM_Payment_List_Test_DB {
-    public string $prefix = 'wp_';
-    public array $reads = array();
-    public function __construct(public IDLM_Test_WPDB $inner, public array $leads, public array $snapshots) {}
+    public $prefix = 'wp_';
+    public $reads = array();
+    public $inner;
+    public $leads;
+    public $snapshots;
+    public function __construct($inner, array $leads, array $snapshots) { $this->inner = $inner; $this->leads = $leads; $this->snapshots = $snapshots; }
     public function esc_like($value) { return $this->inner->esc_like($value); }
     public function prepare($query, ...$args) { return $this->inner->prepare($query, ...$args); }
     public function __call($name, $args) { return $this->inner->$name(...$args); }
