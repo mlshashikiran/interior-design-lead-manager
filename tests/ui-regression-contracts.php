@@ -350,7 +350,7 @@ idlm_test('frontend workspace button components outrank Elementor kit defaults w
 
 idlm_test('compact CRM typography uses a consistent scalable hierarchy', static function(): void {
     $root = dirname(__DIR__);
-    $admin_css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $admin_css = (string) file_get_contents($root . '/assets/css/admin-style.css') . (string) file_get_contents($root . '/assets/css/crm-tokens.css');
     $dashboard_css = (string) file_get_contents($root . '/assets/css/dashboard.css');
     $master = (string) file_get_contents($root . '/design-system/interior-design-lead-manager/MASTER.md');
 
@@ -365,7 +365,7 @@ idlm_test('compact CRM typography uses a consistent scalable hierarchy', static 
 
 idlm_test('CRM buttons use a shared radius and readable semantic contrast', static function(): void {
     $root = dirname(__DIR__);
-    $admin_css = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $admin_css = (string) file_get_contents($root . '/assets/css/admin-style.css') . (string) file_get_contents($root . '/assets/css/crm-tokens.css');
     $workspace_css = (string) file_get_contents($root . '/assets/css/workspace.css');
     $quotes_css = (string) file_get_contents($root . '/assets/css/quotations.css');
     $overlays = (string) file_get_contents($root . '/templates/admin/common-overlays.php');
@@ -399,7 +399,7 @@ idlm_test('final UI acceptance uses shared dialogs and non-blocking feedback ins
 
 idlm_test('pre-sales outreach stays recoverable while the activity request is pending', static function(): void {
     $script = (string) file_get_contents(dirname(__DIR__) . '/assets/js/admin-app.js');
-    $css = (string) file_get_contents(dirname(__DIR__) . '/assets/css/admin-style.css');
+    $css = (string) file_get_contents(dirname(__DIR__) . '/assets/css/admin-style.css') . (string) file_get_contents(dirname(__DIR__) . '/assets/css/crm-tokens.css');
     $dialog = (string) file_get_contents(dirname(__DIR__) . '/assets/js/dialog.js');
     $assets = (string) file_get_contents(dirname(__DIR__) . '/includes/class-admin-assets.php');
 
@@ -472,10 +472,32 @@ idlm_test('lead routing popup distills safeguards with conditional controls whil
     assert_contains('Run fallback now', $routing_settings);
 });
 
+idlm_test('crm-tokens.css is the one ungated stylesheet: custom properties only, enqueued first (STD-CSS-10)', static function(): void {
+    $root = dirname(__DIR__);
+    $path = $root . '/assets/css/crm-tokens.css';
+    assert_true(is_file($path), 'crm-tokens.css must exist.');
+    $bare = trim((string) preg_replace('~/\*.*?\*/~s', '', (string) file_get_contents($path)));
+    assert_true(1 === preg_match_all('/([^{}]+)\{([^{}]*)\}/', $bare, $blocks), 'crm-tokens.css holds the single :root block.');
+    assert_same(':root', trim($blocks[1][0]));
+    assert_same('', trim((string) preg_replace('/([^{}]+)\{([^{}]*)\}/', '', $bare)), 'Nothing but the :root block.');
+    foreach (preg_split('/;\s*(?![^()]*\))/', trim($blocks[2][0])) as $declaration) {
+        if ('' !== trim($declaration)) {
+            assert_true((bool) preg_match('/^\s*--idlm-[a-z0-9-]+\s*:\s*[^;]+$/s', $declaration), 'STD-CSS-10: only --idlm-* custom properties: ' . trim($declaration));
+        }
+    }
+    assert_false(false !== strpos($bare, '!important'), 'No !important in the tokens file.');
+    assert_false((bool) preg_match('/--idlm-[a-z0-9-]+\s*:/', (string) preg_replace('~/\*.*?\*/~s', '', (string) file_get_contents($root . '/assets/css/admin-style.css'))), 'admin-style.css declares no tokens.');
+    $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
+    assert_contains("wp_register_style('idlm-crm-tokens'", $assets);
+    assert_contains("array('idlm-crm-tokens', 'dashicons')", $assets);
+    assert_true(strpos($assets, "wp_register_style('idlm-crm-tokens'") < strpos($assets, "wp_register_style('idlm-admin-styles'"), 'Tokens are registered before admin-style.css.');
+});
+
 idlm_test('CRM design layer stays fully gated, token-led and reversible', static function(): void {
     $root = dirname(__DIR__);
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
     $admin = (string) file_get_contents($root . '/includes/class-admin.php');
+    // crm-tokens.css is deliberately outside this glob and this gate: STD-CSS-10 holds it to custom properties only.
     $files = glob($root . '/assets/css/crm-design*.css') ?: array();
     assert_true(9 === count($files), 'The design layer must stay in its base, seven area and one standalone stylesheet.');
     $rule_count = 0;

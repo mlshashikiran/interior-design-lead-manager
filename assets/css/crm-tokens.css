@@ -1,0 +1,103 @@
+/* ==========================================================================
+   Interior Design Lead Manager - base tokens
+   The one stylesheet outside the gated design layer that declares base tokens
+   and white-label defaults. Custom properties only: no styling rules here.
+   Loaded before admin-style.css and crm-design*.css (STD-CSS-10).
+   ========================================================================== */
+
+:root {
+    /* Canonical brand and action colours. */
+    --idlm-brand-gold: #c99644;
+    --idlm-action: #7a5017;
+    --idlm-action-hover: #603d10;
+    --idlm-action-soft: #fff4df;
+    --idlm-action-contrast: #ffffff;
+    --idlm-info: #176a9e;
+    --idlm-success: #177c51;
+    --idlm-warning: #855a00;
+    --idlm-danger: #c84635;
+    --idlm-info-soft: #e7f4ff;
+    --idlm-success-soft: #e8f6ef;
+    --idlm-warning-soft: #fff6d7;
+    --idlm-danger-soft: #fff0ec;
+
+    /* Canonical surfaces and text. */
+    --idlm-canvas: #eef2f6;
+    --idlm-surface: #ffffff;
+    --idlm-surface-soft: #f8fafc;
+    --idlm-surface-tint: #f5f9ff;
+    --idlm-text: #17212b;
+    --idlm-text-muted: #56657a;
+    --idlm-border: #d9e1eb;
+    --idlm-border-strong: #b9c6d5;
+    --idlm-sidebar: #111a24;
+    --idlm-text-inverse: #ffffff;
+    --idlm-readonly: #f1f5f9;
+
+    /* Spacing, controls, shape, and elevation. */
+    --idlm-space-1: 4px;
+    --idlm-space-2: 8px;
+    --idlm-space-3: 12px;
+    --idlm-space-4: 16px;
+    --idlm-space-5: 20px;
+    --idlm-space-6: 24px;
+    --idlm-space-8: 32px;
+    --idlm-space-10: 40px;
+    --idlm-space-12: 48px;
+    /* Dense desktop CRM controls. Icon-only and mobile-touch targets keep the
+       separate 44px target token below. */
+    --idlm-control-height: 34px;
+    --idlm-target-size: 44px;
+    --idlm-font-weight-medium: 500;
+    /* Compact operational type scale. Rem values preserve browser text scaling. */
+    --idlm-type-page: 1.375rem;
+    --idlm-type-section: 1rem;
+    --idlm-type-card: 0.875rem;
+    --idlm-type-body: 0.8125rem;
+    --idlm-type-compact: 0.75rem;
+    --idlm-type-label: 0.625rem;
+    --idlm-type-meta: 0.5625rem;
+    --idlm-type-metric: 1.125rem;
+    --idlm-radius-compact: 6px;
+    --idlm-radius: 8px;
+    --idlm-button-radius: 8px;
+    --idlm-radius-panel: 12px;
+    --idlm-radius-pill: 999px;
+    --idlm-shadow: 0 16px 36px rgba(23, 33, 43, 0.07);
+    --idlm-shadow-lg: 0 24px 80px rgba(15, 23, 42, 0.24);
+
+    /* Focus and motion. */
+    --idlm-focus-ring: var(--idlm-action);
+    --idlm-focus-offset: 2px;
+    --idlm-motion-fast: 150ms;
+    --idlm-motion-base: 200ms;
+    --idlm-motion-slow: 250ms;
+    --idlm-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --idlm-transition: color var(--idlm-motion-base) var(--idlm-ease), background-color var(--idlm-motion-base) var(--idlm-ease), border-color var(--idlm-motion-base) var(--idlm-ease), box-shadow var(--idlm-motion-base) var(--idlm-ease), opacity var(--idlm-motion-base) var(--idlm-ease), transform var(--idlm-motion-base) var(--idlm-ease);
+
+    /* Documented responsive and layer scale. Custom properties are reference tokens. */
+    --idlm-breakpoint-phone: 480px;
+    --idlm-breakpoint-wp-mobile: 782px;
+    --idlm-breakpoint-compact: 1024px;
+    --idlm-breakpoint-wide: 1280px;
+    --idlm-layer-base: 0;
+    --idlm-layer-sticky: 20;
+    --idlm-layer-dropdown: 1000;
+    --idlm-layer-filter-backdrop: 99990;
+    --idlm-layer-filter-panel: 99999;
+    --idlm-layer-modal-backdrop: 100000;
+    --idlm-layer-modal: 100100;
+    --idlm-layer-dialog: 100150;
+    --idlm-layer-toast: 100200;
+
+    /* Backward-compatible aliases for established selectors and modules. */
+    --idlm-secondary: var(--idlm-info);
+    --idlm-bg-main: var(--idlm-canvas);
+    --idlm-card-bg: var(--idlm-surface);
+    --idlm-text-main: var(--idlm-text);
+    --idlm-muted: var(--idlm-text-muted);
+    --idlm-bg: var(--idlm-canvas);
+    --idlm-blue: var(--idlm-info);
+    --idlm-green: var(--idlm-success);
+    --idlm-danger-bg: #fff1f1;
+}

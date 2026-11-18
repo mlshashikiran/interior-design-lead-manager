@@ -337,7 +337,7 @@ idlm_test('admin hooks, AJAX actions, shortcodes, and menu callbacks remain regi
 idlm_test('admin core asset handles and localized JavaScript contract remain stable', static function(): void {
     IDLM_Admin::register_core_assets();
     assert_same(array(
-        'idlm-google-fonts', 'idlm-admin-styles', 'idlm-dashboard-styles',
+        'idlm-google-fonts', 'idlm-crm-tokens', 'idlm-admin-styles', 'idlm-dashboard-styles',
         'idlm-kanban-styles', 'idlm-workspace-styles',
     ), idlm_admin_asset_handles('register_style'));
     assert_same(array(
@@ -390,7 +390,7 @@ idlm_test('admin utility stays asset-free while shortcode contexts enqueue their
 idlm_test('Phase 1 accessible dialog and design-token contracts remain present', static function(): void {
     $root = dirname(__DIR__);
     $dialog = (string) file_get_contents($root . '/assets/js/dialog.js');
-    $styles = (string) file_get_contents($root . '/assets/css/admin-style.css');
+    $styles = (string) file_get_contents($root . '/assets/css/admin-style.css') . (string) file_get_contents($root . '/assets/css/crm-tokens.css');
     $overlays = (string) file_get_contents($root . '/templates/admin/common-overlays.php');
     $kanban = (string) file_get_contents($root . '/templates/admin/kanban.php');
     $quotations = (string) file_get_contents($root . '/includes/class-quotation-renderer.php');
