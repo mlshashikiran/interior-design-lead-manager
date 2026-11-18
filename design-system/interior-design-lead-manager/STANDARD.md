@@ -100,4 +100,3 @@ To inspect the old source, use the git tags `design-baseline-head` (last commit)
 Do not make these worse.
 
 1. Some legacy rules on screens outside the design layer's reach still hard-code `9–10px` text, against STD-TYPE-1.
-2. Log rows cannot show a failure reason: the query has no such column.

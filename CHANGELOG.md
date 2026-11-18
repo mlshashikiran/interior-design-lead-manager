@@ -6,6 +6,16 @@
 
 - The wp-login.php sign-in and password reset screens and the wp-admin Identity reviews page now use the CRM design: the shared colours, buttons, fields, status badges, bordered notices and the keyboard focus ring. White-label colours from Settings still apply. On the CRM sign-in, a logo now shows on its own, without the brand name beside it. Signing in, resetting a password and resolving a review are unchanged. Builder: Shashi.
 
+## [1.112.0] - 2026-11-18
+
+### Added
+
+- Ad conversions and Ad audiences logs: a failed row now says in plain words why it failed and what to fix, for example "Meta access token expired or revoked. Reconnect Meta in Settings.", a pixel or audience ID Meta cannot find, a value-based audience missing deal values, a rate limit or a timeout. Other provider errors show the provider's own short message with tokens, contact details and links removed. Inspect payload still shows the full request and response. Builder: Shashi.
+
+### Changed
+
+- Log status badges use the shared success and danger tones on both screens, and an audience row reads Succeeded or Failed, matching the status tabs. Builder: Shashi.
+
 ## [1.111.0] - 2026-11-18
 
 ### Added

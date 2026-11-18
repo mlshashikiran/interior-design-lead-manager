@@ -97,6 +97,9 @@ Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Proje
 = 1.113.0 =
 * Improved: The wp-login sign-in and password reset screens and the Identity reviews page now match the rest of the CRM: the same colours, buttons, fields, status badges and keyboard focus. Sign-in, reset and review decisions work as before.
 
+= 1.112.0 =
+* Added: Failed rows on the Ad conversions and Ad audiences logs say in plain words why they failed and what to fix, such as an expired Meta token or a missing pixel or audience ID.
+
 = 1.111.0 =
 * Fixed: A payment that cannot be saved returns to its dialog with the reason instead of an error page.
 * Added: The Payments list is shown again to administrators and managers.

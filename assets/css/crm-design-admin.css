@@ -392,10 +392,18 @@ body.idlm-crm-design .idlm-logs-page .idlm-log-table .idlm-log-primary {
     overflow-wrap: anywhere;
 }
 
+/* Status badge and its failure reason stay one grid item in the phone card. */
+body.idlm-crm-design .idlm-logs-page .idlm-log-table .idlm-log-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-inline-size: 0;
+}
+
 body.idlm-crm-design .idlm-logs-page .idlm-log-table .idlm-log-outcome-message {
     display: block;
     margin-block-start: var(--idlm-space-1);
-    max-inline-size: 32ch;
+    max-inline-size: 60ch;
     color: var(--idlm-text-muted);
     overflow-wrap: anywhere;
 }
