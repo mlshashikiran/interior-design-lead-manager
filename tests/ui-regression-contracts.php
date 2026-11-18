@@ -528,7 +528,7 @@ idlm_test('legacy rules live in crm-legacy-*.css under a zero-specificity gate a
     assert_true($important <= 4, 'STD-CSS-11: the legacy files must not gain !important (' . $important . ').');
 
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
-    assert_contains("wp_register_style('idlm-admin-styles', false, array('idlm-crm-legacy-shared'))", $assets);
+    assert_contains("wp_register_style('idlm-admin-styles', false, array('idlm-crm-legacy-shared'), IDLM_VERSION)", $assets);
     assert_contains("array('idlm-crm-tokens', 'dashicons')", $assets);
     assert_true(strpos($assets, "wp_register_style('idlm-crm-legacy-shared'") < strpos($assets, "wp_register_style('idlm-dashboard-styles'"), 'Legacy rules register before the files that depend on them.');
     assert_same(array('leads', 'settings', 'admin'), IDLM_Admin_Assets::LEGACY_AREAS);

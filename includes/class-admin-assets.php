@@ -125,7 +125,7 @@ final class IDLM_Admin_Assets {
             wp_register_style('idlm-crm-legacy-' . $area, $asset_url . 'css/crm-legacy-' . $area . '.css', array('idlm-crm-legacy-shared'), self::asset_version('css/crm-legacy-' . $area . '.css'));
         }
         // The handle every other stylesheet depends on: no file of its own, it stands for the legacy rules.
-        wp_register_style('idlm-admin-styles', false, array('idlm-crm-legacy-shared'));
+        wp_register_style('idlm-admin-styles', false, array('idlm-crm-legacy-shared'), IDLM_VERSION);
         wp_register_style('idlm-dashboard-styles', $asset_url . 'css/dashboard.css', array('idlm-admin-styles'), self::asset_version('css/dashboard.css'));
         wp_register_style('idlm-kanban-styles', $asset_url . 'css/kanban.css', array('idlm-admin-styles'), self::asset_version('css/kanban.css'));
         wp_register_style('idlm-workspace-styles', $asset_url . 'css/workspace.css', array('idlm-admin-styles'), self::asset_version('css/workspace.css'));
