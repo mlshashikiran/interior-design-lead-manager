@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.109.1] - 2026-11-18
+
+### Removed
+
+- About 170 more lines of the legacy stylesheet: rules the current design overrides at every screen width, including some inside the phone and tablet layouts. Every screen was compared with 1.109.0 at four widths, with drawers, dialogs and filter panels open, and renders the same. Builder: Shashi.
+
 ## [1.109.0] - 2026-11-18
 
 ### Added

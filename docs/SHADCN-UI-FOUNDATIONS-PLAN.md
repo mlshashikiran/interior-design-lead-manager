@@ -80,6 +80,8 @@ A Design system view in the workspace (`?idlm_view=ui-kit`) renders every varian
 
 Anything that cannot be measured stays. What remains is listed in `docs/TECH-DEBT.md`.
 
+3. **Second pass (1.109.1).** Rules inside media queries measured at the widths where they apply, and every view also measured with modals, drawers, filter panels and `details` forced open. 49 more rules removed; rules naming a state class are now always kept, because forcing several open classes at once makes each look redundant. Details in `docs/CHANGELOG-DEV.md`; what remains and why in `docs/TECH-DEBT.md`.
+
 ## Out of scope, next
 
 - A Cmd-K command palette (shadcn `Command` in a `Dialog`) for lead search and navigation.

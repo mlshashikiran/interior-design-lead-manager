@@ -39,9 +39,15 @@ No open high-priority code defect is currently proven. Version 1.99.8 adds the g
 
 ## Low
 
-### Legacy stylesheet under the design layer (1.109.0)
+### Legacy stylesheet under the design layer (1.109.1)
 
-`admin-style.css` (~6,580 lines) still loads under every CRM page. Version 1.109.0 removed rules for class names no code renders and 113 top-level rules that the design layer overrides everywhere it was measured (method in `docs/SHADCN-UI-FOUNDATIONS-PLAN.md`). Still to do: rules inside media queries, rules with state pseudo-classes or pseudo-elements, 220 rules that matched nothing in any measured state (they may serve dialogs and states not opened during measurement), and rules kept on purpose (`[hidden]` guards, `data-idlm-ui` utilities, size and position, `!important`, contract-test literals, twin selectors). The file also owns the base tokens (`:root` spacing, radius, layers, status colours), which must move into `crm-design.css` before the file can go.
+`admin-style.css` (~6,400 lines) still loads under every CRM page, and only there: legacy wp-admin pages redirect to the workspace before output. 1.109.0 and 1.109.1 removed every rule that could be proven to have no effect (method in `docs/SHADCN-UI-FOUNDATIONS-PLAN.md`). What remains is not removable by measurement:
+
+- About 700 rules still change what is rendered. Deleting the file means moving them into `crm-design*.css`, where STD-CSS-1 requires the `body.idlm-crm-design` prefix. That raises their specificity above layer rules they currently lose to, so each moved rule needs its cascade re-checked. Do it one screen area at a time, with the same computed-style comparison against the previous release.
+- About 160 rules that had no measurable effect but were kept on purpose: state classes (`.is-open`, `.active`, `[open]`, `[aria-*]`), `[hidden]` and `display: none` guards, `data-idlm-ui` utilities, size and position declarations, `!important`, contract-test literals and twin selectors.
+- About 240 rules that matched nothing even with every dialog forced open. Their classes exist in code, so they style states the local data never produced.
+- 108 hover, focus and pseudo-element rules, which this method cannot measure.
+- The `:root` block (80 tokens, about 30 hex colours) that every stylesheet reads. Moving it into `crm-design.css` breaks STD-CSS-2's colour budget (one slot left) unless the standard is changed to allow the token block to move. That is a decision for the standard's owner.
 
 ### Remaining request and client hotspots
 
