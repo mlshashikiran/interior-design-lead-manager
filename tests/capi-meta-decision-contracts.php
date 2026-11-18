@@ -208,13 +208,13 @@ idlm_test('CAPI D13: the log screen tells rejected, retrying, uncertain and not-
     assert_same(array('success', 'Succeeded', 'success', false), array($ok['key'], $ok['label'], $ok['badge'], $ok['retryable']));
     $rejected = IDLM_Admin_Logs_Renderer::capi_outcome($row('failed', array('outcome'=>'failed', 'attempted'=>true, 'retryable'=>false), '{"error":{"message":"Invalid parameter","error_user_msg":"The event_time is too old.","fbtrace_id":"synthetic-trace"}}'));
     assert_same(array('Rejected', 'failed', false), array($rejected['label'], $rejected['badge'], $rejected['retryable']));
-    assert_same('The event_time is too old. (trace synthetic-trace)', $rejected['message']);
+    assert_same('The event_time is too old.', $rejected['message'], 'The row shows the reason; the trace stays in the payload dialog.');
     $fixable = IDLM_Admin_Logs_Renderer::capi_outcome($row('failed', array('outcome'=>'failed', 'attempted'=>true, 'retryable'=>true), '{"error":{"message":"Invalid OAuth access token."}}'));
     assert_true($fixable['retryable']); assert_same('Invalid OAuth access token.', $fixable['message']);
     $transient = IDLM_Admin_Logs_Renderer::capi_outcome($row('failed', array('outcome'=>'transient', 'attempted'=>true, 'retryable'=>true), '{"error":{"code":17,"message":"User request limit reached"}}'));
     assert_same(array('Retrying', 'warning', true), array($transient['label'], $transient['badge'], $transient['retryable']));
     $uncertain = IDLM_Admin_Logs_Renderer::capi_outcome($row('failed', array('outcome'=>'uncertain', 'attempted'=>true, 'retryable'=>false), 'cURL error 28'));
-    assert_same(array('Uncertain', false, 'cURL error 28'), array($uncertain['label'], $uncertain['retryable'], $uncertain['message']));
+    assert_same(array('Uncertain', false, 'The request timed out. The provider may or may not have received it.'), array($uncertain['label'], $uncertain['retryable'], $uncertain['message']));
     $skipped = IDLM_Admin_Logs_Renderer::capi_outcome($row('failed', array('outcome'=>'failed', 'attempted'=>false, 'retryable'=>true), 'Missing integration destination or credentials.'));
     assert_same(array('Not sent', true), array($skipped['label'], $skipped['retryable']));
     $legacy = IDLM_Admin_Logs_Renderer::capi_outcome((object) array('status'=>'failed', 'payload'=>'{"data":[]}', 'response'=>''));
