@@ -32,11 +32,12 @@ final class IDLM_Lead_Payment_Controller {
             (current_user_can('manage_options') || current_user_can('idlm_record_lead_payments') || current_user_can('idlm_correct_lead_payments'));
     }
     /**
-     * The workspace Payments tab and its lead list are retired: each lead's payment page
-     * opens from the lead drawer and the Design project. Filter `idlm_show_payments_tab` true restores it.
+     * The workspace Payments tab and its lead list show to administrators and managers (people who can
+     * assign leads); representatives open each lead's payment page from the lead drawer or the Design project.
+     * Filter `idlm_show_payments_tab` overrides it either way. The list itself still needs visible().
      */
     public static function tab_shown() {
-        return (bool) apply_filters('idlm_show_payments_tab', false);
+        return (bool) apply_filters('idlm_show_payments_tab', current_user_can('manage_options') || IDLM_Lead_Access_Policy::can_assign());
     }
     /** May open this lead's payment page: same checks the page itself applies. */
     public static function can_open($lead_id) {

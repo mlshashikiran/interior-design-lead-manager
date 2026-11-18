@@ -63,10 +63,10 @@ idlm_test('PAYMENT legacy recovery requires confirmation source valid percentage
     foreach(array(array('confirmed'=>false),array('source_reference'=>' '),array('milestones'=>array(array('name'=>'Advance','percentage'=>'101','advance'=>'1'))),array('milestones'=>array(array('name'=>'Advance','percentage'=>'10'))),array('milestones'=>array(array('name'=>'Advance','percentage'=>array(),'advance'=>'1'))))as$bad){assert_true(is_wp_error(IDLM_Lead_Payment_Ledger::legacy_schedule($revision,array_merge(idlm_payment_legacy_input(),$bad))));}
     $revision->document_terms=IDLM_Quotation_Document::capture(array('payment_structure'=>'[{"name":"Original advance","percentage":10}]'),'1000');assert_true(is_wp_error(IDLM_Lead_Payment_Ledger::legacy_schedule($revision,idlm_payment_legacy_input())));
 });
-idlm_test('PAYMENT tab is retired while each lead page, data and grants stay',static function():void {
+idlm_test('PAYMENT tab shows to administrators and managers while each lead page, data and grants stay',static function():void {
     $root=dirname(__DIR__).'/';$read=static function(string $path)use($root):string{return (string)file_get_contents($root.$path);};
     $controller=$read('includes/class-lead-payment-controller.php');$nav=$read('includes/class-admin-shortcodes.php');$template=$read('templates/workspace.php');
-    assert_contains("return (bool) apply_filters('idlm_show_payments_tab', false);",$controller);
+    assert_contains("return (bool) apply_filters('idlm_show_payments_tab', current_user_can('manage_options') || IDLM_Lead_Access_Policy::can_assign());",$controller);
     assert_contains("array('IDLM_Lead_Payment_Controller', 'render'), !IDLM_Lead_Payment_Controller::tab_shown())",$nav);
     assert_contains("if (!empty(\$idlm_section[3])) { continue; }",$template);
     // The per-lead page keeps its own checks; the drawer and Design links reuse them.
@@ -218,4 +218,13 @@ idlm_test('PAYMENT list sorts and filters on the ledger inputs without dropping 
         assert_contains('GREATEST(0, sch.basis_total - COALESCE(rec.received, 0)) = 0', $sql);
         assert_contains('ORDER BY (sch.lead_id IS NULL), GREATEST(0, sch.basis_total - COALESCE(rec.received, 0)) DESC, l.id DESC LIMIT 51 OFFSET 50', $sql);
     } finally { $GLOBALS['wpdb'] = $inner; }
+});
+idlm_test('PAYMENT list is on the menu for administrators and managers, not representatives', static function(): void {
+    idlm_test_reset_environment();
+    idlm_test_login(1, array('administrator'), array('manage_options')); assert_true(IDLM_Lead_Payment_Controller::tab_shown());
+    idlm_test_login(4, array('idlm_sales_manager'), array('idlm_access_leads', 'idlm_assign_leads', 'idlm_record_lead_payments')); assert_true(IDLM_Lead_Payment_Controller::tab_shown());
+    idlm_test_login(5, array('idlm_sales_rep'), array('idlm_access_leads', 'idlm_record_lead_payments')); assert_false(IDLM_Lead_Payment_Controller::tab_shown());
+    // A suspended manager loses it with the rest of their access.
+    $GLOBALS['idlm_test_user_meta'][4][IDLM_Admin_Users_Controller::DISABLED_META_KEY] = '1';
+    idlm_test_login(4, array('idlm_sales_manager'), array('idlm_access_leads', 'idlm_assign_leads', 'idlm_record_lead_payments')); assert_false(IDLM_Lead_Payment_Controller::tab_shown());
 });
