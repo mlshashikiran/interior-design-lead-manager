@@ -98,13 +98,14 @@ $idlm_status_tabs = array('' => 'All', 'failed' => 'Failed', 'success' => 'Succe
                 <?php else: ?>
                     <?php foreach ($idlm_logs as $idlm_log):
                         $idlm_entry_label = sprintf('%s audience %s at %s', ucfirst($idlm_log->platform), $idlm_log->audience_id, IDLM_Admin::format_datetime($idlm_log->created_at));
+                        $idlm_outcome = isset($idlm_log->outcome) && is_array($idlm_log->outcome) ? $idlm_log->outcome : array('label' => 'success' === $idlm_log->status ? 'Succeeded' : 'Failed', 'tone' => 'success' === $idlm_log->status ? 'is-success' : 'is-danger', 'message' => '');
                     ?>
                         <tr<?php echo 'success' !== $idlm_log->status ? ' class="is-failed"' : ''; ?>>
                             <td data-label="Time" class="idlm-table-cell-nowrap"><?php echo esc_html(IDLM_Admin::format_datetime($idlm_log->created_at)); ?></td>
                             <td data-label="Platform"><span class="idlm-badge idlm-badge-<?php echo esc_attr($idlm_log->platform); ?>"><?php echo esc_html(ucfirst($idlm_log->platform)); ?></span></td>
                             <td data-label="Audience"><code class="idlm-log-token"><?php echo esc_html($idlm_log->audience_id); ?></code></td>
                             <td data-label="Leads synced"><span class="idlm-log-primary"><?php echo esc_html(number_format_i18n((int) $idlm_log->lead_count)); ?></span></td>
-                            <td data-label="Status"><span class="idlm-badge idlm-badge-<?php echo 'success' === $idlm_log->status ? 'success' : 'failed'; ?>"><?php echo esc_html(ucfirst((string) $idlm_log->status)); ?></span></td>
+                            <td data-label="Status"><div class="idlm-log-status"><span class="idlm-badge <?php echo esc_attr($idlm_outcome['tone']); ?>"><?php echo esc_html($idlm_outcome['label']); ?></span><?php if ('' !== $idlm_outcome['message']): ?><small class="idlm-log-outcome-message"><?php echo esc_html($idlm_outcome['message']); ?></small><?php endif; ?></div></td>
                             <td data-label="Details"><button class="idlm-btn idlm-btn-secondary idlm-btn-sm" type="button" data-idlm-log-inspect data-log-type="audience" data-log-id="<?php echo esc_attr($idlm_log->id); ?>" data-log-label="<?php echo esc_attr($idlm_entry_label); ?>" aria-haspopup="dialog">Inspect payload</button></td>
                         </tr>
                     <?php endforeach; ?>
