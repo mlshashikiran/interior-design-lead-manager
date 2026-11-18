@@ -86,7 +86,9 @@ final class IDLM_Admin_Assets {
         wp_register_style('idlm-google-fonts', $asset_url . 'css/fonts.css', array(), self::asset_version('css/fonts.css'));
         wp_register_script('idlm-chartjs', $asset_url . 'js/chart.js', array(), '4.4.1', true);
 
-        wp_register_style('idlm-admin-styles', $asset_url . 'css/admin-style.css', array('dashicons'), self::asset_version('css/admin-style.css'));
+        // Base design tokens load first: before admin-style.css and every crm-design*.css (STD-CSS-10).
+        wp_register_style('idlm-crm-tokens', $asset_url . 'css/crm-tokens.css', array(), self::asset_version('css/crm-tokens.css'));
+        wp_register_style('idlm-admin-styles', $asset_url . 'css/admin-style.css', array('idlm-crm-tokens', 'dashicons'), self::asset_version('css/admin-style.css'));
         wp_register_style('idlm-dashboard-styles', $asset_url . 'css/dashboard.css', array('idlm-admin-styles'), self::asset_version('css/dashboard.css'));
         wp_register_style('idlm-kanban-styles', $asset_url . 'css/kanban.css', array('idlm-admin-styles'), self::asset_version('css/kanban.css'));
         wp_register_style('idlm-workspace-styles', $asset_url . 'css/workspace.css', array('idlm-admin-styles'), self::asset_version('css/workspace.css'));

@@ -47,7 +47,7 @@ No open high-priority code defect is currently proven. Version 1.99.8 adds the g
 - About 160 rules that had no measurable effect but were kept on purpose: state classes (`.is-open`, `.active`, `[open]`, `[aria-*]`), `[hidden]` and `display: none` guards, `data-idlm-ui` utilities, size and position declarations, `!important`, contract-test literals and twin selectors.
 - About 240 rules that matched nothing even with every dialog forced open. Their classes exist in code, so they style states the local data never produced.
 - 108 hover, focus and pseudo-element rules, which this method cannot measure.
-- The `:root` block (80 tokens, about 30 hex colours) that every stylesheet reads. Moving it into `crm-design.css` breaks STD-CSS-2's colour budget (one slot left) unless the standard is changed to allow the token block to move. That is a decision for the standard's owner.
+- Done in 1.113.1 (step A): the `:root` block (80 tokens, about 30 hex colours) moved into `assets/css/crm-tokens.css`, allowed by STD-CSS-10. Still to do: B, split the ~700 live rules into `crm-legacy-*.css` under `:where(body.idlm-crm-design)`; C, fold those into the design layer area by area; D, final standard and test cleanup.
 
 ### Remaining request and client hotspots
 

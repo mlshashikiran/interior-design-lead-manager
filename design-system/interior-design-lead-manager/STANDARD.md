@@ -71,6 +71,7 @@ The redesign lives in switchable stylesheets: `assets/css/crm-design.css` (token
 - **STD-CSS-7** New UI uses shared components and adds its rules to the layer or its own gated section. New inline `style=` attributes are not allowed.
 - **STD-CSS-9** Markup changes must keep every existing class, ID, `name`, `data-*` and handler that `assets/js/` or the contract tests use. The CRM design is the only design, so change markup directly; never add a second rendering path or a design switch.
 - **STD-CSS-8** The quotation editor stays free of the document-content review panel, and printed or PDF quotations are not restyled by this layer.
+- **STD-CSS-10** `assets/css/crm-tokens.css` is the one file outside the gated design layer allowed to declare the base tokens and the white-label defaults. Its `:root` selector is exempt from STD-CSS-1's `body.idlm-crm-design` prefix, and it holds custom-property declarations only: no styling rules, no `!important`. It loads before `admin-style.css` and every `crm-design*.css` (`admin-style.css` depends on it). Its hex colours count toward the STD-CSS-2 budget. **[test]**
 
 ## Components (shadcn/ui model)
 

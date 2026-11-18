@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.113.0
+Stable tag: 1.113.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,9 @@ Action Scheduler is optional; WP-Cron is the fallback. Scheduled work requires w
 Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Project Authors. The complete SIL Open Font License 1.1 is bundled in assets/fonts/OFL.txt; assets/fonts/NOTICE.txt and assets/fonts/inter-provenance.json identify the exact upstream revision, matching Google Fonts distribution and file hashes. Font bytes and existing CSS mappings are preserved.
 
 == Changelog ==
+
+= 1.113.1 =
+* Internal: the base design values moved into their own stylesheet, crm-tokens.css. Nothing changes on screen.
 
 = 1.113.0 =
 * Improved: The wp-login sign-in and password reset screens and the Identity reviews page now match the rest of the CRM: the same colours, buttons, fields, status badges and keyboard focus. Sign-in, reset and review decisions work as before.

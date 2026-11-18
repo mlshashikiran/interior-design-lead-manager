@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.113.1] - 2026-11-18
+
+### Changed
+
+- Internal only: the base colours, spacing and other design values now live in their own stylesheet, `crm-tokens.css`. Nothing changes on screen. Builder: Shashi.
+
 ## [1.113.0] - 2026-11-18
 
 ### Changed
