@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.110.0] - 2026-11-18
+
+### Changed
+
+- Every form in Settings, Users and access, the Leads dialogs and filters, My account and the delivery logs now uses the shared field layout: label, field, help text, then any error. Builder: Shashi.
+- Help text under a field is read out by screen readers with that field. Groups of checkboxes and radio buttons, such as working days, available reps and export scope, are announced with their heading.
+- A field with an error turns its label red on the White label settings as soon as the page loads. A connector credential managed in server configuration shows as disabled.
+- Filter labels sit slightly closer to their dropdowns, and help text sits closer to its field. Nothing else on these screens moves.
+
 ## [1.109.1] - 2026-11-18
 
 ### Removed
