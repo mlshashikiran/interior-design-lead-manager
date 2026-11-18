@@ -260,7 +260,7 @@ idlm_test('PAYMENT refused save returns to the page with the reason and typed va
     assert_same('', IDLM_Lead_Payment_Controller::take_retry(IDLM_Lead_Payment_Controller::save_retry('x', 'other-dialog"><script>', array()))['dialog']);
     assert_same(null, IDLM_Lead_Payment_Controller::take_retry('../../etc'));
     $source = (string) file_get_contents(dirname(__DIR__) . '/includes/class-lead-payment-controller.php');
-    assert_false(strpos($source, "'Payment not saved'"), 'No WordPress error page for a refused save.');
+    assert_contains("array('idlm_payment_denied', 'idlm_file_denied', 'idlm_payment_busy'), true)) { wp_die(", $source, 'Only access refusals and a busy CRM stop on an error page.');
     assert_contains("wp_safe_redirect(add_query_arg(array('payment_lead_id' => \$lead_id, 'payment_error' => \$token), \$url)); exit;", $source);
     assert_contains("self::hidden('payment_dialog', \$id);", $source);
     assert_contains("document.querySelector('[data-payment-reopen]')", (string) file_get_contents(dirname(__DIR__) . '/assets/js/design-detail.js'));

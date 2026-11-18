@@ -111,6 +111,8 @@ final class IDLM_Lead_Payment_Controller {
         });
         if (false === $result) { $result = new WP_Error('idlm_payment_busy', 'CRM recovery is busy. Retry shortly.'); }
         $url = wp_validate_redirect(self::text($_POST, 'return_url'), admin_url('admin.php?page=idlm-payments'));
+        // Access refusals stay a hard stop: there is nothing to retype.
+        if (is_wp_error($result) && in_array($result->get_error_code(), array('idlm_payment_denied', 'idlm_file_denied', 'idlm_payment_busy'), true)) { wp_die(esc_html($result->get_error_message()), 'Payment not saved', array('response' => 422, 'back_link' => true)); }
         if (is_wp_error($result)) {
             // Back to the payment page with the reason and what was typed, not a WordPress error page.
             $file_chosen = isset($_FILES['payment_screenshot']) && UPLOAD_ERR_NO_FILE !== (int) ($_FILES['payment_screenshot']['error'] ?? UPLOAD_ERR_NO_FILE);
