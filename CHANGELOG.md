@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.113.11] - 2026-11-19
+
+### Changed
+
+- Internal only: the plain dialog rules of the shared legacy stylesheet moved into the design layer. Nothing changes on screen. Builder: Shashi.
+
 ## [1.113.10] - 2026-11-19
 
 ### Changed
