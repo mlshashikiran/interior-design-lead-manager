@@ -1,23 +1,5 @@
 # Changelog
 
-## [1.113.13] - 2026-11-19
-
-### Added
-
-- Settings > AI Agent Access has an explicit MCP on/off switch. Off refuses every MCP endpoint (REST and the local command) with a clear error and no database work, and the tab then hides the API key and setup snippets. A saved choice wins; until one is saved, production stays off and other environments stay on. `IDLM_MCP_ENABLED` / `IDLM_MCP_DISABLED` in wp-config.php still override the switch. Enabling or disabling is written to the telemetry audit log. Builder: Shashi.
-
-### Security
-
-- `get_lead_details` selects the same columns the query policy grants instead of `SELECT *`, so private file paths and ad-click identifiers are no longer returned. Internal errors return a generic message instead of exception text. Non-scalar saved switch values read as off.
-
-### Fixed
-
-- `query_leads` orders by id so pages do not repeat or skip leads; non-string filters and missing or invalid lead ids return a clear error. The disabled protocol error maps to HTTP 503. MariaDB hosts (for example Hostinger) enforce the MCP statement time limit through `max_statement_time`; the MySQL hint was silently ignored there.
-
-### Changed
-
-- Performance: `get_leads_summary` runs 2 queries instead of 9 and `get_reps_performance` plus the summary are reused for 60 seconds (filter `idlm_mcp_cache_ttl`, 0 disables). Rep names are looked up once per request. A migrated site no longer re-reads and decrypts every secret on each MCP request. Builder: Shashi.
-
 ## [1.113.12] - 2026-11-19
 
 ### Changed

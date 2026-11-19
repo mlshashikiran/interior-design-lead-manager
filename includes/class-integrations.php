@@ -1256,8 +1256,6 @@ class IDLM_Integrations {
                 $http_status = 400;
             } elseif ($error_code === -32601) {
                 $http_status = 404;
-            } elseif ($error_code === -32003) {
-                $http_status = 503;
             } else {
                 $http_status = 500;
             }

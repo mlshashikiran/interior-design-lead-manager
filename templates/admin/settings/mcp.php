@@ -4,10 +4,7 @@ if (!defined('ABSPATH')) {
 }
 
 $idlm_active_tab = isset($context['active_tab']) ? $context['active_tab'] : 'general';
-$idlm_mcp_enabled = IDLM_Production_Security::is_mcp_enabled();
-$idlm_mcp_source = IDLM_Production_Security::mcp_enabled_source();
-// The key and client snippets are only built while MCP is on, so a disabled site never decrypts or prints the credential.
-$idlm_saved_api_key = $idlm_mcp_enabled ? IDLM_Admin_Settings_Renderer::credential_value('mcp_api_key') : '';
+$idlm_saved_api_key = IDLM_Admin_Settings_Renderer::credential_value('mcp_api_key');
 $idlm_mcp_script_path = isset($context['mcp_script_path']) ? $context['mcp_script_path'] : '';
 $idlm_mcp_rest_url = isset($context['mcp_rest_url']) ? $context['mcp_rest_url'] : '';
 $idlm_mcp_local_json = isset($context['mcp_local_json']) ? $context['mcp_local_json'] : '';
@@ -19,6 +16,7 @@ $idlm_mcp_remote_json = wp_json_encode(array(
         ),
     ),
 ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+$idlm_mcp_enabled = IDLM_Production_Security::is_mcp_enabled();
 $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
 ?>
             <!-- Tab: AI Agent Access (MCP) -->
@@ -33,24 +31,10 @@ $idlm_mcp_allowed_tools = IDLM_Production_Security::mcp_allowed_tools();
                             <?php if ($idlm_mcp_enabled): ?>
                                 <span> Granted tools: <?php echo esc_html(implode(', ', $idlm_mcp_allowed_tools)); ?>.</span>
                             <?php else: ?>
-                                <span> Every MCP endpoint refuses requests and no data is returned.</span>
+                                <span> Production is fail-closed until <code>IDLM_MCP_ENABLED</code> is explicitly set.</span>
                             <?php endif; ?>
                         </div>
-                        <div class="idlm-form-group idlm-field full idlm-mcp-form-block">
-                            <input type="hidden" name="mcp_enabled_present" value="1">
-                            <label class="idlm-checkbox-row"><input type="checkbox" id="idlm-mcp-enabled" aria-describedby="idlm-mcp-enabled-help" name="mcp_enabled" value="1" <?php checked($idlm_mcp_enabled); ?> <?php disabled('setting' !== $idlm_mcp_source); ?>> Allow AI clients to connect to this CRM through MCP</label>
-                            <p id="idlm-mcp-enabled-help" class="description idlm-field-help">
-                                <?php if ('setting' === $idlm_mcp_source): ?>
-                                    Save settings to apply. Turning this off refuses every MCP request immediately, over the web and from the local command, and hides the key and setup snippets here. The key is kept, so turning it back on needs no client changes. New sites start with MCP <?php echo '1' === IDLM_Production_Security::mcp_default_enabled() ? 'on' : 'off'; ?> in the <?php echo esc_html(IDLM_Production_Security::environment_type()); ?> environment.
-                                <?php else: ?>
-                                    This state is fixed by <code><?php echo 'constant-enabled' === $idlm_mcp_source ? 'IDLM_MCP_ENABLED' : 'IDLM_MCP_DISABLED'; ?></code> in wp-config.php. Remove that line to control MCP from here.
-                                <?php endif; ?>
-                            </p>
-                        </div>
-                        <?php if (!$idlm_mcp_enabled): ?>
-                            <p class="idlm-card-desc">Turn MCP on and save to see the API key and client setup instructions.</p>
-                        <?php else: ?>
-
+                        
                         <div class="idlm-tabs idlm-nested-tabs idlm-mcp-tabs" role="tablist" aria-label="MCP client setup">
                             <button type="button" id="idlm-mcp-tab-claude" class="idlm-tab-link active" role="tab" aria-selected="true" aria-controls="mcp-claude" onclick="switchMcpClientTab(this, 'mcp-claude')">Claude Desktop</button>
                             <button type="button" id="idlm-mcp-tab-antigravity" class="idlm-tab-link" role="tab" aria-selected="false" aria-controls="mcp-antigravity" tabindex="-1" onclick="switchMcpClientTab(this, 'mcp-antigravity')">Antigravity IDE</button>
@@ -208,14 +192,12 @@ args = ["<?php echo esc_html($idlm_mcp_script_path); ?>"]</pre>
                             </div>
                         </div>
 
-                        <?php endif; ?>
-
                         <div class="idlm-form-group idlm-field full idlm-settings-divider">
                             <h4 data-idlm-ui="heading">Security and access sandbox</h4>
                             <ul class="idlm-security-list">
                                 <li><strong>Read-Only Restraints</strong>: The MCP server strictly executes only <code>SELECT</code> queries. Any writing, modifying, or structure altering statements are automatically rejected.</li>
                                 <li><strong>Table Isolation</strong>: Access is strictly sandboxed to the CRM plugin custom tables (leads, activities, sync logs, cost mappings) and the <code>wp_users</code> table. Attempts to read other WordPress database tables (like <code>wp_options</code> or <code>wp_posts</code>) are blocked.</li>
-                                <li><strong>Deployment Gate</strong>: Production HTTP access is off until an administrator turns it on here. Only approved tools are granted, and <code>IDLM_MCP_DISABLED</code> in wp-config.php is the emergency shutdown switch that overrides this setting.</li>
+                                <li><strong>Deployment Gate</strong>: Production HTTP access is disabled by default. Enable it explicitly, grant only approved tools, and use <code>IDLM_MCP_DISABLED</code> as the emergency shutdown switch.</li>
                             </ul>
                         </div>
                     </article>

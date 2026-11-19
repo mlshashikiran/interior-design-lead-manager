@@ -108,23 +108,11 @@ final class IDLM_MCP_Query_Policy {
         if ($offset > 100000) { $this->reject('Pagination offset exceeds the 100000 row budget.'); }
         if ($this->position !== count($this->tokens)) { $this->reject('Unsupported trailing syntax or table expression.'); }
         $this->validate_references();
-        // The database enforces the statement time budget, including aggregate work.
-        // The budget is generated internally and cannot be supplied by the caller.
-        $seconds = IDLM_Production_Security::mcp_request_time_limit();
-        $body = $distinct . implode(', ', $fields) .
+        // MySQL enforces the statement time budget, including aggregate work.
+        // This internally generated hint cannot be supplied by the caller.
+        $milliseconds = (int) ceil(IDLM_Production_Security::mcp_request_time_limit() * 1000);
+        return 'SELECT /*+ MAX_EXECUTION_TIME(' . $milliseconds . ') */ ' . $distinct . implode(', ', $fields) .
             ' FROM ' . $from . $joins . $tail . ' LIMIT ' . $rows . ($offset ? ' OFFSET ' . $offset : '');
-        if (self::is_mariadb()) {
-            // MariaDB ignores the MySQL optimizer hint, so use its own statement timeout.
-            return 'SET STATEMENT max_statement_time=' . rtrim(rtrim(number_format($seconds, 3, '.', ''), '0'), '.') . ' FOR SELECT ' . $body;
-        }
-        return 'SELECT /*+ MAX_EXECUTION_TIME(' . (int) ceil($seconds * 1000) . ') */ ' . $body;
-    }
-
-    /** MariaDB (common on shared hosting) needs max_statement_time instead of the MySQL hint. */
-    private static function is_mariadb() {
-        global $wpdb;
-        $info = is_object($wpdb) && is_callable(array($wpdb, 'db_server_info')) ? (string) $wpdb->db_server_info() : '';
-        return false !== stripos($info, 'mariadb');
     }
 
     private function table() {
