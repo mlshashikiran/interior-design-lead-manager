@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.113.9 — Button rules leave crm-legacy-shared.css (2026-11-19)
+
+Builder: Shashi. Step C, shared components, buttons. 17 rule blocks whose subject is an `.idlm-btn*` class (primary, compact, icon, header action buttons and their hover/focus states) moved from `crm-legacy-shared.css` to the start of `crm-design.css` with the `body.idlm-crm-design` prefix. Kept in the shared file after the comparison: the `.idlm-btn-secondary` base rule (folded, its border colour changed on every secondary button) and the `.idlm-btn-danger-outline` rules (folded, remove buttons became pill shaped at 390px), plus rules with hex, `!important` or non-canonical breakpoints. The method for shared components is trial: fold, compare every view, pull back what changes. Test helper `idlm_legacy_css()` now also reads `crm-design.css`. Computed styles match 1.113.8 on all 12 workspace views at 1440, 1100, 782 and 390px, normal and forced open, plus the lead drawer open.
+
 ## 1.113.8 — Leads rules leave crm-legacy-shared.css (2026-11-19)
 
 Builder: Shashi. Step C, shared file, Leads. 18 rule blocks whose selectors name classes found only in the Leads template and renderer moved from `crm-legacy-shared.css` to the start of `crm-design-leads.css` with the `body.idlm-crm-design` prefix. Kept in the shared file after the first comparison: everything about the routing dialog (`routing`), the filter primary row and the per-page control (folded, they changed button display, filter alignment, label type, the conditional routing controls' display and the dialog footer padding), plus the usual hex, `!important`, `transition: all` and non-canonical-breakpoint exclusions. Computed styles match 1.113.7 on Leads, Pipeline and Payments at 1440, 1100, 782 and 390px, normal and forced open, and with the lead drawer open.

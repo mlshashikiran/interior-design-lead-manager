@@ -919,8 +919,8 @@ function idlm_legacy_only_css(?string $root = null): string {
 function idlm_legacy_css(?string $root = null): string {
     $root = $root ?? dirname(__DIR__);
     $source = idlm_legacy_only_css($root);
-    foreach (array('leads', 'pipeline', 'dashboard', 'quotations', 'settings', 'admin', 'payments') as $area) {
-        $file = $root . '/assets/css/crm-design-' . $area . '.css';
+    foreach (array('', '-leads', '-pipeline', '-dashboard', '-quotations', '-settings', '-admin', '-payments') as $area) {
+        $file = $root . '/assets/css/crm-design' . $area . '.css';
         if (is_file($file)) {
             $source .= str_replace('body.idlm-crm-design ', '', (string) file_get_contents($file)) . "\n";
         }

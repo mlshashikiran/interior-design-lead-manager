@@ -587,12 +587,6 @@
     white-space: nowrap;
 }
 
-:where(body.idlm-crm-design) .idlm-btn-compact {
-    min-height: var(--idlm-control-height);
-    padding: var(--idlm-space-1) var(--idlm-space-3);
-    font-size: 11px;
-}
-
 :where(body.idlm-crm-design) .idlm-text-link,
 :where(body.idlm-crm-design) .idlm-action-link {
     display: inline-flex;
@@ -888,20 +882,6 @@
     transition: var(--idlm-transition);
 }
 
-:where(body.idlm-crm-design) .idlm-btn-primary {
-    background-color: var(--idlm-action);
-    background: var(--idlm-action);
-    color: var(--idlm-action-contrast);
-}
-
-:where(body.idlm-crm-design) .idlm-btn-primary:hover,
-:where(body.idlm-crm-design) .idlm-btn-primary:focus-visible {
-    background-color: var(--idlm-action-hover);
-    background: var(--idlm-action-hover);
-    color: var(--idlm-action-contrast);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--idlm-action-hover) 24%, transparent);
-}
-
 :where(body.idlm-crm-design) .idlm-btn-secondary {
     background-color: var(--idlm-surface);
     background: var(--idlm-surface);
@@ -976,38 +956,12 @@
     font-size: 12px;
 }
 
-:where(body.idlm-crm-design) .idlm-workspace .idlm-wrap .idlm-header-actions :is(.idlm-btn, .button, select, .idlm-input) {
-    min-height: var(--idlm-control-height);
-    height: var(--idlm-control-height);
-    padding-inline: 9px;
-    font-size: 11px;
-}
-
-:where(body.idlm-crm-design) .idlm-workspace .idlm-wrap .idlm-header-actions :is(.idlm-btn, .button) {
-    min-width: 0;
-}
-
-:where(body.idlm-crm-design) .idlm-workspace .idlm-wrap .idlm-btn-icon {
-    width: var(--idlm-control-height);
-    min-width: var(--idlm-control-height);
-    height: var(--idlm-control-height);
-    min-height: var(--idlm-control-height);
-}
-
 :where(body.idlm-crm-design) .idlm-workspace .idlm-wrap .idlm-badge {
     min-height: 22px;
     padding-inline: 8px;
     font-size: 10px;
     line-height: 1.2;
     white-space: nowrap;
-}
-
-@media (max-width: 782px) {
-:where(body.idlm-crm-design) .idlm-wrap .idlm-header-actions :is(.idlm-btn, .button, select, .idlm-input) {
-            min-height: var(--idlm-target-size);
-            height: var(--idlm-target-size);
-            font-size: 1rem;
-        }
 }
 
 :where(body.idlm-crm-design) .idlm-permission-actions > span { color: var(--idlm-text-muted); font-size: 12px; }
@@ -1140,25 +1094,6 @@
 :where(body.idlm-crm-design) .idlm-filters-close {
     background: var(--idlm-surface);
     color: var(--idlm-text);
-}
-
-:where(body.idlm-crm-design) .idlm-wrap .idlm-btn-primary,
-:where(body.idlm-crm-design) .idlm-dialog .idlm-btn-primary,
-:where(body.idlm-crm-design) .idlm-workspace .idlm-btn-primary {
-    background: var(--idlm-action);
-    border-color: var(--idlm-action);
-    color: var(--idlm-action-contrast);
-}
-
-:where(body.idlm-crm-design) .idlm-wrap .idlm-btn-primary:hover,
-:where(body.idlm-crm-design) .idlm-wrap .idlm-btn-primary:focus-visible,
-:where(body.idlm-crm-design) .idlm-dialog .idlm-btn-primary:hover,
-:where(body.idlm-crm-design) .idlm-dialog .idlm-btn-primary:focus-visible,
-:where(body.idlm-crm-design) .idlm-workspace .idlm-btn-primary:hover,
-:where(body.idlm-crm-design) .idlm-workspace .idlm-btn-primary:focus-visible {
-    background: var(--idlm-action-hover);
-    border-color: var(--idlm-action-hover);
-    color: var(--idlm-action-contrast);
 }
 
 /* Shared actionable dialog and non-blocking status feedback. */
@@ -1700,10 +1635,6 @@ body.idlm-filters-open:where(.idlm-crm-design) {
         }
 
 :where(body.idlm-crm-design) #idlm-leads-table .idlm-queue-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-:where(body.idlm-crm-design) #idlm-leads-table .idlm-queue-actions .idlm-btn-primary {
-            grid-column: 1 / -1;
-        }
 
 /* Phone card summary and quick actions (the front-end design layer restyles these). */
 
@@ -2365,10 +2296,6 @@ body.idlm-filters-open:where(.idlm-crm-design) {
     border: none;
     cursor: pointer;
     padding: 0 16px;
-}
-
-:where(body.idlm-crm-design) .idlm-drawer-comment-actions .idlm-btn:hover {
-    background: var(--idlm-action);
 }
 
 /* Timeline activity log */
@@ -3770,11 +3697,6 @@ body.idlm-modal-open:where(.idlm-crm-design) {
     padding: 0 16px;
 }
 
-:where(body.idlm-crm-design) .idlm-drawer-form-footer .idlm-btn-primary {
-    border-radius: 10px;
-    border: 1px solid var(--idlm-brand-gold);
-}
-
 :where(body.idlm-crm-design) .idlm-btn-danger-outline {
     background-color: var(--idlm-surface);
     background: var(--idlm-surface);
@@ -3967,46 +3889,6 @@ body.idlm-modal-open:where(.idlm-crm-design) {
 }
 
 :where(body.idlm-crm-design) .idlm-wrap .idlm-btn { min-height: var(--idlm-control-height); border: 1px solid var(--idlm-border-strong); border-radius: var(--idlm-button-radius, 8px); background: var(--idlm-surface); color: var(--idlm-text); display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; font-size: 11px; white-space: nowrap; }
-
-:where(body.idlm-crm-design) .idlm-wrap .idlm-btn-icon {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  min-height: 34px;
-  padding: 0;
-  border-radius: 8px;
-  background: var(--idlm-surface);
-  border: 1px solid var(--idlm-border);
-  color: var(--idlm-text-muted);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: var(--idlm-transition);
-}
-
-:where(body.idlm-crm-design) .idlm-wrap .idlm-btn-icon:hover {
-  background: var(--idlm-surface-soft);
-  border-color: var(--idlm-border-strong);
-  color: var(--idlm-action);
-}
-
-:where(body.idlm-crm-design) .idlm-wrap .idlm-btn-primary {
-  min-width: 0;
-  min-height: var(--idlm-control-height);
-  border-color: var(--idlm-action);
-  border-radius: var(--idlm-button-radius, 8px);
-  background: var(--idlm-action);
-  color: var(--idlm-action-contrast);
-  font-weight: 700;
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--idlm-action) 24%, transparent);
-}
-
-:where(body.idlm-crm-design) .idlm-wrap .idlm-btn-primary:hover {
-  background: var(--idlm-action-hover);
-  border-color: var(--idlm-action-hover);
-  color: var(--idlm-action-contrast);
-}
 
 :where(body.idlm-crm-design) .idlm-wrap .idlm-btn-danger:hover {
   background: #fecdd3;
@@ -5516,8 +5398,6 @@ body.idlm-modal-open:where(.idlm-crm-design) {
 :where(body.idlm-crm-design) .idlm-queue-actions { display: grid; grid-template-columns: repeat(2, max-content); gap: 5px; min-width: 0; }
 
 :where(body.idlm-crm-design) .idlm-queue-actions .idlm-btn { padding: 5px 7px; font-size: 10px; }
-
-:where(body.idlm-crm-design) .idlm-queue-actions .idlm-btn-primary { grid-column: 1 / -1; }
 
 :where(body.idlm-crm-design) .idlm-card.idlm-access-restricted {
     padding: 24px;

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.113.9] - 2026-11-19
+
+### Changed
+
+- Internal only: the plain button rules of the shared legacy stylesheet moved into the design layer. Nothing changes on screen. Builder: Shashi.
+
 ## [1.113.8] - 2026-11-19
 
 ### Changed
