@@ -4,7 +4,7 @@ Tags: lead-manager, interior-design, crm, lead-tracking, duplicate-detection
 Requires at least: 6.6
 Requires PHP: 7.4
 Tested up to: 7.1
-Stable tag: 1.113.12
+Stable tag: 1.113.13
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,12 @@ Action Scheduler is optional; WP-Cron is the fallback. Scheduled work requires w
 Inter 4.001 Latin fonts are served locally. Copyright belongs to The Inter Project Authors. The complete SIL Open Font License 1.1 is bundled in assets/fonts/OFL.txt; assets/fonts/NOTICE.txt and assets/fonts/inter-provenance.json identify the exact upstream revision, matching Google Fonts distribution and file hashes. Font bytes and existing CSS mappings are preserved.
 
 == Changelog ==
+
+= 1.113.13 =
+* New: Settings > AI Agent Access now has an on/off switch for MCP. Turning it off refuses every MCP request and hides the key and setup snippets. Production sites stay off until an administrator turns it on.
+* Security: the lead details tool no longer returns private file paths or ad-click identifiers, and internal MCP errors no longer expose technical details.
+* Fixed: lead search pages in a stable order; MariaDB hosts now enforce the MCP query time limit.
+* Faster: the MCP summary needs two database queries instead of nine, results are reused for a minute, and each request skips a credential check that only matters once per site.
 
 = 1.113.12 =
 * Internal: documentation and standards updated now the old stylesheet is retired. Nothing changes on screen.

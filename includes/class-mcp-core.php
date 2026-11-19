@@ -134,7 +134,7 @@ class IDLM_MCP_Core {
 
         $id = isset($request['id']) ? $request['id'] : null;
         $method = $request['method'];
-        $params = isset($request['params']) ? $request['params'] : array();
+        $params = isset($request['params']) && is_array($request['params']) ? $request['params'] : array();
 
         try {
             switch ($method) {
@@ -169,6 +169,7 @@ class IDLM_MCP_Core {
                 case 'tools/call':
                     $tool_name = isset($params['name']) ? $params['name'] : '';
                     $tool_args = isset($params['arguments']) ? $params['arguments'] : array();
+                    if (is_object($tool_args) || (null === $tool_args)) { $tool_args = (array) $tool_args; }
                     
                     $result = self::execute_tool($tool_name, $tool_args);
                     
@@ -212,13 +213,21 @@ class IDLM_MCP_Core {
                         )
                     );
             }
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
+            // Never echo exception text (it can carry SQL, paths or table names) to the caller.
+            try {
+                if (class_exists('IDLM_Telemetry')) {
+                    IDLM_Telemetry::log('mcp_access', 'error', 'MCP internal error: ' . get_class($e));
+                }
+            } catch (Throwable $logging_failure) {
+                unset($logging_failure); // The audit trail must never turn into a second failure.
+            }
             return array(
                 'jsonrpc' => '2.0',
                 'id' => $id,
                 'error' => array(
                     'code' => -32603,
-                    'message' => 'Internal error: ' . $e->getMessage()
+                    'message' => 'Internal error.'
                 )
             );
         }
@@ -235,6 +244,7 @@ class IDLM_MCP_Core {
     public static function execute_tool($name, $arguments) {
         global $wpdb;
         $table_leads = $wpdb->prefix . 'idlm_leads';
+        self::$rep_users = array(); // The stdio server is long-lived; never serve stale display names.
 
         if (!is_string($name) || !is_array($arguments)) {
             return array('error' => 'Invalid tool name or arguments.');
@@ -253,77 +263,78 @@ class IDLM_MCP_Core {
 
         switch ($name) {
             case 'get_leads_summary':
-                $where = "is_duplicate = 0";
-                $params = array();
+                // 0 means "all time"; non-positive values used to produce an empty future window.
+                $days = isset($arguments['days_ago']) ? max(0, min(3650, intval($arguments['days_ago']))) : 0;
+                $currency = (string) get_option('idlm_currency_code', 'INR');
+                return self::cached('summary', array($days, $currency), static function() use ($wpdb, $table_leads, $days, $currency) {
+                    // One grouped scan and one scalar scan replace the previous nine full passes.
+                    $created = $days ? 'created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)' : '1 = 1';
+                    $converted = $days ? 'conversion_time >= DATE_SUB(NOW(), INTERVAL %d DAY)' : '1 = 1';
+                    $scalar = "SELECT COUNT(*) AS total_leads,
+                        SUM(CASE WHEN is_duplicate = 0 AND $created THEN 1 ELSE 0 END) AS non_duplicate_leads,
+                        SUM(CASE WHEN stage = 'Won' AND is_duplicate = 0 AND $converted THEN deal_value ELSE 0 END) AS won_value,
+                        AVG(CASE WHEN stage = 'Won' AND deal_value > 0 AND is_duplicate = 0 AND $converted THEN deal_value END) AS avg_won_value,
+                        AVG(CASE WHEN time_to_connected IS NOT NULL AND is_duplicate = 0 AND $created THEN time_to_connected END) AS avg_connected,
+                        AVG(CASE WHEN time_to_won IS NOT NULL AND is_duplicate = 0 AND $created THEN time_to_won END) AS avg_won
+                        FROM $table_leads";
+                    $grouped = "SELECT stage, source, lead_quality, COUNT(*) AS lead_count FROM $table_leads WHERE is_duplicate = 0" . ($days ? ' AND ' . $created : '') . ' GROUP BY stage, source, lead_quality';
+                    // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- REL007-SQL-0377: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
+                    $totals = (array) $wpdb->get_row($days ? $wpdb->prepare($scalar, array_fill(0, 5, $days)) : $scalar, ARRAY_A);
+                    $rows = (array) $wpdb->get_results($days ? $wpdb->prepare($grouped, $days) : $grouped, ARRAY_A);
+                    // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 
-                if (!empty($arguments['days_ago'])) {
-                    $days = intval($arguments['days_ago']);
-                    $where .= " AND created_at >= DATE_SUB(NOW(), INTERVAL %d DAY)";
-                    $params[] = $days;
-                }
+                    $buckets = array('stage' => array(), 'source' => array(), 'lead_quality' => array());
+                    foreach ($rows as $row) {
+                        foreach ($buckets as $dimension => $unused) {
+                            $key = (string) ($row[$dimension] ?? '');
+                            $buckets[$dimension][$key] = ($buckets[$dimension][$key] ?? 0) + intval($row['lead_count'] ?? 0);
+                        }
+                    }
+                    $shape = static function($dimension) use ($buckets) {
+                        $list = array();
+                        foreach ($buckets[$dimension] as $key => $count) {
+                            $list[] = array($dimension => (string) $key, 'count' => (string) $count);
+                        }
+                        return $list;
+                    };
 
-                if (!empty($params)) {
-                    // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- REL007-SQL-0377: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
-                    $total_leads = $wpdb->get_var("SELECT COUNT(*) FROM $table_leads");
-                    $non_dup_leads = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM $table_leads WHERE $where", $params));
-                    $total_won_val = $wpdb->get_var($wpdb->prepare("SELECT SUM(deal_value) FROM $table_leads WHERE stage = 'Won' AND is_duplicate = 0 AND conversion_time >= DATE_SUB(NOW(), INTERVAL %d DAY)", $days)) ?: 0;
-                    $avg_won_val = $wpdb->get_var($wpdb->prepare("SELECT AVG(deal_value) FROM $table_leads WHERE stage = 'Won' AND deal_value > 0 AND is_duplicate = 0 AND conversion_time >= DATE_SUB(NOW(), INTERVAL %d DAY)", $days)) ?: 0;
-                    $stages = $wpdb->get_results($wpdb->prepare("SELECT stage, COUNT(*) as count FROM $table_leads WHERE $where GROUP BY stage", $params), ARRAY_A);
-                    $sources = $wpdb->get_results($wpdb->prepare("SELECT source, COUNT(*) as count FROM $table_leads WHERE $where GROUP BY source", $params), ARRAY_A);
-                    $qualities = $wpdb->get_results($wpdb->prepare("SELECT lead_quality, COUNT(*) as count FROM $table_leads WHERE $where GROUP BY lead_quality", $params), ARRAY_A);
-                    $avg_connected = $wpdb->get_var($wpdb->prepare("SELECT AVG(time_to_connected) FROM $table_leads WHERE time_to_connected IS NOT NULL AND $where", $params)) ?: 0;
-                    $avg_won = $wpdb->get_var($wpdb->prepare("SELECT AVG(time_to_won) FROM $table_leads WHERE time_to_won IS NOT NULL AND $where", $params)) ?: 0;
-                    // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
-                } else {
-                    // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0378: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
-                    $total_leads = $wpdb->get_var("SELECT COUNT(*) FROM $table_leads");
-                    $non_dup_leads = $wpdb->get_var("SELECT COUNT(*) FROM $table_leads WHERE is_duplicate = 0");
-                    $total_won_val = $wpdb->get_var("SELECT SUM(deal_value) FROM $table_leads WHERE stage = 'Won' AND is_duplicate = 0") ?: 0;
-                    $avg_won_val = $wpdb->get_var("SELECT AVG(deal_value) FROM $table_leads WHERE stage = 'Won' AND deal_value > 0 AND is_duplicate = 0") ?: 0;
-                    $stages = $wpdb->get_results("SELECT stage, COUNT(*) as count FROM $table_leads WHERE is_duplicate = 0 GROUP BY stage", ARRAY_A);
-                    $sources = $wpdb->get_results("SELECT source, COUNT(*) as count FROM $table_leads WHERE is_duplicate = 0 GROUP BY source", ARRAY_A);
-                    $qualities = $wpdb->get_results("SELECT lead_quality, COUNT(*) as count FROM $table_leads WHERE is_duplicate = 0 GROUP BY lead_quality", ARRAY_A);
-                    $avg_connected = $wpdb->get_var("SELECT AVG(time_to_connected) FROM $table_leads WHERE time_to_connected IS NOT NULL AND is_duplicate = 0") ?: 0;
-                    $avg_won = $wpdb->get_var("SELECT AVG(time_to_won) FROM $table_leads WHERE time_to_won IS NOT NULL AND is_duplicate = 0") ?: 0;
-                    // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-                }
-
-                return array(
-                    'total_leads_in_db' => intval($total_leads),
-                    'non_duplicate_leads' => intval($non_dup_leads),
-                    'financial_metrics' => array(
-                        'total_won_deal_value_inr' => floatval($total_won_val),
-                        'average_won_deal_value_inr' => round(floatval($avg_won_val), 2),
-                        'currency_code' => get_option('idlm_currency_code', 'INR'),
-                        'total_won_deal_value_' . strtolower(get_option('idlm_currency_code', 'INR')) => floatval($total_won_val),
-                        'average_won_deal_value_' . strtolower(get_option('idlm_currency_code', 'INR')) => round(floatval($avg_won_val), 2)
-                    ),
-                    'leads_by_stage' => $stages,
-                    'leads_by_source' => $sources,
-                    'leads_by_quality' => $qualities,
-                    'responsiveness_metrics' => array(
-                        'avg_time_to_connected_hours' => round(floatval($avg_connected) / 3600, 2),
-                        'avg_time_to_won_days' => round(floatval($avg_won) / 86400, 2)
-                    )
-                );
+                    $total_won_val = floatval($totals['won_value'] ?? 0);
+                    $avg_won_val = round(floatval($totals['avg_won_value'] ?? 0), 2);
+                    $code = strtolower($currency);
+                    return array(
+                        'total_leads_in_db' => intval($totals['total_leads'] ?? 0),
+                        'non_duplicate_leads' => intval($totals['non_duplicate_leads'] ?? 0),
+                        'financial_metrics' => array(
+                            'total_won_deal_value_inr' => $total_won_val,
+                            'average_won_deal_value_inr' => $avg_won_val,
+                            'currency_code' => $currency,
+                            'total_won_deal_value_' . $code => $total_won_val,
+                            'average_won_deal_value_' . $code => $avg_won_val
+                        ),
+                        'leads_by_stage' => $shape('stage'),
+                        'leads_by_source' => $shape('source'),
+                        'leads_by_quality' => $shape('lead_quality'),
+                        'responsiveness_metrics' => array(
+                            'avg_time_to_connected_hours' => round(floatval($totals['avg_connected'] ?? 0) / 3600, 2),
+                            'avg_time_to_won_days' => round(floatval($totals['avg_won'] ?? 0) / 86400, 2)
+                        )
+                    );
+                });
 
             case 'query_leads':
                 $where = "is_duplicate = 0";
                 $params = array();
 
-                if (isset($arguments['stage']) && $arguments['stage'] !== '') {
-                    $where .= " AND stage = %s";
-                    $params[] = sanitize_text_field($arguments['stage']);
+                foreach (array('stage', 'source', 'lead_quality') as $filter) {
+                    if (isset($arguments[$filter]) && !is_scalar($arguments[$filter])) {
+                        return array('error' => "Invalid value for $filter: a string is required.");
+                    }
+                    if (isset($arguments[$filter]) && '' !== (string) $arguments[$filter]) {
+                        $where .= " AND $filter = %s";
+                        $params[] = sanitize_text_field((string) $arguments[$filter]);
+                    }
                 }
-                if (isset($arguments['source']) && $arguments['source'] !== '') {
-                    $where .= " AND source = %s";
-                    $params[] = sanitize_text_field($arguments['source']);
-                }
-                if (isset($arguments['lead_quality']) && $arguments['lead_quality'] !== '') {
-                    $where .= " AND lead_quality = %s";
-                    $params[] = sanitize_text_field($arguments['lead_quality']);
-                }
-                if (isset($arguments['assigned_rep_id'])) {
+                if (isset($arguments['assigned_rep_id']) && '' !== $arguments['assigned_rep_id']) {
                     $where .= " AND assigned_rep_id = %d";
                     $params[] = intval($arguments['assigned_rep_id']);
                 }
@@ -331,7 +342,8 @@ class IDLM_MCP_Core {
                 $limit = isset($arguments['limit']) ? min(100, max(1, intval($arguments['limit']))) : 20;
                 $offset = isset($arguments['offset']) ? max(0, intval($arguments['offset'])) : 0;
 
-                $where .= " LIMIT %d OFFSET %d";
+                // A stable order is required: LIMIT/OFFSET without one repeats and skips rows between pages.
+                $where .= " ORDER BY id DESC LIMIT %d OFFSET %d";
                 $params[] = $limit;
                 $params[] = $offset;
 
@@ -342,20 +354,23 @@ class IDLM_MCP_Core {
                 // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
                 
                 foreach ($results as &$lead) {
-                    $rep_id = intval($lead['assigned_rep_id']);
-                    if ($rep_id === 0) {
-                        $lead['assigned_rep_name'] = 'Unassigned';
-                    } else {
-                        $rep_user = get_userdata($rep_id);
-                        $lead['assigned_rep_name'] = $rep_user ? $rep_user->display_name : 'Unknown Rep';
-                    }
+                    $lead['assigned_rep_name'] = self::rep_name(intval($lead['assigned_rep_id']), 'Unknown Rep');
                 }
+                unset($lead);
                 return $results;
 
             case 'get_lead_details':
-                $lead_id = intval($arguments['id']);
+                $lead_id = isset($arguments['id']) && is_scalar($arguments['id']) ? intval($arguments['id']) : 0;
+                if ($lead_id < 1) {
+                    return array('error' => 'A positive lead id is required.');
+                }
+                // Project exactly the columns the query policy grants with the PII grant.
+                // SELECT * also returned private file paths and ad-click identifiers.
+                require_once __DIR__ . '/class-mcp-query-policy.php';
+                $granted = IDLM_MCP_Query_Policy::fields();
+                $lead_columns = implode(', ', array_map('sanitize_key', $granted[strtolower($table_leads)] ?? array('id')));
                 // phpcs:disable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0380: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
-                $lead = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_leads WHERE id = %d", $lead_id), ARRAY_A);
+                $lead = $wpdb->get_row($wpdb->prepare("SELECT $lead_columns FROM $table_leads WHERE id = %d", $lead_id), ARRAY_A);
                 // phpcs:enable PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
                 if (!$lead) {
                     return array('error' => "Lead not found for ID $lead_id");
@@ -368,7 +383,7 @@ class IDLM_MCP_Core {
 
                 $rep = null;
                 if (!empty($lead['assigned_rep_id'])) {
-                    $rep_user = get_userdata($lead['assigned_rep_id']);
+                    $rep_user = self::rep_user(intval($lead['assigned_rep_id']));
                     if ($rep_user) {
                         $rep = array(
                             'id' => $rep_user->ID,
@@ -383,60 +398,9 @@ class IDLM_MCP_Core {
                 return $lead;
 
             case 'get_reps_performance':
-                $timezone = wp_timezone();
-                $yesterday = new DateTime('yesterday', $timezone);
-                $yesterday_start = $yesterday->format('Y-m-d 00:00:00');
-                $yesterday_end = $yesterday->format('Y-m-d 23:59:59');
-                // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0382: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
-                $query = $wpdb->prepare("
-                    SELECT 
-                        l.assigned_rep_id,
-                        COUNT(l.id) as total_assigned_leads,
-                        SUM(CASE WHEN l.stage NOT IN ('Won', 'Lost') AND l.lead_quality != 'Unqualified' THEN 1 ELSE 0 END) as active_assigned_leads,
-                        SUM(CASE WHEN l.lead_quality = 'Qualified' THEN 1 ELSE 0 END) as qualified_assigned_leads,
-                        SUM(CASE WHEN l.handoff_at BETWEEN %s AND %s AND l.handoff_status IN ('manually_assigned', 'auto_assigned') THEN 1 ELSE 0 END) as received_yesterday,
-                        SUM(CASE WHEN l.stage = 'Won' THEN 1 ELSE 0 END) as won_leads,
-                        SUM(CASE WHEN l.stage = 'Won' THEN l.deal_value ELSE 0 END) as total_deal_value,
-                        AVG(l.time_to_connected) as avg_time_to_connected_sec,
-                        AVG(l.time_to_won) as avg_time_to_won_sec
-                    FROM $table_leads l
-                    WHERE l.is_duplicate = 0
-                    GROUP BY l.assigned_rep_id
-                ", $yesterday_start, $yesterday_end);
-                // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
-                $performance_data = $wpdb->get_results($query, ARRAY_A);
-                // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-
-                $result_reps = array();
-                foreach ($performance_data as $row) {
-                    $rep_id = intval($row['assigned_rep_id']);
-                    if ($rep_id === 0) {
-                        $rep_name = 'Unassigned';
-                    } else {
-                        $rep_user = get_userdata($rep_id);
-                        $rep_name = $rep_user ? $rep_user->display_name : 'Unknown User';
-                    }
-                    
-                    $total = intval($row['total_assigned_leads']);
-                    $won = intval($row['won_leads']);
-                    $conversion_rate = $total > 0 ? round(($won / $total) * 100, 2) : 0.00;
-                    
-                    $result_reps[] = array(
-                        'rep_id' => $rep_id,
-                        'rep_name' => $rep_name,
-                        'total_assigned_leads' => $total,
-                        'active_assigned_leads' => intval($row['active_assigned_leads']),
-                        'qualified_assigned_leads' => intval($row['qualified_assigned_leads']),
-                        'received_yesterday' => intval($row['received_yesterday']),
-                        'won_leads' => $won,
-                        'conversion_rate_percent' => $conversion_rate,
-                        'total_won_deal_value_inr' => floatval($row['total_deal_value']),
-                        'total_won_deal_value_' . strtolower(get_option('idlm_currency_code', 'INR')) => floatval($row['total_deal_value']),
-                        'avg_time_to_connected_hours' => $row['avg_time_to_connected_sec'] !== null ? round(floatval($row['avg_time_to_connected_sec']) / 3600, 2) : null,
-                        'avg_time_to_won_days' => $row['avg_time_to_won_sec'] !== null ? round(floatval($row['avg_time_to_won_sec']) / 86400, 2) : null,
-                    );
-                }
-                return $result_reps;
+                return self::cached('reps', array((new DateTime('yesterday', wp_timezone()))->format('Y-m-d'), (string) get_option('idlm_currency_code', 'INR')), static function() {
+                    return self::reps_performance();
+                });
 
             case 'run_custom_query':
                 $allowed_tables = array_map('strtolower', array(
@@ -468,5 +432,100 @@ class IDLM_MCP_Core {
             default:
                 return array('error' => "Unknown tool: $name");
         }
+    }
+
+    /** Per-rep performance aggregate (one grouped scan). */
+    private static function reps_performance() {
+        global $wpdb;
+        $table_leads = $wpdb->prefix . 'idlm_leads';
+        $timezone = wp_timezone();
+        $yesterday = new DateTime('yesterday', $timezone);
+        $yesterday_start = $yesterday->format('Y-m-d 00:00:00');
+        $yesterday_end = $yesterday->format('Y-m-d 23:59:59');
+        // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- REL007-SQL-0382: execute_tool(): fixed typed-tool projections and bound values; custom SELECT passes MCP_Query_Policy restricted grammar/field/table/PII/time limits; live tool grants are checked before execution.
+        $query = $wpdb->prepare("
+            SELECT 
+                l.assigned_rep_id,
+                COUNT(l.id) as total_assigned_leads,
+                SUM(CASE WHEN l.stage NOT IN ('Won', 'Lost') AND l.lead_quality != 'Unqualified' THEN 1 ELSE 0 END) as active_assigned_leads,
+                SUM(CASE WHEN l.lead_quality = 'Qualified' THEN 1 ELSE 0 END) as qualified_assigned_leads,
+                SUM(CASE WHEN l.handoff_at BETWEEN %s AND %s AND l.handoff_status IN ('manually_assigned', 'auto_assigned') THEN 1 ELSE 0 END) as received_yesterday,
+                SUM(CASE WHEN l.stage = 'Won' THEN 1 ELSE 0 END) as won_leads,
+                SUM(CASE WHEN l.stage = 'Won' THEN l.deal_value ELSE 0 END) as total_deal_value,
+                AVG(l.time_to_connected) as avg_time_to_connected_sec,
+                AVG(l.time_to_won) as avg_time_to_won_sec
+            FROM $table_leads l
+            WHERE l.is_duplicate = 0
+            GROUP BY l.assigned_rep_id
+        ", $yesterday_start, $yesterday_end);
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $performance_data = $wpdb->get_results($query, ARRAY_A);
+        // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+        $result_reps = array();
+        $currency_key = strtolower((string) get_option('idlm_currency_code', 'INR'));
+        foreach ($performance_data as $row) {
+            $rep_id = intval($row['assigned_rep_id']);
+            $rep_name = self::rep_name($rep_id, 'Unknown User');
+
+            $total = intval($row['total_assigned_leads']);
+            $won = intval($row['won_leads']);
+            $conversion_rate = $total > 0 ? round(($won / $total) * 100, 2) : 0.00;
+
+            $result_reps[] = array(
+                'rep_id' => $rep_id,
+                'rep_name' => $rep_name,
+                'total_assigned_leads' => $total,
+                'active_assigned_leads' => intval($row['active_assigned_leads']),
+                'qualified_assigned_leads' => intval($row['qualified_assigned_leads']),
+                'received_yesterday' => intval($row['received_yesterday']),
+                'won_leads' => $won,
+                'conversion_rate_percent' => $conversion_rate,
+                'total_won_deal_value_inr' => floatval($row['total_deal_value']),
+                'total_won_deal_value_' . $currency_key => floatval($row['total_deal_value']),
+                'avg_time_to_connected_hours' => $row['avg_time_to_connected_sec'] !== null ? round(floatval($row['avg_time_to_connected_sec']) / 3600, 2) : null,
+                'avg_time_to_won_days' => $row['avg_time_to_won_sec'] !== null ? round(floatval($row['avg_time_to_won_sec']) / 86400, 2) : null,
+            );
+        }
+        return $result_reps;
+    }
+
+    /** Seconds a typed analytic result may be reused; keeps repeated AI calls off the leads table. */
+    const CACHE_TTL = 60;
+
+    /** Reuse an expensive aggregate briefly. Filterable; 0 disables the cache. */
+    private static function cached($name, array $parts, callable $compute) {
+        $ttl = (int) apply_filters('idlm_mcp_cache_ttl', self::CACHE_TTL, $name);
+        if ($ttl < 1) {
+            return $compute();
+        }
+        $key = 'idlm_mcp_' . $name . '_' . md5(wp_json_encode($parts));
+        $hit = get_transient($key);
+        if (is_array($hit)) {
+            return $hit;
+        }
+        $result = $compute();
+        if (is_array($result) && !isset($result['error'])) {
+            set_transient($key, $result, $ttl);
+        }
+        return $result;
+    }
+
+    private static $rep_users = array();
+
+    private static function rep_user($rep_id) {
+        if (!array_key_exists($rep_id, self::$rep_users)) {
+            self::$rep_users[$rep_id] = get_userdata($rep_id);
+        }
+        return self::$rep_users[$rep_id];
+    }
+
+    /** Display name for a rep id, looked up once per request. */
+    private static function rep_name($rep_id, $unknown) {
+        if (0 === $rep_id) {
+            return 'Unassigned';
+        }
+        $user = self::rep_user($rep_id);
+        return $user ? $user->display_name : $unknown;
     }
 }
