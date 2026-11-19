@@ -524,7 +524,7 @@ idlm_test('legacy rules live in crm-legacy-*.css under a zero-specificity gate a
             }
         }
     }
-    assert_true($rules <= 1125, 'STD-CSS-11: the legacy files must not gain rules (' . $rules . ').');
+    assert_true($rules <= 1107, 'STD-CSS-11: the legacy files must not gain rules (' . $rules . ').');
     assert_true($important <= 4, 'STD-CSS-11: the legacy files must not gain !important (' . $important . ').');
 
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
