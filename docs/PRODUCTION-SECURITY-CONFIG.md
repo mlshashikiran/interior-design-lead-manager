@@ -6,7 +6,7 @@ Status: Local implementation; production qualification/deployment remain pending
 
 ## MCP production policy
 
-MCP is disabled by default when `wp_get_environment_type()` returns `production`. Since 1.113.13 an administrator can also turn it on or off in Settings > AI Agent Access (saved option `idlm_mcp_enabled`; the saved choice wins over the environment default, and the constants below override the switch and make it read-only). Enable it only after approving the exact tool grants:
+MCP is disabled by default when `wp_get_environment_type()` returns `production`. Enable it only after approving the exact tool grants:
 
 ```php
 define('IDLM_MCP_ENABLED', true);
@@ -29,7 +29,7 @@ Emergency shutdown:
 define('IDLM_MCP_DISABLED', true);
 ```
 
-Optional bounded-budget constants are `IDLM_MCP_MAX_PAYLOAD_BYTES`, `IDLM_MCP_MAX_BATCH_CALLS`, `IDLM_MCP_MAX_QUERY_ROWS`, `IDLM_MCP_MAX_QUERY_LENGTH`, and `IDLM_MCP_MAX_REQUEST_SECONDS`. Built-in production defaults are 256 KiB, 5 calls, 100 custom-query rows, 4,000 query characters, and 3 seconds between batch calls. Custom SQL additionally receives the database statement-time limit using that budget (the MySQL `MAX_EXECUTION_TIME` hint, or `SET STATEMENT max_statement_time` on MariaDB); network/queue time and individual typed-tool SQL remain separate.
+Optional bounded-budget constants are `IDLM_MCP_MAX_PAYLOAD_BYTES`, `IDLM_MCP_MAX_BATCH_CALLS`, `IDLM_MCP_MAX_QUERY_ROWS`, `IDLM_MCP_MAX_QUERY_LENGTH`, and `IDLM_MCP_MAX_REQUEST_SECONDS`. Built-in production defaults are 256 KiB, 5 calls, 100 custom-query rows, 4,000 query characters, and 3 seconds between batch calls. Custom SQL additionally receives the MySQL statement-time hint using that budget; network/queue time and individual typed-tool SQL remain separate.
 
 ## Trusted proxies
 
