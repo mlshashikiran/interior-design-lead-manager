@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.113.12] - 2026-11-19
+
+### Changed
+
+- Internal only: documentation and the design standard now describe the retired stylesheet's remaining rules as a frozen layer. Nothing changes on screen. Builder: Shashi.
+
 ## [1.113.11] - 2026-11-19
 
 ### Changed

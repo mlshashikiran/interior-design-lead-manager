@@ -86,4 +86,4 @@ Anything that cannot be measured stays. What remains is listed in `docs/TECH-DEB
 
 - A Cmd-K command palette (shadcn `Command` in a `Dialog`) for lead search and navigation.
 - Moving screen markup onto the new Badge anatomy screen by screen. Field moved in 1.110.0 for Settings, Users and access, Leads dialogs and filters, My account and the log filters; the lead drawer, quotation editor, Pipeline, payments and design-team dialogs are still to do.
-- Retiring `admin-style.css` entirely, after the overridden-rule pass has been repeated for phone width, open drawers and dialogs.
+- Emptying `crm-legacy-shared.css` (what is left of the retired `admin-style.css`): see `docs/TECH-DEBT.md`.

@@ -1,6 +1,7 @@
-/* Temporary legacy rules, moved verbatim from admin-style.css (STD-CSS-11). Every selector sits under :where(body.idlm-crm-design),
-   which adds no specificity, so cascade order and specificity are exactly what admin-style.css had. Do not add rules here: new
-   styling goes in crm-design*.css, and rules move there area by area until these files are empty. Area: shared. */
+/* Frozen legacy rules (STD-CSS-11), moved unchanged from the retired admin-style.css. Every selector sits under
+   :where(body.idlm-crm-design), which adds no specificity, so cascade order and specificity are what admin-style.css had.
+   Do not add rules here: new styling goes in crm-design*.css. A rule may leave this file only by moving into the design
+   layer with the same computed styles on every view (docs/TECH-DEBT.md, "Legacy stylesheet under the design layer"). Area: shared. */
 
 /* ==========================================================================
    Interior Design Lead Manager - Premium Design System

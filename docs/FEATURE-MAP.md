@@ -9,7 +9,7 @@ Use this map to identify the likely blast radius before changing a business feat
 - **AJAX:** `idlm_get_lead_details`, `idlm_get_lead_activity`, `idlm_get_leads_table`, `idlm_get_kanban_leads`, `idlm_quick_edit_lead`, `idlm_save_lead_details`, `idlm_add_lead_manual`, `idlm_bulk_action`, `idlm_delete_lead`, `idlm_import_leads_batch`, `idlm_upload_lead_file`.
 - **REST:** `POST /interior-design-lead-manager/v1/webhook`.
 - **Hooks:** `idlm_lead_stage_converted`, `idlm_lead_attribution_merged`, `idlm_lead_call_status_no_answer`, `idlm_trigger_interakt_event`.
-- **Shortcodes/UI:** `[idlm_leads_list]`, `[idlm_kanban]`, `[idlm_workspace]`; `assets/js/admin-app.js`, `assets/js/kanban.js`; `assets/css/admin-style.css`, `assets/css/kanban.css`, `assets/css/workspace.css`.
+- **Shortcodes/UI:** `[idlm_leads_list]`, `[idlm_kanban]`, `[idlm_workspace]`; `assets/js/admin-app.js`, `assets/js/kanban.js`; `assets/css/crm-legacy-shared.css`, `assets/css/kanban.css`, `assets/css/workspace.css`.
 - **Verification:** the Phase 5 matrix covers the wp-admin and frontend dashboard, Leads, Pipeline, logs, Settings, account, and quotation surfaces at desktop/tablet/mobile widths; see [ADMIN-REFACTOR-VERIFICATION.md](ADMIN-REFACTOR-VERIFICATION.md).
 - **High-risk coupling:** always route lifecycle mutations through `IDLM_DB::insert_lead()`, `upsert_inbound_lead()`, or `update_lead()` so duplicate, qualification, handoff, task, timing, activity, and integration behavior remains intact.
 
@@ -20,7 +20,7 @@ Use this map to identify the likely blast radius before changing a business feat
 - **AJAX:** `idlm_log_presales_touch`, `idlm_presales_decision`, `idlm_get_lead_tasks`, `idlm_add_lead_task`, `idlm_toggle_task_status`, `idlm_delete_lead_task`, `idlm_get_rep_tasks`, `idlm_run_fallback_now`.
 - **Schedules:** `idlm_hourly_assignment_fallback` / `idlm_hourly_assignment_fallback_cron` call `IDLM_Integrations::run_assignment_fallback()` and `IDLM_DB::roll_forward_presales_tasks()`.
 - **Settings:** outreach targets, working days/hours, reminder rules, assignment mode/pools, capacity, studio mappings, handoff policy and fallback thresholds.
-- **JS/CSS:** task, activity and pre-sales behavior is primarily in `assets/js/admin-app.js` and `assets/css/admin-style.css`.
+- **JS/CSS:** task, activity and pre-sales behavior is primarily in `assets/js/admin-app.js` and `assets/css/crm-legacy-shared.css`.
 - **High-risk coupling:** quality, stage, call evidence, task completion, owner, `qualified_at`, and `handoff_status` are one workflow rather than independent fields.
 
 ## Quotations and catalogue
@@ -42,7 +42,7 @@ Use this map to identify the likely blast radius before changing a business feat
 - **Hooks:** `idlm_lead_call_status_no_answer`, `idlm_trigger_interakt_event`, `idlm_async_interakt_track_event`.
 - **AJAX:** `idlm_log_presales_touch`; lead/activity endpoints surface replies and read state.
 - **Settings:** Interakt enable/key/secret/event mappings; Meta webhook enable/verify token/app secret.
-- **JS/CSS:** WhatsApp actions, the guarded Interakt workspace handoff, unread indicators and activity rendering live in `assets/js/admin-app.js` and `assets/css/admin-style.css`.
+- **JS/CSS:** WhatsApp actions, the guarded Interakt workspace handoff, unread indicators and activity rendering live in `assets/js/admin-app.js` and `assets/css/crm-legacy-shared.css`.
 - **Boundary:** the plugin logs inbound replies and sends Interakt event triggers; it does not contain a general outbound WhatsApp chat API.
 
 ## Users, roles and access
@@ -72,7 +72,7 @@ Use this map to identify the likely blast radius before changing a business feat
 - **PHP/UI:** `IDLM_Admin_Settings_Controller` owns CRM/integration settings POST validation, persistence, and authenticated API-credential rotation; `IDLM_Admin_Settings_Renderer` builds settings context and delegates to guarded tab/section templates behind `IDLM_Admin::render_settings_page()`. `ajax_save_routing_settings()` covers routing controls. `IDLM_Quotations::render_settings_page()` / `handle_save_settings()` own quote configuration.
 - **Storage:** `idlm_*` WordPress options; major groups are vocabularies, targets/reminders, visibility, routing/pools/fallback, field mappings, platform credentials/event mappings, audience rules, telemetry, `idlm_quote_settings`, and the non-secret `idlm_white_label_settings` branding snapshot.
 - **Authorization:** `manage_options` for CRM/integration settings; `idlm_manage_quote_settings` for quote settings; nonce required.
-- **JS/CSS:** settings tabs, mapping builders, white-label media/preview/contrast controls, tests and batch sync controls use the guarded settings templates plus `assets/js/admin-app.js` and `assets/js/settings.js`; presentation is in `admin-style.css`, `workspace.css`, and `quotations.css`.
+- **JS/CSS:** settings tabs, mapping builders, white-label media/preview/contrast controls, tests and batch sync controls use the guarded settings templates plus `assets/js/admin-app.js` and `assets/js/settings.js`; presentation is in `crm-legacy-shared.css`, `workspace.css`, and `quotations.css`.
 - **Side effects:** settings can change routing, visible states, CAPI/Interakt dispatch, scheduled audience behavior, print output, and plugin-owned sign-in/workspace/account branding without code changes. White-label presentation is scoped to plugin roots and does not consume or modify site theme settings.
 - **High-risk coupling:** several configurable labels are also hard-coded workflow literals. Secrets are ordinary WordPress options and must never be exposed to localized JS, logs or diagnostics.
 

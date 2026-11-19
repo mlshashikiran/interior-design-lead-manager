@@ -329,13 +329,13 @@ Do not shrink text below legible sizes to force desktop layouts onto mobile. Pre
 
 | Area | Primary files |
 |---|---|
-| Shared tokens and components | `assets/css/admin-style.css` |
+| Shared tokens and components | `assets/css/crm-tokens.css`, `assets/css/crm-design.css`, `assets/css/crm-legacy-shared.css` |
 | Unified frontend shell | `assets/css/workspace.css`, `assets/js/workspace.js` |
 | Leads List and drawer behavior | `includes/class-admin.php`, `assets/js/admin-app.js` |
 | Dashboard | `assets/css/dashboard.css`, `assets/js/dashboard.js` |
 | Kanban | `assets/css/kanban.css`, `assets/js/kanban.js` |
 | Quotations | `assets/css/quotations.css`, `assets/js/quotations.js`, `includes/class-quotations.php` |
-| Settings and shared overlays | `includes/class-admin.php`, `assets/css/admin-style.css` |
+| Settings and shared overlays | `includes/class-admin.php`, `assets/css/crm-design-settings.css`, `assets/css/crm-legacy-shared.css` |
 | Local Inter font | `assets/css/fonts.css`, `assets/fonts/` |
 
 ## 19. Frontend Change Checklist

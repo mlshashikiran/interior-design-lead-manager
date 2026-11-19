@@ -39,15 +39,19 @@ No open high-priority code defect is currently proven. Version 1.99.8 adds the g
 
 ## Low
 
-### Legacy stylesheet under the design layer (1.109.1, step B done in 1.113.2)
+### Frozen legacy layer under the design layer (1.113.12)
 
-The legacy rules (formerly `admin-style.css`, now `crm-legacy-*.css`, ~6,800 lines) still load under every CRM page, and only there: legacy wp-admin pages redirect to the workspace before output. 1.109.0 and 1.109.1 removed every rule that could be proven to have no effect (method in `docs/SHADCN-UI-FOUNDATIONS-PLAN.md`). What remains is not removable by measurement:
+`admin-style.css` is retired. What it held lives in four frozen files, `crm-legacy-shared.css` (1,039 rules, about 5,800 lines), `crm-legacy-settings.css` (11), `crm-legacy-leads.css` (9) and `crm-legacy-admin.css` (3), each selector under the zero-specificity `:where(body.idlm-crm-design)` gate (STD-CSS-11). They load after `crm-tokens.css` and before `crm-design.css` on every CRM page, and only there. Cascade order and specificity are exactly what 1.113.1 had; the STD-CSS-11 test caps the rule count and no new rule may be added.
 
-- About 700 rules still change what is rendered. Deleting the file means moving them into `crm-design*.css`, where STD-CSS-1 requires the `body.idlm-crm-design` prefix. That raises their specificity above layer rules they currently lose to, so each moved rule needs its cascade re-checked. Do it one screen area at a time, with the same computed-style comparison against the previous release.
-- About 160 rules that had no measurable effect but were kept on purpose: state classes (`.is-open`, `.active`, `[open]`, `[aria-*]`), `[hidden]` and `display: none` guards, `data-idlm-ui` utilities, size and position declarations, `!important`, contract-test literals and twin selectors.
-- About 240 rules that matched nothing even with every dialog forced open. Their classes exist in code, so they style states the local data never produced.
-- 108 hover, focus and pseudo-element rules, which this method cannot measure.
-- Done in 1.113.1 (step A): the `:root` block (80 tokens, about 30 hex colours) moved into `assets/css/crm-tokens.css`, allowed by STD-CSS-10. Done in 1.113.2 (step B): `admin-style.css` is gone; its rules sit in `crm-legacy-shared.css` (nearly all of them) and the `leads`, `settings` and `admin` files under `:where(body.idlm-crm-design)`, with computed styles identical to 1.113.1 (STD-CSS-11). Step C in progress: `admin` folded in 1.113.3 except three 1100px rules; `settings` in 1.113.4 except the 520/600/900px blocks and two rules that would outrank the design layer. `leads` folded in 1.113.5 except the 760/768px blocks and the progress bar (hex colour). `crm-legacy-shared.css`: the admin-only rules folded in 1.113.6, Settings-specific rules in 1.113.7, Leads-specific rules in 1.113.8; what is left is mostly shared components (buttons, tables, dialogs, badges) that need a plan of their own. Still to do: C (the rest of the shared file), fold those into the design layer area by area; D, final standard and test cleanup.
+History: 1.109.x removed every rule that could be proven dead (method in `docs/SHADCN-UI-FOUNDATIONS-PLAN.md`). 1.113.1 moved the tokens into `crm-tokens.css`. 1.113.2 split the rest into the legacy files. 1.113.3 to 1.113.11 folded about 340 rule blocks into `crm-design*.css` (admin, settings, leads, then plain buttons, inputs and dialogs), each release checked against the previous one by computed style on every view.
+
+Why the rest stays: folding raises a rule's specificity by (0,1,1), which flips it against design rules and `workspace.css` / `dashboard.css` / `kanban.css` / `quotations.css` rules it used to lose to. Static checks cannot tell which flips are visible, so each fold is a trial (fold, compare every view at 1440, 1100, 782 and 390px, normal and with dialogs, drawers and filter panels forced open, plus the lead drawer open, pull back what changes). Rules left behind by the trials, by kind:
+
+- Base rules of components the design layer restyles (secondary and danger-outline buttons, base `.idlm-input`, `.idlm-modal-content`, `.idlm-dialog__panel`, tables, tabs, badges): folding changed borders, radii, paddings, font sizes or widths.
+- Rules with a hex colour, `!important`, `transition: all` or a non-canonical breakpoint (520, 600, 760, 768, 900, 1100px), which STD-CSS-2, -3 and -5 forbid in the design layer. Folding them means choosing a token, a canonical breakpoint, or accepting a visible change.
+- State and hover/focus/pseudo-element rules that the comparison cannot always measure.
+
+Next steps, if the layer is to go: pick a canonical breakpoint for the 1100px and 900px rules (a visual decision), replace the remaining hex values with tokens, then repeat the trial per component, starting with tables and tabs. Until then the layer is small, frozen and harmless.
 
 ### Remaining request and client hotspots
 
