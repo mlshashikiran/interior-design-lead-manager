@@ -3,6 +3,125 @@
    design-system/interior-design-lead-manager/pages/leads.md. Every selector starts with
    body.idlm-crm-design. Tokens only: no hex colours, no important overrides. */
 
+/* Folded from crm-legacy-shared.css (step C): kept first, where the legacy rules loaded before the design rules. */
+body.idlm-crm-design .idlm-pagination-btn { display: inline-flex; align-items: center; justify-content: center; min-height: var(--idlm-control-height); border: 1px solid var(--idlm-border); border-radius: var(--idlm-button-radius, 8px); background-color: var(--idlm-surface); background: var(--idlm-surface); color: var(--idlm-text); cursor: pointer; outline: none; }
+
+body.idlm-crm-design .idlm-pagination-btn:hover:not(:disabled) { border-color: var(--idlm-border-strong); background-color: var(--idlm-surface-soft); background: var(--idlm-surface-soft); }
+
+body.idlm-crm-design .idlm-pagination-btn:disabled { cursor: not-allowed; border-color: var(--idlm-border); background-color: var(--idlm-readonly); }
+
+body.idlm-crm-design .idlm-bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+body.idlm-crm-design .idlm-sortable-column[aria-sort="ascending"] .idlm-sort-indicator::before {
+    color: var(--idlm-action);
+    content: "↑";
+}
+
+body.idlm-crm-design .idlm-sortable-column[aria-sort="descending"] .idlm-sort-indicator::before {
+    color: var(--idlm-action);
+    content: "↓";
+}
+
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-leads-mobile-select-all { display: inline-flex; align-items: center; gap: 6px; min-height: var(--idlm-target-size); }
+}
+
+body.idlm-crm-design .idlm-pending-pulse-dot::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--idlm-brand-gold);
+    border-radius: 50%;
+    animation: idlm-dot-pulse 1.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+}
+
+/* ==========================================================================
+   Lead Import CSS Styles
+   ========================================================================== */
+body.idlm-crm-design .idlm-import-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--idlm-surface-soft);
+    border: 1px solid var(--idlm-border);
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    list-style: none;
+}
+
+body.idlm-crm-design .idlm-import-step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--idlm-border);
+    color: var(--idlm-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-import-step-item.active .idlm-import-step-number {
+    background-color: var(--idlm-action);
+    color: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-import-step-item.completed .idlm-import-step-number {
+    background-color: var(--idlm-success);
+    color: var(--idlm-surface);
+}
+
+body.idlm-crm-design .idlm-import-mapping-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+body.idlm-crm-design .idlm-import-preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+body.idlm-crm-design .idlm-import-progress-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+body.idlm-crm-design .idlm-import-progress-bar-fill {
+    height: 100%;
+    background-color: var(--idlm-action);
+    width: 0%;
+    transition: width 0.3s ease-out;
+}
+
+body.idlm-crm-design .idlm-filters-secondary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    align-items: flex-end;
+    width: 100%;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--idlm-border);
+}
+
+body.idlm-crm-design .idlm-metric-hint {
+    font-size: var(--idlm-type-meta);
+    line-height: 1.4;
+}
+
 /* --- 1. Page header: search and filters first, secondary actions quiet ----- */
 body.idlm-crm-design .idlm-wrap.idlm-leads-page.idlm-leads-page .idlm-header {
     gap: var(--idlm-space-3);
