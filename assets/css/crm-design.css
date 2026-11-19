@@ -9,6 +9,129 @@
    colours outside the neutral token block, or important overrides.
    ========================================================================== */
 
+/* Folded from crm-legacy-shared.css (step C): kept first, where the legacy rules loaded before the design rules. */
+body.idlm-crm-design .idlm-btn-compact {
+    min-height: var(--idlm-control-height);
+    padding: var(--idlm-space-1) var(--idlm-space-3);
+    font-size: 11px;
+}
+
+body.idlm-crm-design .idlm-btn-primary {
+    background-color: var(--idlm-action);
+    background: var(--idlm-action);
+    color: var(--idlm-action-contrast);
+}
+
+body.idlm-crm-design .idlm-btn-primary:hover,
+body.idlm-crm-design .idlm-btn-primary:focus-visible {
+    background-color: var(--idlm-action-hover);
+    background: var(--idlm-action-hover);
+    color: var(--idlm-action-contrast);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--idlm-action-hover) 24%, transparent);
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header-actions :is(.idlm-btn, .button, select, .idlm-input) {
+    min-height: var(--idlm-control-height);
+    height: var(--idlm-control-height);
+    padding-inline: 9px;
+    font-size: 11px;
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-header-actions :is(.idlm-btn, .button) {
+    min-width: 0;
+}
+
+body.idlm-crm-design .idlm-workspace .idlm-wrap .idlm-btn-icon {
+    width: var(--idlm-control-height);
+    min-width: var(--idlm-control-height);
+    height: var(--idlm-control-height);
+    min-height: var(--idlm-control-height);
+}
+
+@media (max-width: 782px) {
+    body.idlm-crm-design .idlm-wrap .idlm-header-actions :is(.idlm-btn, .button, select, .idlm-input) {
+                min-height: var(--idlm-target-size);
+                height: var(--idlm-target-size);
+                font-size: 1rem;
+            }
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-btn-primary,
+body.idlm-crm-design .idlm-dialog .idlm-btn-primary,
+body.idlm-crm-design .idlm-workspace .idlm-btn-primary {
+    background: var(--idlm-action);
+    border-color: var(--idlm-action);
+    color: var(--idlm-action-contrast);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-btn-primary:hover,
+body.idlm-crm-design .idlm-wrap .idlm-btn-primary:focus-visible,
+body.idlm-crm-design .idlm-dialog .idlm-btn-primary:hover,
+body.idlm-crm-design .idlm-dialog .idlm-btn-primary:focus-visible,
+body.idlm-crm-design .idlm-workspace .idlm-btn-primary:hover,
+body.idlm-crm-design .idlm-workspace .idlm-btn-primary:focus-visible {
+    background: var(--idlm-action-hover);
+    border-color: var(--idlm-action-hover);
+    color: var(--idlm-action-contrast);
+}
+
+@media (max-width: 782px) {
+    body.idlm-crm-design #idlm-leads-table .idlm-queue-actions .idlm-btn-primary {
+                grid-column: 1 / -1;
+            }
+}
+
+body.idlm-crm-design .idlm-drawer-comment-actions .idlm-btn:hover {
+    background: var(--idlm-action);
+}
+
+body.idlm-crm-design .idlm-drawer-form-footer .idlm-btn-primary {
+    border-radius: 10px;
+    border: 1px solid var(--idlm-brand-gold);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-btn-icon {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 8px;
+  background: var(--idlm-surface);
+  border: 1px solid var(--idlm-border);
+  color: var(--idlm-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--idlm-transition);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-btn-icon:hover {
+  background: var(--idlm-surface-soft);
+  border-color: var(--idlm-border-strong);
+  color: var(--idlm-action);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-btn-primary {
+  min-width: 0;
+  min-height: var(--idlm-control-height);
+  border-color: var(--idlm-action);
+  border-radius: var(--idlm-button-radius, 8px);
+  background: var(--idlm-action);
+  color: var(--idlm-action-contrast);
+  font-weight: 700;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--idlm-action) 24%, transparent);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-btn-primary:hover {
+  background: var(--idlm-action-hover);
+  border-color: var(--idlm-action-hover);
+  color: var(--idlm-action-contrast);
+}
+
+body.idlm-crm-design .idlm-queue-actions .idlm-btn-primary { grid-column: 1 / -1; }
+
 /* --- 1. Tokens ----------------------------------------------------------- */
 /* Brand, action and sidebar tokens stay owned by white-label settings. */
 body.idlm-crm-design {
