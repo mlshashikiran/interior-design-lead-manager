@@ -10,6 +10,79 @@
    ========================================================================== */
 
 /* Folded from crm-legacy-shared.css (step C): kept first, where the legacy rules loaded before the design rules. */
+body.idlm-crm-design .idlm-log-filters .idlm-input {
+    width: 100%;
+}
+
+body.idlm-crm-design .idlm-filters-panel.idlm-log-filters .idlm-input {
+    width: 100%;
+    min-width: 0;
+}
+
+body.idlm-crm-design #idlm-deal-value-modal .idlm-input,
+body.idlm-crm-design #idlm-kanban-deal-modal .idlm-input,
+body.idlm-crm-design #idlm-quote-value-modal .idlm-input,
+body.idlm-crm-design #idlm-kanban-quote-modal .idlm-input {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-strategy-section .idlm-input {
+    width: 100%;
+    max-width: 620px;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-input,
+body.idlm-crm-design #idlm-routing-modal .idlm-select {
+    min-height: 40px;
+    padding: 7px 11px;
+    border-radius: 7px;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-input:focus-visible,
+body.idlm-crm-design #idlm-routing-modal .idlm-select:focus-visible {
+    border-color: var(--idlm-action);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--idlm-action) 14%, transparent);
+    outline: 0;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-rep-row .idlm-input {
+    width: 100%;
+    min-width: 0;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-input-suffix .idlm-input {
+    width: 72px;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-time-range .idlm-input {
+    width: 100%;
+    min-width: 0;
+}
+
+body.idlm-crm-design .idlm-wrap #settings-mcp .idlm-mcp-key-control .idlm-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-table .idlm-input,
+body.idlm-crm-design .idlm-wrap .idlm-table .idlm-select {
+  min-height: 34px;
+}
+
+body.idlm-crm-design #idlm-routing-modal .idlm-routing-source-section.is-inactive .idlm-input {
+    color: var(--idlm-text-muted);
+    cursor: not-allowed;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-meta-connector__copy .idlm-input { flex: 1 1 auto; min-width: 0; }
+
+/* Folded from crm-legacy-shared.css (step C): kept first, where the legacy rules loaded before the design rules. */
 body.idlm-crm-design .idlm-btn-compact {
     min-height: var(--idlm-control-height);
     padding: var(--idlm-space-1) var(--idlm-space-3);
