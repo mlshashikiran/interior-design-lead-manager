@@ -1789,6 +1789,7 @@ require_once __DIR__ . '/access-flow-contracts.php';
 require_once __DIR__ . '/quotation-authorization-contracts.php';
 require_once __DIR__ . '/lead-read-authorization-contracts.php';
 require_once __DIR__ . '/mcp-query-contracts.php';
+require_once __DIR__ . '/mcp-switch-contracts.php';
 require_once __DIR__ . '/lead-csv-contracts.php';
 require_once __DIR__ . '/release-contracts.php';
 require_once __DIR__ . '/runtime-support-contracts.php';

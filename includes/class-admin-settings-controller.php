@@ -41,6 +41,27 @@ class IDLM_Admin_Settings_Controller {
         return empty($values) ? array_values($fallback) : $values;
     }
 
+    /**
+     * Persist the MCP on/off switch.
+     *
+     * Only a form that rendered the switch (marker field) changes it, so a
+     * partial post can never turn MCP on or off by omission. A wp-config
+     * constant owns the state when set, and the audit trail records each change.
+     */
+    private static function save_mcp_enabled() {
+        // phpcs:disable WordPress.Security.NonceVerification.Missing -- process_request() verifies manage_options and idlm_settings_save_action before this helper runs.
+        if (!isset($_POST['mcp_enabled_present']) || 'setting' !== IDLM_Production_Security::mcp_enabled_source()) {
+            return;
+        }
+        $enabled = isset($_POST['mcp_enabled']) && is_string($_POST['mcp_enabled']) && '1' === sanitize_text_field(wp_unslash($_POST['mcp_enabled'])) ? '1' : '0';
+        // phpcs:enable WordPress.Security.NonceVerification.Missing
+        $previous = IDLM_Production_Security::is_mcp_enabled() ? '1' : '0';
+        update_option(IDLM_Production_Security::MCP_ENABLED_OPTION, $enabled, false);
+        if ($previous !== $enabled && class_exists('IDLM_Telemetry')) {
+            IDLM_Telemetry::log('mcp_access', 'info', sprintf('MCP access %s by user %d', '1' === $enabled ? 'enabled' : 'disabled', get_current_user_id()));
+        }
+    }
+
     /** Rotate a scoped REST credential after explicit administrator confirmation. */
     public static function handle_rotate_api_credential() {
         if (!current_user_can('manage_options')) {
@@ -152,6 +173,7 @@ class IDLM_Admin_Settings_Controller {
         update_option('idlm_monthly_conversion_target', isset($_POST['conversion_target']) ? intval(wp_unslash($_POST['conversion_target'])) : 0);
         update_option('idlm_currency_code', isset($_POST['currency_code']) ? strtoupper(sanitize_text_field(wp_unslash($_POST['currency_code']))) : 'INR');
         update_option('idlm_reps_see_all_leads', isset($_POST['reps_see_all']) ? '1' : '0');
+        self::save_mcp_enabled();
         update_option('idlm_presales_calls_per_day', isset($_POST['presales_calls_per_day']) ? min(20, max(1, intval(wp_unslash($_POST['presales_calls_per_day'])))) : 2);
         update_option('idlm_presales_whatsapp_per_day', isset($_POST['presales_whatsapp_per_day']) ? min(20, max(0, intval(wp_unslash($_POST['presales_whatsapp_per_day'])))) : 1);
         $assignment_mode = isset($_POST['assignment_mode']) ? sanitize_key(wp_unslash($_POST['assignment_mode'])) : 'manual';

@@ -13,6 +13,7 @@ if (!defined('ABSPATH')) {
 final class IDLM_Production_Security {
     const MCP_GRANTS_OPTION = 'idlm_mcp_tool_grants';
     const MCP_METADATA_OPTION = 'idlm_mcp_credential_metadata';
+    const MCP_ENABLED_OPTION = 'idlm_mcp_enabled';
 
     /** Return the normalized WordPress environment type. */
     public static function environment_type() {
@@ -22,17 +23,35 @@ final class IDLM_Production_Security {
         return defined('IDLM_TESTING') && IDLM_TESTING ? 'development' : 'production';
     }
 
-    /** MCP is fail-closed in production unless explicitly enabled. */
-    public static function is_mcp_enabled() {
+    /**
+     * Where the MCP on/off state comes from: a wp-config constant (which the
+     * Settings switch cannot override) or the saved Settings switch.
+     *
+     * @return string 'constant-disabled', 'constant-enabled' or 'setting'.
+     */
+    public static function mcp_enabled_source() {
         if (defined('IDLM_MCP_DISABLED') && IDLM_MCP_DISABLED) {
-            return false;
+            return 'constant-disabled';
         }
         if (defined('IDLM_MCP_ENABLED')) {
-            return (bool) IDLM_MCP_ENABLED;
+            return IDLM_MCP_ENABLED ? 'constant-enabled' : 'constant-disabled';
         }
+        return 'setting';
+    }
 
-        $default = 'production' === self::environment_type() ? '0' : '1';
-        return '1' === (string) get_option('idlm_mcp_enabled', $default);
+    /** State used until an administrator saves the Settings switch. */
+    public static function mcp_default_enabled() {
+        return 'production' === self::environment_type() ? '0' : '1';
+    }
+
+    /** MCP is fail-closed in production unless explicitly enabled. */
+    public static function is_mcp_enabled() {
+        $source = self::mcp_enabled_source();
+        if ('setting' !== $source) {
+            return 'constant-enabled' === $source;
+        }
+        $saved = get_option(self::MCP_ENABLED_OPTION, self::mcp_default_enabled());
+        return is_scalar($saved) && '1' === (string) $saved;
     }
 
     /** Resolve least-privilege tool grants for the current MCP credential. */

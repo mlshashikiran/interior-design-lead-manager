@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.113.13 — MCP module review and enable/disable switch (2026-11-19)
+
+Builder: Shashi. Settings > AI Agent Access gets the MCP switch (option `idlm_mcp_enabled`, saved only when the form carries `mcp_enabled_present`, read-only while a wp-config constant owns the state, audited through telemetry). Review fixes: explicit column projection in `get_lead_details`, generic internal errors, stable `query_leads` order, MariaDB `max_statement_time`, 503 for the disabled protocol error, summary 9 to 2 queries with a 60 s transient cache, auth no longer runs the credential migration on every request. Contracts live in `tests/mcp-switch-contracts.php`. Known and left alone: `IDLM_Telemetry::log` runs `SHOW TABLES` and `COUNT(*)` per call and stops at 1000 rows, so the MCP audit trail pauses until logs are pruned.
+
 ## 1.113.12 — Step D: the legacy layer is frozen and documented (2026-11-19)
 
 Builder: Shashi. Closes the admin-style.css retirement. No CSS rule changed; the four `crm-legacy-*.css` headers now say the files are frozen (they only shrink, by moving rules into the design layer with identical computed styles), STD-CSS-11 says the same and names the comparison a fold needs, `docs/TECH-DEBT.md` is rewritten to the final state (1,062 rules left in four files, why, and the next steps if the layer is to go), and the file-ownership docs (`DESIGN.md`, `PROJECT-MAP.md`, `FEATURE-MAP.md`, the shadcn plan) point at `crm-tokens.css`, `crm-design*.css` and `crm-legacy-*.css` instead of the deleted `admin-style.css`. The rule-count test from 1.113.2 stays as the ratchet.

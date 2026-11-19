@@ -81,8 +81,13 @@ final class IDLM_Integration_Auth {
     }
 
     public static function validate_scoped_api_key(WP_REST_Request $request, $option_name) {
-        self::maybe_migrate_api_credentials();
         $scoped_key = (string) IDLM_Secret_Store::get($option_name, '');
+        if ('' === $scoped_key || self::API_CREDENTIALS_VERSION !== get_option('idlm_api_credentials_version', '')) {
+            // Only an unmigrated site (or one missing this key) pays for the full credential
+            // migration; it re-reads and decrypts every secret from the database.
+            self::maybe_migrate_api_credentials();
+            $scoped_key = (string) IDLM_Secret_Store::get($option_name, '');
+        }
         $header_key = trim((string) $request->get_header('X-IDLM-API-Key'));
         return self::credential_matches($header_key, $scoped_key);
     }
