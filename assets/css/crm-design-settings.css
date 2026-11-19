@@ -2,6 +2,352 @@
    Contract: design-system/interior-design-lead-manager/STANDARD.md. Every selector starts
    with body.idlm-crm-design. Tokens only: no hex colours, no important overrides. */
 
+/* Folded from crm-legacy-shared.css (step C): kept first, where the legacy rules loaded before the design rules. */
+body.idlm-crm-design .idlm-wrap .idlm-white-label-errors {
+    margin-bottom: var(--idlm-space-5);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-white-label-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, .75fr);
+    gap: var(--idlm-space-6);
+    align-items: start;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-white-label-editor {
+    min-width: 0;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-brand-assets {
+    display: grid;
+    gap: var(--idlm-space-4);
+    margin-top: var(--idlm-space-5);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-brand-asset-control {
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) 124px minmax(150px, auto);
+    gap: var(--idlm-space-3);
+    align-items: center;
+    padding: var(--idlm-space-4);
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface-soft);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-brand-asset-control.has-error {
+    border-color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-brand-asset-preview {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    min-height: 76px;
+    padding: var(--idlm-space-2);
+    overflow: hidden;
+    border: 1px solid var(--idlm-border);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface);
+    color: var(--idlm-text-muted);
+    font-size: 11px;
+    text-align: center;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-brand-asset-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-brand-colours {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-brand-colour-inputs {
+    display: grid;
+    grid-template-columns: var(--idlm-control-height) minmax(0, 1fr);
+    gap: var(--idlm-space-2);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-brand-contrast {
+    margin: var(--idlm-space-1) 0 0;
+    color: var(--idlm-text-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-brand-colour-control.has-valid-colour .idlm-brand-contrast {
+    color: var(--idlm-success);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-brand-colour-control.has-error .idlm-brand-contrast {
+    color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-white-label-preview {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    min-height: 390px;
+    overflow: hidden;
+    border: 1px solid var(--idlm-border-strong);
+    border-radius: var(--idlm-radius-panel);
+    background: var(--idlm-canvas);
+    box-shadow: var(--idlm-shadow);
+    color: var(--idlm-text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-white-label-preview__content {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--idlm-space-6) var(--idlm-space-4);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-white-label-preview__brand {
+    display: flex;
+    min-height: 34px;
+    align-items: center;
+    margin-bottom: var(--idlm-space-8);
+    color: var(--idlm-text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-white-label-preview-panel > .idlm-settings-callout {
+    margin-top: var(--idlm-space-3);
+}
+
+@media (max-width: 1024px) {
+    body.idlm-crm-design .idlm-wrap .idlm-white-label-preview {
+                min-height: 310px;
+            }
+}
+
+@media (max-width: 480px) {
+    body.idlm-crm-design .idlm-wrap .idlm-white-label-preview {
+                grid-template-columns: 82px minmax(0, 1fr);
+                min-height: 270px;
+            }
+
+    body.idlm-crm-design .idlm-wrap .idlm-white-label-preview__content {
+                padding: var(--idlm-space-4) var(--idlm-space-3);
+            }
+}
+
+body.idlm-crm-design .idlm-settings-section-title {
+    margin: var(--idlm-space-6) 0 var(--idlm-space-3);
+    color: var(--idlm-text);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+body.idlm-crm-design .idlm-settings-callout {
+    margin-top: var(--idlm-space-4);
+    padding: var(--idlm-space-3);
+    border: 1px solid var(--idlm-border);
+    border-left: 4px solid var(--idlm-info);
+    border-radius: var(--idlm-radius);
+    background: var(--idlm-surface-tint);
+    color: var(--idlm-text);
+    font-size: 13px;
+}
+
+body.idlm-crm-design .idlm-settings-wrap { display: flex; flex-wrap: wrap; gap: var(--idlm-space-3); margin-top: var(--idlm-space-2); }
+
+body.idlm-crm-design .idlm-settings-working-hours { display: flex; align-items: center; gap: var(--idlm-space-3); }
+
+body.idlm-crm-design .idlm-mcp-copy-row { display: flex; align-items: center; justify-content: space-between; gap: var(--idlm-space-2); width: 100%; }
+
+body.idlm-crm-design .idlm-routing-settings-group-heading {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+/* Webhook Mapping Tab Visibility */
+body.idlm-crm-design .idlm-mapping-tab-content {
+    display: none;
+}
+
+body.idlm-crm-design .idlm-settings-page .idlm-shell {
+  max-width: 1440px;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-settings-tab-content {
+  display: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-settings-tab-content.active {
+  display: block;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-lead-fields-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-lead-fields-card .idlm-ui-label-editor {
+  margin-top: 2px;
+  padding: 16px;
+  border: 1px solid var(--idlm-border);
+  border-radius: var(--idlm-radius);
+  background: var(--idlm-surface-soft);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-lead-fields-card .idlm-settings-disclosure__content {
+  margin: 2px 14px 14px;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-token-editor {
+  display: grid;
+  gap: var(--idlm-space-2);
+  min-width: 0;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-token-editor__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--idlm-space-2);
+  min-height: var(--idlm-target-size);
+  margin: 0;
+  padding: var(--idlm-space-2);
+  border: 1px solid var(--idlm-border);
+  border-radius: var(--idlm-radius);
+  background: var(--idlm-surface-soft);
+  list-style: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-token-editor__list--movable {
+  display: grid;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-token-editor__drag { cursor: grab; color: var(--idlm-text-muted); }
+
+body.idlm-crm-design .idlm-wrap .idlm-token-editor__move:hover {
+  background: var(--idlm-action-soft);
+  color: var(--idlm-action);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-token-editor__move:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-mapping-status {
+  margin: var(--idlm-space-3) 0;
+  padding: var(--idlm-space-2) var(--idlm-space-3);
+  border: 1px solid var(--idlm-border);
+  border-radius: var(--idlm-radius);
+  background: var(--idlm-surface-soft);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-mapping-status.is-configured { border-color: var(--idlm-success); }
+
+body.idlm-crm-design .idlm-wrap .idlm-mapping-status.needs-attention { border-color: var(--idlm-warning); }
+
+body.idlm-crm-design .idlm-wrap .idlm-mapping-tab-content {
+  margin-top: 14px;
+  border: 1px solid var(--idlm-border);
+  border-radius: var(--idlm-radius);
+  background: var(--idlm-surface);
+  padding: 16px;
+  display: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-mapping-tab-content.active {
+  display: block;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-mapping-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-health-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-health-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+/* Settings notices are promoted by settings.js into a fixed, non-live stack.
+ * Each WordPress notice retains its own status/alert semantics and dismiss control. */
+body.idlm-crm-design .idlm-settings-toast-stack { position: fixed; z-index: var(--idlm-layer-toast); display: flex; width: fit-content; max-width: min(520px, calc(100vw - (var(--idlm-space-4) * 2))); max-height: calc(100dvh - 128px); flex-direction: column; gap: var(--idlm-space-2); overflow: auto; pointer-events: none; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: var(--idlm-type-body); line-height: 1.5; }
+
+body.idlm-crm-design .idlm-settings-toast-stack .notice.idlm-settings-toast {
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: var(--idlm-space-3) 42px var(--idlm-space-3) var(--idlm-space-4);
+  border-radius: var(--idlm-radius);
+  box-shadow: var(--idlm-shadow-lg);
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--idlm-motion-fast) var(--idlm-ease), transform var(--idlm-motion-fast) var(--idlm-ease);
+}
+
+body.idlm-crm-design .idlm-settings-toast-stack .notice.idlm-settings-toast.notice-error {
+  background: var(--idlm-danger);
+  border: 1px solid var(--idlm-danger);
+  color: var(--idlm-text-inverse);
+}
+
+body.idlm-crm-design .idlm-settings-toast-stack .notice.idlm-settings-toast.notice-warning {
+  background: var(--idlm-warning);
+  border: 1px solid var(--idlm-warning);
+  color: var(--idlm-text-inverse);
+}
+
+body.idlm-crm-design .idlm-settings-toast-stack .notice.idlm-settings-toast.is-closing {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+body.idlm-crm-design .idlm-settings-toast-stack .notice.idlm-settings-toast .notice-dismiss .idlm-settings-toast__dismiss-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-settings-action-status {
+  flex-basis: 100%;
+  margin: var(--idlm-space-1) 0 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-settings-action-status.is-success {
+  color: var(--idlm-success);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-settings-action-status.is-error {
+  color: var(--idlm-danger);
+}
+
+body.idlm-crm-design .idlm-wrap .idlm-connector-secret__saved { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 12px; padding: 12px; border: 1px solid var(--idlm-border); border-radius: var(--idlm-radius); background: var(--idlm-surface-soft); }
+
 /* --- Page and navigation ------------------------------------------------- */
 body.idlm-crm-design .idlm-settings-page .idlm-header h1 {
     font-size: 1.25rem;
