@@ -898,10 +898,9 @@ $GLOBALS['idlm_test_menu_calls'] = array();
 $GLOBALS['idlm_test_remote_response'] = null;
 
 /**
- * The retired assets/css/admin-style.css as one string: every crm-legacy-*.css file in load order with the
- * :where() gate prefix removed, so contract tests keep reading the rules the way they were written (STD-CSS-11).
+ * The legacy files alone (every crm-legacy-*.css in load order), with the :where() gate prefix removed (STD-CSS-11).
  */
-function idlm_legacy_css(?string $root = null): string {
+function idlm_legacy_only_css(?string $root = null): string {
     $root = $root ?? dirname(__DIR__);
     $source = '';
     foreach (array('shared', 'leads', 'pipeline', 'dashboard', 'quotations', 'settings', 'admin', 'payments') as $area) {
@@ -911,6 +910,22 @@ function idlm_legacy_css(?string $root = null): string {
         }
     }
     return str_replace(array(':where(body.idlm-crm-design) ', ':where(.idlm-crm-design)'), '', $source);
+}
+
+/**
+ * What the retired assets/css/admin-style.css held, wherever it lives now: the legacy files plus the rules folded into the
+ * crm-design-<area>.css files (step C), with the gate prefix removed, so contract tests keep reading the rules as written.
+ */
+function idlm_legacy_css(?string $root = null): string {
+    $root = $root ?? dirname(__DIR__);
+    $source = idlm_legacy_only_css($root);
+    foreach (array('leads', 'pipeline', 'dashboard', 'quotations', 'settings', 'admin', 'payments') as $area) {
+        $file = $root . '/assets/css/crm-design-' . $area . '.css';
+        if (is_file($file)) {
+            $source .= str_replace('body.idlm-crm-design ', '', (string) file_get_contents($file)) . "\n";
+        }
+    }
+    return $source;
 }
 
 function idlm_test_reset_environment(): void {

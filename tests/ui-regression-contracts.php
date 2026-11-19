@@ -486,7 +486,7 @@ idlm_test('crm-tokens.css is the one ungated stylesheet: custom properties only,
         }
     }
     assert_false(false !== strpos($bare, '!important'), 'No !important in the tokens file.');
-    assert_false((bool) preg_match('/--idlm-[a-z0-9-]+\s*:/', (string) preg_replace('~/\*.*?\*/~s', '', (string) idlm_legacy_css($root))), 'The legacy files declare no tokens.');
+    assert_false((bool) preg_match('/--idlm-[a-z0-9-]+\s*:/', (string) preg_replace('~/\*.*?\*/~s', '', (string) idlm_legacy_only_css($root))), 'The legacy files declare no tokens.');
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
     assert_contains("wp_register_style('idlm-crm-tokens'", $assets);
     assert_contains("array('idlm-crm-tokens', 'dashicons')", $assets);
@@ -524,7 +524,7 @@ idlm_test('legacy rules live in crm-legacy-*.css under a zero-specificity gate a
             }
         }
     }
-    assert_true($rules <= 1203, 'STD-CSS-11: the legacy files must not gain rules (' . $rules . ').');
+    assert_true($rules <= 1182, 'STD-CSS-11: the legacy files must not gain rules (' . $rules . ').');
     assert_true($important <= 4, 'STD-CSS-11: the legacy files must not gain !important (' . $important . ').');
 
     $assets = (string) file_get_contents($root . '/includes/class-admin-assets.php');
