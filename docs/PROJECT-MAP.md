@@ -164,8 +164,9 @@ assets/js/workspace.js
 assets/js/chart.js
     [Vendored dependency] Minified Chart.js 4.4.1; do not hand-edit.
 
-assets/css/admin-style.css
-    [Shared presentation] CRM shell, list, drawer, forms and responsive styles.
+assets/css/crm-tokens.css, crm-design*.css, crm-legacy-*.css
+    [Shared presentation] Tokens, the gated design layer and the frozen legacy rules
+    (STD-CSS-10, STD-CSS-11); admin-style.css was retired in 1.113.2.
 assets/css/dashboard.css, kanban.css, quotations.css, workspace.css
     [Module presentation] Module-specific layouts and print rules.
 assets/css/fonts.css; assets/fonts/

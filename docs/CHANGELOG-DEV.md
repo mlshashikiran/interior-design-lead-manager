@@ -1,5 +1,9 @@
 # Engineering Change Log
 
+## 1.113.12 — Step D: the legacy layer is frozen and documented (2026-11-19)
+
+Builder: Shashi. Closes the admin-style.css retirement. No CSS rule changed; the four `crm-legacy-*.css` headers now say the files are frozen (they only shrink, by moving rules into the design layer with identical computed styles), STD-CSS-11 says the same and names the comparison a fold needs, `docs/TECH-DEBT.md` is rewritten to the final state (1,062 rules left in four files, why, and the next steps if the layer is to go), and the file-ownership docs (`DESIGN.md`, `PROJECT-MAP.md`, `FEATURE-MAP.md`, the shadcn plan) point at `crm-tokens.css`, `crm-design*.css` and `crm-legacy-*.css` instead of the deleted `admin-style.css`. The rule-count test from 1.113.2 stays as the ratchet.
+
 ## 1.113.11 — Dialog rules leave crm-legacy-shared.css (2026-11-19)
 
 Builder: Shashi. Step C, shared components, dialogs. 16 rule blocks whose subject is an `.idlm-dialog*` or `.idlm-modal*` class (dialog title, field, error and action rows, the shared modal shell and its active state, routing modal and pre-sales activity modal parts) moved from `crm-legacy-shared.css` to the start of `crm-design.css` with the `body.idlm-crm-design` prefix. Kept in the shared file: the compact dialog width (folded, a 520px dialog became 450px at 1100px), `body.idlm-modal-open` (its `body…:where()` form is not allowed in the design layer by STD-CSS-1), `.idlm-modal-content` and `.idlm-modal-header` rules (folded, the dialog panel width at 390px changed from 374px to 358px), and the `.idlm-dialog .idlm-dialog__panel` rule (folded, the log payload dialog shrank from 920px to 520px), plus rules with hex, `!important` or non-canonical breakpoints. Computed styles match 1.113.10 on all 12 workspace views at 1440, 1100, 782 and 390px, normal and forced open, plus the lead drawer open.
