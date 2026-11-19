@@ -664,13 +664,6 @@
     width: min(450px, calc(100vw - var(--idlm-space-12)));
 }
 
-:where(body.idlm-crm-design) .idlm-dialog__title--danger {
-    display: flex;
-    align-items: center;
-    gap: var(--idlm-space-2);
-    color: var(--idlm-danger);
-}
-
 :where(body.idlm-crm-design) .idlm-mb-4 { margin-bottom: var(--idlm-space-4); }
 
 :where(body.idlm-crm-design) [data-idlm-ui~="w-full"] { width: 100%; }
@@ -1091,17 +1084,6 @@
     background: var(--idlm-surface);
     color: var(--idlm-text);
 }
-
-/* Shared actionable dialog and non-blocking status feedback. */
-
-:where(body.idlm-crm-design) .idlm-dialog__field {display:grid;gap:6px;margin:0 0 14px;font-size:13px;font-weight:700}
-
-:where(body.idlm-crm-design) .idlm-dialog__field[hidden],
-:where(body.idlm-crm-design) .idlm-dialog__error[hidden] {display:none}
-
-:where(body.idlm-crm-design) .idlm-dialog__error {margin:0 0 14px;color:var(--idlm-danger);font-size:13px;font-weight:600}
-
-:where(body.idlm-crm-design) .idlm-dialog__actions {display:flex;justify-content:flex-end;gap:10px}
 
 :where(body.idlm-crm-design) .idlm-toast { right:24px; bottom:24px; z-index:var(--idlm-layer-toast); opacity:0; transform:translateY(8px); transition:opacity var(--idlm-transition),transform var(--idlm-transition); }
 
@@ -2336,31 +2318,7 @@ body.idlm-filters-open:where(.idlm-crm-design) {
     line-height: 1.45;
 }
 
-/* Modal boxes layout */
-
-:where(body.idlm-crm-design) .idlm-modal { display: none; position: fixed; inset: 0; width: 100%; min-height: 100vh; min-height: 100dvh; padding: var(--idlm-space-6); z-index: var(--idlm-layer-modal-backdrop); align-items: center; justify-content: center; box-sizing: border-box; }
-
-:where(body.idlm-crm-design) .idlm-modal.active {
-    display: flex;
-}
-
 :where(body.idlm-crm-design) .idlm-modal-content { background-color: var(--idlm-surface); width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; box-sizing: border-box; padding: 25px; animation: scaleUp var(--idlm-motion-slow) var(--idlm-ease); }
-
-/* Reusable Phase 1 dialog component. Existing IDs remain workflow contracts. */
-
-:where(body.idlm-crm-design) .idlm-dialog {
-    z-index: var(--idlm-layer-dialog);
-    overscroll-behavior: contain;
-}
-
-/* Action dialogs are appended directly to body, outside the CRM wrapper. */
-
-:where(body.idlm-crm-design) .idlm-dialog.idlm-dialog {
-    color: var(--idlm-text);
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-}
 
 :where(body.idlm-crm-design) .idlm-dialog.idlm-dialog :where(h1, h2, h3, p, label, button, input, select, textarea) {
     font-family: inherit;
@@ -2380,27 +2338,11 @@ body.idlm-filters-open:where(.idlm-crm-design) {
     box-shadow: var(--idlm-shadow-lg);
 }
 
-:where(body.idlm-crm-design) .idlm-dialog .idlm-dialog__header { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: var(--idlm-space-4); margin: 0; border-bottom: 1px solid var(--idlm-border); }
-
-:where(body.idlm-crm-design) .idlm-dialog .idlm-dialog__description { margin: var(--idlm-space-1) 0 0; color: var(--idlm-text-muted); line-height: 1.5; }
-
 :where(body.idlm-crm-design) .idlm-dialog .idlm-dialog__close .dashicons {
     width: 18px;
     height: 18px;
     font-size: 18px;
     line-height: 18px;
-}
-
-:where(body.idlm-crm-design) .idlm-dialog .idlm-dialog__body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
-
-:where(body.idlm-crm-design) .idlm-dialog .idlm-dialog__footer {
-    display: flex;
-    flex: 0 0 auto;
-    justify-content: flex-end;
-    gap: var(--idlm-space-2);
-    padding: var(--idlm-space-4) var(--idlm-space-6);
-    border-top: 1px solid var(--idlm-border);
-    background: var(--idlm-surface-soft);
 }
 
 :where(body.idlm-crm-design) .idlm-dialog .idlm-form-group {
@@ -5758,14 +5700,10 @@ body:not(.wp-admin):not(.admin-bar):where(.idlm-crm-design) .idlm-wrap .idlm-hea
 
 :where(body.idlm-crm-design) .idlm-dialog .idlm-dialog__body :where(input, select, textarea) { max-width: 100%; }
 
-:where(body.idlm-crm-design) .idlm-dialog .idlm-dialog__actions { margin-top: var(--idlm-space-5); }
-
 :where(body.idlm-crm-design) .idlm-dialog .idlm-dialog__actions .idlm-btn,
 :where(body.idlm-crm-design) .idlm-dialog .idlm-dialog__footer .idlm-btn { min-width: 0; white-space: normal; }
 
 :where(body.idlm-crm-design) .idlm-log-payload-dialog .idlm-log-dialog-panel { min-width: 0; width: min(920px, calc(100vw - var(--idlm-space-8))); }
-
-:where(body.idlm-crm-design) .idlm-log-payload-dialog .idlm-dialog__body { min-width: 0; overflow-x: hidden; }
 
 :where(body.idlm-crm-design) .idlm-log-payload-dialog .idlm-code-block { max-width: 100%; overflow: auto; overflow-wrap: anywhere; word-break: break-word; white-space: pre-wrap; overscroll-behavior: contain; }
 
